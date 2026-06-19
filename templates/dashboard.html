@@ -1986,21 +1986,61 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           </div>
         </div>
 
-        {# Dimension pills — plain English names #}
-        {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
-        <div class="sl-dim-grid">
-          {% for dim, avg in progress_data.dim_avgs.items() %}
+        {# Dimension sparklines — matches desktop right column #}
+        {% set _dim_labels = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
+        {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
+        <div class="sl-sparkline-row">
+        {% for dim, avg in progress_data.dim_avgs.items() %}
           {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
-          <div class="sl-dim-pill">
-            <span class="sl-dim-pill__name">{{ _dim_mobile.get(dim, dim|title) }}</span>
-            <span>
-              <span class="sl-dim-pill__score">{{ '%.1f'|format(avg) }}</span>
-              {% if _pill == 'up' %}<span class="sl-dim-pill__trend up">▲</span>
-              {% elif _pill == 'down' %}<span class="sl-dim-pill__trend down">▼</span>
-              {% else %}<span class="sl-dim-pill__trend steady">–</span>{% endif %}
-            </span>
+          {% set _dcolor = _dim_colours.get(dim, '#2C3E6B') %}
+          {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
+          {% set _raw = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
+          <div class="sl-sparkline-item">
+            <div class="sl-sparkline-header">
+              <span class="sl-sparkline-label">{{ _dim_labels.get(dim, dim|title) }}</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="sl-sparkline-val">{{ '%.1f'|format(avg) }}</span>
+                {% if _pill == 'up' %}<span class="sl-sparkline-pill up">↑ climbing</span>
+                {% elif _pill == 'down' %}<span class="sl-sparkline-pill down">↓ dipped</span>
+                {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
+              </div>
+            </div>
+            {% if _sp and _sp.polyline %}
+            <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
+                 aria-label="{{ _dim_labels.get(dim, dim) }} trend">
+              <rect x="0" y="0" width="300" height="28" fill="none"/>
+              <polyline
+                fill="none"
+                stroke="{{ _dcolor }}"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                points="{{ _sp.polyline }}"
+              />
+              {% if _sp.points %}
+              {% for _pt in _sp.points %}
+              <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
+              {% endfor %}
+              {% endif %}
+              {% set _mission_idxs = progress_data.dim_mission_indices.get(dim, []) if progress_data.dim_mission_indices is defined else [] %}
+              {% for _mi in _mission_idxs %}
+              {% if _sp.points and _mi < (_sp.points | length) %}
+              <circle cx="{{ _sp.points[_mi].x }}" cy="{{ _sp.points[_mi].y }}" r="5" fill="#C8A84B" opacity="0.9"/>
+              {% endif %}
+              {% endfor %}
+            </svg>
+            {% if _raw %}
+            <div style="display:flex; justify-content:space-between; margin-top:3px;">
+              {% for _v in _raw %}{% if _v != none %}
+              <span style="font-size:13px; color:var(--sl-text-light); font-family:monospace;">{{ '%.1f'|format(_v) }}</span>
+              {% endif %}{% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
+            {% endif %}
           </div>
-          {% endfor %}
+        {% endfor %}
         </div>
 
         {# Tier progress bar #}
