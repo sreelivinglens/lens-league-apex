@@ -5872,14 +5872,16 @@ def upload():
                                             # Mission followed — award bonus
                                             award_points(_pts_user, 10.0, 'mission_complete', commit=False)
                                             _img.scoring_flash = (
-                                                f'+{_pts_earned:.1f} pts · Mission complete: +10 bonus'
+                                                f'+{_pts_earned:.1f} pts earned \u00b7 Your eye is moving forward.'
                                             )
                                         else:
                                             # Mission not followed — note it in flash
-                                            _mission_title = getattr(_img, 'mission_title', None) or 'today\'s mission'
                                             _img.scoring_flash = (
-                                                f'+{_pts_earned:.1f} pts · Mission open — try {_mission_title} again'
+                                                f'+{_pts_earned:.1f} pts earned \u00b7 That assignment is still waiting for you.'
                                             )
+                                    else:
+                                        # No mission — generic flash
+                                        _img.scoring_flash = f'+{_pts_earned:.1f} pts earned'
                                     # Check tier jump bonus
                                     _img_count = Image.query.filter_by(
                                         user_id=_pts_user.id, status='scored'
@@ -5887,8 +5889,6 @@ def upload():
                                     check_tier_jump_bonus(
                                         _pts_user, _img.tier, _img_count, commit=False
                                     )
-                                    # Store flash for dashboard pickup
-                                    _img.scoring_flash = f'+{_pts_earned:.1f} points earned'
                                     db.session.commit()
                             except Exception as _pe:
                                 app.logger.error(f'[points hook] image_scored error: {_pe}')
