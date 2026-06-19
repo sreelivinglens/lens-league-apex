@@ -4671,6 +4671,11 @@ def account_deleted():
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
+    # Interests must be complete before uploading — genre_interests drives
+    # seasonal advisory, curriculum dimension selection, and scoring context.
+    if not getattr(current_user, 'interests_complete', False):
+        session['post_login_next'] = request.url
+        return redirect(url_for('onboarding_interests'))
     if request.method == 'POST':
         file = request.files.get('image')
         if not file or file.filename == '':
@@ -5589,6 +5594,12 @@ def upload():
                                         )
                                         if _sc_seasonal_ctx:
                                             app.logger.info(f'[auto_score] on-demand discovery succeeded — advisory ready for ({_sc_user_city}, {_od_genre})')
+                                        else:
+                                            app.logger.warning(
+                                                f'[auto_score] on-demand discovery inserted {_od_n} row(s) for '
+                                                f'({_sc_user_city}, {_od_genre}) but month filter returned no context '
+                                                f'(month={datetime.utcnow().month}) — scorecard will have no advisory'
+                                            )
                                     else:
                                         app.logger.warning(f'[auto_score] on-demand discovery found nothing for ({_sc_user_city}, {_od_genre})')
                                         # Mark as done in queue so we don't retry endlessly
