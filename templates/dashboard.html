@@ -1366,15 +1366,16 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   ══════════════════════════════════════════ #}
 
   {# ── Dimension colour map — light/muted, same for both principle and master days ── #}
+  {# Session 91: unified sky blue for all dimensions — no colour-coded bands #}
   {% set _dim_band = {
-    'dod':        ('linear-gradient(135deg,#A8B8CC,#8CA0B8)', '#7890A8', '⬛'),
-    'dm':         ('linear-gradient(135deg,#A8C4A0,#88A880)', '#78986A', '◎'),
-    'aq':         ('linear-gradient(135deg,#D8C490,#C4AC70)', '#B09858', '☀'),
-    'wonder':     ('linear-gradient(135deg,#C8C0E0,#B0A8D0)', '#A098C0', '✦'),
-    'disruption': ('linear-gradient(135deg,#B8BEC8,#A0A8B4)', '#8890A0', '◈')
+    'dod':        ('#E8F4F8', '#B8D8E4', '⬛'),
+    'dm':         ('#E8F4F8', '#B8D8E4', '◎'),
+    'aq':         ('#E8F4F8', '#B8D8E4', '☀'),
+    'wonder':     ('#E8F4F8', '#B8D8E4', '✦'),
+    'disruption': ('#E8F4F8', '#B8D8E4', '◈')
   } %}
   {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
-               ('linear-gradient(135deg,#C8D8C0,#A8C0A0)','#9AB092','◉')) %}
+               ('#E8F4F8','#B8D8E4','◉')) %}
 
   {# ── Mission done today — replace entire card with done state ── #}
   {% if mission_done %}
@@ -1630,11 +1631,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {% if mission_attempted %}
     {# CTAs already rendered in attempted block above — nothing here #}
     {% elif weather and weather.state == 'red' %}
-    <div style="padding:12px 16px 14px;">
-      <div style="background:var(--sl-border); color:var(--sl-text-light);
-                  font-size:15px; font-weight:700; padding:14px 16px; border-radius:var(--r-btn);
-                  text-align:center;">Outdoor mission paused · resumes tomorrow</div>
-    </div>
+    {# Indoor options shown above — no additional CTA needed here #}
     {% elif mission_due %}
     <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
       <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px;">
