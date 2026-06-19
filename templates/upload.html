@@ -204,6 +204,28 @@
     .overlay-status { font-size: 15px; }
     .overlay-substatus { font-size: 14px; }
   }
+  /* ── iPad / tablet overlay — 431px to 1024px ── */
+  @media (min-width: 431px) and (max-width: 1024px) {
+    #scoringOverlay { padding: 24px 40px 32px; }
+    .overlay-engine-tag { margin-bottom: 28px; font-size: 14px; }
+    .breath-ring-hero { width: 120px; height: 120px; }
+    .breath-hero { gap: 12px; margin-bottom: 20px; }
+    .breath-word { font-size: 20px; }
+    .breath-counts { font-size: 14px; }
+    .overlay-cards-wrap { max-width: 480px; margin-bottom: 20px; }
+    .overlay-card { padding: 18px 20px 14px; gap: 9px; }
+    .overlay-card-headline { font-size: 17px; }
+    .overlay-card-body { font-size: 16px; }
+    .overlay-card.card-quote .overlay-card-body { font-size: 16px; }
+  }
+  /* ── iPad landscape — height can be tight at 768px ── */
+  @media (min-width: 431px) and (max-width: 1024px) and (max-height: 820px) {
+    .breath-ring-hero { width: 100px; height: 100px; }
+    .breath-hero { gap: 8px; margin-bottom: 12px; }
+    .overlay-cards-wrap { margin-bottom: 12px; }
+    .overlay-card { padding: 14px 18px 12px; gap: 7px; }
+    .overlay-engine-tag { margin-bottom: 16px; }
+  }
   @keyframes breatheHero {
     /* border-color and box-shadow removed — owned by JS so VIBGYOR colours apply cleanly */
     0%   { transform: scale(0.82); }
@@ -270,6 +292,62 @@
   .mini-clock-unit {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 1.5px;
     color:#FFFFFF; text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* ── ROTATING CONTENT CARDS ── */
+  .overlay-cards-wrap {
+    width: 100%; max-width: 420px;
+    margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 24px;
+  }
+  .overlay-card {
+    width: 100%; border-radius: 14px;
+    padding: 24px 24px 20px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    background: #1A1508; border: 1px solid #F5C518;
+    transition: opacity 0.6s ease;
+  }
+  .overlay-card.card-quote {
+    background: #0D1A14; border-color: #3ECFA0;
+  }
+  .overlay-card-accent {
+    width: 28px; height: 2px; background: #F5C518; border-radius: 2px;
+  }
+  .overlay-card.card-quote .overlay-card-accent { background: #3ECFA0; }
+  .overlay-card-headline {
+    font-size: 18px; font-weight: 500; color: #FFFFFF;
+    line-height: 1.55; letter-spacing: 0.01em;
+  }
+  .overlay-card-body {
+    font-size: 17px; color: #F5C518;
+    line-height: 1.75; letter-spacing: 0.01em;
+  }
+  .overlay-card.card-quote .overlay-card-body {
+    font-style: italic; font-family: Georgia, serif;
+    font-size: 16px; color: #FFFFFF; line-height: 1.7;
+  }
+  .overlay-card-attr {
+    font-size: 13px; letter-spacing: 0.18em; color: #3ECFA0;
+    font-family: var(--font-mono); margin-top: 2px;
+  }
+  .overlay-pips {
+    display: flex; gap: 7px; margin-top: 12px; align-items: center;
+  }
+  .overlay-pip {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #3a3420; transition: all 0.3s ease;
+  }
+  .overlay-pip.active {
+    background: #F5C518; width: 14px; border-radius: 3px;
+  }
+  /* Mobile — tighten card on small screens */
+  @media (max-height: 750px), (max-width: 430px) {
+    .overlay-card { padding: 14px 16px 12px; gap: 7px; }
+    .overlay-card-headline { font-size: 16px; }
+    .overlay-card-body { font-size: 15px; }
+    .overlay-card.card-quote .overlay-card-body { font-size: 15px; }
+    .overlay-cards-wrap { margin-bottom: 14px; max-width: 100%; }
   }
 
   /* ── Responsive — iPad (≤768px): collapse camera/mobile track selector to 1 column ── */
@@ -485,11 +563,14 @@
     <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
     <div class="breath-tagline">Watch your breath while you wait</div>
   </div>
-  <div class="overlay-copy">
-    <div class="overlay-phase" id="overlayPhase">Uploading</div>
-    <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
-    <div class="overlay-substatus" id="overlaySubstatus">Keep this tab open</div>
-    <div class="overlay-eta" id="overlayEta" style="display:none;"></div>
+  <div class="overlay-cards-wrap">
+    <div class="overlay-card" id="overlayCard">
+      <div class="overlay-card-accent" id="overlayCardAccent"></div>
+      <div class="overlay-card-headline" id="overlayCardHeadline">You saw something worth capturing.</div>
+      <div class="overlay-card-body" id="overlayCardBody">In a few seconds, we&#8217;ll tell you exactly what your eye found &#8212; and what to do with it next.</div>
+      <div class="overlay-card-attr" id="overlayCardAttr" style="display:none;"></div>
+    </div>
+    <div class="overlay-pips" id="overlayPips"></div>
   </div>
   <div class="mini-timer">
     <div class="mini-clock-wrap">
@@ -952,94 +1033,175 @@
     const overlay   = document.getElementById('scoringOverlay');
     const clockRing = document.getElementById('clockRing');
     const clockSecs = document.getElementById('clockSecs');
-    const phase     = document.getElementById('overlayPhase');
-    const status    = document.getElementById('overlayStatus');
-    const sub       = document.getElementById('overlaySubstatus');
     const breath    = document.getElementById('breathLabel');
-    // Ring fills over FILL_SECS then stays full. Clock counts up from 0
-    // throughout — no countdown, no jump, continuous forward motion.
     const FILL_SECS = 65, CIRC = 195;
 
-    const phases = [
-      { from:0,  to:4,  p:'UPLOADING',   s:'Transferring your image…',            ss:'Sending to the engine securely.' },
-      { from:4,  to:8,  p:'PROCESSING',  s:'Preparing for analysis…',             ss:'Extracting EXIF data and verifying authenticity.' },
-      { from:8,  to:20, p:'READING',     s:'Reading the scene…',                  ss:'The engine is examining every subject, light, and form in the frame.' },
-      { from:20, to:27, p:'RESEARCH',    s:'Cross-referencing species data…',     ss:'Checking range, rarity, and documentation for what is in frame.' },
-      { from:27, to:35, p:'DIFFICULTY',  s:'Mapping difficulty…',                 ss:'How hard was this image to capture?' },
-      { from:35, to:43, p:'TIMING',      s:'Reading whether the timing was right…',        ss:'Did you press the shutter at the right instant?' },
-      { from:43, to:51, p:'IMPACT',      s:'Measuring visual impact…',            ss:'Does this image stop you? Does it demand attention?' },
-      { from:51, to:59, p:'EMOTION',     s:'Calibrating emotion…',               ss:'What feeling does this image leave behind?' },
-      { from:59, to:67, p:'AESTHETIC',   s:'Evaluating technique and composition…',    ss:'Light, colour, form — all at once.' },
-      { from:67, to:80, p:'VERDICT',     s:'Building the verdict…',               ss:'Weighing every dimension. Almost there.' },
-      { from:80, to:110,p:'FINALISING',  s:'Finalising your scorecard…',          ss:'A little longer for image-rich frames — worth the wait.' },
-    ];
-
-    overlay.classList.add('active');
-    clockSecs.textContent = '0';
-    clockRing.style.strokeDashoffset = CIRC; // start empty
-
-    // VIBGYOR colours — cycle through on every breath phase change
+    // ── VIBGYOR colours — cycle on every breath phase change ─────────────────
     const VIBGYOR = [
-      { ring: 'rgba(148,0,211,0.85)',  glow: 'rgba(148,0,211,0.25)',  dot: '#9400D3' },  // Violet
-      { ring: 'rgba(75,0,130,0.85)',   glow: 'rgba(75,0,130,0.25)',   dot: '#4B0082'  },  // Indigo
-      { ring: 'rgba(0,0,255,0.85)',    glow: 'rgba(0,0,255,0.25)',    dot: '#0000FF'  },  // Blue
-      { ring: 'rgba(0,168,107,0.85)',  glow: 'rgba(0,168,107,0.25)',  dot: '#00A86B'  },  // Green
-      { ring: 'rgba(255,191,0,0.85)',  glow: 'rgba(255,191,0,0.25)',  dot: '#FFBF00'  },  // Yellow
-      { ring: 'rgba(255,127,0,0.85)',  glow: 'rgba(255,127,0,0.25)',  dot: '#FF7F00'  },  // Orange
-      { ring: 'rgba(255,0,0,0.85)',    glow: 'rgba(255,0,0,0.25)',    dot: '#FF0000'  },  // Red
+      { ring: 'rgba(148,0,211,0.85)',  glow: 'rgba(148,0,211,0.25)',  dot: '#9400D3' },
+      { ring: 'rgba(75,0,130,0.85)',   glow: 'rgba(75,0,130,0.25)',   dot: '#4B0082' },
+      { ring: 'rgba(0,0,255,0.85)',    glow: 'rgba(0,0,255,0.25)',    dot: '#0000FF' },
+      { ring: 'rgba(0,168,107,0.85)',  glow: 'rgba(0,168,107,0.25)',  dot: '#00A86B' },
+      { ring: 'rgba(255,191,0,0.85)',  glow: 'rgba(255,191,0,0.25)',  dot: '#FFBF00' },
+      { ring: 'rgba(255,127,0,0.85)',  glow: 'rgba(255,127,0,0.25)',  dot: '#FF7F00' },
+      { ring: 'rgba(255,0,0,0.85)',    glow: 'rgba(255,0,0,0.25)',    dot: '#FF0000' },
     ];
     let bp = 0, colorIdx = 0;
-    const ring    = document.querySelector('.breath-ring-hero');
+    const ring     = document.querySelector('.breath-ring-hero');
     const innerDot = document.querySelector('.breath-inner-dot');
 
     function applyBreathColor(idx) {
       const c = VIBGYOR[idx % VIBGYOR.length];
-      ring.style.borderColor  = c.ring;
-      ring.style.boxShadow    = `0 0 48px 10px ${c.glow}`;
-      ring.style.background   = `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`;
+      ring.style.borderColor = c.ring;
+      ring.style.boxShadow   = '0 0 48px 10px ' + c.glow;
+      ring.style.background  = 'radial-gradient(circle, ' + c.glow + ' 0%, transparent 70%)';
       innerDot.style.background = c.dot;
     }
-
-    // Apply first colour immediately
     applyBreathColor(colorIdx);
 
-    const bc = setInterval(() => {
+    const bc = setInterval(function() {
       bp = (bp + 1) % 2;
       breath.textContent = bp === 0 ? 'Inhale' : 'Exhale';
       colorIdx = (colorIdx + 1) % VIBGYOR.length;
       applyBreathColor(colorIdx);
     }, 4000);
 
+    // ── ROTATING CARDS ────────────────────────────────────────────────────────
+    const genreVal = (document.getElementById('genre') ? document.getElementById('genre').value : '').toLowerCase();
+    const dimParam = (new URLSearchParams(window.location.search)).get('mission_dimension') || '';
+    const dimLabels = { 'dod': 'technique', 'dm': 'timing', 'aq': 'visual impact', 'wonder': 'wonder', 'disruption': 'originality' };
+    const dimPlain = dimLabels[dimParam] || '';
+
+    // Card 1 — random opener pool
+    const openers = [
+      { h: 'You saw something worth capturing.', b: 'In a few seconds, we\u2019ll tell you exactly what your eye found \u2014 and what to do with it next.' },
+      { h: 'Most photographs go unread.', b: 'This one won\u2019t.' },
+      { h: 'Something made you press the shutter.', b: 'We\u2019re about to find out what it was.' },
+      { h: 'The photograph is already made.', b: 'Now find out what it is.' },
+      { h: 'Every serious photographer has a moment where they stopped guessing.', b: 'This might be yours.' },
+      { h: 'You didn\u2019t take this photograph by accident.', b: 'Neither will we read it by accident.' },
+      { h: 'The frame is set. The eye has spoken.', b: 'Let\u2019s see what it said.' },
+      { h: 'Thirty seconds.', b: 'Then you\u2019ll know something about this photograph you didn\u2019t know before.' },
+    ];
+    const opener = openers[Math.floor(Math.random() * openers.length)];
+
+    // Card 2 — genre-specific copy
+    const genreCopy = {
+      wildlife:    { h: 'Wild subjects don\u2019t wait.', b: 'We look for the moment you were ready before they moved.' },
+      nature:      { h: 'Nature rewards patience.', b: 'We look for the light, the stillness, and the one moment that earned the frame.' },
+      street:      { h: 'The street doesn\u2019t repeat itself.', b: 'We look for whether you caught the unrepeatable instant.' },
+      landscape:   { h: 'A landscape is never just a place.', b: 'We look for whether yours makes someone want to be there.' },
+      people:      { h: 'A portrait is a negotiation.', b: 'We look for whether yours lets the person breathe.' },
+      wedding:     { h: 'Wedding moments are gone before they land.', b: 'We look for whether yours stopped time at exactly the right instant.' },
+      macro:       { h: 'Macro photography finds the world inside the world.', b: 'We look for whether yours reveals something invisible to the naked eye.' },
+      drone:       { h: 'Height changes everything.', b: 'We look for whether yours found the geometry that only exists from up there.' },
+      creative:    { h: 'Creative work starts where the rule ends.', b: 'We look for whether yours broke the convention with a reason.' },
+    };
+    const card2 = genreCopy[genreVal] || { h: 'We don\u2019t count megapixels.', b: 'We look for what your photograph does to the person who sees it. Whether it stops them. Whether it stays with them.' };
+
+    // Card 3 — mission / curriculum copy
+    var card3;
+    if (dimPlain) {
+      card3 = { h: 'You\u2019ve been working on your ' + dimPlain + '.', b: 'This is the photograph where we find out if it\u2019s moving.\n\nKeep breathing.' };
+    } else {
+      card3 = { h: 'Every photographer has one thing holding them back.', b: 'After this, you\u2019ll know exactly what yours is \u2014 and what to shoot next.' };
+    }
+
+    // Card 4 — master quotes pool
+    const quotes = [
+      { q: 'Your first 10,000 photographs are your worst.', a: '\u2014 HENRI CARTIER-BRESSON' },
+      { q: 'Photography is not about the thing photographed. It is about how that thing looks photographed.', a: '\u2014 GARRY WINOGRAND' },
+      { q: 'I don\u2019t trust words. I trust pictures.', a: '\u2014 GILLES PERESS' },
+      { q: 'The camera is an instrument that teaches people how to see without a camera.', a: '\u2014 DOROTHEA LANGE' },
+      { q: 'To photograph is to hold one\u2019s breath.', a: '\u2014 HENRI CARTIER-BRESSON' },
+      { q: 'Light makes photography. Embrace light. Admire it. Love it. But above all, know light.', a: '\u2014 GEORGE EASTMAN' },
+      { q: 'Photography is a way of feeling, of touching, of loving.', a: '\u2014 AARON SISKIND' },
+      { q: 'The best thing about a picture is that it never changes, even when the people in it do.', a: '\u2014 ANDY WARHOL' },
+    ];
+    const quote = quotes[Math.floor(Math.random() * quotes.length)];
+
+    // Build card sequence
+    const cards = [
+      { type: 'standard', h: opener.h, b: opener.b },
+      { type: 'standard', h: card2.h,  b: card2.b },
+      { type: 'standard', h: card3.h,  b: card3.b },
+      { type: 'quote',    h: quote.q,  b: '',       a: quote.a },
+    ];
+
+    // Build pips
+    const pipsEl = document.getElementById('overlayPips');
+    pipsEl.innerHTML = '';
+    cards.forEach(function(_, i) {
+      var p = document.createElement('div');
+      p.className = 'overlay-pip' + (i === 0 ? ' active' : '');
+      p.id = 'opip' + i;
+      pipsEl.appendChild(p);
+    });
+
+    var cardEl      = document.getElementById('overlayCard');
+    var headlineEl  = document.getElementById('overlayCardHeadline');
+    var bodyEl      = document.getElementById('overlayCardBody');
+    var accentEl    = document.getElementById('overlayCardAccent');
+    var attrEl      = document.getElementById('overlayCardAttr');
+
+    function showCard(idx) {
+      var c = cards[idx];
+      cardEl.style.opacity = '0';
+      setTimeout(function() {
+        if (c.type === 'quote') {
+          cardEl.className = 'overlay-card card-quote';
+          headlineEl.style.display = 'none';
+          bodyEl.textContent = c.h;
+          attrEl.textContent = c.a;
+          attrEl.style.display = '';
+        } else {
+          cardEl.className = 'overlay-card';
+          headlineEl.style.display = '';
+          headlineEl.textContent = c.h;
+          bodyEl.textContent = c.b;
+          attrEl.style.display = 'none';
+        }
+        // Update pips
+        cards.forEach(function(_, j) {
+          var p = document.getElementById('opip' + j);
+          if (p) p.className = 'overlay-pip' + (j === idx ? ' active' : '');
+        });
+        cardEl.style.opacity = '1';
+      }, 300);
+    }
+
+    // Show first card immediately
+    showCard(0);
+    var cardIdx = 0;
+    var cardTimer = setInterval(function() {
+      cardIdx = (cardIdx + 1) % cards.length;
+      showCard(cardIdx);
+    }, 9000);
+
+    // ── Clock counts up ───────────────────────────────────────────────────────
+    overlay.classList.add('active');
+    clockSecs.textContent = '0';
+    clockRing.style.strokeDashoffset = CIRC;
+
     let elapsed = 0;
-    const tick = setInterval(() => {
+    const tick = setInterval(function() {
       elapsed++;
-      // Clock always counts up — 0, 1, 2, 3 ... no reversal
       clockSecs.textContent = elapsed;
-      // Ring fills smoothly up to FILL_SECS, then stays full
       const fill = Math.min(elapsed / FILL_SECS, 1);
       clockRing.style.strokeDashoffset = CIRC - (fill * CIRC);
-      // Phase labels
-      const p = phases.find(x => elapsed >= x.from && elapsed < x.to);
-      if (p) {
-        phase.textContent  = p.p;
-        status.textContent = p.s;
-        sub.textContent    = p.ss;
-      } else {
-        phase.textContent  = 'ANALYSING';
-        status.textContent = 'Apex DDI Engine evaluating…';
-        sub.textContent    = 'Almost there — your score will appear automatically.';
-      }
     }, 1000);
 
-    overlay._bc   = bc;
-    overlay._tick = tick;
+    overlay._bc        = bc;
+    overlay._tick      = tick;
+    overlay._cardTimer = cardTimer;
   }
 
   const obs = new MutationObserver(() => {
     const overlay = document.getElementById('scoringOverlay');
     if (!overlay.classList.contains('active')) {
-      if (overlay._bc)   clearInterval(overlay._bc);
-      if (overlay._tick) clearInterval(overlay._tick);
+      if (overlay._bc)        clearInterval(overlay._bc);
+      if (overlay._tick)      clearInterval(overlay._tick);
+      if (overlay._cardTimer) clearInterval(overlay._cardTimer);
     }
   });
   obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
