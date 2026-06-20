@@ -102,15 +102,17 @@
     .peer-block { padding: 14px 16px; }
   }
 
-  /* Watermark badges: side-by-side corners work on desktop where there's
-     room, but on mobile the combined width of a longish photographer name
-     plus the fixed "shutterleague.com" text can exceed the image width and
-     the two badges collide in the middle. Stack them vertically at the
-     same corner instead, so they never compete for horizontal space. */
-  @media (max-width: 600px) {
-    .sc-wm-platform    { left: 16px; right: auto; bottom: 42px; }
-    .sc-wm-photographer { bottom: 14px; }
-  }
+  /* Watermark badges: opposite-corner placement was colliding when a long
+     photographer name plus the fixed "shutterleague.com" text exceeded the
+     image width on narrow phones. Platform credit moved to top-right,
+     photographer credit stays bottom-left — opposite corners, opposite
+     vertical ends, so the two can never collide regardless of name length
+     or screen width. Applies at all sizes, not just mobile, since this
+     removes the collision class of bug entirely rather than working around
+     it at one breakpoint. */
+  .sc-wm { position: absolute; max-width: calc(100% - 32px); background: rgba(26,26,18,0.52); border-radius: 4px; padding: 4px 10px; pointer-events: none; }
+  .sc-wm-platform     { top: 14px; right: 16px; }
+  .sc-wm-photographer { bottom: 14px; left: 16px; user-select: none; -webkit-user-select: none; }
 
   .status-banner { border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
   .status-banner.flagged { background: var(--red-dim); border: 1px solid var(--red); border-left: 4px solid var(--red); }
@@ -290,15 +292,18 @@
       <img src="{{ image.thumb_url }}"
            alt="{{ image.asset_name or image.original_filename }}"
            style="width:100%; max-height:520px; object-fit:cover; display:block;">
-      {# Corner watermarks — bottom-right: platform credit · bottom-left: photographer credit.
-         On mobile (<=600px) the two badges can collide in the middle when the photographer's
-         name is long enough that the combined width exceeds the image width — so on mobile
-         they stack vertically at the same corner instead of competing for opposite corners. #}
-      <div class="sc-wm sc-wm-platform" style="position:absolute; bottom:14px; right:16px; max-width:calc(100% - 32px); background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none;">
+      {# Corner watermarks — platform credit top-right, photographer credit bottom-left.
+         Opposite corners AND opposite vertical ends so they can never collide, regardless
+         of how long the photographer's name is or how narrow the screen is. All positioning
+         lives in the .sc-wm CSS classes above — keep it that way, not inline, or a future
+         inline style will silently win over any CSS override again (this exact mistake
+         shipped last round: an inline bottom:14px on this element silently overrode a
+         stylesheet rule trying to move it, since inline styles beat plain class selectors). #}
+      <div class="sc-wm sc-wm-platform">
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">© shutterleague.com</span>
       </div>
       {% if image.photographer_name %}
-      <div class="sc-wm sc-wm-photographer" style="position:absolute; bottom:14px; left:16px; max-width:calc(100% - 32px); background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none; user-select:none; -webkit-user-select:none;">
+      <div class="sc-wm sc-wm-photographer">
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">© {{ image.photographer_name }}</span>
       </div>
       {% endif %}
