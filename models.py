@@ -259,6 +259,7 @@ class Image(db.Model):
     mission_dimension         = db.Column(db.String(20), nullable=True)  # v34 mission focus dim
     mission_title             = db.Column(db.String(120), nullable=True) # v34 mission title
     mission_principle_id      = db.Column(db.String(10), nullable=True)  # Session 95: links to curriculum_data._CURRICULUM_BY_ID, used to ground mission-fail messages in the actual lesson text
+    seasonal_calendar_ids_shown = db.Column(db.String(40), nullable=True)  # Session 95: comma-separated seasonal_calendar.id(s) used for this image's advisory text, so the scorecard "go here" link always matches what mentor_location_1/2 actually describes
 
     # v30: Jury scoring columns
     in_judge_pool         = db.Column(db.Boolean, default=False, nullable=False)
