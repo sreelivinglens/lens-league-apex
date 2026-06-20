@@ -386,6 +386,45 @@ os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'cards'),  exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'raw'),    exist_ok=True)
 
+
+def backfill_residency_months():
+    """
+    One-time backfill — called at startup if any subscribed user has
+    residency_months = 0 and subscribed_at is set.
+    Calculates months from subscribed_at to today and sets residency_months.
+    Safe to run multiple times — skips users who already have residency_months > 0.
+    NOTE: must stay defined ABOVE the with app.app_context() block below, since
+    that block runs as straight top-to-bottom module code (not inside a
+    deferred function) and looks this function up by name at the point it
+    executes — if this def is below that point, the lookup always returns
+    None and the backfill silently never runs (this was the original bug:
+    the function used to live ~500 lines further down, after its caller).
+    """
+    with app.app_context():
+        from datetime import date as _date
+        today = _date.today()
+        users = User.query.filter(
+            User.is_subscribed == True,
+            User.subscribed_at.isnot(None),
+            db.or_(User.residency_months == None, User.residency_months == 0)
+        ).all()
+        backfilled = 0
+        for u in users:
+            sub_date = u.subscribed_at.date() if hasattr(u.subscribed_at, 'date') else u.subscribed_at
+            months = (today.year - sub_date.year) * 12 + (today.month - sub_date.month)
+            months = max(0, months)
+            if months > 0:
+                u.residency_months = months
+                if not u.residency_started_at:
+                    u.residency_started_at = u.subscribed_at
+                backfilled += 1
+        db.session.commit()
+        app.logger.info(
+            f'[residency_backfill] Backfill complete. '
+            f'{backfilled} users updated. Date: {today}'
+        )
+
+
 with app.app_context():
     try:
         db.create_all()
@@ -1775,39 +1814,11 @@ def run_monthly_residency_clock():
         db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
 
 
-def backfill_residency_months():
-    """
-    One-time backfill — called at startup if any subscribed user has
-    residency_months = 0 and subscribed_at is set.
-    Calculates months from subscribed_at to today and sets residency_months.
-    Safe to run multiple times — skips users who already have residency_months > 0.
-    """
-    with app.app_context():
-        from datetime import date as _date
-        today = _date.today()
-        users = User.query.filter(
-            User.is_subscribed == True,
-            User.subscribed_at.isnot(None),
-            db.or_(User.residency_months == None, User.residency_months == 0)
-        ).all()
-        backfilled = 0
-        for u in users:
-            sub_date = u.subscribed_at.date() if hasattr(u.subscribed_at, 'date') else u.subscribed_at
-            months = (today.year - sub_date.year) * 12 + (today.month - sub_date.month)
-            months = max(0, months)
-            if months > 0:
-                u.residency_months = months
-                if not u.residency_started_at:
-                    u.residency_started_at = u.subscribed_at
-                backfilled += 1
-        db.session.commit()
-        app.logger.info(
-            f'[residency_backfill] Backfill complete. '
-            f'{backfilled} users updated. Date: {today}'
-        )
-
-
 # ── End of Sprint 3 ───────────────────────────────────────────────────────────
+# (backfill_residency_months() was moved above the admin-init block that calls
+#  it — see ~line 1265 — because it was previously defined here, AFTER the
+#  startup code that looks it up, so the lookup always returned None and the
+#  one-time backfill silently never ran on any deploy.)
 
 # ── Item C — seasonal_shown_log prune ─────────────────────────────────────────
 
