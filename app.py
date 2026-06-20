@@ -426,6 +426,30 @@ def backfill_residency_months():
 
 
 with app.app_context():
+    # ── Startup migration lock (Session 96 fix) ─────────────────────────────
+    # Root cause of the recurring "concurrent-worker migration deadlock":
+    # Railway runs multiple Gunicorn worker processes, and this entire
+    # migration block is module-level code, so EVERY worker executes it
+    # independently at boot. With no serialization, concurrent ALTER TABLE
+    # statements from different workers race for the same table locks and
+    # Postgres deadlocks/lock-times-out — caught below as a non-fatal
+    # "Migration warning" (hence "self-healing"), but it fires on every
+    # single deploy, not just occasionally.
+    # Fix: take a blocking Postgres advisory lock so workers run this block
+    # one at a time instead of concurrently. Every migration below is
+    # idempotent (IF NOT EXISTS / safe re-run), so a worker that waits its
+    # turn and finds everything already applied just no-ops through quickly.
+    # No-op on sqlite (local dev) — advisory locks are Postgres-only, and
+    # local dev runs a single process, so there's no concurrency to guard.
+    _migration_lock_conn = None
+    if db.engine.dialect.name == 'postgresql':
+        try:
+            _migration_lock_conn = db.engine.connect()
+            _migration_lock_conn.execute(db.text("SELECT pg_advisory_lock(958134)"))
+        except Exception as _lock_err:
+            print(f'[migration_lock] could not acquire advisory lock, proceeding unguarded: {_lock_err}')
+            _migration_lock_conn = None
+
     try:
         db.create_all()
         with db.engine.connect() as conn:
@@ -1348,6 +1372,14 @@ with app.app_context():
 
     except Exception as e:
         print(f'Admin init warning: {e}')
+
+    # ── Release startup migration lock ──────────────────────────────────────
+    if _migration_lock_conn is not None:
+        try:
+            _migration_lock_conn.execute(db.text("SELECT pg_advisory_unlock(958134)"))
+            _migration_lock_conn.close()
+        except Exception as _unlock_err:
+            print(f'[migration_lock] unlock warning: {_unlock_err}')
 
 
 @login_manager.user_loader
@@ -4764,6 +4796,10 @@ def upload():
                     'dhotis, mundus, lungis, sarongs, loincloths, bare-chested traditional dress at festivals, '
                     'temples, or cultural events (common in South Asian, African, and Pacific cultures), '
                     'and any other regional clothing that leaves skin exposed as a matter of cultural practice. '
+                    'ALSO IMPORTANT: Commercial, editorial, or advertising photography — billboards, posters, '
+                    'magazine ads, fashion/swimwear/lingerie shoots, sports uniforms — must NOT be flagged for '
+                    'showing models in swimwear, lingerie, or undergarments. Only flag this kind of image if it '
+                    'exposes genitalia or bare breasts, or is otherwise explicit/sexual rather than commercial. '
                     'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
                     '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
                     'this overrides nudity=true when present. '
@@ -12387,8 +12423,16 @@ def bulk_upload_one():
                             'Examine this photograph carefully. Respond ONLY with JSON — no other text. '
                             'Return: {"nudity": true/false, "breastfeeding": true/false, "description": "one short phrase or null"} '
                             'Where: '
-                            '"nudity" = true if the image contains explicit nudity, exposed genitalia, bare breasts '
+                            '"nudity" = true ONLY if the image contains explicit nudity, exposed genitalia, bare breasts '
                             '(other than breastfeeding), or explicit sexual content. '
+                            'IMPORTANT: Traditional, cultural, or religious attire must NOT be flagged — this includes '
+                            'dhotis, mundus, lungis, sarongs, loincloths, bare-chested traditional dress at festivals, '
+                            'temples, or cultural events (common in South Asian, African, and Pacific cultures), '
+                            'and any other regional clothing that leaves skin exposed as a matter of cultural practice. '
+                            'ALSO IMPORTANT: Commercial, editorial, or advertising photography — billboards, posters, '
+                            'magazine ads, fashion/swimwear/lingerie shoots, sports uniforms — must NOT be flagged for '
+                            'showing models in swimwear, lingerie, or undergarments. Only flag this kind of image if it '
+                            'exposes genitalia or bare breasts, or is otherwise explicit/sexual rather than commercial. '
                             'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
                             '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
                             'this overrides nudity=true when present. '
@@ -15337,7 +15381,7 @@ def admin_raw_send_reminder(image_id):
     sub = db.session.execute(db.text(
         'SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
     ), {'iid': image_id}).fetchone()
-    deadline_str  = sub.deadline.strftime('%d %B %Y, %H:%M UTC') if (sub and sub.deadline) else '—'
+    deadline_str  = (sub.deadline + _IST_OFFSET).strftime('%d %B %Y, %H:%M IST') if (sub and sub.deadline) else '—'
     contest_type  = (sub.contest_type or 'weekly') if sub else 'weekly'
     site_url      = os.getenv('SITE_URL', 'https://shutterleague.com')
     submit_url    = f'{site_url}/raw/submit/{contest_type}/{image_id}'
@@ -15435,7 +15479,7 @@ def admin_raw_bulk_remind():
             sub = db.session.execute(db.text(
                 'SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
             ), {'iid': iid}).fetchone()
-            deadline_str = sub.deadline.strftime('%d %B %Y, %H:%M UTC') if (sub and sub.deadline) else '---'
+            deadline_str = (sub.deadline + _IST_OFFSET).strftime('%d %B %Y, %H:%M IST') if (sub and sub.deadline) else '---'
             contest_type = (sub.contest_type or 'weekly') if sub else 'weekly'
             submit_url   = f'{site_url}/raw/submit/{contest_type}/{iid}'
             uname  = owner.full_name or owner.username
