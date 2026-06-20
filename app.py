@@ -1368,12 +1368,6 @@ def _run_startup_tasks():
         except Exception as e:
             print(f'Admin init warning: {e}')
 
-
-if __name__ == '__main__':
-    _run_startup_tasks()
-
-
-@login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
@@ -10825,7 +10819,6 @@ def _seed_mentors():
     except Exception as _se:
         print(f'[mentor seed] {_se}')
 
-_seed_mentors()
 
 # ---------------------------------------------------------------------------
 
@@ -19187,4 +19180,14 @@ if _sched_lock_held:
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'migrate':
+        # Railway Pre-Deploy Command: `python app.py migrate`
+        # Runs schema migrations + mentor seeding exactly once, in a single
+        # dedicated process, before any Gunicorn worker exists. Exits clean
+        # afterward -- never falls through to app.run() below.
+        _run_startup_tasks()
+        _seed_mentors()
+    else:
+        # Local development: `python app.py` (no args) -- unchanged behavior.
+        app.run(debug=True)
