@@ -43,7 +43,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 *, *::before, *::after { box-sizing: border-box; }
 
 body:has(.sl-today) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
-@media (max-width: 768px) { body:has(.sl-today) { padding-top: 0 !important; } }
+@media (max-width: 768px) { body:has(.sl-today) { padding-top: calc(68px + env(safe-area-inset-top, 0px)) !important; } }
 
 .sl-today {
   background: var(--sl-bg);
