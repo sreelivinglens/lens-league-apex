@@ -1245,6 +1245,13 @@ with app.app_context():
             db.session.execute(db.text(
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS curriculum_state JSON DEFAULT NULL"
             ))
+            # mission_principle_id — links an uploaded image back to the exact
+            # curriculum principle (e.g. 'V1.2') its mission was generated from,
+            # so a failure message can reference the real lesson text instead of
+            # only a generic dimension label like "Originality".
+            db.session.execute(db.text(
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS mission_principle_id VARCHAR(10) DEFAULT NULL"
+            ))
             db.session.commit()
             print('Photo School columns OK.')
         except Exception as _ps_mig:
@@ -4903,6 +4910,20 @@ def upload():
                 f'principle={_curriculum_pid!r} dim={_curriculum_dim!r}'
             )
             _advance_curriculum(current_user.id, _curriculum_pid, _curriculum_dim)
+            # Persist which exact curriculum principle this mission came from,
+            # onto the image itself — used later if the mission fails, to build
+            # a failure message grounded in the actual lesson text rather than
+            # only a generic dimension label. Raw SQL: mission_principle_id is
+            # not (yet) a declared column on the Image ORM model.
+            try:
+                db.session.execute(
+                    db.text("UPDATE images SET mission_principle_id = :pid WHERE id = :iid"),
+                    {'pid': _curriculum_pid, 'iid': img.id}
+                )
+                db.session.commit()
+            except Exception as _mpid_err:
+                db.session.rollback()
+                app.logger.warning(f'[mission_principle_id] write failed: {_mpid_err}')
         else:
             app.logger.info(
                 f'[curriculum_advance] skipped: pid={_curriculum_pid!r} '
@@ -5652,17 +5673,59 @@ def upload():
                                                 f'+{_pts_earned:.1f} pts earned \u00b7 Your eye is moving forward.'
                                             )
                                         else:
-                                            # Mission not followed — Sherpa copy names the dimension and tells user to resubmit
+                                            # Mission not followed — ground the message in the actual
+                                            # curriculum lesson behind this mission, not just a generic
+                                            # dimension label. "Originality" alone reads as "is the subject
+                                            # unusual" — the real ask (Disruption) is about breaking from
+                                            # the expected, predictable treatment of a subject, which is
+                                            # a different thing and was the source of real user confusion
+                                            # (a flamingo photo getting "not original enough" when the
+                                            # subject itself already felt distinctive to the user).
                                             _dim_label_map = {
                                                 'dod': 'Technical Difficulty', 'dm': 'Timing',
                                                 'aq': 'Visual Impact', 'wonder': 'Wonder',
                                                 'disruption': 'Originality'
                                             }
                                             _dim_label = _dim_label_map.get(_mission_dim, 'that dimension')
-                                            _img.scoring_flash = (
-                                                f'+{_pts_earned:.1f} pts earned \u00b7 Your photograph was evaluated — '
-                                                f'the mission focuses on {_dim_label}. Submit a frame where that is the primary intention.'
-                                            )
+                                            _dim_guidance_map = {
+                                                'dod': 'push your technical control \u2014 exposure, focus, and handling of light have to work harder here.',
+                                                'dm': 'the timing has to be unmistakably decisive \u2014 a beat earlier or later and the frame falls apart.',
+                                                'aq': 'the image needs more visual punch \u2014 composition and color that hold attention immediately.',
+                                                'wonder': 'the photograph has to evoke genuine wonder \u2014 something that stops a viewer, not just documents a scene.',
+                                                'disruption': 'this isn\u2019t about how unusual the subject is \u2014 it\u2019s about breaking from the expected, predictable treatment of it. Try an unconventional angle, mood, or moment.',
+                                            }
+                                            _dim_guidance = _dim_guidance_map.get(
+                                                _mission_dim, 'submit a frame where that is the primary intention.')
+
+                                            # Look up the exact curriculum principle this mission was
+                                            # generated from (if linked) to name the real lesson instead
+                                            # of only the dimension. NOTE: this grounds the message in the
+                                            # lesson text already shown to the user on the mission screen —
+                                            # it is not yet a per-dimension AI critique of the submitted
+                                            # photo itself; that's a separate, still-in-progress piece of
+                                            # the scoring engine.
+                                            _principle_id = None
+                                            try:
+                                                _pid_row = db.session.execute(
+                                                    db.text("SELECT mission_principle_id FROM images WHERE id = :iid"),
+                                                    {'iid': _img.id}
+                                                ).fetchone()
+                                                _principle_id = _pid_row[0] if _pid_row else None
+                                            except Exception as _pid_err:
+                                                app.logger.warning(f'[mission_principle_id] read failed: {_pid_err}')
+                                            _principle_entry = _CURRICULUM_BY_ID.get(_principle_id) if _principle_id else None
+
+                                            if _principle_entry:
+                                                _img.scoring_flash = (
+                                                    f'+{_pts_earned:.1f} pts earned \u00b7 Your photograph was evaluated \u2014 '
+                                                    f'today\u2019s mission was \u201c{_principle_entry.get("title", _dim_label)}\u201d: '
+                                                    f'{_principle_entry.get("principle", "")} This frame didn\u2019t carry that through \u2014 {_dim_guidance}'
+                                                )
+                                            else:
+                                                _img.scoring_flash = (
+                                                    f'+{_pts_earned:.1f} pts earned \u00b7 Your photograph was evaluated \u2014 '
+                                                    f'the mission focuses on {_dim_label}. {_dim_guidance}'
+                                                )
                                     else:
                                         # No mission — generic flash
                                         _img.scoring_flash = f'+{_pts_earned:.1f} pts earned'
