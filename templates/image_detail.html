@@ -426,9 +426,17 @@
   {% endif %}
   {% endif %}
 
-  {# ── SUBSCRIBER GATE — full scorecard for subscribers, UAT, admin ─ #}
-  {% set _can_see_full = current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin' %}
+  {# ── SUBSCRIBER GATE — full scorecard for subscribers, UAT, admin,         #}
+  {# ── and the first-ever evaluation for any free user (the "wow" moment)  ── #}
+  {% set _can_see_full = current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin' or is_first_eval %}
   {% if _can_see_full %}
+
+  {% if is_first_eval and not (current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin') %}
+  <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--gold); border-radius:var(--radius-md); margin-bottom:14px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Your first evaluation — fully unlocked</div>
+    <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">Every dimension, the mentor's advice, and what's shooting near you — all of it, just this once. Subscribe to keep getting this on every photograph.</div>
+  </div>
+  {% endif %}
 
   {# ── 4 STORY CARDS ─────────────────────────────────────────────── #}
   {% if audit %}
@@ -702,7 +710,7 @@
 
   {# ── MISSION CONTEXT — shown if image was uploaded against a mission ── #}
   {% if image.mission_dimension %}
-  {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
+  {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Disruption'} %}
   {% set _dim_score_map = {'dod':image.dod_score,'dm':image.dm_score,'aq':image.aq_score,'wonder':image.wonder_score,'disruption':image.disruption_score} %}
   {% set _mission_score = _dim_score_map.get(image.mission_dimension) %}
   {% set _mission_label = _dim_mobile.get(image.mission_dimension, image.mission_dimension) %}
@@ -750,9 +758,9 @@
       {% set dims = [
         ('dod',        image.dod_score,        'How difficult it was', 'HOW DIFFICULT', 'IT WAS'),
         ('Disruption', image.disruption_score,  'Visual Disruption',   'VISUAL',        'DISRUPTION'),
-        ('DM',         image.dm_score,          'Decisive Moment',     'WHETHER THE',   'TIMING WAS RIGHT'),
-        ('Wonder',     image.wonder_score,      'Wonder Factor',       'WHETHER IT MADE','ONE FEEL SOMETHING'),
-        ('AQ',         image.aq_score,          'Aesthetic Quality',   'THE EMOTION',   'IT CREATES'),
+        ('DM',         image.dm_score,          'Timing',               'WHETHER THE',   'TIMING WAS RIGHT'),
+        ('Wonder',     image.wonder_score,      'Wonder',               'WHETHER IT MADE','ONE FEEL SOMETHING'),
+        ('AQ',         image.aq_score,          'Visual Impact',        'THE EMOTION',   'IT CREATES'),
       ] %}
       {% for lbl, val, title, line1, line2 in dims %}
       <div class="ddi-dim">
