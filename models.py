@@ -258,6 +258,7 @@ class Image(db.Model):
     sub_genre                 = db.Column(db.String(60), nullable=True)  # v35 DDI sub-genre
     mission_dimension         = db.Column(db.String(20), nullable=True)  # v34 mission focus dim
     mission_title             = db.Column(db.String(120), nullable=True) # v34 mission title
+    mission_principle_id      = db.Column(db.String(10), nullable=True)  # Session 95: links to curriculum_data._CURRICULUM_BY_ID, used to ground mission-fail messages in the actual lesson text
 
     # v30: Jury scoring columns
     in_judge_pool         = db.Column(db.Boolean, default=False, nullable=False)
