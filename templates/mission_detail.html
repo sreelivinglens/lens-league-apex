@@ -499,7 +499,7 @@
       </div>
       <h1 class="md-title">{{ assignment.title if assignment is defined else "Today's Assignment" }}</h1>
       <div class="md-genre-badge">
-        <span>{{ current_user.mission_genre or 'Photography' }}</span>
+        <span>{{ assignment.genre if assignment is defined and assignment.genre else 'Wildlife' }}</span>
       </div>
     </div>
   </div>
@@ -638,7 +638,7 @@
 
   {# ── Switch genre ── #}
   <div class="md-switch">
-    <span>Missions currently in <strong>{{ current_user.mission_genre or 'your genre' }}</strong></span>
+    <span>Missions currently in <strong>{{ assignment.genre if assignment is defined and assignment.genre else 'your genre' }}</strong></span>
     <a href="{{ url_for('onboarding_interests') }}">Switch interest →</a>
   </div>
 
