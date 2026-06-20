@@ -149,12 +149,21 @@ def enqueue_missing_combos(db_session, refresh_after_days: int = 30):
 
     Returns the number of new queue entries created.
     """
-    from .seasonal_calendar import normalize_city
+    from .seasonal_calendar import normalize_city, GENRE_FALLBACK
 
     combos = get_active_city_genre_combos(db_session)
     enqueued = 0
 
     for city, genre in combos:
+        # Session 98: genres that always redirect to a fallback genre
+        # (Wedding, Fashion -> People) never need their own discovery —
+        # build_seasonal_context() never even reaches an empty result for
+        # them, so queuing a search that can structurally never succeed
+        # just burns API cost for nothing.
+        _rule = GENRE_FALLBACK.get(genre)
+        if _rule and _rule[0] == "replace":
+            continue
+
         normalized = normalize_city(city)
         try:
             newest = db_session.execute(_sql_text(
@@ -263,13 +272,39 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
     what is happening NOW — the extracted rows are guaranteed to cover this month.
     Pass datetime.utcnow().month from the scoring thread for on-demand discovery.
 
+    Session 98:
+      - Wedding/Fashion always return 0 immediately — they never have a
+        standalone location concept (see GENRE_FALLBACK in
+        seasonal_calendar.py), so a search for "wedding locations near
+        {city}" would just waste a web-search + LLM-extraction call on a
+        query that can't structurally succeed. This is a defensive
+        backstop; enqueue_missing_combos() already keeps them out of the
+        weekly queue, but discover_one() can also be called directly
+        (e.g. on-demand discovery from the scoring thread).
+      - Documentary's search additionally covers breaking/current civic
+        events (protests, demonstrations, newsworthy gatherings), not just
+        scheduled exhibitions and recurring seasons.
+      - Drone's search explicitly excludes restricted/no-fly airspace, and
+        its extraction is required to append a regulation-verification
+        reminder to access_notes — drone law varies by country and
+        changes over time, so a suggested spot is never asserted as
+        cleared to fly.
+
     Returns the number of rows inserted (0 on no results or error — never
     raises, so a single bad combo doesn't break the batch).
     """
-    from .seasonal_calendar import normalize_city
+    from .seasonal_calendar import normalize_city, GENRE_FALLBACK
     import calendar as _cal
+
+    _rule = GENRE_FALLBACK.get(genre)
+    if _rule and _rule[0] == "replace":
+        print(f"[seasonal_discovery] Skipping discovery for '{genre}' — "
+              f"no standalone location concept, always falls back to {_rule[1]}")
+        return 0
+
     normalized_city = normalize_city(city)
     _month_name = _cal.month_name[current_month] if current_month else ''
+    _genre_lower = genre.lower()
 
     try:
         # ── Step 1: web search ────────────────────────────────────────────
@@ -278,6 +313,21 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
             if _month_name else
             "recurring wildlife/nature photography seasons near "
         )
+        _extra_scope = ""
+        if _genre_lower == "documentary":
+            _extra_scope = (
+                " Also search for any significant current civic events, protests, "
+                "demonstrations, or newsworthy public gatherings happening in or near "
+                f"{normalized_city} right now — these are valid Documentary subjects, "
+                "not just scheduled exhibitions."
+            )
+        elif _genre_lower == "drone":
+            _extra_scope = (
+                " IMPORTANT: only suggest locations that are clearly outside "
+                "restricted or no-fly airspace (airports, military installations, "
+                "government buildings, international borders) — do not suggest a "
+                "specific restricted zone even if it would be photogenic."
+            )
         search_resp = _anthropic_call(
             messages=[{
                 'role': 'user',
@@ -286,6 +336,7 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
                     f"{normalized_city}, AND any photography exhibitions, expos, or "
                     f"festivals currently running or upcoming in {normalized_city}, "
                     f"relevant to {genre} photography."
+                    f"{_extra_scope}"
                 )
             }],
             tools=[{'type': 'web_search_20250305', 'name': 'web_search'}],
@@ -305,15 +356,23 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
             f"Do not set month_start to a future month."
             if current_month else ''
         )
+        _drone_extraction_rule = (
+            "\nDRONE-SPECIFIC RULE: every extracted item's access_notes MUST end "
+            "with a reminder to verify current local drone regulations and confirm "
+            "the specific spot is NOT in restricted/no-fly airspace before flying — "
+            "drone law varies by country and changes over time, never assert a "
+            "location is cleared to fly."
+            if _genre_lower == "drone" else ''
+        )
         extraction_resp = _anthropic_call(
             messages=[{
                 'role': 'user',
                 'content': (
-                    f"{_EXTRACTION_SYSTEM}{_month_rule}\n\n"
+                    f"{_EXTRACTION_SYSTEM}{_month_rule}{_drone_extraction_rule}\n\n"
                     f"Base city: {normalized_city}\n"
                     f"Genre: {genre}\n"
                     f"Current month: {_month_name} (month {current_month})\n" if current_month else
-                    f"{_EXTRACTION_SYSTEM}\n\n"
+                    f"{_EXTRACTION_SYSTEM}{_drone_extraction_rule}\n\n"
                     f"Base city: {normalized_city}\n"
                     f"Genre: {genre}\n"
                 )
