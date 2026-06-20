@@ -245,11 +245,11 @@ _CURRICULUM = [
         'commons_caption': None,
         'master': 'Sebastião Salgado', 'master_quote': 'Photography is not for me an end in itself, but it is a medium for me to tell a story.',
         'assignments': {
-            'Wildlife':     'Return to a location three times before photographing. See what becomes available on the third visit.',
-            'Street':       'Return to one street location every day for a week. Photograph only what the repeated presence earns.',
+            'Wildlife':     'Spend the first 30 minutes at the location only watching — no camera raised. Photograph only what that patience reveals.',
+            'Street':       'Stand in one street location for at least an hour before you raise the camera. Photograph only what that presence earns you, not the first thing you saw.',
             'Nature':       'Go somewhere that requires effort to reach. The access is the difficulty and the wonder.',
             'Landscape':    'Find a landscape location not on any photography website. The unknown location is the access.',
-            'People':       'Ask someone if you can photograph them over several sessions, not just once.',
+            'People':       'Spend real time talking with someone before you ask to photograph them. Earn it in the same sitting, not with a single transactional ask.',
             'Documentary':  'Find a story that requires an introduction to access. Get the introduction before raising the camera.',
             'Macro':        'Find a macro subject that requires permission or relationship to photograph.',
             'Creative':     'Build something for the photograph. The construction is the access.',
@@ -269,7 +269,7 @@ _CURRICULUM = [
         'assignments': {
             'Wildlife':     'Stay with one subject long enough that its behaviour becomes predictable. Wait for the moment that breaks the pattern.',
             'Street':       'Spend two hours in one location. Photograph only in the second hour.',
-            'Nature':       'Visit one natural location in different seasons. Find the season where it produces the emotion you want.',
+            'Nature':       'Visit one natural location at a different time of day than you normally would — dawn instead of midday, dusk instead of morning. Find the light that produces the emotion you want.',
             'Landscape':    'Before shooting, name the emotion you want the image to produce. Every decision serves that feeling.',
             'People':       'Photograph for longer than feels necessary. The emotional truth arrives after the subject has exhausted their performance.',
             'Documentary':  'Find the one person whose face contains the entire emotional weight of the event.',
