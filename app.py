@@ -1248,7 +1248,10 @@ with app.app_context():
             # mission_principle_id — links an uploaded image back to the exact
             # curriculum principle (e.g. 'V1.2') its mission was generated from,
             # so a failure message can reference the real lesson text instead of
-            # only a generic dimension label like "Originality".
+            # only a generic dimension label like "Originality". Declared as a
+            # proper column on the Image model (models.py) — this ALTER TABLE
+            # is still required because db.create_all() only creates new
+            # tables, not new columns on an existing one.
             db.session.execute(db.text(
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS mission_principle_id VARCHAR(10) DEFAULT NULL"
             ))
@@ -4913,13 +4916,9 @@ def upload():
             # Persist which exact curriculum principle this mission came from,
             # onto the image itself — used later if the mission fails, to build
             # a failure message grounded in the actual lesson text rather than
-            # only a generic dimension label. Raw SQL: mission_principle_id is
-            # not (yet) a declared column on the Image ORM model.
+            # only a generic dimension label.
             try:
-                db.session.execute(
-                    db.text("UPDATE images SET mission_principle_id = :pid WHERE id = :iid"),
-                    {'pid': _curriculum_pid, 'iid': img.id}
-                )
+                img.mission_principle_id = _curriculum_pid
                 db.session.commit()
             except Exception as _mpid_err:
                 db.session.rollback()
@@ -5704,15 +5703,7 @@ def upload():
                                             # it is not yet a per-dimension AI critique of the submitted
                                             # photo itself; that's a separate, still-in-progress piece of
                                             # the scoring engine.
-                                            _principle_id = None
-                                            try:
-                                                _pid_row = db.session.execute(
-                                                    db.text("SELECT mission_principle_id FROM images WHERE id = :iid"),
-                                                    {'iid': _img.id}
-                                                ).fetchone()
-                                                _principle_id = _pid_row[0] if _pid_row else None
-                                            except Exception as _pid_err:
-                                                app.logger.warning(f'[mission_principle_id] read failed: {_pid_err}')
+                                            _principle_id = getattr(_img, 'mission_principle_id', None)
                                             _principle_entry = _CURRICULUM_BY_ID.get(_principle_id) if _principle_id else None
 
                                             if _principle_entry:
