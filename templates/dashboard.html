@@ -1167,7 +1167,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
             label.textContent = 'Evaluation complete';
             label.style.color = 'rgba(90,158,58,.9)';
             banner.style.borderLeftColor = '#5A9E3A';
-            msg.innerHTML = 'Your photograph has been evaluated. <a href="/dashboard#gallery" style="color:#F4C20D; font-weight:700;">See your evaluation in My Gallery →</a>';
+            msg.innerHTML = 'Your photograph has been evaluated. <a href="{{ url_for('my_gallery') }}" style="color:#F4C20D; font-weight:700;">See your evaluation in My Gallery →</a>';
             try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
           } else {
             // error or flagged
