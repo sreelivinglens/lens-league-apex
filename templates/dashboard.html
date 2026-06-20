@@ -1258,7 +1258,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
      GREETING
   ══════════════════════════════════════════ #}
   {% set ns = namespace(greeting='Good morning', emoji='☀️') %}
-  {% set ist_hour = (now().hour + 5) % 24 if now is defined else 9 %}
+  {% set ist_total_minutes = (now().hour * 60 + now().minute + 330) % 1440 if now is defined else 540 %}
+  {% set ist_hour = ist_total_minutes // 60 %}
   {% if ist_hour >= 21 or ist_hour < 5 %}
     {% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌙' %}
   {% elif ist_hour >= 17 %}
