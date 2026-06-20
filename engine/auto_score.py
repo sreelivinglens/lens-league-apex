@@ -566,6 +566,7 @@ Return this exact JSON structure:
   "background_check": "<SCORECARD CARD 3 BODY. ONE FLOWING PARAGRAPH — 2-3 sentences in continuous prose. INFERENCE NOT DESCRIPTION: name the specific background element in THIS image that the reading-the-field habit would have transformed, frame it as something the photographer almost had — the gap between good and unrepeatable — then close with the transferable habit. The Bresson habit — 'reading the field': knowing what is behind your subject before the moment arrives. Name the specific element in THIS image that the habit would have resolved. Frame it as something the photographer almost had — not a failure. MANDATORY: Name the master whose practice this habit belongs to — for Street use Cartier-Bresson or Raghu Rai, for Wildlife use Brandt or Art Wolfe, for Documentary use Nachtwey or Salgado, for Landscape use Adams or Kenna, for People use Karsh or Leibovitz. Then state the habit as transferable: 'That one-second glance behind your subject lifts every photograph you make — Wildlife at the waterhole, Street in the market, a face in a crowd.' SPECIES NAMING RULE: if this text names a species (e.g. a secondary/background animal), it MUST use the same species_id determined above — do not independently guess or rename a species here. If you are not confident in a specific species for a background subject, use a general term (e.g. 'the second bird', 'the background animal') rather than naming a species that may be incorrect. KYC: plain language only.>",
   "mentor_location_1": "<SCORECARD MENTOR LOCATION 1. Populated ONLY when seasonal_context is provided in the prompt. 3-4 sentences in the Sherpa voice — warm, specific, like a friend who knows the reserve. Include: the specific subject active NOW, why this window is special this season, why it connects directly to the photographer's growth opportunity. Specific enough that the photographer starts planning immediately. If no seasonal_context in prompt, return null.>",
   "mentor_location_2": "<SCORECARD MENTOR LOCATION 2. The upcoming window — plan ahead. Same voice as mentor_location_1. If seasonal_context only has one location, or if no seasonal_context provided, return null.>",
+  "mentor_location_3": "<SCORECARD MENTOR LOCATION 3. ONLY populated when seasonal_context explicitly lists a THIRD location — this happens only when multiple time-sensitive events are genuinely concurrent this week (seasonal_context will say so), not in the routine one-or-two-location case. Same Sherpa voice as mentor_location_1/2, lean into the urgency — a limited window, not a standing recommendation. If seasonal_context lists fewer than three locations, or no seasonal_context provided, return null.>",
   "emoji_rating": "<ONE LINE. The emotional verdict. Scale 1-5 of the single most precise emoji for this image's dominant register, followed by two spaces and the tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'. Pick the emoji that names what the image IS, not what it contains.>",
   "days_since_language": "<SCORECARD DAYS-SINCE LINE. One sentence. Genre-specific, tied to mentor_location_1 subject if available. For Wildlife with black leopard: 'The black leopard doesn't wait. Neither should you.' For Wildlife generally: reference the specific animal or seasonal window. For Street: reference the light window. For Landscape: reference the seasonal moment. For Wedding/People: warm personal line. NEVER 'your camera is waiting' — that is the fallback only when nothing specific is available.>"
 }}
@@ -3284,8 +3285,11 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                   summary and advice constraints injected into the DDI prompt.
     seasonal_context: pre-built string from build_seasonal_context() — genre-aware
                   location intelligence for the user's city and month.
-                  Injected into the scoring prompt to generate mentor_location_1/2
+                  Injected into the scoring prompt to generate mentor_location_1/2/3
                   and days_since_language. Empty string = not available.
+                  mentor_location_3 is only ever populated when seasonal_context
+                  itself lists three locations — a genuine cluster of concurrent
+                  time-sensitive events, not the routine case.
     portfolio_summary: dict with user's last 8 dimension scores per trend dimension,
                   only passed when user has 5+ scored images. None otherwise.
                   Format: {"feeling": [6.1,6.2,...], "timing": [...], "difficulty": [...]}
@@ -3759,6 +3763,7 @@ def build_audit_data(result, image_obj):
         "background_check":  result.get("background_check", ""),
         "mentor_location_1": result.get("mentor_location_1", None),
         "mentor_location_2": result.get("mentor_location_2", None),
+        "mentor_location_3": result.get("mentor_location_3", None),
         "days_since_language": result.get("days_since_language", ""),
         "emoji_rating":      result.get("emoji_rating", ""),
     }
