@@ -147,7 +147,8 @@
 
   /* iPad portrait (768px) and below — 4 cards stack vertically, one per row */
   @media (max-width: 768px) {
-    .sc-four-grid { grid-template-columns: 1fr !important; }
+    .sc-support-cards-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .sc-loc-grid-3 { grid-template-columns: 1fr !important; }
     .sc-three-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
     .sc-hero-score { font-size: 52px !important; }
     .sc-hero-img-wrap img { max-height: 380px !important; }
@@ -174,10 +175,12 @@
     }
     /* All 2-col grids → single column */
     .sc-two-grid { grid-template-columns: 1fr !important; }
+    .sc-support-cards-grid { grid-template-columns: 1fr !important; }
     /* 3-col stats → single column */
     .sc-three-grid { grid-template-columns: 1fr !important; }
     /* Location detail grid */
     .sc-loc-grid { grid-template-columns: 1fr !important; }
+    .sc-loc-grid-3 { grid-template-columns: 1fr !important; }
     /* Days-since + Share/Download → single column on mobile */
     .sc-days-share-grid { grid-template-columns: 1fr !important; }
     /* DDI dims → 2 cols on mobile (5 items = 2+2+1, avoids 3-line label wrap vs 2-line neighbours) */
@@ -248,7 +251,7 @@
     <strong>⚠ Image Flagged</strong> — {{ image.flagged_reason or 'This image has been flagged and is under review before going public.' }}
     {% if image.ai_suspicion and image.ai_suspicion >= 0.7 %}
     <br><span style="font-size: 14px; opacity:0.8; line-height:1.8;">
-      AI suspicion score: {{ '%.2f'|format(image.ai_suspicion) }}.<br>
+      AI suspicion level: {{ '%.2f'|format(image.ai_suspicion) }}.<br>
       High-production constructed shoots — studio work, allegorical tableaux, heavily lit portraits — can trigger false positives.
       If this is an original photograph, email <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span> with your original RAW file, any behind-the-scenes photos, and the camera and lens used.
       We aim to resolve appeals within 48 hours.
@@ -258,7 +261,7 @@
   {% elif image.needs_review %}
     {% if image.judge_referral %}
     <div class="status-banner raw-req">
-      <strong>📂 RAW File Requested — Score Held</strong><br>
+      <strong>📂 RAW File Requested — Evaluation Held</strong><br>
       Your image has been selected as a finalist. Submit your original RAW file to confirm your result.
       <br><br>
       <a href="{{ url_for('raw_status', image_id=image.id) }}" class="btn btn-solid" style="font-size: 14px;">Submit RAW File →</a>
@@ -438,7 +441,13 @@
   </div>
   {% endif %}
 
-  {# ── 4 STORY CARDS ─────────────────────────────────────────────── #}
+  {# ── 4 STORY CARDS — Session 98 redesign ─────────────────────────── #}
+  {# Layout: Card 1 leads full-width (the primary insight), Cards 2-4    #}
+  {# compress into a supporting row below. Each card's background is a  #}
+  {# left-to-right gradient in its own label colour (reuses the exact   #}
+  {# gradient pairs already established in the "2025 stats" cards       #}
+  {# further down this page, for blue/green/amber — maroon has no       #}
+  {# existing pair so one was built in the same lightness curve).       #}
   {% if audit %}
   {% set _next_row = namespace(val='') %}
   {% set _tech_row = namespace(val='') %}
@@ -478,71 +487,110 @@
   {% set _c3_body = _bgcheck or _next_row.val or '' %}
   {% set _c4_body = audit.byline_2_body or audit.byline_2 or '' %}
 
+  {# ── Resolve each card's final text (real audit data, or genre fallback) ──
+     before any formatting is applied — every fallback branch below is the
+     exact original copy, just captured into a variable instead of printed
+     inline, so the SAME bold-lead/anchor treatment can apply to old and
+     new images alike. #}
+  {% set _c1_resolved %}{%- if _c1_body -%}
+{{ _c1_body }}
+{%- else -%}
+  {%- if image.genre in ('Wildlife', 'Nature') -%}
+  Brandt made the harder exposure choice every single time — and his images hold because of it. The principle is the same whatever you are photographing: the difficult decision is usually the right one.
+  {%- elif image.genre == 'Street' -%}
+  Cartier-Bresson said the right moment is a choice, not a catch. You chose the exposure that held both extremes. That is the principle — know what you are protecting before you press.
+  {%- elif image.genre in ('Documentary', 'Photojournalism') -%}
+  Salgado chose the frame that cost him something to make. The lesson is not about the specific image — it is about making the harder call every time you can see it.
+  {%- elif image.genre in ('Landscape', 'Landscapes') -%}
+  Kenna stayed until the light was right, not until it was easy. The principle travels: the image you almost made is always better than the one you settled for.
+  {%- elif image.genre in ('People', 'Wedding') -%}
+  McCurry earned the trust before he raised the camera. The technical decision followed naturally from that. Know what you are trying to hold before you expose for it.
+  {%- else -%}
+  Every master made this choice consciously. Identify what you were protecting — and make that decision your default.
+  {%- endif -%}
+{%- endif -%}{% endset %}
 
+  {% set _c2_resolved %}{%- if _c2_body -%}
+{{ _c2_body }}
+{%- else -%}
+  {%- if image.genre in ('Wildlife', 'Nature') -%}
+  Art Wolfe says sharpness is the by-product of patience, not speed. The decision you made here — whatever it was — is the one that defines the image. Name it and own it.
+  {%- elif image.genre == 'Street' -%}
+  Vivian Maier never explained her exposures. She just got them right. The decision you made in this frame is yours — understand it clearly enough to repeat it deliberately.
+  {%- elif image.genre in ('Documentary', 'Photojournalism') -%}
+  Nachtwey controlled the only thing available — where to stand. Every other variable was chaos. Identify your controllable. It is the only thing that separates the image you wanted from the one you got.
+  {%- elif image.genre in ('Landscape', 'Landscapes') -%}
+  Adams pre-visualised the final print before he opened the shutter. What you controlled here is exactly that — a decision made before the moment, not during it.
+  {%- elif image.genre in ('People', 'Wedding') -%}
+  Karsh waited for the moment the mask came off. That is a decision, not an accident. Know what you are waiting for so you are ready when it arrives.
+  {%- else -%}
+  The decision was made before the shutter opened. Understand it well enough to make it again.
+  {%- endif -%}
+{%- endif -%}{% endset %}
 
-  <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:14px;" class="sc-four-grid">
+  {% set _c3_resolved %}{{ _c3_body }}{% endset %}
+  {% set _c4_resolved %}{{ _c4_body }}{% endset %}
 
-    {# Card 1 — The photographer's advice #}
-    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
-      <div style="width:34px; height:34px; border-radius:8px; background:#EAF0FA; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
-        <span style="font-size:16px; color:#185FA5;">📷</span>
+  {# ── Bold the lead sentence and the closing/anchor sentence, leaving any
+     middle sentences at normal weight. For one or two sentence bodies
+     (nothing to leave unbolded in the middle), bold the whole thing. #}
+  {% macro lead_anchor_bold(text) -%}
+    {%- set _s = text.split('. ') -%}
+    {%- if _s|length >= 3 -%}
+      <strong>{{ _s[0] }}.</strong> {{ _s[1:-1]|join('. ') }}. <strong>{{ _s[-1] }}</strong>
+    {%- else -%}
+      <strong>{{ text }}</strong>
+    {%- endif -%}
+  {%- endmacro %}
+
+  {# ── Card 1 — lead card, full width ───────────────────────────────── #}
+  {% if _c1_resolved.strip() %}
+  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:22px 26px; margin-bottom:12px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <div style="width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center;">
+        <span style="font-size:16px; color:#0C447C;">📷</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
-      
-      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {% if _c1_body %}{{ _c1_body }}{% else %}
-          {% if image.genre in ('Wildlife', 'Nature') %}Brandt made the harder exposure choice every single time — and his images hold because of it. The principle is the same whatever you are photographing: the difficult decision is usually the right one.
-          {% elif image.genre == 'Street' %}Cartier-Bresson said the right moment is a choice, not a catch. You chose the exposure that held both extremes. That is the principle — know what you are protecting before you press.
-          {% elif image.genre in ('Documentary', 'Photojournalism') %}Salgado chose the frame that cost him something to make. The lesson is not about the specific image — it is about making the harder call every time you can see it.
-          {% elif image.genre in ('Landscape', 'Landscapes') %}Kenna stayed until the light was right, not until it was easy. The principle travels: the image you almost made is always better than the one you settled for.
-          {% elif image.genre in ('People', 'Wedding') %}McCurry earned the trust before he raised the camera. The technical decision followed naturally from that. Know what you are trying to hold before you expose for it.
-          {% else %}Every master made this choice consciously. Identify what you were protecting — and make that decision your default.{% endif %}
-        {% endif %}
-      </p>
+      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
+    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; max-width:680px;">{{ lead_anchor_bold(_c1_resolved.strip()) }}</p>
+  </div>
+  {% endif %}
+
+  {# ── Cards 2-4 — supporting row ───────────────────────────────────── #}
+  <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-support-cards-grid">
 
     {# Card 2 — What you controlled #}
-    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
-      <div style="width:34px; height:34px; border-radius:8px; background:#EAF5EE; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
-        <span style="font-size:16px; color:#27500A;">▲</span>
+    {% if _c2_resolved.strip() %}
+    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
+        <span style="font-size:15px; color:#27500A;">▲</span>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What you controlled</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
-      
-      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {% if _c2_body %}{{ _c2_body }}{% else %}
-          {% if image.genre in ('Wildlife', 'Nature') %}Art Wolfe says sharpness is the by-product of patience, not speed. The decision you made here — whatever it was — is the one that defines the image. Name it and own it.
-          {% elif image.genre == 'Street' %}Vivian Maier never explained her exposures. She just got them right. The decision you made in this frame is yours — understand it clearly enough to repeat it deliberately.
-          {% elif image.genre in ('Documentary', 'Photojournalism') %}Nachtwey controlled the only thing available — where to stand. Every other variable was chaos. Identify your controllable. It is the only thing that separates the image you wanted from the one you got.
-          {% elif image.genre in ('Landscape', 'Landscapes') %}Adams pre-visualised the final print before he opened the shutter. What you controlled here is exactly that — a decision made before the moment, not during it.
-          {% elif image.genre in ('People', 'Wedding') %}Karsh waited for the moment the mask came off. That is a decision, not an accident. Know what you are waiting for so you are ready when it arrives.
-          {% else %}The decision was made before the shutter opened. Understand it well enough to make it again.{% endif %}
-        {% endif %}
-      </p>
+      <p style="margin:0; font-size:14px; color:#173404; line-height:1.7; flex:1;">{{ lead_anchor_bold(_c2_resolved.strip()) }}</p>
     </div>
+    {% endif %}
 
     {# Card 3 — What to watch next (Bresson habit) #}
-    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
-      <div style="width:34px; height:34px; border-radius:8px; background:#F5EAF0; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
-        <span style="font-size:16px; color:#72243E;">◎</span>
+    {% if _c3_resolved.strip() %}
+    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
+        <span style="font-size:15px; color:#72243E;">◎</span>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What to watch next</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
-      
-      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ _c3_body }}
-      </p>
+      <p style="margin:0; font-size:14px; color:#4B1528; line-height:1.7; flex:1;">{{ lead_anchor_bold(_c3_resolved.strip()) }}</p>
     </div>
+    {% endif %}
 
     {# Card 4 — Keep this in mind (creative direction) #}
-    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
-      <div style="width:34px; height:34px; border-radius:8px; background:#FDF3E3; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
-        <span style="font-size:16px; color:#854F0B;">💡</span>
+    {% if _c4_resolved.strip() %}
+    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
+        <span style="font-size:15px; color:#854F0B;">💡</span>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Keep this in mind</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
-      
-      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ _c4_body }}
-      </p>
+      <p style="margin:0; font-size:14px; color:#412402; line-height:1.7; flex:1;">{{ lead_anchor_bold(_c4_resolved.strip()) }}</p>
     </div>
+    {% endif %}
 
   </div>
   {% endif %}
@@ -568,7 +616,7 @@
         <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); letter-spacing:1px; text-transform:uppercase;">How you're developing</span>
         <span style="margin-left:auto; font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">Score</span>
       </div>
-      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">Last {{ portfolio_data.count }} photographs evaluated{% if not portfolio_data.same_genre %} (across all genres — not enough {{ image.genre }} photographs yet for a genre-specific trend){% endif %}</p>
+      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">Last {{ portfolio_data.count }} photographs evaluated{% if not portfolio_data.same_genre %} (across all genres — not enough {{ image.genre }} photographs yet for an interest-specific trend){% endif %}</p>
 
       {% for dim in portfolio_data.dimensions %}
       <div style="margin-bottom:18px;">
@@ -682,7 +730,34 @@
     {% if not audit.mentor_location_2 and location_links and location_links|length > 0 %}
     <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; margin-top:-6px; margin-bottom:8px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
     {% endif %}
-    {% if audit.mentor_location_2 %}
+    {% if audit.mentor_location_3 %}
+    {# Genuine cluster of concurrent time-sensitive events this week — all three #}
+    {# carry equal urgency, so they get equal-weight cards rather than a         #}
+    {# now/later sequence. #}
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid-3">
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
+        {% if location_links and location_links|length > 0 %}
+        <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
+        {% if location_links and location_links|length > 1 %}
+        <a href="{{ location_links[1].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_3 }}</p>
+        {% if location_links and location_links|length > 2 %}
+        <a href="{{ location_links[2].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% elif audit.mentor_location_2 %}
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid">
       <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
         <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Now open</p>
@@ -753,13 +828,13 @@
   {# ── DDI DIMENSIONS ────────────────────────────────────────────── #}
   {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
   <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
-    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension scores</a></p>
+    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension breakdown</a></p>
     <div class="ddi-grid">
       {% set dims = [
         ('dod',        image.dod_score,        'How difficult it was', 'HOW DIFFICULT', 'IT WAS'),
         ('Disruption', image.disruption_score,  'Visual Disruption',   'VISUAL',        'DISRUPTION'),
         ('DM',         image.dm_score,          'Timing',               'WHETHER THE',   'TIMING WAS RIGHT'),
-        ('Wonder',     image.wonder_score,      'Wonder',               'WHETHER IT MADE','ONE FEEL SOMETHING'),
+        ('Wonder',     image.wonder_score,      'Wonder',               'WHETHER IT MAKES','ONE FEEL SOMETHING'),
         ('AQ',         image.aq_score,          'Visual Impact',        'THE EMOTION',   'IT CREATES'),
       ] %}
       {% for lbl, val, title, line1, line2 in dims %}
@@ -779,13 +854,13 @@
     <div class="peer-strip">
       <div class="peer-item">Ratings <strong>{{ image.peer_rating_count }}</strong></div>
       {% if image.peer_avg_score %}<div class="peer-item">Peer avg <strong>{{ '%.1f'|format(image.peer_avg_score) }}</strong></div>{% endif %}
-      {% if image.blended_score %}<div class="peer-item">Blended score <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
+      {% if image.blended_score %}<div class="peer-item">Combined evaluation <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
     </div>
   </div>
   {% elif image.score is not none and current_user.is_authenticated and image.user_id == current_user.id %}
   <div class="peer-block peer-block-nudge" style="margin-bottom:14px;">
     <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
-    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">Your AI score is live. Want human photographers to validate it?</div>
+    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">Your AI evaluation is live. Want human photographers to validate it?</div>
     {% if current_user.is_subscribed %}
     <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Rate others to unlock &#x2192;</a>
     {% else %}
@@ -874,14 +949,16 @@
   ] %}
   {% set _quote_idx = (image.id or 0) % (_master_quotes|length) %}
   {% set _quote_text, _quote_author = _master_quotes[_quote_idx] %}
-  <div style="border-left:4px solid var(--gold); padding:16px 22px; margin-bottom:14px;">
-    <p style="margin:0 0 8px; font-size:17px; color:var(--text-primary); line-height:1.85; font-style:italic;">"{{ _quote_text }}"</p>
-    <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono); letter-spacing:1px;">— {{ _quote_author }}</p>
+  <div style="border-left:4px solid var(--gold); padding:18px 22px 16px 26px; margin-bottom:14px; position:relative;">
+    <span style="position:absolute; top:8px; left:30px; font-family:Georgia, serif; font-size:42px; line-height:1; color:var(--gold); opacity:0.45; user-select:none;">"</span>
+    <p style="margin:0 0 12px; padding-left:24px; font-size:17px; color:var(--text-primary); line-height:1.85;">{{ _quote_text }}</p>
+    <div style="width:28px; height:2px; background:var(--gold); margin:0 0 10px 24px;"></div>
+    <p style="margin:0; padding-left:24px; font-size:13px; color:var(--text-muted); font-family:var(--font-mono); letter-spacing:1px;">{{ _quote_author }}</p>
   </div>
 
   {# ── DDI qualifier note ───────────────────────────────────────── #}
   <div style="font-size:13px; color:var(--text-muted); line-height:1.6; padding:10px 14px; margin-bottom:14px; border-left:3px solid var(--border); font-family:var(--font-mono);">
-    Your score is consistent and science-based. Your tier reflects performance across multiple photographs, not any single result. <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">How scoring works →</a>
+    Your evaluation is consistent and science-based. Your tier reflects performance across multiple photographs, not any single result. <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">How scoring works →</a>
     <span style="display:block; margin-top:5px; opacity:0.65;">Evaluated by {{ image.photographer_name or current_user.full_name or current_user.username }} · Apex DDI Engine · {{ image.scored_at.strftime('%d %b %Y') if image.scored_at else image.created_at.strftime('%d %b %Y') if image.created_at else '' }}</span>
   </div>
 
@@ -997,7 +1074,7 @@
   <div style="background:rgba(200,168,75,0.06); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 24px; margin-bottom:24px;">
     <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:8px;">🏆 Programme Result — Published</div>
     <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--gold);">{{ image.judge_final_score }}</div>
-    <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">Final score · {{ image.genre }}</div>
+    <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">Final evaluation · {{ image.genre }}</div>
   </div>
   {% endif %}
 
@@ -1079,10 +1156,10 @@
       {% set _best_score = _scored_versions | map(attribute='score') | max %}
       {% if image.score and image.parent_image_id and image.score < _best_score %}
       <div style="margin-top:14px;padding:12px 16px;background:#FFF8E8;border:1px solid #E8D08A;border-radius:var(--radius-sm);font-size:14px;line-height:1.6;color:#4A4020;">
-        <strong>This version scored lower than your original.</strong>
+        <strong>This version evaluated lower than your original.</strong>
         The Apex DDI Engine evaluates each image independently — edit guidance is directional, not prescriptive.
-        A lower score on an edited version does not mean the original advice was wrong; it reflects how the final
-        image performed on its own merits. Your original score stands and continues to count toward your standing.
+        A lower evaluation on an edited version does not mean the original advice was wrong; it reflects how the final
+        image performed on its own merits. Your original evaluation stands and continues to count toward your standing.
         Shutter League assessments are independent evaluations and outcomes on edited versions are not guaranteed.
       </div>
       {% endif %}
@@ -1176,7 +1253,7 @@
   <div class="delete-modal-box">
     <h3 style="font-size:20px; font-weight:700; margin-bottom:8px;">Delete this image?</h3>
     <p style="font-size:15px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-      This will permanently remove the image, its scores, and all programme records. This cannot be undone.
+      This will permanently remove the image, its evaluations, and all programme records. This cannot be undone.
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn" style="flex:1; min-width:120px;">Cancel</button>
