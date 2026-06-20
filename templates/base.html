@@ -124,7 +124,7 @@ table { max-width: none; }
   justify-content: space-around;
   align-items: center;
   z-index: 998;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: env(safe-area-inset-top, 0px);
   overflow: visible;
 }
 .sl-bottom-nav .sl-nav-item {
@@ -264,7 +264,7 @@ table { max-width: none; }
   transform: scale(1.05);
 }
 /* Add padding so page content clears the tab bar */
-body { padding-top: calc(68px + env(safe-area-inset-bottom, 0px)); }
+body { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
