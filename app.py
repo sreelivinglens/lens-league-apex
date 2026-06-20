@@ -2676,6 +2676,7 @@ def mission():
         _best_time  = _best_time_map.get(_focus_key, '6:00 – 9:00 AM')
         _weather_str = _weather.get('condition') or 'Any light works'
         _focus_label = _dim_mobile.get(_focus_key, 'Timing')
+        _genre       = lesson.get('mission_genre') or 'Wildlife'
 
         # Master — only on master days
         _master = None
@@ -2696,6 +2697,7 @@ def mission():
         _best_time   = _best_time_map.get(_focus_key, '6:00 – 9:00 AM')
         _weather_str = _weather.get('condition') or 'Any light works'
         _focus_label = _dim_mobile.get(_focus_key, 'Timing')
+        _genre       = 'Wildlife'
         _master      = None
 
     # ── Indoor override — if user chose an indoor option, swap assignment text ──
@@ -2736,6 +2738,7 @@ def mission():
         best_time    = _best_time
         weather      = _weather_str
         focus_label  = _focus_label
+        genre        = _genre
         dimension    = _focus_key
         principle_id = lesson['principle_id'] if lesson else None
 
@@ -3142,8 +3145,8 @@ def dashboard():
             app.logger.warning(f'[mission_due] {_mde}')
         # Mission done today — scored mission image completed successfully today
         # NOTE: do NOT filter on scoring_flash — it is cleared to None on first
-        # dashboard load (by the flash pickup loop above). Use disruption_score
-        # >= 5.0 directly: the scoring thread writes this before setting
+        # dashboard load (by the flash pickup loop above). Use the per-dimension
+        # score column directly: the scoring thread writes this before setting
         # scoring_flash, so it persists in the DB regardless of flash state.
         _mission_done = False
         try:
@@ -3156,15 +3159,25 @@ def dashboard():
             # new day instead of correctly resetting to not-done.
             _ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
             _today_start = _ist_now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=5, minutes=30)
-            _done_img = (Image.query
+            # Check the score column matching THIS image's own mission_dimension,
+            # not a single hardcoded column — a Wonder or DoD mission must be
+            # judged on wonder_score / dod_score, not disruption_score.
+            _mdd_dim_col_map = {
+                'dod': 'dod_score', 'dm': 'dm_score', 'aq': 'aq_score',
+                'wonder': 'wonder_score', 'disruption': 'disruption_score',
+            }
+            _today_mission_imgs = (Image.query
                          .filter_by(user_id=current_user.id, status='scored')
                          .filter(Image.mission_dimension.isnot(None),
-                                 Image.created_at >= _today_start,
-                                 Image.disruption_score >= 5.0)
+                                 Image.created_at >= _today_start)
                          .order_by(Image.created_at.desc())
-                         .first())
-            if _done_img:
-                _mission_done = True
+                         .all())
+            for _cand in _today_mission_imgs:
+                _col = _mdd_dim_col_map.get(_cand.mission_dimension)
+                _val = getattr(_cand, _col, None) if _col else None
+                if _val is not None and _val >= 5.0:
+                    _mission_done = True
+                    break
         except Exception as _mdd:
             app.logger.warning(f'[mission_done] {_mdd}')
     # ── End Photo School ──────────────────────────────────────────────────
@@ -5615,9 +5628,9 @@ def upload():
                                     _mission_dim = getattr(_img, 'mission_dimension', None)
                                     if _mission_dim:
                                         _dim_key_map = {
-                                            'dod': 'score_dod', 'dm': 'score_dm',
-                                            'aq': 'score_aq', 'wonder': 'score_wonder',
-                                            'disruption': 'score_disruption'
+                                            'dod': 'dod_score', 'dm': 'dm_score',
+                                            'aq': 'aq_score', 'wonder': 'wonder_score',
+                                            'disruption': 'disruption_score'
                                         }
                                         _dim_col = _dim_key_map.get(_mission_dim)
                                         _dim_score = getattr(_img, _dim_col, None) if _dim_col else None
