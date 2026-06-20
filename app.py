@@ -1238,6 +1238,29 @@ with app.app_context():
             print(f'Item D schema migration warning: {_disc_mig}')
 
         try:
+            # Location advisory links — "go here" link on the scorecard advisory.
+            # source_url holds the real event/location page when the discovery
+            # web search found one (populated by engine/seasonal_discovery.py —
+            # not yet wired up to capture it; column is ready to receive it).
+            # seasonal_calendar_ids_shown on images remembers exactly which
+            # calendar row(s) were used for THIS image's advisory text, so the
+            # scorecard link always matches what was actually shown — a fresh
+            # lookup by city/genre/month at render time could drift (rotation
+            # logic, month boundary) and link to a different place than the
+            # advisory paragraph describes.
+            db.session.execute(db.text(
+                "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS source_url VARCHAR(500) DEFAULT NULL"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS seasonal_calendar_ids_shown VARCHAR(40) DEFAULT NULL"
+            ))
+            db.session.commit()
+            print('Location advisory link columns OK.')
+        except Exception as _loc_url_mig:
+            db.session.rollback()
+            print(f'Location advisory link columns migration warning: {_loc_url_mig}')
+
+        try:
             # Photo School — mission genre override + curriculum progress tracker
             db.session.execute(db.text(
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS mission_genre VARCHAR(20) DEFAULT NULL"
@@ -5584,6 +5607,8 @@ def upload():
                                 _img.scored_at        = datetime.utcnow()
                                 audit = build_audit_data(result, _img)
                                 _img.set_audit(audit)
+                                if _sc_calendar_ids:
+                                    _img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
                                 db.session.commit()
 
                                 # Item C — log rotation entries only on successful scoring,
@@ -6164,6 +6189,8 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
             # Item C — log rotation entries only on successful (re)scoring.
             try:
                 if _sc_calendar_ids:
+                    img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
+                    db.session.commit()
                     from engine.seasonal_calendar import log_seasonal_shown
                     log_seasonal_shown(db.session, img.user_id, _sc_calendar_ids)
             except Exception as _ssl_err:
@@ -6840,6 +6867,20 @@ def image_detail(image_id):
     except Exception:
         pass
 
+    # ── Location advisory link(s) — "go here" for the seasonal advisory ────────
+    # Uses the calendar IDs stored on THIS image at scoring time, not a fresh
+    # city/genre/month lookup, so the link always matches what mentor_location_1/2
+    # actually describes (rotation logic could otherwise select a different row).
+    _location_links = []
+    try:
+        _sc_ids_csv = getattr(img, 'seasonal_calendar_ids_shown', None)
+        if _sc_ids_csv:
+            from engine.seasonal_calendar import get_location_links
+            _sc_ids = [int(x) for x in _sc_ids_csv.split(',') if x.strip().isdigit()]
+            _location_links = get_location_links(db.session, _sc_ids)
+    except Exception as _lle:
+        app.logger.warning(f'[image_detail] location_links: {_lle}')
+
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
                            percentile=percentile_data,
                            image_versions=_versions,
@@ -6847,6 +6888,7 @@ def image_detail(image_id):
                            portfolio_data=_portfolio_data,
                            stats=_stats,
                            weekly_challenge=_challenge,
+                           location_links=_location_links,
                            now=_now)
 
 
