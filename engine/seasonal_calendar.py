@@ -380,12 +380,21 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
             WHERE LOWER(base_city) = LOWER(:city)
               AND LOWER(genre)     = LOWER(:genre)
               AND (
-                    -- Recurring window (existing behaviour)
-                    (month_start <= :month AND month_end >= :month)
-                    OR
-                    -- Date-bound one-off event (item D) — not yet expired
+                    -- Date-bound one-off event takes precedence when present —
+                    -- governed ONLY by its actual dates, never by month_start/
+                    -- month_end (which is NOT NULL in the schema and carries a
+                    -- placeholder value even on date-bound rows, e.g. Photo
+                    -- Today Expo: month_start=6/month_end=6 alongside
+                    -- date_end=2026-06-14 — without this exclusivity, the
+                    -- month check alone keeps matching all of June even after
+                    -- the actual 3-day event has expired).
                     (date_start IS NOT NULL AND date_end IS NOT NULL
                      AND date_end >= CURRENT_DATE)
+                    OR
+                    -- Recurring window — only applies to rows that are NOT
+                    -- date-bound.
+                    (date_start IS NULL
+                     AND month_start <= :month AND month_end >= :month)
                   )
             ORDER BY
                 -- Prefer date-bound (one-off, time-sensitive) events first,
@@ -488,6 +497,58 @@ def log_seasonal_shown(db_session, user_id: int, calendar_ids: list[int]):
     except Exception as e:
         print(f"[log_seasonal_shown] error: {e}")
         db_session.rollback()
+
+
+def get_location_links(db_session, calendar_ids: list[int]) -> list[dict]:
+    """
+    Given the seasonal_calendar IDs that were actually used for an image's
+    advisory text (stored on Image.seasonal_calendar_ids_shown at scoring
+    time — NOT re-derived from city/genre/month at render time, since
+    rotation logic and month boundaries could select a different row than
+    what the advisory paragraph actually describes), return a "go here"
+    link for each.
+
+    Prefers source_url (the real event/location page, when the discovery
+    web search captured one) and falls back to an auto-generated Google
+    Maps search link built from location_name + state_country, which is
+    always available since every row has those fields. This means every
+    advisory gets a usable link today, even before source_url is populated
+    for any existing rows.
+
+    Returns a list of {'location_name': str, 'url': str} dicts, in the same
+    order as calendar_ids, so index 0 corresponds to mentor_location_1 and
+    index 1 to mentor_location_2. Safe to call with an empty list (no-op).
+    """
+    if not calendar_ids:
+        return []
+    try:
+        placeholders = ",".join(f":id{i}" for i in range(len(calendar_ids)))
+        params = {f"id{i}": cid for i, cid in enumerate(calendar_ids)}
+        rows = db_session.execute(
+            _sql_text(
+                f"SELECT id, location_name, state_country, source_url "
+                f"FROM seasonal_calendar WHERE id IN ({placeholders})"
+            ),
+            params
+        ).fetchall()
+    except Exception as e:
+        print(f"[get_location_links] lookup error: {e}")
+        return []
+
+    by_id = {r.id: r for r in rows}
+    links = []
+    for cid in calendar_ids:
+        row = by_id.get(cid)
+        if not row:
+            continue
+        if row.source_url:
+            url = row.source_url
+        else:
+            from urllib.parse import quote_plus
+            query = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
+            url = f"https://www.google.com/maps/search/?api=1&query={query}"
+        links.append({"location_name": row.location_name, "url": url})
+    return links
 
 
 def prune_seasonal_shown_log(db_session, days: int = 60):
