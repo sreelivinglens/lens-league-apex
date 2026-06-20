@@ -298,11 +298,14 @@
   .lb-filter-group select { width: 100%; }
 }
 @media (max-width: 420px) {
-  .lb-tile-grid { grid-template-columns: 1fr; gap: 10px; }
+  .lb-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .tile-img { aspect-ratio: 16/9; }
   .lb-cta { flex-direction: column; }
   .lb-pills { gap: 6px; }
   .lb-pill { font-size:16px; padding: 5px 11px; }
+}
+@media (max-width: 280px) {
+  .lb-tile-grid { grid-template-columns: 1fr !important; }
 }
 body { overflow-x: hidden; }
 *, *::before, *::after { box-sizing: border-box; }
