@@ -551,6 +551,56 @@ def get_location_links(db_session, calendar_ids: list[int]) -> list[dict]:
     return links
 
 
+def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, current_month: int) -> dict | None:
+    """
+    Lightweight version of build_seasonal_context() for the dashboard's
+    "Shooting near you" widget — returns the single nearest match as plain
+    display fields instead of an AI-prompt string. No rotation/dedup logic
+    (unlike build_seasonal_context, which avoids repeating the same advice
+    across uploads) since this is just a glanceable sidebar widget, not the
+    image scorecard, and isn't logged to seasonal_shown_log.
+
+    Returns None if no match (city/genre have no calendar rows this month) —
+    the dashboard template falls back to its existing generic placeholder.
+    """
+    if not user_city or not primary_genre:
+        return None
+    _normalized_city = normalize_city(user_city)
+    try:
+        row = db_session.execute(
+            _sql_text("""
+            SELECT location_name, state_country, distance_hours, what_is_happening
+            FROM seasonal_calendar
+            WHERE LOWER(base_city) = LOWER(:city)
+              AND LOWER(genre)     = LOWER(:genre)
+              AND (
+                    (date_start IS NOT NULL AND date_end IS NOT NULL AND date_end >= CURRENT_DATE)
+                    OR (date_start IS NULL AND month_start <= :month AND month_end >= :month)
+                  )
+            ORDER BY
+                (date_start IS NOT NULL AND date_end IS NOT NULL) DESC,
+                distance_hours ASC
+            LIMIT 1
+            """),
+            {"city": _normalized_city, "genre": primary_genre, "month": current_month}
+        ).fetchone()
+    except Exception as e:
+        print(f"[get_dashboard_advisory] DB error: {e}")
+        return None
+    if not row:
+        return None
+
+    from urllib.parse import quote_plus
+    _q = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
+    return {
+        'location_name':     row.location_name,
+        'state_country':     row.state_country,
+        'distance_hours':    row.distance_hours,
+        'what_is_happening': row.what_is_happening,
+        'url':               f"https://www.google.com/maps/search/?api=1&query={_q}",
+    }
+
+
 def prune_seasonal_shown_log(db_session, days: int = 60):
     """
     Item C — delete seasonal_shown_log entries older than `days` (default 60).
