@@ -2517,6 +2517,22 @@ def onboarding_interests():
             f'[onboarding_interests] user={current_user.id} '
             f'genres={genre_interests} freq={shooting_frequency} motivation={primary_motivation}'
         )
+
+        # Item D — this is the FIRST point a brand-new user has both city
+        # (set in /onboarding) and genres (just set above) confirmed. The
+        # other two priority-discovery call sites (GPS confirm, settings
+        # update) only cover users CHANGING an existing city — new signups
+        # never hit either, so their city/genre combos sat waiting for the
+        # weekly general sweep with no priority. Mirrors that same pattern.
+        if current_user.city and current_user.city != 'Other':
+            try:
+                from engine.seasonal_discovery import enqueue_priority_combo
+                for _g in _genres:
+                    if _g:
+                        enqueue_priority_combo(db.session, current_user.city, _g)
+            except Exception as _disc_err:
+                app.logger.warning(f'[onboarding_interests] priority discovery enqueue failed: {_disc_err}')
+
         post_next = session.pop('post_login_next', None)
         return redirect(post_next or url_for('dashboard'))
 
