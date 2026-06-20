@@ -102,6 +102,16 @@
     .peer-block { padding: 14px 16px; }
   }
 
+  /* Watermark badges: side-by-side corners work on desktop where there's
+     room, but on mobile the combined width of a longish photographer name
+     plus the fixed "shutterleague.com" text can exceed the image width and
+     the two badges collide in the middle. Stack them vertically at the
+     same corner instead, so they never compete for horizontal space. */
+  @media (max-width: 600px) {
+    .sc-wm-platform    { left: 16px; right: auto; bottom: 42px; }
+    .sc-wm-photographer { bottom: 14px; }
+  }
+
   .status-banner { border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
   .status-banner.flagged { background: var(--red-dim); border: 1px solid var(--red); border-left: 4px solid var(--red); }
   .status-banner.review  { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-left: 4px solid var(--amber); }
@@ -224,7 +234,9 @@
       });
       </script>
       {% endif %}
+      {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
       <button onclick="document.getElementById('delete-modal').classList.add('open')" class="btn btn-danger">Delete</button>
+      {% endif %}
     </div>
   </div>
 
@@ -278,13 +290,16 @@
       <img src="{{ image.thumb_url }}"
            alt="{{ image.asset_name or image.original_filename }}"
            style="width:100%; max-height:520px; object-fit:cover; display:block;">
-      {# Corner watermarks — bottom-right: platform credit · bottom-left: photographer credit #}
-      <div style="position:absolute; bottom:14px; right:16px; background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none;">
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase;">© shutterleague.com</span>
+      {# Corner watermarks — bottom-right: platform credit · bottom-left: photographer credit.
+         On mobile (<=600px) the two badges can collide in the middle when the photographer's
+         name is long enough that the combined width exceeds the image width — so on mobile
+         they stack vertically at the same corner instead of competing for opposite corners. #}
+      <div class="sc-wm sc-wm-platform" style="position:absolute; bottom:14px; right:16px; max-width:calc(100% - 32px); background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none;">
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">© shutterleague.com</span>
       </div>
       {% if image.photographer_name %}
-      <div style="position:absolute; bottom:14px; left:16px; background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none; user-select:none; -webkit-user-select:none;">
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase;">© {{ image.photographer_name }}</span>
+      <div class="sc-wm sc-wm-photographer" style="position:absolute; bottom:14px; left:16px; max-width:calc(100% - 32px); background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none; user-select:none; -webkit-user-select:none;">
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">© {{ image.photographer_name }}</span>
       </div>
       {% endif %}
     </div>
