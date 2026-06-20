@@ -657,6 +657,38 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   color: var(--sl-text);
 }
 
+/* ── Mobile sparkline trend rows — globally available (not desktop-only) ── */
+.sl-mob-spark-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+.sl-mob-spark-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sl-mob-spark-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sl-mob-spark-svg {
+  width: 100%;
+  height: 28px;
+  display: block;
+}
+.sl-sparkline-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+}
+.sl-sparkline-pill.up   { background:#EAF3DE; color:#27500A; }
+.sl-sparkline-pill.down { background:#FCEBEB; color:#A32D2D; }
+.sl-sparkline-pill.st   { background:#F1EFE8; color:#5F5E5A; }
+
 .sl-dim-pill__trend {
   font-size: 13px;
   margin-left: 4px;
@@ -1360,23 +1392,25 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <span style="font-size:20px;">→</span>
   </a>
 
-  {% else %}
+  {% endif %}{# /first-login onboarding — no longer exclusive with the mission card below #}
   {# ══════════════════════════════════════════
-     RETURNING USER — Photo School mission card
+     MISSION CARD — now shown to every user,
+     including brand-new free-tier zero-upload
+     users, so the dashboard never looks empty.
      lesson + weather injected from app.py
   ══════════════════════════════════════════ #}
 
   {# ── Dimension colour map — light/muted, same for both principle and master days ── #}
   {# Session 91: unified sky blue for all dimensions — no colour-coded bands #}
   {% set _dim_band = {
-    'dod':        ('#E8F4F8', '#B8D8E4', '⬛'),
-    'dm':         ('#E8F4F8', '#B8D8E4', '◎'),
-    'aq':         ('#E8F4F8', '#B8D8E4', '☀'),
-    'wonder':     ('#E8F4F8', '#B8D8E4', '✦'),
-    'disruption': ('#E8F4F8', '#B8D8E4', '◈')
+    'dod':        ('#FFFFFF', '#E5E5E0', '⬛'),
+    'dm':         ('#FFFFFF', '#E5E5E0', '◎'),
+    'aq':         ('#FFFFFF', '#E5E5E0', '☀'),
+    'wonder':     ('#FFFFFF', '#E5E5E0', '✦'),
+    'disruption': ('#FFFFFF', '#E5E5E0', '◈')
   } %}
   {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
-               ('#E8F4F8','#B8D8E4','◉')) %}
+               ('#FFFFFF','#E5E5E0','◉')) %}
 
   {# ── Mission done today — replace entire card with done state ── #}
   {% if mission_done %}
@@ -1427,7 +1461,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div>
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
                     color:rgba(21,21,21,.45); margin-bottom:5px;">
-          Today's lesson · {{ lesson.dim_label if lesson else 'Timing' }}
+          Today's lesson · {{ lesson.dim_short if lesson else 'Timing' }}
         </div>
         <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
@@ -1582,13 +1616,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       </div>
     </div>
 
-    {# ── Today action block — dark, full-width, unmissable ── #}
+    {# ── Today action block — sky blue, matches "Your assignment today" treatment ── #}
     {# mission_attempted = uploaded today but dimension threshold not met #}
     {% if mission_attempted %}
-    <div style="background:#1A1A18; padding:14px 16px; margin-top:0;">
+    <div style="background:#E8F4F8; padding:14px 16px; margin-top:0;">
       <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                  color:rgba(244,194,13,.7); margin-bottom:5px;">Assignment not yet complete</div>
-      <div style="font-size:15px; font-weight:600; color:#FFFFFF; line-height:1.6;">
+                  color:#185FA5; margin-bottom:5px;">Assignment not yet complete</div>
+      <div style="font-size:15px; font-weight:600; color:#0C447C; line-height:1.6;">
         {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
       </div>
     </div>
@@ -1614,15 +1648,15 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
 
     {% elif weather and weather.state != 'red' %}
-    <div style="background:#1A1A18; padding:14px 16px; margin-top:0;">
+    <div style="background:#E8F4F8; padding:14px 16px; margin-top:0;">
       {% if mission_due %}
       <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                  color:rgba(244,194,13,.7); margin-bottom:5px;">Mission due — continue</div>
+                  color:#185FA5; margin-bottom:5px;">Mission due — continue</div>
       {% else %}
       <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                  color:rgba(244,194,13,.7); margin-bottom:5px;">Your assignment today</div>
+                  color:#185FA5; margin-bottom:5px;">Your assignment today</div>
       {% endif %}
-      <div style="font-size:16px; font-weight:700; color:#FFFFFF; line-height:1.55;">
+      <div style="font-size:16px; font-weight:700; color:#0C447C; line-height:1.55;">
         {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
       </div>
     </div>
@@ -1858,7 +1892,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
 
     {# Sparklines — one per dimension, from dim_trends data #}
-    {% set _dim_labels = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
+    {% set _dim_labels = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
     <div class="sl-sparkline-row">
     {% for dim, avg in progress_data.dim_avgs.items() %}
@@ -2000,12 +2034,26 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   <div class="sl-desktop-right-section" style="border-left:3px solid var(--sl-yellow);">
     <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
                 color:var(--sl-yellow-dark); margin-bottom:4px;">Shooting near you</div>
+    {% if dash_advisory %}
+    <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
+      {{ dash_advisory.location_name }}{% if dash_advisory.state_country %}, {{ dash_advisory.state_country }}{% endif %}
+      {% if dash_advisory.distance_hours %}<span style="font-weight:500; color:var(--sl-text-light);">· {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+    </div>
+    <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">
+      {{ dash_advisory.what_is_happening }}
+    </div>
+    <a href="{{ dash_advisory.url }}" target="_blank" rel="noopener"
+       style="display:inline-block; margin-top:6px; font-size:13px; font-weight:700; color:var(--sl-yellow-dark); text-decoration:none;">
+      Get directions →
+    </a>
+    {% else %}
     <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
       {{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}
     </div>
     <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">
       Your daily brief is tuned to your location. Upload a photograph to get local seasonal context on your next scorecard.
     </div>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -2055,19 +2103,38 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           </div>
         </div>
 
-        {# Dimension pills — plain English names #}
-        {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
-        <div class="sl-dim-grid">
+        {# Dimension trend rows — sparklines, same pre-computed data as desktop #}
+        {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Disruption'} %}
+        {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
+        <div class="sl-mob-spark-row">
           {% for dim, avg in progress_data.dim_avgs.items() %}
           {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
-          <div class="sl-dim-pill">
-            <span class="sl-dim-pill__name">{{ _dim_mobile.get(dim, dim|title) }}</span>
-            <span>
-              <span class="sl-dim-pill__score">{{ '%.1f'|format(avg) }}</span>
-              {% if _pill == 'up' %}<span class="sl-dim-pill__trend up">▲</span>
-              {% elif _pill == 'down' %}<span class="sl-dim-pill__trend down">▼</span>
-              {% else %}<span class="sl-dim-pill__trend steady">–</span>{% endif %}
-            </span>
+          {% set _dcolor = _dim_colours.get(dim, '#2C3E6B') %}
+          {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
+          <div class="sl-mob-spark-item">
+            <div class="sl-mob-spark-hdr">
+              <span class="sl-dim-pill__name">{{ _dim_mobile.get(dim, dim|title) }}</span>
+              <span style="display:flex; align-items:center; gap:6px;">
+                <span class="sl-dim-pill__score">{{ '%.1f'|format(avg) }}</span>
+                {% if _pill == 'up' %}<span class="sl-sparkline-pill up">↑ climbing</span>
+                {% elif _pill == 'down' %}<span class="sl-sparkline-pill down">↓ dipped</span>
+                {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
+              </span>
+            </div>
+            {% if _sp and _sp.polyline %}
+            <svg class="sl-mob-spark-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
+                 aria-label="{{ _dim_mobile.get(dim, dim) }} trend">
+              <polyline fill="none" stroke="{{ _dcolor }}" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" points="{{ _sp.polyline }}" />
+              {% if _sp.points %}
+              {% for _pt in _sp.points %}
+              <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
+              {% endfor %}
+              {% endif %}
+            </svg>
+            {% else %}
+            <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
@@ -2149,6 +2216,40 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         <a href="{{ url_for('weekly_challenge') }}" class="sl-btn-redeem" style="background:var(--sl-yellow);color:var(--sl-text);">
           View assignment →
         </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Shooting near you (mobile) — same data as desktop right col ── #}
+    {% if current_user.city %}
+    <div class="sl-sec" id="sec-near-you">
+      <div class="sl-sec__hdr" onclick="slToggle('sec-near-you')" role="button" tabindex="0" aria-expanded="false">
+        <div class="sl-sec__hdr-left">
+          <span class="sl-sec__icon">📍</span>
+          <div>
+            <span class="sl-sec__title">Shooting near you</span>
+            <span class="sl-sec__sub">
+              {% if dash_advisory %}{{ dash_advisory.location_name }}{% else %}{{ current_user.city }}{% endif %}
+            </span>
+          </div>
+        </div>
+        <span class="sl-sec__chev">▼</span>
+      </div>
+      <div class="sl-sec__body">
+        {% if dash_advisory %}
+        <p style="font-size:17px;font-weight:700;line-height:1.4;margin:16px 0 4px;color:var(--sl-text);">
+          {{ dash_advisory.location_name }}{% if dash_advisory.state_country %}, {{ dash_advisory.state_country }}{% endif %}
+          {% if dash_advisory.distance_hours %}<span style="font-weight:500;color:var(--sl-text-light);">· {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+        </p>
+        <p style="font-size:16px;line-height:1.65;margin:0 0 14px;color:#404040">
+          {{ dash_advisory.what_is_happening }}
+        </p>
+        <a href="{{ dash_advisory.url }}" target="_blank" rel="noopener" class="sl-btn-redeem">Get directions →</a>
+        {% else %}
+        <p style="font-size:17px;line-height:1.65;margin:16px 0 14px;color:#404040">
+          Your daily brief is tuned to your location. Upload a photograph to get local seasonal context on your next scorecard.
+        </p>
+        {% endif %}
       </div>
     </div>
     {% endif %}
@@ -2238,8 +2339,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <a href="{{ url_for('profile') }}" class="sl-loc-widget__change">Change</a>
   </div>
   {% endif %}
-
-  {% endif %}{# /first-login else — end returning-user block #}
 
 </div>{# /sl-today #}
 
