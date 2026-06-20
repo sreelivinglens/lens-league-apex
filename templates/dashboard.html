@@ -2131,7 +2131,23 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
               <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
               {% endfor %}
               {% endif %}
+              {# Mission upload dots — gold filled circle overlay, same as desktop #}
+              {% set _mission_idxs = progress_data.dim_mission_indices.get(dim, []) if progress_data.dim_mission_indices is defined else [] %}
+              {% for _mi in _mission_idxs %}
+              {% if _sp.points and _mi < (_sp.points | length) %}
+              <circle cx="{{ _sp.points[_mi].x }}" cy="{{ _sp.points[_mi].y }}" r="5" fill="#C8A84B" opacity="0.9"/>
+              {% endif %}
+              {% endfor %}
             </svg>
+            {# Score values x-axis — matches desktop and scorecard style #}
+            {% set _raw = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
+            {% if _raw %}
+            <div style="display:flex; justify-content:space-between; margin-top:3px;">
+              {% for _v in _raw %}{% if _v != none %}
+              <span style="font-size:12px; color:var(--sl-text-light); font-family:monospace;">{{ '%.1f'|format(_v) }}</span>
+              {% endif %}{% endfor %}
+            </div>
+            {% endif %}
             {% else %}
             <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
             {% endif %}
