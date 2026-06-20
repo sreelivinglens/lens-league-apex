@@ -2669,7 +2669,7 @@ def mission():
     # ── Build assignment object from lesson ──────────────────────────────
     _dim_mobile = {
         'dod': 'Technical', 'dm': 'Timing', 'aq': 'Visual Impact',
-        'wonder': 'Wonder', 'disruption': 'Originality'
+        'wonder': 'Wonder', 'disruption': 'Disruption'
     }
     _best_time_map = {
         'dod': '6:00 – 9:00 AM', 'dm': '6:00 – 9:00 AM',
@@ -3325,6 +3325,21 @@ def dashboard():
             app.logger.warning(f'[upload_credits_backfill] {_ucb_e}')
     _ucb_val = _ucb_val or 0
 
+    # ── Dashboard location advisory — real seasonal content, same source    ──
+    # ── data as the scorecard's "What's happening near you", just a         ──
+    # ── lighter single-match version for the sidebar widget. Falls back to  ──
+    # ── the existing generic placeholder in dashboard.html if no match.     ──
+    _dash_advisory = None
+    try:
+        if current_user.city:
+            from engine.seasonal_calendar import get_dashboard_advisory, get_primary_genre as _gpg2
+            _adv_genre = _gpg2(current_user)
+            _dash_advisory = get_dashboard_advisory(
+                db.session, current_user.city, _adv_genre or 'Wildlife', datetime.utcnow().month
+            )
+    except Exception as _dae:
+        app.logger.warning(f'[dashboard] advisory: {_dae}')
+
     return render_template('dashboard.html', images=images, stats=stats,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
                            query=query, search_enabled=(total_images >= 20),
@@ -3354,7 +3369,8 @@ def dashboard():
                            lesson=_lesson,
                            weather=_weather,
                            mission_due=_mission_due,
-                           mission_done=_mission_done)
+                           mission_done=_mission_done,
+                           dash_advisory=_dash_advisory)
 
 
 # ---------------------------------------------------------------------------
@@ -3694,8 +3710,8 @@ from curriculum_data import _CURRICULUM, _CURRICULUM_BY_ID
 _DIM_KEYS      = ['dod', 'disruption', 'dm', 'wonder', 'aq']
 _DIM_LABELS    = {'dod': 'Depth of Difficulty', 'disruption': 'Disruption',
                   'dm': 'Decisive Moment', 'wonder': 'Wonder Factor', 'aq': 'Affective Quotient'}
-_DIM_SHORT     = {'dod': 'Difficulty', 'disruption': 'Disruption',
-                  'dm': 'Timing', 'wonder': 'Wonder', 'aq': 'Emotion'}
+_DIM_SHORT     = {'dod': 'Technical', 'disruption': 'Disruption',
+                  'dm': 'Timing', 'wonder': 'Wonder', 'aq': 'Visual Impact'}
 
 # Valid mission genres matching platform genres
 _VALID_MISSION_GENRES = [
@@ -5699,16 +5715,17 @@ def upload():
                                         else:
                                             # Mission not followed — ground the message in the actual
                                             # curriculum lesson behind this mission, not just a generic
-                                            # dimension label. "Originality" alone reads as "is the subject
-                                            # unusual" — the real ask (Disruption) is about breaking from
-                                            # the expected, predictable treatment of a subject, which is
-                                            # a different thing and was the source of real user confusion
-                                            # (a flamingo photo getting "not original enough" when the
-                                            # subject itself already felt distinctive to the user).
+                                            # dimension label. Disruption is kept as the literal term
+                                            # (not euphemised to "Originality") because that's the actual
+                                            # construct the engine measures — does the eye get forced to
+                                            # re-look at something it expected it had already understood.
+                                            # A user's subject being inherently unusual (e.g. a flamingo)
+                                            # doesn't make the TREATMENT disruptive, so the guidance line
+                                            # below still does the work of clarifying that distinction.
                                             _dim_label_map = {
                                                 'dod': 'Technical Difficulty', 'dm': 'Timing',
                                                 'aq': 'Visual Impact', 'wonder': 'Wonder',
-                                                'disruption': 'Originality'
+                                                'disruption': 'Disruption'
                                             }
                                             _dim_label = _dim_label_map.get(_mission_dim, 'that dimension')
                                             _dim_guidance_map = {
@@ -6881,6 +6898,23 @@ def image_detail(image_id):
     except Exception as _lle:
         app.logger.warning(f'[image_detail] location_links: {_lle}')
 
+    # ── First-eval full access — every free user's very first evaluated     ──
+    # ── image shows the full scorecard (dimension scores, mission block,     ──
+    # ── location advisory) even without a subscription. This is deliberately ──
+    # ── ONE moment, not all 3 free evaluations — it demonstrates full value  ──
+    # ── once, then the normal subscriber gate applies again. See image_detail──
+    # ── .html "SUBSCRIBER GATE" for where this is consumed. ──────────────────
+    _is_first_eval = False
+    try:
+        if (img.status == 'scored' and current_user.is_authenticated
+                and img.user_id == current_user.id):
+            _owner_scored_count = db.session.query(Image).filter(
+                Image.user_id == img.user_id, Image.status == 'scored'
+            ).count()
+            _is_first_eval = (_owner_scored_count == 1)
+    except Exception as _fee:
+        app.logger.warning(f'[image_detail] first_eval check: {_fee}')
+
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
                            percentile=percentile_data,
                            image_versions=_versions,
@@ -6889,6 +6923,7 @@ def image_detail(image_id):
                            stats=_stats,
                            weekly_challenge=_challenge,
                            location_links=_location_links,
+                           is_first_eval=_is_first_eval,
                            now=_now)
 
 
