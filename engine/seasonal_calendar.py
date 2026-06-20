@@ -32,22 +32,21 @@ from sqlalchemy import text as _sql_text
 # to the seeded spelling at query time — no data migration needed, and it
 # self-heals for every existing and future user immediately.
 CITY_ALIASES = {
-    "bengaluru":    "Bangalore",
-    "bangalore":    "Bangalore",
-    "bombay":       "Mumbai",
-    "mumbai":       "Mumbai",
-    "navi mumbai":  "Mumbai",
-    "calcutta":     "Kolkata",
-    "kolkata":      "Kolkata",
-    "madras":       "Chennai",
-    "chennai":      "Chennai",
-    "mysore":       "Mysuru",
-    "mysuru":       "Mysuru",
-    "gurgaon":      "Gurugram",
-    "gurugram":     "Gurugram",
-    "trivandrum":   "Thiruvananthapuram",
-    "cochin":       "Kochi",
-    "kochi":        "Kochi",
+    "bengaluru":  "Bangalore",
+    "bangalore":  "Bangalore",
+    "bombay":     "Mumbai",
+    "mumbai":     "Mumbai",
+    "calcutta":   "Kolkata",
+    "kolkata":    "Kolkata",
+    "madras":     "Chennai",
+    "chennai":    "Chennai",
+    "mysore":     "Mysuru",
+    "mysuru":     "Mysuru",
+    "gurgaon":    "Gurugram",
+    "gurugram":   "Gurugram",
+    "trivandrum": "Thiruvananthapuram",
+    "cochin":     "Kochi",
+    "kochi":      "Kochi",
 }
 
 
