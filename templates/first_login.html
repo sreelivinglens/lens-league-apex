@@ -50,17 +50,18 @@
 
 /* ── Welcome hero ── */
 .fl-hero {
-  background: #1A1A18;
+  background: var(--sl-bg);
   padding: 28px 20px 24px;
   text-align: center;
   margin-bottom: 20px;
+  border-bottom: 1px solid var(--sl-border);
 }
 
 .fl-hero__logo {
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 3px;
-  color: var(--sl-yellow);
+  color: var(--sl-yellow-dark);
   margin-bottom: 12px;
   display: block;
 }
@@ -68,14 +69,14 @@
 .fl-hero__name {
   font-size: 26px;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--sl-text);
   margin-bottom: 6px;
   line-height: 1.2;
 }
 
 .fl-hero__sub {
   font-size: 16px;
-  color: rgba(255,255,255,.60);
+  color: var(--sl-text-light);
   line-height: 1.5;
 }
 
@@ -114,19 +115,21 @@
 }
 
 .fl-btn-primary {
+  /* min-height 60px exceeds Apple's 44px minimum tap target */
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   gap: 10px;
   background: var(--sl-yellow);
   color: var(--sl-text);
   font-size: 18px;
   font-weight: 800;
-  height: 60px;
-  min-height: 44px;
+  min-height: 60px;
   border: none;
   border-radius: var(--r-btn);
   width: 100%;
+  padding: 14px 16px;
   text-decoration: none;
   transition: background .2s;
   cursor: pointer;
@@ -294,6 +297,7 @@
   .fl-steps { gap: 8px; }
   .fl-step { grid-template-columns: 36px 1fr; }
   .md-meta { gap: 8px; }
+  .fl-btn-primary { font-size: 16px; gap: 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
