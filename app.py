@@ -1368,6 +1368,8 @@ def _run_startup_tasks():
         except Exception as e:
             print(f'Admin init warning: {e}')
 
+
+@login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
