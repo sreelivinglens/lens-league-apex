@@ -62,6 +62,117 @@ def normalize_city(city: str) -> str:
     key = city.strip().lower()
     return CITY_ALIASES.get(key, city.strip())
 
+
+# ── Genre fallback map (Session 98) ─────────────────────────────────────────
+# Not every genre has a standalone "go shoot here" location concept:
+#   - Wedding/Fashion are commissioned, private events — there is no public
+#     "wedding location" to suggest. Both genres exist to hone the same
+#     underlying skill (light, expression, working with a human subject),
+#     so they ALWAYS redirect straight to the People pool — never query
+#     themselves, never burn a discovery cycle on a search that can't
+#     structurally succeed.
+#   - Macro and Nature sit between two other genres rather than owning a
+#     dedicated place of their own. They try their own genre first (real
+#     Macro/Nature rows always win when they exist), and only widen to the
+#     fallback genres when nothing dedicated has been found yet.
+#   - Creative is a technique, not a subject — multi-exposure, light
+#     painting, long exposure apply equally well to a leopard at a
+#     reserve or a flower market. It never filters by genre at all.
+#
+# mode 'replace'    -> always query the fallback genres instead of this one
+# mode 'supplement' -> query this genre first; widen to fallback if empty
+# mode 'any'        -> no genre filter at all, match every genre in the city
+GENRE_FALLBACK = {
+    "Wedding":  ("replace",    ["People"]),
+    "Fashion":  ("replace",    ["People"]),
+    "Macro":    ("supplement", ["Wildlife", "Landscape"]),
+    "Nature":   ("supplement", ["Wildlife", "Landscape"]),
+    "Creative": ("any",        []),
+}
+
+# Genres whose location pool is nationwide rather than city-day-trip-bound —
+# wildlife photography is inherently a travel genre, and a leopard reserve
+# four states away is still more useful than nothing.
+NATIONWIDE_GENRES = {"Wildlife"}
+
+
+def _genre_query_plan(primary_genre: str):
+    """
+    Returns an ordered list of genre "attempts" to run against
+    seasonal_calendar — each attempt is either a list of genre strings
+    (matched with genre IN (...)) or None (no genre filter at all).
+    The caller tries each attempt in order and stops at the first one that
+    returns rows, so a genre with real dedicated data always wins over its
+    fallback, and a genre with no standalone concept (Wedding, Fashion)
+    never wastes a query attempt on itself.
+    """
+    rule = GENRE_FALLBACK.get(primary_genre)
+    if not rule:
+        return [[primary_genre]]
+    mode, fallback_genres = rule
+    if mode == "any":
+        return [None]
+    if mode == "replace":
+        return [fallback_genres]
+    if mode == "supplement":
+        return [[primary_genre], fallback_genres]
+    return [[primary_genre]]
+
+
+def _query_calendar_rows(db_session, city, genres, current_month, country=None):
+    """
+    Core seasonal_calendar lookup, shared by build_seasonal_context() and
+    get_dashboard_advisory(). Pass exactly one of `city` (normal local
+    match) or `country` (Wildlife's nationwide widening, Session 98) —
+    `genres=None` means no genre filter at all (Creative).
+
+    Returns raw SQLAlchemy result rows (with .id, .base_city,
+    .location_name, .state_country, .distance_hours, .subject,
+    .what_is_happening, .why_it_matters, .best_light_time, .access_notes,
+    .date_start, .date_end), ordered date-bound-first then nearest.
+    Returns [] on any DB error rather than raising — a bad lookup should
+    never break scoring.
+    """
+    where = [
+        """(
+            (date_start IS NOT NULL AND date_end IS NOT NULL AND date_end >= CURRENT_DATE)
+            OR (date_start IS NULL AND month_start <= :month AND month_end >= :month)
+        )"""
+    ]
+    params = {"month": current_month}
+
+    if city:
+        where.append("LOWER(base_city) = LOWER(:city)")
+        params["city"] = city
+    elif country:
+        # state_country is stored as "[City,] State, Country" — country is
+        # always the last comma-separated segment regardless of how many
+        # precede it, so this is reliable without a dedicated schema column.
+        where.append("LOWER(SPLIT_PART(state_country, ',', -1)) = LOWER(:country)")
+        params["country"] = country.strip()
+
+    if genres:
+        placeholders = ",".join(f":g{i}" for i in range(len(genres)))
+        where.append(f"LOWER(genre) IN ({placeholders})")
+        for i, g in enumerate(genres):
+            params[f"g{i}"] = g.lower()
+
+    sql = f"""
+        SELECT id, base_city, location_name, state_country, distance_hours,
+               subject, what_is_happening, why_it_matters, best_light_time,
+               access_notes, date_start, date_end
+        FROM seasonal_calendar
+        WHERE {' AND '.join(where)}
+        ORDER BY
+            (date_start IS NOT NULL AND date_end IS NOT NULL) DESC,
+            distance_hours ASC
+    """
+    try:
+        return db_session.execute(_sql_text(sql), params).fetchall()
+    except Exception as e:
+        print(f"[seasonal_calendar] query error: {e}")
+        return []
+
 # ── Migration SQL ──────────────────────────────────────────────────────────────
 # Add to your existing migrations block in app.py's startup section.
 # Pattern matches your existing ALTER TABLE / CREATE TABLE IF NOT EXISTS style.
@@ -332,11 +443,46 @@ SEED_DATA = [
         "best_light_time": "Dawn — mist fills the valley before 8am",
         "access_notes":    "Madikeri is the base. Abbey Falls 5km. Raja's Seat in town.",
     },
+    # ── DRONE · Nandi Hills sunrise · June–September (monsoon clouds) ────────
+    # Session 98: Drone is city-proximate like Street/Landscape, but the
+    # subject matter is weather-phenomena-led (clouds, light, river bends)
+    # rather than landmark-led, and every Drone row's access_notes MUST
+    # carry a regulation-verification reminder — see discover_one() in
+    # seasonal_discovery.py for the same rule applied to auto-discovered
+    # Drone rows.
+    {
+        "base_city":       "Bangalore",
+        "genre":           "Drone",
+        "location_name":   "Nandi Hills",
+        "state_country":   "Karnataka, India",
+        "distance_hours":  1.5,
+        "month_start":     6,
+        "month_end":       9,
+        "subject":         "Sunrise above the cloud line, monsoon cloud formations",
+        "what_is_happening": (
+            "Monsoon cloud cover sits below the hilltop at sunrise through "
+            "September, with the surrounding valley and reservoir visible "
+            "between cloud breaks — a genuine above-the-clouds vantage less "
+            "than two hours out, not a remote expedition."
+        ),
+        "why_it_matters": (
+            "Aerial cloud-layer light is rare without altitude, and Nandi Hills "
+            "gives it from a short, ordinary drive-out — geometric cloud "
+            "patterns and shifting valley light reward an early start."
+        ),
+        "best_light_time": "Sunrise, before the cloud layer burns off — arrive in the dark",
+        "access_notes": (
+            "Open public hill station, no special permit for the location "
+            "itself. VERIFY CURRENT LOCAL DRONE REGULATIONS AND CONFIRM "
+            "NON-RESTRICTED AIRSPACE before flying — rules change and vary "
+            "by state; this note does not constitute clearance to fly."
+        ),
+    },
 ]
 
 
 def build_seasonal_context(db_session, user_city: str, primary_genre: str, current_month: int,
-                            user_id: int | None = None) -> tuple[str, list[int]]:
+                            user_id: int | None = None, user_country: str = "") -> tuple[str, list[int]]:
     """
     Query seasonal_calendar for the user's city, primary genre, and current month.
     Returns (context_string, calendar_ids_used) — context_string is formatted
@@ -345,12 +491,30 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
 
     Called in app.py before auto_score() on every image upload.
 
-    Rotation (item C): instead of always returning the same nearest 2 rows
-    (old LIMIT 2 behaviour — caused repeat advice like "black leopard at
-    Kabini" on every upload in the same window), this queries ALL matching
-    rows and prefers rows NOT shown to this user in the last 14 days. If
-    fewer than 2 unseen rows exist, falls back to the least-recently-shown
-    rows to fill the remainder.
+    Session 98 — genre fallback, nationwide Wildlife, event-cluster display:
+      - Genres with no standalone "go shoot here" concept (Wedding, Fashion)
+        query their fallback genre directly instead of themselves. Genres
+        that sit between two others (Macro, Nature) try their own genre
+        first, then widen to the fallback genres if nothing dedicated
+        exists yet. Creative has no genre filter at all. See
+        GENRE_FALLBACK / _genre_query_plan() above.
+      - Wildlife additionally widens to the user's whole country (via
+        user_country) when their own city has no rows — wildlife
+        photography is inherently a travel genre. Cross-city matches are
+        captioned against their OWN base_city, not the user's, since
+        distance_hours is only meaningful relative to the row's seed city.
+      - Display count: normally surfaces exactly ONE location. Only widens
+        to up to THREE when genuinely concurrent date-bound events exist
+        this week — a real cluster, not the routine recurring-season case
+        — so a quiet week gets one strong recommendation and a busy week
+        isn't throttled down to one when three things are expiring.
+
+    Rotation (item C): for the normal single-location case, prefers rows
+    NOT shown to this user in the last 14 days, falling back to the
+    least-recently-shown row if everything available has been seen
+    recently. Rotation is skipped for a genuine date-bound event cluster —
+    urgency overrides repeat-avoidance; an expiring event shouldn't be
+    hidden just because it was mentioned a few days ago.
 
     Args:
         db_session:     SQLAlchemy db.session
@@ -358,7 +522,10 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
         primary_genre:  user's primary genre interest — e.g. "Wildlife"
         current_month:  datetime.utcnow().month
         user_id:        user.id — required for rotation; if None, falls back
-                         to the old nearest-2 behaviour (no rotation, no log)
+                         to the old nearest-1 behaviour (no rotation, no log)
+        user_country:   user.country — only used to widen Wildlife search
+                         nationwide when the user's own city has no rows.
+                         Optional; Wildlife simply stays city-scoped if omitted.
 
     Returns:
         (formatted_string, calendar_ids) — formatted_string is "" if no
@@ -370,90 +537,90 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
     # Normalise city spelling (Bengaluru -> Bangalore, etc) before matching
     _normalized_city = normalize_city(user_city)
 
-    try:
-        rows = db_session.execute(
-            _sql_text("""
-            SELECT id, location_name, state_country, distance_hours,
-                   subject, what_is_happening, why_it_matters,
-                   best_light_time, access_notes, date_start, date_end
-            FROM seasonal_calendar
-            WHERE LOWER(base_city) = LOWER(:city)
-              AND LOWER(genre)     = LOWER(:genre)
-              AND (
-                    -- Date-bound one-off event takes precedence when present —
-                    -- governed ONLY by its actual dates, never by month_start/
-                    -- month_end (which is NOT NULL in the schema and carries a
-                    -- placeholder value even on date-bound rows, e.g. Photo
-                    -- Today Expo: month_start=6/month_end=6 alongside
-                    -- date_end=2026-06-14 — without this exclusivity, the
-                    -- month check alone keeps matching all of June even after
-                    -- the actual 3-day event has expired).
-                    (date_start IS NOT NULL AND date_end IS NOT NULL
-                     AND date_end >= CURRENT_DATE)
-                    OR
-                    -- Recurring window — only applies to rows that are NOT
-                    -- date-bound.
-                    (date_start IS NULL
-                     AND month_start <= :month AND month_end >= :month)
-                  )
-            ORDER BY
-                -- Prefer date-bound (one-off, time-sensitive) events first,
-                -- then nearest by distance.
-                (date_start IS NOT NULL AND date_end IS NOT NULL) DESC,
-                distance_hours ASC
-            """),
-            {"city": _normalized_city, "genre": primary_genre, "month": current_month}
-        ).fetchall()
-    except Exception as e:
-        print(f"[build_seasonal_context] DB error: {e}")
-        return "", []
+    rows = []
+    for _genre_attempt in _genre_query_plan(primary_genre):
+        rows = _query_calendar_rows(db_session, _normalized_city, _genre_attempt, current_month)
+        if rows:
+            break
+
+    # ── Wildlife: widen nationwide if the user's own city has nothing ──────
+    _is_cross_city = False
+    if not rows and primary_genre in NATIONWIDE_GENRES and user_country:
+        rows = _query_calendar_rows(db_session, None, [primary_genre], current_month,
+                                     country=user_country)
+        _is_cross_city = True
 
     if not rows:
         return "", []
 
-    if user_id is None:
-        # No rotation context available — old behaviour, nearest 2.
-        chosen = list(rows[:2])
+    # ── Split into date-bound (one-off, expiring) vs recurring windows ──────
+    date_bound = [r for r in rows if getattr(r, 'date_start', None) and getattr(r, 'date_end', None)]
+    recurring  = [r for r in rows if not (getattr(r, 'date_start', None) and getattr(r, 'date_end', None))]
+
+    if len(date_bound) >= 2:
+        # A genuine cluster of concurrent time-sensitive events — show all
+        # of them (capped at 3), nearest first. No rotation suppression
+        # here: an expiring event shouldn't be hidden for having been
+        # shown recently.
+        chosen = sorted(date_bound, key=lambda r: r.distance_hours)[:3]
     else:
-        # ── Item C rotation ──────────────────────────────────────────────
-        try:
-            shown_rows = db_session.execute(
-                _sql_text("""
-                SELECT calendar_id, MAX(shown_at) AS last_shown
-                FROM seasonal_shown_log
-                WHERE user_id = :uid
-                  AND shown_at >= NOW() - INTERVAL '14 days'
-                GROUP BY calendar_id
-                """),
-                {"uid": user_id}
-            ).fetchall()
-            shown_recently = {r.calendar_id: r.last_shown for r in shown_rows}
-        except Exception as e:
-            print(f"[build_seasonal_context] shown_log read error: {e}")
-            shown_recently = {}
+        # Normal case — exactly one location. Prefer a live date-bound
+        # event over a recurring window if both exist, otherwise rotate
+        # through recurring rows so the same spot doesn't repeat every
+        # upload.
+        pool = date_bound + recurring
+        if user_id is None:
+            chosen = pool[:1]
+        else:
+            try:
+                shown_rows = db_session.execute(
+                    _sql_text("""
+                    SELECT calendar_id, MAX(shown_at) AS last_shown
+                    FROM seasonal_shown_log
+                    WHERE user_id = :uid
+                      AND shown_at >= NOW() - INTERVAL '14 days'
+                    GROUP BY calendar_id
+                    """),
+                    {"uid": user_id}
+                ).fetchall()
+                shown_recently = {r.calendar_id: r.last_shown for r in shown_rows}
+            except Exception as e:
+                print(f"[build_seasonal_context] shown_log read error: {e}")
+                shown_recently = {}
 
-        unseen = [r for r in rows if r.id not in shown_recently]
-        seen   = [r for r in rows if r.id in shown_recently]
-        # Among seen rows, prefer the ones shown longest ago (oldest first)
-        seen.sort(key=lambda r: shown_recently[r.id])
-
-        chosen = unseen[:2]
-        if len(chosen) < 2:
-            chosen += seen[:2 - len(chosen)]
+            unseen = [r for r in pool if r.id not in shown_recently]
+            seen   = [r for r in pool if r.id in shown_recently]
+            # Among seen rows, prefer the ones shown longest ago (oldest first)
+            seen.sort(key=lambda r: shown_recently[r.id])
+            chosen = (unseen + seen)[:1]
 
     if not chosen:
         return "", []
 
+    _location_field_note = (
+        "mentor_location_1, mentor_location_2, and mentor_location_3 fields "
+        "(mentor_location_3 only if THREE locations are listed below)"
+        if len(chosen) > 1 else
+        "mentor_location_1 field only — leave mentor_location_2 and "
+        "mentor_location_3 as null, there is only one location this time"
+    )
+
     lines = [
         f"\nSEASONAL INTELLIGENCE — {primary_genre.upper()} NEAR {user_city.upper()}:",
-        "Use the following location intelligence in the mentor_location_1 and mentor_location_2 fields.",
+        f"Use the following location intelligence in the {_location_field_note}.",
         "This is specific to the photographer's city, genre, and current month.",
         "Write in the Sherpa voice — warm, specific, like a friend who knows the location.\n",
     ]
 
     for i, row in enumerate(chosen, 1):
         lines.append(f"Location {i}: {row.location_name} ({row.state_country})")
-        lines.append(f"  Distance: {row.distance_hours} hours from {user_city}")
+        if _is_cross_city or row.base_city.lower() != _normalized_city.lower():
+            lines.append(
+                f"  Distance: {row.distance_hours} hours from {row.base_city} "
+                f"— this is a trip from {user_city}, not a local outing; say so"
+            )
+        else:
+            lines.append(f"  Distance: {row.distance_hours} hours from {user_city}")
         lines.append(f"  Subject:  {row.subject}")
         lines.append(f"  Now:      {row.what_is_happening}")
         lines.append(f"  Why:      {row.why_it_matters}")
@@ -560,35 +727,27 @@ def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, curre
     across uploads) since this is just a glanceable sidebar widget, not the
     image scorecard, and isn't logged to seasonal_shown_log.
 
+    Session 98: uses the same genre fallback plan as build_seasonal_context()
+    (Wedding/Fashion -> People, Macro/Nature -> Wildlife/Landscape, Creative
+    -> any genre) so the dashboard widget never goes empty for a genre with
+    no standalone location concept. Does not widen Wildlife nationwide —
+    this widget stays city-local by design.
+
     Returns None if no match (city/genre have no calendar rows this month) —
     the dashboard template falls back to its existing generic placeholder.
     """
     if not user_city or not primary_genre:
         return None
     _normalized_city = normalize_city(user_city)
-    try:
-        row = db_session.execute(
-            _sql_text("""
-            SELECT location_name, state_country, distance_hours, what_is_happening
-            FROM seasonal_calendar
-            WHERE LOWER(base_city) = LOWER(:city)
-              AND LOWER(genre)     = LOWER(:genre)
-              AND (
-                    (date_start IS NOT NULL AND date_end IS NOT NULL AND date_end >= CURRENT_DATE)
-                    OR (date_start IS NULL AND month_start <= :month AND month_end >= :month)
-                  )
-            ORDER BY
-                (date_start IS NOT NULL AND date_end IS NOT NULL) DESC,
-                distance_hours ASC
-            LIMIT 1
-            """),
-            {"city": _normalized_city, "genre": primary_genre, "month": current_month}
-        ).fetchone()
-    except Exception as e:
-        print(f"[get_dashboard_advisory] DB error: {e}")
+
+    rows = []
+    for _genre_attempt in _genre_query_plan(primary_genre):
+        rows = _query_calendar_rows(db_session, _normalized_city, _genre_attempt, current_month)
+        if rows:
+            break
+    if not rows:
         return None
-    if not row:
-        return None
+    row = rows[0]
 
     from urllib.parse import quote_plus
     _q = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
@@ -599,6 +758,7 @@ def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, curre
         'what_is_happening': row.what_is_happening,
         'url':               f"https://www.google.com/maps/search/?api=1&query={_q}",
     }
+
 
 
 def prune_seasonal_shown_log(db_session, days: int = 60):
