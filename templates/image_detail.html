@@ -429,15 +429,89 @@
   {% endif %}
   {% endif %}
 
+  {# ── MENTOR LOCATION INTELLIGENCE — Session 99 ───────────────────────────
+     Deliberately OUTSIDE the subscriber gate below — visible to every user,
+     free or subscribed. This is a discovery/trust utility (where to shoot,
+     what's happening nearby), not the paid coaching product. The 4 cards,
+     mentor's advice, and edit guide further down stay gated — that's the
+     actual reason to subscribe. Giving this away costs nothing on the
+     conversion lever and buys daily-habit + trust for free users who
+     haven't decided to pay yet. #}
+  {% if audit and audit.mentor_location_1 %}
+  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <div style="width:34px; height:34px; border-radius:8px; background:rgba(126,200,160,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <span style="font-size:15px;">📍</span>
+      </div>
+      <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(126,200,160,0.6); text-transform:uppercase;">What's happening near you — {{ image.genre }}</p>
+    </div>
+    <p style="margin:0 0 16px; font-size:18px; color:#fff; line-height:1.85; font-weight:700;">{{ audit.mentor_location_1 | truncate(120) }}</p>
+    {% if not audit.mentor_location_2 and location_links and location_links|length > 0 %}
+    <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; margin-top:-6px; margin-bottom:8px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+    {% endif %}
+    {% if audit.mentor_location_3 %}
+    {# Genuine cluster of concurrent time-sensitive events this week — all three #}
+    {# carry equal urgency, so they get equal-weight cards rather than a         #}
+    {# now/later sequence. #}
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid-3">
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
+        {% if location_links and location_links|length > 0 %}
+        <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
+        {% if location_links and location_links|length > 1 %}
+        <a href="{{ location_links[1].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_3 }}</p>
+        {% if location_links and location_links|length > 2 %}
+        <a href="{{ location_links[2].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% elif audit.mentor_location_2 %}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid">
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Now open</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
+        {% if location_links and location_links|length > 0 %}
+        <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Coming up</p>
+        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
+        {% if location_links and location_links|length > 1 %}
+        <a href="{{ location_links[1].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% if audit.days_since_language %}
+    <div style="margin-top:14px; padding-top:12px; border-top:0.5px solid rgba(255,255,255,0.1);">
+      <p style="margin:0; font-size:16px; color:#F5C518; font-style:italic;">{{ audit.days_since_language }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {# ── SUBSCRIBER GATE — full scorecard for subscribers, UAT, admin,         #}
   {# ── and the first-ever evaluation for any free user (the "wow" moment)  ── #}
   {% set _can_see_full = current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin' or is_first_eval %}
   {% if _can_see_full %}
 
+
   {% if is_first_eval and not (current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin') %}
   <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--gold); border-radius:var(--radius-md); margin-bottom:14px;">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Your first evaluation — fully unlocked</div>
-    <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">Every dimension, the mentor's advice, and what's shooting near you — all of it, just this once. Subscribe to keep getting this on every photograph.</div>
+    <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">Every dimension and the mentor's advice — all of it, just this once. Subscribe to keep getting this on every photograph.</div>
   </div>
   {% endif %}
 
@@ -717,71 +791,9 @@
   </div>
   {% endif %}
 
-  {# ── MENTOR LOCATION INTELLIGENCE ──────────────────────────────── #}
-  {% if audit and audit.mentor_location_1 %}
-  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-      <div style="width:34px; height:34px; border-radius:8px; background:rgba(126,200,160,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-        <span style="font-size:15px;">📍</span>
-      </div>
-      <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(126,200,160,0.6); text-transform:uppercase;">What's happening near you — {{ image.genre }}</p>
-    </div>
-    <p style="margin:0 0 16px; font-size:18px; color:#fff; line-height:1.85; font-weight:700;">{{ audit.mentor_location_1 | truncate(120) }}</p>
-    {% if not audit.mentor_location_2 and location_links and location_links|length > 0 %}
-    <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; margin-top:-6px; margin-bottom:8px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
-    {% endif %}
-    {% if audit.mentor_location_3 %}
-    {# Genuine cluster of concurrent time-sensitive events this week — all three #}
-    {# carry equal urgency, so they get equal-weight cards rather than a         #}
-    {# now/later sequence. #}
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid-3">
-      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
-        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
-        {% if location_links and location_links|length > 0 %}
-        <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
-        {% endif %}
-      </div>
-      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
-        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
-        {% if location_links and location_links|length > 1 %}
-        <a href="{{ location_links[1].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
-        {% endif %}
-      </div>
-      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">This week</p>
-        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_3 }}</p>
-        {% if location_links and location_links|length > 2 %}
-        <a href="{{ location_links[2].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
-        {% endif %}
-      </div>
-    </div>
-    {% elif audit.mentor_location_2 %}
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid">
-      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Now open</p>
-        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
-        {% if location_links and location_links|length > 0 %}
-        <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
-        {% endif %}
-      </div>
-      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Coming up</p>
-        <p style="margin:0 0 8px; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
-        {% if location_links and location_links|length > 1 %}
-        <a href="{{ location_links[1].url }}" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% if audit.days_since_language %}
-    <div style="margin-top:14px; padding-top:12px; border-top:0.5px solid rgba(255,255,255,0.1);">
-      <p style="margin:0; font-size:16px; color:#F5C518; font-style:italic;">{{ audit.days_since_language }}</p>
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
+  {# ── MENTOR LOCATION INTELLIGENCE moved above the subscriber gate —      #}
+  {# ── Session 99: now visible to all users, see comment above. ─────────  #}
+
 
   {# ── MISSION CONTEXT — shown if image was uploaded against a mission ── #}
   {% if image.mission_dimension %}
@@ -966,7 +978,7 @@
   {# ── Free tier CTA ─────────────────────────────────────────────── #}
   <div style="padding:20px 24px; background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius-md) var(--radius-md) 0; margin-bottom:14px;">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">What to do next</div>
-    <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full scorecard — the mentor's advice, the creative direction, the edit guide, and where to shoot next.</div>
+    <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full scorecard — the mentor's advice, the creative direction, and the edit guide.</div>
     <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px; font-size:15px;">Unlock →</a>
   </div>
   {% endif %}{# end subscriber gate #}
