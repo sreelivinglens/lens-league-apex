@@ -661,11 +661,10 @@
           <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{{ '5' if loop.last else '3.5' }}" fill="{{ dim.color }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
           {% endfor %}
         </svg>
-        <div style="display:flex; justify-content:space-between; margin-top:4px;">
-          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ dim.score_values[0] }}</span>
-          {% if dim.score_values|length > 1 %}
-          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ dim.score_values[-1] }}</span>
-          {% endif %}
+        <div style="position:relative; height:16px; margin-top:4px;">
+          {% for lp in dim.label_points %}
+          <span style="position:absolute; left:{{ lp.x_pct }}%; transform:translateX(-50%); font-size:13px; color:var(--text-muted); font-family:var(--font-mono); white-space:nowrap;">{{ lp.value }}</span>
+          {% endfor %}
         </div>
       </div>
       {% endfor %}
