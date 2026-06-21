@@ -726,7 +726,24 @@ def _run_startup_tasks():
                     "CREATE TABLE IF NOT EXISTS genre_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_genre VARCHAR(60) NOT NULL, created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
                     # v76 — location suggestions from free-text country/state/city
                     # (countries without detailed location_data.py coverage)
-                    "CREATE TABLE IF NOT EXISTS location_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_country VARCHAR(80), suggested_state VARCHAR(80), suggested_city VARCHAR(80), created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
+                    # v77 — upload disputes (NSFW false-positive recourse).
+                    # thumb_url points to a copy preserved under the disputed/
+                    # R2 prefix at reject time (the normal thumbs/ copy is
+                    # deleted as before) so an admin has something to review.
+                    """CREATE TABLE IF NOT EXISTS upload_disputes (
+                        id                 SERIAL PRIMARY KEY,
+                        user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        thumb_url          VARCHAR(512) NOT NULL,
+                        original_filename  VARCHAR(255),
+                        nsfw_description   TEXT,
+                        status             VARCHAR(20) DEFAULT 'pending',
+                        created_at         TIMESTAMP DEFAULT NOW(),
+                        submitted_at       TIMESTAMP,
+                        resolved_at        TIMESTAMP,
+                        resolved_by        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        resolution_note    TEXT
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_upload_disputes_user ON upload_disputes(user_id)",
                 ]
                 for sql in _migrations:
                     try:
@@ -1463,6 +1480,26 @@ def _r2_upload_thumb(local_path: str, uid: str) -> str | None:
     except Exception as _r2e:
         import logging
         logging.error(f'[r2_upload_thumb] exception: {_r2e}')
+        return None
+
+def _r2_upload_disputed_thumb(local_path: str, uid: str) -> str | None:
+    """
+    Same as _r2_upload_thumb but stored under a separate disputed/ prefix.
+    Used for images that were hard-rejected by the NSFW check — a copy is
+    preserved here so an admin has something to look at if the user objects,
+    since the normal thumb gets deleted on reject as before.
+    """
+    ext = os.path.splitext(local_path)[1].lower() or '.jpg'
+    key = f'disputed/{uid}{ext}'
+    try:
+        result = r2.upload_file(local_path, key, content_type='image/jpeg')
+        if not result:
+            import logging
+            logging.error(f'[r2_upload_disputed_thumb] upload_file returned None for key={key}')
+        return result
+    except Exception as _r2e:
+        import logging
+        logging.error(f'[r2_upload_disputed_thumb] exception: {_r2e}')
         return None
 
 def _r2_upload_card(local_path: str, uid: str) -> str | None:
@@ -4476,6 +4513,88 @@ def account_deleted():
 
 
 
+def _check_upload_quota(user):
+    """
+    Returns a user-facing message string if `user` is currently blocked from
+    uploading (free-tier lifetime limit used up, dormant-track pause, or a
+    subscribed track's monthly limit reached) — or None if they're clear.
+
+    Pure logic only, no flash/redirect/jsonify here — the /upload route
+    decides how to respond, since GET and POST need slightly different
+    response shapes (GET always redirects with a flash; POST also supports
+    a JSON response for XHR submissions).
+
+    Mirrors exactly the checks that used to live inline in the POST branch
+    of /upload, extracted so the SAME check also runs on GET — this blocks
+    the upload FORM itself for a free user who's out of quota, rather than
+    letting them fill it out and submit before finding out.
+    """
+    _plan = getattr(user, 'subscription_plan', None) or ''
+    if user.role == 'admin' or _plan in ('beta', 'uat'):
+        return None  # UAT/beta/admin — unlimited, skip all quota checks
+
+    from datetime import date as _date
+    today   = _date.today()
+    _track  = getattr(user, 'subscription_track', None) or ''
+    _is_sub = getattr(user, 'is_subscribed', False)
+
+    if not _is_sub:
+        # Free tier — 3 lifetime assessments per user_id + referral bonus
+        # Uses total_uploads_ever — never decremented on delete.
+        # Deleting images does NOT restore free slots.
+        _lifetime = getattr(user, 'total_uploads_ever', None)
+        if _lifetime is None:
+            # total_uploads_ever is NULL — repair it now from current image count.
+            # Using current count is safe here: if it's NULL the user predates the
+            # migration and has never had the gate enforced, so current count is
+            # the best available proxy. Once set it is never decremented.
+            _lifetime = Image.query.filter(Image.user_id == user.id).count()
+            try:
+                db.session.execute(
+                    db.text("UPDATE users SET total_uploads_ever = :n WHERE id = :uid AND total_uploads_ever IS NULL"),
+                    {'n': _lifetime, 'uid': user.id}
+                )
+                db.session.commit()
+            except Exception:
+                pass
+        _bonus = getattr(user, 'referral_bonus_uploads', 0) or 0
+        if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
+            _limit_shown = FREE_IMAGE_LIMIT + _bonus
+            return (f'You have used your {_limit_shown} free assessments. '
+                    'Deleting images does not restore free slots — '
+                    'upgrade to Mobile or Camera League (₹200/mo) to keep uploading.')
+        return None
+
+    if _track == 'dormant':
+        # Dormant mode — rank preserved, 0 uploads
+        return ('Your subscription is in Dormant mode. Uploads are paused. '
+                'Reactivate your Mobile or Camera subscription to resume.')
+
+    if _track in ('mobile', 'camera', 'learning'):
+        # Subscribed tracks — check monthly count
+        month_start = datetime(today.year, today.month, 1)
+        month_count = Image.query.filter(
+            Image.user_id == user.id,
+            Image.created_at >= month_start,
+        ).count()
+        if _track == 'mobile':
+            MOBILE_IMAGE_LIMIT = 8
+            if month_count >= MOBILE_IMAGE_LIMIT:
+                return (f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
+                        'Your quota resets on the 1st of next month.')
+        elif _track == 'camera':
+            CAMERA_IMAGE_LIMIT = 5
+            if month_count >= CAMERA_IMAGE_LIMIT:
+                return (f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
+                        'Your quota resets on the 1st of next month.')
+        elif _track == 'learning':
+            if month_count >= LEARNING_IMAGE_LIMIT:
+                return (f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
+                        'Upgrade to Mobile or Camera to upload more.')
+    # Mentor track — unlimited, no check needed
+    return None
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -4484,6 +4603,17 @@ def upload():
     if not getattr(current_user, 'interests_complete', False):
         session['post_login_next'] = request.url
         return redirect(url_for('onboarding_interests'))
+
+    # Quota check — runs for GET and POST alike, so a free user who's out of
+    # quota gets stopped the moment they click "Upload" anywhere on the site,
+    # not after they've picked a file and submitted the form.
+    _quota_msg = _check_upload_quota(current_user)
+    if _quota_msg:
+        if request.method == 'POST' and (request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1'):
+            return jsonify({'error': True, 'message': _quota_msg}), 403
+        flash(_quota_msg, 'warning')
+        return redirect(url_for('dashboard'))
+
     if request.method == 'POST':
         file = request.files.get('image')
         if not file or file.filename == '':
@@ -4492,87 +4622,6 @@ def upload():
         if not allowed_file(file.filename):
             flash('File type not supported.', 'error')
             return redirect(request.url)
-
-        # -- Free quota check (3 lifetime assessment images per investor doc) --
-        # UAT/beta users get unlimited uploads — skip all quota checks.
-        _plan = getattr(current_user, 'subscription_plan', None) or ''
-        if current_user.role != 'admin' and _plan not in ('beta', 'uat'):
-            from datetime import date as _date
-            today       = _date.today()
-            _track = getattr(current_user, 'subscription_track', None) or ''
-            _is_sub = getattr(current_user, 'is_subscribed', False)
-
-            if not _is_sub:
-                # Free tier — 3 lifetime assessments per user_id + referral bonus
-                # Uses total_uploads_ever — never decremented on delete.
-                # Deleting images does NOT restore free slots.
-                _lifetime = getattr(current_user, 'total_uploads_ever', None)
-                if _lifetime is None:
-                    # total_uploads_ever is NULL — repair it now from current image count.
-                    # Using current count is safe here: if it's NULL the user predates the
-                    # migration and has never had the gate enforced, so current count is
-                    # the best available proxy. Once set it is never decremented.
-                    _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
-                    try:
-                        db.session.execute(
-                            db.text("UPDATE users SET total_uploads_ever = :n WHERE id = :uid AND total_uploads_ever IS NULL"),
-                            {'n': _lifetime, 'uid': current_user.id}
-                        )
-                        db.session.commit()
-                    except Exception:
-                        pass
-                _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-                if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
-                    _limit_shown = FREE_IMAGE_LIMIT + _bonus
-                    _msg = (f'You have used your {_limit_shown} free assessments. '
-                            'Deleting images does not restore free slots — '
-                            'upgrade to Mobile or Camera League (₹200/mo) to keep uploading.')
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                        return jsonify({'error': True, 'message': _msg}), 403
-                    flash(_msg, 'warning')
-                    return redirect(url_for('dashboard'))
-            elif _track == 'dormant':
-                # Dormant mode — rank preserved, 0 uploads
-                _msg = ('Your subscription is in Dormant mode. Uploads are paused. '
-                        'Reactivate your Mobile or Camera subscription to resume.')
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                    return jsonify({'error': True, 'message': _msg}), 403
-                flash(_msg, 'warning')
-                return redirect(url_for('dashboard'))
-            elif _track in ('mobile', 'camera', 'learning'):
-                # Subscribed tracks — check monthly count
-                month_start = datetime(today.year, today.month, 1)
-                month_count = Image.query.filter(
-                    Image.user_id == current_user.id,
-                    Image.created_at >= month_start,
-                ).count()
-                if _track == 'mobile':
-                    MOBILE_IMAGE_LIMIT = 8
-                    if month_count >= MOBILE_IMAGE_LIMIT:
-                        _msg = (f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
-                                'Your quota resets on the 1st of next month.')
-                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                            return jsonify({'error': True, 'message': _msg}), 403
-                        flash(_msg, 'warning')
-                        return redirect(url_for('dashboard'))
-                elif _track == 'camera':
-                    CAMERA_IMAGE_LIMIT = 5
-                    if month_count >= CAMERA_IMAGE_LIMIT:
-                        _msg = (f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
-                                'Your quota resets on the 1st of next month.')
-                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                            return jsonify({'error': True, 'message': _msg}), 403
-                        flash(_msg, 'warning')
-                        return redirect(url_for('dashboard'))
-                elif _track == 'learning':
-                    if month_count >= LEARNING_IMAGE_LIMIT:
-                        _msg = (f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                                'Upgrade to Mobile or Camera to upload more.')
-                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                            return jsonify({'error': True, 'message': _msg}), 403
-                        flash(_msg, 'warning')
-                        return redirect(url_for('dashboard'))
-            # Mentor track — unlimited, no check needed
 
         uid       = str(uuid.uuid4())
         filename  = secure_filename(file.filename)
@@ -4787,6 +4836,10 @@ def upload():
                     'magazine ads, fashion/swimwear/lingerie shoots, sports uniforms — must NOT be flagged for '
                     'showing models in swimwear, lingerie, or undergarments. Only flag this kind of image if it '
                     'exposes genitalia or bare breasts, or is otherwise explicit/sexual rather than commercial. '
+                    'ALSO IMPORTANT: Vigorous physical activity — sports, water play, splashing, running, '
+                    'wrestling, bent-over or twisted poses, wet clothing clinging to the body — must NOT be '
+                    'flagged as nudity on its own. Only flag if genitalia or bare breasts are clearly and '
+                    'unambiguously visible, regardless of pose, motion, or activity. '
                     'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
                     '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
                     'this overrides nudity=true when present. '
@@ -4839,13 +4892,38 @@ def upload():
                 )
 
                 if _nsfw_reject:
+                    # Preserve a copy under disputed/ and create a dispute record
+                    # BEFORE deleting the local thumb — gives the user a "Tell us"
+                    # recourse path instead of a dead-end rejection, and gives an
+                    # admin something to actually look at if they object.
+                    _dispute_id = None
+                    try:
+                        _disputed_uid = str(uuid.uuid4())
+                        _disputed_thumb_url = _r2_upload_disputed_thumb(thumb_path, _disputed_uid)
+                        if _disputed_thumb_url:
+                            _dispute_row = db.session.execute(
+                                db.text("""
+                                    INSERT INTO upload_disputes
+                                        (user_id, thumb_url, original_filename, nsfw_description, status)
+                                    VALUES (:uid, :thumb_url, :fname, :desc, 'pending')
+                                    RETURNING id
+                                """),
+                                {'uid': current_user.id, 'thumb_url': _disputed_thumb_url,
+                                 'fname': file.filename, 'desc': _nsfw_data.get('description')}
+                            )
+                            db.session.commit()
+                            _dispute_id = _dispute_row.scalar()
+                    except Exception as _dispute_save_err:
+                        db.session.rollback()
+                        app.logger.warning(f'[upload] dispute save failed (non-fatal): {_dispute_save_err}')
+
                     if os.path.exists(thumb_path): os.remove(thumb_path)
                     _nsfw_msg = (
                         'Nudity or explicit content was detected in your image. '
                         'Please re-upload a clean image that complies with Shutter League programme rules.'
                     )
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                        return jsonify({'error': True, 'message': _nsfw_msg}), 422
+                        return jsonify({'error': True, 'message': _nsfw_msg, 'dispute_id': _dispute_id}), 422
                     flash(_nsfw_msg, 'error')
                     return redirect(request.url)
 
@@ -5955,6 +6033,80 @@ def upload():
                            curriculum_principle_id=request.args.get('curriculum_principle_id', ''),
                            mission_title=request.args.get('mission_title', ''),
                            next_page=request.args.get('next', ''))
+
+
+@app.route('/upload/dispute/<int:dispute_id>/submit', methods=['POST'])
+@login_required
+def submit_upload_dispute(dispute_id):
+    """
+    User objects to an NSFW hard-reject — "Think this is a mistake? Tell us".
+    Marks the dispute submitted and emails ADMIN_EMAIL with the preserved
+    thumbnail, the user's info, and what the check itself detected, so an
+    admin can review and resolve manually. V1 has no in-app approve/reject
+    UI — that's a natural follow-up if manual handling becomes a drag.
+    """
+    row = db.session.execute(
+        db.text("""SELECT id, user_id, thumb_url, original_filename, nsfw_description, status
+                    FROM upload_disputes WHERE id = :id"""),
+        {'id': dispute_id}
+    ).fetchone()
+
+    if not row or row.user_id != current_user.id:
+        return jsonify({'error': True, 'message': 'Dispute not found.'}), 404
+
+    if row.status == 'submitted':
+        return jsonify({'ok': True, 'message': "Already sent to our team."})
+
+    try:
+        db.session.execute(
+            db.text("UPDATE upload_disputes SET status = 'submitted', submitted_at = NOW() WHERE id = :id"),
+            {'id': dispute_id}
+        )
+        db.session.commit()
+    except Exception as _dispute_update_err:
+        db.session.rollback()
+        app.logger.error(f'[upload_dispute] status update failed: {_dispute_update_err}')
+        return jsonify({'error': True, 'message': 'Could not record your objection — please try again.'}), 500
+
+    try:
+        _user_label = getattr(current_user, 'name', None) or current_user.email
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+      <tr><td style="background:#1a1a18;padding:24px 32px;">
+        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
+      </td></tr>
+      <tr><td style="padding:28px 32px;">
+        <h1 style="margin:0 0 6px;font-size:22px;color:#1a1a18;">Upload rejection disputed</h1>
+        <p style="margin:0 0 20px;color:#8a8070;font-size:14px;">Dispute #{dispute_id} &middot; submitted {datetime.utcnow().strftime('%d %b %Y, %H:%M UTC')}</p>
+        <img src="{row.thumb_url}" alt="Flagged image" style="width:100%;max-width:480px;border-radius:6px;border:1px solid #E0D8C8;margin-bottom:20px;display:block;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+          <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;width:140px;vertical-align:top;">User</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;">{_user_label} ({current_user.email})</td></tr>
+          <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;vertical-align:top;">Filename</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;">{row.original_filename or 'unknown'}</td></tr>
+          <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;vertical-align:top;">System flagged</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;">{row.nsfw_description or 'no description returned'}</td></tr>
+        </table>
+        <p style="margin:0;color:#8a8070;font-size:13px;line-height:1.6;">The photographer believes this was flagged in error and would like it reviewed.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>"""
+        send_email(
+            ADMIN_EMAIL,
+            f'Upload dispute #{dispute_id} — {_user_label}',
+            html_body
+        )
+    except Exception as _email_err:
+        # Dispute is already recorded in the DB regardless — email is best-effort,
+        # never block the user's confirmation on a transport failure.
+        app.logger.warning(f'[upload_dispute] email send failed (non-fatal): {_email_err}')
+
+    return jsonify({'ok': True, 'message': "Sent to our team — we'll review and follow up by email."})
 
 
 @app.route('/score-status/<int:image_id>')
