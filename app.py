@@ -18092,7 +18092,6 @@ def send_welcome_email(user):
     upload_url    = site_url + '/upload'
     bow_url       = site_url + '/bow'
     challenge_url = site_url + '/challenge'
-    portfolio_url = site_url + '/dashboard/portfolio'
     dashboard_url = site_url + '/dashboard'
     mentors_url   = site_url + '/mentors'
     pricing_url   = site_url + '/pricing'
@@ -18109,8 +18108,7 @@ def send_welcome_email(user):
     hero_quote         = ('You held your nerve long enough to capture the recognition instant '
                            '\u2014 a layered juxtaposition of geometric find and emotional truth.')
 
-    bow_thumb_url       = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/6ec03c83-087c-4287-a0a4-5baed9a0c058.jpg'
-    portfolio_thumb_url = bow_thumb_url  # same safe, real, approved photo used for the illustrative grid
+    bow_thumb_url       = site_url + '/static/Treasures-of-the-mangroves_Threat_Conservation_SRA2987.jpg'
 
     ashok_photo_url = site_url + '/static/img/mentor_ashok.jpg'
     ar_photo_url    = None  # pending decision — falls back to initials badge in the template
@@ -18122,7 +18120,6 @@ def send_welcome_email(user):
         upload_url=upload_url,
         bow_url=bow_url,
         challenge_url=challenge_url,
-        portfolio_url=portfolio_url,
         dashboard_url=dashboard_url,
         mentors_url=mentors_url,
         pricing_url=pricing_url,
@@ -18135,7 +18132,6 @@ def send_welcome_email(user):
         hero_photographer=hero_photographer,
         hero_quote=hero_quote,
         bow_thumb_url=bow_thumb_url,
-        portfolio_thumb_url=portfolio_thumb_url,
         ashok_photo_url=ashok_photo_url,
         ar_photo_url=ar_photo_url,
     )
@@ -18190,8 +18186,8 @@ def send_welcome_email(user):
         'been putting off.\n' + challenge_url + '\n\n'
         'Body of Work - six to ten photographs, one story, jury-evaluated every December.\n'
         + bow_url + '\n\n'
-        'Your Portfolio Page - a free, public link, every photograph carries its evaluation.\n'
-        + portfolio_url + '\n\n'
+        'Your Portfolio Page - a free, public link, every photograph carries its evaluation. '
+        'Coming together as you upload.\n\n'
 
         'BEFORE YOU UPLOAD\n'
         '- Original photograph. No AI generation, no compositing.\n'
