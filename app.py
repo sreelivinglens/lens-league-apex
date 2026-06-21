@@ -804,6 +804,24 @@ def _run_startup_tasks():
                     # v79 — ddi_score on pixabay_reference_cache for rows created
                     # before this column existed (idempotent on rerun).
                     "ALTER TABLE pixabay_reference_cache ADD COLUMN IF NOT EXISTS ddi_score NUMERIC(4,2)",
+                    # v80 — lightweight delete log so the free-tier quota
+                    # message can explain itself (e.g. "1 photograph here +
+                    # 2 uploaded and deleted earlier") instead of looking
+                    # like a bug when someone deletes down to fewer photos
+                    # than their lifetime limit. Deliberately NOT a full undo
+                    # / restore mechanism — no thumbnail, no audit text, no
+                    # EXIF, nothing that resurfaces the actual photograph.
+                    # Just enough metadata (filename, score, genre, when) to
+                    # account for where the user's free slots went.
+                    """CREATE TABLE IF NOT EXISTS upload_history_log (
+                        id           SERIAL PRIMARY KEY,
+                        user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        asset_name   VARCHAR(180),
+                        score        NUMERIC(4,2),
+                        genre        VARCHAR(40),
+                        deleted_at   TIMESTAMP DEFAULT NOW()
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_upload_history_log_user ON upload_history_log(user_id)",
                 ]
                 for sql in _migrations:
                     try:
@@ -4699,7 +4717,45 @@ def _check_upload_quota(user):
         _bonus = getattr(user, 'referral_bonus_uploads', 0) or 0
         if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
             _limit_shown = FREE_IMAGE_LIMIT + _bonus
-            return (f'You have used your {_limit_shown} free assessments. '
+
+            # Build a short account of where the limit went, so the message
+            # explains itself instead of looking broken when someone has
+            # deleted down to fewer photos than their lifetime limit (e.g.
+            # "The Class (7.12) · 2 photographs uploaded and deleted
+            # earlier" rather than a flat "you're out of slots" sitting
+            # next to a near-empty gallery). Deleted entries only exist
+            # from the upload_history_log migration (v80) onward — deletes
+            # from before that aren't logged, since the old hard-delete
+            # left nothing behind to reconstruct after the fact.
+            _current_imgs = (Image.query
+                              .filter(Image.user_id == user.id)
+                              .order_by(Image.created_at.asc())
+                              .limit(_limit_shown)
+                              .all())
+            _current_parts = [
+                (f'{_img.asset_name or "Untitled"} ({_img.score:.2f})' if _img.score is not None
+                 else (_img.asset_name or 'Untitled'))
+                for _img in _current_imgs
+            ]
+            try:
+                _deleted_count = db.session.execute(
+                    db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid"),
+                    {'uid': user.id}
+                ).scalar() or 0
+            except Exception:
+                _deleted_count = 0
+
+            _account_parts = []
+            if _current_parts:
+                _account_parts.append(', '.join(_current_parts))
+            if _deleted_count:
+                _account_parts.append(
+                    f'{_deleted_count} photograph{"s" if _deleted_count != 1 else ""} '
+                    f'uploaded and deleted earlier'
+                )
+            _account_clause = f' {" · ".join(_account_parts)}.' if _account_parts else ''
+
+            return (f'You have used your {_limit_shown} free assessments.{_account_clause} '
                     'Deleting images does not restore free slots — '
                     'upgrade to Mobile or Camera League (₹200/mo) to keep uploading.')
         return None
@@ -8287,6 +8343,21 @@ def delete_image(image_id):
                 r2_keys.append(url.split(r2.R2_PUBLIC_URL + '/')[-1])
             except Exception:
                 pass
+
+    # Log a lightweight record before it's gone — just enough (filename,
+    # score, genre) for the free-tier quota message to later explain where
+    # a user's slots went, without resurfacing the actual photograph. See
+    # the upload_history_log migration (v80) for why this exists. Runs in
+    # the same session as the deletes below, so it commits atomically with
+    # the real delete — if that fails and rolls back, this rolls back too.
+    try:
+        db.session.execute(
+            db.text("""INSERT INTO upload_history_log (user_id, asset_name, score, genre)
+                       VALUES (:uid, :name, :score, :genre)"""),
+            {'uid': current_user.id, 'name': img.asset_name, 'score': img.score, 'genre': img.genre}
+        )
+    except Exception as _log_err:
+        app.logger.warning(f'[delete_image] upload_history_log write failed: {_log_err}')
 
     # Direct SQL deletes — instant, no ORM cascade
     iid = image_id
