@@ -217,10 +217,25 @@
     </div>
     <div class="detail-actions">
       <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
-      {% if image.status != 'scored' %}
+      {% if image.status not in ['scored', 'processing'] %}
         <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}" style="display:inline;">
           <button type="submit" class="btn btn-solid">Score Now</button>
         </form>
+      {% elif image.status == 'processing' %}
+        <button type="button" class="btn" style="font-size: 14px; opacity:0.6;" disabled>
+          <span style="display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspinscorenow 0.7s linear infinite; margin-right:6px; vertical-align:-1px;"></span>
+          Evaluating your photograph… this can take up to a minute
+        </button>
+        <style>@keyframes llspinscorenow { to { transform: rotate(360deg); } }</style>
+        <script>
+          // Poll for completion — same pattern as the admin Force Rescore polling below.
+          (function pollScoreNow(){
+            fetch("{{ url_for('score_status', image_id=image.id) }}")
+              .then(r => r.json())
+              .then(d => { if (d.status !== 'processing') { window.location.reload(); } else { setTimeout(pollScoreNow, 2500); } })
+              .catch(() => setTimeout(pollScoreNow, 4000));
+          })();
+        </script>
       {% endif %}
       {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' %}
       <a href="{{ url_for('upload_edited_version', image_id=image.id) }}" class="btn btn-solid" style="font-size:14px;">Upload Edited Version</a>
