@@ -610,29 +610,35 @@
   {% set _c3_resolved %}{{ _c3_body }}{% endset %}
   {% set _c4_resolved %}{{ _c4_body }}{% endset %}
 
-  {# ── Bold the lead sentence, the closing/anchor sentence, and any middle
-     sentence that names a master photographer — their technique or
-     principle is the actual teaching content, not just color commentary,
-     so it should carry the same visual weight as the lead/anchor. For
-     one or two sentence bodies (nothing to leave unbolded in the middle),
-     bold the whole thing. #}
+  {# ── Selectively bold only the genuinely skim-worthy content: any
+     sentence naming a master photographer (their technique or principle
+     IS the actionable advice, wherever it falls in the paragraph), plus
+     — only when bold_first is set — the opening sentence. Everything
+     else stays normal weight, so bold actually signals "read this
+     first" rather than diluting into decoration across the whole card.
+     Short (<3 sentence) bodies stay fully bold — nothing to selectively
+     trim in one or two sentences. #}
   {% set _master_names = ['Henri Cartier-Bresson', 'Cartier-Bresson', 'Sebastião Salgado',
                             'Salgado', 'Ansel Adams', 'Dorothea Lange', 'Ernst Haas',
                             'Yousuf Karsh', 'Bruno Barbey', 'Steve McCurry', 'Annie Leibovitz',
                             'Vivian Maier', 'Robert Capa', 'Diane Arbus', 'Garry Winogrand',
                             'Saul Leiter', 'Elliott Erwitt', 'Joel Meyerowitz', 'William Eggleston',
                             'Galen Rowell', 'Eliot Porter', 'Frans Lanting', 'Art Wolfe'] %}
-  {% macro lead_anchor_bold(text) -%}
+  {% macro key_bold(text, bold_first=False) -%}
     {%- set _s = text.split('. ') -%}
-    {%- if _s|length >= 3 -%}
-      <strong>{{ _s[0] }}.</strong>
-      {%- for _sent in _s[1:-1] -%}
-        {%- set _is_master = _master_names|select('in', _sent)|list|length > 0 -%}
-        {%- if _is_master %} <strong>{{ _sent }}.</strong>{% else %} {{ _sent }}.{% endif -%}
-      {%- endfor %}
-      <strong>{{ _s[-1] }}</strong>
-    {%- else -%}
+    {%- if _s|length < 3 -%}
       <strong>{{ text }}</strong>
+    {%- else -%}
+      {%- for _sent in _s -%}
+        {%- set _is_master = _master_names|select('in', _sent)|list|length > 0 -%}
+        {%- set _is_first = loop.first and bold_first -%}
+        {%- set _piece = _sent if loop.last else (_sent ~ '.') -%}
+        {%- if _is_master or _is_first -%}
+          {{ '' if loop.first else ' ' }}<strong>{{ _piece }}</strong>
+        {%- else -%}
+          {{ '' if loop.first else ' ' }}{{ _piece }}
+        {%- endif -%}
+      {%- endfor -%}
     {%- endif -%}
   {%- endmacro %}
 
@@ -645,7 +651,7 @@
       </div>
       <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
-    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; max-width:680px;">{{ lead_anchor_bold(_c1_resolved.strip()) }}</p>
+    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; max-width:680px; text-align:justify;">{{ key_bold(_c1_resolved.strip(), bold_first=True) }}</p>
   </div>
   {% endif %}
 
@@ -659,7 +665,7 @@
         <span style="font-size:15px; color:#27500A;">▲</span>
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What you controlled</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#173404; line-height:1.7; flex:1;">{{ lead_anchor_bold(_c2_resolved.strip()) }}</p>
+      <p style="margin:0; font-size:14px; color:#173404; line-height:1.7; flex:1;">{{ key_bold(_c2_resolved.strip()) }}</p>
     </div>
     {% endif %}
 
@@ -670,7 +676,7 @@
         <span style="font-size:15px; color:#72243E;">◎</span>
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What to watch next</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#4B1528; line-height:1.7; flex:1;">{{ lead_anchor_bold(_c3_resolved.strip()) }}</p>
+      <p style="margin:0; font-size:14px; color:#4B1528; line-height:1.7; flex:1;">{{ key_bold(_c3_resolved.strip()) }}</p>
     </div>
     {% endif %}
 
@@ -681,7 +687,7 @@
         <span style="font-size:15px; color:#854F0B;">💡</span>
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Keep this in mind</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#412402; line-height:1.7; flex:1;">{{ lead_anchor_bold(_c4_resolved.strip()) }}</p>
+      <p style="margin:0; font-size:14px; color:#412402; line-height:1.7; flex:1;">{{ key_bold(_c4_resolved.strip()) }}</p>
     </div>
     {% endif %}
 
@@ -989,8 +995,8 @@
 
   {# ── DDI qualifier note ───────────────────────────────────────── #}
   <div style="font-size:13px; color:var(--text-muted); line-height:1.6; padding:10px 14px; margin-bottom:14px; border-left:3px solid var(--border); font-family:var(--font-mono);">
-    Your evaluation is consistent and science-based. Your tier reflects performance across multiple photographs, not any single result. <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">How scoring works →</a>
-    <span style="display:block; margin-top:5px; opacity:0.65;">Evaluated by {{ image.photographer_name or current_user.full_name or current_user.username }} · Apex DDI Engine · {{ image.scored_at.strftime('%d %b %Y') if image.scored_at else image.created_at.strftime('%d %b %Y') if image.created_at else '' }}</span>
+    Your evaluation is consistent and science-based. Your tier reflects performance across multiple photographs, not any single result. <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">How evaluation works →</a>
+    <span style="display:block; margin-top:5px; opacity:0.65;">Evaluation run by {{ image.photographer_name or current_user.full_name or current_user.username }} · Evaluated by Apex DDI Engine · {{ image.scored_at.strftime('%d %b %Y') if image.scored_at else image.created_at.strftime('%d %b %Y') if image.created_at else '' }}</span>
   </div>
 
   {% else %}
