@@ -13,6 +13,18 @@ there simply isn't a community submission yet for that genre+dimension
 combo — instead of falling through to "show anything", it searches Pixabay
 for something genuinely relevant.
 
+Two-function split, because the slow part can't run during a page request:
+  - get_cached_reference_image() — fast, synchronous, cache-read only. Safe
+    to call inline in the /mission route.
+  - refresh_reference_cache()    — slow. Searches Pixabay, then runs each
+    candidate through the real DDI engine (auto_score()) and only caches
+    one that scores >= 8.5 — the same bar the community-benchmark query
+    already enforces, so Pixabay can't introduce a lower-quality reference
+    image than a community submission would. auto_score() calls Claude
+    Vision (and, for Wildlife/Nature, a species-research web search), so
+    this takes multiple seconds per candidate and MUST run in a background
+    thread, never inline — see app.py /mission route for the call site.
+
 Pixabay API terms (https://pixabay.com/api/docs/) this code follows:
   - Results must be cached 24h minimum. This caches per (genre, dimension)
     combo until manually refreshed (max_age_days, default 30) — there are
@@ -27,11 +39,10 @@ Pixabay API terms (https://pixabay.com/api/docs/) this code follows:
     ever needed (moderation, future credit line, etc).
 
 Env: PIXABAY_API_KEY must be set in the environment. If it isn't, or
-anything in the fetch pipeline fails, get_or_fetch_reference_image()
-returns None — it never raises, since it sits in a fallback path that
-itself sits behind a fallback. The caller (app.py /mission route) should
-treat None exactly like "no benchmark image" and fall through to its
-existing placeholder.
+anything in either pipeline fails, both functions return None/False — they
+never raise, since this sits in a fallback path that itself sits behind a
+fallback. Callers should treat a falsy return exactly like "no benchmark
+image" and fall through to the existing placeholder.
 """
 import os
 import uuid
@@ -57,7 +68,7 @@ _GENRE_TERMS = {
     'People':          'portrait person',
     'Wedding':         'wedding couple',
     'Macro':           'macro closeup',
-    'Drone & Aerial':  'aerial drone',
+    'Drone':           'aerial drone',
     'Creative':        'abstract creative',
     'Nature':          'nature outdoor',
     'Documentary':     'documentary candid',
@@ -117,19 +128,6 @@ def _pixabay_search(query: str, api_key: str, timeout: int = 10) -> list:
         return []
 
 
-def _pick_best_hit(hits: list):
-    """
-    Pixabay's default order=popular already ranks results reasonably, so
-    this takes the first hit that has the fields we actually need rather
-    than re-deriving a quality score Pixabay has already computed.
-    Returns None if hits is empty or nothing usable is in it.
-    """
-    for hit in hits:
-        if hit.get('id') and hit.get('largeImageURL'):
-            return hit
-    return None
-
-
 def _download_to_temp(url: str, timeout: int = 15):
     """Downloads an image to a local temp file. Returns the local path, or None on failure."""
     path = None
@@ -169,23 +167,20 @@ def _r2_upload_reference_image(local_path: str, cache_key: str):
         return None
 
 
-# ── Main entry point ─────────────────────────────────────────────────────────
+# ── Fast path — safe to call inline during a page request ──────────────────
 
-def get_or_fetch_reference_image(db_session, genre: str, dimension: str,
-                                  max_age_days: int = 30):
+def get_cached_reference_image(db_session, genre: str, dimension: str,
+                                max_age_days: int = 30):
     """
-    Call this when no community benchmark photo exists for a given
-    genre+dimension combo. Returns an R2-hosted image URL, or None if
-    Pixabay has nothing usable / PIXABAY_API_KEY isn't set / anything in
-    the pipeline failed — never raises. Callers should treat None exactly
-    like "no benchmark image" and fall through to their existing
-    placeholder.
+    Pure cache read — never calls Pixabay, never scores anything, never
+    blocks on a slow network call. Safe to call inline during a page
+    request. Returns the cached R2 URL, or None if there's no fresh cache
+    entry for this combo.
 
-    Caches the pick per (genre, dimension) in pixabay_reference_cache so
-    the same combo isn't re-fetched from Pixabay on every page load —
-    there are only 55 possible combos, so in practice this means Pixabay
-    gets hit at most 55 times per max_age_days window, total, regardless
-    of traffic volume.
+    Callers should treat None like "no image yet" and fall through to
+    their existing placeholder — optionally also kicking off
+    refresh_reference_cache() in a background thread so the combo is
+    populated for next time (see app.py /mission route).
     """
     try:
         cached = db_session.execute(
@@ -196,61 +191,127 @@ def get_or_fetch_reference_image(db_session, genre: str, dimension: str,
             """),
             {'genre': genre, 'dimension': dimension, 'days': max_age_days}
         ).fetchone()
-        if cached:
-            return cached.image_url
+        return cached.image_url if cached else None
     except Exception as e:
         print(f'[stock_images] cache read failed (non-fatal): {e}')
+        return None
 
+
+# ── Slow path — must run in a background thread, never inline ──────────────
+
+def refresh_reference_cache(db_session, genre: str, dimension: str,
+                             max_candidates: int = 8, min_score: float = 8.5):
+    """
+    Searches Pixabay for up to max_candidates results and runs each one
+    through the real DDI engine (auto_score() — the same function that
+    scores a user's upload) until one clears min_score, then caches that
+    one. Every candidate that doesn't clear the bar is discarded — nothing
+    below min_score is ever written to the cache, so nothing below it is
+    ever served on the Mission page.
+
+    This is slow (auto_score() calls Claude Vision and, for Wildlife/
+    Nature, a species-research web search — multiple seconds per
+    candidate) and is NOT safe to call inline during a page request. The
+    caller is responsible for running this inside a background thread
+    wrapped in `with app.app_context():`, matching the existing pattern
+    used everywhere else in this codebase for auto_score calls (e.g.
+    _force_rescore_in_background in app.py).
+
+    Returns True if a candidate was cached, False otherwise (no usable
+    candidates, none cleared min_score, or PIXABAY_API_KEY not set).
+    Never raises — failures are logged and treated as "try again on the
+    next cache-miss".
+    """
     api_key = os.getenv('PIXABAY_API_KEY', '')
     if not api_key:
-        return None
-
-    query = _build_query(genre, dimension)
-    hits  = _pixabay_search(query, api_key)
-    hit   = _pick_best_hit(hits)
-    if not hit:
-        return None
-
-    local_path = _download_to_temp(hit['largeImageURL'])
-    if not local_path:
-        return None
-
-    _safe_genre = genre.lower().replace(' ', '-').replace('&', 'and')
-    cache_key   = f"{_safe_genre}-{dimension}-{uuid.uuid4().hex[:8]}"
-    image_url   = _r2_upload_reference_image(local_path, cache_key)
+        return False
 
     try:
-        if os.path.exists(local_path):
-            os.remove(local_path)
-    except Exception:
-        pass
-
-    if not image_url:
-        return None
-
-    try:
-        db_session.execute(
-            _sql_text("""
-                INSERT INTO pixabay_reference_cache
-                    (genre, dimension, pixabay_id, image_url, photographer_credit, fetched_at)
-                VALUES (:genre, :dimension, :pid, :url, :credit, NOW())
-                ON CONFLICT (genre, dimension) DO UPDATE SET
-                    pixabay_id          = EXCLUDED.pixabay_id,
-                    image_url           = EXCLUDED.image_url,
-                    photographer_credit = EXCLUDED.photographer_credit,
-                    fetched_at          = NOW()
-            """),
-            {
-                'genre':     genre,
-                'dimension': dimension,
-                'pid':       str(hit.get('id', '')),
-                'url':       image_url,
-                'credit':    hit.get('user', ''),
-            }
-        )
-        db_session.commit()
+        from engine.auto_score import auto_score
     except Exception as e:
-        db_session.rollback()
-        print(f'[stock_images] cache write failed (non-fatal): {e}')
+        print(f'[stock_images] could not import auto_score: {e}')
+        return False
 
-    return image_url
+    query      = _build_query(genre, dimension)
+    hits       = _pixabay_search(query, api_key)
+    candidates = [h for h in hits if h.get('id') and h.get('largeImageURL')][:max_candidates]
+
+    if not candidates:
+        print(f'[stock_images] no usable Pixabay candidates for {genre}/{dimension} (query={query!r})')
+        return False
+
+    for hit in candidates:
+        local_path = _download_to_temp(hit['largeImageURL'])
+        if not local_path:
+            continue
+
+        score = 0.0
+        try:
+            result = auto_score(
+                image_path    = local_path,
+                genre         = genre,
+                title         = f'Pixabay reference — {genre}',
+                photographer  = hit.get('user', '') or 'Pixabay contributor',
+                primary_genre = genre,
+            )
+            score = float(result.get('score', 0))
+        except Exception as e:
+            print(f'[stock_images] auto_score failed for pixabay id={hit.get("id")}: {e}')
+
+        print(f'[stock_images] candidate pixabay id={hit.get("id")} for {genre}/{dimension} scored {score:.2f}')
+
+        if score < min_score:
+            try:
+                if os.path.exists(local_path):
+                    os.remove(local_path)
+            except Exception:
+                pass
+            continue
+
+        # This candidate cleared the bar — upload the same local copy we
+        # just scored, no need to download it twice.
+        _safe_genre = genre.lower().replace(' ', '-').replace('&', 'and')
+        cache_key   = f"{_safe_genre}-{dimension}-{uuid.uuid4().hex[:8]}"
+        image_url   = _r2_upload_reference_image(local_path, cache_key)
+        try:
+            if os.path.exists(local_path):
+                os.remove(local_path)
+        except Exception:
+            pass
+
+        if not image_url:
+            continue  # upload failed — try the next candidate rather than giving up
+
+        try:
+            db_session.execute(
+                _sql_text("""
+                    INSERT INTO pixabay_reference_cache
+                        (genre, dimension, pixabay_id, image_url, photographer_credit, ddi_score, fetched_at)
+                    VALUES (:genre, :dimension, :pid, :url, :credit, :score, NOW())
+                    ON CONFLICT (genre, dimension) DO UPDATE SET
+                        pixabay_id           = EXCLUDED.pixabay_id,
+                        image_url             = EXCLUDED.image_url,
+                        photographer_credit   = EXCLUDED.photographer_credit,
+                        ddi_score             = EXCLUDED.ddi_score,
+                        fetched_at            = NOW()
+                """),
+                {
+                    'genre':     genre,
+                    'dimension': dimension,
+                    'pid':       str(hit.get('id', '')),
+                    'url':       image_url,
+                    'credit':    hit.get('user', ''),
+                    'score':     score,
+                }
+            )
+            db_session.commit()
+        except Exception as e:
+            db_session.rollback()
+            print(f'[stock_images] cache write failed (non-fatal): {e}')
+            return False
+
+        print(f'[stock_images] cached pixabay id={hit.get("id")} for {genre}/{dimension} — DDI score {score:.2f}')
+        return True
+
+    print(f'[stock_images] no candidate cleared {min_score} for {genre}/{dimension} out of {len(candidates)} tried')
+    return False
