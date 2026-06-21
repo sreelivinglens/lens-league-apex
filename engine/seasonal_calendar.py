@@ -481,6 +481,29 @@ SEED_DATA = [
 ]
 
 
+def _distance_phrase(hours: float, place: str) -> str:
+    """
+    Convert a raw distance_hours float + reference city into a natural
+    language distance description for the LLM prompt.
+
+    Feeding the model a clean phrase here — rather than the raw float —
+    means it doesn't have to interpret a number on its own. That's what
+    produced "is 0.0 hours from you right now" in the generated copy when
+    distance_hours was 0.0: the prompt said "Distance: 0.0 hours from
+    {city}" and the model transcribed it almost verbatim instead of writing
+    something like "zero travel time".
+    """
+    if hours <= 0.05:
+        return f"zero — the photographer is already there, right in {place}, no travel needed"
+    if hours < 1:
+        minutes = round(hours * 60)
+        return f"about {minutes} minutes from {place}"
+    if hours == int(hours):
+        n = int(hours)
+        return f"about {n} hour{'s' if n != 1 else ''} from {place}"
+    return f"about {hours:g} hours from {place}"
+
+
 def build_seasonal_context(db_session, user_city: str, primary_genre: str, current_month: int,
                             user_id: int | None = None, user_country: str = "") -> tuple[str, list[int]]:
     """
@@ -616,11 +639,11 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
         lines.append(f"Location {i}: {row.location_name} ({row.state_country})")
         if _is_cross_city or row.base_city.lower() != _normalized_city.lower():
             lines.append(
-                f"  Distance: {row.distance_hours} hours from {row.base_city} "
+                f"  Distance: {_distance_phrase(row.distance_hours, row.base_city)} "
                 f"— this is a trip from {user_city}, not a local outing; say so"
             )
         else:
-            lines.append(f"  Distance: {row.distance_hours} hours from {user_city}")
+            lines.append(f"  Distance: {_distance_phrase(row.distance_hours, user_city)}")
         lines.append(f"  Subject:  {row.subject}")
         lines.append(f"  Now:      {row.what_is_happening}")
         lines.append(f"  Why:      {row.why_it_matters}")
