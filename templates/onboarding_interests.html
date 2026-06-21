@@ -264,11 +264,11 @@
       <div class="oi-payoff-body">
         Upload your first frame. The Apex DDI Engine will tell you exactly what it sees — across 5 dimensions, in 60 seconds.
       </div>
-      <a href="{{ url_for('upload') }}" class="btn btn-solid" style="padding:14px 32px;font-size:16px;min-height:44px;display:inline-flex;align-items:center;">
+      <a href="{{ url_for('upload') }}" id="oi-upload-cta" class="btn btn-solid" style="padding:14px 32px;font-size:16px;min-height:44px;display:inline-flex;align-items:center;">
         Upload Your First Frame →
       </a>
       <div style="margin-top:16px;">
-        <a href="{{ url_for('dashboard') }}" style="font-size:14px;color:var(--text-muted);text-decoration:none;">
+        <a href="{{ url_for('dashboard') }}" id="oi-dashboard-cta" style="font-size:14px;color:var(--text-muted);text-decoration:none;">
           Go to dashboard instead
         </a>
       </div>
@@ -439,6 +439,20 @@ function selectMotive(el) {
 }
 
 // ── Save and continue ─────────────────────────────────────────────────────
+// This POST mutates current_user.interests_complete — a real auth-adjacent
+// state change, not a pure analytics ping. It used to fire via
+// navigator.sendBeacon(), which is fire-and-forget by design: the browser
+// never has to process the response, including any refreshed Set-Cookie
+// header the server sends back. Safari in particular doesn't reliably
+// commit a Set-Cookie that arrives via a beacon response, which can desync
+// the session cookie — so the very next login_required navigation
+// (clicking either CTA below) gets bounced back to /login even though the
+// save itself succeeded server-side. fetch() properly processes the
+// response either way, and keepalive:true keeps it running even if the
+// page navigates before it resolves — the same "survives navigation"
+// guarantee sendBeacon offered, without the cookie risk.
+var _savePromise = null;
+
 function submitForm() {
   document.getElementById('f-genres').value = JSON.stringify(selectedGenres);
   document.getElementById('f-freq').value   = selectedFreq   || '';
@@ -453,24 +467,53 @@ function submitForm() {
   var form = document.getElementById('oi-form');
   var data = new FormData(form);
 
-  // sendBeacon is purpose-built for "fire and forget, survive navigation"
-  // requests — it queues the request with the browser itself, so it
-  // completes even if the user immediately clicks "Upload Your First Frame"
-  // or "Go to dashboard instead". Falls back to fetch+keepalive for browsers
-  // without sendBeacon support.
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(form.action, data);
+  _savePromise = fetch(form.action, {
+    method: 'POST',
+    body: data,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    credentials: 'same-origin',
+    redirect: 'manual',
+    keepalive: true
+  }).catch(function(err) {
+    console.error('onboarding-interests save failed:', err);
+  });
+}
+
+// Both screen-4 CTAs navigate into a login_required page (upload, dashboard).
+// Wait for the save fetch to settle first so the browser has properly
+// processed whatever cookie the server sent back, capped at 1.5s so a slow
+// network never makes the button feel stuck — keepalive means the save
+// keeps going in the background even if we navigate before it resolves.
+function _continueTo(url) {
+  var navigated = false;
+  function go() {
+    if (navigated) return;
+    navigated = true;
+    window.location.href = url;
+  }
+  if (_savePromise) {
+    _savePromise.then(go).catch(go);
+    setTimeout(go, 1500);
   } else {
-    fetch(form.action, {
-      method: 'POST',
-      body: data,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      redirect: 'manual',
-      keepalive: true
-    }).catch(function(err) {
-      console.error('onboarding-interests save failed:', err);
-    });
+    go();
   }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var uploadCta    = document.getElementById('oi-upload-cta');
+  var dashboardCta = document.getElementById('oi-dashboard-cta');
+  if (uploadCta) {
+    uploadCta.addEventListener('click', function(e) {
+      e.preventDefault();
+      _continueTo(uploadCta.href);
+    });
+  }
+  if (dashboardCta) {
+    dashboardCta.addEventListener('click', function(e) {
+      e.preventDefault();
+      _continueTo(dashboardCta.href);
+    });
+  }
+});
 </script>
 {% endblock %}
