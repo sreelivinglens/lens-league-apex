@@ -610,13 +610,27 @@
   {% set _c3_resolved %}{{ _c3_body }}{% endset %}
   {% set _c4_resolved %}{{ _c4_body }}{% endset %}
 
-  {# ── Bold the lead sentence and the closing/anchor sentence, leaving any
-     middle sentences at normal weight. For one or two sentence bodies
-     (nothing to leave unbolded in the middle), bold the whole thing. #}
+  {# ── Bold the lead sentence, the closing/anchor sentence, and any middle
+     sentence that names a master photographer — their technique or
+     principle is the actual teaching content, not just color commentary,
+     so it should carry the same visual weight as the lead/anchor. For
+     one or two sentence bodies (nothing to leave unbolded in the middle),
+     bold the whole thing. #}
+  {% set _master_names = ['Henri Cartier-Bresson', 'Cartier-Bresson', 'Sebastião Salgado',
+                            'Salgado', 'Ansel Adams', 'Dorothea Lange', 'Ernst Haas',
+                            'Yousuf Karsh', 'Bruno Barbey', 'Steve McCurry', 'Annie Leibovitz',
+                            'Vivian Maier', 'Robert Capa', 'Diane Arbus', 'Garry Winogrand',
+                            'Saul Leiter', 'Elliott Erwitt', 'Joel Meyerowitz', 'William Eggleston',
+                            'Galen Rowell', 'Eliot Porter', 'Frans Lanting', 'Art Wolfe'] %}
   {% macro lead_anchor_bold(text) -%}
     {%- set _s = text.split('. ') -%}
     {%- if _s|length >= 3 -%}
-      <strong>{{ _s[0] }}.</strong> {{ _s[1:-1]|join('. ') }}. <strong>{{ _s[-1] }}</strong>
+      <strong>{{ _s[0] }}.</strong>
+      {%- for _sent in _s[1:-1] -%}
+        {%- set _is_master = _master_names|select('in', _sent)|list|length > 0 -%}
+        {%- if _is_master %} <strong>{{ _sent }}.</strong>{% else %} {{ _sent }}.{% endif -%}
+      {%- endfor %}
+      <strong>{{ _s[-1] }}</strong>
     {%- else -%}
       <strong>{{ text }}</strong>
     {%- endif -%}
