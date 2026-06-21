@@ -423,6 +423,12 @@
       <!-- Hard error — wrong type etc -->
       <div class="file-error" id="fileError"></div>
 
+      <!-- NSFW reject dispute — only shown when the server returns a dispute_id -->
+      <div id="disputeBox" style="display:none; margin-top:8px; padding:12px 16px; background:#fdecea; border:1px solid #e53935; border-radius:var(--radius-sm); font-size:15px; color:#7a0000; line-height:1.6;">
+        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:#7a0000; text-decoration:underline; font-weight:700;">Tell us →</a></span>
+        <span id="disputeConfirm" style="display:none;">✓ Sent to our team — we'll review and follow up by email.</span>
+      </div>
+
       <div class="preview-area" id="previewArea">
         <img id="previewImg" src="" alt="Preview">
         <div class="file-info" id="fileInfo"></div>
@@ -608,6 +614,7 @@
   const previewImg     = document.getElementById('previewImg');
   const fileInfo       = document.getElementById('fileInfo');
   const fileError      = document.getElementById('fileError');
+  const disputeBox     = document.getElementById('disputeBox');
   const fileSizeWarn   = document.getElementById('fileSizeWarning');
   const form           = document.getElementById('uploadForm');
   const submitBtn      = document.getElementById('submitBtn');
@@ -662,6 +669,7 @@
 
   function handleFile(file) {
     fileError.style.display    = 'none';
+    disputeBox.style.display   = 'none';
     fileSizeWarn.style.display = 'none';
 
     if (!ALLOWED.includes(file.type)) {
@@ -697,6 +705,36 @@
     submitBtn.textContent    = '⬆ Submit for Scoring';
     document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Shows the "Think this is a mistake? Tell us →" link under an NSFW
+  // rejection. disputeId comes from the server's JSON response — only the
+  // nudity-check reject path sets it, so this is a no-op for every other
+  // error type.
+  function showDispute(disputeId) {
+    if (!disputeId) { disputeBox.style.display = 'none'; return; }
+    var prompt  = document.getElementById('disputePrompt');
+    var confirm = document.getElementById('disputeConfirm');
+    var link    = document.getElementById('disputeLink');
+    prompt.style.display  = 'inline';
+    confirm.style.display = 'none';
+    link.textContent      = 'Tell us →';
+    disputeBox.style.display = 'block';
+    link.onclick = function (e) {
+      e.preventDefault();
+      link.textContent = 'Sending…';
+      fetch('/upload/dispute/' + disputeId + '/submit', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+      }).then(function (r) { return r.json(); }).then(function () {
+        prompt.style.display  = 'none';
+        confirm.style.display = 'inline';
+      }).catch(function () {
+        link.textContent = 'Tell us →';
+        showError('Could not send your objection — please try again, or email support@shutterleague.com directly.');
+      });
+    };
   }
 
   // ── Audio context — created at submit (during user gesture) ─────────────
@@ -959,6 +997,7 @@
       }
 
       showError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
+      showDispute(resp && resp.dispute_id);
     };
 
     xhr.onerror   = function () { showError('Network error — check your connection and try again.'); };
