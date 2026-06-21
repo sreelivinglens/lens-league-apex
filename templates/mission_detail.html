@@ -422,39 +422,44 @@
   .md-back { padding: 20px 22px 0; }
 }
 
-/* ── Desktop (≥1025px) — two column ── */
+/* ── Desktop (≥1025px) — hero full-width on top, body in two columns below ── */
 .md-col-left, .md-col-right { display: contents; }
+.md-body-left, .md-body-right, .md-body-full { display: contents; }
 
 @media (min-width: 1025px) {
   .md-page { background: var(--sl-bg); }
   .md-inner {
     max-width: 1100px;
-    display: grid;
-    grid-template-columns: 1fr 500px;
-    grid-template-rows: auto 1fr;
-    gap: 0 48px;
-    align-items: start;
+    margin: 0 auto;
     padding: 0 48px 64px;
   }
   .md-back {
-    grid-column: 1 / -1;
     padding: 24px 0 0;
     margin-bottom: 20px;
   }
-  .md-col-left {
-    display: block;
-    position: sticky;
-    top: 80px;
-  }
-  .md-col-right { display: block; }
   .md-hero {
-    height: 380px;
+    height: 420px;
     border-radius: 20px;
     margin-bottom: 0;
   }
-  .md-hero-content { padding: 24px 28px 28px; }
-  .md-title { font-size: 30px; }
-  .md-body { padding: 20px 0 0; gap: 14px; }
+  .md-hero-content { padding: 28px 32px 32px; }
+  .md-title { font-size: 32px; }
+  .md-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 40px;
+    row-gap: 14px;
+    padding: 24px 0 0;
+  }
+  .md-body-left, .md-body-right {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .md-body-full {
+    display: block;
+    grid-column: 1 / -1;
+  }
   .md-principle { font-size: 16px; }
   .md-assignment-text { font-size: 17px; }
   .md-master-quote { font-size: 19px; }
@@ -479,9 +484,6 @@
 
   {# ── Back button ── #}
   <a href="{{ url_for('dashboard') }}" class="md-back">← Today</a>
-
-  {# ── Left column: hero image ── #}
-  <div class="md-col-left">
 
   {# ── Hero — Tier 1: community benchmark, Tier 2: Pixabay, Tier 3: dark placeholder ── #}
   <div class="md-hero">
@@ -515,11 +517,9 @@
   </p>
   {% endif %}
 
-  </div>{# end md-col-left #}
-
-  {# ── Right column: assignment details ── #}
-  <div class="md-col-right">
+  {# ── Body — left: today's task, right: tips/master, full: CTAs ── #}
   <div class="md-body">
+  <div class="md-body-left">
 
   {# ── Principle — continues from the title, no repeat ── #}
   <p class="md-principle">{{ assignment.description if assignment is defined else 'One frame. Make it count.' }}</p>
@@ -565,6 +565,9 @@
       {{ assignment.assignment if assignment is defined else assignment.description }}
     </div>
   </div>
+
+  </div>{# end md-body-left #}
+  <div class="md-body-right">
 
   {# ── Tips ── #}
   <div class="md-tips">
@@ -627,6 +630,9 @@
   </div>
   {% endif %}
 
+  </div>{# end md-body-right #}
+  <div class="md-body-full">
+
   {# ── Shot count ── #}
   <div class="md-shot-count">
     <span>◷</span>
@@ -647,8 +653,8 @@
     <a href="{{ url_for('onboarding_interests') }}">Switch interest →</a>
   </div>
 
+  </div>{# end md-body-full #}
   </div>{# end md-body #}
-  </div>{# end md-col-right #}
 
 </div>
 </div>
