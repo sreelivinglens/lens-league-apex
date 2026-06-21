@@ -91,7 +91,10 @@
 <div style="margin:0 0 8px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:2px;color:#1A2744;text-transform:uppercase;">Learn From Masters</div>
 <table cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr>
 <td width="32" style="vertical-align:middle;padding-right:8px;">
-<img src="{{ ashok_photo_url }}" width="28" height="28" alt="Ashok Kochhar" style="display:block;width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">
+<div style="position:relative;width:28px;height:28px;">
+<img src="{{ ashok_photo_url }}" width="28" height="28" alt="Ashok Kochhar" style="display:block;width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+<div style="display:none;width:28px;height:28px;border-radius:50%;background:#1A2744;color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:12px;text-align:center;line-height:28px;">AK</div>
+</div>
 </td>
 <td style="vertical-align:middle;">
 <div style="margin:0;font-size:13px;font-weight:700;color:#1a1a18;">Ashok Kochhar</div>
@@ -129,12 +132,12 @@
 </td></tr>
 
 <tr><td style="padding:12px 0;border-bottom:1px solid #E0D8C8;">
-<p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a18;">Body of Work</p>
+<div style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1a1a18;">Body of Work</div>
 <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 8px;"><tr>
-<td width="84" style="vertical-align:top;padding-right:12px;">
-<img src="{{ bow_thumb_url }}" width="72" alt="Body of Work example" style="display:block;width:72px;height:72px;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'">
+<td class="sl-col" style="display:inline-block;width:42%;vertical-align:top;padding-right:4%;">
+<img src="{{ bow_thumb_url }}" width="220" alt="Body of Work example" style="display:block;width:100%;max-width:220px;height:auto;border-radius:6px;" onerror="this.style.display='none'">
 </td>
-<td style="vertical-align:top;">
+<td class="sl-col" style="display:inline-block;width:54%;vertical-align:top;">
 <p style="margin:0;font-size:16px;color:#4A4840;line-height:1.7;">Six to ten photographs, one story — jury-evaluated every December. Where serious work gets noticed.</p>
 </td>
 </tr></table>
@@ -142,39 +145,8 @@
 </td></tr>
 
 <tr><td style="padding:12px 0;">
-<p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a18;">Your Portfolio Page</p>
-<p style="margin:0 0 10px;font-size:16px;color:#4A4840;line-height:1.7;">A free, public link — every photograph carries its evaluation, a credential you can point to.</p>
-
-<table cellpadding="0" cellspacing="0" style="width:100%;background:#F5F0E8;border-radius:6px;border:1px solid #E0D8C8;overflow:hidden;margin:0 0 10px;">
-<tr><td style="background:#ffffff;border-bottom:1px solid #E0D8C8;padding:8px 12px;">
-<div style="margin:0;font-family:Courier New,monospace;font-size:12px;color:#8a8070;">shutterleague.com/portfolio/yourname</div>
-</td></tr>
-<tr><td style="padding:14px 14px 4px;">
-<table cellpadding="0" cellspacing="0"><tr>
-<td style="vertical-align:middle;padding-right:8px;">
-<span style="display:inline-block;background:#F5C518;color:#1a1a18;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:3px;">MASTER</span>
-</td>
-<td style="vertical-align:middle;">
-<div style="margin:0;font-size:13px;font-weight:700;color:#1a1a18;">Your Name</div>
-</td>
-</tr></table>
-</td></tr>
-<tr><td style="padding:4px 14px 14px;">
-<table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
-{% for _ in range(4) %}
-<td width="134" style="padding:2px;">
-<img src="{{ portfolio_thumb_url }}" width="128" alt="Portfolio thumbnail" style="display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:3px;" onerror="this.style.display='none'">
-</td>
-{% endfor %}
-</tr></table>
-</td></tr>
-<tr><td style="padding:0 14px 14px;">
-<div style="margin:0;font-family:Courier New,monospace;font-size:12px;color:#8a8070;">14 photographs &middot; 7.6 avg &middot; 8.9 best</div>
-</td></tr>
-</table>
-<div style="margin:0 0 8px;font-size:13px;color:#8a8070;font-style:italic;">Illustrative example — yours fills in as you upload.</div>
-
-<a href="{{ portfolio_url }}" style="font-size:14px;color:#1A2744;text-decoration:underline;">&#8594; Set up your portfolio</a>
+<div style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a18;">Your Portfolio Page</div>
+<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.7;">A free, public link — every photograph carries its evaluation, a credential you can point to. Coming together as you upload.</p>
 </td></tr>
 
 </table>
