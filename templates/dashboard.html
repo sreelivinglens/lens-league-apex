@@ -1302,7 +1302,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   <div class="sl-greeting">
     <div class="sl-greeting__name">
-      {{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }} {{ ns.emoji }}
+      {{ ns.greeting }}, {{ current_user.full_name if current_user.full_name else current_user.username }} {{ ns.emoji }}
     </div>
     <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
   </div>
@@ -1345,7 +1345,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   <div style="background:var(--sl-card); border-radius:var(--r-card); padding:20px; margin-bottom:12px; border:1px solid var(--sl-border);">
     <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:14px;">What you get back</div>
     {% for icon, heading, body in [
-        ('📐', 'A score across 5 dimensions', 'Technical difficulty, timing, visual surprise, emotional impact, and the feeling your image creates. Each scored separately.'),
+        ('📐', 'An evaluation across 5 dimensions', 'Technical difficulty, timing, visual surprise, emotional impact, and the feeling your image creates. Each evaluated separately.'),
         ('🎯', 'Your strongest dimension', 'Where your eye is already working. The engine reads your photograph honestly — not to be kind, to be useful.'),
         ('📍', 'One specific thing to work on next', 'Not a list. One direction. The single change most likely to lift your next photograph.')
       ] %}
@@ -1359,16 +1359,16 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {% endfor %}
   </div>
 
-  {# Social proof — one real score example #}
+  {# Social proof — A.R, Berlin: found ShutterLeague via ChatGPT before launch, third upload scored Grandmaster #}
   <div style="background:var(--sl-card); border-radius:var(--r-card); padding:18px 20px; margin-bottom:12px; border:1px solid var(--sl-border); display:flex; align-items:center; gap:16px;">
     <div style="flex-shrink:0; text-align:center;">
-      <div style="font-size:32px; font-weight:800; color:var(--sl-yellow-dark); line-height:1;">8.32</div>
-      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--sl-text-light); margin-top:2px;">Master</div>
+      <div style="font-size:32px; font-weight:800; color:var(--sl-yellow-dark); line-height:1;">9.28</div>
+      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--sl-text-light); margin-top:2px;">Grandmaster</div>
     </div>
     <div style="flex:1; min-width:0;">
       <div style="font-size:14px; font-weight:700; color:var(--sl-text); margin-bottom:3px;">A.R — Berlin</div>
-      <div style="font-size:13px; color:var(--sl-text-light); line-height:1.5;">"I think the idea and the site is really really nice. It has a lot of potential."</div>
-      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; opacity:0.7;">Grandmaster on his 3rd upload · found ShutterLeague via ChatGPT</div>
+      <div style="font-size:13px; color:var(--sl-text-light); line-height:1.5;">Asked ChatGPT for street photography feedback sites — before we'd even launched, it pointed him here anyway. His third upload came back Grandmaster.</div>
+      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; font-style:italic; opacity:0.8;">"I think the idea and the site is really really nice. It has a lot of potential."</div>
     </div>
   </div>
 
@@ -1381,16 +1381,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       {% endfor %}
     </div>
     <div style="font-size:13px; color:var(--sl-text-light); margin-top:12px; line-height:1.55;">
-      iPhone or DSLR. Beginner or advanced. The engine scores what it sees — not the equipment or the story behind the shot.
+      iPhone or DSLR. Beginner or advanced. The engine evaluates what it sees — not the equipment or the story behind the shot.
     </div>
   </div>
-
-  {# Final CTA #}
-  <a href="{{ url_for('upload') }}"
-     style="display:flex; align-items:center; justify-content:space-between; background:var(--sl-yellow); color:var(--sl-text); font-size:16px; font-weight:800; padding:16px 20px; border-radius:var(--r-btn); text-decoration:none; margin-bottom:12px;">
-    <span>Upload your first photograph</span>
-    <span style="font-size:20px;">→</span>
-  </a>
 
   {% endif %}{# /first-login onboarding — no longer exclusive with the mission card below #}
   {# ══════════════════════════════════════════
@@ -1708,7 +1701,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
                      background:rgba(106,62,240,.08); border:1px solid rgba(106,62,240,.18);
                      border-radius:8px; padding:5px 11px; cursor:pointer; white-space:nowrap; flex-shrink:0;
                      font-family:inherit;">
-        Switch genre →
+        Switch interest →
       </button>
     </div>
   </div>
@@ -1739,7 +1732,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
               border:1px solid var(--sl-border); box-shadow:0 10px 40px rgba(0,0,0,.08);
               overflow:hidden; margin-bottom:16px;">
     <div style="padding:14px 16px 12px; border-bottom:1px solid var(--sl-border); background:var(--sl-cream);">
-      <div style="font-size:14px; font-weight:800; color:var(--sl-text); letter-spacing:-.01em;">Switch your mission genre</div>
+      <div style="font-size:14px; font-weight:800; color:var(--sl-text); letter-spacing:-.01em;">Switch your mission interest</div>
       <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px; line-height:1.4;">
         Your lesson adapts. Your weakest dimension stays the focus.
       </div>
@@ -1783,7 +1776,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <span class="sl-yesterday__top-label">Yesterday</span>
     <div class="sl-yesterday__row">
       <div class="sl-yesterday__col">
-        <span class="sl-yesterday__label">Score</span>
+        <span class="sl-yesterday__label">Evaluation</span>
         <div class="sl-yesterday__score-val">{{ '%.1f'|format(progress_data.avg_score) }}</div>
         <div class="sl-yesterday__stars">
           {% set _s = progress_data.avg_score | int %}
@@ -1968,7 +1961,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {# ── Points (desktop right col) ── #}
   {% if wallet_hud %}
   <div class="sl-desktop-right-section">
-    <span class="sl-desktop-section-label">Points & rewards</span>
+    <span class="sl-desktop-section-label">Points & redemptions</span>
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
       <div>
         <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ wallet_hud.balance | int }}</div>
@@ -2020,7 +2013,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% else %}
     <div style="font-size:13px; color:var(--sl-text-light); line-height:1.6;">
-      Keep shooting. Your standing builds automatically as scores accumulate.
+      Keep shooting. Your standing builds automatically as evaluations accumulate.
     </div>
     {% endif %}
     <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px;">
@@ -2095,7 +2088,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         <div class="sl-standing-row">
           <div class="sl-standing-stat">
             <div class="sl-standing-stat__val">{{ '%.2f'|format(progress_data.avg_score) }}</div>
-            <div class="sl-standing-stat__label">Average score</div>
+            <div class="sl-standing-stat__label">Average evaluation</div>
           </div>
           <div class="sl-standing-stat">
             <div class="sl-standing-stat__val">{% if progress_data.overall_pct %}Top {{ progress_data.overall_pct }}%{% else %}—{% endif %}</div>
@@ -2169,13 +2162,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── Points & Rewards ── #}
+    {# ── Points & Redemptions ── #}
     <div class="sl-sec" id="sec-points">
       <div class="sl-sec__hdr" onclick="slToggle('sec-points')" role="button" tabindex="0" aria-expanded="false">
         <div class="sl-sec__hdr-left">
           <span class="sl-sec__icon">★</span>
           <div>
-            <span class="sl-sec__title">Points & rewards</span>
+            <span class="sl-sec__title">Points & redemptions</span>
             <span class="sl-sec__sub">{% if wallet_hud %}{{ wallet_hud.balance | int | default(0) }} pts{% else %}Earn on every upload{% endif %}</span>
           </div>
         </div>
