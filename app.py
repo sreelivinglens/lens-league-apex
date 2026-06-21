@@ -744,6 +744,21 @@ def _run_startup_tasks():
                         resolution_note    TEXT
                     )""",
                     "CREATE INDEX IF NOT EXISTS ix_upload_disputes_user ON upload_disputes(user_id)",
+                    # v78 — Pixabay reference-image cache for Mission lesson cards.
+                    # One row per (genre, dimension) combo — UNIQUE constraint backs
+                    # the ON CONFLICT upsert in engine/stock_images.py. Only 55
+                    # possible combos (11 genres x 5 dimensions), so this table
+                    # stays tiny regardless of traffic volume.
+                    """CREATE TABLE IF NOT EXISTS pixabay_reference_cache (
+                        id                   SERIAL PRIMARY KEY,
+                        genre                VARCHAR(40) NOT NULL,
+                        dimension            VARCHAR(20) NOT NULL,
+                        pixabay_id           VARCHAR(40),
+                        image_url            VARCHAR(512) NOT NULL,
+                        photographer_credit  VARCHAR(120),
+                        fetched_at           TIMESTAMP DEFAULT NOW(),
+                        CONSTRAINT uq_pixabay_cache UNIQUE (genre, dimension)
+                    )""",
                 ]
                 for sql in _migrations:
                     try:
@@ -2824,27 +2839,40 @@ def mission():
         _assignment = lesson['indoor_assignment']
         _title = _title + ' — indoors'
 
-    # ── Benchmark image ──────────────────────────────────────────────────
-    _benchmark = None
+    # ── Reference image — Tier 1: community, Tier 2: Pixabay ──────────────
+    # Tier 1: a community photo matching BOTH genre AND dimension
+    # (score >= 8.5). This genre filter is the actual root-cause fix — the
+    # old query only filtered by dimension, and its fallback dropped even
+    # that, showing literally the highest-scoring public photo on the whole
+    # platform regardless of genre. That's how a Wildlife lesson once
+    # showed a street protest photo as its reference image.
+    # Tier 2: no genre-matched community photo yet -> live Pixabay search
+    # using genre + dimension keywords (engine/stock_images.py), instead of
+    # the old "show anything" fallback.
+    # commons_file (curriculum_data.py) is a separate, deliberately
+    # genre-agnostic system for illustrating a principle with an iconic
+    # historical photo — not touched here.
+    _benchmark   = None
+    _pixabay_url = None
     try:
         _benchmark = (Image.query
                       .filter_by(status='scored', is_public=True, is_flagged=False)
                       .filter(Image.mission_dimension == _focus_key,
+                              Image.genre == _genre,
                               Image.score >= 8.5,
                               Image.user_id != current_user.id,
                               Image.thumb_url != None)
                       .order_by(Image.score.desc())
                       .first())
-        if not _benchmark:
-            _benchmark = (Image.query
-                          .filter_by(status='scored', is_public=True, is_flagged=False)
-                          .filter(Image.score >= 8.5,
-                                  Image.user_id != current_user.id,
-                                  Image.thumb_url != None)
-                          .order_by(Image.score.desc())
-                          .first())
-    except Exception:
-        pass
+    except Exception as _bench_err:
+        app.logger.warning(f'[mission benchmark] {_bench_err}')
+
+    if not _benchmark:
+        try:
+            from engine.stock_images import get_or_fetch_reference_image
+            _pixabay_url = get_or_fetch_reference_image(db.session, _genre, _focus_key)
+        except Exception as _pix_err:
+            app.logger.warning(f'[mission pixabay fallback] {_pix_err}')
 
     class _Assignment:
         title        = _title
@@ -2862,6 +2890,7 @@ def mission():
                            assignment=_Assignment(),
                            master=_master,
                            benchmark=_benchmark,
+                           pixabay_reference_url=_pixabay_url,
                            progress_data=progress_data,
                            active_challenge=active_challenge,
                            weather=_weather)
