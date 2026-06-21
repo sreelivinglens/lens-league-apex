@@ -756,9 +756,13 @@ def _run_startup_tasks():
                         pixabay_id           VARCHAR(40),
                         image_url            VARCHAR(512) NOT NULL,
                         photographer_credit  VARCHAR(120),
+                        ddi_score            NUMERIC(4,2),
                         fetched_at           TIMESTAMP DEFAULT NOW(),
                         CONSTRAINT uq_pixabay_cache UNIQUE (genre, dimension)
                     )""",
+                    # v79 — ddi_score on pixabay_reference_cache for rows created
+                    # before this column existed (idempotent on rerun).
+                    "ALTER TABLE pixabay_reference_cache ADD COLUMN IF NOT EXISTS ddi_score NUMERIC(4,2)",
                 ]
                 for sql in _migrations:
                     try:
@@ -2869,8 +2873,20 @@ def mission():
 
     if not _benchmark:
         try:
-            from engine.stock_images import get_or_fetch_reference_image
-            _pixabay_url = get_or_fetch_reference_image(db.session, _genre, _focus_key)
+            from engine.stock_images import get_cached_reference_image
+            _pixabay_url = get_cached_reference_image(db.session, _genre, _focus_key)
+            if not _pixabay_url:
+                # No cached candidate yet — kick off the slow DDI-vetting
+                # pipeline in the background (it calls Claude Vision and can
+                # take several seconds per candidate, so it must never run
+                # inline here). This request still falls through to the
+                # placeholder; the next request for this combo will see the
+                # cached result once the background thread finishes.
+                threading.Thread(
+                    target=_refresh_pixabay_reference_in_background,
+                    args=(_genre, _focus_key),
+                    daemon=True
+                ).start()
         except Exception as _pix_err:
             app.logger.warning(f'[mission pixabay fallback] {_pix_err}')
 
@@ -2894,6 +2910,28 @@ def mission():
                            progress_data=progress_data,
                            active_challenge=active_challenge,
                            weather=_weather)
+
+
+def _refresh_pixabay_reference_in_background(genre, dimension):
+    """
+    Background worker for the Mission page's Pixabay reference-image
+    fallback. Runs in its own thread — needs its own app context, matching
+    the existing _force_rescore_in_background pattern in this file.
+
+    Calls engine.stock_images.refresh_reference_cache(), which searches
+    Pixabay for several candidates and runs each through the real DDI
+    engine (auto_score()) until one scores >= 8.5, then caches that one.
+    Nothing below that bar is ever cached — same standard the community
+    benchmark query already enforces, so a Mission reference image can
+    never be lower quality than a community submission would be.
+    """
+    with app.app_context():
+        try:
+            from engine.stock_images import refresh_reference_cache
+            cached = refresh_reference_cache(db.session, genre, dimension)
+            app.logger.info(f'[mission pixabay refresh] {genre}/{dimension}: cached={cached}')
+        except Exception as _refresh_err:
+            app.logger.warning(f'[mission pixabay refresh] {genre}/{dimension} failed: {_refresh_err}')
 
 
 @app.route('/mission-snooze')
