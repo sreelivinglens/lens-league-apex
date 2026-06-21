@@ -509,9 +509,14 @@
 
 
   {% if is_first_eval and not (current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin') %}
-  <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--gold); border-radius:var(--radius-md); margin-bottom:14px;">
-    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Your first evaluation — fully unlocked</div>
-    <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">Every dimension and the mentor's advice — all of it, just this once. Subscribe to keep getting this on every photograph.</div>
+  <div style="padding:16px 20px; background:var(--gold); border-radius:var(--radius-md); margin-bottom:14px; display:flex; align-items:flex-start; gap:12px;">
+    <div style="width:32px; height:32px; border-radius:8px; background:rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <span style="font-size:16px;">✦</span>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#1a1a18; margin-bottom:4px;">Your first evaluation — fully unlocked</div>
+      <div style="font-size:15px; color:#1a1a18; line-height:1.6; opacity:0.82;">Every dimension and the mentor's advice — all of it, just this once. Subscribe to keep getting this on every photograph.</div>
+    </div>
   </div>
   {% endif %}
 
