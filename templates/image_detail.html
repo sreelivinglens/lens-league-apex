@@ -642,7 +642,7 @@
         <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); letter-spacing:1px; text-transform:uppercase;">How you're developing</span>
         <span style="margin-left:auto; font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">Score</span>
       </div>
-      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">{% if portfolio_data.same_genre %}Last {{ portfolio_data.plotted_count }} {{ image.genre }} photographs evaluated{% else %}Last {{ portfolio_data.plotted_count }} photographs evaluated (across all genres — not enough {{ image.genre }} photographs yet for an interest-specific trend){% endif %}</p>
+      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">Last {{ portfolio_data.plotted_count }} photograph{{ 's' if portfolio_data.plotted_count != 1 else '' }} evaluated</p>
 
       {% for dim in portfolio_data.dimensions %}
       <div style="margin-bottom:18px;">
@@ -662,9 +662,10 @@
           {% endfor %}
         </svg>
         <div style="display:flex; justify-content:space-between; margin-top:4px;">
-          {% for v in dim.score_values %}
-          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ v }}</span>
-          {% endfor %}
+          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ dim.score_values[0] }}</span>
+          {% if dim.score_values|length > 1 %}
+          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ dim.score_values[-1] }}</span>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
