@@ -2884,16 +2884,25 @@ def mission():
         _assignment = lesson['indoor_assignment']
         _title = _title + ' — indoors'
 
-    # ── Reference image — Tier 1: community, Tier 2: Pixabay ──────────────
+    # ── Reference image — Tier 1: community (exact), Tier 2: Pixabay, ─────
+    # ── Tier 3: community (genre-only) ─────────────────────────────────────
     # Tier 1: a community photo matching BOTH genre AND dimension
     # (score >= 8.5). This genre filter is the actual root-cause fix — the
     # old query only filtered by dimension, and its fallback dropped even
     # that, showing literally the highest-scoring public photo on the whole
     # platform regardless of genre. That's how a Wildlife lesson once
-    # showed a street protest photo as its reference image.
-    # Tier 2: no genre-matched community photo yet -> live Pixabay search
+    # showed a street protest photo as its reference image. Every tier
+    # below still filters by genre for this same reason — only the
+    # dimension match loosens, never the genre match.
+    # Tier 2: no genre+dimension community photo yet -> live Pixabay search
     # using genre + dimension keywords (engine/stock_images.py), instead of
     # the old "show anything" fallback.
+    # Tier 3: still nothing (Pixabay cache miss, background fetch still
+    # pending, or the cache table itself unreachable) -> broaden to any
+    # genre-matched community photo at 8.0+, dropping the dimension
+    # requirement only. Genuinely empty only when this platform has no
+    # public 8.0+ photo at all yet in that genre — at that point the
+    # template's dark placeholder is the honest answer, not a bug.
     # commons_file (curriculum_data.py) is a separate, deliberately
     # genre-agnostic system for illustrating a principle with an iconic
     # historical photo — not touched here.
@@ -2921,7 +2930,7 @@ def mission():
                 # pipeline in the background (it calls Claude Vision and can
                 # take several seconds per candidate, so it must never run
                 # inline here). This request still falls through to the
-                # placeholder; the next request for this combo will see the
+                # next tier; the next request for this combo will see the
                 # cached result once the background thread finishes.
                 threading.Thread(
                     target=_refresh_pixabay_reference_in_background,
@@ -2930,6 +2939,28 @@ def mission():
                 ).start()
         except Exception as _pix_err:
             app.logger.warning(f'[mission pixabay fallback] {_pix_err}')
+
+    if not _benchmark and not _pixabay_url:
+        # Tier 3: neither an exact genre+dimension benchmark nor a Pixabay
+        # reference is available (cache miss, background fetch still
+        # pending, or the cache itself is unreachable) — broaden to any
+        # genre-matched platform photo at 8.0+ rather than fall through to
+        # the dark placeholder. Reuses the `benchmark` template slot (Tier
+        # 1's <img> block in mission_detail.html), so no template change is
+        # needed — the hero just shows a less precisely-matched real
+        # photograph (genre only, not the specific lesson dimension)
+        # instead of nothing.
+        try:
+            _benchmark = (Image.query
+                          .filter_by(status='scored', is_public=True, is_flagged=False)
+                          .filter(Image.genre == _genre,
+                                  Image.score >= 8.0,
+                                  Image.user_id != current_user.id,
+                                  Image.thumb_url != None)
+                          .order_by(Image.score.desc())
+                          .first())
+        except Exception as _bench2_err:
+            app.logger.warning(f'[mission benchmark tier3] {_bench2_err}')
 
     class _Assignment:
         title        = _title
