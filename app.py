@@ -299,6 +299,47 @@ uri = app.config['SQLALCHEMY_DATABASE_URI']
 if uri and uri.startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = uri.replace('postgres://', 'postgresql://', 1)
 
+@app.template_filter('sentence_truncate')
+def sentence_truncate(text, max_length=160, hard_limit=230):
+    """Truncate to the nearest complete sentence, never mid-thought.
+
+    Plain truncate(N) chops at a raw character count and can land mid-word
+    or mid-clause ("...elephant herds are moving through the reserve in...").
+    This instead:
+      1. Returns text unchanged if it's already within max_length.
+      2. Otherwise cuts at the last sentence-ending punctuation (. ! ?) that
+         fits within max_length, so the result is always a complete thought.
+      3. If even the first sentence runs past max_length, extends up to
+         hard_limit to let it finish rather than leave a hanging fragment --
+         a few extra words beats an incomplete sentence.
+      4. Only if no sentence boundary exists within hard_limit (very long
+         run-on, or no terminal punctuation at all) falls back to a clean
+         word-boundary cut with an ellipsis, as a last resort.
+    """
+    if not text:
+        return text
+    text = text.strip()
+    if len(text) <= max_length:
+        return text
+
+    sentence_ends = [m.end() for m in re.finditer(r'[.!?](?:\s|$)', text)]
+
+    best = None
+    for end in sentence_ends:
+        if end <= max_length:
+            best = end
+        else:
+            break
+    if best:
+        return text[:best].rstrip()
+
+    for end in sentence_ends:
+        if end <= hard_limit:
+            return text[:end].rstrip()
+
+    cut = text[:hard_limit].rsplit(' ', 1)[0]
+    return cut.rstrip(',;:—-') + '…'
+
 # ---------------------------------------------------------------------------
 # Platform constants  -  single source of truth for branding + contact emails
 # Change these env vars in Railway; no code deploy needed.
