@@ -2475,38 +2475,6 @@ function slRestoreSections() {
   }
 }
 
-function slCollapseAll() {
-  var secIds = ['sec-standing', 'sec-points', 'sec-weekly', 'sec-referral', 'sec-photos', 'sec-aea', 'sec-location'];
-  secIds.forEach(function(id) {
-    var s = document.getElementById(id);
-    if (!s) return;
-    s.classList.remove('is-open');
-    var h = s.querySelector('.sl-sec__hdr');
-    if (h) h.setAttribute('aria-expanded', 'false');
-  });
-}
-
-// ── Auto-collapse on scroll past upload banner ──
-(function() {
-  var banner = document.getElementById('sl-upload-banner');
-  if (!banner || !window.IntersectionObserver) return;
-  var _hasScrolledPast = false;
-  var obs = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (!entry.isIntersecting && !_hasScrolledPast) {
-        // Banner scrolled out of view — user is in data zone, collapse all
-        _hasScrolledPast = true;
-        slCollapseAll();
-      } else if (entry.isIntersecting) {
-        // Banner back in view — restore saved state
-        _hasScrolledPast = false;
-        slRestoreSections();
-      }
-    });
-  }, { threshold: 0 });
-  obs.observe(banner);
-})();
-
 // ── Keyboard nav for collapsible sections ──
 document.querySelectorAll('.sl-sec__hdr').forEach(function(hdr) {
   hdr.addEventListener('keydown', function(e) {
