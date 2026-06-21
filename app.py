@@ -7138,6 +7138,26 @@ def image_detail(image_id):
                     _timing     = [r.dm_score  for r in _recent if r.dm_score  is not None]
                     _difficulty = [r.dod_score for r in _recent if r.dod_score is not None]
 
+                    def _label_subset(vals, pts, max_labels=8):
+                        """Pick values to label under the sparkline, positioned
+                        to align with their actual x-coordinate on the SVG so
+                        labels sit directly under their dot. Showing every
+                        value works fine up to max_labels points (covers
+                        nearly every real case today) but becomes an
+                        unreadable wall of numbers as the trend lookback
+                        grows toward 30, so beyond that this samples evenly
+                        across the range -- always including the first and
+                        last -- instead of dropping to just two endpoints.
+                        """
+                        n = len(vals)
+                        if n <= max_labels:
+                            idxs = list(range(n))
+                        else:
+                            step = (n - 1) / (max_labels - 1)
+                            idxs = sorted(set(round(i * step) for i in range(max_labels)))
+                        return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
+                                 'value': round(vals[i], 1)} for i in idxs]
+
                     _dims = []
                     for _label, _vals, _color, _flat_color in [
                         ('Whether it made you feel something', _feeling,    '#F5C518', '#BA7517'),
@@ -7152,6 +7172,7 @@ def image_detail(image_id):
                                 'label':      _label,
                                 'current':    _vals[-1],
                                 'score_values': [round(v, 1) for v in _vals],
+                                'label_points': _label_subset(_vals, _pts),
                                 'sparkline':  _sp,
                                 'points':     _pts,
                                 'color':      _flat_color if _is_flat else _color,
