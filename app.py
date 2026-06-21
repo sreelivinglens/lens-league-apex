@@ -6667,6 +6667,9 @@ def retry_score(image_id):
     if img.status == 'scored':
         flash('This image has already been scored.', 'info')
         return redirect(url_for('image_detail', image_id=image_id))
+    if img.status == 'processing':
+        flash('This image is already being evaluated — refresh in a moment.', 'info')
+        return redirect(url_for('image_detail', image_id=image_id))
     if not img.thumb_path or not os.path.exists(img.thumb_path):
         if not img.thumb_url:
             flash('Image file not found. Please contact support.', 'error')
@@ -6677,15 +6680,43 @@ def retry_score(image_id):
         flash('Scoring service not available. Please try again later.', 'error')
         return redirect(url_for('image_detail', image_id=image_id))
 
-    try:
-        import traceback, tempfile
-        from engine.auto_score import auto_score, build_audit_data, build_exif_context
-        from engine.compositor import build_card1
+    old_status = img.status
+    img.status = 'processing'
+    db.session.commit()
 
-        thumb_path = img.thumb_path
-        temp_file  = None
-        if not thumb_path or not os.path.exists(thumb_path):
-            try:
+    threading.Thread(
+        target=_retry_score_in_background,
+        args=(image_id, old_status),
+        daemon=True
+    ).start()
+
+    flash('Evaluating your photograph — this can take up to a minute.', 'info')
+    return redirect(url_for('image_detail', image_id=image_id))
+
+
+def _retry_score_in_background(image_id, old_status):
+    """
+    Background worker for retry_score. Runs in its own thread — needs its
+    own app context, matches the existing _force_rescore_in_background
+    pattern in this file. No request context here, so no flash() calls;
+    outcomes are communicated via img.status, which the existing
+    /score-status/<id> polling route + image_detail.html already surface
+    to the user (processing -> scored, or processing -> error with a
+    friendly message).
+    """
+    with app.app_context():
+        img = Image.query.get(image_id)
+        if not img:
+            return
+
+        temp_file = None
+        try:
+            import traceback, tempfile
+            from engine.auto_score import auto_score, build_audit_data, build_exif_context
+            from engine.compositor import build_card1
+
+            thumb_path = img.thumb_path
+            if not thumb_path or not os.path.exists(thumb_path):
                 from storage import get_client, BUCKET
                 tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
                 get_client().download_fileobj(
@@ -6693,109 +6724,106 @@ def retry_score(image_id):
                 )
                 tf.close()
                 thumb_path = temp_file = tf.name
-            except Exception as e:
-                flash(f'Could not retrieve image for scoring: {e}', 'error')
-                return redirect(url_for('image_detail', image_id=image_id))
 
-        _rescore_exif_ctx = build_exif_context(
-            {'make': img.exif_make, 'model': img.exif_model,
-             'focal_length_35mm': img.exif_focal_length_35mm,
-             'lens': img.exif_lens, 'software': img.exif_software,
-             'has_gps': img.exif_has_gps},
-            camera_track=img.camera_track,
-        ) if (img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
+            _rescore_exif_ctx = build_exif_context(
+                {'make': img.exif_make, 'model': img.exif_model,
+                 'focal_length_35mm': img.exif_focal_length_35mm,
+                 'lens': img.exif_lens, 'software': img.exif_software,
+                 'has_gps': img.exif_has_gps},
+                camera_track=img.camera_track,
+            ) if (img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
 
-        result = auto_score(
-            image_path   = thumb_path,
-            genre        = img.genre,
-            sub_genre    = img.sub_genre,
-            title        = img.asset_name,
-            photographer = img.photographer_name,
-            subject      = img.subject,
-            location     = img.location,
-            exif_context = _rescore_exif_ctx,
-        )
+            result = auto_score(
+                image_path   = thumb_path,
+                genre        = img.genre,
+                sub_genre    = img.sub_genre,
+                title        = img.asset_name,
+                photographer = img.photographer_name,
+                subject      = img.subject,
+                location     = img.location,
+                exif_context = _rescore_exif_ctx,
+            )
 
-        img.dod_score        = float(result.get('dod', 0))
-        img.disruption_score = float(result.get('disruption', 0))
-        img.dm_score         = float(result.get('dm', 0))
-        img.wonder_score     = float(result.get('wonder', 0))
-        img.aq_score         = float(result.get('aq', 0))
-        img.score            = float(result.get('score', 0))
-        img.tier             = get_tier(float(result.get('score', 0)))
-        img.archetype        = result.get('archetype', '')
-        img.soul_bonus       = result.get('soul_bonus', False)
-        img.status           = 'scored'
-        img.scored_at        = datetime.utcnow()
-        audit = build_audit_data(result, img)
-        img.set_audit(audit)
-        db.session.commit()
-
-        # Sprint 2 — award points for scored image (subscribers only)
-        try:
-            _su = User.query.get(img.user_id)
-            if _su and _su.is_subscribed and img.score and not img.is_flagged:
-                _sp = img.score * 10
-                award_points(_su, _sp, 'image_scored', commit=False)
-                _sc = Image.query.filter_by(user_id=_su.id, status='scored').count()
-                check_tier_jump_bonus(_su, img.tier, _sc, commit=False)
-                db.session.commit()
-        except Exception as _spe:
-            app.logger.error(f'[points hook] score_image error: {_spe}')
-        try:
-            _scored_total = Image.query.filter_by(
-                user_id=img.user_id, status='scored'
-            ).count()
-            if _scored_total == 1:
-                _ref_rec = db.session.execute(
-                    db.text('SELECT id, referrer_id, points_reward_granted '
-                            'FROM referrals WHERE referred_user_id = :uid'),
-                    {'uid': img.user_id}
-                ).fetchone()
-                if _ref_rec and not _ref_rec[2]:
-                    _referrer = User.query.get(_ref_rec[1])
-                    if _referrer:
-                        award_points(_referrer, 20, 'referral_first_image')
-                    db.session.execute(
-                        db.text('UPDATE referrals SET first_image_at = NOW() WHERE id = :rid'),
-                        {'rid': _ref_rec[0]}
-                    )
-                    db.session.commit()
-                    app.logger.info(f'[referral] +20pts: referrer={_ref_rec[1]} referred={img.user_id}')
-        except Exception as _rse:
-            app.logger.error(f'[referral] score hook: {_rse}')
-
-        try:
-            uid       = str(uuid.uuid4())
-            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
-                          f"{img.genre}_{img.score}.jpg")
-            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-            build_card1(thumb_path, audit, card_path)
-            img.card_path = card_path
-            card_url = _r2_upload_card(card_path, uid + '_card')
-            if card_url:
-                img.card_url = card_url
+            img.dod_score        = float(result.get('dod', 0))
+            img.disruption_score = float(result.get('disruption', 0))
+            img.dm_score         = float(result.get('dm', 0))
+            img.wonder_score     = float(result.get('wonder', 0))
+            img.aq_score         = float(result.get('aq', 0))
+            img.score            = float(result.get('score', 0))
+            img.tier             = get_tier(float(result.get('score', 0)))
+            img.archetype        = result.get('archetype', '')
+            img.soul_bonus       = result.get('soul_bonus', False)
+            img.status           = 'scored'
+            img.scored_at        = datetime.utcnow()
+            audit = build_audit_data(result, img)
+            img.set_audit(audit)
             db.session.commit()
-        except Exception:
-            app.logger.error(f'[retry_score card error] {traceback.format_exc()}')
 
-        if temp_file:
-            try: os.unlink(temp_file)
-            except: pass
+            # Sprint 2 — award points for scored image (subscribers only)
+            try:
+                _su = User.query.get(img.user_id)
+                if _su and _su.is_subscribed and img.score and not img.is_flagged:
+                    _sp = img.score * 10
+                    award_points(_su, _sp, 'image_scored', commit=False)
+                    _sc = Image.query.filter_by(user_id=_su.id, status='scored').count()
+                    check_tier_jump_bonus(_su, img.tier, _sc, commit=False)
+                    db.session.commit()
+            except Exception as _spe:
+                app.logger.error(f'[points hook] score_image error: {_spe}')
+            try:
+                _scored_total = Image.query.filter_by(
+                    user_id=img.user_id, status='scored'
+                ).count()
+                if _scored_total == 1:
+                    _ref_rec = db.session.execute(
+                        db.text('SELECT id, referrer_id, points_reward_granted '
+                                'FROM referrals WHERE referred_user_id = :uid'),
+                        {'uid': img.user_id}
+                    ).fetchone()
+                    if _ref_rec and not _ref_rec[2]:
+                        _referrer = User.query.get(_ref_rec[1])
+                        if _referrer:
+                            award_points(_referrer, 20, 'referral_first_image')
+                        db.session.execute(
+                            db.text('UPDATE referrals SET first_image_at = NOW() WHERE id = :rid'),
+                            {'rid': _ref_rec[0]}
+                        )
+                        db.session.commit()
+                        app.logger.info(f'[referral] +20pts: referrer={_ref_rec[1]} referred={img.user_id}')
+            except Exception as _rse:
+                app.logger.error(f'[referral] score hook: {_rse}')
 
-        flash(f'Scored! LL-Score: {img.score}  -  {img.tier}', 'success')
+            try:
+                uid       = str(uuid.uuid4())
+                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                              f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                              f"{img.genre}_{img.score}.jpg")
+                card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                build_card1(thumb_path, audit, card_path)
+                img.card_path = card_path
+                card_url = _r2_upload_card(card_path, uid + '_card')
+                if card_url:
+                    img.card_url = card_url
+                db.session.commit()
+            except Exception:
+                app.logger.error(f'[retry_score_bg card error] {traceback.format_exc()}')
 
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'[retry_score] {traceback.format_exc()}')
-        err = str(e)
-        if '529' in err or 'overloaded' in err.lower():
-            flash('AI engine is busy right now. Try again during off-peak hours: 6am-11am IST or 11pm-5am IST.', 'warning')
-        else:
-            flash(f'Scoring failed: {err[:120]}', 'error')
+            app.logger.info(f'[retry_score_bg] image={image_id} scored -> {img.score:.2f} ({img.tier})')
 
-    return redirect(url_for('image_detail', image_id=image_id))
+        except Exception as e:
+            db.session.rollback()
+            img2 = Image.query.get(image_id)
+            if img2:
+                img2.status = 'error'
+                db.session.commit()
+            app.logger.error(f'[retry_score_bg] {traceback.format_exc()}')
+
+        finally:
+            if temp_file:
+                try: os.unlink(temp_file)
+                except: pass
+
+
 
 
 @app.route('/image/<int:image_id>/upload-edit', methods=['GET', 'POST'])
