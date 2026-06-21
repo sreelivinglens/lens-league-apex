@@ -7091,10 +7091,11 @@ def image_detail(image_id):
                             })
 
                     _portfolio_data = {
-                        'has_trends': bool(_dims),
-                        'count':      _scored_count,
-                        'dimensions': _dims,
-                        'same_genre': _same_genre,
+                        'has_trends':     bool(_dims),
+                        'count':          _scored_count,
+                        'plotted_count':  len(_recent),
+                        'dimensions':     _dims,
+                        'same_genre':     _same_genre,
                     }
                 else:
                     _portfolio_data = {'has_trends': False, 'count': _scored_count}
