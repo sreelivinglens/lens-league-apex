@@ -485,7 +485,10 @@
   {# ── Back button ── #}
   <a href="{{ url_for('dashboard') }}" class="md-back">← Today</a>
 
-  {# ── Hero — Tier 1: community benchmark, Tier 2: Pixabay, Tier 3: dark placeholder ── #}
+  {# ── Hero — Tier 1: community benchmark (genre+dimension), Tier 2: Pixabay, #}
+  {# ── Tier 3: community benchmark (genre only, broader) — both tiers reuse  #}
+  {# ── the same `benchmark` variable from app.py, so this block only needs   #}
+  {# ── one check. Tier 4 (no img tags at all): dark placeholder.             #}
   <div class="md-hero">
     {% if benchmark and benchmark.thumb_url %}
     <img src="{{ benchmark.thumb_url }}"
