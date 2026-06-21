@@ -7084,25 +7084,24 @@ def image_detail(image_id):
             ).count()
 
             if _scored_count >= 5:
-                # Pull last 8 same-genre photographs for trend lines
+                # Pull up to the last 30 scored photographs across ALL
+                # genres for trend lines. This used to filter to the
+                # current photo's genre first, falling back to all genres
+                # only when fewer than 2 same-genre results existed — which
+                # meant a photographer with 6 total scored photos but only
+                # 2 in this specific genre saw a near-meaningless 2-point
+                # trend even though 6 data points were sitting right there.
+                # Trends are about overall trajectory across everything you
+                # shoot, not a single genre, so this is genre-agnostic by
+                # design now, with a much longer lookback (30 vs 8) so it
+                # actually tracks "where am I going" rather than just the
+                # last handful of uploads.
                 _recent = db.session.query(
                     Image.aq_score, Image.dm_score, Image.dod_score, Image.score
                 ).filter(
                     Image.user_id == _owner_id,
                     Image.status  == 'scored',
-                    Image.genre   == img.genre,
-                ).order_by(Image.scored_at.desc()).limit(8).all()
-
-                _same_genre = True
-                if not _recent or len(_recent) < 2:
-                    # Not enough same-genre data — fall back to all genres
-                    _recent = db.session.query(
-                        Image.aq_score, Image.dm_score, Image.dod_score, Image.score
-                    ).filter(
-                        Image.user_id == _owner_id,
-                        Image.status  == 'scored',
-                    ).order_by(Image.scored_at.desc()).limit(8).all()
-                    _same_genre = False
+                ).order_by(Image.scored_at.desc()).limit(30).all()
 
                 if _recent and len(_recent) >= 2:
                     _recent = list(reversed(_recent))  # oldest first
@@ -7167,7 +7166,6 @@ def image_detail(image_id):
                         'count':          _scored_count,
                         'plotted_count':  len(_recent),
                         'dimensions':     _dims,
-                        'same_genre':     _same_genre,
                     }
                 else:
                     _portfolio_data = {'has_trends': False, 'count': _scored_count}
