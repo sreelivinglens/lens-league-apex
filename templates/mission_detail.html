@@ -483,11 +483,16 @@
   {# ── Left column: hero image ── #}
   <div class="md-col-left">
 
-  {# ── Hero — benchmark image if available, else dark placeholder ── #}
+  {# ── Hero — Tier 1: community benchmark, Tier 2: Pixabay, Tier 3: dark placeholder ── #}
   <div class="md-hero">
     {% if benchmark and benchmark.thumb_url %}
     <img src="{{ benchmark.thumb_url }}"
          alt="{{ benchmark.asset_name or 'Reference photograph' }}"
+         class="md-hero-img"
+         onerror="this.style.display='none'">
+    {% elif pixabay_reference_url %}
+    <img src="{{ pixabay_reference_url }}"
+         alt="Reference photograph"
          class="md-hero-img"
          onerror="this.style.display='none'">
     {% endif %}
