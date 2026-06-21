@@ -18082,7 +18082,7 @@ def send_welcome_email(user):
     HTML body: templates/email_welcome.html (Jinja2).
     Hero: Ashok Kochhar, "Recycling", 8.84 Master, Street — fixed/static, founder-approved.
     Body of Work example: R Mahesh Iyer, "Jejuri Haldi", 8.82 Master, Documentary — fixed/static.
-    Attachment: sample_evaluation_card.jpg — full real scorecard sample (R Mahesh Iyer,
+    Attachment: sample_evaluation_card.pdf — full real scorecard sample (R Mahesh Iyer,
                 "Spirit of Olympics", 8.72), referenced from A.R's testimonial.
     A.R's photo: not yet set (ar_photo_url=None) — pending decision, falls back to
                  initials badge automatically.
@@ -18203,9 +18203,13 @@ def send_welcome_email(user):
         'shutterleague.com'
     )
 
-    # Sample evaluation card — real scorecard attached as a file, not embedded/linked.
+    # Sample evaluation card — attached as a PDF rather than a JPG. Brevo's
+    # API has no inline-image support at all (true attachment either way),
+    # but most email clients auto-preview image attachments directly in the
+    # message view. A PDF doesn't get that treatment — it opens separately,
+    # as a real attachment, which is what we want here.
     # Place the file at this path in your repo before deploying (see delivery notes).
-    sample_card_path = os.path.join(app.root_path, 'static', 'img', 'sample_evaluation_card.jpg')
+    sample_card_path = os.path.join(app.root_path, 'static', 'img', 'sample_evaluation_card.pdf')
 
     if send_email(
         user.email,
