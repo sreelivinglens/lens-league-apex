@@ -232,7 +232,31 @@
           (function pollScoreNow(){
             fetch("{{ url_for('score_status', image_id=image.id) }}")
               .then(r => r.json())
-              .then(d => { if (d.status !== 'processing') { window.location.reload(); } else { setTimeout(pollScoreNow, 2500); } })
+              .then(d => {
+                if (d.status === 'processing') {
+                  setTimeout(pollScoreNow, 2500);
+                } else if (d.status === 'error') {
+                  var container = document.getElementById('flashContainer');
+                  if (!container) {
+                    container = document.createElement('div');
+                    container.className = 'flash-container';
+                    container.id = 'flashContainer';
+                    container.style.cssText = 'max-width:var(--max-width); margin:12px auto; padding:0 var(--page-pad);';
+                    document.querySelector('main').insertAdjacentElement('beforebegin', container);
+                  }
+                  var el = document.createElement('div');
+                  el.className = 'flash error';
+                  el.setAttribute('role', 'alert');
+                  el.innerHTML = '<span class="flash-msg"></span><button class="flash-close" onclick="dismissFlash(this)" aria-label="Dismiss">&times;</button>';
+                  el.querySelector('.flash-msg').textContent = d.message || 'Evaluation failed — please try again.';
+                  container.appendChild(el);
+                  // Give the user time to read the message before the reload
+                  // swaps the spinner back to the Score Now button.
+                  setTimeout(function() { window.location.reload(); }, 4000);
+                } else {
+                  window.location.reload();
+                }
+              })
               .catch(() => setTimeout(pollScoreNow, 4000));
           })();
         </script>
