@@ -5417,6 +5417,7 @@ def upload():
                             img.audit_json = _orig.audit_json
                     except Exception as _ae:
                         app.logger.warning(f'[upload] audit copy failed: {_ae}')
+                _ensure_share_token(img)
                 db.session.commit()
                 app.logger.info(
                     f'[upload] score anchored from cache: image={img.id} '
@@ -5825,6 +5826,7 @@ def upload():
                                         _img.set_audit(audit)
                                     except Exception as _bf_audit_err:
                                         app.logger.warning(f'[scoring] breastfeeding audit save failed: {_bf_audit_err}')
+                                _ensure_share_token(_img)
                                 db.session.commit()
                                 app.logger.info(
                                     f'[scoring] breastfeeding whitelist cleared: '
@@ -5961,6 +5963,7 @@ def upload():
                                 _img.set_audit(audit)
                                 if _sc_calendar_ids:
                                     _img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
+                                _ensure_share_token(_img)
                                 db.session.commit()
 
                                 # Item C — log rotation entries only on successful scoring,
@@ -6611,6 +6614,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 except Exception as _gme:
                     app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
+            _ensure_share_token(img)
             db.session.commit()
 
             # Item C — log rotation entries only on successful (re)scoring.
