@@ -223,20 +223,11 @@
 
   {# ── Dimension breakdown ── #}
   <div class="pc-dims">
-    {% for attr, l1, l2 in [
-      ('dod_score',        'How Difficult', 'It Was'),
-      ('disruption_score', 'Visual',        'Disruption'),
-      ('dm_score',         'Timing',        'Was Right'),
-      ('wonder_score',     'Makes You',     'Feel'),
-      ('aq_score',         'Emotion',       'It Creates'),
-    ] %}
-    {% set val = attribute(image, attr) %}
-    {% if val %}
+    {% for dim in dim_breakdown %}
     <div class="pc-dim">
-      <div class="pc-dim-score">{{ "%.1f"|format(val) }}</div>
-      <div class="pc-dim-label">{{ l1 }}<br>{{ l2 }}</div>
+      <div class="pc-dim-score">{{ "%.1f"|format(dim.score) }}</div>
+      <div class="pc-dim-label">{{ dim.l1 }}<br>{{ dim.l2 }}</div>
     </div>
-    {% endif %}
     {% endfor %}
   </div>
 
