@@ -206,11 +206,12 @@
      FULL EVALUATION — mirrors image_detail scorecard content exactly.
      ══════════════════════════════════════════════════════════════════ #}
 
-  {# ── What Stood Out ── #}
-  {% if audit and audit.what_stood_out %}
+  {# ── What Stood Out — handles both new (what_stood_out) and old (hard_truth) schema #}
+  {% set _wso = audit.what_stood_out if audit and audit.what_stood_out else (audit.hard_truth if audit and audit.hard_truth else '') %}
+  {% if _wso %}
   <div style="margin-bottom:14px;">
     <p style="margin:0 0 6px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;line-height:1.5;">&#9733; What Stood Out</p>
-    <p style="margin:0;font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.6;">{{ audit.what_stood_out }}</p>
+    <p style="margin:0;font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.6;">{{ _wso }}</p>
   </div>
   {% endif %}
 
