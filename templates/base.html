@@ -1047,6 +1047,54 @@ img {
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
+<!-- og:image dimensions — WhatsApp/Facebook render reliability -->
+<meta property="og:image:width" content="{% block og_image_width %}1200{% endblock %}">
+<meta property="og:image:height" content="{% block og_image_height %}630{% endblock %}">
+<meta property="og:image:type" content="{% block og_image_type %}image/jpeg{% endblock %}">
+<!-- Schema.org — WebApplication + Organization entity assertion -->
+<!-- Tells Google's knowledge graph what Shutter League is (fixes brand disambiguation) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": "https://shutterleague.com/#webapp",
+      "name": "Shutter League",
+      "url": "https://shutterleague.com",
+      "description": "Photography evaluation and learning platform. Honest feedback across 5 dimensions — technical difficulty, timing, originality, visual impact, and wonder. Free to start.",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "en",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR",
+        "description": "3 free photograph evaluations. Subscription from ₹200/month."
+      },
+      "provider": { "@id": "https://shutterleague.com/#organization" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://shutterleague.com/#organization",
+      "name": "Shutter League",
+      "url": "https://shutterleague.com",
+      "email": "support@shutterleague.com",
+      "foundingDate": "2026",
+      "description": "Photography learning and certification platform. Photographers are evaluated by the Apex DDI Engine across 5 dimensions.",
+      "sameAs": []
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://shutterleague.com/#website",
+      "url": "https://shutterleague.com",
+      "name": "Shutter League",
+      "publisher": { "@id": "https://shutterleague.com/#organization" }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
