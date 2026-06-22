@@ -11142,8 +11142,32 @@ def robots_txt():
         "Disallow: /judge\n"
         "Crawl-delay: 10\n"
         "\n"
+        "# Google-Extended (Google AI training) — marketing pages allowed;\n"
+        "# photographer content and private pages disallowed.\n"
+        "User-agent: Google-Extended\n"
+        "Allow: /\n"
+        "Allow: /about\n"
+        "Allow: /how-it-works\n"
+        "Allow: /pricing\n"
+        "Allow: /science\n"
+        "Allow: /learning\n"
+        "Allow: /programme-rules\n"
+        "Disallow: /card/\n"
+        "Disallow: /image/\n"
+        "Disallow: /admin\n"
+        "Disallow: /sree-admin\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /profile\n"
+        "Disallow: /upload\n"
+        "Disallow: /bulk-upload\n"
+        "Disallow: /rate\n"
+        "Disallow: /raw\n"
+        "Disallow: /judge\n"
+        "\n"
         "# Automated scraping, bulk harvesting, and data extraction are\n"
         "# strictly prohibited. See /terms for full legal restrictions.\n"
+        "\n"
+        "Sitemap: https://shutterleague.com/sitemap-index.xml\n"
     )
     return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
@@ -11177,6 +11201,71 @@ def sitemap():
     <lastmod>{today}</lastmod>
     <changefreq>{freq}</changefreq>
     <priority>{priority}</priority>
+  </url>
+'''
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls}</urlset>'''
+    return xml, 200, {'Content-Type': 'application/xml; charset=utf-8'}
+
+
+@app.route('/sitemap-index.xml')
+def sitemap_index():
+    """
+    Sitemap index — references sitemap.xml (static pages) and
+    sitemap-cards.xml (public scored evaluation cards).
+    Submitted to Google Search Console.
+    """
+    base = 'https://shutterleague.com'
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>{base}/sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>{base}/sitemap-cards.xml</loc>
+  </sitemap>
+</sitemapindex>'''
+    return xml, 200, {'Content-Type': 'application/xml; charset=utf-8'}
+
+
+@app.route('/sitemap-cards.xml')
+def sitemap_cards():
+    """
+    Dynamic sitemap for public scored evaluation cards.
+    Queries all scored images with a share_token (not flagged).
+    Each /card/<token> page is unique content: photograph, score,
+    photographer name, genre, and full evaluation — strong long-tail
+    SEO targets (e.g. "Ashok Kochhar 8.92 Master Street Photography").
+    """
+    try:
+        rows = db.session.execute(db.text(
+            "SELECT share_token, scored_at "
+            "FROM images "
+            "WHERE status = 'scored' "
+            "  AND share_token IS NOT NULL "
+            "  AND share_token != '' "
+            "  AND (is_flagged IS NULL OR is_flagged = false) "
+            "ORDER BY scored_at DESC "
+            "LIMIT 5000"
+        )).fetchall()
+    except Exception as _e:
+        app.logger.error(f'[sitemap_cards] DB error: {_e}')
+        rows = []
+
+    from datetime import date as _date
+    base = 'https://shutterleague.com'
+    fallback_date = _date.today().strftime('%Y-%m-%d')
+    urls = ''
+    for row in rows:
+        token     = row[0]
+        scored_at = row[1]
+        lastmod   = scored_at.strftime('%Y-%m-%d') if scored_at else fallback_date
+        urls += f'''  <url>
+    <loc>{base}/card/{token}</loc>
+    <lastmod>{lastmod}</lastmod>
+    <changefreq>never</changefreq>
+    <priority>0.6</priority>
   </url>
 '''
     xml = f'''<?xml version="1.0" encoding="UTF-8"?>
