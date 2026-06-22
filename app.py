@@ -4431,7 +4431,6 @@ def profile():
             logout_user()
             return redirect(url_for('login'))
 
-    progress_data = _build_progress_data(current_user)
     _ref_code  = get_or_create_referral_code(current_user)
     _ref_stats = get_referral_stats(current_user)
     _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
@@ -4444,7 +4443,7 @@ def profile():
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
 
-    return render_template('profile.html', images_used=images_used, progress_data=progress_data,
+    return render_template('profile.html', images_used=images_used,
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
                            countries=get_countries(), location_data_json=json.dumps(_loc))
 
@@ -5417,7 +5416,6 @@ def upload():
                             img.audit_json = _orig.audit_json
                     except Exception as _ae:
                         app.logger.warning(f'[upload] audit copy failed: {_ae}')
-                _ensure_share_token(img)
                 db.session.commit()
                 app.logger.info(
                     f'[upload] score anchored from cache: image={img.id} '
@@ -5826,7 +5824,6 @@ def upload():
                                         _img.set_audit(audit)
                                     except Exception as _bf_audit_err:
                                         app.logger.warning(f'[scoring] breastfeeding audit save failed: {_bf_audit_err}')
-                                _ensure_share_token(_img)
                                 db.session.commit()
                                 app.logger.info(
                                     f'[scoring] breastfeeding whitelist cleared: '
@@ -5963,7 +5960,6 @@ def upload():
                                 _img.set_audit(audit)
                                 if _sc_calendar_ids:
                                     _img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
-                                _ensure_share_token(_img)
                                 db.session.commit()
 
                                 # Item C — log rotation entries only on successful scoring,
@@ -6614,7 +6610,6 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 except Exception as _gme:
                     app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
-            _ensure_share_token(img)
             db.session.commit()
 
             # Item C — log rotation entries only on successful (re)scoring.
