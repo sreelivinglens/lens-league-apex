@@ -1827,7 +1827,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
          style="background:#F5C518; color:#1A1A18; font-size:14px; font-weight:700;
                 padding:8px 14px; border-radius:10px; text-decoration:none; white-space:nowrap;
                 min-height:44px; display:inline-flex; align-items:center;">
-        Set up →
+        {% if portfolio_is_public %}Manage →{% else %}Set up →{% endif %}
       </a>
       <button onclick="fetch('{{ url_for('dismiss_portfolio_banner') }}',{method:'POST'}).then(function(){document.getElementById('sl-portfolio-banner').style.display='none';})"
               style="background:none; border:none; color:rgba(90,70,0,.45); font-size:20px;
