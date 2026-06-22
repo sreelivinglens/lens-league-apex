@@ -7315,17 +7315,58 @@ def public_card(token):
         app.logger.warning(f'[public_card] stats: {_se}')
         _stats = None
 
-    # Parse audit JSON for the card details
+    # ── Parse audit JSON and pre-compute all card display values in Python ──
+    # This approach mirrors how build_audit_data() assembles the data server-side.
+    # Never rely on Jinja2 namespace() objects or conditional dict access for this
+    # — subtle scoping issues produce empty strings silently in the template.
     _audit = {}
     try:
         if img.audit_json:
             import json as _json
             _audit = _json.loads(img.audit_json)
-    except Exception:
-        pass
+    except Exception as _ae:
+        app.logger.warning(f'[public_card] audit_json parse error: {_ae}')
 
-    # Dimension breakdown computed in Python — avoids Jinja2 attribute()
-    # which is not available as a callable in Flask's template environment.
+    # What Stood Out — new schema field first, fall back to old hard_truth
+    _wso = (_audit.get('what_stood_out') or '').strip() or (_audit.get('hard_truth') or '').strip()
+
+    # Card bodies — mirror image_detail.html resolution logic exactly
+    # Extract rows tuples: [("Technical", val), ("Moment", val), ("Next", val)]
+    _rows = _audit.get('rows') or []
+    _tech_val = ''
+    _mom_val  = ''
+    _next_val = ''
+    for _row in _rows:
+        if _row and len(_row) >= 2:
+            if _row[0] == 'Technical': _tech_val = _row[1] or ''
+            if _row[0] == 'Moment':    _mom_val  = _row[1] or ''
+            if _row[0] == 'Next':      _next_val = _row[1] or ''
+
+    # Card 1 — The Photographer's Advice
+    _c1 = ((_audit.get('transferable_advice') or '').strip()
+           or _tech_val.strip())
+
+    # Card 2 — What You Controlled
+    _c2 = ''
+    if (_audit.get('transferable_advice') or '').strip():
+        _c2 = (_tech_val.strip() or _mom_val.strip())
+    else:
+        _c2 = _mom_val.strip()
+
+    # Card 3 — What To Watch Next
+    _bgcheck = ((_audit.get('background_check') or '').strip()
+                or (_audit.get('byline_1') or '').strip())
+    _c3 = _bgcheck or _next_val.strip()
+
+    # Card 4 — Keep This In Mind
+    _c4 = ((_audit.get('byline_2_body') or '').strip()
+           or (_audit.get('byline_2') or '').strip())
+
+    # Edit guide
+    _edit_base     = (_audit.get('edit_base') or '').strip()
+    _edit_creative = (_audit.get('edit_creative') or '').strip()
+
+    # Dimension breakdown — from model attributes, not audit JSON
     _dim_breakdown = []
     for _dattr, _dl1, _dl2 in [
         ('dod_score',        'How Difficult', 'It Was'),
@@ -7341,12 +7382,19 @@ def public_card(token):
     return render_template(
         'card_public.html',
         image          = img,
-        audit          = _audit,
         portfolio_data = _portfolio_data,
         stats          = _stats,
         share_token    = token,
         dim_breakdown  = _dim_breakdown,
         platform_name  = PLATFORM_NAME,
+        # Pre-computed evaluation display values — all plain strings
+        wso            = _wso,
+        c1_body        = _c1,
+        c2_body        = _c2,
+        c3_body        = _c3,
+        c4_body        = _c4,
+        edit_base      = _edit_base,
+        edit_creative  = _edit_creative,
     )
 
 
