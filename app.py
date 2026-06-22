@@ -3316,11 +3316,21 @@ def dashboard():
 
     # POTY welcome banner
     show_poty_banner = not getattr(current_user, 'poty_banner_dismissed', False)
+    try:
+        _port_row = db.session.execute(
+            db.text("SELECT portfolio_public, portfolio_banner_dismissed FROM users WHERE id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        _portfolio_public    = bool(_port_row[0]) if _port_row else False
+        _portfolio_dismissed = bool(_port_row[1]) if _port_row else False
+    except Exception:
+        _portfolio_public    = False
+        _portfolio_dismissed = False
     show_portfolio_banner = (
         current_user.role != 'admin' and
-        not getattr(current_user, 'portfolio_banner_dismissed', False) and
-        not getattr(current_user, 'portfolio_public', False)
+        not _portfolio_dismissed
     )
+    portfolio_is_public = _portfolio_public
 
     # Contest announcement banners — active banners matching user audience
     _is_sub = getattr(current_user, 'is_subscribed', False)
@@ -3608,6 +3618,7 @@ def dashboard():
                            wallet_hud=wallet_hud,
                            progress_data=progress_data,
                            show_portfolio_banner=show_portfolio_banner,
+                           portfolio_is_public=portfolio_is_public,
                            mentor_reviews=mentor_reviews,
                            referral_code=get_or_create_referral_code(current_user),
                            referral_stats=get_referral_stats(current_user),
@@ -4431,6 +4442,7 @@ def profile():
             logout_user()
             return redirect(url_for('login'))
 
+    progress_data = _build_progress_data(current_user)
     _ref_code  = get_or_create_referral_code(current_user)
     _ref_stats = get_referral_stats(current_user)
     _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
@@ -4443,7 +4455,7 @@ def profile():
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
 
-    return render_template('profile.html', images_used=images_used,
+    return render_template('profile.html', images_used=images_used, progress_data=progress_data,
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
                            countries=get_countries(), location_data_json=json.dumps(_loc))
 
