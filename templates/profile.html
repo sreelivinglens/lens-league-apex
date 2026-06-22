@@ -89,10 +89,10 @@
   .danger-zone p { font-size: 16px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
 
   @media (max-width: 768px) {
-    .profile-wrap { padding: 56px 16px 40px; }
-    .profile-wrap h1 { text-shadow: none; }
     /* Collapse any inline 2-col grids on mobile */
     [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+    .profile-wrap { padding: 56px 16px 40px; }
+    .profile-wrap h1 { text-shadow: none; }
   }
   /* 600px breakpoint (subset of the 768px breakpoint above; no additional
      rules needed — included for mobile-breakpoint audit detection) */
@@ -216,10 +216,12 @@
       <input type="hidden" name="action" value="update_profile">
 
       <div class="form-group">
-        <label for="full_name">Full Name</label>
+        <label for="full_name">Photographer Name
+          <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(appears on your evaluation cards)</span>
+        </label>
         <input type="text" id="full_name" name="full_name"
                value="{{ current_user.full_name or '' }}"
-               placeholder="Your full name" maxlength="120">
+               placeholder="e.g. Sreekumar Krishnan" maxlength="120">
       </div>
 
       <div class="form-group">
