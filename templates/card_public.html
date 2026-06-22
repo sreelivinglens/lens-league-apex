@@ -5,107 +5,155 @@
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="{{ image.photographer_name or 'Photographer' }} · {{ '%.2f'|format(image.score) }} {{ image.tier }} — Shutter League">
 <meta property="og:description" content="{{ image.genre }} · Evaluated by the Apex DDI Engine · Shutter League">
-{% if image.thumb_url %}
-<meta property="og:image" content="{{ image.thumb_url }}">
-{% endif %}
+{% if image.thumb_url %}<meta property="og:image" content="{{ image.thumb_url }}">{% endif %}
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
 
 {% block extra_css %}
 <style>
+  /* ── Reset/base ── */
+  -webkit-font-smoothing: antialiased;
+
   .pc-wrap {
     max-width: 820px; margin: 0 auto; padding: 0 var(--page-pad) 60px;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  /* ── Brand header ── */
   .pc-brand {
     display: flex; align-items: center; gap: 12px;
     padding: 20px 0 18px; border-bottom: 1px solid var(--border);
     margin-bottom: 28px;
   }
   .pc-brand-mark {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
   }
   .pc-brand-sub {
-    font-size: 13px; color: var(--text-muted); margin-left: auto;
+    font-size: 14px; color: var(--text-muted); margin-left: auto; line-height: 1.5;
   }
+
+  /* ── Photo ── */
   .pc-photo-wrap {
-    border-radius: var(--radius-md); overflow: hidden; margin-bottom: 0;
-    background: var(--surface-3); position: relative;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    overflow: hidden; background: var(--surface-3);
   }
   .pc-photo-wrap img {
     display: block; width: 100%; height: auto; max-height: 520px;
     object-fit: cover; object-position: center;
   }
+
+  /* ── Score bar ── */
   .pc-score-bar {
-    background: var(--navy); padding: 16px 22px;
+    background: #1A2744; padding: 18px 22px;
     display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 8px; margin-bottom: 28px;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 28px;
     border-radius: 0 0 var(--radius-md) var(--radius-md);
   }
-  .pc-score-left { display: flex; flex-direction: column; gap: 3px; }
+  .pc-score-left { display: flex; flex-direction: column; gap: 5px; }
   .pc-photographer {
-    font-size: 16px; font-weight: 700; color: #fff;
-    font-family: var(--font-mono);
+    font-size: 18px; font-weight: 700; color: #F5C518;
+    font-family: var(--font-mono); line-height: 1.5;
   }
   .pc-tier-badge {
-    display: inline-block; background: var(--gold); color: var(--navy);
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 1.5px; padding: 2px 8px; border-radius: 3px;
+    display: inline-block; background: var(--gold); color: #1A2744;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; padding: 4px 10px; border-radius: 3px;
     text-transform: uppercase; margin-right: 6px;
   }
-  .pc-genre { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .pc-genre { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+  .pc-score-right { text-align: right; }
+  .pc-score-label {
+    font-family: var(--font-mono); font-size: 14px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 4px;
+    line-height: 1.5;
+  }
   .pc-score-num {
     font-family: var(--font-mono); font-size: 42px; font-weight: 700;
-    color: var(--gold); line-height: 1;
+    color: var(--gold); line-height: 1.5;
   }
+
+  /* ── Download bar ── */
   .pc-download-bar {
     display: flex; justify-content: flex-end; margin-bottom: 28px;
   }
+  .pc-download-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px; padding: 12px 22px;
+    background: var(--gold); color: #1A2744;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    border-radius: var(--radius-sm); text-decoration: none;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    line-height: 1.5;
+  }
+  .pc-download-btn:hover { opacity: 0.88; }
+
+  /* ── Section cards ── */
   .pc-card {
     background: var(--surface-1); border: 1px solid var(--border);
     border-radius: 14px; padding: 22px 24px; margin-bottom: 16px;
   }
   .pc-card-eyebrow {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;
-    display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+    line-height: 1.5;
   }
   .pc-what-stood-out {
     font-size: 18px; font-weight: 700; color: var(--text-primary);
-    line-height: 1.6; margin: 0;
+    line-height: 1.7; margin: 0;
   }
   .pc-advice {
-    font-size: 15px; color: var(--text-secondary); line-height: 1.75; margin: 0;
+    font-size: 16px; color: var(--text-secondary); line-height: 1.75; margin: 0;
   }
+
+  /* ── Dimension breakdown ── */
   .pc-dims {
     display: grid; grid-template-columns: repeat(5, 1fr);
     gap: 8px; margin-bottom: 16px;
   }
   .pc-dim {
     background: var(--surface-1); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 10px; text-align: center;
+    border-radius: 10px; padding: 14px 8px; text-align: center;
   }
   .pc-dim-score {
     font-family: var(--font-mono); font-size: 22px; font-weight: 700;
-    color: var(--text-primary); line-height: 1.2;
+    color: var(--text-primary); line-height: 1.5;
   }
   .pc-dim-label {
-    font-size: 11px; color: var(--text-muted); line-height: 1.4;
+    font-size: 14px; color: var(--text-muted); line-height: 1.5;
     text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;
   }
+
+  /* ── Trends grid ── */
   .pc-trends-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
     margin-bottom: 16px;
   }
+
+  /* ── Footer ── */
   .pc-footer {
     margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
-    font-size: 13px; color: var(--text-muted); text-align: center;
-    line-height: 1.7;
+    font-size: 15px; color: var(--text-muted); text-align: center;
+    line-height: 1.75;
   }
+
+  /* ── Mobile ≤600px ── */
   @media (max-width: 600px) {
-    .pc-dims { grid-template-columns: repeat(3, 1fr); }
+    .pc-dims { grid-template-columns: repeat(2, 1fr); }
     .pc-trends-grid { grid-template-columns: 1fr; }
     .pc-score-num { font-size: 32px; }
+    .pc-download-bar { justify-content: stretch; }
+    .pc-download-btn { width: 100%; justify-content: center; }
+    .pc-brand-sub { display: none; }
+    .pc-dim-label { font-size: 14px; }
+  }
+
+  /* ── iPad 601px–1024px ── */
+  @media (min-width: 601px) and (max-width: 1024px) {
+    .pc-dims { grid-template-columns: repeat(3, 1fr); }
+    .pc-trends-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 {% endblock %}
@@ -119,23 +167,29 @@
     <span class="pc-brand-sub">Evaluation Card &nbsp;·&nbsp; Apex DDI Engine</span>
   </div>
 
-  {# ── Photo + score bar ── #}
+  {# ── Photo ── #}
   <div class="pc-photo-wrap">
     {% if image.thumb_url %}
-    <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Photograph' }}">
+    <img src="{{ image.thumb_url }}"
+         alt="{{ image.asset_name or 'Photograph' }}"
+         onerror="this.style.display='none'">
     {% endif %}
   </div>
+
+  {# ── Score bar ── #}
   <div class="pc-score-bar">
     <div class="pc-score-left">
       <span class="pc-photographer">{{ image.photographer_name or 'Photographer' }}</span>
       <span>
         <span class="pc-tier-badge">{{ image.tier }}</span>
-        {% if image.soul_bonus %}<span class="pc-tier-badge" style="background:transparent;color:var(--gold);border:1px solid var(--gold);">Soul Bonus</span>{% endif %}
+        {% if image.soul_bonus %}
+        <span class="pc-tier-badge" style="background:transparent;color:#F5C518;border:1px solid #F5C518;">Soul Bonus</span>
+        {% endif %}
       </span>
-      <span class="pc-genre">{{ image.genre }}{% if image.sub_genre %} · {{ image.sub_genre }}{% endif %}</span>
+      <span class="pc-genre">{{ image.genre }}{% if image.sub_genre %} &middot; {{ image.sub_genre }}{% endif %}</span>
     </div>
-    <div>
-      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;text-align:right;margin-bottom:4px;">Score</div>
+    <div class="pc-score-right">
+      <div class="pc-score-label">Score</div>
       <div class="pc-score-num">{{ "%.2f"|format(image.score) }}</div>
     </div>
   </div>
@@ -143,24 +197,24 @@
   {# ── Download button ── #}
   <div class="pc-download-bar">
     <a href="{{ url_for('public_card_download', token=share_token) }}"
-       class="btn btn-solid" style="font-size:13px;">
-      ↓ Download Evaluation Card
+       class="pc-download-btn">
+      &darr; Download Evaluation Card
     </a>
   </div>
 
   {# ── What Stood Out ── #}
   {% if audit.get('what_stood_out') %}
-  <div class="pc-card" style="margin-bottom:16px;">
-    <div class="pc-card-eyebrow">★ What Stood Out</div>
+  <div class="pc-card">
+    <div class="pc-card-eyebrow">&#9733; What Stood Out</div>
     <p class="pc-what-stood-out">{{ audit.what_stood_out }}</p>
   </div>
   {% endif %}
 
   {# ── Photographer's Advice ── #}
   {% if audit.get('advice') %}
-  <div class="pc-card" style="background:var(--surface-2);margin-bottom:16px;">
-    <div class="pc-card-eyebrow" style="margin-bottom:8px;">
-      <span style="display:inline-block;width:18px;height:10px;background:var(--navy);border-radius:2px;"></span>
+  <div class="pc-card" style="background:var(--surface-2);">
+    <div class="pc-card-eyebrow">
+      <span style="display:inline-block;width:18px;height:10px;background:#1A2744;border-radius:2px;"></span>
       The Photographer's Advice
     </div>
     <p class="pc-advice">{{ audit.advice }}</p>
@@ -169,15 +223,14 @@
 
   {# ── Dimension breakdown ── #}
   <div class="pc-dims">
-    {% set dim_labels = [
-      ('dod_score',         'How Difficult', 'It Was'),
-      ('disruption_score',  'Visual', 'Disruption'),
-      ('dm_score',          'Whether the Timing', 'Was Right'),
-      ('wonder_score',      'Whether It Makes', 'One Feel Something'),
-      ('aq_score',          'The Emotion', 'It Creates'),
+    {% for attr, l1, l2 in [
+      ('dod_score',        'How Difficult', 'It Was'),
+      ('disruption_score', 'Visual',        'Disruption'),
+      ('dm_score',         'Timing',        'Was Right'),
+      ('wonder_score',     'Makes You',     'Feel'),
+      ('aq_score',         'Emotion',       'It Creates'),
     ] %}
-    {% for attr, l1, l2 in dim_labels %}
-    {% set val = image[attr] if image[attr] is defined else attribute(image, attr) %}
+    {% set val = attribute(image, attr) %}
     {% if val %}
     <div class="pc-dim">
       <div class="pc-dim-score">{{ "%.1f"|format(val) }}</div>
@@ -187,26 +240,27 @@
     {% endfor %}
   </div>
 
-  {# ── Trend sparklines + Your Stats ── #}
+  {# ── Trends + Stats ── #}
   <div class="pc-trends-grid">
 
     {% if portfolio_data and portfolio_data.has_trends %}
     <div class="pc-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;">How you're developing</span>
-        <span style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">Score</span>
+        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;line-height:1.5;">How you're developing</span>
+        <span style="margin-left:auto;font-family:var(--font-mono);font-size:14px;color:var(--text-muted);line-height:1.5;">Score</span>
       </div>
-      <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted);">Last {{ portfolio_data.plotted_count }} photographs evaluated</p>
+      <p style="margin:0 0 16px;font-size:14px;color:var(--text-muted);line-height:1.6;">Last {{ portfolio_data.plotted_count }} photographs evaluated</p>
+
       {% for dim in portfolio_data.dimensions %}
-      <div style="margin-bottom:16px;">
+      <div style="margin-bottom:18px;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
           <div>
-            <p style="margin:0;font-size:14px;color:var(--text-primary);">{{ dim.label }}</p>
+            <p style="margin:0;font-size:15px;color:var(--text-primary);line-height:1.6;">{{ dim.label }}</p>
             {% if dim.pill %}
-            <span style="font-size:12px;font-family:var(--font-mono);font-weight:700;color:{{ dim.pill_color }};display:inline-block;background:{{ dim.pill_bg }};padding:2px 8px;border-radius:4px;margin-top:3px;">{{ dim.pill }}</span>
+            <span style="font-size:13px;font-family:var(--font-mono);font-weight:700;color:{{ dim.pill_color }};display:inline-block;background:{{ dim.pill_bg }};padding:2px 8px;border-radius:4px;margin-top:3px;line-height:1.5;">{{ dim.pill }}</span>
             {% endif %}
           </div>
-          <span style="font-size:24px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);flex-shrink:0;margin-left:10px;">{{ "%.1f"|format(dim.current) }}</span>
+          <span style="font-size:26px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);flex-shrink:0;margin-left:10px;line-height:1.5;">{{ "%.1f"|format(dim.current) }}</span>
         </div>
         <svg viewBox="0 0 300 32" width="100%" height="32" preserveAspectRatio="none">
           <polyline points="{{ dim.sparkline }}" fill="none" stroke="{{ dim.color }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" {% if dim.flat %}stroke-dasharray="7,4"{% endif %}/>
@@ -214,51 +268,52 @@
           <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{{ '5' if loop.last else '3.5' }}" fill="{{ dim.color }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
           {% endfor %}
         </svg>
-        <div style="position:relative;height:16px;margin-top:4px;">
+        <div style="position:relative;height:18px;margin-top:4px;">
           {% for lp in dim.label_points %}
-          <span style="position:absolute;left:{{ lp.x_pct }}%;transform:translateX(-50%);font-size:12px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;">{{ lp.value }}</span>
+          <span style="position:absolute;left:{{ lp.x_pct }}%;transform:translateX(-50%);font-size:13px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;line-height:1.5;">{{ lp.value }}</span>
           {% endfor %}
         </div>
       </div>
       {% endfor %}
     </div>
+
     {% else %}
-    <div class="pc-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:10px;">
-      <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;">How you're developing</span>
-      <p style="margin:0;font-size:14px;color:var(--text-muted);line-height:1.7;">Trend lines unlock after 5 photographs evaluated.</p>
-      {% if portfolio_data %}<div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--gold);">{{ portfolio_data.count }}/5</div>{% endif %}
+    <div class="pc-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;">
+      <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;line-height:1.5;">How you're developing</span>
+      <p style="margin:0;font-size:15px;color:var(--text-muted);line-height:1.7;">Trend lines unlock after 5 photographs evaluated.</p>
+      {% if portfolio_data %}<div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--gold);line-height:1.5;">{{ portfolio_data.count }}/5</div>{% endif %}
     </div>
     {% endif %}
 
     {# Your Stats #}
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <p style="margin:0 0 2px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--text-primary);text-transform:uppercase;">Your Stats</p>
+      <p style="margin:0 0 2px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:var(--text-primary);text-transform:uppercase;line-height:1.5;">Your Stats</p>
       <div style="background:linear-gradient(135deg,#FDF3E3,#F0D9A8);border:0.5px solid rgba(186,117,23,0.3);border-radius:12px;padding:16px 18px;text-align:center;flex:1;">
-        <p style="margin:0 0 4px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;color:#854F0B;text-transform:uppercase;">Best This Year</p>
-        <p style="margin:0;font-size:34px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1.7;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '—' }}</p>
-        {% if stats and stats.best_genre %}<p style="margin:4px 0 0;font-size:12px;color:#4A3010;">{{ stats.best_title or stats.best_genre }}</p>{% endif %}
+        <p style="margin:0 0 4px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#854F0B;text-transform:uppercase;line-height:1.5;">Best This Year</p>
+        <p style="margin:0;font-size:34px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1.5;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '&mdash;' }}</p>
+        {% if stats and stats.best_genre %}<p style="margin:4px 0 0;font-size:14px;color:#4A3010;line-height:1.5;">{{ stats.best_title or stats.best_genre }}</p>{% endif %}
       </div>
       <div style="background:linear-gradient(135deg,#EAF5EE,#C8E6D0);border:0.5px solid rgba(39,80,10,0.2);border-radius:12px;padding:16px 18px;text-align:center;flex:1;">
-        <p style="margin:0 0 4px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;color:#27500A;text-transform:uppercase;">This Month</p>
-        <p style="margin:0;font-size:34px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1.7;">{{ "%.2f"|format(stats.month_avg) if stats and stats.month_avg else '—' }}</p>
-        {% if stats and stats.month_count %}<p style="margin:4px 0 0;font-size:12px;color:#27500A;">{{ stats.month_count }} photograph{{ 's' if stats.month_count != 1 else '' }} evaluated</p>{% endif %}
+        <p style="margin:0 0 4px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#27500A;text-transform:uppercase;line-height:1.5;">This Month</p>
+        <p style="margin:0;font-size:34px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1.5;">{{ "%.2f"|format(stats.month_avg) if stats and stats.month_avg else '&mdash;' }}</p>
+        {% if stats and stats.month_count %}<p style="margin:4px 0 0;font-size:14px;color:#27500A;line-height:1.5;">{{ stats.month_count }} photograph{{ 's' if stats.month_count != 1 else '' }} evaluated</p>{% endif %}
       </div>
     </div>
 
-  </div>{# end pc-trends-grid #}
+  </div>
 
   {# ── Footer ── #}
   <div class="pc-footer">
     <p style="margin:0 0 6px;">
       Evaluation run by <strong>{{ image.photographer_name }}</strong>
-      &nbsp;·&nbsp; Evaluated by Apex DDI Engine
-      {% if image.scored_at %}&nbsp;·&nbsp; {{ image.scored_at.strftime('%d %b %Y') }}{% endif %}
+      &nbsp;&middot;&nbsp; Evaluated by Apex DDI Engine
+      {% if image.scored_at %}&nbsp;&middot;&nbsp; {{ image.scored_at.strftime('%d %b %Y') }}{% endif %}
     </p>
-    <p style="margin:0;">
+    <p style="margin:0 0 6px;">
       Your evaluation is consistent and science-based. Your tier reflects performance across multiple photographs, not any single result.
     </p>
-    <p style="margin:8px 0 0;">
-      <a href="{{ url_for('index') }}" style="color:var(--gold);font-family:var(--font-mono);font-weight:700;">shutterleague.com</a>
+    <p style="margin:0;">
+      <a href="{{ url_for('index') }}" style="color:var(--gold);font-family:var(--font-mono);font-weight:700;cursor:pointer;">shutterleague.com</a>
     </p>
   </div>
 
