@@ -11482,17 +11482,7 @@ MENTORS = {
         'genres':      'Conceptual · Fashion · Street · Nature',
         'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
     },
-    'gopal': {
-        'slug':        'gopal',
-        'name':        'Gopal MS',
-        'tier_label':  'Grandmaster Mentor',
-        'tier_class':  'grandmaster',
-        'price':       150,
-        'points_cost': 1500,
-        'photo':       'img/Gopal MS.jpeg',
-        'genres':      'Street · Documentary · Urban',
-        'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
-    },
+
     'sreekumar': {
         'slug':        'sreekumar',
         'name':        'Sreekumar Krishnan',
