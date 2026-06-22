@@ -3414,6 +3414,7 @@ def dashboard():
     _weather = {'state': 'green', 'condition': '', 'message': None, 'window': None,
                 'temp_c': None, 'humidity': None}
     _mission_due = False
+    _mission_done = False  # default for admin users — assigned inside non-admin block below
     if current_user.role != 'admin':
         try:
             _lesson = _get_curriculum_lesson(current_user, progress_data)
