@@ -843,6 +843,8 @@ def _run_startup_tasks():
                         deleted_at   TIMESTAMP DEFAULT NOW()
                     )""",
                     "CREATE INDEX IF NOT EXISTS ix_upload_history_log_user ON upload_history_log(user_id)",
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS share_token VARCHAR(64)",
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_images_share_token ON images(share_token) WHERE share_token IS NOT NULL",
                 ]
                 for sql in _migrations:
                     try:
@@ -6755,6 +6757,7 @@ def _retry_score_in_background(image_id, old_status):
             img.soul_bonus       = result.get('soul_bonus', False)
             img.status           = 'scored'
             img.scored_at        = datetime.utcnow()
+            _ensure_share_token(img)
             audit = build_audit_data(result, img)
             img.set_audit(audit)
             db.session.commit()
@@ -7134,6 +7137,228 @@ def upload_edited_version(image_id):
                            edit_pts_cost=_EDIT_PTS_COST,
                            can_upload=_can_upload,
                            slots_ok=_slots_ok and _free_slots_ok)
+
+
+
+def _ensure_share_token(img):
+    """
+    Idempotent — generates and saves a share_token on `img` if one doesn't
+    exist yet. Call this after scoring is confirmed, before returning.
+    Returns the token string.
+    """
+    try:
+        existing = db.session.execute(
+            db.text("SELECT share_token FROM images WHERE id = :id"),
+            {'id': img.id}
+        ).fetchone()
+        if existing and existing[0]:
+            return existing[0]
+        token = uuid.uuid4().hex  # 32-char hex, URL-safe, no ambiguous chars
+        db.session.execute(
+            db.text("UPDATE images SET share_token = :tok WHERE id = :id"),
+            {'tok': token, 'id': img.id}
+        )
+        db.session.commit()
+        return token
+    except Exception as _te:
+        app.logger.warning(f'[share_token] {_te}')
+        return None
+
+
+@app.route('/card/<token>')
+def public_card(token):
+    """
+    Public share page for a scored evaluation card.
+    No login required — the token is the access key.
+    Shows the full scorecard: photo, score, evaluation detail, trend sparklines,
+    dimension breakdown, and a download button for the card JPG (which carries
+    the Shutter League logo via build_card1).
+    """
+    if not token or len(token) < 8:
+        abort(404)
+
+    row = db.session.execute(
+        db.text("SELECT id FROM images WHERE share_token = :tok AND status = 'scored'"),
+        {'tok': token}
+    ).fetchone()
+    if not row:
+        abort(404)
+
+    img = Image.query.get_or_404(row[0])
+    if getattr(img, 'is_flagged', False):
+        abort(404)
+
+    # ── Trend / sparkline data (same logic as image_detail, but using the
+    #    image OWNER's history — no auth check needed, token is the gate) ──
+    _portfolio_data = None
+    _stats          = None
+    _owner_id       = img.user_id
+    _now            = datetime.utcnow()
+
+    try:
+        _scored_count = db.session.query(Image).filter(
+            Image.user_id == _owner_id,
+            Image.status  == 'scored',
+        ).count()
+
+        if _scored_count >= 5:
+            _recent = db.session.query(
+                Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+            ).filter(
+                Image.user_id == _owner_id,
+                Image.status  == 'scored',
+            ).order_by(Image.scored_at.desc()).limit(30).all()
+
+            if _recent and len(_recent) >= 2:
+                _recent = list(reversed(_recent))
+
+                def _spark(values, height=30):
+                    if not values or len(values) < 2:
+                        return "", []
+                    mn, mx = min(values), max(values)
+                    rng = mx - mn if mx != mn else 1.0
+                    w_step = 300 / (len(values) - 1)
+                    pts = []
+                    for i, v in enumerate(values):
+                        x = round(i * w_step, 1)
+                        y = round(height - ((v - mn) / rng) * (height - 2) - 1, 1)
+                        pts.append({'x': x, 'y': y})
+                    polyline = ' '.join(f"{p['x']},{p['y']}" for p in pts)
+                    return polyline, pts
+
+                def _trend_pill(values):
+                    if len(values) < 3:
+                        return None, None, None
+                    first  = sum(values[:len(values)//2]) / (len(values)//2)
+                    second = sum(values[len(values)//2:]) / (len(values) - len(values)//2)
+                    diff   = second - first
+                    if diff > 0.3:
+                        return '↑ Climbing — getting stronger', '#27500A', '#EAF5EE'
+                    if diff < -0.3:
+                        return '↓ Dipped recently', '#72243E', '#F5EAF0'
+                    return '— Steady — your next opportunity to grow', '#854F0B', '#FDF6E3'
+
+                def _label_subset(vals, pts, max_labels=8):
+                    n = len(vals)
+                    if n <= max_labels:
+                        idxs = list(range(n))
+                    else:
+                        step = (n - 1) / (max_labels - 1)
+                        idxs = sorted(set(round(i * step) for i in range(max_labels)))
+                    return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
+                             'value': round(vals[i], 1)} for i in idxs]
+
+                _feeling    = [r.aq_score  for r in _recent if r.aq_score  is not None]
+                _timing     = [r.dm_score  for r in _recent if r.dm_score  is not None]
+                _difficulty = [r.dod_score for r in _recent if r.dod_score is not None]
+
+                _dims = []
+                for _lbl, _vals, _color, _flat_color in [
+                    ('Whether it made you feel something', _feeling,    '#F5C518', '#BA7517'),
+                    ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
+                    ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
+                ]:
+                    if len(_vals) >= 2:
+                        _sp, _pts  = _spark(_vals)
+                        _pill, _pc, _pb = _trend_pill(_vals)
+                        _is_flat   = abs(max(_vals) - min(_vals)) < 0.5
+                        _dims.append({
+                            'label':        _lbl,
+                            'current':      _vals[-1],
+                            'score_values': [round(v, 1) for v in _vals],
+                            'label_points': _label_subset(_vals, _pts),
+                            'sparkline':    _sp,
+                            'points':       _pts,
+                            'color':        _flat_color if _is_flat else _color,
+                            'flat':         _is_flat,
+                            'pill':         _pill,
+                            'pill_color':   _pc,
+                            'pill_bg':      _pb,
+                        })
+
+                _portfolio_data = {
+                    'has_trends':    bool(_dims),
+                    'count':         _scored_count,
+                    'plotted_count': len(_recent),
+                    'dimensions':    _dims,
+                }
+            else:
+                _portfolio_data = {'has_trends': False, 'count': _scored_count}
+        else:
+            _portfolio_data = {'has_trends': False, 'count': _scored_count}
+    except Exception as _pe:
+        app.logger.warning(f'[public_card] portfolio_data: {_pe}')
+        _portfolio_data = {'has_trends': False, 'count': 0}
+
+    try:
+        _year_start  = datetime(_now.year, 1, 1)
+        _month_start = datetime(_now.year, _now.month, 1)
+        _year_imgs = db.session.query(Image).filter(
+            Image.user_id  == _owner_id,
+            Image.status   == 'scored',
+            Image.scored_at >= _year_start,
+        ).all()
+        _month_imgs = [i for i in _year_imgs if i.scored_at and i.scored_at >= _month_start]
+        _best_year  = max((i.score for i in _year_imgs if i.score), default=None)
+        _best_img   = next((i for i in _year_imgs if i.score == _best_year), None)
+        _month_avg  = (sum(i.score for i in _month_imgs if i.score) / len(_month_imgs)
+                       if _month_imgs else None)
+        _stats = {
+            'best_this_year':  _best_year,
+            'best_genre':      _best_img.genre if _best_img else None,
+            'best_title':      _best_img.asset_name if _best_img else None,
+            'month_avg':       round(_month_avg, 2) if _month_avg else None,
+            'month_count':     len(_month_imgs),
+        }
+    except Exception as _se:
+        app.logger.warning(f'[public_card] stats: {_se}')
+        _stats = None
+
+    # Parse audit JSON for the card details
+    _audit = {}
+    try:
+        if img.audit_json:
+            import json as _json
+            _audit = _json.loads(img.audit_json)
+    except Exception:
+        pass
+
+    return render_template(
+        'card_public.html',
+        image          = img,
+        audit          = _audit,
+        portfolio_data = _portfolio_data,
+        stats          = _stats,
+        share_token    = token,
+        platform_name  = PLATFORM_NAME,
+    )
+
+
+@app.route('/card/<token>/download')
+def public_card_download(token):
+    """
+    Serves the card JPG as a direct browser download from the share token URL.
+    The card JPG (built by build_card1) already carries the Shutter League logo
+    and photographer watermark, so no separate PDF generation is needed.
+    """
+    row = db.session.execute(
+        db.text("SELECT id FROM images WHERE share_token = :tok AND status = 'scored'"),
+        {'tok': token}
+    ).fetchone()
+    if not row:
+        abort(404)
+    img = Image.query.get_or_404(row[0])
+    if getattr(img, 'is_flagged', False):
+        abort(404)
+
+    # Prefer the local card_path (Railway ephemeral storage); fall back to
+    # the R2 public URL with a redirect.
+    if img.card_path and os.path.exists(img.card_path):
+        fname = f"SL_Evaluation_{(img.asset_name or 'card').replace(' ', '_')}.jpg"
+        return send_file(img.card_path, as_attachment=True, download_name=fname)
+    if img.card_url:
+        return redirect(img.card_url)
+    abort(404)
 
 
 @app.route('/image/<int:image_id>')
@@ -18134,6 +18359,7 @@ def send_welcome_email(user):
         bow_thumb_url=bow_thumb_url,
         ashok_photo_url=ashok_photo_url,
         ar_photo_url=ar_photo_url,
+        sample_card_url=os.getenv('SAMPLE_CARD_URL', site_url + '/card/sample'),
     )
 
     text_body = (
@@ -18152,7 +18378,7 @@ def send_welcome_email(user):
         'A.R, BERLIN - 9.28 GRANDMASTER\n'
         'Asked ChatGPT for street photography feedback sites - before we\'d even launched, '
         'it pointed him here anyway. His third upload came back Grandmaster.\n'
-        '(A full sample evaluation card is attached to this email.)\n\n'
+        '(View a sample evaluation card: ' + os.getenv('SAMPLE_CARD_URL', site_url + '/card/sample') + ')\n\n'
 
         'THE PRACTICE\n'
         'A violinist doesn\'t become great by performing once a year. They practise daily - '
@@ -18203,20 +18429,11 @@ def send_welcome_email(user):
         'shutterleague.com'
     )
 
-    # Sample evaluation card — attached as a PDF rather than a JPG. Brevo's
-    # API has no inline-image support at all (true attachment either way),
-    # but most email clients auto-preview image attachments directly in the
-    # message view. A PDF doesn't get that treatment — it opens separately,
-    # as a real attachment, which is what we want here.
-    # Place the file at this path in your repo before deploying (see delivery notes).
-    sample_card_path = os.path.join(app.root_path, 'static', 'img', 'sample_evaluation_card.pdf')
-
     if send_email(
         user.email,
         'Welcome to Shutter League — you are in',
         html_body,
         text_body,
-        attachments=[sample_card_path],
     ):
         app.logger.info('[welcome_email] Sent to ' + user.email)
     else:
