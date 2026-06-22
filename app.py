@@ -7324,6 +7324,20 @@ def public_card(token):
     except Exception:
         pass
 
+    # Dimension breakdown computed in Python — avoids Jinja2 attribute()
+    # which is not available as a callable in Flask's template environment.
+    _dim_breakdown = []
+    for _dattr, _dl1, _dl2 in [
+        ('dod_score',        'How Difficult', 'It Was'),
+        ('disruption_score', 'Visual',        'Disruption'),
+        ('dm_score',         'Timing',        'Was Right'),
+        ('wonder_score',     'Makes You',     'Feel'),
+        ('aq_score',         'Emotion',       'It Creates'),
+    ]:
+        _dval = getattr(img, _dattr, None)
+        if _dval is not None:
+            _dim_breakdown.append({'score': _dval, 'l1': _dl1, 'l2': _dl2})
+
     return render_template(
         'card_public.html',
         image          = img,
@@ -7331,6 +7345,7 @@ def public_card(token):
         portfolio_data = _portfolio_data,
         stats          = _stats,
         share_token    = token,
+        dim_breakdown  = _dim_breakdown,
         platform_name  = PLATFORM_NAME,
     )
 
