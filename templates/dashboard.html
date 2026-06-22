@@ -2065,6 +2065,28 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <span style="font-size:18px; color:#F5C518; font-weight:700;">→</span>
   </a>
 
+  {# ── Referral (desktop right col) ── #}
+  {% if referral_code %}
+  <div class="sl-desktop-right-section" style="border-left:3px solid var(--sl-yellow);">
+    <span class="sl-desktop-section-label">Invite a photographer</span>
+    <div style="font-size:14px; color:var(--sl-text-light); margin-bottom:10px; line-height:1.5;">
+      They save ₹20 · you earn 200 pts
+    </div>
+    <div style="background:var(--sl-bg); border-radius:10px; padding:10px 12px;
+                font-family:monospace; font-size:13px; color:var(--sl-text);
+                word-break:break-all; margin-bottom:10px;">
+      {{ referral_url }}
+    </div>
+    <a href="{{ url_for('referral_page') }}"
+       style="display:block; text-align:center; background:#13254B; color:#F5C518;
+              font-size:14px; font-weight:700; padding:12px; border-radius:var(--r-btn);
+              text-decoration:none; transition:opacity .2s;"
+       onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+      See your referral dashboard →
+    </a>
+  </div>
+  {% endif %}
+
 </div>{# /sl-today__right #}
 
 </div>{# /sl-today__inner — desktop grid ends here #}
@@ -2271,7 +2293,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           <span class="sl-sec__icon">↗</span>
           <div>
             <span class="sl-sec__title">Invite a photographer</span>
-            <span class="sl-sec__sub">They get ₹{{ referred_discount or 180 }} off · you earn 200 pts</span>
+            <span class="sl-sec__sub">They save ₹20 · you earn 200 pts</span>
           </div>
         </div>
         <span class="sl-sec__chev">▼</span>
