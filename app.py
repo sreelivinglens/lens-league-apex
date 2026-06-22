@@ -3316,21 +3316,11 @@ def dashboard():
 
     # POTY welcome banner
     show_poty_banner = not getattr(current_user, 'poty_banner_dismissed', False)
-    try:
-        _port_row = db.session.execute(
-            db.text("SELECT portfolio_public, portfolio_banner_dismissed FROM users WHERE id = :uid"),
-            {'uid': current_user.id}
-        ).fetchone()
-        _portfolio_public    = bool(_port_row[0]) if _port_row else False
-        _portfolio_dismissed = bool(_port_row[1]) if _port_row else False
-    except Exception:
-        _portfolio_public    = False
-        _portfolio_dismissed = False
     show_portfolio_banner = (
         current_user.role != 'admin' and
-        not _portfolio_dismissed
+        not getattr(current_user, 'portfolio_banner_dismissed', False) and
+        not getattr(current_user, 'portfolio_public', False)
     )
-    portfolio_is_public = _portfolio_public
 
     # Contest announcement banners — active banners matching user audience
     _is_sub = getattr(current_user, 'is_subscribed', False)
@@ -3618,7 +3608,6 @@ def dashboard():
                            wallet_hud=wallet_hud,
                            progress_data=progress_data,
                            show_portfolio_banner=show_portfolio_banner,
-                           portfolio_is_public=portfolio_is_public,
                            mentor_reviews=mentor_reviews,
                            referral_code=get_or_create_referral_code(current_user),
                            referral_stats=get_referral_stats(current_user),
@@ -18462,6 +18451,20 @@ def send_welcome_email(user):
     ashok_photo_url = site_url + '/static/img/mentor_ashok.jpg'
     ar_photo_url    = None  # pending decision — falls back to initials badge in the template
 
+    # Live DB query — always returns a real card URL, survives image deletion
+    try:
+        _sample_row = db.session.execute(
+            db.text(
+                "SELECT share_token FROM images "
+                "WHERE share_token IS NOT NULL AND status = 'scored' "
+                "AND is_flagged = FALSE AND is_public = TRUE "
+                "ORDER BY score DESC LIMIT 1"
+            )
+        ).fetchone()
+        _sample_card_url = (site_url + '/card/' + _sample_row[0]) if _sample_row else None
+    except Exception:
+        _sample_card_url = None
+
     html_body = render_template(
         'email_welcome.html',
         name=name,
@@ -18483,7 +18486,7 @@ def send_welcome_email(user):
         bow_thumb_url=bow_thumb_url,
         ashok_photo_url=ashok_photo_url,
         ar_photo_url=ar_photo_url,
-        sample_card_url=os.getenv('SAMPLE_CARD_URL', site_url + '/card/sample'),
+        sample_card_url=_sample_card_url,
     )
 
     text_body = (
@@ -18502,9 +18505,9 @@ def send_welcome_email(user):
         'A.R, BERLIN - 9.28 GRANDMASTER\n'
         'Asked ChatGPT for street photography feedback sites - before we\'d even launched, '
         'it pointed him here anyway. His third upload came back Grandmaster.\n'
-        '(View a sample evaluation card: ' + os.getenv('SAMPLE_CARD_URL', site_url + '/card/sample') + ')\n\n'
+        + ('(View a sample evaluation card: ' + _sample_card_url + ')\n\n' if _sample_card_url else '')
 
-        'THE PRACTICE\n'
+        + 'THE PRACTICE\n'
         'A violinist doesn\'t become great by performing once a year. They practise daily - '
         'scales, repetition, the work nobody sees until it\'s undeniable.\n'
         'Every morning, one new assignment is waiting - built around your interests, how you '
