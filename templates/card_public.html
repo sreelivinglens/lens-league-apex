@@ -202,24 +202,153 @@
     </a>
   </div>
 
+  {# ══════════════════════════════════════════════════════════════════
+     FULL EVALUATION — mirrors image_detail scorecard content exactly.
+     ══════════════════════════════════════════════════════════════════ #}
+
   {# ── What Stood Out ── #}
-  {% if audit.get('what_stood_out') %}
-  <div class="pc-card">
-    <div class="pc-card-eyebrow">&#9733; What Stood Out</div>
-    <p class="pc-what-stood-out">{{ audit.what_stood_out }}</p>
+  {% if audit and audit.what_stood_out %}
+  <div style="margin-bottom:14px;">
+    <p style="margin:0 0 6px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;line-height:1.5;">&#9733; What Stood Out</p>
+    <p style="margin:0;font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.6;">{{ audit.what_stood_out }}</p>
   </div>
   {% endif %}
 
-  {# ── Photographer's Advice ── #}
-  {% if audit.get('advice') %}
-  <div class="pc-card" style="background:var(--surface-2);">
-    <div class="pc-card-eyebrow">
-      <span style="display:inline-block;width:18px;height:10px;background:#1A2744;border-radius:2px;"></span>
-      The Photographer's Advice
+  {# ── 4 Analysis cards — exact same logic as image_detail scorecard ── #}
+  {% if audit %}
+
+  {# Resolve card bodies from audit JSON (supports both new and old image schema) #}
+  {% set _next_row = namespace(val='') %}
+  {% set _tech_row = namespace(val='') %}
+  {% set _mom_row  = namespace(val='') %}
+  {% if audit.rows %}
+  {% for row in audit.rows %}
+    {% if row[0] == 'Next'      and row[1] %}{% set _next_row.val = row[1] %}{% endif %}
+    {% if row[0] == 'Technical' and row[1] %}{% set _tech_row.val = row[1] %}{% endif %}
+    {% if row[0] == 'Moment'    and row[1] %}{% set _mom_row.val  = row[1] %}{% endif %}
+  {% endfor %}
+  {% endif %}
+
+  {% set _bgcheck = audit.background_check if audit.background_check else audit.byline_1 %}
+
+  {% set _c1_body = audit.transferable_advice or _tech_row.val or '' %}
+  {% if audit.transferable_advice %}
+    {% set _c2_body = _tech_row.val or _mom_row.val or '' %}
+  {% else %}
+    {% set _c2_body = _mom_row.val or '' %}
+  {% endif %}
+  {% set _c3_body = _bgcheck or _next_row.val or '' %}
+  {% set _c4_body = audit.byline_2_body or audit.byline_2 or '' %}
+
+  {# key_bold macro — bolds master photographer references + optional first sentence #}
+  {% set _master_names = ['Henri Cartier-Bresson','Cartier-Bresson','Sebastião Salgado',
+    'Salgado','Ansel Adams','Dorothea Lange','Ernst Haas','Yousuf Karsh','Bruno Barbey',
+    'Steve McCurry','Annie Leibovitz','Vivian Maier','Robert Capa','Diane Arbus',
+    'Garry Winogrand','Saul Leiter','Elliott Erwitt','Joel Meyerowitz','William Eggleston',
+    'Galen Rowell','Eliot Porter','Frans Lanting','Art Wolfe'] %}
+  {% macro key_bold(text, bold_first=False) -%}
+    {%- set _s = text.split('. ') -%}
+    {%- if _s|length < 3 -%}
+      <strong>{{ text }}</strong>
+    {%- else -%}
+      {%- for _sent in _s -%}
+        {%- set _is_master = _master_names|select('in', _sent)|list|length > 0 -%}
+        {%- set _is_first = loop.first and bold_first -%}
+        {%- set _piece = _sent if loop.last else (_sent ~ '.') -%}
+        {%- if _is_master or _is_first -%}
+          {{ '' if loop.first else ' ' }}<strong>{{ _piece }}</strong>
+        {%- else -%}
+          {{ '' if loop.first else ' ' }}{{ _piece }}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endmacro %}
+
+  {# Card 1 — The Photographer's Advice (full width, blue) #}
+  {% if _c1_body.strip() %}
+  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0);border-radius:14px;padding:22px 26px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.55);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:16px;color:#0C447C;">&#128247;</span>
+      </div>
+      <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#0C447C;text-transform:uppercase;line-height:1.5;">The Photographer's Advice</span>
     </div>
-    <p class="pc-advice">{{ audit.advice }}</p>
+    <p style="margin:0;font-size:16px;color:#042C53;line-height:1.85;">{{ key_bold(_c1_body.strip(), bold_first=True) }}</p>
   </div>
   {% endif %}
+
+  {# Cards 2–4 — 3-column supporting row #}
+  {% if _c2_body.strip() or _c3_body.strip() or _c4_body.strip() %}
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;" class="sc-support-cards-grid">
+
+    {% if _c2_body.strip() %}
+    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:15px;color:#27500A;">&#9650;</span>
+        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;color:#27500A;text-transform:uppercase;line-height:1.5;">What you controlled</span>
+      </div>
+      <p style="margin:0;font-size:15px;color:#173404;line-height:1.75;flex:1;">{{ key_bold(_c2_body.strip()) }}</p>
+    </div>
+    {% endif %}
+
+    {% if _c3_body.strip() %}
+    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:15px;color:#72243E;">&#9678;</span>
+        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;color:#72243E;text-transform:uppercase;line-height:1.5;">What to watch next</span>
+      </div>
+      <p style="margin:0;font-size:15px;color:#4B1528;line-height:1.75;flex:1;">{{ key_bold(_c3_body.strip()) }}</p>
+    </div>
+    {% endif %}
+
+    {% if _c4_body.strip() %}
+    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:15px;color:#854F0B;">&#128161;</span>
+        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;color:#854F0B;text-transform:uppercase;line-height:1.5;">Keep this in mind</span>
+      </div>
+      <p style="margin:0;font-size:15px;color:#412402;line-height:1.75;flex:1;">{{ key_bold(_c4_body.strip()) }}</p>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  {# ── Edit Guide — Standard + Creative ── #}
+  {% if audit.edit_base or audit.edit_creative %}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;" class="sc-two-grid">
+    {% if audit.edit_base %}
+    <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:34px;height:34px;border-radius:8px;background:#EAF0FA;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:15px;color:#185FA5;">&#9881;</span>
+        </div>
+        <div>
+          <p style="margin:0;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#185FA5;text-transform:uppercase;line-height:1.5;">Standard edit</p>
+          <p style="margin:0;font-size:13px;color:var(--text-muted);font-family:var(--font-mono);line-height:1.5;">Balanced &middot; Light editing</p>
+        </div>
+      </div>
+      <p style="margin:0;font-size:16px;color:var(--text-secondary);line-height:1.85;">{{ audit.edit_base }}</p>
+    </div>
+    {% endif %}
+    {% if audit.edit_creative %}
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:34px;height:34px;border-radius:8px;background:#FDF3E3;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:15px;color:#854F0B;">&#127912;</span>
+        </div>
+        <div>
+          <p style="margin:0;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#854F0B;text-transform:uppercase;line-height:1.5;">Creative edit</p>
+          <p style="margin:0;font-size:13px;color:var(--text-muted);font-family:var(--font-mono);line-height:1.5;">Artistic &middot; Heavy editing</p>
+        </div>
+      </div>
+      <p style="margin:0;font-size:16px;color:var(--text-secondary);line-height:1.85;">{{ audit.edit_creative }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% endif %}{# end if audit #}
 
   {# ── Dimension breakdown ── #}
   <div class="pc-dims">
