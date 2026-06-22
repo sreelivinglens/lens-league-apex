@@ -1,12 +1,43 @@
 {% extends "base.html" %}
-{% block title %}{{ image.asset_name or 'Evaluation Card' }} — Shutter League{% endblock %}
+{% block title %}{{ image.photographer_name or 'Photographer' }} · {{ '%.2f'|format(image.score) }} {{ image.tier }} — Shutter League{% endblock %}
+
+{% block canonical %}https://shutterleague.com/card/{{ share_token }}{% endblock %}
 
 {% block extra_head %}
-<meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="{{ image.photographer_name or 'Photographer' }} · {{ '%.2f'|format(image.score) }} {{ image.tier }} — Shutter League">
-<meta property="og:description" content="{{ image.genre }} · Evaluated by the Apex DDI Engine · Shutter League">
-{% if image.thumb_url %}<meta property="og:image" content="{{ image.thumb_url }}">{% endif %}
+<meta property="og:description" content="{{ image.asset_name or 'Photograph' }} · {{ image.genre or 'Photography' }} · Evaluated by the Apex DDI Engine · Shutter League">
+<meta property="og:url" content="https://shutterleague.com/card/{{ share_token }}">
+{% if image.thumb_url %}<meta property="og:image" content="{{ image.thumb_url }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">{% endif %}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ image.photographer_name or 'Photographer' }} · {{ '%.2f'|format(image.score) }} {{ image.tier }} — Shutter League">
+<meta name="twitter:description" content="{{ image.asset_name or 'Photograph' }} · {{ image.genre or 'Photography' }} · Evaluated by the Apex DDI Engine">
+{% if image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Review",
+  "name": "{{ image.photographer_name or 'Photographer' }} — Evaluation Card",
+  "reviewBody": "{{ image.asset_name or 'Photograph' }} evaluated across 5 dimensions by the Apex DDI Engine. Score: {{ '%.2f'|format(image.score) }}. Tier: {{ image.tier }}.",
+  "author": {
+    "@type": "Organization",
+    "name": "Shutter League",
+    "url": "https://shutterleague.com"
+  },
+  "itemReviewed": {
+    "@type": "CreativeWork",
+    "name": "{{ image.asset_name or 'Photograph' }}",
+    "creator": {
+      "@type": "Person",
+      "name": "{{ image.photographer_name or 'Photographer' }}"
+    }{% if image.genre %},
+    "genre": "{{ image.genre }}"{% endif %}
+  },
+  "url": "https://shutterleague.com/card/{{ share_token }}"
+}
+</script>
 {% endblock %}
 
 {% block extra_css %}
