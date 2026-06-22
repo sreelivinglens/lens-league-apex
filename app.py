@@ -7324,6 +7324,7 @@ def public_card(token):
         if img.audit_json:
             import json as _json
             _audit = _json.loads(img.audit_json)
+            app.logger.info(f'[public_card] audit OK: {len(_audit)} keys, edit_base={bool(_audit.get("edit_base"))}')
     except Exception as _ae:
         app.logger.warning(f'[public_card] audit_json parse error: {_ae}')
 
