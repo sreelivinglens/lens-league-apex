@@ -617,7 +617,14 @@
       </div>
       <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
-    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ key_bold(_c1_resolved.strip()) }}</p>
+    {% set _c1_sentences = _c1_resolved.strip().split('. ') %}
+    {% for _sent in _c1_sentences %}
+    {% set _piece = _sent.strip() %}
+    {% if _piece %}
+    {% set _is_master = _master_names|select('in', _piece)|list|length > 0 %}
+    <p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;{% if _is_master %} font-weight:700;{% endif %}">{{ _piece }}{% if not loop.last %}.{% endif %}</p>
+    {% endif %}
+    {% endfor %}
   </div>
   {% endif %}
 
