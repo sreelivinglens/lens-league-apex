@@ -417,7 +417,7 @@
   <div style="margin-bottom:14px; padding:12px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</span>
     <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">{{ image.genre }} · {{ audit.effective_subgenre.replace('_',' ') }}</span>
-    {% if audit.vision_subgenre_reason %}<span style="font-size:14px;color:var(--text-secondary);">{{ audit.vision_subgenre_reason }}</span>{% endif %}
+    {% if audit.vision_subgenre_reason %}<span style="font-size:14px;color:var(--text-secondary);display:block;text-align:justify;">{{ audit.vision_subgenre_reason }}</span>{% endif %}
   </div>
   {% endif %}
 
@@ -453,7 +453,7 @@
         </div>
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
       </div>
-      <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7;">{{ _hero_headline }}</p>
+      <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7; text-align:justify;">{{ _hero_headline }}</p>
     </div>
     {% if _has_right_col %}
     <div style="border-left:1px solid var(--border); padding-left:22px; display:flex; align-items:center;">
