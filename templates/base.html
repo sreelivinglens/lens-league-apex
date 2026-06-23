@@ -1303,6 +1303,7 @@ img {
             More <span class="nav-more-chevron">&#9660;</span>
           </button>
           <div class="nav-more-menu">
+            <a href="{{ url_for('portfolio_manager') }}" class="{% if request.endpoint == 'portfolio_manager' %}nav-active{% endif %}">My Portfolio</a>
             <a href="{{ url_for('profile') }}"      class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
             <a href="{{ url_for('pricing') }}"      class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
             <a href="{{ url_for('science') }}"      class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
@@ -1354,6 +1355,7 @@ img {
     {% else %}
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('my_gallery') }}" onclick="toggleNav()">My Gallery</a>
+      <a href="{{ url_for('portfolio_manager') }}" onclick="toggleNav()">My Portfolio</a>
       <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
       <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
       <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
@@ -1435,6 +1437,7 @@ img {
           <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
           <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
           <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
+          <a href="{{ url_for('portfolio_manager') }}" onclick="closeBottomMore()">My Portfolio</a>
           <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
           <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
           <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
@@ -1484,9 +1487,6 @@ img {
           <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
           <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
           <div class="sl-bottom-more-menu__fade"></div>
-        </div>
-        <div class="sl-bottom-more-menu__pinned">
-          <a href="{{ url_for('register') }}" onclick="closeBottomMore()" style="color:#F4C20D;font-weight:700;">Create Account →</a>
         </div>
       </div>
     </div>
