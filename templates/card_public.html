@@ -70,8 +70,9 @@
     overflow: hidden; background: var(--surface-3);
   }
   .pc-photo-wrap img {
-    display: block; width: 100%; height: auto; max-height: 520px;
-    object-fit: cover; object-position: center;
+    display: block; width: 100%; height: auto;
+    object-fit: contain; object-position: center;
+    background: #000;
   }
 
   /* ── Score bar ── */
@@ -136,7 +137,7 @@
     line-height: 1.7; margin: 0;
   }
   .pc-advice {
-    font-size: 16px; color: var(--text-secondary); line-height: 1.75; margin: 0;
+    font-size: 16px; color: var(--text-secondary); line-height: 1.75; margin: 0; text-align: justify;
   }
 
   /* ── Dimension breakdown ── */
@@ -179,6 +180,7 @@
     .pc-download-btn { width: 100%; justify-content: center; }
     .pc-brand-sub { display: none; }
     .pc-dim-label { font-size: 14px; }
+    .pc-photo-wrap img { max-height: 80vw; }
   }
 
   /* ── iPad 601px–1024px ── */
