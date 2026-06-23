@@ -617,14 +617,31 @@
       </div>
       <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
-    {% set _c1_sentences = _c1_resolved.strip().split('. ') %}
-    {% for _sent in _c1_sentences %}
-    {% set _piece = _sent.strip() %}
-    {% if _piece %}
-    {% set _is_master = _master_names|select('in', _piece)|list|length > 0 %}
-    <p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;{% if _is_master %} font-weight:700;{% endif %}">{{ _piece }}{% if not loop.last %}.{% endif %}</p>
-    {% endif %}
+    {% set _c1_text = _c1_resolved.strip() %}
+    {% set _master_markers = ['This is what ', 'This is the ', 'This is Cartier-Bresson', 'This is Weston', 'This is Adams', 'This is Salgado'] %}
+    {% set _split_marker = namespace(val='') %}
+    {% for _mk in _master_markers %}
+      {% if _mk in _c1_text and not _split_marker.val %}{% set _split_marker.val = _mk %}{% endif %}
     {% endfor %}
+    {% if _split_marker.val and _split_marker.val in _c1_text %}
+      {% set _c1_parts = _c1_text.split(_split_marker.val) %}
+      {% set _before = _c1_parts[0].strip() %}
+      {% set _remainder = (_split_marker.val + _c1_parts[1]) if _c1_parts|length > 1 else '' %}
+      {# Split remainder into master sentence and rest on next period #}
+      {% set _master_end = _remainder.find('. ') %}
+      {% if _master_end != -1 %}
+        {% set _master_sent = _remainder[:_master_end + 1] %}
+        {% set _after = _remainder[_master_end + 2:].strip() %}
+      {% else %}
+        {% set _master_sent = _remainder %}
+        {% set _after = '' %}
+      {% endif %}
+      {% if _before %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _before }}</p>{% endif %}
+      {% if _master_sent %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify; font-weight:700;">{{ _master_sent }}</p>{% endif %}
+      {% if _after %}<p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _after }}</p>{% endif %}
+    {% else %}
+      <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _c1_text }}</p>
+    {% endif %}
   </div>
   {% endif %}
 
