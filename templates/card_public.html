@@ -198,7 +198,9 @@
     <span class="pc-brand-sub">Evaluation Card &nbsp;·&nbsp; Apex DDI Engine</span>
   </div>
 
-  {# ── Photo ── #}
+  {# ── Photo + Score bar — wrapped so bar never overlays photo ── #}
+  <div>
+
   <div class="pc-photo-wrap">
     {% if image.thumb_url %}
     <img src="{{ image.thumb_url }}"
@@ -224,6 +226,8 @@
       <div class="pc-score-num">{{ "%.2f"|format(image.score) }}</div>
     </div>
   </div>
+
+  </div>{# ── end photo+score wrapper ── #}
 
   {# ── Download button ── #}
   <div class="pc-download-bar">
