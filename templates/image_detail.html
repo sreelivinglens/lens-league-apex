@@ -356,7 +356,7 @@
   </div>
 
   {# ── SCORE BAND — slim bar below the photograph ───────────────────── #}
-  <div style="background:rgba(26,26,24,0.20); border-radius:0 0 14px 14px; padding:18px 24px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;" class="sc-score-band">
+  <div style="background:#1a1a18; border-radius:0 0 14px 14px; padding:18px 24px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;" class="sc-score-band">
     {# Left — name + tier + soul bonus #}
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0;">
       <span style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:#fff;" class="sc-hero-name">
@@ -617,7 +617,7 @@
       </div>
       <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
-    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; max-width:680px; text-align:justify;">{{ key_bold(_c1_resolved.strip(), bold_first=True) }}</p>
+    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ key_bold(_c1_resolved.strip()) }}</p>
   </div>
   {% endif %}
 
