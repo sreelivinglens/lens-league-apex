@@ -1324,63 +1324,14 @@ img {
       <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Programme Standings</a>
       <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Excellence Award</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
-      <div class="nav-lj-wrap" id="navLjWrap">
-        <button class="nav-lj-btn" onclick="toggleLjDropdown()" aria-haspopup="true" aria-label="Login or Join">
-          Login / Join <span class="nav-lj-chevron">&#9660;</span>
-        </button>
-        <div class="nav-lj-dropdown" id="navLjDropdown">
-          <div class="nav-lj-tabs">
-            <button class="nav-lj-tab active" id="lj-tab-login" onclick="switchLjTab('login')">Log In</button>
-            <button class="nav-lj-tab" id="lj-tab-join" onclick="switchLjTab('join')">Join</button>
-          </div>
-          <a href="{{ url_for('auth_google') }}" class="nav-lj-google">
-            <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-            Continue with Google
-          </a>
-          <div class="nav-lj-divider"><span>or with email</span></div>
-          <!-- Log In form -->
-          <form id="lj-login-form" method="POST" action="{{ url_for('login') }}">
-            <div class="nav-lj-field">
-              <label class="nav-lj-label" for="lj-email">Email</label>
-              <input type="email" id="lj-email" name="email" class="nav-lj-input" placeholder="you@example.com" required autocomplete="email">
-            </div>
-            <div class="nav-lj-field">
-              <label class="nav-lj-label" for="lj-password">Password</label>
-              <input type="password" id="lj-password" name="password" class="nav-lj-input" placeholder="Your password" required autocomplete="current-password">
-            </div>
-            <button type="submit" class="nav-lj-cta">Sign In →</button>
-          </form>
-          <a href="{{ url_for('forgot_password') }}" class="nav-lj-forgot">Forgot password?</a>
-          <!-- Join form -->
-          <form id="lj-join-form" method="POST" action="{{ url_for('register') }}" style="display:none;">
-            <div class="nav-lj-field">
-              <label class="nav-lj-label" for="lj-full-name">Photographer name</label>
-              <input type="text" id="lj-full-name" name="full_name" class="nav-lj-input" placeholder="Your name" required maxlength="120" autocomplete="name">
-            </div>
-            <div class="nav-lj-field">
-              <label class="nav-lj-label" for="lj-username">Username</label>
-              <input type="text" id="lj-username" name="username" class="nav-lj-input" placeholder="e.g. sriphoto" required maxlength="80" autocomplete="username">
-            </div>
-            <div class="nav-lj-field">
-              <label class="nav-lj-label" for="lj-join-email">Email</label>
-              <input type="email" id="lj-join-email" name="email" class="nav-lj-input" placeholder="you@example.com" required autocomplete="email">
-            </div>
-            <div class="nav-lj-field">
-              <label class="nav-lj-label" for="lj-join-pw">Password</label>
-              <input type="password" id="lj-join-pw" name="password" class="nav-lj-input" placeholder="Minimum 8 characters" required minlength="8" autocomplete="new-password">
-            </div>
-            <input type="hidden" name="confirm_password" id="lj-join-pw-confirm">
-            <button type="submit" class="nav-lj-cta" onclick="document.getElementById('lj-join-pw-confirm').value=document.getElementById('lj-join-pw').value">Create Account →</button>
-          </form>
-        </div>
-      </div>
+      <a href="{{ url_for('login') }}" class="nav-lj-btn" style="text-decoration:none;">Log In</a>
     {% endif %}
   </div>
 
   <!-- Mobile nav login buttons -->
   {% if not current_user.is_authenticated %}
   <div class="nav-mobile-login">
-    <button class="nav-ml-login" onclick="toggleLjSheet()" style="background:none; border:1px solid var(--gold); color:var(--gold); font-family:var(--font-mono); font-size:16px; letter-spacing:1px; font-weight:700; padding:8px 14px; cursor:pointer; white-space:nowrap;">LOGIN / JOIN</button>
+    <a href="{{ url_for('login') }}" class="nav-ml-login" style="text-decoration:none;">LOG IN</a>
   </div>
   {% endif %}
 
@@ -1389,54 +1340,6 @@ img {
     <span></span><span></span><span></span>
   </button>
 </nav>
-
-<!-- Login/Join mobile sheet overlay -->
-<div class="nav-lj-sheet-overlay" id="ljSheetOverlay" onclick="closeLjSheet()"></div>
-<div class="nav-lj-sheet" id="ljSheet">
-  <div class="nav-lj-tabs">
-    <button class="nav-lj-tab active" id="ljs-tab-login" onclick="switchLjSheetTab('login')">Log In</button>
-    <button class="nav-lj-tab" id="ljs-tab-join" onclick="switchLjSheetTab('join')">Join</button>
-  </div>
-  <a href="{{ url_for('auth_google') }}" class="nav-lj-google">
-    <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-    Continue with Google
-  </a>
-  <div class="nav-lj-divider"><span>or with email</span></div>
-  <!-- Log In form -->
-  <form id="ljs-login-form" method="POST" action="{{ url_for('login') }}">
-    <div class="nav-lj-field">
-      <label class="nav-lj-label" for="ljs-email">Email</label>
-      <input type="email" id="ljs-email" name="email" class="nav-lj-input" placeholder="you@example.com" required autocomplete="email">
-    </div>
-    <div class="nav-lj-field">
-      <label class="nav-lj-label" for="ljs-password">Password</label>
-      <input type="password" id="ljs-password" name="password" class="nav-lj-input" placeholder="Your password" required autocomplete="current-password">
-    </div>
-    <button type="submit" class="nav-lj-cta">Sign In →</button>
-  </form>
-  <a href="{{ url_for('forgot_password') }}" class="nav-lj-forgot">Forgot password?</a>
-  <!-- Join form -->
-  <form id="ljs-join-form" method="POST" action="{{ url_for('register') }}" style="display:none;">
-    <div class="nav-lj-field">
-      <label class="nav-lj-label" for="ljs-full-name">Photographer name</label>
-      <input type="text" id="ljs-full-name" name="full_name" class="nav-lj-input" placeholder="Your name" required maxlength="120" autocomplete="name">
-    </div>
-    <div class="nav-lj-field">
-      <label class="nav-lj-label" for="ljs-username">Username</label>
-      <input type="text" id="ljs-username" name="username" class="nav-lj-input" placeholder="e.g. sriphoto" required maxlength="80" autocomplete="username">
-    </div>
-    <div class="nav-lj-field">
-      <label class="nav-lj-label" for="ljs-join-email">Email</label>
-      <input type="email" id="ljs-join-email" name="email" class="nav-lj-input" placeholder="you@example.com" required autocomplete="email">
-    </div>
-    <div class="nav-lj-field">
-      <label class="nav-lj-label" for="ljs-join-pw">Password</label>
-      <input type="password" id="ljs-join-pw" name="password" class="nav-lj-input" placeholder="Minimum 8 characters" required minlength="8" autocomplete="new-password">
-    </div>
-    <input type="hidden" name="confirm_password" id="ljs-join-pw-confirm">
-    <button type="submit" class="nav-lj-cta" onclick="document.getElementById('ljs-join-pw-confirm').value=document.getElementById('ljs-join-pw').value">Create Account →</button>
-  </form>
-</div>
 
 <!-- Mobile menu -->
 <div class="nav-mobile" id="navMobile">
@@ -1560,10 +1463,10 @@ img {
       <span class="sl-nav-item__icon">◈</span>
       <span>Recent</span>
     </a>
-    <button class="sl-nav-item sl-nav-more-btn" onclick="toggleLjSheet()" aria-label="Login or Join" style="color:var(--gold);">
+    <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold);">
       <span class="sl-nav-item__icon">◉</span>
-      <span>Login/Join</span>
-    </button>
+      <span>Log In</span>
+    </a>
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
       <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
         <span class="sl-nav-item__icon">☰</span>
@@ -1629,41 +1532,6 @@ function toggleNavMoreLoggedOut() {
   var nm = document.getElementById('navMoreLoggedOut');
   if (nm) nm.classList.toggle('open');
 }
-function toggleLjDropdown() {
-  var wrap = document.getElementById('navLjWrap');
-  if (wrap) wrap.classList.toggle('open');
-}
-function switchLjTab(tab) {
-  document.getElementById('lj-tab-login').className = 'nav-lj-tab' + (tab==='login'?' active':'');
-  document.getElementById('lj-tab-join').className  = 'nav-lj-tab' + (tab==='join' ?' active':'');
-  document.getElementById('lj-login-form').style.display = tab==='login'?'block':'none';
-  document.getElementById('lj-join-form').style.display  = tab==='join' ?'block':'none';
-  var forgot = document.querySelector('.nav-lj-forgot');
-  if (forgot) forgot.style.display = tab==='login'?'block':'none';
-}
-function toggleLjSheet() {
-  var sheet   = document.getElementById('ljSheet');
-  var overlay = document.getElementById('ljSheetOverlay');
-  if (!sheet) return;
-  var opening = !sheet.classList.contains('open');
-  sheet.classList.toggle('open');
-  if (overlay) overlay.classList.toggle('open');
-  if (opening) { switchLjSheetTab('login'); }
-}
-function closeLjSheet() {
-  var sheet   = document.getElementById('ljSheet');
-  var overlay = document.getElementById('ljSheetOverlay');
-  if (sheet)   sheet.classList.remove('open');
-  if (overlay) overlay.classList.remove('open');
-}
-function switchLjSheetTab(tab) {
-  document.getElementById('ljs-tab-login').className = 'nav-lj-tab' + (tab==='login'?' active':'');
-  document.getElementById('ljs-tab-join').className  = 'nav-lj-tab' + (tab==='join' ?' active':'');
-  document.getElementById('ljs-login-form').style.display = tab==='login'?'block':'none';
-  document.getElementById('ljs-join-form').style.display  = tab==='join' ?'block':'none';
-  var forgot = document.getElementById('ljSheet').querySelector('.nav-lj-forgot');
-  if (forgot) forgot.style.display = tab==='login'?'block':'none';
-}
 function toggleBottomMore(e) {
   e.stopPropagation();
   var menu = document.getElementById('slBottomMoreMenu');
@@ -1677,10 +1545,6 @@ document.addEventListener('click', function(e) {
   var nm = document.getElementById('navMore');
   if (nm && nm.classList.contains('open') && !nm.contains(e.target)) {
     nm.classList.remove('open');
-  }
-  var ljWrap = document.getElementById('navLjWrap');
-  if (ljWrap && ljWrap.classList.contains('open') && !ljWrap.contains(e.target)) {
-    ljWrap.classList.remove('open');
   }
   var nmlo = document.getElementById('navMoreLoggedOut');
   if (nmlo && nmlo.classList.contains('open') && !nmlo.contains(e.target)) {
@@ -1700,7 +1564,6 @@ document.addEventListener('click', function(e) {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    closeLjSheet();
     var ljWrap = document.getElementById('navLjWrap');
     if (ljWrap) ljWrap.classList.remove('open');
   }
