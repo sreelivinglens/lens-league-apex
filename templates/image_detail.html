@@ -341,7 +341,8 @@
          shipped last round: an inline bottom:14px on this element silently overrode a
          stylesheet rule trying to move it, since inline styles beat plain class selectors). #}
       {% if image.photographer_name %}
-      <div class="sc-wm sc-wm-credit">© {{ image.photographer_name.split()[0] }} {{ image.photographer_name.split()[-1][0] if image.photographer_name.split()|length > 1 else '' }}</div>
+      {% set _wm_parts = image.photographer_name.split() %}
+      <div class="sc-wm sc-wm-credit">© {{ _wm_parts[0] }}{% if _wm_parts|length > 1 %} {{ _wm_parts|last|first }}{% endif %}</div>
       {% endif %}
     </div>
     {% else %}
