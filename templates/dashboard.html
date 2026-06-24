@@ -985,12 +985,14 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   /* Desktop — 2-column layout */
   .sl-today { padding-bottom: 0; }
   .sl-today__inner {
-    max-width: 1600px;
-    padding: 0 48px;
+    max-width: none;
+    width: 100%;
+    padding: 0 64px;
     display: grid;
     grid-template-columns: 1fr 420px;
     gap: 0 32px;
     align-items: start;
+    box-sizing: border-box;
   }
   /* Hero banner: full viewport width on desktop, break out of grid */
   .sl-dash-hero-banner {
