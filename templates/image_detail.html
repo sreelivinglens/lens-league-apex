@@ -332,7 +332,7 @@
     <div style="position:relative; display:block;">
       <img src="{{ image.thumb_url }}"
            alt="{{ image.asset_name or image.original_filename }}"
-           style="width:100%; max-height:520px; object-fit:cover; display:block;">
+           style="width:100%; max-height:520px; object-fit:contain; display:block;">
       {# Corner watermarks — platform credit top-right, photographer credit bottom-left.
          Opposite corners AND opposite vertical ends so they can never collide, regardless
          of how long the photographer's name is or how narrow the screen is. All positioning
