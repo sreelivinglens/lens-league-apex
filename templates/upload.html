@@ -507,9 +507,13 @@
         <div class="shot-on-required-hint" id="trackRequiredHint">Please select Camera or Mobile.</div>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="location-field-wrap">
         <label for="location">Current Location</label>
         <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180" value="{{ last_location|default('') }}" required>
+      </div>
+      <div id="location-session-note" style="display:none; margin-bottom:16px; padding:10px 14px; background:var(--surface-2, #f5f5f3); border-radius:8px; font-size:14px; color:var(--text-secondary);">
+        📍 <span id="location-session-city"></span> &nbsp;·&nbsp; <a href="{{ url_for('profile') }}" style="color:var(--text-primary); text-decoration:underline; text-underline-offset:2px;">Change in Profile</a>
+        <input type="hidden" id="location-hidden" name="location">
       </div>
 
       <div class="form-group">
@@ -1295,6 +1299,45 @@
     banner.innerHTML = '<span style="font-size:18px">◷</span><span>Today\'s assignment: <strong>' + (title || dim) + '</strong> · Focus on <strong>' + (dimLabels[dim] || dim) + '</strong></span>';
     var form = document.getElementById('uploadForm');
     if (form) form.parentNode.insertBefore(banner, form);
+  }
+})();
+
+// ── Location session persistence ──
+// First upload: show field, save location on submit.
+// Second+ upload in same session: hide field, show pill with saved location.
+(function() {
+  var wrap      = document.getElementById('location-field-wrap');
+  var input     = document.getElementById('location');
+  var note      = document.getElementById('location-session-note');
+  var cityLabel = document.getElementById('location-session-city');
+  var hidden    = document.getElementById('location-hidden');
+
+  try {
+    var saved = sessionStorage.getItem('sl_last_location');
+    if (saved && wrap && note && input) {
+      // Second+ upload — hide text field, show pill
+      wrap.style.display  = 'none';
+      input.removeAttribute('required');
+      input.name          = '';           // don't submit duplicate
+      note.style.display  = 'block';
+      if (cityLabel) cityLabel.textContent = saved;
+      if (hidden)    hidden.value          = saved;
+    }
+  } catch(e) {}
+
+  // Save location on submit for future uploads in this session
+  var uploadForm = document.getElementById('uploadForm') || document.querySelector('form');
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', function() {
+      try {
+        var val = document.getElementById('location');
+        if (val && val.value.trim()) {
+          sessionStorage.setItem('sl_last_location', val.value.trim());
+        } else if (hidden && hidden.value.trim()) {
+          sessionStorage.setItem('sl_last_location', hidden.value.trim());
+        }
+      } catch(e) {}
+    });
   }
 })();
 </script>
