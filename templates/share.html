@@ -240,20 +240,13 @@
   <div class="photo-wrap" style="position:relative;">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}" style="display:block; width:100%;">
-    <!-- Photographer credit — bottom left -->
-    <div style="position:absolute; bottom:10px; left:10px;
-                font-family:var(--font-mono); font-size:13px; font-weight:700;
-                letter-spacing:0.5px; color:rgba(255,255,255,0.85);
-                text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none;
-                max-width:45%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-      © {{ image.photographer_name }}
-    </div>
-    <!-- Platform attribution — top right -->
-    <div style="position:absolute; top:10px; right:10px;
-                font-family:var(--font-mono); font-size:13px; font-weight:700;
-                letter-spacing:0.5px; color:rgba(255,255,255,0.55);
-                text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none;">
-      shutterleague
+    <!-- Photographer credit pill — bottom-right corner -->
+    <div style="position:absolute; bottom:0; right:0;
+                font-family:var(--font-mono); font-size:13px; font-weight:500;
+                color:rgba(255,255,255,0.88); background:rgba(0,0,0,0.42);
+                padding:2px 8px 3px; border-radius:6px 0 0 0;
+                white-space:nowrap; pointer-events:none; letter-spacing:0.2px;">
+      © {{ image.photographer_name.split()[0] }} {{ image.photographer_name.split()[-1][0] if image.photographer_name.split()|length > 1 else '' }}
     </div>
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="sl-award-badge">🏆</div>
