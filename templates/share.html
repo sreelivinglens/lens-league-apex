@@ -246,7 +246,8 @@
                 color:rgba(255,255,255,0.88); background:rgba(0,0,0,0.42);
                 padding:2px 8px 3px; border-radius:6px 0 0 0;
                 white-space:nowrap; pointer-events:none; letter-spacing:0.2px;">
-      © {{ image.photographer_name.split()[0] }} {{ image.photographer_name.split()[-1][0] if image.photographer_name.split()|length > 1 else '' }}
+      {% set _wm_parts = image.photographer_name.split() %}
+      © {{ _wm_parts[0] }}{% if _wm_parts|length > 1 %} {{ _wm_parts|last|first }}{% endif %}
     </div>
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="sl-award-badge">🏆</div>
