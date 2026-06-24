@@ -68,9 +68,7 @@ CARD_FOREST_AC   = ( 39,  80,  10)   # forest accent
 CARD_PLUM_AC     = (114,  36,  62)   # plum accent
 
 # ── Watermark config ─────────────────────────────────────────────────────────
-WATERMARK_MODE    = 'corner'
-WATERMARK_OPACITY = 18
-WATERMARK_TEXT    = '© SHUTTERLEAGUE.COM'
+WATERMARK_OPACITY = 180   # alpha for text (0-255)
 
 CW, CH   = 2480, 1754
 PAD      = 80
@@ -141,38 +139,38 @@ def draw_footer(canvas, draw, stamp, canvas_h=None):
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
     draw.text((CW-PAD-sw, h-FOOTER_H+26), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
 
-def apply_watermark(canvas, x, y, w, h):
-    if WATERMARK_MODE == 'none':
-        return
+def apply_watermark(canvas, x, y, w, h, credit=''):
+    """
+    Draw two small text overlays on the photo area (no box background):
+      bottom-left  — © <photographer name>   (photographer owns the image)
+      bottom-right — shutterleague.com        (platform attribution)
+    Both sit 24px above the bottom edge so they clear the score band below.
+    """
     wm_layer = PilImage.new('RGBA', (w, h), (0, 0, 0, 0))
     wm_draw  = ImageDraw.Draw(wm_layer)
-    if WATERMARK_MODE == 'diagonal':
-        wm_font = fnt(48, bold=True, mono=True)
-        text    = f'{WATERMARK_TEXT} · EVALUATED · '
-        import math
-        angle   = -35
-        big = PilImage.new('RGBA', (w * 3, h * 3), (0, 0, 0, 0))
-        bd  = ImageDraw.Draw(big)
-        step_y = 120
-        for row in range(-h, h * 3, step_y):
-            bd.text((-w, row), text * 6, font=wm_font,
-                    fill=(255, 255, 255, WATERMARK_OPACITY))
-        big = big.rotate(angle, expand=False)
-        cx = (big.width  - w) // 2
-        cy = (big.height - h) // 2
-        wm_layer = big.crop((cx, cy, cx + w, cy + h))
-    elif WATERMARK_MODE == 'corner':
-        wm_font  = fnt(40, bold=True, mono=True)
-        text     = WATERMARK_TEXT
-        tw_val   = wm_draw.textbbox((0, 0), text, font=wm_font)[2]
-        th_val   = wm_draw.textbbox((0, 0), text, font=wm_font)[3]
-        pad      = 20
-        bx       = w - tw_val - pad * 2 - 10
-        by       = h - th_val - pad * 2 - 10
-        wm_draw.rectangle([bx - pad, by - pad, bx + tw_val + pad, by + th_val + pad],
-                          fill=(44, 62, 107, int(WATERMARK_OPACITY * 4)))
-        wm_draw.text((bx, by), text, font=wm_font,
-                     fill=(255, 255, 255, min(255, WATERMARK_OPACITY * 5)))
+    wm_font  = fnt(32, mono=True)
+    pad_x    = 24
+    pad_y    = 24
+
+    # © Photographer — bottom-left
+    if credit:
+        left_text = f'\u00a9 {credit}'
+        wm_draw.text(
+            (pad_x, h - pad_y - wm_draw.textbbox((0, 0), left_text, font=wm_font)[3]),
+            left_text, font=wm_font,
+            fill=(255, 255, 255, WATERMARK_OPACITY)
+        )
+
+    # shutterleague.com — bottom-right
+    right_text = 'shutterleague.com'
+    rt_w = wm_draw.textbbox((0, 0), right_text, font=wm_font)[2]
+    rt_h = wm_draw.textbbox((0, 0), right_text, font=wm_font)[3]
+    wm_draw.text(
+        (w - rt_w - pad_x, h - pad_y - rt_h),
+        right_text, font=wm_font,
+        fill=(255, 255, 255, int(WATERMARK_OPACITY * 0.65))
+    )
+
     canvas.paste(wm_layer, (x, y), wm_layer)
 
 
@@ -231,7 +229,7 @@ def build_card1(photo_path, data, out_path):
         ox = (CW - nw) // 2
         oy = HEADER_H + (PHOTO_H - nh) // 2
         canvas.paste(ph, (ox, oy))
-        apply_watermark(canvas, ox, oy, nw, nh)
+        apply_watermark(canvas, ox, oy, nw, nh, credit=data.get('credit', ''))
     except:
         draw.rectangle([0, HEADER_H, CW, HEADER_H + PHOTO_H], fill=BORDER)
 
