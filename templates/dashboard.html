@@ -166,8 +166,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 }
 .sl-dash-hero-banner img {
   width: 100%; height: 100%;
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: center top;
   display: block;
 }
 .sl-dash-hero-banner__grad {
@@ -985,11 +985,11 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   /* Desktop — 2-column layout */
   .sl-today { padding-bottom: 0; }
   .sl-today__inner {
-    max-width: 1200px;
-    padding: 0 32px;
+    max-width: 1600px;
+    padding: 0 48px;
     display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 0 28px;
+    grid-template-columns: 1fr 420px;
+    gap: 0 32px;
     align-items: start;
   }
   /* Hero banner: full viewport width on desktop, break out of grid */
