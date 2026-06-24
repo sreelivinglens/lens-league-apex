@@ -85,7 +85,7 @@
   /* ── Tile grid ── */
   .admin-tile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 12px;
     align-items: start;
   }
@@ -101,7 +101,7 @@
   .admin-tile.is-ref { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 
   .admin-tile-img-wrap { position: relative; }
-  .admin-tile-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: var(--surface-3); }
+  .admin-tile-img { width: 100%; aspect-ratio: 4/3; object-fit: contain; display: block; background: #1a1a18; }
   .admin-tile-placeholder { width: 100%; aspect-ratio: 4/3; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: 28px; }
   .admin-tile-checkbox { position: absolute; top: 8px; left: 8px; accent-color: var(--gold); width: 18px; height: 18px; cursor: pointer; }
   .admin-tile-status {
