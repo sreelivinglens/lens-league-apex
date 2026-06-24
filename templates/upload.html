@@ -425,7 +425,12 @@
 
       <!-- NSFW reject dispute — only shown when the server returns a dispute_id -->
       <div id="disputeBox" style="display:none; margin-top:8px; padding:12px 16px; background:#fdecea; border:1px solid #e53935; border-radius:var(--radius-sm); font-size:15px; color:#7a0000; line-height:1.6;">
-        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:#7a0000; text-decoration:underline; font-weight:700;">Tell us →</a></span>
+        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:#7a0000; text-decoration:underline; font-weight:700;">Tell us →</a>
+          <div id="disputeReasonWrap" style="display:none; margin-top:10px;">
+            <textarea id="disputeReason" placeholder="Tell us why you think this was flagged incorrectly (required)" maxlength="500" style="width:100%; min-height:80px; padding:8px 10px; border:1px solid #e53935; border-radius:6px; font-size:14px; font-family:inherit; color:#1a1a18; resize:vertical; box-sizing:border-box;"></textarea>
+            <button id="disputeSubmitBtn" style="margin-top:8px; padding:8px 18px; background:#e53935; color:#fff; border:none; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer;">Submit dispute</button>
+          </div>
+        </span>
         <span id="disputeConfirm" style="display:none;">✓ Sent to our team — we'll review and follow up by email.</span>
       </div>
 
@@ -717,25 +722,44 @@
   // error type.
   function showDispute(disputeId) {
     if (!disputeId) { disputeBox.style.display = 'none'; return; }
-    var prompt  = document.getElementById('disputePrompt');
-    var confirm = document.getElementById('disputeConfirm');
-    var link    = document.getElementById('disputeLink');
+    var prompt      = document.getElementById('disputePrompt');
+    var confirm     = document.getElementById('disputeConfirm');
+    var link        = document.getElementById('disputeLink');
+    var reasonWrap  = document.getElementById('disputeReasonWrap');
+    var reasonInput = document.getElementById('disputeReason');
+    var submitBtn   = document.getElementById('disputeSubmitBtn');
     prompt.style.display  = 'inline';
     confirm.style.display = 'none';
     link.textContent      = 'Tell us →';
     disputeBox.style.display = 'block';
     link.onclick = function (e) {
       e.preventDefault();
-      link.textContent = 'Sending…';
+      reasonWrap.style.display = 'block';
+      link.style.display = 'none';
+    };
+    submitBtn.onclick = function() {
+      var reason = reasonInput.value.trim();
+      if (!reason) {
+        reasonInput.style.borderColor = '#e53935';
+        reasonInput.placeholder = 'Please tell us why before submitting';
+        reasonInput.focus();
+        return;
+      }
+      submitBtn.textContent = 'Sending…';
+      submitBtn.disabled = true;
+      var fd = new FormData();
+      fd.append('reason', reason);
       fetch('/upload/dispute/' + disputeId + '/submit', {
         method: 'POST',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        body: fd
       }).then(function (r) { return r.json(); }).then(function () {
         prompt.style.display  = 'none';
         confirm.style.display = 'inline';
       }).catch(function () {
-        link.textContent = 'Tell us →';
+        submitBtn.textContent = 'Submit dispute';
+        submitBtn.disabled = false;
         showError('Could not send your objection — please try again, or email support@shutterleague.com directly.');
       });
     };
