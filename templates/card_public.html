@@ -229,13 +229,7 @@
 
   </div>{# ── end photo+score wrapper ── #}
 
-  {# ── Download button ── #}
-  <div class="pc-download-bar">
-    <a href="{{ url_for('public_card_download', token=share_token) }}"
-       class="pc-download-btn">
-      &darr; Download Evaluation Card
-    </a>
-  </div>
+  {# ── No inline download button — Save Rating Card (PDF) is the CTA on this page ── #}
 
   {# ══════════════════════════════════════════════════════════════════
      FULL EVALUATION — all values pre-computed in Python route.
