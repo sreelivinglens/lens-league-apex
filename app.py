@@ -798,6 +798,7 @@ def _run_startup_tasks():
                         thumb_url          VARCHAR(512) NOT NULL,
                         original_filename  VARCHAR(255),
                         nsfw_description   TEXT,
+                        user_reason        TEXT,
                         status             VARCHAR(20) DEFAULT 'pending',
                         created_at         TIMESTAMP DEFAULT NOW(),
                         submitted_at       TIMESTAMP,
@@ -1215,6 +1216,18 @@ def _run_startup_tasks():
             except Exception as _cme:
                 db.session.rollback()
                 print(f'contact_messages migration warning: {_cme}')
+
+            # upload_disputes — add user_reason and resolved_at columns if missing
+            try:
+                for _sql in [
+                    "ALTER TABLE upload_disputes ADD COLUMN IF NOT EXISTS user_reason TEXT",
+                    "ALTER TABLE upload_disputes ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMP",
+                ]:
+                    db.session.execute(db.text(_sql))
+                db.session.commit()
+            except Exception as _udme:
+                db.session.rollback()
+                print(f'upload_disputes migration warning: {_udme}')
             except Exception as ce:
                 print(f'raw_submissions migration warning: {ce}')
 
@@ -5060,6 +5073,16 @@ def upload():
                     'wrestling, bent-over or twisted poses, wet clothing clinging to the body — must NOT be '
                     'flagged as nudity on its own. Only flag if genitalia or bare breasts are clearly and '
                     'unambiguously visible, regardless of pose, motion, or activity. '
+                    'ALSO IMPORTANT: Bare-chested men in any context — family portraits, street photography, '
+                    'documentary, everyday life, cultural events, sports, or casual settings — must NOT be '
+                    'flagged. Male shirtlessness is not nudity. Only flag a male subject if genitalia '
+                    'are explicitly exposed. '
+                    'ALSO IMPORTANT: Children in age-appropriate contexts must NOT be flagged. This includes '
+                    'boys shirtless or in underwear in family, beach, play, or everyday settings; girls in '
+                    'age-appropriate swimwear (bikinis, one-piece), underwear, or everyday clothing; children '
+                    'bathing, swimming, playing, or in family portraits. Only flag a child if genitalia are '
+                    'explicitly and unambiguously exposed, or if there are clear signs of sexual exploitation '
+                    'or abuse. When in doubt about a child image, return nudity=false. '
                     'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
                     '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
                     'this overrides nudity=true when present. '
@@ -6277,10 +6300,12 @@ def submit_upload_dispute(dispute_id):
     if row.status == 'submitted':
         return jsonify({'ok': True, 'message': "Already sent to our team."})
 
+    _user_reason = request.form.get('reason', '').strip()[:500]
+
     try:
         db.session.execute(
-            db.text("UPDATE upload_disputes SET status = 'submitted', submitted_at = NOW() WHERE id = :id"),
-            {'id': dispute_id}
+            db.text("UPDATE upload_disputes SET status = 'submitted', submitted_at = NOW(), user_reason = :reason WHERE id = :id"),
+            {'id': dispute_id, 'reason': _user_reason}
         )
         db.session.commit()
     except Exception as _dispute_update_err:
@@ -6308,8 +6333,18 @@ def submit_upload_dispute(dispute_id):
           <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;width:140px;vertical-align:top;">User</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;">{_user_label} ({current_user.email})</td></tr>
           <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;vertical-align:top;">Filename</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;">{row.original_filename or 'unknown'}</td></tr>
           <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;vertical-align:top;">System flagged</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;">{row.nsfw_description or 'no description returned'}</td></tr>
+          <tr><td style="padding:6px 0;color:#8a8070;font-size:14px;vertical-align:top;">Photographer says</td><td style="padding:6px 0;color:#1a1a18;font-size:14px;font-style:italic;">{_user_reason or 'No reason provided'}</td></tr>
         </table>
-        <p style="margin:0;color:#8a8070;font-size:13px;line-height:1.6;">The photographer believes this was flagged in error and would like it reviewed.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+          <tr>
+            <td style="padding-right:8px;">
+              <a href="{_site_url}/admin/dispute/{dispute_id}/approve" style="display:inline-block;background:#2a7a3a;color:#fff;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:6px;text-decoration:none;">✓ Approve — Clear Flag</a>
+            </td>
+            <td>
+              <a href="{_site_url}/admin/dispute/{dispute_id}/reject" style="display:inline-block;background:#7a2a2a;color:#fff;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:6px;text-decoration:none;">✗ Reject — Keep Flagged</a>
+            </td>
+          </tr>
+        </table>
       </td></tr>
     </table>
   </td></tr>
@@ -9949,6 +9984,116 @@ def admin_reject_review(image_id):
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
+# -- Dispute Approve / Reject Routes -------------------------------------------
+
+@app.route('/admin/dispute/<int:dispute_id>/approve', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_dispute_approve(dispute_id):
+    """Approve a disputed upload rejection — notify user they can re-upload."""
+    row = db.session.execute(
+        db.text("""SELECT id, user_id, thumb_url, original_filename, nsfw_description, user_reason
+                   FROM upload_disputes WHERE id = :id"""),
+        {'id': dispute_id}
+    ).fetchone()
+
+    if not row:
+        flash('Dispute not found.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        db.session.execute(
+            db.text("UPDATE upload_disputes SET status = 'approved', resolved_at = NOW() WHERE id = :id"),
+            {'id': dispute_id}
+        )
+        db.session.commit()
+    except Exception as _e:
+        db.session.rollback()
+        flash(f'Could not update dispute: {_e}', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    # Notify user they can re-upload
+    try:
+        _u = User.query.get(row.user_id)
+        if _u:
+            _uname = _u.full_name or _u.username
+            send_email(
+                to_addresses=[_u.email],
+                subject='[Shutter League] Your upload has been cleared — please re-upload',
+                html_body=(
+                    f'<p>Hi {_uname},</p>'
+                    f'<p>Good news — we reviewed your disputed upload (<strong>{row.original_filename or "your image"}</strong>) '
+                    f'and our team has determined it was flagged incorrectly.</p>'
+                    f'<p>You are welcome to re-upload this photograph. It will be scored normally.</p>'
+                    f'<p>We apologise for the inconvenience.</p>'
+                    f'<p>The Shutter League Team</p>'
+                ),
+                text_body=(
+                    f'Hi {_uname},\n\nYour disputed upload ({row.original_filename or "your image"}) has been cleared. '
+                    f'You are welcome to re-upload this photograph.\n\nSorry for the inconvenience.\n\nThe Shutter League Team'
+                )
+            )
+    except Exception as _me:
+        app.logger.error(f'[dispute approve email] {_me}')
+
+    flash(f'Dispute #{dispute_id} approved — user notified to re-upload.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/dispute/<int:dispute_id>/reject', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_dispute_reject(dispute_id):
+    """Reject a disputed upload — notify user the flag stands."""
+    row = db.session.execute(
+        db.text("""SELECT id, user_id, thumb_url, original_filename, nsfw_description
+                   FROM upload_disputes WHERE id = :id"""),
+        {'id': dispute_id}
+    ).fetchone()
+
+    if not row:
+        flash('Dispute not found.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        db.session.execute(
+            db.text("UPDATE upload_disputes SET status = 'rejected', resolved_at = NOW() WHERE id = :id"),
+            {'id': dispute_id}
+        )
+        db.session.commit()
+    except Exception as _e:
+        db.session.rollback()
+        flash(f'Could not update dispute: {_e}', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    # Notify user the flag stands
+    try:
+        _u = User.query.get(row.user_id)
+        if _u:
+            _uname = _u.full_name or _u.username
+            send_email(
+                to_addresses=[_u.email],
+                subject='[Shutter League] Upload dispute outcome',
+                html_body=(
+                    f'<p>Hi {_uname},</p>'
+                    f'<p>We reviewed your disputed upload (<strong>{row.original_filename or "your image"}</strong>) '
+                    f'and our team has determined that the flag was applied correctly. '
+                    f'This image does not meet Shutter League programme guidelines and cannot be submitted.</p>'
+                    f'<p>If you believe this is still an error, please contact '
+                    f'<a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a>.</p>'
+                    f'<p>The Shutter League Team</p>'
+                ),
+                text_body=(
+                    f'Hi {_uname},\n\nWe reviewed your disputed upload and determined the flag was correctly applied. '
+                    f'This image cannot be submitted.\n\nContact {CONTACT_EMAIL} if you believe this is an error.\n\nThe Shutter League Team'
+                )
+            )
+    except Exception as _me:
+        app.logger.error(f'[dispute reject email] {_me}')
+
+    flash(f'Dispute #{dispute_id} rejected — user notified.', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
 
 # -- Community Report Routes ---------------------------------------------------
 
@@ -13353,6 +13498,16 @@ def bulk_upload_one():
                             'magazine ads, fashion/swimwear/lingerie shoots, sports uniforms — must NOT be flagged for '
                             'showing models in swimwear, lingerie, or undergarments. Only flag this kind of image if it '
                             'exposes genitalia or bare breasts, or is otherwise explicit/sexual rather than commercial. '
+                            'ALSO IMPORTANT: Bare-chested men in any context — family portraits, street photography, '
+                            'documentary, everyday life, cultural events, sports, or casual settings — must NOT be '
+                            'flagged. Male shirtlessness is not nudity. Only flag a male subject if genitalia '
+                            'are explicitly exposed. '
+                            'ALSO IMPORTANT: Children in age-appropriate contexts must NOT be flagged. This includes '
+                            'boys shirtless or in underwear in family, beach, play, or everyday settings; girls in '
+                            'age-appropriate swimwear (bikinis, one-piece), underwear, or everyday clothing; children '
+                            'bathing, swimming, playing, or in family portraits. Only flag a child if genitalia are '
+                            'explicitly and unambiguously exposed, or if there are clear signs of sexual exploitation '
+                            'or abuse. When in doubt about a child image, return nudity=false. '
                             'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
                             '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
                             'this overrides nudity=true when present. '
