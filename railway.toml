@@ -2,3 +2,5 @@
 startCommand = "gunicorn app:app --workers 4 --timeout 300 --keep-alive 5"
 restartPolicyType = "ALWAYS"
 restartPolicyMaxRetries = 10
+healthcheckPath = "/health"
+healthcheckTimeout = 300
