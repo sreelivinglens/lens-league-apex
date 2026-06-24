@@ -279,7 +279,7 @@
     <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
       ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
     </a>
-    <button type="button" class="admin-nav-btn gold" onclick="adminPostUrl({{ url_for('admin_rebuild_cards') | tojson }}, 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
+    <button type="button" class="admin-nav-btn gold" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
   </div>
 
   {# ── Action Required Banner ── #}
