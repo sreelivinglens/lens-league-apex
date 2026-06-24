@@ -141,35 +141,39 @@ def draw_footer(canvas, draw, stamp, canvas_h=None):
 
 def apply_watermark(canvas, x, y, w, h, credit=''):
     """
-    Draw two small text overlays on the photo area (no box background):
-      bottom-left  — © <photographer name>   (photographer owns the image)
-      bottom-right — shutterleague.com        (platform attribution)
-    Both sit 24px above the bottom edge so they clear the score band below.
+    Draw a single small credit pill at the bottom-right corner of the photo.
+    Format: © [First name] [Last initial] — photographer credit only.
+    Semi-dark pill background ensures readability on any photo colour.
     """
+    if not credit:
+        return
+
+    # Format: first name + last initial only (handles long names)
+    parts = credit.strip().split()
+    if len(parts) >= 2:
+        display = f'\u00a9 {parts[0]} {parts[-1][0]}'
+    else:
+        display = f'\u00a9 {credit.strip()}'
+
     wm_layer = PilImage.new('RGBA', (w, h), (0, 0, 0, 0))
     wm_draw  = ImageDraw.Draw(wm_layer)
-    wm_font  = fnt(32, mono=True)
-    pad_x    = 24
-    pad_y    = 24
+    wm_font  = fnt(24, mono=True)   # small — 9px equivalent at card scale
 
-    # © Photographer — bottom-left
-    if credit:
-        left_text = f'\u00a9 {credit}'
-        wm_draw.text(
-            (pad_x, h - pad_y - wm_draw.textbbox((0, 0), left_text, font=wm_font)[3]),
-            left_text, font=wm_font,
-            fill=(255, 255, 255, WATERMARK_OPACITY)
-        )
+    bb      = wm_draw.textbbox((0, 0), display, font=wm_font)
+    tw, th  = bb[2], bb[3]
+    pad_x   = 14
+    pad_y   = 10
+    pill_x  = w - tw - pad_x * 2
+    pill_y  = h - th - pad_y * 2
 
-    # shutterleague.com — bottom-right
-    right_text = 'shutterleague.com'
-    rt_w = wm_draw.textbbox((0, 0), right_text, font=wm_font)[2]
-    rt_h = wm_draw.textbbox((0, 0), right_text, font=wm_font)[3]
-    wm_draw.text(
-        (w - rt_w - pad_x, h - pad_y - rt_h),
-        right_text, font=wm_font,
-        fill=(255, 255, 255, int(WATERMARK_OPACITY * 0.65))
+    # Semi-dark pill — readable on white, yellow, black
+    wm_draw.rounded_rectangle(
+        [pill_x - pad_x, pill_y - pad_y, w, h],
+        radius=8,
+        fill=(0, 0, 0, 110)
     )
+    wm_draw.text((pill_x, pill_y), display, font=wm_font,
+                 fill=(255, 255, 255, 220))
 
     canvas.paste(wm_layer, (x, y), wm_layer)
 
