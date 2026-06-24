@@ -7776,9 +7776,18 @@ def download_card(image_id):
         'byline_2_body': audit.get('byline_2_body','') or audit.get('byline_2',''),
         'badges_g':      audit.get('badges_g',[]),
         'badges_w':      audit.get('badges_w',[]),
-        'hard_truth':    audit.get('hard_truth',''),
-        'edit_base':     audit.get('edit_base',''),
-        'edit_creative': audit.get('edit_creative',''),
+        'hard_truth':          audit.get('hard_truth',''),
+        'edit_base':           audit.get('edit_base',''),
+        'edit_creative':       audit.get('edit_creative',''),
+        'what_stood_out':      audit.get('what_stood_out',''),
+        'transferable_advice': audit.get('transferable_advice',''),
+        'background_check':    audit.get('background_check',''),
+        'mentor_location_1':   audit.get('mentor_location_1',''),
+        'mentor_location_2':   audit.get('mentor_location_2',''),
+        'mentor_location_3':   audit.get('mentor_location_3',''),
+        'days_since_language': audit.get('days_since_language',''),
+        'genre_tag':           audit.get('genre_tag',''),
+        'composition_technique': audit.get('composition_technique',''),
     }
 
     photo_tmp  = None
@@ -7798,8 +7807,25 @@ def download_card(image_id):
         t2 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
         t1.close(); t2.close()
 
-        build_card1(photo_path, card_data, t1.name)
-        build_card2(card_data, t2.name)
+        # Run compositor in a thread with a hard timeout so a slow build
+        # never pins the gunicorn sync worker and triggers maintenance mode.
+        _build_exc = [None]
+        def _run_build():
+            try:
+                build_card1(photo_path, card_data, t1.name)
+                build_card2(card_data, t2.name)
+            except Exception as _be:
+                _build_exc[0] = _be
+
+        _bt = threading.Thread(target=_run_build, daemon=True)
+        _bt.start()
+        _bt.join(timeout=55)
+        if _bt.is_alive():
+            app.logger.error(f'[download] build timeout img={image_id}')
+            return Response('PDF generation timed out. Please try again.', status=503,
+                            mimetype='text/plain')
+        if _build_exc[0]:
+            raise _build_exc[0]
 
         import re as _re
         raw = img.asset_name or 'card'
