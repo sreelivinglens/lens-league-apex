@@ -9419,6 +9419,137 @@ def admin_health_check():
     })
 
 
+@app.route('/admin/rebuild-cards', methods=['POST'])
+@login_required
+@admin_required
+def admin_rebuild_cards():
+    """
+    Bulk rebuild card JPGs for all scored images using existing audit data.
+    No rescoring — no API calls — compositor only.
+    Runs in a background thread; returns job status immediately.
+    Use after compositor changes (e.g. watermark update) to backfill all images.
+    """
+    import time as _time
+
+    images = Image.query.filter_by(status='scored').filter(
+        Image.is_flagged != True
+    ).all()
+    image_ids = [img.id for img in images]
+    total = len(image_ids)
+
+    app.logger.info(f'[rebuild_cards] Starting bulk rebuild for {total} images')
+
+    def _rebuild_worker():
+        from engine.compositor import build_card1
+        done = 0; errors = 0
+        for iid in image_ids:
+            try:
+                with app.app_context():
+                    _img = Image.query.get(iid)
+                    if not _img:
+                        continue
+                    _audit = _img.get_audit() or {}
+                    _modules = [(n, v) for n, v in [
+                        ('DoD', _img.dod_score), ('VD', _img.disruption_score),
+                        ('DM', _img.dm_score),   ('WF', _img.wonder_score),
+                        ('AQ', _img.aq_score),
+                    ] if v and float(v) > 0]
+                    _card_data = {
+                        'score':               _img.score,
+                        'tier':                _img.tier or '',
+                        'asset':               _img.asset_name or _img.original_filename or 'Untitled',
+                        'meta':                '  .  '.join(filter(None, [_img.genre, _img.format, _img.location])),
+                        'dec':                 _img.archetype or '',
+                        'credit':              _img.photographer_name or '',
+                        'soul_bonus':          bool(_img.soul_bonus),
+                        'iucn_tag':            _audit.get('iucn_tag', ''),
+                        'modules':             _modules,
+                        'rows':                _audit.get('rows', []),
+                        'byline_1':            _audit.get('byline_1', ''),
+                        'byline_2_body':       _audit.get('byline_2_body', '') or _audit.get('byline_2', ''),
+                        'hard_truth':          _audit.get('hard_truth', ''),
+                        'edit_base':           _audit.get('edit_base', ''),
+                        'edit_creative':       _audit.get('edit_creative', ''),
+                        'what_stood_out':      _audit.get('what_stood_out', ''),
+                        'transferable_advice': _audit.get('transferable_advice', ''),
+                        'background_check':    _audit.get('background_check', ''),
+                        'mentor_location_1':   _audit.get('mentor_location_1', ''),
+                        'mentor_location_2':   _audit.get('mentor_location_2', ''),
+                        'mentor_location_3':   _audit.get('mentor_location_3', ''),
+                        'days_since_language': _audit.get('days_since_language', ''),
+                        'genre_tag':           _audit.get('genre_tag', ''),
+                        'composition_technique': _audit.get('composition_technique', ''),
+                        'badges_g':            _audit.get('badges_g', []),
+                        'badges_w':            _audit.get('badges_w', []),
+                    }
+
+                    # Get thumb — prefer local disk, fall back to R2
+                    import tempfile as _tf
+                    _thumb_path = None
+                    _tmp_file   = None
+                    if _img.thumb_path and os.path.exists(_img.thumb_path):
+                        _thumb_path = _img.thumb_path
+                    elif _img.thumb_url:
+                        try:
+                            from storage import get_client, BUCKET
+                            _tf_obj = _tf.NamedTemporaryFile(suffix='.jpg', delete=False)
+                            get_client().download_fileobj(
+                                BUCKET,
+                                'thumbs/' + _img.thumb_url.split('/thumbs/')[-1],
+                                _tf_obj
+                            )
+                            _tf_obj.close()
+                            _thumb_path = _tmp_file = _tf_obj.name
+                        except Exception as _fe:
+                            app.logger.warning(f'[rebuild_cards] thumb fetch failed img={iid}: {_fe}')
+
+                    if not _thumb_path:
+                        app.logger.warning(f'[rebuild_cards] no thumb for img={iid}, skipping')
+                        errors += 1
+                        continue
+
+                    # Build card JPG
+                    _uid = str(uuid.uuid4())
+                    _card_fname = (
+                        f"LL_{date.today().strftime('%Y%m%d')}_"
+                        f"{secure_filename((_img.photographer_name or 'unknown').replace(' ', ''))}_"
+                        f"{_img.genre}_{_img.score}.jpg"
+                    )
+                    _card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', _card_fname)
+                    build_card1(_thumb_path, _card_data, _card_path)
+
+                    # Upload to R2
+                    _card_url = _r2_upload_card(_card_path, _uid + '_card')
+                    if _card_url:
+                        _img.card_url  = _card_url
+                    _img.card_path = _card_path
+                    db.session.commit()
+                    done += 1
+                    app.logger.info(f'[rebuild_cards] {done}/{total} img={iid} OK')
+
+                    if _tmp_file:
+                        try: os.unlink(_tmp_file)
+                        except: pass
+
+                    _time.sleep(0.3)  # avoid overwhelming compositor + R2
+
+            except Exception as _e:
+                errors += 1
+                app.logger.error(f'[rebuild_cards] img={iid} error: {_e}')
+                try: db.session.rollback()
+                except: pass
+
+        app.logger.info(f'[rebuild_cards] Complete — {done} rebuilt, {errors} errors out of {total}')
+
+    threading.Thread(target=_rebuild_worker, daemon=True).start()
+
+    return jsonify({
+        'status':  'started',
+        'total':   total,
+        'message': f'Rebuilding cards for {total} images in background. Check logs for progress.',
+    })
+
+
 @app.route('/admin/rescore-all', methods=['POST'])
 @login_required
 @admin_required
