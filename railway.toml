@@ -1,4 +1,4 @@
 [deploy]
 startCommand = "gunicorn app:app --workers 4 --timeout 300 --keep-alive 5"
-restartPolicyType = "ON_FAILURE"
+restartPolicyType = "ALWAYS"
 restartPolicyMaxRetries = 10
