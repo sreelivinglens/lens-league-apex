@@ -3552,7 +3552,8 @@ def dashboard():
                                   Image.is_public==True, Image.is_flagged==False,
                                   Image.tier.in_(['Legend','Grandmaster','Master']),
                                   Image.score>=8.5,
-                                  Image.thumb_url!=None)
+                                  Image.thumb_url!=None,
+                                  Image.width > Image.height)
                           .order_by(db.func.random())
                           .limit(1).first())
     except Exception:
@@ -10260,7 +10261,8 @@ def how_it_works():
                             Image.is_flagged == False,
                             Image.thumb_url != None,
                             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                            Image.score >= 8.0)
+                            Image.score >= 8.0,
+                            Image.width > Image.height)
                     .order_by(db.func.random())
                     .first())
     except Exception:
@@ -10886,7 +10888,8 @@ def science():
                              Image.is_flagged == False,
                              Image.thumb_url  != None,
                              Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                             Image.score >= 8.0)
+                             Image.score >= 8.0,
+                             Image.width > Image.height)
                      .order_by(db.func.random()))
         sci_hero = _sci_base.first()
         sci_mid  = _sci_base.offset(1).first()
@@ -10944,7 +10947,8 @@ def poty():
                              Image.is_flagged == False,
                              Image.thumb_url != None,
                              Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                             Image.score >= 8.0)
+                             Image.score >= 8.0,
+                             Image.width > Image.height)
                      .order_by(db.func.random())
                      .first())
     except Exception:
@@ -10959,7 +10963,8 @@ def poty():
                            Image.thumb_url != None,
                            Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
                            Image.score >= 8.0,
-                           Image.id != exclude_id)
+                           Image.id != exclude_id,
+                           Image.width > Image.height)
                    .order_by(db.func.random())
                    .first())
     except Exception:
@@ -11657,7 +11662,8 @@ def learning():
                                  Image.is_flagged == False,
                                  Image.thumb_url != None,
                                  Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                                 Image.score >= 8.0)
+                                 Image.score >= 8.0,
+                                 Image.width > Image.height)
                          .order_by(db.func.random())
                          .first())
     except Exception:
@@ -11760,7 +11766,8 @@ def mentors():
                             Image.is_flagged == False,
                             Image.thumb_url != None,
                             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                            Image.score >= 8.0)
+                            Image.score >= 8.0,
+                            Image.width > Image.height)
                     .order_by(db.func.random())
                     .first())
     except Exception:
@@ -12037,7 +12044,8 @@ def bow_info():
                             Image.is_flagged == False,
                             Image.thumb_url != None,
                             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                            Image.score >= 8.0)
+                            Image.score >= 8.0,
+                            Image.width > Image.height)
                     .order_by(db.func.random())
                     .first())
     except Exception:
