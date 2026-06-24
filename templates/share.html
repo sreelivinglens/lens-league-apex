@@ -240,19 +240,20 @@
   <div class="photo-wrap" style="position:relative;">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}" style="display:block; width:100%;">
-    <!-- Photographer name — bottom left -->
-    <div style="position:absolute; bottom:12px; left:12px;
-                font-family:var(--font-mono); font-size:14px; font-weight:700;
-                letter-spacing:1px; color:rgba(255,255,255,0.85);
-                text-shadow:0 1px 4px rgba(0,0,0,0.7); pointer-events:none;">
-      {{ image.photographer_name }}
+    <!-- Photographer credit — bottom left -->
+    <div style="position:absolute; bottom:10px; left:10px;
+                font-family:var(--font-mono); font-size:13px; font-weight:700;
+                letter-spacing:0.5px; color:rgba(255,255,255,0.85);
+                text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none;
+                max-width:45%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      © {{ image.photographer_name }}
     </div>
-    <!-- Watermark — bottom right, 30% opacity -->
-    <div style="position:absolute; bottom:12px; right:12px;
-                background:rgba(44,62,107,0.30); border-radius:4px;
-                padding:4px 8px; font-family:var(--font-mono);
-                font-size:12px; font-weight:700; letter-spacing:1.5px;
-                color:rgba(255,255,255,0.70); pointer-events:none;">
+    <!-- Platform attribution — bottom right -->
+    <div style="position:absolute; bottom:10px; right:10px;
+                font-family:var(--font-mono); font-size:13px; font-weight:700;
+                letter-spacing:0.5px; color:rgba(255,255,255,0.55);
+                text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none;
+                max-width:45%; white-space:nowrap;">
       shutterleague.com
     </div>
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
