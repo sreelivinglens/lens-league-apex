@@ -184,7 +184,7 @@
 }
 .mg-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 @media (max-width: 900px) {
@@ -214,15 +214,15 @@
 .mg-img-card__photo {
   position: relative;
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 4/3;
   overflow: hidden;
-  background: #0D0D0B;
+  background: #1a1a18;
   flex-shrink: 0;
 }
 .mg-img-card__photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transition: transform .3s ease;
 }
@@ -240,7 +240,7 @@
 .mg-img-card__score {
   font-size: 13px;
   font-weight: 800;
-  color: #D9A900;
+  color: #1a1a18;
   line-height: 1;
   display: inline;
 }
@@ -370,7 +370,7 @@
       {% endif %}
       {% if stats.best %}
       <div class="mg-stat">
-        <span class="mg-stat__val" style="color:#F4C20D;">{{ '%.2f'|format(stats.best) }}</span>
+        <span class="mg-stat__val" style="color:#1a1a18;">{{ '%.2f'|format(stats.best) }}</span>
         <span class="mg-stat__label">top evaluation</span>
       </div>
       {% endif %}
