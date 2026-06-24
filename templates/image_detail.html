@@ -941,8 +941,11 @@
     </div>
     <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
       {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
+      {% if image.share_token %}
+      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this scorecard</a>
+      {% else %}
       <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this scorecard</a>
-      <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank" class="btn" style="font-size:15px; padding:14px; text-align:center;">Download full scorecard</a>
+      {% endif %}
     </div>
   </div>
   {% endif %}
@@ -1271,7 +1274,7 @@
   </div>
   {% endif %}
 
-<a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
+<a href="{{ url_for('public_card', token=image.share_token) if image.share_token else url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
     {% endif %}
   </div>
 
