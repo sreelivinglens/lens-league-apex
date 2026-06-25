@@ -149,8 +149,7 @@ a{text-decoration:none;color:inherit}
   .dim svg{width:36px;height:36px}
   .dim-n{font-size:10px}
   .dim-d{font-size:12px}
-  .dims .sci-cta-wrap{width:100%;display:flex;justify-content:center;margin-top:4px}
-  .sci-cta{width:100%;justify-content:center;margin-top:0}
+  .sci-cta{width:auto;justify-content:center;margin-top:0}
 
   /* Mentors + Standing — stack vertically */
   .mentors-standing{padding:0 16px 48px}
@@ -259,42 +258,47 @@ a{text-decoration:none;color:inherit}
   <div class="sec-label">Your Journey With Shutter League</div>
   <div class="steps">
     <div class="step">
-      <div class="step-icon">
+      <div class="step-icon" style="position:relative">
         <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#2457D6;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">1</span>
       </div>
-      <div class="step-n">1. Submit</div>
+      <div class="step-n">Submit</div>
       <div class="step-b">Share your best work.</div>
     </div>
     <div class="arr">→</div>
     <div class="step">
-      <div class="step-icon">
+      <div class="step-icon" style="position:relative">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#2457D6;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">2</span>
       </div>
-      <div class="step-n">2. Understand</div>
+      <div class="step-n">Understand</div>
       <div class="step-b">Get a detailed 5-dimension evaluation.</div>
     </div>
     <div class="arr">→</div>
     <div class="step">
-      <div class="step-icon">
+      <div class="step-icon" style="position:relative">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#2457D6;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">3</span>
       </div>
-      <div class="step-n">3. Improve</div>
+      <div class="step-n">Improve</div>
       <div class="step-b">Receive daily assignments crafted for you.</div>
     </div>
     <div class="arr">→</div>
     <div class="step">
-      <div class="step-icon">
+      <div class="step-icon" style="position:relative">
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="4 8 8 4 12 8"/></svg>
+        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#2457D6;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">4</span>
       </div>
-      <div class="step-n">4. Repeat</div>
+      <div class="step-n">Repeat</div>
       <div class="step-b">Keep learning. Keep getting better.</div>
     </div>
     <div class="arr">→</div>
     <div class="step">
-      <div class="step-icon">
+      <div class="step-icon" style="position:relative">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#2457D6;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">5</span>
       </div>
-      <div class="step-n">5. Recognition</div>
+      <div class="step-n">Recognition</div>
       <div class="step-b">Build your standing. Earn recognition.</div>
     </div>
   </div>
@@ -371,9 +375,9 @@ a{text-decoration:none;color:inherit}
         <div class="dim-n">Affective Quotient</div>
         <div class="dim-d">What emotion does it evoke?</div>
       </div>
-      <div class="sci-cta-wrap" style="flex:0 0 100%;display:flex;justify-content:center;padding-left:0;margin-top:8px">
-        <a href="{{ site_url }}/science" class="sci-cta">Explore the Science →</a>
-      </div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:24px">
+      <a href="{{ site_url }}/science" class="sci-cta">Explore the Science →</a>
     </div>
   </div>
 </div>
