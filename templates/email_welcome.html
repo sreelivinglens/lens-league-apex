@@ -103,6 +103,88 @@ a{text-decoration:none;color:inherit}
 .footer-reply a{color:#2457D6;font-weight:600}
 .footer-legal{font-size:13px;color:#999999;line-height:1.65}
 .footer-legal a{color:#999999}
+
+/* ── MOBILE ─────────────────────────────────────────────── */
+@media (max-width:620px){
+  .outer{padding:0}
+  .wrap{max-width:100%}
+
+  /* Hero — stack vertically, copy on top, collage below */
+  .hero{flex-direction:column;min-height:auto}
+  .hero-left{width:100%;padding:36px 24px 28px}
+  .hero-logo{text-align:center}
+  .hero-logo img{height:48px}
+  .hero-h1{font-size:32px}
+  .hero-sub{font-size:24px}
+  .hero-body{font-size:16px;max-width:100%}
+  .hero-cta{width:100%;justify-content:center}
+  .hero-right{width:100%;padding:16px;height:320px}
+  .light-table{height:300px}
+
+  /* Scale collage photos down proportionally for 320px container */
+  .p{transform-origin:top left}
+
+  /* Journey — 2 rows on mobile */
+  .journey{padding:40px 20px}
+  .steps{flex-wrap:wrap;justify-content:center;gap:16px 0;overflow-x:visible}
+  .step{width:30%;flex-shrink:0;min-width:100px}
+  .step-b{font-size:13px}
+  .arr{display:none}
+
+  /* Tiles — 2 col grid */
+  .tiles{flex-wrap:wrap;padding:0 16px 48px;gap:12px}
+  .tile{flex:1 1 calc(50% - 6px);min-width:140px}
+  .tile-img-wrap{height:140px}
+  .tile-body{padding:14px 14px 18px}
+  .tile-title{font-size:11px}
+  .tile-text{font-size:13px}
+
+  /* Science — single column */
+  .sci-wrap{padding:0 16px 48px}
+  .science{padding:36px 24px}
+  .sci-h{font-size:20px}
+  .sci-sub{font-size:16px;margin-bottom:32px}
+  .dims{flex-wrap:wrap;gap:16px}
+  .dim{flex:1 1 calc(33% - 12px);min-width:80px}
+  .dim svg{width:36px;height:36px}
+  .dim-n{font-size:10px}
+  .dim-d{font-size:12px}
+  .dims .sci-cta-wrap{width:100%;display:flex;justify-content:center;margin-top:4px}
+  .sci-cta{width:100%;justify-content:center;margin-top:0}
+
+  /* Mentors + Standing — stack vertically */
+  .mentors-standing{padding:0 16px 48px}
+  .ms-row{flex-direction:column}
+  .ms-bottom{flex-direction:column}
+  .ms-quote{border-right:none;border-bottom:1px solid #E8E8E8;padding:24px 20px}
+  .ms-quote p{font-size:16px}
+  .ms-questions{padding:20px}
+  .ms-badges{gap:6px}
+
+  /* Final CTA */
+  .final{height:240px}
+  .final-content{padding:0 24px}
+  .final-content h2{font-size:24px}
+  .final-btn{width:100%;justify-content:center;padding:0 20px}
+
+  /* Footer */
+  .footer{padding:28px 20px}
+  .footer-reply{font-size:15px}
+}
+
+/* ── IPAD ───────────────────────────────────────────────── */
+@media (min-width:621px) and (max-width:900px){
+  .wrap{max-width:100%}
+  .hero-h1{font-size:36px}
+  .hero-sub{font-size:28px}
+  .tiles{padding:0 24px 60px;gap:12px}
+  .tile-img-wrap{height:160px}
+  .sci-wrap{padding:0 24px 60px}
+  .mentors-standing{padding:0 24px 60px}
+  .ms-badges{gap:6px}
+  .journey{padding:60px 32px}
+  .footer{padding:32px 32px}
+}
 </style>
 </head>
 <body>
@@ -289,7 +371,7 @@ a{text-decoration:none;color:inherit}
         <div class="dim-n">Affective Quotient</div>
         <div class="dim-d">What emotion does it evoke?</div>
       </div>
-      <div style="flex:0;display:flex;align-items:center;padding-left:20px">
+      <div class="sci-cta-wrap" style="flex:0 0 100%;display:flex;justify-content:center;padding-left:0;margin-top:8px">
         <a href="{{ site_url }}/science" class="sci-cta">Explore the Science →</a>
       </div>
     </div>
@@ -305,14 +387,14 @@ a{text-decoration:none;color:inherit}
       <div class="ms-label">Learn From Mentors</div>
       <div class="ms-mentors">
         <a href="{{ mentors_url }}" class="ms-mentor" style="text-decoration:none">
-          <img class="ms-mentor-img" src="https://shutterleague.com/static/img/mentor_ashok.jpg" alt="Ashok Kochhar">
+          <img class="ms-mentor-img" style="object-position:center 20%;" src="https://shutterleague.com/static/img/mentor_ashok.jpg" alt="Ashok Kochhar">
           <div class="ms-mentor-name">Ashok Kochhar</div>
           <div class="ms-mentor-role">Legend Mentor</div>
         </a>
         <a href="{{ mentors_url }}" class="ms-mentor" style="text-decoration:none">
           <img class="ms-mentor-img" src="https://shutterleague.com/static/img/Sreekumar.png" alt="Sreekumar Krishnan">
           <div class="ms-mentor-name">Sreekumar Krishnan</div>
-          <div class="ms-mentor-role">Legend Mentor</div>
+          <div class="ms-mentor-role">Master Mentor</div>
         </a>
       </div>
     </div>
