@@ -1,179 +1,397 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no">
-<style>@media (max-width:480px){.sl-col{display:block !important;width:100% !important;padding-right:0 !important;padding-bottom:16px !important;}}</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to Shutter League</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#F5F4F1;font-family:'Inter',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#111111}
+a{text-decoration:none;color:inherit}
+.outer{background:#F5F4F1;padding:48px 0}
+.wrap{max-width:960px;margin:0 auto;background:#FFFFFF}
+
+/* HERO */
+.hero{display:flex;min-height:620px;background:#F5F4F1}
+.hero-left{width:42%;padding:56px 48px;display:flex;flex-direction:column;justify-content:flex-start;padding-top:56px}
+.hero-logo{margin-bottom:38px}
+.hero-logo img{height:68px;width:auto}
+.hero-h1{font-size:44px;font-weight:800;color:#111111;letter-spacing:-1px;line-height:1.05;margin-bottom:18px}
+.hero-sub{font-size:36px;font-weight:600;color:#111111;letter-spacing:-0.5px;line-height:1.1;margin-bottom:22px}
+.hero-body{font-size:18px;font-weight:400;color:#4A4A4A;line-height:1.65;max-width:360px;margin-bottom:36px}
+.hero-cta{display:inline-flex;align-items:center;justify-content:center;background:#F4C400;color:#111111;font-size:16px;font-weight:700;height:56px;padding:0 32px;border-radius:16px;width:fit-content}
+
+/* LIGHT TABLE */
+.hero-right{width:58%;position:relative;overflow:hidden;background:#ECEAE4;padding:20px}
+.light-table{position:relative;width:100%;height:600px}
+.p{position:absolute;border-radius:6px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.p img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* JOURNEY */
+.journey{background:#FFFFFF;padding:80px 60px;text-align:center;border-top:1px solid #F0F0F0}
+.sec-label{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#888888;margin-bottom:48px}
+.steps{display:flex;align-items:flex-start;justify-content:center}
+.step{display:flex;flex-direction:column;align-items:center;width:148px}
+.step-icon{width:64px;height:64px;border-radius:50%;border:1.5px solid #2457D6;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.step-icon svg{width:26px;height:26px;stroke:#2457D6;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.step-n{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111111;margin-bottom:8px}
+.step-b{font-size:14px;color:#555555;line-height:1.6}
+.arr{color:#CCCCCC;font-size:18px;margin-top:22px;padding:0 4px;flex-shrink:0}
+
+/* FEATURE TILES */
+.tiles{display:flex;gap:16px;padding:0 40px 80px;background:#FFFFFF}
+.tile{flex:1;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.06);display:block;color:inherit;text-decoration:none;transition:transform .2s, box-shadow .2s}.tile:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.tile-img-wrap{display:block;width:100%;height:220px;overflow:hidden}
+.tile-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
+.tile-img:hover{transform:scale(1.03)}
+.tile-body{padding:20px 20px 24px;background:#FFFFFF}
+.tile-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111111;margin-bottom:8px}
+.tile-text{font-size:14px;color:#555555;line-height:1.6}
+
+/* SCIENCE */
+.sci-wrap{padding:0 40px 80px;background:#FFFFFF}
+.science{background:#EEF4FB;padding:64px 56px;border-radius:24px}
+.sci-h{font-size:26px;font-weight:800;color:#111111;letter-spacing:-0.5px;line-height:1.2;margin-bottom:10px}
+.sci-h span{color:#2457D6}
+.sci-sub{font-size:18px;color:#555555;line-height:1.65;margin-bottom:52px}
+.dims{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:40px}
+.dim{text-align:center;flex:1}
+.dim svg{width:50px;height:50px;stroke:#F4C400;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.dim-n{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111111;margin:12px 0 6px}
+.dim-d{font-size:13px;color:#555555;line-height:1.5}
+.sci-cta{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #111111;color:#111111;font-size:14px;font-weight:700;padding:12px 24px;border-radius:8px}
+
+/* MENTORS */
+.mentors-standing{padding:0 40px 80px;background:#FFFFFF}
+.ms-row{display:flex;gap:16px}
+.ms-left{flex:1;background:#F5F4F1;border-radius:16px;padding:24px}
+.ms-right{flex:1;background:#F5F4F1;border-radius:16px;padding:24px}
+.ms-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111111;text-align:center;margin-bottom:20px}
+.ms-mentors{display:flex;gap:16px;justify-content:center}
+.ms-mentor{text-align:center;flex:1}
+.ms-mentor-img{width:100%;aspect-ratio:1;object-fit:contain;object-position:center center;border-radius:8px;display:block;filter:grayscale(100%);background:#1A1A18;margin-bottom:10px}
+.ms-mentor-name{font-size:14px;font-weight:700;color:#111111;margin-bottom:2px}
+.ms-mentor-role{font-size:12px;color:#555555}
+.ms-badges{display:flex;gap:8px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
+.ms-badge{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ms-badge-name{font-size:10px;color:#555555;text-align:center}
+.ms-bottom{display:flex;gap:0;margin-top:16px;background:#F5F4F1;border-radius:16px}
+.ms-quote{flex:1;padding:28px 32px;border-right:1px solid #E8E8E8}
+.ms-quote p{font-size:18px;font-weight:700;color:#111111;line-height:1.4;margin:0}
+.ms-questions{flex:1;padding:28px 32px;display:flex;gap:14px;align-items:flex-start}
+.ms-q-icon{width:36px;height:36px;flex-shrink:0;margin-top:2px}
+.ms-q-title{font-size:16px;font-weight:700;color:#111111;margin-bottom:4px}
+.ms-q-body{font-size:14px;color:#555555;line-height:1.6}
+
+/* STANDING — merged into mentors-standing block above */
+
+/* FINAL CTA */
+.final{position:relative;height:280px;overflow:hidden;display:flex;align-items:center}
+.final-bg{position:absolute;inset:0}
+.final-bg img{width:100%;height:100%;object-fit:cover;display:block}
+.final-overlay{position:absolute;inset:0;background:rgba(0,0,0,.50)}
+.final-content{position:relative;z-index:2;width:100%;padding:0 60px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.final-content h2{font-size:32px;font-weight:700;color:#FFFFFF;letter-spacing:-0.5px}
+.final-content p{font-size:16px;color:rgba(255,255,255,.8)}
+.final-btn{display:inline-flex;align-items:center;justify-content:center;background:#F4C400;color:#111111;font-size:16px;font-weight:700;height:56px;padding:0 40px;border-radius:16px;white-space:nowrap;margin-top:4px}
+.final-small{font-size:13px;color:rgba(255,255,255,.5)}
+
+/* FOOTER */
+.footer{padding:40px 60px;background:#FFFFFF;border-top:1px solid #E8E8E8}
+.footer-reply{font-size:16px;color:#555555;line-height:1.65;margin-bottom:20px}
+.footer-reply a{color:#2457D6;font-weight:600}
+.footer-legal{font-size:13px;color:#999999;line-height:1.65}
+.footer-legal a{color:#999999}
+</style>
 </head>
-<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:24px 12px;">
-<tr><td align="center">
-<table cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+<body>
+<div class="outer">
+<div class="wrap">
 
-<!-- Header -->
-<tr><td style="background:#C8E6F5;padding:20px 24px 0;">
-<div style="margin:0;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:4px;color:#1A2744;text-transform:uppercase;">SHUTTER LEAGUE</div>
-</td></tr>
-<tr><td style="background:#C8E6F5;padding:8px 24px 22px;">
-<h1 style="margin:0;font-size:24px;font-weight:700;color:#1A2744;line-height:1.5;">Welcome to Shutter League, {{ name }}.</h1>
-</td></tr>
+<!-- ═══ HERO ═══════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-logo">
+      <img src="https://shutterleague.com/static/img/shutterleague-logo-cropped.png" alt="Shutter League">
+    </div>
+    <h1 class="hero-h1">Welcome to<br>Shutter League{% if name %}, {{ name.split()[0] }}{% endif %}.</h1>
+    <p class="hero-sub">The pursuit of better<br>starts here.</p>
+    <p class="hero-body">Honest feedback. Purposeful practice. Meaningful recognition.</p>
+    <a href="{{ upload_url }}" class="hero-cta">Submit Your First Photograph</a>
+  </div>
 
-<!-- HERO IMAGE — fixed, real, founder-approved (Ashok Kochhar, 8.84 Master, Street, "Recycling") -->
-<tr><td>
-<img src="{{ hero_thumb_url }}" width="560" alt="{{ hero_genre }} — {{ hero_photographer }}" style="display:block;width:100%;max-width:560px;height:auto;border:0;" onerror="this.style.display='none'">
-</td></tr>
-<tr><td style="padding:14px 24px 4px;text-align:center;">
-<p style="margin:0 0 6px;font-size:15px;color:#8a8070;font-family:Courier New,monospace;">
-<span style="color:#1a1a18;font-weight:700;">{{ hero_score }} {{ hero_tier|upper }}</span>&nbsp;&middot;&nbsp;{{ hero_genre }}&nbsp;&middot;&nbsp;{{ hero_photographer }}</p>
-<p style="margin:0;font-size:15px;color:#4A4840;line-height:1.6;">&#8220;{{ hero_quote }}&#8221;</p>
-</td></tr>
+  <div class="hero-right">
+    <div class="light-table">
 
-<!-- Recognition -->
-<tr><td style="padding:20px 24px 4px;">
-<p style="margin:0 0 8px;font-size:17px;color:#1a1a18;line-height:1.7;font-weight:700;">We see you.</p>
-<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.75;">Your photograph captured something your eye saw. Most people never get told that part.</p>
-</td></tr>
+      <!-- ROW 1: now i see now i dont · Children-Sree · Landscape1-Ashok -->
+      <div class="p" style="top:8px;left:0;width:196px;height:158px;transform:rotate(-1.5deg)">
+        <img src="https://shutterleague.com/static/email_heroes/now i see now i dont.jpg" alt="" style="object-position:center 20%">
+      </div>
+      <div class="p" style="top:2px;left:204px;width:102px;height:156px;transform:rotate(1deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Children-Sree.jpg" alt="">
+      </div>
+      <div class="p" style="top:4px;left:314px;width:183px;height:128px;transform:rotate(2deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Landscape1 -Ashok.jpg" alt="">
+      </div>
 
-<!-- Honest Feedback / 200 years -->
-<tr><td style="padding:22px 24px 4px;">
-<table cellpadding="0" cellspacing="0" style="background:#EDF5FB;border-radius:6px;width:100%;padding:26px 24px;">
-<tr><td style="text-align:left;">
-<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.75;">Chess has a rating. Cricket has a standing. Michelin has stars. F1 has points. But for 200 years, since the first photograph was taken, photography never got one.</p>
-<p style="margin:0 0 12px;font-size:18px;color:#1a1a18;font-weight:700;line-height:1.5;">&#8220;Photographers have received two kinds of feedback: flattery and silence.&#8221;</p>
-<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">Likes are not feedback. Evaluations without reasons are not feedback. Feedback is what works, what doesn&#39;t, and what to improve next.</p>
-<p style="margin:0;font-size:16px;color:#1a1a18;font-weight:700;line-height:1.6;">Photography has never had an honest improvement loop. Until now.</p>
-</td></tr></table>
-</td></tr>
+      <!-- ROW 2: Flamingos · Street 4 · Fashion 5 -->
+      <div class="p" style="top:148px;left:0;width:148px;height:148px;transform:rotate(1.5deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Flamingos Art-Sree.jpg" alt="">
+      </div>
+      <div class="p" style="top:152px;left:156px;width:188px;height:122px;transform:rotate(-1deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Street 4-Ashok.jpg" alt="">
+      </div>
+      <div class="p" style="top:130px;left:352px;width:108px;height:168px;transform:rotate(-2deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Fashion 5-Ashok.jpg" alt="">
+      </div>
 
-<!-- Testimonial — A.R, Berlin -->
-<tr><td style="padding:18px 24px 4px;">
-<table cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;width:100%;padding:18px;"><tr>
-<td class="sl-col" style="display:inline-block;width:28%;vertical-align:top;padding-right:14px;">
-{% if ar_photo_url %}
-<img src="{{ ar_photo_url }}" width="130" alt="A.R, Berlin" style="display:block;width:100%;max-width:130px;height:auto;border-radius:6px;" onerror="this.style.display='none'">
-{% else %}
-<div style="width:64px;height:64px;border-radius:50%;background:#1A2744;color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:20px;text-align:center;line-height:64px;">AR</div>
-{% endif %}
-</td>
-<td class="sl-col" style="display:inline-block;width:68%;vertical-align:top;">
-<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">A.R, Berlin <span style="font-weight:400;color:#8a8070;font-size:14px;">&middot; 9.28 Grandmaster</span></p>
-<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">Asked ChatGPT for street photography feedback sites — before we&#39;d even launched, it pointed him here anyway. His third upload came back Grandmaster.</p>
-{% if sample_card_url %}<div style="margin:0;font-size:13px;color:#8a8070;">&#128247; <a href="{{ sample_card_url }}" style="color:#1A2744;font-weight:700;text-decoration:underline;" target="_blank">View a sample evaluation card &#8594;</a></div>{% endif %}
-</td>
-</tr></table>
-</td></tr>
+      <!-- ROW 3: Landscape-5 · Pelicans · Still-Ashok -->
+      <div class="p" style="top:300px;left:0;width:214px;height:130px;transform:rotate(-1deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Landscape -5-Ashok.jpg" alt="">
+      </div>
+      <div class="p" style="top:290px;left:222px;width:120px;height:120px;transform:rotate(2deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Pelicans-Ashok.jpg" alt="">
+      </div>
+      <div class="p" style="top:298px;left:350px;width:110px;height:152px;transform:rotate(-1.5deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Still-Ashok.jpg" alt="">
+      </div>
 
-<!-- The Practice -->
-<tr><td style="padding:22px 24px 4px;">
-<table cellpadding="0" cellspacing="0" style="background:#EAF4FA;border-left:4px solid #F5C518;width:100%;padding:18px 16px 18px 14px;">
-<tr><td>
-<div style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">The Practice</div>
-<p style="margin:0 0 10px;font-size:16px;color:#4A4840;line-height:1.75;">A violinist doesn&#39;t become great by performing once a year. They practise daily — scales, repetition, the work nobody sees until it&#39;s undeniable.</p>
-<p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.75;">Every morning, one new assignment is waiting — built around your interests, how you shoot, your city, and the part of your eye that&#39;s ready to grow next. Some mornings it points you somewhere nearby. Some mornings you&#39;ll be asked to go again. Both are the practice.</p>
-<a href="{{ dashboard_url }}" style="font-size:15px;color:#1A2744;font-weight:700;text-decoration:underline;">&#8594; See today&#39;s assignment</a>
-</td></tr></table>
-</td></tr>
+      <!-- ROW 4: Tiger (replaces wolf) · Woods-Sree · Nature-Tern -->
+      <div class="p" style="top:436px;left:0;width:196px;height:148px;transform:rotate(1deg)">
+        <img src="https://shutterleague.com/static/email_heroes/tiger moving-sree.jpg" alt="">
+      </div>
+      <div class="p" style="top:430px;left:204px;width:148px;height:144px;transform:rotate(-2deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Woods-Sree.jpg" alt="">
+      </div>
+      <div class="p" style="top:440px;left:360px;width:104px;height:128px;transform:rotate(1.5deg)">
+        <img src="https://shutterleague.com/static/email_heroes/Nature-Tern-Ashok.jpg" alt="">
+      </div>
 
-<!-- 2-COLUMN: Points | Learn From Masters -->
-<tr><td style="padding:22px 24px 4px;">
-<table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+    </div>
+  </div>
+</div>
 
-<td class="sl-col" style="display:inline-block;width:48%;vertical-align:top;padding-right:4%;">
-<table cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;width:100%;padding:18px 16px;">
-<tr><td>
-<div style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:2px;color:#1A2744;text-transform:uppercase;">Points</div>
-<p style="margin:0 0 10px;font-size:16px;color:#4A4840;line-height:1.7;">Every evaluation you receive earns you points. Rate someone else&#39;s work and you earn more — the more photographers give feedback, the sharper everyone&#39;s eye gets, yours included.</p>
-<p style="margin:0 0 10px;font-size:16px;color:#4A4840;line-height:1.7;">Save them for extra uploads, or trade them for real time with a mentor — from 1,000 points.</p>
-<a href="{{ dashboard_url }}" style="font-size:14px;color:#1A2744;font-weight:700;text-decoration:underline;">&#8594; Your wallet</a>
-</td></tr></table>
-</td>
+<!-- ═══ JOURNEY ═════════════════════════════════════════════ -->
+<div class="journey">
+  <div class="sec-label">Your Journey With Shutter League</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      </div>
+      <div class="step-n">1. Submit</div>
+      <div class="step-b">Share your best work.</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      </div>
+      <div class="step-n">2. Understand</div>
+      <div class="step-b">Get a detailed 5-dimension evaluation.</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+      </div>
+      <div class="step-n">3. Improve</div>
+      <div class="step-b">Receive daily assignments crafted for you.</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="4 8 8 4 12 8"/></svg>
+      </div>
+      <div class="step-n">4. Repeat</div>
+      <div class="step-b">Keep learning. Keep getting better.</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      </div>
+      <div class="step-n">5. Recognition</div>
+      <div class="step-b">Build your standing. Earn recognition.</div>
+    </div>
+  </div>
+</div>
 
-<td class="sl-col" style="display:inline-block;width:48%;vertical-align:top;">
-<table cellpadding="0" cellspacing="0" style="background:#FBF6E5;border-radius:6px;width:100%;overflow:hidden;">
-<tr><td style="padding:0;font-size:0;">
-<img src="{{ ashok_photo_url }}" width="260" alt="Ashok Kochhar" style="display:block;width:100%;height:140px;object-fit:cover;object-position:center 15%;border-radius:6px 6px 0 0;" onerror="this.style.background:#1A2744;this.style.height='140px';">
-</td></tr>
-<tr><td style="padding:14px 16px 16px;">
-<div style="margin:0 0 8px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:2px;color:#1A2744;text-transform:uppercase;">Learn From Masters</div>
-<div style="margin:0 0 2px;font-size:14px;font-weight:700;color:#1a1a18;">Ashok Kochhar</div>
-<div style="margin:0 0 10px;font-size:12px;color:#8a8070;">Legend Mentor</div>
-<p style="margin:0 0 10px;font-size:16px;color:#4A4840;line-height:1.7;">A real photographer reads your frame — not a template.</p>
-<a href="{{ mentors_url }}" style="font-size:14px;color:#1A2744;font-weight:700;text-decoration:underline;">&#8594; Meet the mentors</a>
-</td></tr>
-</table>
-</td>
+<!-- ═══ FEATURE TILES ════════════════════════════════════════ -->
+<div class="tiles">
+  <a href="{{ sample_card_url or dashboard_url }}" class="tile">
+    <div class="tile-img-wrap">
+      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Wolf of Bhigwan-2.jpg" alt="Detailed Evaluations">
+    </div>
+    <div class="tile-body">
+      <div class="tile-title">Detailed Evaluations</div>
+      <div class="tile-text">Understand your photograph like never before.</div>
+    </div>
+  </a>
+  <a href="{{ dashboard_url }}" class="tile">
+    <div class="tile-img-wrap">
+      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Still 2-Ashok.jpg" alt="Daily Assignments">
+    </div>
+    <div class="tile-body">
+      <div class="tile-title">Daily Assignments</div>
+      <div class="tile-text">A personalised brief every morning. Just for you.</div>
+    </div>
+  </a>
+  <a href="{{ site_url }}/aea" class="tile">
+    <div class="tile-img-wrap">
+      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Landscape -5-Ashok.jpg" alt="Annual Excellence Award">
+    </div>
+    <div class="tile-body">
+      <div class="tile-title">Annual Excellence Award</div>
+      <div class="tile-text">Recognising photographers who keep growing.</div>
+    </div>
+  </a>
+  <a href="{{ bow_url }}" class="tile">
+    <div class="tile-img-wrap">
+      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Portraits 3- Ashok.jpg" alt="Body of Work">
+    </div>
+    <div class="tile-body">
+      <div class="tile-title">Body of Work</div>
+      <div class="tile-text">Build a public portfolio of your best evaluations.</div>
+    </div>
+  </a>
+</div>
 
-</tr></table>
-</td></tr>
+<!-- ═══ SCIENCE ══════════════════════════════════════════════ -->
+<div class="sci-wrap">
+  <div class="science">
+    <h2 class="sci-h">Photography deserves more than validation.<br><span>It deserves understanding.</span></h2>
+    <p class="sci-sub">Every photograph is evaluated across 5 dimensions.</p>
+    <div class="dims">
+      <div class="dim">
+        <svg viewBox="0 0 44 44"><polygon points="22,4 40,38 4,38"/><line x1="22" y1="4" x2="22" y2="38"/></svg>
+        <div class="dim-n">Difficulty</div>
+        <div class="dim-d">How hard was it to capture?</div>
+      </div>
+      <div class="dim">
+        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><polyline points="22,12 22,22 28,28"/></svg>
+        <div class="dim-n">Decisive Moment</div>
+        <div class="dim-d">How well was the moment captured?</div>
+      </div>
+      <div class="dim">
+        <svg viewBox="0 0 44 44"><polyline points="4,22 12,10 20,28 28,14 36,22" stroke-width="2"/></svg>
+        <div class="dim-n">Disruption</div>
+        <div class="dim-d">Does it break the ordinary?</div>
+      </div>
+      <div class="dim">
+        <svg viewBox="0 0 44 44"><path d="M22 38C22 38 4 26 4 16a9 9 0 0 1 18-1 9 9 0 0 1 18 1c0 10-18 22-18 22z"/></svg>
+        <div class="dim-n">Wonder</div>
+        <div class="dim-d">Does it create a sense of wonder?</div>
+      </div>
+      <div class="dim">
+        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><path d="M14 22c0-4.4 3.6-8 8-8s8 3.6 8 8"/><circle cx="22" cy="22" r="3" fill="#F4C400" stroke="none"/></svg>
+        <div class="dim-n">Affective Quotient</div>
+        <div class="dim-d">What emotion does it evoke?</div>
+      </div>
+      <div style="flex:0;display:flex;align-items:center;padding-left:20px">
+        <a href="{{ site_url }}/science" class="sci-cta">Explore the Science →</a>
+      </div>
+    </div>
+  </div>
+</div>
 
-<!-- Your Standing (merged with Free vs Subscribed) -->
-<tr><td style="padding:22px 24px 4px;">
-<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">
-<tr><td>
-<div style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Standing</div>
-<p style="margin:0 0 10px;font-size:16px;color:#4A4840;line-height:1.75;">Every evaluation adds to something larger — your standing toward the <strong style="color:#1a1a18;">Annual Excellence Award</strong>. Eight tiers, the top jury-reviewed:</p>
-<p style="margin:0 0 10px;font-size:16px;color:#1a1a18;line-height:2.1;">Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman<br>Maverick &#8594; Master &#8594; Grandmaster &#8594; <strong>Legend</strong></p>
-<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">Consistency wins. One great photograph isn&#39;t enough.</p>
-<p style="margin:0;font-size:15px;color:#4A4840;line-height:1.75;">Your first three evaluations are free — plenty to see how this works. When you&#39;re ready to chase that standing, enter Weekly Assignments, or keep shooting past those first three, that&#39;s when you subscribe. <a href="{{ pricing_url }}" style="color:#1A2744;font-weight:700;text-decoration:underline;">See plans &#8594;</a></p>
-</td></tr></table>
-</td></tr>
+<!-- ═══ MENTORS + STANDING ══════════════════════════════════ -->
+<div class="mentors-standing">
+  <div class="ms-row">
 
-<!-- What Awaits You -->
-<tr><td style="padding:22px 24px 4px;">
-<div style="margin:0 0 14px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">What Awaits You</div>
-<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+    <!-- LEFT: Mentors -->
+    <div class="ms-left">
+      <div class="ms-label">Learn From Mentors</div>
+      <div class="ms-mentors">
+        <a href="{{ mentors_url }}" class="ms-mentor" style="text-decoration:none">
+          <img class="ms-mentor-img" src="https://shutterleague.com/static/img/mentor_ashok.jpg" alt="Ashok Kochhar">
+          <div class="ms-mentor-name">Ashok Kochhar</div>
+          <div class="ms-mentor-role">Legend Mentor</div>
+        </a>
+        <a href="{{ mentors_url }}" class="ms-mentor" style="text-decoration:none">
+          <img class="ms-mentor-img" src="https://shutterleague.com/static/img/Sreekumar.png" alt="Sreekumar Krishnan">
+          <div class="ms-mentor-name">Sreekumar Krishnan</div>
+          <div class="ms-mentor-role">Legend Mentor</div>
+        </a>
+      </div>
+    </div>
 
-<tr><td style="padding:12px 0;border-bottom:1px solid #E0D8C8;">
-<p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a18;">Weekly Assignment</p>
-<p style="margin:0 0 6px;font-size:16px;color:#4A4840;line-height:1.7;">One theme, one week — a low-stakes place to try the thing you&#39;ve been putting off.</p>
-<a href="{{ challenge_url }}" style="font-size:14px;color:#1A2744;text-decoration:underline;">&#8594; This week&#39;s assignment</a>
-</td></tr>
+    <!-- RIGHT: Standing badges -->
+    <div class="ms-right">
+      <div class="ms-label">Your Standing</div>
+      <div class="ms-badges">
+        <div class="ms-badge">
+          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#E8E6E2" stroke="#C4C0B8" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C4C0B8" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#999994">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C4C0B8"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#D8D4CE" opacity="0.5"/></svg>
+          <span class="ms-badge-name">Newcomer</span>
+        </div>
+        <div class="ms-badge">
+          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#E8C898" stroke="#C89850" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C89850" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#8B6020">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C89850"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#E8A840" opacity="0.5"/></svg>
+          <span class="ms-badge-name">Apprentice</span>
+        </div>
+        <div class="ms-badge">
+          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#D4D8E0" stroke="#9098A8" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#9098A8" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#606870">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#9098A8"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#B8C0CC" opacity="0.5"/></svg>
+          <span class="ms-badge-name">Maverick</span>
+        </div>
+        <div class="ms-badge">
+          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#EAC840" stroke="#C8A000" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C8A000" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#6B4C00">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C8A000"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#F4C400" opacity="0.5"/></svg>
+          <span class="ms-badge-name">Master</span>
+        </div>
+        <div class="ms-badge">
+          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#EAC840" stroke="#C8A000" stroke-width="2"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C8A000" stroke-width="1.5"/><circle cx="26" cy="24" r="7" fill="none" stroke="#C8A000" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#6B4C00">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#1A1A18"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#3A3020" opacity="0.6"/></svg>
+          <span class="ms-badge-name">Grandmaster</span>
+        </div>
+        <div class="ms-badge">
+          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#1A1A18" stroke="#C89820" stroke-width="2"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C89820" stroke-width="1.5"/><circle cx="26" cy="24" r="7" fill="#C89820"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#F4C400">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#1A1A18"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C89820" opacity="0.4"/></svg>
+          <span class="ms-badge-name">Legend</span>
+        </div>
+      </div>
+    </div>
 
-<tr><td style="padding:12px 0;border-bottom:1px solid #E0D8C8;">
-<div style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1a1a18;">Body of Work</div>
-<table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 8px;"><tr>
-<td class="sl-col" style="display:inline-block;width:42%;vertical-align:top;padding-right:4%;">
-<img src="{{ bow_thumb_url }}" width="220" alt="Body of Work example" style="display:block;width:100%;max-width:220px;height:auto;border-radius:6px;" onerror="this.style.display='none'">
-</td>
-<td class="sl-col" style="display:inline-block;width:54%;vertical-align:top;">
-<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.7;">Six to ten photographs, one story — jury-evaluated every December. Where serious work gets noticed.</p>
-</td>
-</tr></table>
-<a href="{{ bow_url }}" style="font-size:14px;color:#1A2744;text-decoration:underline;">&#8594; Learn about Body of Work</a>
-</td></tr>
+  </div>
 
-<tr><td style="padding:12px 0;">
-<div style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a18;">Your Portfolio Page</div>
-<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.7;">A free, public link — every photograph carries its evaluation, a credential you can point to. Coming together as you upload.</p>
-</td></tr>
+  <!-- BOTTOM: Quote + Questions -->
+  <div class="ms-bottom" style="margin-top:16px">
+    <div class="ms-quote">
+      <p>You don't compete against others.<br>You compete against yesterday.</p>
+    </div>
+    <div class="ms-questions">
+      <svg class="ms-q-icon" viewBox="0 0 36 36" fill="none"><rect x="2" y="2" width="32" height="26" rx="6" fill="#E8E8E8"/><circle cx="18" cy="15" r="4" fill="#888"/><path d="M10 28c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="#888" stroke-width="1.5" fill="none"/></svg>
+      <div>
+        <div class="ms-q-title">Questions?</div>
+        <div class="ms-q-body">Reply directly to this email.<br>A real photographer will answer.</div>
+      </div>
+    </div>
+  </div>
 
-</table>
-</td></tr>
+</div>
 
-<!-- Before You Upload -->
-<tr><td style="padding:22px 24px 4px;">
-<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">
-<tr><td>
-<div style="margin:0 0 10px;font-family:Courier New,monospace;font-size:12px;font-weight:700;letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Before You Upload</div>
-<table cellpadding="0" cellspacing="0" style="width:100%;">
-<tr><td style="padding:6px 0;font-size:16px;color:#4A4840;line-height:1.7;">&#10003;&nbsp; Original photograph — no AI generation, no compositing</td></tr>
-<tr><td style="padding:6px 0;font-size:16px;color:#4A4840;line-height:1.7;">&#10003;&nbsp; Minimum 1500px on the <span style="text-decoration:underline;text-decoration-color:#D32F2F;text-decoration-thickness:2px;text-underline-offset:2px;">short edge</span></td></tr>
-<tr><td style="padding:6px 0;font-size:16px;color:#4A4840;line-height:1.7;">&#10003;&nbsp; Mobile League — smartphone only &middot; Camera League — DSLR/mirrorless only</td></tr>
-<tr><td style="padding:6px 0;font-size:16px;color:#4A4840;line-height:1.7;">&#10003;&nbsp; Keep your RAW files — may be requested for verification</td></tr>
-</table>
-</td></tr></table>
-</td></tr>
+<!-- ═══ FINAL CTA ════════════════════════════════════════════ -->
+<div class="final">
+  <div class="final-bg">
+    <img src="https://shutterleague.com/static/email_heroes/ICM-Pench-Sree.jpg" alt="">
+  </div>
+  <div class="final-overlay"></div>
+  <div class="final-content">
+    <h2>Ready to begin?</h2>
+    <p>Your first photograph could change everything.</p>
+    <a href="{{ upload_url }}" class="final-btn">Submit Your First Photograph</a>
+    <span class="final-small">Your first three evaluations are complimentary.</span>
+  </div>
+</div>
 
-<!-- First Goal + CTA -->
-<tr><td style="padding:22px 24px 28px;">
-<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;text-align:center;">Upload your first photograph today. Tomorrow morning, your first assignment will be waiting.</p>
-<a href="{{ upload_url }}" style="display:block;background:#F5C518;color:#1a1a18;font-family:Courier New,monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:18px;text-decoration:none;border-radius:4px;text-align:center;">UPLOAD YOUR FIRST PHOTOGRAPH &#8594;</a>
-</td></tr>
+<!-- ═══ FOOTER ═══════════════════════════════════════════════ -->
+<div class="footer">
+  <p class="footer-reply">Questions? Reply directly to this email. A real photographer will answer.</p>
+  <p class="footer-legal">
+    Member Agreement &amp; <a href="{{ terms_url }}" style="color:#999999;">Terms &amp; Conditions</a> accepted {{ accepted_date }}. &nbsp;·&nbsp;
+    <a href="{{ terms_url }}">Terms</a> &nbsp;·&nbsp;
+    <a href="mailto:support@shutterleague.com">support@shutterleague.com</a> &nbsp;·&nbsp;
+    <a href="/">shutterleague.com</a>
+  </p>
+</div>
 
-<!-- Footer -->
-<tr><td style="padding:18px 24px;border-top:1px solid #E0D8C8;background:#F5F0E8;">
-<div style="margin:0 0 6px;font-size:13px;color:#8a8070;line-height:1.6;"><strong style="color:#1a1a18;">Agreement confirmed</strong> — Member Agreement &amp; <a href="{{ terms_url }}" style="color:#C8A84B;">Terms &amp; Conditions</a> accepted on {{ accepted_date }}.</div>
-<div style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">Questions? Reply to this email or write to <a href="mailto:support@shutterleague.com" style="color:#C8A84B;">support@shutterleague.com</a> — <a href="{{ site_url }}" style="color:#C8A84B;">shutterleague.com</a></div>
-</td></tr>
-
-</table>
-</td></tr>
-</table>
-</body></html>
+</div>
+</div>
+</body>
+</html>
