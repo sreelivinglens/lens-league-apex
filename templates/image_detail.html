@@ -5,7 +5,7 @@
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
-<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Apex DDI Engine.">
+<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Apex Engine.">
 {% if image.thumb_url %}
 <meta property="og:image" content="{{ image.thumb_url }}">
 <meta property="og:image:width" content="1200">
@@ -937,9 +937,9 @@
     <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
       {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
       {% if image.share_token %}
-      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this scorecard</a>
+      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this evaluation card</a>
       {% else %}
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this scorecard</a>
+      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this evaluation card</a>
       {% endif %}
     </div>
   </div>
@@ -987,7 +987,7 @@
   {# ── Free tier CTA ─────────────────────────────────────────────── #}
   <div style="padding:20px 24px; background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius-md) var(--radius-md) 0; margin-bottom:14px;">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">What to do next</div>
-    <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full scorecard — the mentor's advice, the creative direction, and the edit guide.</div>
+    <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full evaluation card — the mentor's advice, the creative direction, and the edit guide.</div>
     <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px; font-size:15px;">Unlock →</a>
   </div>
   {% endif %}{# end subscriber gate #}
@@ -1000,7 +1000,7 @@
   <div style="margin-bottom:28px; padding:24px 28px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
     <div>
       <div style="font-size:16px; font-weight:600; color:var(--text-primary); line-height:1.7; margin-bottom:4px;">Book Mentor Review</div>
-      <div style="font-size:14px; color:var(--text-muted); line-height:1.5;">Get your image reviewed additionally by our month's mentors</div>
+      <div style="font-size:14px; color:var(--text-muted); line-height:1.5;">Get your image reviewed as well by our month's mentors</div>
     </div>
     <a href="{{ url_for('mentors') }}" class="btn btn-solid" style="white-space:nowrap; padding:12px 24px; font-size:15px;">Book Mentor Review →</a>
   </div>
@@ -1253,7 +1253,7 @@
       {% if image.score and image.parent_image_id and image.score < _best_score %}
       <div style="margin-top:14px;padding:12px 16px;background:#FFF8E8;border:1px solid #E8D08A;border-radius:var(--radius-sm);font-size:14px;line-height:1.6;color:#4A4020;">
         <strong>This version evaluated lower than your original.</strong>
-        The Apex DDI Engine evaluates each image independently — edit guidance is directional, not prescriptive.
+        The Apex Engine evaluates each image independently — edit guidance is directional, not prescriptive.
         A lower evaluation on an edited version does not mean the original advice was wrong; it reflects how the final
         image performed on its own merits. Your original evaluation stands and continues to count toward your standing.
         Shutter League assessments are independent evaluations and outcomes on edited versions are not guaranteed.
