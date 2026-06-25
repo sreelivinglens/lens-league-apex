@@ -2,9 +2,9 @@
 {% block title %}Create Account — Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="Create a Shutter League account. Get 3 free scored images with honest DDI feedback. No credit card required.">
+<meta name="description" content="Create a Shutter League account. Get 3 free evaluated photographs with honest feedback across 5 dimensions. No credit card required.">
 <meta property="og:title" content="Create Account — Shutter League">
-<meta property="og:description" content="Join Shutter League. 3 free scored images. Honest feedback across 5 dimensions. No credit card.">
+<meta property="og:description" content="Join Shutter League. 3 free evaluated photographs. Honest feedback across 5 dimensions. No credit card.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -17,25 +17,30 @@
     --text-muted:     var(--text-primary) !important;
   }
   .auth-input {
-    width:100%; padding:11px 14px; font-size:15px;
+    width:100%; padding:12px 14px; font-size:16px;
     background:var(--surface-2); color:var(--text-primary);
     border:1px solid var(--border-strong); border-radius:var(--radius-sm);
     box-sizing:border-box; outline:none; transition:border-color 0.2s;
   }
   .auth-input:focus { border-color:var(--gold); }
+  @media (max-width:480px) {
+    .auth-wrap { padding: 20px 0 !important; }
+    .auth-card { padding: 24px 20px !important; }
+    .auth-inner { padding: 0 16px !important; }
+  }
 </style>{% endblock %}
 
 {% block content %}
-<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
-  <div style="width:100%; max-width:420px;">
+<div class="auth-wrap" style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
+  <div class="auth-inner" style="width:100%; max-width:420px;">
 
     <div style="text-align:center; margin-bottom:32px;">
-      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">SHUTTER LEAGUE</div>
-      <h1 style="font-size:26px; font-weight:700; color:var(--text-primary); margin-bottom:6px;">Create your account</h1>
-      <p style="font-size:15px; color:var(--text-primary);">Or <a href="{{ url_for('login') }}" style="color:var(--gold); text-decoration:none;">sign in</a> if you already have one.</p>
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:#1a1a18; margin-bottom:12px;">SHUTTER LEAGUE</div>
+      <h1 style="font-size:28px; font-weight:700; color:var(--text-primary); margin-bottom:6px; line-height:1.4;">Create your account</h1>
+      <p style="font-size:16px; color:var(--text-primary); line-height:1.65;">Or <a href="{{ url_for('login') }}" style="color:#1a3a6e; text-decoration:underline; text-underline-offset:2px;">sign in</a> if you already have one.</p>
     </div>
 
-    <div class="card" style="padding:32px;">
+    <div class="card auth-card" style="padding:32px;">
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for cat, msg in messages %}
@@ -53,11 +58,11 @@
           <div style="font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:10px;">Check your email</div>
           <div style="font-size:15px; color:var(--text-primary); line-height:1.7;">
             We&#39;ve sent a verification link to your email address.
-            Click the link to activate your account and start scoring.
+            Click the link to activate your account and begin your journey.
           </div>
-          <div style="margin-top:20px; font-size:13px; color:var(--text-primary);">
+          <div style="margin-top:20px; font-size:14px; color:var(--text-primary); line-height:1.7;">
             Didn&#39;t get it? Check your spam folder, or
-            <a href="{{ url_for('register') }}" style="color:var(--gold); text-decoration:none;">try again</a>.
+            <a href="{{ url_for('register') }}" style="color:#1a3a6e; text-decoration:underline; text-underline-offset:2px;">try again</a>.
           </div>
         </div>
 
@@ -66,7 +71,7 @@
         <!-- Google OAuth — primary -->
         <a href="{{ url_for('auth_google') }}"
            style="display:flex; align-items:center; justify-content:center; gap:12px;
-                  width:100%; padding:14px 20px;
+                  width:100%; padding:14px 20px; min-height:52px;
                   background:#FFFFFF; border:1px solid var(--border-strong);
                   border-radius:var(--radius-md); text-decoration:none;
                   font-size:16px; font-weight:600; color:var(--text-primary);
@@ -90,50 +95,50 @@
 
         <form method="POST" action="{{ url_for('register') }}">
           <div style="margin-bottom:14px;">
-            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Full Name</label>
+            <label style="display:block; font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Full Name</label>
             <input type="text" name="full_name" class="auth-input"
                    placeholder="Your name" required autocomplete="name"
                    value="{{ full_name or '' }}">
           </div>
           <div style="margin-bottom:14px;">
-            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Username</label>
+            <label style="display:block; font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Username</label>
             <input type="text" name="username" class="auth-input"
                    placeholder="e.g. john_doe or jane123" required autocomplete="username"
                    value="{{ username or '' }}" pattern="[a-z0-9_]+" minlength="3"
                    oninvalid="this.setCustomValidity('Lowercase letters, numbers and underscores only. No spaces or capitals.')"
                    oninput="this.setCustomValidity('')">
-            <div style="font-size:12px; color:var(--text-primary); margin-top:4px; opacity:0.7;">Shown on your public profile. Lowercase letters, numbers and underscores only — no spaces or capitals.</div>
+            <div style="font-size:14px; color:var(--text-primary); margin-top:4px; opacity:0.7;">Shown on your public profile. Lowercase letters, numbers and underscores only — no spaces or capitals.</div>
           </div>
           <div style="margin-bottom:14px;">
-            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Email</label>
+            <label style="display:block; font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Email</label>
             <input type="email" name="email" class="auth-input"
                    placeholder="you@example.com" required autocomplete="email"
                    value="{{ email or '' }}">
           </div>
           <div style="margin-bottom:14px;">
-            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Password</label>
+            <label style="display:block; font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Password</label>
             <input type="password" name="password" class="auth-input"
                    placeholder="At least 8 characters" required autocomplete="new-password" minlength="8">
           </div>
           <div style="margin-bottom:22px;">
-            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Confirm Password</label>
+            <label style="display:block; font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Confirm Password</label>
             <input type="password" name="confirm_password" class="auth-input"
                    placeholder="Repeat password" required autocomplete="new-password" minlength="8">
           </div>
           <button type="submit"
-                  style="width:100%; padding:13px; background:var(--gold); color:#000000;
-                         font-family:var(--font-mono); font-size:13px; font-weight:700;
+                  style="width:100%; padding:14px; background:var(--gold); color:#000000;
+                         font-family:var(--font-mono); font-size:16px; font-weight:700;
                          letter-spacing:1px; text-transform:uppercase; border:none;
-                         border-radius:var(--radius-sm); cursor:pointer;">
+                         border-radius:var(--radius-sm); cursor:pointer; min-height:52px;">
             Create Account
           </button>
         </form>
 
-        <div style="margin-top:20px; font-size:13px; color:var(--text-primary); text-align:center; line-height:1.7;">
+        <div style="margin-top:20px; font-size:14px; color:var(--text-primary); text-align:center; line-height:1.7;">
           By registering you agree to our
-          <a href="{{ url_for('terms') }}" style="color:var(--gold); text-decoration:none;">Terms &amp; Conditions</a>
+          <a href="{{ url_for('terms') }}" style="color:#1a3a6e; text-decoration:underline; text-underline-offset:2px;">Terms &amp; Conditions</a>
           and
-          <a href="{{ url_for('contest_rules') }}" style="color:var(--gold); text-decoration:none;">Programme Rules</a>.
+          <a href="{{ url_for('contest_rules') }}" style="color:#1a3a6e; text-decoration:underline; text-underline-offset:2px;">Programme Rules</a>.
         </div>
 
       {% endif %}
