@@ -98,9 +98,11 @@
           <div style="margin-bottom:14px;">
             <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Username</label>
             <input type="text" name="username" class="auth-input"
-                   placeholder="letters, numbers, underscores" required autocomplete="username"
-                   value="{{ username or '' }}" pattern="[a-z0-9_]+" minlength="3">
-            <div style="font-size:12px; color:var(--text-primary); margin-top:4px; opacity:0.7;">Shown on your public profile.</div>
+                   placeholder="e.g. john_doe or jane123" required autocomplete="username"
+                   value="{{ username or '' }}" pattern="[a-z0-9_]+" minlength="3"
+                   oninvalid="this.setCustomValidity('Lowercase letters, numbers and underscores only. No spaces or capitals.')"
+                   oninput="this.setCustomValidity('')">
+            <div style="font-size:12px; color:var(--text-primary); margin-top:4px; opacity:0.7;">Shown on your public profile. Lowercase letters, numbers and underscores only — no spaces or capitals.</div>
           </div>
           <div style="margin-bottom:14px;">
             <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Email</label>
