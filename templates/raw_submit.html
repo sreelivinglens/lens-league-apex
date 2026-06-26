@@ -3,6 +3,19 @@
 
 {% block extra_css %}
 <style>
+  /* ── Mobile & 70yr accessibility ── */
+  @media (max-width: 600px) {
+    .raw-wrap { padding: 0 16px; }
+    .method-option { padding: 14px 16px; }
+    .method-title { font-size: 18px; }
+    .method-desc { font-size: 16px; }
+    .upload-main-text { font-size: 18px; }
+    .upload-hint { font-size: 15px; }
+  }
+  .btn, .btn-solid, button[onclick] {
+    min-height: 44px;
+  }
+  body { line-height: 1.7; }
   .raw-wrap { max-width: 680px; margin: 0 auto; }
   .method-option {
     display: flex; align-items: flex-start; gap: 14px; padding: 18px 22px;
@@ -42,7 +55,21 @@
     <p>Required to confirm your programme result for <strong>{{ img.asset_name or 'your image' }}</strong>.</p>
   </div>
 
-  {% if already_submitted %}
+  {% if resubmit_exhausted %}
+  {# All 3 attempts used — show disqualification notice #}
+  <div style="padding:28px; background:var(--red-dim); border:1px solid var(--red);
+              border-radius:var(--radius-md); text-align:center; margin-bottom:28px;">
+    <div style="font-size:40px; margin-bottom:14px;">❌</div>
+    <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:12px;">No Further Attempts Permitted</div>
+    <div style="font-size:17px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">
+      You have used all 3 RAW verification attempts for this image.
+      If you believe this is an error, please contact us directly.
+    </div>
+    <a href="mailto:{{ config.get('CONTACT_EMAIL', 'support@shutterleague.com') }}"
+       style="font-size:16px; color:var(--gold);">support@shutterleague.com</a>
+  </div>
+
+  {% elif already_submitted %}
   <div style="padding:28px; background:var(--surface-2); border:1px solid var(--green);
               border-radius:var(--radius-md); text-align:center; margin-bottom:28px;">
     <div style="font-size:40px; margin-bottom:14px;">✅</div>
@@ -74,7 +101,7 @@
       </div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--gold);">{{ img.genre or '—' }}</div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-muted); margin-top:3px;">
-        DDI Score: {{ '%.2f'|format(img.score) if img.score else '—' }}
+        Evaluation: {{ '%.2f'|format(img.score) if img.score else '—' }}
       </div>
     </div>
   </div>
@@ -83,8 +110,22 @@
   {% if existing and existing.deadline %}
   <div style="padding:16px 20px; background:rgba(184,112,10,0.06); border:1px solid rgba(184,112,10,0.4);
               border-radius:var(--radius-md); margin-bottom:24px; font-size:18px; color:var(--amber);">
-    ⏰ <strong>Deadline:</strong> {{ existing.deadline.strftime('%d %B %Y, %H:%M UTC') }}
+    ⏰ <strong>Submit by:</strong> {{ existing.deadline.strftime('%d %B %Y, %H:%M UTC') }}
     &nbsp;·&nbsp; Submit before this time to keep your programme standing.
+  </div>
+  {% endif %}
+
+  {% if resubmit_count and resubmit_count > 0 %}
+  <div style="padding:14px 18px; background:rgba(184,112,10,0.06); border:1px solid var(--amber);
+              border-radius:var(--radius-md); margin-bottom:20px; font-size:16px; color:var(--amber); line-height:1.6;">
+    ⚠ This is attempt {{ resubmit_count }} of 3.
+    {% if attempts_remaining == 1 %}This is your final attempt.{% else %}You have {{ attempts_remaining }} attempt{{ 's' if attempts_remaining != 1 else '' }} remaining after this.{% endif %}
+    Please make sure you are submitting the correct original file.
+  </div>
+  {% elif attempts_remaining is defined %}
+  <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--border);
+              border-radius:var(--radius-md); margin-bottom:20px; font-size:16px; color:var(--text-muted); line-height:1.6;">
+    You have <strong style="color:var(--text-primary);">3 attempts</strong> to submit the correct original RAW file.
   </div>
   {% endif %}
 
@@ -110,7 +151,7 @@
 
   <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px;
               text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">
-    Choose Submission Method
+    Choose Upload Method
   </div>
 
   <!-- Upload option -->
@@ -172,6 +213,8 @@
   <div style="font-size:16px; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6;">
     You will receive an email confirmation once submitted. Verification takes up to 48 hours.
   </div>
+  {% endif %}
+
   {% endif %}
 
 </div>
@@ -261,7 +304,7 @@ async function handleSubmit() {
     });
 
     // Step 3: Notify server — record in DB, start analysis thread
-    document.getElementById('progressLabel').textContent = 'Verifying submission…';
+    document.getElementById('progressLabel').textContent = 'Verifying…';
     const fd = new FormData();
     fd.append('method', 'upload');
     fd.append('key', presignData.key);
