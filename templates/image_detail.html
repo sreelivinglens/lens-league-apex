@@ -374,37 +374,160 @@
     </div>
   </div>
 
-  {# ── PUBLIC STRIP — visible to all visitors ───────────────────── #}
-  {# what_stood_out shown publicly — ego line for sharing             #}
-  {# Everything else stays behind the owner/subscriber gate           #}
+  {# ── PUBLIC SCORECARD — visible to all visitors when image is public ─ #}
+  {# Session 110: expanded from thin WSO strip to full learning view.     #}
+  {# Shows: genre/archetype, DDI dimensions, What Stood Out, 4 analysis   #}
+  {# cards. EXIF is subscriber-only (locked tile for non-subscribers).    #}
+  {# Edit guide, trends, admin fields remain owner/admin only.            #}
   {% if not (current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin')) %}
   {% set _public_audit = image.get_audit() %}
   {% set _public_wso = _public_audit.what_stood_out if _public_audit and _public_audit.what_stood_out else (_public_audit.hard_truth if _public_audit and _public_audit.hard_truth else '') %}
 
+  {# ── Genre + archetype strip ─────────────────────────── #}
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+    {% if image.genre %}
+    <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:var(--surface-2); border:1px solid var(--border); padding:4px 12px; border-radius:99px; color:var(--text-primary);">{{ image.genre }}</span>
+    {% endif %}
+    {% if image.archetype %}
+    <span style="font-size:15px; color:var(--text-secondary); font-style:italic;">{{ image.archetype }}</span>
+    {% endif %}
+    {% if image.soul_bonus %}
+    <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#F5C518;">✦ Soul Bonus</span>
+    {% endif %}
+  </div>
+
+  {# ── DDI dimension breakdown ─────────────────────────── #}
+  {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
+    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Depth Dimension Index (DDI) breakdown</p>
+    <div class="ddi-grid">
+      {% set _pub_dims = [
+        (image.dod_score,        'HOW DIFFICULT', 'IT WAS'),
+        (image.disruption_score, 'VISUAL',        'DISRUPTION'),
+        (image.dm_score,         'WHETHER THE',   'TIMING WAS RIGHT'),
+        (image.wonder_score,     'WHETHER IT MAKES','ONE FEEL SOMETHING'),
+        (image.aq_score,         'THE EMOTION',   'IT CREATES'),
+      ] %}
+      {% for val, line1, line2 in _pub_dims %}
+      <div class="ddi-dim">
+        <div class="ddi-val">{{ val or '—' }}</div>
+        <div class="ddi-lbl">{{ line1 }}<br>{{ line2 }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── What Stood Out ──────────────────────────────────── #}
   {% if _public_wso %}
   <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
       <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
         <span style="font-size:16px;">★</span>
       </div>
       <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
     </div>
-    <p style="margin:0 0 20px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7; text-align:justify;">{{ _public_wso }}</p>
-    <div style="border-top:1px solid var(--border); padding-top:18px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.7;">The full evaluation — mentor's advice, edit guide, where to shoot next — is available to the photographer.</p>
-      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:15px; padding:12px 20px; white-space:nowrap; flex-shrink:0;">See how it works &#8594;</a>
+    <p style="margin:0; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7; text-align:justify;">{{ _public_wso }}</p>
+  </div>
+  {% endif %}
+
+  {# ── 4 Analysis cards ────────────────────────────────── #}
+  {% if _public_audit %}
+  {% set _pub_c1 = (_public_audit.transferable_advice or '') | trim %}
+  {% set _pub_c2_raw = '' %}
+  {% if _public_audit.transferable_advice %}
+    {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] %}{% set _pub_c2_raw = row[1] %}{% endif %}{% endfor %}
+  {% else %}
+    {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] and not _pub_c1 %}{% set _pub_c1 = row[1] %}{% elif row[0] == 'Moment' and row[1] %}{% set _pub_c2_raw = row[1] %}{% endif %}{% endfor %}
+  {% endif %}
+  {% set _pub_c2 = _pub_c2_raw | trim %}
+  {% set _pub_c3_raw = (_public_audit.background_check or _public_audit.byline_1 or '') | trim %}
+  {% if not _pub_c3_raw %}{% for row in (_public_audit.rows or []) %}{% if row[0] == 'Next' and row[1] %}{% set _pub_c3_raw = row[1] %}{% endif %}{% endfor %}{% endif %}
+  {% set _pub_c3 = _pub_c3_raw | trim %}
+  {% set _pub_c4 = (_public_audit.byline_2_body or _public_audit.byline_2 or '') | trim %}
+
+  {% if _pub_c1 or _pub_c2 or _pub_c3 or _pub_c4 %}
+  {# Card 1 — The Photographer's Advice (full width) #}
+  {% if _pub_c1 %}
+  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:22px 26px; margin-bottom:12px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <div style="width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center;">
+        <span style="font-size:16px; color:#0C447C;">📷</span>
+      </div>
+      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
+    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _pub_c1 | replace('**', '') }}</p>
+  </div>
+  {% endif %}
+
+  {# Cards 2–4 — supporting row #}
+  <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-support-cards-grid">
+    {% if _pub_c2 %}
+    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
+        <span style="font-size:15px; color:#27500A;">▲</span>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What you controlled</span>
+      </div>
+      <p style="margin:0; font-size:14px; color:#173404; line-height:1.7; flex:1;">{{ _pub_c2 | replace('**', '') }}</p>
+    </div>
+    {% endif %}
+    {% if _pub_c3 %}
+    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
+        <span style="font-size:15px; color:#72243E;">◎</span>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What to watch next</span>
+      </div>
+      <p style="margin:0; font-size:14px; color:#4B1528; line-height:1.7; flex:1;">{{ _pub_c3 | replace('**', '') }}</p>
+    </div>
+    {% endif %}
+    {% if _pub_c4 %}
+    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
+        <span style="font-size:15px; color:#854F0B;">💡</span>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Keep this in mind</span>
+      </div>
+      <p style="margin:0; font-size:14px; color:#412402; line-height:1.7; flex:1;">{{ _pub_c4 | replace('**', '') }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {# ── EXIF — subscriber-only gate ─────────────────────── #}
+  {% if image.exif_camera or image.exif_settings %}
+  {% set _viewer_is_sub = current_user.is_authenticated and (current_user.is_subscribed or current_user.subscription_plan == 'uat') %}
+  {% if _viewer_is_sub %}
+  <div class="exif-block" style="margin-bottom:14px;">
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:8px;">EXIF Data</div>
+    {% if image.exif_camera %}<div>📷 {{ image.exif_camera }}{% if image.exif_lens %} · {{ image.exif_lens }}{% endif %}</div>{% endif %}
+    {% if image.exif_settings %}<div>⚙ {{ image.exif_settings }}</div>{% endif %}
+    {% if image.exif_date_taken %}<div>📅 {{ image.exif_date_taken }}</div>{% endif %}
   </div>
   {% else %}
-  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; text-align:center;">
-    <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Apex DDI Engine</p>
-    <p style="margin:0 0 16px; font-size:18px; font-weight:700; color:var(--text-primary);">{{ "%.2f"|format(image.score) }} &#183; {{ image.tier }}</p>
-    <p style="margin:0 0 18px; font-size:16px; color:var(--text-secondary); line-height:1.7;">Rated by science. The photographer receives a full evaluation &#8212; mentor's advice, development trends, and where to shoot next.</p>
-    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:15px; padding:12px 20px;">See how it works &#8594;</a>
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="font-size:22px; opacity:0.4;">🔒</span>
+      <div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-primary); margin-bottom:3px;">EXIF Data</div>
+        <div style="font-size:14px; color:var(--text-muted); line-height:1.5;">Camera, lens, aperture, shutter speed, ISO — available to subscribers.</div>
+      </div>
+    </div>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:14px; padding:10px 18px; white-space:nowrap; flex-shrink:0;">Subscribe to see EXIF &#8594;</a>
   </div>
   {% endif %}
   {% endif %}
-  {# ── END PUBLIC STRIP ──────────────────────────────────────────── #}
+
+  {# ── Subscribe CTA — learn from this image ───────────── #}
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius-md) var(--radius-md) 0; padding:16px 22px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    <div>
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Get this on your own images</div>
+      <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">Upload your photograph — get the same depth of evaluation, edit guide, and development trends.</div>
+    </div>
+    <a href="{{ url_for('register') }}" class="btn btn-solid" style="font-size:15px; padding:12px 20px; white-space:nowrap; flex-shrink:0;">Get My Free Evaluation &#8594;</a>
+  </div>
+
+  {% endif %}
+  {# ── END PUBLIC SCORECARD ──────────────────────────────────────────── #}
 
   {# ── Owner / admin gate — all scorecard detail below ──────────── #}
   {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
