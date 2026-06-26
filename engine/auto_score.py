@@ -3230,18 +3230,23 @@ def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
     return '\n'.join(lines)
 
 
-def _build_portfolio_context(portfolio_summary: dict) -> str:
+def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> str:
     """
     Build the portfolio_context string from the portfolio_summary dict.
-    Only called when user has 5+ scored images — gated in app.py before call.
-    Returns "" if portfolio_summary is None or malformed.
+    Active from image 2 onwards — gated in app.py before call.
+    Produces plain English inference the engine uses to lead the evaluation
+    with history-aware observations. No dimension names. No raw numbers
+    visible as labels. No jargon.
+    Returns "" if portfolio_summary is None or insufficient data.
     """
     if not portfolio_summary or not isinstance(portfolio_summary, dict):
         return ""
-    feeling    = portfolio_summary.get("feeling", [])
-    timing     = portfolio_summary.get("timing", [])
-    difficulty = portfolio_summary.get("difficulty", [])
-    if len(feeling) < 5:
+
+    feeling    = portfolio_summary.get("feeling", [])    # AQ — visual impact
+    timing     = portfolio_summary.get("timing", [])     # DM — decisive moment
+    difficulty = portfolio_summary.get("difficulty", []) # DoD — difficulty
+
+    if len(feeling) < 1:
         return ""
 
     def _avg(lst):
@@ -3249,28 +3254,92 @@ def _build_portfolio_context(portfolio_summary: dict) -> str:
 
     def _trend(lst):
         if len(lst) < 3:
-            return "insufficient data"
-        first_half = _avg(lst[:len(lst)//2])
+            return "flat"
+        first_half  = _avg(lst[:len(lst)//2])
         second_half = _avg(lst[len(lst)//2:])
         diff = second_half - first_half
-        if diff > 0.3:
-            return "climbing"
-        if diff < -0.3:
-            return "declining"
-        return "steady"
+        if diff > 0.3:  return "improving"
+        if diff < -0.3: return "declining"
+        return "flat"
 
-    return (
-        f"\nPORTFOLIO CONTEXT — last {len(feeling)} photographs in this genre:\n"
-        f"  Whether it made you feel something: {feeling} (avg {_avg(feeling)}, {_trend(feeling)})\n"
-        f"  Whether the timing was right:       {timing} (avg {_avg(timing)}, {_trend(timing)})\n"
-        f"  How difficult it was:               {difficulty} (avg {_avg(difficulty)}, {_trend(difficulty)})\n"
-        f"Use this to identify strongest dimension (highest avg) and weakest (lowest avg or steadiest trend).\n"
-        f"Reference portfolio trajectory naturally in transferable_advice and days_since_language.\n"
-        f"Do NOT invent trends not visible in the data.\n"
+    def _level(avg):
+        if avg >= 7.5: return "strong"
+        if avg >= 6.0: return "solid"
+        if avg >= 4.5: return "developing"
+        return "weak"
+
+    avg_visual   = _avg(feeling)
+    avg_timing   = _avg(timing)
+    avg_diff     = _avg(difficulty)
+    trend_visual = _trend(feeling)
+    trend_timing = _trend(timing)
+    trend_diff   = _trend(difficulty)
+    n            = len(feeling)
+
+    # Identify weakest and strongest area in plain English
+    areas = {
+        "how the image feels to a stranger": (avg_visual, trend_visual),
+        "capturing the right moment":        (avg_timing, trend_timing),
+        "the difficulty of what was attempted": (avg_diff, trend_diff),
+    }
+    weakest  = min(areas, key=lambda k: areas[k][0])
+    strongest = max(areas, key=lambda k: areas[k][0])
+
+    weak_avg,   weak_trend   = areas[weakest]
+    strong_avg, strong_trend = areas[strongest]
+
+    # Build plain English inference block
+    lines = []
+    lines.append(f"PHOTOGRAPHER HISTORY — image {image_number} from this user in this genre ({n} previous scored):")
+    lines.append("")
+
+    # Stagnation check — same subject territory repeatedly with flat scores
+    if n >= 3 and trend_visual == "flat" and trend_timing == "flat" and avg_visual < 6.5:
+        lines.append(
+            "The previous uploads in this genre have not shown score movement. "
+            "The photographer is returning to similar territory without changing what they attempt. "
+            "If this image shows the same pattern, name it plainly: they are not getting harder shots, "
+            "they are getting more comfortable with the same shot. That is a ceiling, not progress."
+        )
+    elif n >= 2:
+        # Weakest area
+        if weak_trend == "flat" and weak_avg < 5.5:
+            lines.append(
+                f"The consistent gap across previous uploads has been {weakest}. "
+                f"It has not improved across {n} images. "
+                f"If this image shows the same gap, name it without softening. "
+                f"If it shows genuine improvement, name that specifically — it is the most important thing to tell this photographer right now."
+            )
+        elif weak_trend == "improving":
+            lines.append(
+                f"The photographer has been working on {weakest} and it is moving in the right direction. "
+                f"Acknowledge this if the improvement continues in this image."
+            )
+
+        # Breakthrough check — significant jump from personal average
+        # (handled dynamically in prompt based on this image's scores vs history)
+        if strong_avg >= 7.0 and strong_trend in ("improving", "flat"):
+            lines.append(
+                f"Their strongest area has been {strongest} — "
+                f"{'and it is still climbing' if strong_trend == 'improving' else 'consistent across uploads'}. "
+                f"Reference this as their established strength, not a discovery."
+            )
+
+    lines.append("")
+    lines.append(
+        "INSTRUCTION: Lead the evaluation with what the history shows about this photographer, "
+        "not with a description of this image. "
+        "Do not use the words 'dimension', 'score', 'DoD', 'DM', 'AQ', 'DDI', or any technical engine term. "
+        "Write as a coach who has watched this person shoot for months. "
+        "Short sentences. Plain English. No idiom. No metaphor that needs explaining. "
+        "Do not describe what is visible in the image. "
+        "Only say what the history and this image together reveal about how this photographer sees."
     )
 
+    return "\n" + "\n".join(lines) + "\n"
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre=""):
+
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1):
     """
     Score an image using the Apex DDI Engine.
 
@@ -3473,7 +3542,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         calibration_notes    = correction_block,
         exif_context         = exif_context or '',
         seasonal_context     = seasonal_context or '',
-        portfolio_context    = _build_portfolio_context(portfolio_summary),
+        portfolio_context    = _build_portfolio_context(portfolio_summary, image_number),
     )
 
     payload = {
