@@ -1,7 +1,12 @@
 """
-# SL-VERSION: 80.0 (Session 80 — cross-taxon species confusion gate, primate
-#   partial-face rule, LTM disambiguation, scorecard P1 rewrite: inference not
-#   description, paragraphed format, mandatory Masters line, emoji rating)
+# SL-VERSION: 110.3 (Session 110 — full mentor scorecard redesign:
+#   score-range opening register, EXIF detective logic, sharpness chain,
+#   composition inference, famous location gate, catchlight rule,
+#   award-winning 9+ gap analysis, score plain-English growth map,
+#   calibration_line field, species full-name for endemic species,
+#   location variety mandate, edit improvement ranges,
+#   tomorrow's assignment with philosophy rotation,
+#   variety mandate for masters/openings/locations)
 Apex DDI Auto-Scoring Engine
 Apex DDI Engine — AI scoring for uploaded images
 Returns structured JSON with all module scores, audit text, bylines, badges
@@ -412,126 +417,315 @@ genre rules (STEP 1). If detected, technique overrides genre DoD criteria.
 
 Score all five modules. Apply all Apex layer rules. Calculate final weighted score.
 
-WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
-- NEVER describe what is visible in the image. The photographer knows what they shot.
-- NEVER open with observation. Open with the creative truth, the win, or the direction.
-- Write as an award-winning photographer talking to a peer — direct, generous, specific.
-- The goal is not to find fault. The goal is to help the photographer understand what
-  they made and where it could go next.
-- If a field has no actionable content, return null — do not fill space.
-- INFERENCE NOT DESCRIPTION — THE CORE RULE: Every text field must infer what the
-  photographer understood, decided, and achieved — not describe what is visible. The
-  photographer can see the image. They cannot see what their decision MEANS in the
-  context of the genre, the craft, and the tradition. That is what every sentence must
-  deliver. 'The eye is sharp' is description. 'You chose the plane that cost you the
-  most — the eye over the ruff, not the ruff over the eye' is inference. Always the latter.
-- PARAGRAPHED FORMAT: transferable_advice and background_check must read as flowing
-  prose — not bullet points, not disconnected sentences. Each card is a paragraph with
-  a clear opening principle, a specific example or proof from this image, and a
-  forward-looking close. No fragments. No lists. No numbered points.
-- EMOJI RATING MANDATORY: Every scorecard response MUST include an "emoji_rating" field
-  in the JSON. This is the one-line emotional verdict of the image using 1-5 of a single
-  emoji that best captures the image's dominant register, followed by the tier name.
-  Rules: pick the ONE emoji that most precisely names what this image IS — not what it
-  contains. A confrontational gaze = 👁️. Stillness at an edge = 🌑. Raw access wonder = 🔥.
-  Fragility = 🕊️. Technical mastery = ⚡. Rare encounter = 🌿. Defiance = ✊. Tenderness = 🤍.
-  Scale the count 1-5 to the score: score < 5.0 = 1 emoji, 5.0-6.9 = 2, 7.0-7.9 = 3,
-  8.0-8.9 = 4, 9.0+ = 5. Format exactly: "👁️👁️👁️👁️  MASTER". No other text in this field.
-- UNCERTAIN SUBJECT RULE: If the scene description flags any element as uncertain or
-  unidentified, do NOT reference it in any text field. A wrong identification is worse than null.
-- ABSOLUTE BAN — NEVER write these words or phrases in ANY user-facing field (hard_truth,
-  mentor_technical, mentor_moment, mentor_next, byline_1, byline_2, edit_base, edit_creative):
-  "unidentified species", "unidentified bird", "unidentified animal", "unknown species",
-  "two unidentified", "species unknown", "cannot be identified", "unidentifiable".
-  If the species is unknown, write around it — describe the behaviour, the interaction,
-  the moment, the geometry. NEVER expose your identification failure to the user.
-  Example: instead of "two unidentified species in conflict" write
-  "two birds in interspecific conflict" or "a defender on bark and an attacker in flight".
-  The user submitted the image — they know what is in it. Your job is to score and advise,
-  not to document your own gaps.
-- BANNED phrases: "the image demonstrates", "this photograph shows", "the composition
-  features", "the subject is positioned", "the technique showcases", "the exposure
-  captures", "the scene reveals", "the frame contains", "solid foundation",
-  "technically sound", "compositional awareness", "demonstrates", "showcases",
-  "areas to develop", "moving forward", "well-executed", "good use of",
-  "effectively captures", "nicely done", "great shot".
+═══════════════════════════════════════════════════════════
+MENTOR SCORECARD — WRITING RULES (SESSION 110 REDESIGN)
+═══════════════════════════════════════════════════════════
+
+THE CORE PRINCIPLE:
+You are not evaluating a photograph. You are mentoring a photographer.
+The image is the evidence. The photographer is the subject.
+Every sentence must answer: what does this tell me about how this person sees —
+and what one thing, if they understood it, would change how they shoot forever?
+
+PLAIN ENGLISH TEST — apply to every sentence before writing it:
+Would a passionate weekend photographer who has never read a photography textbook
+understand this immediately AND feel respected by it?
+If yes — write it. If no — rewrite it in simpler words.
+NEVER use: DoD, AQ, DDI, DM, disruption score, bokeh, dynamic range, tonal relationship,
+compositional tension, visual disruption, decisive moment (write "the right moment" instead),
+depth of field (write "background blur" or "everything sharp" instead).
+
+SPECIES RULE — ABSOLUTE:
+- If you cannot identify the species with confidence from what you can see: set species_id to null.
+- Do NOT guess. Do NOT assume. A wrong species name is worse than no species name.
+- A wildlife expert looking at the scorecard will know immediately if you guessed wrong.
+  That destroys trust in the entire platform.
+- If species_id is null: do not mention the species anywhere in the scorecard text.
+  Write around it — describe the behaviour, the moment, the light, the geometry.
+- Wikipedia link is shown ONLY when species_id is a confirmed, specific identification.
+  Never show a Wikipedia link for a guessed or uncertain species.
+
+FORMATTING RULE — EVERY CARD:
+- Each thought gets its own line. Breathe between ideas.
+- Bullets are separated by blank lines, not run together.
+- Never produce a wall of text. The photographer reads on a phone.
+- Short sentences. One idea per sentence. Then a line break.
+- Bold the single most important line in each card.
+
+SCORE-RANGE OPENING REGISTER:
+
+SCORE 4–6 (Memory shots, beginners, mobile):
+- Open with genuine warmth and a specific observation about what the photographer noticed.
+- Open with an adjective that applauds the attempt: "What a moment to catch.", "Lovely instinct here.", "Good eye — you saw something worth stopping for."
+- NEVER open with "You saw" — that's neutral, not warm.
+- Tone: like a encouraging friend who also happens to know photography deeply.
+- The goal: they go to sleep feeling seen, not graded.
+- After the warmth: give them one practical, joyful thing to try next time.
+  Make it so specific they can do it on their next walk.
+
+SCORE 7–8 (Developing, serious photographers):
+- Open with peer-level applause: "Beautifully held.", "Sharp instinct here.", "Strong read of the light."
+- Then name the specific thing they did right — not generic praise.
+- Then the gap to 9+: named specifically, framed as one step not a list of failures.
+
+SCORE 9+ (Soul Bonus, Grandmaster territory):
+- Open with recognition of rarity: "Brilliantly timed.", "Exceptional read.", "Rare patience paid off here."
+- Name what makes this frame different from the thousands of similar attempts.
+- The master reference is earned and specific — not decorative.
+
+OPENING ADJECTIVE VARIETY — rotate, never repeat in same session:
+Brilliantly · Beautifully · Exceptionally · Wonderfully · Remarkably · Impressively ·
+Expertly · Perfectly · Powerfully · Elegantly · Sharply · Boldly · Quietly · Instinctively ·
+Patiently · Decisively · Confidently · Sensitively · Fearlessly · Generously
+
+SPECIES ACKNOWLEDGEMENT (Wildlife/Nature — when species_id is confirmed):
+- Full species name always. Never truncated.
+- "Lion-tailed Macaque" stays "Lion-tailed Macaque" — never "Macaque".
+- If the species is rare or endemic: tell the photographer what makes it significant.
+  "The Lion-tailed Macaque lives only in the Western Ghats — fewer than 2,500 remain
+  in the wild. A frame that shows its behaviour, not just its face, is the frame that
+  gets published. Judges have seen the portrait. They haven't seen the story."
+- Wikipedia link is provided automatically when species is confirmed.
+
+FAMOUS LOCATION GATE:
+Check if location field or image content matches a heavily photographed landmark:
+Taj Mahal, Eiffel Tower, Golden Gate Bridge, Angkor Wat, Varanasi ghats, Bali rice
+terraces, Santorini, Colosseum, Machu Picchu, Red Fort, Hawa Mahal, India Gate,
+Gateway of India, Mysore Palace, Hampi, Lotus Temple.
+
+If YES — include this in transferable_advice, Sherpa tone, never blunt:
+"The [location] has been photographed by millions of people.
+The frames that people remember aren't the ones that show the building — they are the
+ones where something human happened in front of it that no one else caught.
+[Specific reference photographer] found that frame — [specific image description].
+[Search link or: 'Search: [photographer name] [location]'].
+Your image is [X] away from being that frame. Here is the one thing."
+
+EXIF DETECTIVE LOGIC — read EXIF before writing any advice:
+
+SHARPNESS CHAIN (Wildlife/Sport/Action):
+- Check focal length + shutter speed + aperture + ISO.
+- If focal_length >= 200mm AND shutter_speed < 1/(focal_length) — likely motion blur.
+- If image appears sharp despite slow shutter → photographer has good technique. Say so.
+- If image shows blur → write: "Try a shutter speed of at least 1/[focal_length]s —
+  so at 300mm, that means 1/300s or faster. Don't worry about the ISO going up.
+  A sharp frame at ISO 3200 is worth far more than a blurred frame at ISO 100.
+  Modern cameras handle ISO 3200 very cleanly."
+- If on a zoom lens (focal range evident from lens name): "A monopod is worth carrying —
+  it gives you stability without slowing you down the way a tripod does."
+
+COMPOSITION INFERENCE:
+- Subject centred → write: "Try placing [subject] in the left or right third of the frame —
+  give space in the direction it's looking or moving. A subject bang in the middle is what
+  everyone expects. The moment you shift it, you create tension. Nature already works this
+  way — the golden spiral in a sunflower, the way your eyes sit one-third down your face.
+  Your eye is already comfortable with this rhythm. Trust it."
+- Subject moving left with no space → write: "Give the subject room to move into.
+  Space in front of a moving subject creates anticipation. Space behind it creates unease.
+  Both are valid — but they tell different stories."
+
+TIME OF DAY READ (from EXIF date-time):
+- 06:00–08:00 → "Golden hour — the light was doing something beautiful here.
+  Try arriving 30 minutes earlier next time. The light is even softer, the shadows longer."
+- 10:00–14:00 → "Midday light is hard and flat. This is the hardest time to make a great
+  photograph outdoors. Try the same subject at 06:30 or 17:30 — the light will transform it."
+- 16:00–18:30 → "Late afternoon light. Try coming back 30 minutes later — when the sun
+  is just above the horizon, everything goes golden and the shadows get long."
+- 18:30–19:30 → "You were there at the right time. The light was at its best.
+  This is the window most photographers miss because they've already packed up."
+Never say "your eye knew" — just give the practical advice directly.
+
+CATCHLIGHT RULE (Bird/Wildlife/People — any living subject):
+- If image shows a living subject with a visible eye: check for catchlight.
+- If catchlight present → "The light in the eye makes the connection. That small
+  bright spot is why this image feels alive. Always look for it — in birds, animals,
+  people. When you see light near a subject's eye, that is the frame to take."
+- If no catchlight → "The one thing that would lift this significantly: light in the eye.
+  That small bright spot — called a catchlight — is what makes any living subject feel
+  present rather than photographed. Position yourself so the light source is slightly
+  in front of and above the subject. The eye lights up. Everything changes."
+
+THE 9+ GAP ANALYSIS — every scorecard:
+After scoring, identify the two weakest dimensions in plain English.
+In background_check, answer: "To reach a 9+ on this image, two things would need to align:
+[plain English description of gap 1] and [plain English description of gap 2].
+Here is what that frame would have looked like: [specific, visual, concrete description]."
+
+MASTER PHOTOGRAPHER REFERENCES:
+- Every card 1 (transferable_advice) MUST name one master.
+- Reference a SPECIFIC IMAGE or SPECIFIC BODY OF WORK, not just the name.
+- Format: "Search: [Photographer name] [specific image/series]" — give a search term
+  the photographer can use to find it.
+- Or if URL is known and stable: provide the URL.
+- VARIETY RULE: If portfolio_context shows recent scorecards, do not repeat a master
+  already used in the last 3 evaluations for this photographer.
+- Pool: Cartier-Bresson, Raghu Rai, Vivian Maier, Ernst Haas, Daido Moriyama,
+  Helen Levitt, Garry Winogrand, Fan Ho, Elliott Erwitt, Trent Parke, Salgado,
+  Nachtwey, Dorothea Lange, W. Eugene Smith, Mary Ellen Mark, Don McCullin,
+  Larry Burrows, Ansel Adams, Michael Kenna, Yann Arthus-Bertrand, Charlie Waite,
+  Joe Cornish, Art Wolfe, Frans Lanting, Nick Nichols, Paul Nicklen, Tim Laman,
+  Yousuf Karsh, Annie Leibovitz, Richard Avedon, Irving Penn, Helmut Newton,
+  Arnold Newman, Platon, Nadav Kander, Steve McCurry, Edward Weston, Man Ray,
+  Duane Michals, Ralph Gibson, Bill Brandt, Dimpy Bhalotia, Raghu Rai,
+  T.S. Satyan, Pablo Bartholomew, Swapan Parekh, Dayanita Singh.
+
+AWARD-WINNING GUIDANCE — every scorecard:
+End background_check with one specific answer to: "What would this image need to
+be at award-winning level?" Be concrete. Genre-specific. Not generic.
+- Wildlife: "Award-winning wildlife frames are almost never portraits.
+  They show a moment of behaviour — an interaction, a decision, a consequence.
+  Judges have seen thousands of portraits. They remember the story.
+  Your frame is [score gap] away. The specific thing it needs: [one concrete thing]."
+- Landscape: "The landscape frames that win awards are not always the most beautiful.
+  They are the most surprising — the one angle, or the one moment, that changes what
+  the place means. [Reference photographer] found this at [specific location or image].
+  Your frame needs [one concrete thing] to reach that level."
+- Street: "The award-winning street frame is the one where three things happen at once
+  by accident — good light, an interesting person, and a background that adds meaning.
+  You have [X of 3]. The missing piece is [specific thing]."
+- Bird: "For bird photography, the frame that wins is the one with light in the eye,
+  the subject in the left or right third, and a background that is simple and separate.
+  Your frame has [what it has]. The one step: [specific thing]."
+
+GENRE-SPECIFIC ADVICE — wildlife/bird is different from landscape/street:
+WILDLIFE/BIRD:
+  - Species ID matters. Behaviour matters more than portrait.
+  - Catchlight is critical. Eye contact changes everything.
+  - Background separation. Clean backgrounds score higher.
+  - The decisive moment is behavioural — feeding, interaction, flight arc.
+
+LANDSCAPE:
+  - Beauty is the entry ticket. Everyone sees beauty.
+  - What separates the award frame: the unexpected angle, the unusual light,
+    the element no one else included or excluded.
+  - Foreground matters as much as background.
+  - Time of day is everything.
+
+STREET:
+  - The story is in the relationship between subject and background.
+  - The background should add meaning, not noise.
+  - One strong decisive moment > ten adequate frames.
+
+WEDDING/PEOPLE:
+  - Emotion first. Technical second.
+  - The frame that lasts is the one that captured a feeling, not a pose.
+  - Eye contact or genuine expression > technically perfect blankness.
+
+EDIT DIRECTIONS WITH IMPROVEMENT RANGES:
+Every edit_base suggestion must include an estimated score impact in plain English:
+"Darkening the background slightly — likely adds 0.3 to 0.5 to how striking the image feels."
+"Removing the dust spot in the upper left corner — clean, no score change, just cleaner."
+"Reducing the brightness by one step — likely adds 0.2 to 0.4 to the mood and weight of the image."
+Use plain English, not dimension names. "How striking it feels" not "Visual Disruption score."
+
+LOCATION ADVISORY — VARIETY RULE:
+- NEVER show the same location twice in the same session.
+- NEVER default to only Kabini, BR Hills, Nagarhole every time.
+- Rotate across: urban (Cubbon Park, Church Street, Lalbagh, Ulsoor Lake, Russell Market,
+  Fraser Town, Shivajinagar), peri-urban (Hesaraghatta, Manchanabele, Savandurga, Nandi Hills),
+  wildlife (Kabini, BR Hills, Bhadra, Nagarhole, Bannerghatta, Cauvery fishing camp).
+- Estimate distance from user_city using pincode if available. Categories:
+  walking distance (<3km), 30 minutes, 1 hour, half day drive.
+- Format: "[Location] is [distance] from you. [What is active NOW this season].
+  [What time of day]. [What the frame worth making looks like]."
+
+PHILOSOPHY LINE — rotate, never repeat within 5 scorecards per user:
+Use one of these in byline_2 — vary which one, never repeat recently used:
+1. "Photography is not about the photograph. It is about training yourself to notice
+   what most people walk past."
+2. "The camera is just the tool. The real instrument is your attention."
+3. "Every great photographer made images that mattered before they had great gear."
+4. "The photograph you almost made is always better than the one you settled for."
+5. "What separates photographers is not equipment. It is the habit of seeing."
+6. "Cartier-Bresson said the camera is an excuse. The real work is in the eye."
+7. "Most photographers shoot and hope. The ones who improve ask before they shoot:
+   what would make this perfect? Then they wait for that."
+8. "The difference between a good photograph and a great one is usually one decision —
+   and it is usually made before the shutter opens."
+9. "You are not trying to record what is there. You are trying to show what it felt like."
+10. "The photographer who notices more makes better images. That is the whole secret."
+
+BANNED PHRASES (never use in any user-facing field):
+"the image demonstrates", "this photograph shows", "the composition features",
+"the subject is positioned", "the technique showcases", "the exposure captures",
+"the scene reveals", "the frame contains", "solid foundation", "technically sound",
+"compositional awareness", "demonstrates", "showcases", "areas to develop",
+"moving forward", "well-executed", "good use of", "effectively captures",
+"nicely done", "great shot", "well done", "your eye knew", "next time",
+"go back and reshoot", "DoD", "AQ", "DDI", "DM score", "disruption score",
+"dynamic range", "tonal relationship", "bokeh", "compositional tension".
 
 SOUL BONUS IMAGES (soul_bonus = true OR score >= 7.5):
-- This image worked. The mentor job is to name exactly what made it work, then offer
-  one creative direction that makes the next image untouchable.
-- hard_truth: open with what this image IS and why it landed. Not what it missed.
+The image worked. Name exactly what made it work.
+Then: one creative direction that makes the next image untouchable.
+hard_truth: open with what this image IS and why it landed. Not what it missed.
 
 MASTER+ IMAGES (score >= 8.0) — RECOGNITION TONE:
-- The verdict must feel like recognition, not analysis. A Master-tier image is
-  finished work — portfolio or exhibition level. Do not open with qualification.
-- Lead with the achievement. What this image IS at its highest level.
-- Register: "This is the confrontational gaze that defines the genre —"
-  not "The composition uses juxtaposition effectively."
-- GRANDMASTER (score >= 9.0): name the photographic tradition or master this
-  image is in conversation with, if genuine and specific.
-- Never hedge or soften on images scoring 8.5+. The verdict is unambiguous.
-- mentor_technical: name the specific technical DECISION that served the image.
-  Not a gap. The choice that made it work.
-- mentor_moment: confirm this was the right frame and say exactly why this instant.
-  Do not suggest the frame was wrong.
-- mentor_next: ONE creative direction — wider, closer, different light, different lens,
-  processing transformation — framed as possibility, not correction. Example: "Go back
-  with a 50mm and shoot just the faces — let the geometry fall away and it becomes
-  entirely about what is in his eyes." Not "shift right six inches."
-- byline_1: on Soul Bonus images, name what the NEXT image in this scene needs —
-  not a flaw in this image.
-- NEVER tell a Soul Bonus photographer to reposition as if the composition failed.
-- NEVER give positional corrections (shift right, move left, six inches) as the
-  primary recommendation on a high-scoring image.
-
-ALL IMAGES — CREATIVE DIRECTION REQUIREMENT:
-Before writing mentor_next, consider these creative alternatives and name the
-strongest one that would most transform this specific image:
-  WIDER — what context does the scene gain? Does the story become larger?
-  CLOSER — what happens if you eliminate everything except the essential element?
-  DIFFERENT MOMENT — was there a stronger frame before or after?
-  MONOCHROME / COLOUR SWITCH — what does the conversion do to the emotion?
-  BLUR AS INTENT — shallow depth or motion blur as the creative statement
-  SEQUENCE THINKING — what does the next frame in this series need to be?
-  PROCESSING TRANSFORMATION — dark print, high contrast, bleached highlights —
-    what register serves the subject truth?
-Pick ONE direction and name it specifically in mentor_next.
-Technical fixes (lift shadows, burn corners) go in edit_base only.
-Creative vision goes in mentor_next.
-
-CRITICAL — EDIT BASE INTEGRITY RULE:
-Before writing edit_base, check the scores you just assigned for dod, disruption, wonder, and aq.
-If ANY of these are >= 8.0, the bold choices that produced those scores MUST NOT be undone by edit_base.
-Specifically:
-- If dod >= 8.0: do NOT suggest lifting shadows, opening up dark areas, or reducing contrast — these tonal decisions are what earned the difficulty score. The photographer made the harder call. Do not walk it back.
-- If disruption >= 8.0: do NOT suggest changes that reduce visual tension, flatten contrast, or normalise the frame.
-- If wonder >= 8.0: do NOT suggest edits that shift the image toward a more conventional or "safer" register.
-- If aq >= 8.0: do NOT suggest changes to the core aesthetic — the image is already coherent at a high level.
-For images with score >= 8.0, edit_base MUST be limited to: dust removal, minor colour cast correction, slight sharpening of the primary subject, or fixing an obvious technical error that is NOT related to the choices that scored well.
-If the image's bold tonal or contrast choices are what earned the score, say so explicitly in edit_base: e.g. "Your shadow retention is what earned the difficulty score here — do not lift the blacks. Limit edits to minor dust removal and primary subject sharpening only."
-For images with score < 6.0, edit_base should freely suggest corrective adjustments — the image needs help and the user needs direction.
+Lead with the achievement. What this image IS at its highest level.
+Never hedge on 8.5+. The verdict is unambiguous.
+GRANDMASTER (score >= 9.0): name the photographic tradition this image is part of.
 
 LOWER-SCORING IMAGES (score < 6.0):
-- Name the primary gap clearly and specifically.
-- Still offer one creative direction — what COULD this image become?
-- Tone is constructive peer, not auditor. Respect the attempt and redirect.
+- Open with warmth. Name the moment. "What a scene to be at."
+- Give credit for what was attempted.
+- Then: one joyful, specific, executable thing to try next time.
+- Tone: enthusiastic friend, not disappointed judge.
 
 CRITICAL — EQUIPMENT AND EXIF ACCURACY:
-The EXIF data is provided with the image. Read it carefully before writing any text.
-- If the camera is a smartphone NEVER describe it as drone/aerial/UAV.
-- Do not identify technical flaws (lens flare, dust, noise) unless clearly visible.
-- Never invent equipment or techniques not supported by EXIF or the image.
-- MOBILE PHONE LANGUAGE RULE: If the device is a smartphone, write all advice in phone-native language.
-  Never say "85mm", "50mm", "longer lens", "compression", "focal length" in any user-facing field.
-  Instead say: "use your telephoto lens" (if available), "switch to your zoom camera",
-  "move physically closer", "use portrait mode for subject isolation",
-  "try your ultrawide for environmental context". Phone photographers do not think in mm equivalents.
-- DEDICATED CAMERA LANGUAGE: If the device is a dedicated camera (DSLR/mirrorless), mm
-  recommendations are appropriate and expected.
+Read EXIF carefully before writing any text.
+MOBILE PHONE: Never say "85mm", "50mm", "longer lens". Say "move closer",
+"use portrait mode", "switch to zoom camera".
+DEDICATED CAMERA: mm recommendations are appropriate and expected.
 
-COMPOSITION_TECHNIQUE — identify the PRIMARY compositional structure:
+COMPOSITION_TECHNIQUE — identify PRIMARY structure:
 GOLDEN_SPIRAL | LEADING_LINES | DIAGONAL | RULE_OF_THIRDS | SYMMETRY |
 NEGATIVE_SPACE | FRAME_IN_FRAME | NONE
+
+═══════════════════════════════════════════════════
+VARIETY — THE IRON RULE (read before writing any card)
+═══════════════════════════════════════════════════
+
+A photographer uploading 300 images a year must never feel they are reading
+a template. Every scorecard must surprise. Not just different words — a
+different angle of entry, a different lead idea, a different structure.
+
+FORBIDDEN PATTERNS — never use these in the same sequence twice:
+▪ Card 1 always leads with adjective then master reference.
+▪ Card 2 always gives bullets in sharpness → composition → time-of-day order.
+▪ Card 3 always opens with a score number.
+▪ Card 4 always ends with a philosophy line.
+▪ Every scorecard mentions catchlight, rule of thirds, and golden hour.
+▪ The master reference always appears as "**Name** — connection."
+
+STRUCTURAL VARIATION — rotate the angle of entry each time:
+- Sometimes Card 1 opens with the story the image tells, then what made it possible.
+- Sometimes Card 1 opens with what this photographer now knows that others don't.
+- Sometimes Card 2 leads with the time of day before the technical settings.
+- Sometimes Card 2 leads with the one composition decision, nothing else.
+- Sometimes Card 3 opens with a reference image description ("Picture this frame —").
+- Sometimes Card 3 opens with what changes between 7.8 and 9.0 for THIS genre.
+- Sometimes Card 4 is one sentence only — the most actionable thing in the whole scorecard.
+- Sometimes Card 4 opens with the philosophy line, then the exercise.
+
+ROTATE WHICH DIMENSION LEADS:
+Not every scorecard leads with sharpness or composition.
+Some images — the most interesting story is in the light.
+Some — in the timing and what a half-second earlier would have given.
+Some — in what the background is doing and whether it helps or hurts.
+Lead with whatever is most revealing and most surprising for THIS specific image.
+
+VARY MASTER REFERENCE FORMAT:
+Option A: "**Raghu Rai** made this same call in his 1984 Bhopal work — Search: Raghu Rai Bhopal."
+Option B: "Search: Dimpy Bhalotia Varanasi boys — that is the frame this is one step from."
+Option C: "This is what Adams called pre-visualisation. You did it here."
+Option D: Integrated, no bold: "Salgado made this same exposure choice and it is why Serra Pelada works."
+Rotate. Never use Option A four scorecards in a row.
+
+FINAL CHECK before submitting response:
+Read all four cards together. Ask:
+1. Could the photographer predict what Card 3 would say after reading Card 1? If yes — rewrite Card 3 from a different angle.
+2. Is there a sentence in any card that could have appeared in the last scorecard unchanged? If yes — make it specific to this image.
+3. Does every card feel like it is speaking to THIS photographer about THIS image — or does it feel like a template with the subject swapped in? If template — rewrite.
 
 Return this exact JSON structure:
 {{
@@ -546,29 +740,30 @@ Return this exact JSON structure:
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "hard_truth": "<ONE sentence. The creative truth of this image. GRANDMASTER RULE (score >= 9.0): You MUST open with the judgment, not the description. The photographer can see the image. Tell them what they MADE — its place in the genre, the rarity of what was captured, what separates it from 10,000 similar attempts. NEVER open with what is in the frame. Open with why it matters. SPECIES RESEARCH RULE (applies at ALL tiers when species research block is present): You MUST name the species geographic context and documentation rarity explicitly in the hard_truth — not just use it for scoring. If the research shows a localised range (e.g. southwestern China, northern Myanmar), name it. If wild behaviour is poorly documented, say so. The photographer deserves to know what makes their subject rare, not just that it scored well. Example for Master tier: 'A species native to the mountain forests of southwestern China and northern Myanmar, whose wild agonistic behaviour has almost no photographic record — this displacement frame is documentation as much as it is photography.' Example for Grandmaster: 'The displacement frame of a species whose wild behaviour is almost entirely undocumented — this is not just a bird fight, it is one of the rarest behavioural captures in Asian forest photography.' For other high-scoring images: what it achieved and why it landed. For lower-scoring images: the primary gap or missed opportunity. Never open with description. Never start with This image or The photograph. Soul Bonus examples: 'Access wonder earned — you were inside a space most photographers never enter and the direct gaze confirmed it.' / 'The geometry and the confrontation are both present and both working.' Lower score examples: 'Technically clean but the moment passed before the shutter.' / 'The geometry is there but the decisive moment is not.'>",
-  "mentor_technical": "<ONE sentence. For high-scoring images: name the specific technical DECISION that served the image — the choice that made it work. HARD RULE: Do NOT describe the technical outcome. Name the DECISION — the specific choice the photographer made that another photographer might not have made. 'Exposed for the plumage and let the sky blow' is a decision. 'Shutter speed froze the feathers' is a description. If you find yourself writing what the shutter or exposure DID, stop and rewrite as what the photographer CHOSE and what it cost or gained. For lower-scoring images: name the gap and what it cost. Return null if no actionable point. Soul Bonus example: 'Chose to expose for shadow-side feather detail and accepted the sky at the limit — the harder call than exposing for the average.' Lower score example: 'Exposure pushed half a stop too bright — the highlight detail is gone and cannot be recovered.'>",
-  "mentor_moment": "<ONE sentence. Was this the right frame? For Soul Bonus: confirm it was right and say exactly why this instant. For lower scores: name the specific frame that was the shot if this was not it. Return null if moment is irrelevant to genre. Soul Bonus example: 'The center figure holds the gaze while the others rest — half a second later he looks away and the confrontational tension is gone.' Lower score example: 'The bill has cleared the water here — the shot was the entry, when the spray was still rising.'>",
-  "mentor_next": "<TWO sentences MAX. First sentence: ONE creative direction — wider, closer, different lens, different moment, processing transformation. Name it specifically. For Soul Bonus: frame as possibility not correction. For lower scores: redirect the creative energy. Second sentence: one processing direction that changes the emotional register. Examples: 'Go back with a 50mm and shoot just the faces — let the geometry disappear and it becomes entirely about what is in his eyes.' / 'A very dark print — push the blacks until the shelter disappears and only the faces remain in darkness — changes the register from documentary to elemental.' NEVER give positional corrections (shift right, move left) as the primary recommendation on high-scoring images.>",
-  "byline_1": "<ONE sentence. For Soul Bonus images: what does the NEXT image in this scene or series need — not a flaw in this image, but the frame that completes the story. For lower-scoring images: the specific gap holding this image from the next tier. Never describe what is visible. Soul Bonus example: 'The next frame is the portrait — just his face, close, the environment gone.' Lower score example: 'The incoming bird floats outside the geometric connection — drop it to the lower third and the composition locks.'>",
-  "byline_2": "<THE ONE CREATIVE INVITATION. One specific imaginable next move — in the field or in processing — framed as possibility not correction. Examples: 'Shoot this scene again at dusk when the fabric catches the last light — the faces go warm against a cooler background and the claustrophobia becomes beauty.' / 'Shoot this at golden hour from the ridge east — low side-light separates the valley without monochrome.' Never use generic advice.>",
-  "badges_g": ["<specific creative or technical strength in this image>", "<specific strength>", "<specific strength>"],
-  "badges_w": ["<specific gap or missed opportunity>", "<specific gap>", "<specific gap>"],
-  "iucn_tag": "<IUCN status if applicable, else null>",
+  "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. FAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. If uncertain, do NOT mention species at all. Write around it — describe behaviour, light, moment. WILDLIFE BEHAVIOUR RULE: if species research block is present, name the species geographic rarity and why this frame matters. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
+  "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. Three bullets. Each bullet: what the eye/camera did + what it means for next time. Separated by blank lines. EXIF-INFORMED: read the actual focal length, aperture, shutter, ISO, and time of day before writing. SHARPNESS CHAIN: if focal_length >= 200mm and shutter slow — address it directly and plainly (see rules above). COMPOSITION: if subject is centred, address it (see rules above). TIME OF DAY: read EXIF datetime and give time-specific advice (see rules above). CATCHLIGHT: if living subject present, address catchlight (see rules above). FORMAT example:\n\n▪ [Observation about what the settings/timing/position tell us.]\n  [One sentence: what this means. What to do differently.]\n\n▪ [Second observation.]\n  [What to do.]\n\n▪ [Third observation — strongest strength or clearest gap.]\n  [What this means for next time.]>",
+  "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why this instant was the one. For lower scores: name the specific moment that would have been stronger. Return null if moment is not relevant to genre.>",
+  "mentor_next": "<ONE creative direction — framed as possibility, never correction. For Soul Bonus: what would make the next image in this series untouchable. For lower scores: redirect the creative energy toward one specific thing. No positional corrections (shift right, move left). Two sentences max.>",
+  "byline_1": "<CARD 3 — WHAT THE SCORE MEANS AND HOW TO REACH 9+. This card answers the question the photographer is really asking: how do I make this award-winning? FORMAT: use line breaks between sections. Structure:\n\n[Plain English description of the score in growth terms — what does this score level mean for where the photographer's eye currently lives? No dimension names.]\n\n[What 9+ looks like for this specific image — not abstract, a concrete visual description of the frame that would score 9+.]\n\n[The one habit or change that gets there — specific, executable, gear-aware.]\n\n[Master reference: name + specific image/series + search term. Bold the master name.]\n\n[If portfolio_context has trend data: one sentence on trajectory — 'Your timing scores have been climbing across your last 5 uploads — keep pushing on this.'] FORMAT RULE: each section separated by blank line. Short sentences. Plain English.>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. One paragraph. One exercise. Executable before next upload. Uses actual gear from EXIF — if 300mm zoom, the assignment uses that lens. Genre-specific. Then one philosophy line from the rotation pool (see rules) — vary it, never repeat recently used. FORMAT:\n\n[The exercise — specific, practical, joyful. One or two sentences.]\n\n[Philosophy line — italicised in rendering, warm, brief.]>",
+  "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
+  "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
+  "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
-  "species_id": "<For Wildlife and Nature genres only: precise common name from scene description. Null for all other genres.>",
-  "edit_base":     "<BASE EDITS — post-processing only. INTEGRITY RULE: if score >= 8.0, DO NOT suggest edits that undo the tonal, contrast, or shadow choices that earned the score. For high-scoring images limit to: dust removal, minor colour cast correction, slight primary-subject sharpening. If bold choices (shadow retention, high contrast, dark register) are what scored, say so explicitly and tell the user not to change them. For score < 6.0: specific corrective adjustments — local exposure, dodging/burning, colour grading. Tool-specific. 1-2 sentences.>",
-  "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
-  "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>",
-  "what_stood_out": "<SCORECARD HERO LINE. One sentence. The bold, proud statement of what this image achieved. Written in the Sherpa voice — direct, specific, never generic. This is the headline the photographer reads first. For high-scoring images: name the specific creative decision that separated this image. NEVER start with 'This image' or 'The photograph'. KYC: no jargon, no banned words. Examples: 'You made the harder call.' / 'Only yours held the sky.' / 'You were there for one of those seconds that doesn't repeat.' FAMOUS EVENT GATE: If this image was made at a famous event AND the gate question answer was NO, this line must name the SPECIFIC frame-level decision the score reflects — not the event. Do not write a line that could apply to any photographer's frame from that event. If the gate answer was YES, name the specific find that separates this frame from the thousands of others.>",
-  "transferable_advice": "<SCORECARD CARD 1 BODY. ONE FLOWING PARAGRAPH — 2-3 sentences in continuous prose. INFERENCE NOT DESCRIPTION: open with the transferable PRINCIPLE, not an account of what was done. The paragraph must read as a master speaking to a peer — a craft truth the photographer now carries into every future shoot. The lesson this image teaches that applies to every future shoot — not just this location or subject. CRITICAL TENSE RULE: This card is ADVISORY, not a description of what was done in this image. Do NOT open with 'Exposed for the...', 'You shot...', 'You chose...', or any past-tense account of this specific frame's settings or decisions — that belongs in Card 2 (mentor_technical), not here. Card 1 must read as a PRINCIPLE the photographer now carries forward: open with the transferable rule itself, in present or future-facing language — 'When the light falls into two registers like this, expose for the one that costs you more — that's the harder call, and it's the one that holds.' / 'Hold your nerve on the highlights even when the shadows beg for detail — what you protect is what gives the image its weight.' The specific frame can be referenced briefly as the PROOF of the principle ('You proved this here —') but the sentence structure must lead with the rule, not the record. NEVER say 'go back and reshoot' — the moment is gone. WHAT COUNTS AS A TRANSFERABLE PRINCIPLE: light, exposure, timing, framing, composition, focus/depth-of-field, and reading the moment — things a photographer DOES with a camera in any future shoot. WHAT DOES NOT COUNT: critiques about the image's TITLE not matching its content, what the image 'should be about', filing/categorisation choices, or species-availability/access commentary (e.g. 'this species is easy to find, the difficulty is deciding what the photo is about') — these are about THIS image's metadata or framing-of-intent, not about photographic craft, and do NOT belong in this card even if phrased as a present-tense rule. SELF-CHECK before finalising: would this advice be useful and make sense to the photographer on a COMPLETELY DIFFERENT photograph, of a different subject, in a different location? If the advice only makes sense by reference to this specific image's title or subject list, rewrite it around a craft principle (light, timing, exposure, framing) the image actually demonstrates. MANDATORY: You MUST name one master photographer from this pool — Cartier-Bresson, Raghu Rai, Vivian Maier, Ernst Haas, Daido Moriyama, Helen Levitt, Garry Winogrand, Fan Ho, Elliot Erwitt, Trent Parke, Salgado, Nachtwey, Dorothea Lange, W. Eugene Smith, Mary Ellen Mark, Don McCullin, Larry Burrows, Adams, Kenna, Yann Arthus-Bertrand, Charlie Waite, Joe Cornish, Art Wolfe, Frans Lanting, Nick Nichols, Paul Nicklen, Tim Laman, Karsh, Leibovitz, Avedon, Penn, Newton, Arnold Newman, Platon, Nadav Kander, McCurry, Weston, Man Ray, Duane Michals, Ralph Gibson, Bill Brandt — and state how the principle connects to their practice. Do not use 'like' comparisons — state the connection directly: 'Salgado made this same exposure choice in the Serra Pelada mines.' / 'This is what Adams called pre-visualisation.' / 'Raghu Rai built his entire practice on exactly this access.' BOLD FORMATTING: The master reference sentence must be its own second paragraph, in bold — start it on a new line after the main principle paragraph. Format it as: '\n\n**[Master name] [connection to their practice].**' Example: '\n\n**Vivian Maier made this same decision shooting through storefront glass — the barrier became the frame.**' The master sentence is bold and standalone — never buried mid-paragraph. The master reference must feel earned, not decorative. Warm, specific, never generic. KYC: no jargon — write 'when the sky was doing something extraordinary' not 'backlit scene'. Write 'you exposed for the sky' not 'silhouette exposure'. Plain language throughout. If portfolio_context shows a trend in feeling/timing/difficulty, reference it naturally.>",
-  "background_check": "<SCORECARD CARD 3 BODY. ONE FLOWING PARAGRAPH — 2-3 sentences in continuous prose. INFERENCE NOT DESCRIPTION: name the specific background element in THIS image that the reading-the-field habit would have transformed, frame it as something the photographer almost had — the gap between good and unrepeatable — then close with the transferable habit. The Bresson habit — 'reading the field': knowing what is behind your subject before the moment arrives. Name the specific element in THIS image that the habit would have resolved. Frame it as something the photographer almost had — not a failure. MANDATORY: Name the master whose practice this habit belongs to — for Street use one of: Cartier-Bresson, Raghu Rai, Vivian Maier, Daido Moriyama, Helen Levitt, Garry Winogrand, Fan Ho, Elliot Erwitt, Trent Parke, Ernst Haas — vary across scorecards, do not default to HCB every time; for Wildlife use one of: Art Wolfe, Frans Lanting, Nick Nichols, Paul Nicklen, Tim Laman; for Documentary use one of: Nachtwey, Salgado, Dorothea Lange, W. Eugene Smith, Mary Ellen Mark, Don McCullin, Larry Burrows; for Landscape use one of: Adams, Kenna, Yann Arthus-Bertrand, Charlie Waite, Joe Cornish; for People use one of: Karsh, Leibovitz, Avedon, Penn, Arnold Newman, Platon, Nadav Kander; for Creative use one of: Man Ray, Duane Michals, Ralph Gibson, Bill Brandt, Aaron Siskind. Then state the habit as transferable: 'That one-second glance behind your subject lifts every photograph you make — Wildlife at the waterhole, Street in the market, a face in a crowd.' SPECIES NAMING RULE: if this text names a species (e.g. a secondary/background animal), it MUST use the same species_id determined above — do not independently guess or rename a species here. If you are not confident in a specific species for a background subject, use a general term (e.g. 'the second bird', 'the background animal') rather than naming a species that may be incorrect. KYC: plain language only.>",
-  "mentor_location_1": "<SCORECARD MENTOR LOCATION 1. Populated ONLY when seasonal_context is provided in the prompt. 3-4 sentences in the Sherpa voice — warm, specific, like a friend who knows the reserve. Include: the specific subject active NOW, why this window is special this season, why it connects directly to the photographer's growth opportunity. Specific enough that the photographer starts planning immediately. If no seasonal_context in prompt, return null.>",
-  "mentor_location_2": "<SCORECARD MENTOR LOCATION 2. The upcoming window — plan ahead. Same voice as mentor_location_1. If seasonal_context only has one location, or if no seasonal_context provided, return null.>",
-  "mentor_location_3": "<SCORECARD MENTOR LOCATION 3. ONLY populated when seasonal_context explicitly lists a THIRD location — this happens only when multiple time-sensitive events are genuinely concurrent this week (seasonal_context will say so), not in the routine one-or-two-location case. Same Sherpa voice as mentor_location_1/2, lean into the urgency — a limited window, not a standing recommendation. If seasonal_context lists fewer than three locations, or no seasonal_context provided, return null.>",
-  "emoji_rating": "<ONE LINE. The emotional verdict. Scale 1-5 of the single most precise emoji for this image's dominant register, followed by two spaces and the tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'. Pick the emoji that names what the image IS, not what it contains.>",
-  "days_since_language": "<SCORECARD DAYS-SINCE LINE. One sentence. Genre-specific, tied to mentor_location_1 subject if available. For Wildlife with black leopard: 'The black leopard doesn't wait. Neither should you.' For Wildlife generally: reference the specific animal or seasonal window. For Street: reference the light window. For Landscape: reference the seasonal moment. For Wedding/People: warm personal line. NEVER 'your camera is waiting' — that is the fallback only when nothing specific is available.>"
+  "species_id": "<Wildlife/Nature only: precise confirmed common name. If you cannot identify with confidence — return null. DO NOT GUESS. A wrong name is worse than null. For hyphenated endemic species use full name: 'Lion-tailed Macaque', not 'Macaque'. Null for all other genres.>",
+  "edit_base": "<BASE EDITS. INTEGRITY RULE: score >= 8.0 — do NOT undo tonal choices that earned the score. Score < 6.0 — specific corrective adjustments. EVERY suggestion must include estimated score impact in plain English: 'likely adds 0.3–0.5 to how striking the image feels'. Format: short bullets, one edit per bullet, with impact range. Plain English — no dimension jargon.>",
+  "edit_creative": "<CREATIVE EDITS — one specific transformation that changes the emotional register. What would this image become if processed differently? One concrete direction with estimated impact.>",
+  "genre_suggestion": "<GENRE ROUTING INSIGHT. If scoring pattern strongly suggests different genre would score higher. Otherwise null. Same format as before.>",
+  "what_stood_out": "<LEGACY FIELD — same as hard_truth. Populate with the same opening line for backward compatibility.>",
+  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. Score 9+/Soul Bonus: two sentences. Others: three sentences. Opens with applause adjective + the specific decision most photographers at this scene would not have made. Then the master reference — bold, specific image/series named, search term given. Then the story verdict: why this image has a story and what the story is. FORMAT:\n\n[Applause adjective + specific decision.]\n\n[**Master name** — specific connection to their practice. Search: [search term].]\n\n[One line: why this image has a story. What the story is.] PLAIN ENGLISH. No jargon. No 'compositional tension', no 'tonal relationship'.>",
+  "background_check": "<CARD 3 BODY — passed to byline_1 in rendering. Same content as byline_1 — the 9+ gap analysis and award-winning guidance. Return the same text here for backward compatibility with templates that read this field.>",
+  "calibration_line": "<PERCENTILE AND CONTEXT. One or two sentences. Plain English. 'This places you in the top [X]% of [genre] images evaluated on Shutter League.' Then: 'Your [plain English weakest dimension description] score of [X] is [above/below] the [genre] average of [Y] — [one plain English sentence on what that means and what to work on].' Use plain English for dimension names: 'how striking the image is to a stranger' not 'Visual Disruption'. 'how well you captured the right moment' not 'DM score'.>",
+  "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. Include: what is active NOW this season, distance from user_city (estimate from pincode if available), best time of day, what the frame worth making looks like. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). If no seasonal_context provided, return null.>",
+  "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window — plan ahead. Same voice. Null if only one location relevant.>",
+  "mentor_location_3": "<LOCATION ADVISORY 3. Only when seasonal_context lists a genuine third concurrent urgent window. Null otherwise.>",
+  "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
+  "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
@@ -3237,6 +3432,18 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     Produces plain English inference the engine uses to lead the evaluation
     with history-aware observations. No dimension names. No raw numbers
     visible as labels. No jargon.
+
+    SESSION 110: Also injects variety lists from recent scorecards so the
+    engine never repeats the same master reference, opening adjective,
+    location advisory, or philosophy line within a rolling window.
+
+    portfolio_summary may carry:
+      feeling, timing, difficulty  — dimension score lists (existing)
+      recent_masters               — list of up to 5 photographer names used recently
+      recent_openings              — list of up to 5 opening adjectives used recently
+      recent_locations             — list of up to 3 location names shown recently
+      recent_philosophy            — list of up to 5 philosophy line indices used recently
+
     Returns "" if portfolio_summary is None or insufficient data.
     """
     if not portfolio_summary or not isinstance(portfolio_summary, dict):
@@ -3246,7 +3453,13 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     timing     = portfolio_summary.get("timing", [])     # DM — decisive moment
     difficulty = portfolio_summary.get("difficulty", []) # DoD — difficulty
 
-    if len(feeling) < 1:
+    # ── Variety history lists (Session 110) ───────────────────────────────────
+    recent_masters    = portfolio_summary.get("recent_masters", [])
+    recent_openings   = portfolio_summary.get("recent_openings", [])
+    recent_locations  = portfolio_summary.get("recent_locations", [])
+    recent_philosophy = portfolio_summary.get("recent_philosophy", [])
+
+    if len(feeling) < 1 and not any([recent_masters, recent_openings, recent_locations]):
         return ""
 
     def _avg(lst):
@@ -3268,73 +3481,126 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
         if avg >= 4.5: return "developing"
         return "weak"
 
-    avg_visual   = _avg(feeling)
-    avg_timing   = _avg(timing)
-    avg_diff     = _avg(difficulty)
-    trend_visual = _trend(feeling)
-    trend_timing = _trend(timing)
-    trend_diff   = _trend(difficulty)
-    n            = len(feeling)
-
-    # Identify weakest and strongest area in plain English
-    areas = {
-        "how the image feels to a stranger": (avg_visual, trend_visual),
-        "capturing the right moment":        (avg_timing, trend_timing),
-        "the difficulty of what was attempted": (avg_diff, trend_diff),
-    }
-    weakest  = min(areas, key=lambda k: areas[k][0])
-    strongest = max(areas, key=lambda k: areas[k][0])
-
-    weak_avg,   weak_trend   = areas[weakest]
-    strong_avg, strong_trend = areas[strongest]
-
-    # Build plain English inference block
+    n = len(feeling)
     lines = []
-    lines.append(f"PHOTOGRAPHER HISTORY — image {image_number} from this user in this genre ({n} previous scored):")
-    lines.append("")
 
-    # Stagnation check — same subject territory repeatedly with flat scores
-    if n >= 3 and trend_visual == "flat" and trend_timing == "flat" and avg_visual < 6.5:
+    if n >= 1:
+        avg_visual   = _avg(feeling)
+        avg_timing   = _avg(timing)
+        avg_diff     = _avg(difficulty)
+        trend_visual = _trend(feeling)
+        trend_timing = _trend(timing)
+        trend_diff   = _trend(difficulty)
+
+        areas = {
+            "how the image feels to a stranger": (avg_visual, trend_visual),
+            "capturing the right moment":        (avg_timing, trend_timing),
+            "the difficulty of what was attempted": (avg_diff, trend_diff),
+        }
+        weakest  = min(areas, key=lambda k: areas[k][0])
+        strongest = max(areas, key=lambda k: areas[k][0])
+        weak_avg,   weak_trend   = areas[weakest]
+        strong_avg, strong_trend = areas[strongest]
+
+        lines.append(f"PHOTOGRAPHER HISTORY — image {image_number} from this user in this genre ({n} previous scored):")
+        lines.append("")
+
+        if n >= 3 and trend_visual == "flat" and trend_timing == "flat" and avg_visual < 6.5:
+            lines.append(
+                "The previous uploads in this genre have not shown score movement. "
+                "The photographer is returning to similar territory without changing what they attempt. "
+                "If this image shows the same pattern, name it plainly: they are not getting harder shots, "
+                "they are getting more comfortable with the same shot. That is a ceiling, not progress."
+            )
+        elif n >= 2:
+            if weak_trend == "flat" and weak_avg < 5.5:
+                lines.append(
+                    f"The consistent gap across previous uploads has been {weakest}. "
+                    f"It has not improved across {n} images. "
+                    f"If this image shows the same gap, name it without softening. "
+                    f"If it shows genuine improvement, name that specifically — it is the most important thing to tell this photographer right now."
+                )
+            elif weak_trend == "improving":
+                lines.append(
+                    f"The photographer has been working on {weakest} and it is moving in the right direction. "
+                    f"Acknowledge this if the improvement continues in this image."
+                )
+
+            if strong_avg >= 7.0 and strong_trend in ("improving", "flat"):
+                lines.append(
+                    f"Their strongest area has been {strongest} — "
+                    f"{'and it is still climbing' if strong_trend == 'improving' else 'consistent across uploads'}. "
+                    f"Reference this as their established strength, not a discovery."
+                )
+
+        lines.append("")
         lines.append(
-            "The previous uploads in this genre have not shown score movement. "
-            "The photographer is returning to similar territory without changing what they attempt. "
-            "If this image shows the same pattern, name it plainly: they are not getting harder shots, "
-            "they are getting more comfortable with the same shot. That is a ceiling, not progress."
+            "INSTRUCTION: Lead the evaluation with what the history shows about this photographer, "
+            "not with a description of this image. "
+            "Do not use the words 'dimension', 'score', 'DoD', 'DM', 'AQ', 'DDI', or any technical engine term. "
+            "Write as a coach who has watched this person shoot for months. "
+            "Short sentences. Plain English. No idiom. No metaphor that needs explaining. "
+            "Do not describe what is visible in the image. "
+            "Only say what the history and this image together reveal about how this photographer sees."
         )
-    elif n >= 2:
-        # Weakest area
-        if weak_trend == "flat" and weak_avg < 5.5:
-            lines.append(
-                f"The consistent gap across previous uploads has been {weakest}. "
-                f"It has not improved across {n} images. "
-                f"If this image shows the same gap, name it without softening. "
-                f"If it shows genuine improvement, name that specifically — it is the most important thing to tell this photographer right now."
-            )
-        elif weak_trend == "improving":
-            lines.append(
-                f"The photographer has been working on {weakest} and it is moving in the right direction. "
-                f"Acknowledge this if the improvement continues in this image."
-            )
+        lines.append("")
 
-        # Breakthrough check — significant jump from personal average
-        # (handled dynamically in prompt based on this image's scores vs history)
-        if strong_avg >= 7.0 and strong_trend in ("improving", "flat"):
-            lines.append(
-                f"Their strongest area has been {strongest} — "
-                f"{'and it is still climbing' if strong_trend == 'improving' else 'consistent across uploads'}. "
-                f"Reference this as their established strength, not a discovery."
-            )
+    # ── VARIETY MANDATE (Session 110) ────────────────────────────────────────
+    # The photographer uploads 300 images a year. Every scorecard must feel
+    # fresh. If the engine repeats the same master, the same opening adjective,
+    # the same location, the same philosophy line — the photographer feels like
+    # they are reading a template. That kills the platform.
+    #
+    # The lists below are populated from the last 5 audit JSONs by app.py.
+    # The engine MUST NOT use anything from these lists in this scorecard.
 
-    lines.append("")
-    lines.append(
-        "INSTRUCTION: Lead the evaluation with what the history shows about this photographer, "
-        "not with a description of this image. "
-        "Do not use the words 'dimension', 'score', 'DoD', 'DM', 'AQ', 'DDI', or any technical engine term. "
-        "Write as a coach who has watched this person shoot for months. "
-        "Short sentences. Plain English. No idiom. No metaphor that needs explaining. "
-        "Do not describe what is visible in the image. "
-        "Only say what the history and this image together reveal about how this photographer sees."
-    )
+    variety_lines = []
+
+    if recent_masters:
+        variety_lines.append(
+            "VARIETY RULE — MASTER REFERENCES: The following photographers were named "
+            f"in this user's last {len(recent_masters)} scorecards. "
+            "Do NOT reference any of them in this scorecard. Choose a different master. "
+            f"Recently used: {', '.join(recent_masters)}."
+        )
+
+    if recent_openings:
+        variety_lines.append(
+            "VARIETY RULE — OPENING ADJECTIVES: The following opening words were used "
+            f"in this user's last {len(recent_openings)} scorecards. "
+            "Do NOT use any of them to open hard_truth or transferable_advice. "
+            f"Recently used: {', '.join(recent_openings)}."
+        )
+
+    if recent_locations:
+        variety_lines.append(
+            "VARIETY RULE — LOCATION ADVISORY: The following locations were shown "
+            f"in this user's last {len(recent_locations)} scorecards. "
+            "Do NOT recommend any of them in mentor_location_1 or mentor_location_2. "
+            "Choose a different location from the rotation pool. "
+            f"Recently shown: {', '.join(recent_locations)}."
+        )
+
+    if recent_philosophy:
+        variety_lines.append(
+            "VARIETY RULE — PHILOSOPHY LINES: The following philosophy lines (by index) "
+            f"were used in this user's last {len(recent_philosophy)} scorecards. "
+            "Do NOT use any of them in byline_2. Choose a different one from the pool. "
+            f"Recently used indices: {', '.join(str(i) for i in recent_philosophy)}."
+        )
+
+    if variety_lines:
+        lines.append("SCORECARD VARIETY — MANDATORY:")
+        lines.append(
+            "This photographer has received multiple scorecards. "
+            "Each scorecard must feel like a fresh conversation, not a template. "
+            "The photographer must never think 'I know what the next card will say.' "
+            "Vary the angle of insight, the master reference, the opening register, "
+            "the location recommendation, and the philosophy line — every time."
+        )
+        lines.append("")
+        lines.extend(variety_lines)
+        lines.append("")
 
     return "\n" + "\n".join(lines) + "\n"
 
@@ -3718,13 +3984,22 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
 def _species_display(species_id):
     """
-    Convert a full vision species ID to a display-safe common family name.
-    Rules (Session 37 spec, extended Session 74 for qualifier stripping):
+    Convert a full vision species ID to a display-safe name.
+    Rules (Session 80 spec, extended Session 110):
       - Gate: return None if species_id is empty, generic, or uncertain
       - Strip parenthetical qualifiers and trailing clauses before extracting
         the family name, e.g. "Flamingo (out of focus)" → "Flamingo",
         "Unknown - out of focus" → None (Unknown is still generic after stripping)
-      - Display: strip leading adjectives to return family common name only
+      - SESSION 110 RULE: Endemic, hyphenated, or well-known compound species
+        names MUST be returned in full — never stripped to family name only.
+        "Lion-tailed Macaque" stays "Lion-tailed Macaque" (not "Macaque")
+        "Snow Leopard" stays "Snow Leopard" (not "Leopard")
+        "Fishing Cat" stays "Fishing Cat" (not "Cat")
+        "Black-necked Crane" stays "Black-necked Crane" (not "Crane")
+        Rule: if species name contains a hyphen, OR is in the endemic list below,
+        return the full cleaned name verbatim.
+      - For non-endemic, non-hyphenated common names: strip leading adjectives
+        to return family common name.
         e.g. "Great Cormorant" → "Cormorant"
              "Indian Kingfisher" → "Kingfisher"
              "Bengal Tiger" → "Tiger"
@@ -3737,9 +4012,6 @@ def _species_display(species_id):
     import re as _re
 
     # Strip parenthetical qualifiers and trailing clauses after , ; – — -
-    # e.g. "Flamingo (out of focus)" -> "Flamingo"
-    #      "Unknown - out of focus" -> "Unknown"
-    #      "Lesser Flamingo (uncertain - out of focus)" -> "Lesser Flamingo"
     cleaned = _re.sub(r'\s*\(.*?\)\s*', '', species_id).strip()
     cleaned = _re.split(r'\s*[,;\u2013\u2014-]\s*', cleaned)[0].strip()
 
@@ -3753,22 +4025,35 @@ def _species_display(species_id):
     _lower = cleaned.lower()
     if _lower in _generic or not cleaned:
         return None
-    # Also gate on very short strings (< 4 chars) and anything with Latin format (Genus species)
     if len(cleaned) < 4:
         return None
     if _re.match(r'^[A-Z][a-z]+ [a-z]+$', cleaned):
-        # Looks like a Latin binomial — do not show
         return None
 
-    # Extract family common name: take the LAST capitalised word
-    # "Great Indian Hornbill" → "Hornbill"
-    # "Indian Kingfisher" → "Kingfisher"
-    # "Bengal Tiger" → "Tiger"
-    # "Flamingo" → "Flamingo" (already family name)
+    # SESSION 110: Full-name rule for hyphenated species (e.g. Lion-tailed Macaque)
+    # A hyphen in the original species_id signals a compound/endemic name — return in full.
+    if '-' in species_id.split('(')[0]:
+        return cleaned
+
+    # SESSION 110: Known endemic / compound species that must never be truncated
+    _keep_full = {
+        'snow leopard', 'fishing cat', 'clouded leopard', 'pallas cat',
+        'rusty spotted cat', 'golden cat', 'marbled cat',
+        'black bear', 'sun bear', 'sloth bear',
+        'river dolphin', 'sea eagle', 'fish eagle', 'fish owl',
+        'great hornbill', 'grey hornbill', 'malabar hornbill',
+        'painted stork', 'open bill', 'openbill stork',
+        'mugger crocodile', 'gharial crocodile', 'king cobra',
+        'indian star tortoise', 'olive ridley', 'leatherback turtle',
+        'blue whale', 'humpback whale', 'sperm whale',
+        'tiger shark', 'whale shark', 'bull shark',
+    }
+    if cleaned.lower() in _keep_full:
+        return cleaned
+
+    # Default: strip leading adjectives, return family name (last capitalised word)
     words = cleaned.split()
-    # Find last meaningful capitalised word
     family = words[-1] if words else cleaned
-    # Handle possessives / trailing punctuation
     family = family.rstrip('.,;:)')
     return family if family else None
 
@@ -3835,4 +4120,5 @@ def build_audit_data(result, image_obj):
         "mentor_location_3": result.get("mentor_location_3", None),
         "days_since_language": result.get("days_since_language", ""),
         "emoji_rating":      result.get("emoji_rating", ""),
+        "calibration_line":  result.get("calibration_line", ""),
     }
