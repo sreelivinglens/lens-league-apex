@@ -1,5 +1,23 @@
 {% extends "base.html" %}
-{% block title %}RAW Verification — {{ img.asset_name or 'Untitled' }} — Admin{% endblock %}
+{% block title %}
+{% block extra_css %}
+<style>
+  body { line-height: 1.6; font-size: 16px; }
+  button, .btn, a.btn { min-height: 44px; }
+  table { width: 100%; }
+  @media (max-width: 600px) {
+    table, thead, tbody, tr, th, td { display: block; }
+    td { padding: 8px 0 !important; }
+  }
+  @media (max-width: 768px) { .admin-two-col { grid-template-columns: 1fr !important; } }
+  @media (max-width: 900px) {
+    div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+    div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    div[style*="repeat(4,1fr)"] { grid-template-columns: 1fr 1fr !important; }
+  }
+</style>
+{% endblock %}
+RAW Verification — {{ img.asset_name or 'Untitled' }} — Admin{% endblock %}
 
 {% block content %}
 <div style="max-width:900px;margin:0 auto;padding:32px var(--page-pad) 80px;">
@@ -7,7 +25,7 @@
   <!-- Header -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:32px;flex-wrap:wrap;">
     <div>
-      <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">
+      <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">
         Admin · RAW Verification
       </div>
       <h1 style="font-size:28px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
@@ -19,7 +37,7 @@
       </div>
     </div>
     <a href="{{ url_for('admin_raw_verification') }}"
-       style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:2px;
+       style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:2px;
               color:var(--text-primary);border:1px solid var(--border);padding:9px 18px;
               text-decoration:none;white-space:nowrap;">
       ← ALL RAW QUEUE
@@ -31,7 +49,7 @@
 
     <!-- Left: Image -->
     <div>
-      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);
+      <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--text-muted);
                   text-transform:uppercase;margin-bottom:10px;">Scored Image (Thumbnail)</div>
       {% if img.thumb_url %}
         <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or '' }}"
@@ -39,7 +57,7 @@
       {% else %}
         <div style="width:100%;aspect-ratio:4/3;background:var(--surface-3);border-radius:var(--radius-md);
                     border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-                    font-family:var(--font-mono);font-size:12px;color:var(--text-disabled);">
+                    font-family:var(--font-mono);font-size:13px;color:var(--text-disabled);">
           No thumbnail
         </div>
       {% endif %}
@@ -47,7 +65,7 @@
 
     <!-- Right: Submission details -->
     <div>
-      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);
+      <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--text-muted);
                   text-transform:uppercase;margin-bottom:10px;">Submission Status</div>
 
       {% if submission %}
@@ -57,28 +75,28 @@
           <!-- Status badge -->
           <div style="margin-bottom:16px;">
             {% if submission.admin_decision == 'approved' %}
-              <span style="background:#2E7D4F;color:#fff;font-family:var(--font-mono);font-size:11px;
+              <span style="background:#2E7D4F;color:#fff;font-family:var(--font-mono);font-size:13px;
                            font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
                 ✓ VERIFIED
               </span>
             {% elif submission.admin_decision == 'rejected' %}
-              <span style="background:var(--red);color:#fff;font-family:var(--font-mono);font-size:11px;
+              <span style="background:var(--red);color:#fff;font-family:var(--font-mono);font-size:13px;
                            font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
                 ✗ REJECTED
               </span>
             {% elif submission.raw_file_key %}
-              <span style="background:var(--amber);color:#fff;font-family:var(--font-mono);font-size:11px;
+              <span style="background:var(--amber);color:#fff;font-family:var(--font-mono);font-size:13px;
                            font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
                 ⏳ AWAITING REVIEW
               </span>
             {% else %}
               <span style="background:var(--surface-3);color:var(--text-muted);font-family:var(--font-mono);
-                           font-size:11px;font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
+                           font-size:13px;font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
                 NOT SUBMITTED
               </span>
             {% endif %}
             {% if appeal_pending %}
-              <span style="background:#8B4513;color:#fff;font-family:var(--font-mono);font-size:11px;
+              <span style="background:#8B4513;color:#fff;font-family:var(--font-mono);font-size:13px;
                            font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;margin-left:8px;">
                 ⚠ APPEAL PENDING
               </span>
@@ -88,28 +106,28 @@
           <!-- Fields -->
           <table style="width:100%;border-collapse:collapse;font-size:14px;">
             <tr>
-              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
                          text-transform:uppercase;padding:6px 0;width:120px;">Photographer</td>
               <td style="padding:6px 0;color:var(--text-primary);font-weight:600;">
                 {{ submission.username or '—' }}
               </td>
             </tr>
             <tr>
-              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
                          text-transform:uppercase;padding:6px 0;">Email</td>
               <td style="padding:6px 0;color:var(--text-primary);">
                 {{ submission.photographer_email or '—' }}
               </td>
             </tr>
             <tr>
-              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
                          text-transform:uppercase;padding:6px 0;">Contest</td>
               <td style="padding:6px 0;color:var(--text-primary);">
                 {{ (submission.contest_type or 'weekly') | title }}
               </td>
             </tr>
             <tr>
-              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
                          text-transform:uppercase;padding:6px 0;">Deadline</td>
               <td style="padding:6px 0;color:var(--text-primary);">
                 {% if submission.deadline %}
@@ -119,7 +137,7 @@
             </tr>
             {% if submission.submitted_at %}
             <tr>
-              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
                          text-transform:uppercase;padding:6px 0;">Submitted</td>
               <td style="padding:6px 0;color:var(--text-primary);">
                 {{ submission.submitted_at.strftime('%d %b %Y, %H:%M UTC') }}
@@ -128,13 +146,27 @@
             {% endif %}
             {% if submission.admin_decided_at %}
             <tr>
-              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
                          text-transform:uppercase;padding:6px 0;">Decided</td>
               <td style="padding:6px 0;color:var(--text-primary);">
                 {{ submission.admin_decided_at.strftime('%d %b %Y, %H:%M UTC') }}
               </td>
             </tr>
             {% endif %}
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;">Attempts</td>
+              <td style="padding:6px 0;">
+                {% set rc = submission.resubmit_count or 0 %}
+                <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;
+                             color:{{ 'var(--red)' if rc >= 2 else ('var(--amber)' if rc == 1 else 'var(--text-primary)') }};">
+                  {{ rc }} / 3 used
+                </span>
+                {% if rc >= 3 %}
+                  <span style="font-family:var(--font-mono);font-size:13px;color:var(--red);margin-left:8px;">EXHAUSTED</span>
+                {% endif %}
+              </td>
+            </tr>
           </table>
         </div>
 
@@ -142,10 +174,10 @@
         {% if raw_file_url %}
           <div style="background:var(--surface-3);border:1px solid var(--gold);border-radius:var(--radius-md);
                       padding:14px 16px;margin-bottom:16px;">
-            <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--gold);
+            <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--gold);
                         text-transform:uppercase;margin-bottom:8px;">RAW File Submitted</div>
             <a href="{{ raw_file_url }}" target="_blank" rel="noopener"
-               style="font-family:var(--font-mono);font-size:12px;color:var(--gold);
+               style="font-family:var(--font-mono);font-size:13px;color:var(--gold);
                       word-break:break-all;text-decoration:underline;">
               Download RAW File ↗
             </a>
@@ -156,7 +188,7 @@
         {% if submission.admin_note %}
           <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--amber);
                       border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;">
-            <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--amber);
+            <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--amber);
                         text-transform:uppercase;margin-bottom:6px;">Admin Note</div>
             <div style="font-size:14px;color:var(--text-primary);line-height:1.6;">
               {{ submission.admin_note }}
@@ -168,13 +200,13 @@
         {% if appeal_pending %}
           <div style="background:#fff8f0;border:1px solid var(--amber);border-radius:var(--radius-md);
                       padding:14px 16px;margin-bottom:16px;">
-            <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--amber);
+            <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--amber);
                         text-transform:uppercase;margin-bottom:8px;">Appeal Submitted</div>
             <div style="font-size:14px;color:var(--text-primary);line-height:1.6;">
               {{ submission.appeal_text or '—' }}
             </div>
             {% if submission.appeal_submitted_at %}
-              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:6px;">
+              <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);margin-top:6px;">
                 {{ submission.appeal_submitted_at.strftime('%d %b %Y, %H:%M UTC') }}
               </div>
             {% endif %}
@@ -184,7 +216,7 @@
       {% else %}
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);
                     padding:24px;text-align:center;">
-          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:var(--text-disabled);
+          <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--text-disabled);
                       text-transform:uppercase;">No submission record found</div>
         </div>
       {% endif %}
@@ -193,7 +225,7 @@
 
   <!-- Actions -->
   <div style="border-top:1px solid var(--border);padding-top:24px;">
-    <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);
+    <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--text-muted);
                 text-transform:uppercase;margin-bottom:16px;">Actions</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
 
@@ -203,14 +235,14 @@
             onsubmit="return confirm('Mark this image as RAW verified?')">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
         <button type="submit"
-                style="background:#2E7D4F;color:#fff;font-family:var(--font-mono);font-size:12px;
+                style="background:#2E7D4F;color:#fff;font-family:var(--font-mono);font-size:13px;
                        font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
                        border:none;border-radius:var(--radius-sm);cursor:pointer;">
           ✓ Mark Verified
         </button>
       </form>
       {% else %}
-      <div style="background:transparent;color:#2E7D4F;font-family:var(--font-mono);font-size:12px;
+      <div style="background:transparent;color:#2E7D4F;font-family:var(--font-mono);font-size:13px;
                   font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
                   border:1px solid #2E7D4F;border-radius:var(--radius-sm);">
         ✓ Verified
@@ -222,7 +254,7 @@
         <form method="POST" action="{{ url_for('admin_raw_send_reminder', image_id=img.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
           <button type="submit"
-                  style="background:var(--amber);color:#fff;font-family:var(--font-mono);font-size:12px;
+                  style="background:var(--amber);color:#fff;font-family:var(--font-mono);font-size:13px;
                          font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
                          border:none;border-radius:var(--radius-sm);cursor:pointer;">
             ✉ Send Reminder
@@ -236,7 +268,7 @@
               onsubmit="return confirm('Delete this RAW submission record? This cannot be undone.')">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
           <button type="submit"
-                  style="background:transparent;color:var(--red);font-family:var(--font-mono);font-size:12px;
+                  style="background:transparent;color:var(--red);font-family:var(--font-mono);font-size:13px;
                          font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
                          border:1px solid var(--red);border-radius:var(--radius-sm);cursor:pointer;">
             ✗ Delete Submission
@@ -244,8 +276,69 @@
         </form>
       {% endif %}
 
+      <!-- Reject with reason — only when submission exists and not already decided -->
+      {% if submission and submission.submitted_at and submission.admin_decision not in ('approved', 'rejected') %}
+        <form method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}"
+              id="reject-form-{{ img.id }}" style="display:none;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <input type="hidden" name="reason" id="reject-reason-{{ img.id }}" value="">
+        </form>
+        <button type="button" onclick="rejectWithReason({{ img.id }})"
+                style="background:var(--red);color:#fff;font-family:var(--font-mono);font-size:13px;
+                       font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
+                       border:none;border-radius:var(--radius-sm);cursor:pointer;">
+          ✗ Reject — Request Resubmission
+        </button>
+      {% endif %}
+
     </div>
   </div>
 
 </div>
+
+{% block extra_js %}
+<script>
+function rejectWithReason(imgId) {
+  var overlay = document.createElement('div');
+  overlay.id = 'reject-modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#1a1a18;border:1px solid #C8A84B;border-radius:6px;padding:28px 32px;width:520px;max-width:90vw;font-family:Arial,sans-serif;';
+
+  box.innerHTML =
+    '<p style="margin:0 0 6px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;font-weight:700;">RAW VERIFICATION</p>' +
+    '<h3 style="margin:0 0 6px;font-size:18px;color:#fff;">Reject & Request Resubmission</h3>' +
+    '<p style="margin:0 0 16px;font-size:13px;color:#aaa;line-height:1.5;">This will reset the submission so the photographer can upload again. The reason will be emailed to them and logged on the record.</p>' +
+    '<label style="display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:6px;">Reason <span style="color:#f08080;">*</span> — sent to photographer</label>' +
+    '<textarea id="reject-modal-reason" rows="4" placeholder="e.g. The RAW file submitted does not match this image — please submit the original capture for Heyder Aliyev Center, Azerbaijan." ' +
+    'style="width:100%;box-sizing:border-box;background:#2a2a28;border:1px solid #444;border-radius:4px;color:#fff;font-size:14px;padding:10px 12px;resize:vertical;font-family:Arial,sans-serif;line-height:1.5;"></textarea>' +
+    '<p id="reject-modal-err" style="color:#f08080;font-size:13px;margin:6px 0 0;display:none;">A reason is required.</p>' +
+    '<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">' +
+      '<button id="reject-modal-cancel" style="padding:9px 20px;background:transparent;border:1px solid #555;border-radius:4px;color:#aaa;cursor:pointer;font-size:13px;">Cancel</button>' +
+      '<button id="reject-modal-confirm" style="padding:9px 20px;background:#7a1a1a;border:1px solid #f08080;border-radius:4px;color:#fff;cursor:pointer;font-size:13px;font-weight:700;">✗ Confirm Reject & Notify</button>' +
+    '</div>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('reject-modal-reason').focus();
+
+  document.getElementById('reject-modal-cancel').onclick = function() { document.body.removeChild(overlay); };
+  overlay.onclick = function(e) { if (e.target === overlay) document.body.removeChild(overlay); };
+
+  document.getElementById('reject-modal-confirm').onclick = function() {
+    var reason = document.getElementById('reject-modal-reason').value.trim();
+    if (!reason) {
+      document.getElementById('reject-modal-err').style.display = 'block';
+      document.getElementById('reject-modal-reason').focus();
+      return;
+    }
+    document.getElementById('reject-reason-' + imgId).value = reason;
+    document.body.removeChild(overlay);
+    document.getElementById('reject-form-' + imgId).submit();
+  };
+}
+</script>
+{% endblock %}
+
 {% endblock %}
