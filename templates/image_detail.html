@@ -437,8 +437,11 @@
   {% set _pub_c2_raw = '' %}
   {% if _public_audit.transferable_advice %}
     {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] %}{% set _pub_c2_raw = row[1] %}{% endif %}{% endfor %}
+    {# Fallback: mentor_technical is the direct per-image field for Card 2 #}
+    {% if not _pub_c2_raw %}{% set _pub_c2_raw = (_public_audit.mentor_technical or '') %}{% endif %}
   {% else %}
     {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] and not _pub_c1 %}{% set _pub_c1 = row[1] %}{% elif row[0] == 'Moment' and row[1] %}{% set _pub_c2_raw = row[1] %}{% endif %}{% endfor %}
+    {% if not _pub_c2_raw %}{% set _pub_c2_raw = (_public_audit.mentor_technical or '') %}{% endif %}
   {% endif %}
   {% set _pub_c2 = _pub_c2_raw | trim %}
   {% set _pub_c3_raw = (_public_audit.background_check or _public_audit.byline_1 or '') | trim %}
@@ -1253,7 +1256,8 @@
   </div>
   {% endif %}
 
-  {# ── Technical details ─────────────────────────────────────────────── #}
+  {# ── Technical details — owner/admin only (filename must not leak) ── #}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   {% if image.original_filename or (image.width and image.height) or image.file_size_kb %}
   <div style="border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:24px; background:var(--surface-2);">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">File Details</div>
@@ -1287,6 +1291,7 @@
     </div>
   </div>
   {% endif %}
+  {% endif %}{# end owner/admin file details gate #}
 
   {# ── Judge/contest info ──────────────────────────────────────────── #}
   {% if image.contest_result_status == 'published' and image.judge_final_score %}
