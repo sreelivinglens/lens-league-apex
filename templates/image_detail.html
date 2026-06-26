@@ -434,16 +434,16 @@
   {# ── 4 Analysis cards ────────────────────────────────── #}
   {% if _public_audit %}
   {% set _pub_c1 = (_public_audit.transferable_advice or '') | trim %}
-  {% set _pub_c2_raw = '' %}
+  {% set _pub_ns = namespace(c2_raw='') %}
   {% if _public_audit.transferable_advice %}
-    {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] %}{% set _pub_c2_raw = row[1] %}{% endif %}{% endfor %}
+    {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] %}{% set _pub_ns.c2_raw = row[1] %}{% endif %}{% endfor %}
     {# Fallback: mentor_technical is the direct per-image field for Card 2 #}
-    {% if not _pub_c2_raw %}{% set _pub_c2_raw = (_public_audit.mentor_technical or '') %}{% endif %}
+    {% if not _pub_ns.c2_raw %}{% set _pub_ns.c2_raw = (_public_audit.mentor_technical or '') %}{% endif %}
   {% else %}
-    {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] and not _pub_c1 %}{% set _pub_c1 = row[1] %}{% elif row[0] == 'Moment' and row[1] %}{% set _pub_c2_raw = row[1] %}{% endif %}{% endfor %}
-    {% if not _pub_c2_raw %}{% set _pub_c2_raw = (_public_audit.mentor_technical or '') %}{% endif %}
+    {% for row in (_public_audit.rows or []) %}{% if row[0] == 'Technical' and row[1] and not _pub_c1 %}{% set _pub_c1 = row[1] %}{% elif row[0] == 'Moment' and row[1] %}{% set _pub_ns.c2_raw = row[1] %}{% endif %}{% endfor %}
+    {% if not _pub_ns.c2_raw %}{% set _pub_ns.c2_raw = (_public_audit.mentor_technical or '') %}{% endif %}
   {% endif %}
-  {% set _pub_c2 = _pub_c2_raw | trim %}
+  {% set _pub_c2 = _pub_ns.c2_raw | trim %}
   {% set _pub_c3_raw = (_public_audit.background_check or _public_audit.byline_1 or '') | trim %}
   {% if not _pub_c3_raw %}{% for row in (_public_audit.rows or []) %}{% if row[0] == 'Next' and row[1] %}{% set _pub_c3_raw = row[1] %}{% endif %}{% endfor %}{% endif %}
   {% set _pub_c3 = _pub_c3_raw | trim %}
@@ -1132,15 +1132,10 @@
   </div>
   {% endif %}
 
-  {# ── MENTOR LOCATION INTELLIGENCE — Session 99, relocated Session 101 ──
-     Moved to the end of the page: the primary reason someone uploads is
-     to read their evaluation, so that comes first. This stays as the
-     closing "what's next" moment instead of competing with it at the top.
-     Still deliberately ungated despite sitting after the subscriber-gate
-     block above — visible to every user, free or subscribed. This is a
-     discovery/trust utility (where to shoot, what's happening nearby),
-     not the paid coaching product; the gated content above is the actual
-     reason to subscribe. #}
+  {# ── MENTOR LOCATION INTELLIGENCE — owner/admin only ──────────────
+     Location advisory is personal to the photographer (city-based,
+     personalised directions). Not appropriate to show to other visitors. #}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   {% if audit and audit.mentor_location_1 %}
   <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
@@ -1205,6 +1200,7 @@
     {% endif %}
   </div>
   {% endif %}
+  {% endif %}{# end owner/admin location advisory gate #}
 
 
   {# ── Metadata grid ───────────────────────────────────────────────── #}
@@ -1243,7 +1239,8 @@
     </div>
   </div>
 
-  {# ── EXIF block ──────────────────────────────────────────────────── #}
+  {# ── EXIF block — owner/admin only (public visitors see subscriber-gated EXIF above) #}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   {% if image.exif_camera or image.exif_settings or image.exif_date_taken %}
   <div class="exif-block">
     <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:8px;">EXIF Data</div>
@@ -1255,6 +1252,7 @@
     {% endif %}
   </div>
   {% endif %}
+  {% endif %}{# end owner/admin EXIF gate #}
 
   {# ── Technical details — owner/admin only (filename must not leak) ── #}
   {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
