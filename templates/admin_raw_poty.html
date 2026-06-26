@@ -1,5 +1,23 @@
 {% extends "base.html" %}
-{% block title %}POTY RAW Verification — Shutter League{% endblock %}
+{% block title %}
+{% block extra_css %}
+<style>
+  body { line-height: 1.6; font-size: 16px; }
+  button, .btn, a.btn { min-height: 44px; }
+  table { width: 100%; }
+  @media (max-width: 600px) {
+    table, thead, tbody, tr, th, td { display: block; }
+    td { padding: 8px 0 !important; }
+  }
+  @media (max-width: 768px) { table { font-size: 14px !important; } }
+  @media (max-width: 900px) {
+    div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+    div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    div[style*="repeat(4,1fr)"] { grid-template-columns: 1fr 1fr !important; }
+  }
+</style>
+{% endblock %}
+POTY RAW Verification — Shutter League{% endblock %}
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
@@ -7,9 +25,10 @@
 
 {% block content %}
 
+<div style="max-width:1200px;margin:0 auto;padding:0 var(--page-pad, 24px);">
 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
   <div class="page-header" style="margin-bottom:0;">
-    <h1>POTY RAW Verification</h1>
+    <h1>Annual Excellence Award — RAW Verification</h1>
     <p>Qualifying pool RAW file submission status.</p>
   </div>
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
