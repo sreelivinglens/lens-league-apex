@@ -187,11 +187,11 @@
     <div class="oi-dot"        id="dot-2"></div>
   </div>
 
-  {# ── SCREEN 1 — Genre ── #}
+  {# ── SCREEN 1 — Interests ── #}
   <div id="screen-1">
     <div class="oi-label">Your eye</div>
     <div class="oi-heading">What do you shoot?</div>
-    <div class="oi-sub">Pick exactly 3. Your first tap is your primary genre.</div>
+    <div class="oi-sub">Pick exactly 3. Your first tap is your primary interest.</div>
 
     <div class="oi-why">
       <span>📍</span>
@@ -212,7 +212,7 @@
 
     <div class="oi-other" id="other-wrap">
       <span>+</span>
-      <input type="text" id="other-input" placeholder="Don't see your genre? Type it here (e.g. Astrophotography)" maxlength="60" oninput="onOtherInput()">
+      <input type="text" id="other-input" placeholder="Don't see your interest? Type it here (e.g. Astrophotography)" maxlength="60" oninput="onOtherInput()">
     </div>
 
     <div class="oi-count" id="genre-count">0 of 3 selected</div>
@@ -232,6 +232,7 @@
         ('biweekly', 'About once a week'),
         ('monthly',  'A few times a month'),
         ('occasional','Whenever the moment finds me'),
+        ('rarely',    'Once every few months or less'),
       ] %}
       <div class="oi-option" data-freq="{{ f[0] }}" onclick="selectFreq(this)">{{ f[1] }}</div>
       {% endfor %}
