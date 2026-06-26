@@ -5757,14 +5757,16 @@ def upload():
                             _sc_primary_genre = _img.genre or ''
                             _sc_user_city     = ''
 
-                        # Portfolio summary — only when 5+ evaluated photographs
+                        # Portfolio summary — active from image 2 onwards (history-aware evaluation)
                         _sc_portfolio = None
+                        _sc_image_number = 1
                         try:
                             _sc_count = db.session.query(Image).filter(
                                 Image.user_id == _img.user_id,
                                 Image.status  == 'scored',
                             ).count()
-                            if _sc_count >= 5:
+                            _sc_image_number = _sc_count + 1
+                            if _sc_count >= 2:
                                 _sc_recent = db.session.query(
                                     Image.aq_score, Image.dm_score, Image.dod_score
                                 ).filter(
@@ -5772,7 +5774,7 @@ def upload():
                                     Image.status  == 'scored',
                                     Image.genre   == _img.genre,
                                 ).order_by(Image.scored_at.desc()).limit(8).all()
-                                if _sc_recent and len(_sc_recent) >= 2:
+                                if _sc_recent and len(_sc_recent) >= 1:
                                     _sc_recent = list(reversed(_sc_recent))
                                     _sc_portfolio = {
                                         'feeling':    [r.aq_score  for r in _sc_recent if r.aq_score  is not None],
@@ -5782,6 +5784,7 @@ def upload():
                         except Exception as _sp_err:
                             app.logger.warning(f'[auto_score] portfolio context error: {_sp_err}')
                             _sc_portfolio = None
+                            _sc_image_number = 1
 
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
@@ -5803,6 +5806,7 @@ def upload():
                             portfolio_summary = _sc_portfolio,
                             user_city         = _sc_user_city,
                             primary_genre     = _sc_primary_genre,
+                            image_number      = _sc_image_number,
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
@@ -6537,11 +6541,13 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                     app.logger.warning(f'[retry_score] on-demand discovery failed for ({_user_city}, {_od_genre}): {_od_err}')
 
             _portfolio_summary = None
+            _image_number = 1
             if _owner:
                 _scored_count = Image.query.filter(
                     Image.user_id == _owner.id, Image.status == 'scored'
                 ).count()
-                if _scored_count >= 5:
+                _image_number = _scored_count + 1
+                if _scored_count >= 2:
                     _recent = db.session.query(
                         Image.aq_score, Image.dm_score, Image.dod_score
                     ).filter(
@@ -6552,9 +6558,9 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                     if _recent:
                         _recent = list(reversed(_recent))
                         _portfolio_summary = {
-                            "feeling":    [r.aq_score  for r in _recent],
-                            "timing":     [r.dm_score  for r in _recent],
-                            "difficulty": [r.dod_score for r in _recent],
+                            "feeling":    [r.aq_score  for r in _recent if r.aq_score  is not None],
+                            "timing":     [r.dm_score  for r in _recent if r.dm_score  is not None],
+                            "difficulty": [r.dod_score for r in _recent if r.dod_score is not None],
                         }
 
             result = auto_score(
@@ -6570,6 +6576,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 portfolio_summary = _portfolio_summary,
                 user_city         = _user_city,
                 primary_genre     = _primary_genre or img.genre or '',
+                image_number      = _image_number,
             )
 
             img.dod_score        = float(result.get('dod', 0))
