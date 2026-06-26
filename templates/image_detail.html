@@ -1,4 +1,4 @@
-{# SL-VERSION: 80.0 (Session 80 — photographer watermark bottom-left, emoji_rating in score band) #}
+{# SL-VERSION: 110.4 (Session 110 — logbook print view, share + save to logbook buttons) #}
 {% extends "base.html" %}
 {% block title %}{{ image.asset_name or image.original_filename }} — {{ platform_name }}{% endblock %}
 
@@ -1062,14 +1062,168 @@
     </div>
     <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
       {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
+
+      {# ── Share button #}
       {% if image.share_token %}
-      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this evaluation card</a>
+      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
+        ↗ Share this evaluation
+      </a>
       {% else %}
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this evaluation card</a>
+      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
+        ↗ Share this evaluation
+      </a>
       {% endif %}
+
+      {# ── Save to Logbook / Print #}
+      <button onclick="window.print()" class="btn sc-share-btn" style="font-size:15px; padding:14px; text-align:center; cursor:pointer;">
+        📓 Save to my logbook
+      </button>
     </div>
   </div>
   {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════ #}
+  {# LOGBOOK PRINT VIEW — hidden on screen, shown on print              #}
+  {# Owner gets a clean, beautiful, shareable PDF of their evaluation.  #}
+  {# Every card, the photograph, the score, the assignment.            #}
+  {# Format: A4 portrait. No navigation. No buttons. Just the letter.  #}
+  {# ══════════════════════════════════════════════════════════════════ #}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and audit %}
+  <style>
+    /* ── Print styles — logbook card ──────────────────────────────── */
+    @media print {
+      /* Hide everything except the logbook */
+      body > * { display: none !important; }
+      .sl-logbook-print { display: block !important; }
+
+      /* Reset */
+      .sl-logbook-print {
+        display: block;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+        color: #1a1a18;
+        background: #fff;
+        padding: 0;
+      }
+
+      /* No links styled as links */
+      .sl-logbook-print a { color: inherit; text-decoration: none; }
+    }
+
+    /* Screen: hidden entirely */
+    @media screen {
+      .sl-logbook-print { display: none; }
+    }
+  </style>
+
+  <div class="sl-logbook-print">
+    {# ── Logbook header ──────────────────────────────────────────── #}
+    <div style="border-bottom: 3px solid #F5C518; padding-bottom: 20px; margin-bottom: 28px; display:flex; align-items:flex-end; justify-content:space-between;">
+      <div>
+        <div style="font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#888; margin-bottom:6px;">Shutter League · Evaluation Record</div>
+        <div style="font-size:28px; font-weight:700; color:#1a1a18; line-height:1.5;">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
+        <div style="font-size:14px; color:#555; margin-top:5px;">
+          {{ image.genre }}{% if image.archetype %} · {{ image.archetype }}{% endif %}
+          {% if image.scored_at %} · {{ image.scored_at.strftime('%d %B %Y') }}{% endif %}
+        </div>
+      </div>
+      <div style="text-align:right; flex-shrink:0;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888; margin-bottom:2px;">Score</div>
+        <div style="font-size:52px; font-weight:700; color:#F5C518; line-height:1; font-family:monospace;">{{ "%.2f"|format(image.score) }}</div>
+        <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#1a1a18; background:#F5C518; padding:2px 8px; border-radius:3px; display:inline-block; margin-top:4px;">{{ image.tier }}</div>
+      </div>
+    </div>
+
+    {# ── Photograph ──────────────────────────────────────────────── #}
+    {% if image.thumb_url %}
+    <div style="margin-bottom:28px; border-radius:8px; overflow:hidden; background:#1a1a18;">
+      <img src="{{ image.thumb_url }}" alt="{{ image.asset_name }}"
+           style="width:100%; max-height:420px; object-fit:contain; display:block;">
+    </div>
+    {% endif %}
+
+    {# ── Opening line ────────────────────────────────────────────── #}
+    {% set _lb_wso = audit.what_stood_out if audit.what_stood_out else audit.hard_truth %}
+    {% if _lb_wso %}
+    <div style="border-left:4px solid #F5C518; padding:16px 20px; margin-bottom:24px; background:#FFFBF0;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#854F0B; margin-bottom:8px;">What Stood Out</div>
+      <div style="font-size:18px; font-weight:700; color:#1a1a18; line-height:1.65;">{{ _lb_wso }}</div>
+    </div>
+    {% endif %}
+
+    {# ── Four cards ──────────────────────────────────────────────── #}
+    {% set _lb_cards = [
+      ('📷', '#0C447C', '#EAF0FA', 'What You Did That Others Didn\'t', audit.transferable_advice or ''),
+      ('▲',  '#27500A', '#EAF5EE', 'What Your Eye Read',              (audit.rows|selectattr(0, 'eq', 'Technical')|map(attribute=1)|first) if audit.rows else (audit.mentor_technical or '')),
+      ('◎',  '#72243E', '#F5EAF0', 'What the Score Means',            audit.background_check or audit.byline_1 or ''),
+      ('💡', '#854F0B', '#FDF3E3', 'Your Assignment Tomorrow',         audit.byline_2_body or audit.byline_2 or ''),
+    ] %}
+    {% for icon, color, bg, label, body in _lb_cards %}
+    {% if body and body.strip() %}
+    <div style="background:{{ bg }}; border-radius:10px; padding:18px 20px; margin-bottom:14px; page-break-inside:avoid;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+        <span style="font-size:14px; color:{{ color }};">{{ icon }}</span>
+        <span style="font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:{{ color }};">{{ label }}</span>
+      </div>
+      <div style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body.replace('**', '') }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {# ── DDI breakdown ───────────────────────────────────────────── #}
+    {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+    <div style="border:1px solid #E0D5B0; border-radius:10px; padding:16px 20px; margin-bottom:20px; page-break-inside:avoid;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888; margin-bottom:14px;">Dimension Breakdown</div>
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; text-align:center;">
+        {% for val, l1, l2 in [
+          (image.dod_score,        'How Difficult', 'It Was'),
+          (image.disruption_score, 'Visual',        'Disruption'),
+          (image.dm_score,         'Timing',        'Was Right'),
+          (image.wonder_score,     'Whether It',    'Moved You'),
+          (image.aq_score,         'Emotional',     'Charge'),
+        ] %}
+        <div>
+          <div style="font-size:24px; font-weight:700; color:#1a1a18; font-family:monospace;">{{ val or '—' }}</div>
+          <div style="font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; margin-top:3px;">{{ l1 }}<br>{{ l2 }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── EXIF ────────────────────────────────────────────────────── #}
+    {% if image.exif_camera or image.exif_settings %}
+    <div style="border:1px solid #E0D5B0; border-radius:10px; padding:14px 20px; margin-bottom:20px; font-family:monospace; font-size:13px; color:#555; line-height:1.8; page-break-inside:avoid;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888; margin-bottom:8px; font-family:sans-serif;">Camera & Settings</div>
+      {% if image.exif_camera %}📷 {{ image.exif_camera }}{% if image.exif_lens %} · {{ image.exif_lens }}{% endif %}<br>{% endif %}
+      {% if image.exif_settings %}⚙ {{ image.exif_settings }}<br>{% endif %}
+      {% if image.exif_date_taken %}📅 {{ image.exif_date_taken }}{% endif %}
+    </div>
+    {% endif %}
+
+    {# ── Calibration line ────────────────────────────────────────── #}
+    {% if audit.calibration_line %}
+    <div style="font-size:13px; color:#555; line-height:1.6; padding:12px 16px; background:#F8F8F5; border-radius:8px; margin-bottom:20px;">
+      {{ audit.calibration_line }}
+    </div>
+    {% endif %}
+
+    {# ── Footer ──────────────────────────────────────────────────── #}
+    <div style="border-top:1px solid #E0D5B0; padding-top:16px; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:13px; color:#888; font-family:monospace; letter-spacing:1px;">
+        {{ image.photographer_name or current_user.full_name or current_user.username }}
+        · Evaluated by Apex DDI Engine
+        · {{ image.scored_at.strftime('%d %b %Y') if image.scored_at else '' }}
+      </div>
+      <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888;">
+        shutterleague.com
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {# ── END LOGBOOK PRINT VIEW ──────────────────────────────────── #}
 
   {# ── QUOTE — rotates per image, not the same one every time ────────── #}
   {% set _master_quotes = [
