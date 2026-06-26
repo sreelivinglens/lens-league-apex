@@ -418,6 +418,8 @@ def audit_html(filepath):
         'my_gallery.html', 'base.html',
         'raw_appeal.html', 'raw_status.html', 'raw_submit.html',
         'register.html', 'login.html', 'forgot_password.html',
+        'admin_raw_detail.html', 'admin_raw_verification.html', 'admin_raw_poty.html',
+        'admin.html', 'admin_user_detail.html', 'admin_ratings.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -431,6 +433,9 @@ def audit_html(filepath):
     # false positives — documented in Session 81 handoff.
     _is_homepage = ('index.html' in fname)
     _is_email = any(x in fname for x in ['email', 'mail', 'notification', 'trigger'])
+    # Admin-only pages: KYC checks are not applicable — these pages are never
+    # seen by payment gateway reviewers and use internal terminology correctly.
+    _is_admin_page = fname.startswith('admin')
 
     # ── Hero ──────────────────────────────────────────────────────────────────
     _section('Hero structure')
@@ -825,7 +830,7 @@ def audit_html(filepath):
         _ok('[desktop] @supports used -- progressive enhancement present')
 
     # ── SL Delivery Standard (5-point) ───────────────────────────────────────
-    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page)
+    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page, is_admin_page=_is_admin_page)
 
     return _result(fails, filepath)
 
@@ -1473,7 +1478,7 @@ SCORECARD_KYC_TERMS = [
 ]
 
 
-def _run_delivery_standard(content, filepath, fails, is_detail_page=False):
+def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_admin_page=False):
     """
     SL Delivery Standard — 5-point compliance check.
     Called at end of every HTML template audit.
@@ -1500,52 +1505,57 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False):
     # Session 91: expanded from scorecard-only to full HTML. Gaps in score/rank
     # coverage discovered on live PayU submission prep — closed here.
     _section('DELIVERY STANDARD 1/5 — KYC compliance (full page)')
-    # Strip Jinja comments and logic before checking
-    stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
-    stripped = re.sub(r'\{%.*?%\}', '', stripped, flags=re.DOTALL)
-    stripped = re.sub(r'\{\{.*?\}\}', '[VAR]', stripped, flags=re.DOTALL)
-    # Strip HTML comments -- developer notes, not user-facing copy
-    stripped = re.sub(r'<!--.*?-->', '', stripped, flags=re.DOTALL)
-    # Strip <script> blocks -- JS variable names / route strings are never user-facing copy
-    stripped = re.sub(r'<script\b[^>]*>.*?</script>', '', stripped, flags=re.DOTALL)
-    # Strip <style> blocks -- CSS class names / variables are never user-facing copy
-    stripped = re.sub(r'<style\b[^>]*>.*?</style>', '', stripped, flags=re.DOTALL)
-    # Strip Python variable names and Jinja tuple literals to avoid false positives
-    stripped = re.sub(r'\b\w*_score\b|\b\w*_data\b|image\.\w+|audit\.\w+', '', stripped)
-    # Strip HTML option values (admin-only form fields)
-    stripped = re.sub(r'<option value="[^"]*">', '', stripped)
-    # Strip HTML id and class attributes -- anchor names / CSS hooks are never user-facing copy
-    stripped = re.sub(r'\s+id="[^"]*"', '', stripped)
-    stripped = re.sub(r'\s+class="[^"]*"', '', stripped)
-    stripped = re.sub(r"\s+id='[^']*'", '', stripped)
-    stripped = re.sub(r"\s+class='[^']*'", '', stripped)
-    # Strip inline style attributes -- CSS values like rgba(0,0,0,.3) are not user-facing copy
-    stripped = re.sub(r'\s+style="[^"]*"', '', stripped)
-    stripped = re.sub(r"\s+style='[^']*'", '', stripped)
-    # Strip Python string literals in Jinja set expressions (e.g. ('DoD', ...) tuples)
-    stripped = re.sub(r"'\s*DoD\s*'|'\s*DM\s*'|'\s*AQ\s*'|'\s*VD\s*'|'\s*WF\s*'", '', stripped)
+    # Admin-only pages are exempt from KYC checks — they are never seen by
+    # payment gateway reviewers and use internal terminology correctly.
+    if is_admin_page:
+        _note('KYC checks skipped — admin-only page, not user-facing')
+    else:
+        # Strip Jinja comments and logic before checking
+        stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
+        stripped = re.sub(r'\{%.*?%\}', '', stripped, flags=re.DOTALL)
+        stripped = re.sub(r'\{\{.*?\}\}', '[VAR]', stripped, flags=re.DOTALL)
+        # Strip HTML comments -- developer notes, not user-facing copy
+        stripped = re.sub(r'<!--.*?-->', '', stripped, flags=re.DOTALL)
+        # Strip <script> blocks -- JS variable names / route strings are never user-facing copy
+        stripped = re.sub(r'<script\b[^>]*>.*?</script>', '', stripped, flags=re.DOTALL)
+        # Strip <style> blocks -- CSS class names / variables are never user-facing copy
+        stripped = re.sub(r'<style\b[^>]*>.*?</style>', '', stripped, flags=re.DOTALL)
+        # Strip Python variable names and Jinja tuple literals to avoid false positives
+        stripped = re.sub(r'\b\w*_score\b|\b\w*_data\b|image\.\w+|audit\.\w+', '', stripped)
+        # Strip HTML option values (admin-only form fields)
+        stripped = re.sub(r'<option value="[^"]*">', '', stripped)
+        # Strip HTML id and class attributes -- anchor names / CSS hooks are never user-facing copy
+        stripped = re.sub(r'\s+id="[^"]*"', '', stripped)
+        stripped = re.sub(r'\s+class="[^"]*"', '', stripped)
+        stripped = re.sub(r"\s+id='[^']*'", '', stripped)
+        stripped = re.sub(r"\s+class='[^']*'", '', stripped)
+        # Strip inline style attributes -- CSS values like rgba(0,0,0,.3) are not user-facing copy
+        stripped = re.sub(r'\s+style="[^"]*"', '', stripped)
+        stripped = re.sub(r"\s+style='[^']*'", '', stripped)
+        # Strip Python string literals in Jinja set expressions (e.g. ('DoD', ...) tuples)
+        stripped = re.sub(r"'\s*DoD\s*'|'\s*DM\s*'|'\s*AQ\s*'|'\s*VD\s*'|'\s*WF\s*'", '', stripped)
 
-    # 1a. Full-page KYC_TERMS sweep (catches score, rank, gym, Mentor Marketplace etc.)
-    kyc_full_fails = 0
-    stripped_lower = stripped.lower()
-    for label, term, exclusions in KYC_TERMS:
-        cleaned = _strip_exclusions(stripped_lower, [e.lower() for e in exclusions])
-        if term.lower() in cleaned:
-            _fail(f'KYC (full page): {label}')
-            fails += 1
-            kyc_full_fails += 1
-    if kyc_full_fails == 0:
-        _ok('Full-page KYC terms -- clean')
+        # 1a. Full-page KYC_TERMS sweep (catches score, rank, gym, Mentor Marketplace etc.)
+        kyc_full_fails = 0
+        stripped_lower = stripped.lower()
+        for label, term, exclusions in KYC_TERMS:
+            cleaned = _strip_exclusions(stripped_lower, [e.lower() for e in exclusions])
+            if term.lower() in cleaned:
+                _fail(f'KYC (full page): {label}')
+                fails += 1
+                kyc_full_fails += 1
+        if kyc_full_fails == 0:
+            _ok('Full-page KYC terms -- clean')
 
-    # 1b. Scorecard-specific dimension jargon terms
-    kyc_sc_fails = 0
-    for phrase, fix in SCORECARD_KYC_TERMS:
-        if phrase.lower() in stripped.lower():
-            _fail(f'KYC: "{phrase}" in user-facing copy -- {fix}')
-            fails += 1
-            kyc_sc_fails += 1
-    if kyc_sc_fails == 0:
-        _ok('Scorecard dimension terms -- clean')
+        # 1b. Scorecard-specific dimension jargon terms
+        kyc_sc_fails = 0
+        for phrase, fix in SCORECARD_KYC_TERMS:
+            if phrase.lower() in stripped.lower():
+                _fail(f'KYC: "{phrase}" in user-facing copy -- {fix}')
+                fails += 1
+                kyc_sc_fails += 1
+        if kyc_sc_fails == 0:
+            _ok('Scorecard dimension terms -- clean')
 
     # ── 2. Mobile (≤600px) ───────────────────────────────────────────────────
     _section('DELIVERY STANDARD 2/5 — Mobile view (≤600px)')
