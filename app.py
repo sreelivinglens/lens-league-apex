@@ -681,6 +681,9 @@ def _run_startup_tasks():
                     "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
                     "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
                     "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
+                    # v-Session109 — RAW resubmission counter (max 3 attempts)
+                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS resubmit_count INTEGER DEFAULT 0",
+                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS admin_note TEXT",
                     # v35 - Re-engagement email tracking
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
                     # v34 - Scoring flash notification
@@ -9965,9 +9968,9 @@ def admin_approve_review(image_id):
 @login_required
 @admin_required
 def admin_reject_review(image_id):
-    """Reject RAW verification — image remains hidden, user notified."""
+    """Reject RAW verification — image remains hidden, submission reset, user notified with reason and re-submit link."""
     img    = Image.query.get_or_404(image_id)
-    reason = request.form.get('reason', 'RAW file not provided or did not match submitted image.').strip()
+    reason = request.form.get('reason', 'RAW file did not match the submitted image.').strip()
     img.needs_review   = True
     img.is_public      = False
     img.is_flagged     = True
@@ -9975,19 +9978,137 @@ def admin_reject_review(image_id):
     img.flagged_at     = datetime.utcnow()
     img.score          = 0.0
     img.tier           = 'Rookie'
+    # Check current resubmit count before resetting
+    _sub_check = db.session.execute(db.text(
+        'SELECT resubmit_count FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
+    ), {'iid': image_id}).fetchone()
+    _current_count = int(getattr(_sub_check, 'resubmit_count', 0) or 0) if _sub_check else 0
+    _MAX_RESUBMITS = 3
+    _final_rejection = (_current_count >= _MAX_RESUBMITS - 1)  # this rejection will exhaust all attempts
+
+    if _final_rejection:
+        # Final rejection — disqualify, no more resubmissions
+        db.session.execute(db.text(
+            "UPDATE raw_submissions SET analysis_status='rejected', "
+            "admin_decision='rejected', admin_decided_at=NOW(), "
+            "admin_note=:note "
+            "WHERE image_id=:iid AND admin_decision IS NULL"
+        ), {'note': reason + ' [FINAL — all resubmission attempts exhausted]', 'iid': image_id})
+        img.raw_disqualified = True
+    else:
+        # Reset submission record so photographer can re-submit a correct file
+        db.session.execute(db.text(
+            "UPDATE raw_submissions SET analysis_status='needs_resubmission', "
+            "admin_decision='rejected', admin_decided_at=NOW(), "
+            "admin_note=:note "
+            "WHERE image_id=:iid AND admin_decision IS NULL"
+        ), {'note': reason, 'iid': image_id})
     db.session.commit()
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-        send_email(
-            to_addresses=[_u.email] if _u else [],
-            subject='[Shutter League] RAW Verification — Image Removed',
-            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> did not pass RAW verification and has been removed. Reason: ' + reason + '</p><p>Contact <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> if this is an error.</p><p>The Shutter League Team</p>'),
-            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" did not pass RAW verification.\nReason: ' + reason + '\nContact ' + CONTACT_EMAIL + ' if this is an error.\n\nThe Shutter League Team')
-        )
+        _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+        _sub = db.session.execute(db.text(
+            'SELECT contest_type FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
+        ), {'iid': image_id}).fetchone()
+        _contest_type = (_sub.contest_type or 'weekly') if _sub else 'weekly'
+        _submit_url = f'{_site}/raw/submit/{_contest_type}/{image_id}'
+        _ititle = img.asset_name or 'Untitled'
+        if _final_rejection:
+            # Final rejection email — no re-submit link, clear explanation
+            send_email(
+                to_addresses=[_u.email] if _u else [],
+                subject=f'[Shutter League] RAW Verification — Image Disqualified ({_ititle})',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">RAW Verification</p>'
+                    '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.4;">Verification Unsuccessful</h1>'
+                    '</td></tr>'
+                    '<tr><td style="padding:24px 28px 20px;">'
+                    f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi {_uname},</p>'
+                    f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">We were unable to verify the RAW file for <strong>{_ititle}</strong> after 3 submission attempts. The image has been removed from the programme.</p>'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8E1;border-left:4px solid #F5C518;border-radius:4px;padding:16px 18px;margin:0 0 20px;">'
+                    '<tr><td>'
+                    '<p style="margin:0 0 4px;font-size:11px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Final reason</p>'
+                    f'<p style="margin:0;font-size:15px;color:#1a1a18;line-height:1.6;">{reason}</p>'
+                    '</td></tr></table>'
+                    f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 20px;">If you believe this is an error, please contact us directly — we will review your case manually.</p>'
+                    f'<p style="font-size:14px;color:#6a6458;line-height:1.6;margin:0;">Email <a href="mailto:{CONTACT_EMAIL}" style="color:#C8A84B;">{CONTACT_EMAIL}</a></p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:12px;color:#6a6458;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    f'Hi {_uname},\n\n'
+                    f'We were unable to verify the RAW file for "{_ititle}" after 3 submission attempts.\n\n'
+                    f'Final reason: {reason}\n\n'
+                    f'The image has been removed from the programme.\n\n'
+                    f'If you believe this is an error, email {CONTACT_EMAIL}.\n\n'
+                    '-- Shutter League'
+                )
+            )
+        else:
+            # Resubmission email — includes reason + fresh submit link + attempts remaining
+            _attempts_used = _current_count + 1
+            _attempts_left = _MAX_RESUBMITS - _attempts_used
+            send_email(
+                to_addresses=[_u.email] if _u else [],
+                subject=f'[Shutter League] RAW Verification — Resubmission Required for {_ititle}',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">RAW Verification</p>'
+                    '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.4;">Resubmission Required</h1>'
+                    '</td></tr>'
+                    '<tr><td style="padding:24px 28px 20px;">'
+                    f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi {_uname},</p>'
+                    f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Your RAW file for <strong>{_ititle}</strong> could not be verified. Please resubmit the correct original file.</p>'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8E1;border-left:4px solid #F5C518;border-radius:4px;padding:16px 18px;margin:0 0 20px;">'
+                    '<tr><td>'
+                    '<p style="margin:0 0 4px;font-size:11px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Reason</p>'
+                    f'<p style="margin:0;font-size:15px;color:#1a1a18;line-height:1.6;">{reason}</p>'
+                    '</td></tr></table>'
+                    f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 8px;">Please submit the original unedited file straight from your camera or phone gallery. The filename does not matter — what matters is that the file is the original capture.</p>'
+                    f'<p style="font-size:13px;color:#6a6458;line-height:1.6;margin:0 0 20px;">You have <strong>{_attempts_left} resubmission attempt{"s" if _attempts_left != 1 else ""}</strong> remaining out of 3 total.</p>'
+                    f'<p style="margin:0 0 8px;text-align:center;"><a href="{_submit_url}" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Resubmit RAW File &#8594;</a></p>'
+                    f'<p style="font-size:12px;color:#6a6458;text-align:center;margin:8px 0 18px;">Or visit: <a href="{_submit_url}" style="color:#C8A84B;">{_submit_url}</a></p>'
+                    f'<p style="font-size:14px;color:#6a6458;line-height:1.6;margin:0;">Questions? Email <a href="mailto:{CONTACT_EMAIL}" style="color:#C8A84B;">{CONTACT_EMAIL}</a></p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:12px;color:#6a6458;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    f'Hi {_uname},\n\n'
+                    f'Your RAW file for "{_ititle}" could not be verified.\n\n'
+                    f'Reason: {reason}\n\n'
+                    f'Please resubmit the original unedited file from your camera or phone gallery.\n\n'
+                    f'You have {_attempts_left} resubmission attempt{{"s" if _attempts_left != 1 else ""}} remaining.\n\n'
+                    f'Resubmit here: {_submit_url}\n\n'
+                    f'Questions? Email {CONTACT_EMAIL}\n\n'
+                    '-- Shutter League'
+                )
+            )
     except Exception as _me:
         app.logger.error(f'[reject review email error] {_me}')
-    flash(f'Image "{img.asset_name}" rejected — user notified.', 'warning')
+    if _final_rejection:
+        flash(f'Image "{img.asset_name}" disqualified — all 3 attempts exhausted. Photographer notified.', 'error')
+    else:
+        flash(f'Image "{img.asset_name}" rejected — resubmission link sent to photographer ({_current_count + 1}/3 attempts used).', 'warning')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
@@ -15567,9 +15688,31 @@ def raw_submit(contest_type, image_id):
     existing = db.session.execute(db.text(
         "SELECT * FROM raw_submissions WHERE image_id=:iid AND contest_type=:ct LIMIT 1"
     ), {'iid': image_id, 'ct': contest_type}).fetchone()
-    if existing and existing.submitted_at:
+    # Only lock the submission page if a submission is genuinely pending or approved.
+    # If the previous submission was rejected or flagged for resubmission, allow a fresh upload —
+    # unless the photographer has already used all 3 attempts.
+    _MAX_RESUBMITS = 3
+    _resubmit_count = int(getattr(existing, 'resubmit_count', 0) or 0) if existing else 0
+    _resubmit_allowed = (
+        existing and
+        existing.analysis_status in ('rejected', 'needs_resubmission') and
+        _resubmit_count < _MAX_RESUBMITS
+    )
+    _resubmit_exhausted = (
+        existing and
+        existing.analysis_status in ('rejected', 'needs_resubmission') and
+        _resubmit_count >= _MAX_RESUBMITS
+    )
+    if _resubmit_exhausted:
+        # Photographer has used all 3 attempts — show disqualification page
         return render_template('raw_submit.html', img=img, existing=existing,
-                               contest_type=contest_type, already_submitted=True)
+                               contest_type=contest_type, already_submitted=False,
+                               resubmit_exhausted=True, resubmit_count=_resubmit_count,
+                               max_resubmits=_MAX_RESUBMITS)
+    if existing and existing.submitted_at and not _resubmit_allowed:
+        return render_template('raw_submit.html', img=img, existing=existing,
+                               contest_type=contest_type, already_submitted=True,
+                               resubmit_count=_resubmit_count, max_resubmits=_MAX_RESUBMITS)
 
     if request.method == 'POST':
         method       = request.form.get('method', 'upload')
@@ -15605,14 +15748,18 @@ def raw_submit(contest_type, image_id):
             ), {'iid': image_id, 'ct': contest_type}).fetchone()
             if _ex_ref:
                 contest_ref = _ex_ref.contest_ref or ''
+        # Determine if this is a resubmission (previous rejected/needs_resubmission)
+        _is_resubmit = existing and existing.analysis_status in ('rejected', 'needs_resubmission')
         db.session.execute(db.text(
             "INSERT INTO raw_submissions "
-            "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status) "
-            "VALUES (:iid, :uid, :cr, :ct, :meth, :fk, :lnk, NOW(), 'pending') "
+            "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status, resubmit_count) "
+            "VALUES (:iid, :uid, :cr, :ct, :meth, :fk, :lnk, NOW(), 'pending', 0) "
             "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE "
-            "SET submission_method=:meth, raw_file_key=:fk, raw_link=:lnk, submitted_at=NOW(), analysis_status='pending'"
+            "SET submission_method=:meth, raw_file_key=:fk, raw_link=:lnk, submitted_at=NOW(), analysis_status='pending', "
+            "resubmit_count = CASE WHEN :is_resubmit THEN COALESCE(raw_submissions.resubmit_count, 0) + 1 ELSE raw_submissions.resubmit_count END"
         ), {'iid': image_id, 'uid': current_user.id, 'cr': contest_ref,
-            'ct': contest_type, 'meth': method, 'fk': raw_file_key, 'lnk': raw_link})
+            'ct': contest_type, 'meth': method, 'fk': raw_file_key, 'lnk': raw_link,
+            'is_resubmit': _is_resubmit})
         db.session.commit()
 
         # Fetch the submission ID for the background thread
@@ -15639,7 +15786,9 @@ def raw_submit(contest_type, image_id):
         return redirect(url_for('raw_status', image_id=image_id))
 
     return render_template('raw_submit.html', img=img, existing=existing,
-                           contest_type=contest_type, already_submitted=False)
+                           contest_type=contest_type, already_submitted=False,
+                           resubmit_count=_resubmit_count, max_resubmits=_MAX_RESUBMITS,
+                           attempts_remaining=(_MAX_RESUBMITS - _resubmit_count))
 
 
 # JPEG Provenance Verification
@@ -16454,7 +16603,8 @@ def admin_bulk_request_raw():
 @login_required
 @admin_required
 def admin_raw_send_reminder(image_id):
-    """Manually send a RAW submission reminder to the photographer."""
+    """Manually send a RAW submission reminder to the photographer.
+    Guard: will not send if a submission is already pending or approved — prevents confusing duplicate emails."""
     img   = Image.query.get_or_404(image_id)
     owner = User.query.get(img.user_id)
     if not owner:
@@ -16463,6 +16613,14 @@ def admin_raw_send_reminder(image_id):
     sub = db.session.execute(db.text(
         'SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
     ), {'iid': image_id}).fetchone()
+    # Do not send reminder if submission is already pending or approved — photographer has already acted
+    if sub and sub.analysis_status in ('pending', 'approved', 'manual_review'):
+        flash(
+            f'Reminder not sent — a submission is already {sub.analysis_status} for this image. '
+            f'Use the admin RAW detail page to take action on the existing submission.',
+            'warning'
+        )
+        return redirect(url_for('admin_raw_detail', image_id=image_id))
     deadline_str  = (sub.deadline + _IST_OFFSET).strftime('%d %B %Y, %H:%M IST') if (sub and sub.deadline) else '—'
     contest_type  = (sub.contest_type or 'weekly') if sub else 'weekly'
     site_url      = os.getenv('SITE_URL', 'https://shutterleague.com')
