@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Appeal RAW Decision — {{ img.asset_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+  @media (max-width: 600px) {
+    .page-header h1 { font-size: 24px; }
+  }
+  .btn, .btn-solid { min-height: 44px; }
+  body { line-height: 1.7; font-size: 16px; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header" style="margin-bottom:32px;">
-  <h1>Appeal RAW Disqualification</h1>
+  <h1>Appeal This Decision</h1>
   <p>{{ img.asset_name }} &middot; {{ img.genre }}</p>
 </div>
 
@@ -20,7 +30,7 @@
     </div>
     <div style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);display:flex;gap:16px;">
       <span>{{ img.genre }}</span>
-      {% if img.score %}<span style="color:var(--gold);">DDI: {{ img.score }}</span>{% endif %}
+      {% if img.score %}<span style="color:var(--gold);">{{ img.score }}</span>{% endif %}
     </div>
   </div>
 </div>
@@ -30,10 +40,10 @@
             padding:20px 24px;max-width:680px;margin-bottom:24px;">
   <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;
               color:var(--red);text-transform:uppercase;margin-bottom:10px;">
-    ⚠ Provisionally Disqualified
+    ⚠ Provisionally Flagged
   </div>
   <p style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin:0 0 12px;">
-    Our automated system flagged your RAW file for the following reason(s):
+    Our system flagged your RAW file. Here is what it found:
   </p>
   <ul style="margin:0;padding-left:20px;">
     {% if submission.auto_flag_reasons %}{% for reason in submission.auto_flag_reasons.split(' | ') %}
@@ -50,13 +60,10 @@
     Submit an Appeal
   </div>
   <p style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">
-    If you believe this automated decision is incorrect, you may appeal within
-    <strong style="color:var(--text-primary);">48 hours</strong> of the disqualification.
-    Our admin team will personally download your RAW file and compare it with your submitted image.
+    If you think the system got this wrong, you can appeal within <strong style="color:var(--text-primary);">48 hours</strong>. A member of our team will personally download and compare your RAW file with your submitted image.
   </p>
   <p style="font-size:15px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;">
-    By submitting this appeal you confirm that your RAW file is the original, unaltered capture
-    corresponding to the submitted image.
+    By appealing you are confirming that the file you submitted is the original, unaltered capture for this image.
   </p>
 
   <form method="POST" action="{{ url_for('raw_appeal', image_id=img.id) }}">
@@ -74,9 +81,7 @@
 
 <div style="max-width:680px;">
   <p style="font-size:14px;color:var(--text-muted);line-height:1.7;">
-    Appeal window closes 48 hours after the automated decision.
-    If your appeal is successful, your image will be reinstated and your result confirmed.
-    If your appeal is unsuccessful, the disqualification stands and the matter is closed.
+    The appeal window closes 48 hours after the automated decision. If successful, your image is reinstated and your result confirmed. If not, the decision stands and the matter is closed. Either way, you will be notified by email.
   </p>
 </div>
 {% endblock %}
