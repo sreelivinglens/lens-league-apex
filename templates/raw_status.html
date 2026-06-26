@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 {% block title %}RAW Verification Status — Shutter League{% endblock %}
 
+{% block extra_css %}
+<style>
+  @media (max-width: 600px) {
+    .page-header h1 { font-size: 24px; }
+  }
+  .btn, .btn-solid { min-height: 44px; }
+  body { line-height: 1.7; font-size: 16px; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div style="max-width:640px; margin:0 auto;">
 
@@ -20,7 +30,7 @@
       <div style="font-family:var(--font-mono); font-size:16px; color:var(--gold);">{{ img.genre or '—' }}</div>
       {% if img.score %}
       <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-muted);">
-        DDI: {{ '%.2f'|format(img.score) }}
+        Evaluation: {{ '%.2f'|format(img.score) }}
       </div>
       {% endif %}
     </div>
@@ -32,9 +42,9 @@
   <div style="padding:28px; background:var(--surface-2); border:1px solid var(--border);
               border-radius:var(--radius-md); text-align:center; margin-bottom:24px;">
     <div style="font-size:40px; margin-bottom:14px;">📁</div>
-    <div style="font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:10px;">No RAW Submitted Yet</div>
+    <div style="font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:10px;">RAW File Needed</div>
     <div style="font-size:18px; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
-      Your programme result is provisional. Please submit your original RAW file to confirm your standing.
+      Your result is provisional until we can verify the original file. This is a standard step — it takes less than 48 hours once submitted.
     </div>
     <a href="{{ url_for('raw_submit', contest_type='contest', image_id=img.id) }}"
        class="btn btn-solid" style="padding:15px 32px; font-size:18px;">
@@ -55,7 +65,7 @@
     <div style="font-size:22px; font-weight:700; color:var(--green); margin-bottom:10px;">Appeal Successful — Image Reinstated</div>
     <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
       Our admin team reviewed your RAW file and found the automated flag was incorrect.
-      Your image is reinstated and your DDI score of
+      Your image is reinstated and your evaluation of
       <strong style="color:var(--gold);">{{ '%.2f'|format(img.score) if img.score }}</strong> stands confirmed.
     </div>
   </div>
@@ -71,7 +81,7 @@
       {% if submission.appeal_admin_note %}
       <br><br><strong>Reason:</strong> {{ submission.appeal_admin_note }}
       {% endif %}
-      <br><br>Your account remains active and all your other scores are unaffected.
+      <br><br>Your account remains active and all your other results are unaffected.
     </div>
   </div>
 
@@ -132,14 +142,29 @@
   {# Resubmit requested #}
   <div style="padding:24px; background:rgba(184,112,10,0.06); border:1px solid var(--amber);
               border-radius:var(--radius-md); margin-bottom:24px;">
-    <div style="font-size:22px; font-weight:700; color:var(--amber); margin-bottom:10px;">⚠ Resubmission Required</div>
+    <div style="font-size:22px; font-weight:700; color:var(--amber); margin-bottom:10px;">⚠ File Resubmit Required</div>
     <div style="font-size:18px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">
       There was an issue with your RAW file. Please resubmit within 24 hours.
-      {% if submission.admin_notes %}<br><strong>Reason:</strong> {{ submission.admin_notes }}{% endif %}
+      {% if submission.admin_note %}<br><strong>Reason:</strong> {{ submission.admin_note }}{% endif %}
     </div>
     <a href="{{ url_for('raw_submit', contest_type=submission.contest_type or 'contest', image_id=img.id) }}"
        class="btn btn-solid" style="padding:13px 28px; font-size:18px;">
       Resubmit RAW →
+    </a>
+  </div>
+
+  {% elif submission.analysis_status == 'needs_resubmission' %}
+  {# Admin rejected — resubmission required, attempts remain #}
+  <div style="padding:24px; background:rgba(184,112,10,0.06); border:1px solid var(--amber);
+              border-radius:var(--radius-md); margin-bottom:24px;">
+    <div style="font-size:22px; font-weight:700; color:var(--amber); margin-bottom:10px;">⚠ File Resubmit Required</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7; margin-bottom:12px;">
+      There was an issue with your RAW file. Check your email for the reason and a direct resubmit link.
+      {% if submission.admin_note %}<br><br><strong>Reason:</strong> {{ submission.admin_note }}{% endif %}
+    </div>
+    <a href="{{ url_for('raw_submit', contest_type=submission.contest_type or 'weekly', image_id=img.id) }}"
+       class="btn btn-solid" style="padding:13px 28px; font-size:18px; min-height:44px;">
+      Resubmit RAW File →
     </a>
   </div>
 
@@ -158,7 +183,7 @@
   <!-- Submission details -->
   <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:22px 26px;">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
-                text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">Submission Details</div>
+                text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">File Details</div>
     {% for label, value in [
       ('Programme',   (submission.contest_ref or '—') + (' · ' + submission.contest_type | title if submission.contest_type else '')),
       ('Method',    submission.submission_method | title if submission.submission_method else '—'),
