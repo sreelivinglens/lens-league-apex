@@ -1,5 +1,5 @@
-# SL-VERSION: 110.1 (Session 110 — R2-FIX: upload original JPEG to originals/ prefix before
-#   ephemeral delete; stored_filename now full R2 key; stage4 backward compat retained)
+# SL-VERSION: 110.2 (Session 110 — R2-FIX: originals/ R2 key; stage4 model fix:
+#   claude-sonnet-4-20250514 → claude-sonnet-4-6)
 import os
 import re
 import uuid
@@ -17415,7 +17415,7 @@ def _run_raw_analysis(submission, img):
                 ) if diff_b64 else ''
 
                 _vision_payload = {
-                    'model': 'claude-sonnet-4-20250514',
+                    'model': 'claude-sonnet-4-6',
                     'max_tokens': 500,
                     'messages': [{
                         'role': 'user',
