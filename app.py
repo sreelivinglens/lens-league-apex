@@ -1,4 +1,4 @@
-# SL-VERSION: 109.0 (Session 109 — RAW resubmission system, email spam fix, template audit)
+# SL-VERSION: 109.1 (Session 109 — RAW resubmission system, email spam fix, template audit)
 #   context block, portfolio trend all-genre fallback)
 import os
 import re
