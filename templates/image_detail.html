@@ -631,11 +631,11 @@
         {% set _master_sent = _remainder %}
         {% set _after = '' %}
       {% endif %}
-      {% if _before %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _before }}</p>{% endif %}
-      {% if _master_sent %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify; font-weight:700;">{{ _master_sent }}</p>{% endif %}
-      {% if _after %}<p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _after }}</p>{% endif %}
+      {% if _before %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _before | replace('**', '') }}</p>{% endif %}
+      {% if _master_sent %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify; font-weight:700;">{{ _master_sent | replace('**', '') }}</p>{% endif %}
+      {% if _after %}<p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _after | replace('**', '') }}</p>{% endif %}
     {% else %}
-      <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _c1_text }}</p>
+      <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _c1_text | replace('**', '') }}</p>
     {% endif %}
   </div>
   {% endif %}
