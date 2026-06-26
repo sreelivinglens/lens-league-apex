@@ -1,4 +1,4 @@
-# SL-VERSION: 73.1 (Session 73 — fixed _u UnboundLocalError in seasonal
+# SL-VERSION: 109.0 (Session 109 — RAW resubmission system, email spam fix, template audit)
 #   context block, portfolio trend all-genre fallback)
 import os
 import re
@@ -15568,7 +15568,14 @@ def raw_confirm(contest_type, image_id):
 def raw_submit(contest_type, image_id):
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id:
-        abort(403)
+        # Not the image owner — show friendly message instead of bare 403
+        # Admin can access for testing but cannot submit on behalf of photographer
+        if current_user.role == 'admin':
+            flash('Admin view — this image belongs to another user. You cannot submit on their behalf.', 'info')
+            return redirect(url_for('admin_raw_detail', image_id=image_id))
+        # Regular user — redirect to login in case they are logged into wrong account
+        flash('This image belongs to a different account. Please log in with the correct account to submit your RAW file.', 'warning')
+        return redirect(url_for('login', next=request.url))
     # Allow RAW submission if: admin flagged it required, OR user arrived via contest RAW link
     # Do NOT block — if user has the link, they were directed here intentionally
     if not getattr(img, 'raw_verification_required', False):
