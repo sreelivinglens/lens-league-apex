@@ -1,5 +1,7 @@
 """
-# SL-VERSION: 110.7 (Session 110 — all four cards + edit fields: bullet format throughout;
+# SL-VERSION: 110.8 (Session 110 — EXIF hallucination gate: Card 2 must never invent
+#   settings when EXIF is partial/absent; hero headline: bold removed, pre-line added;
+#   previously: all four cards + edit fields: bullet format throughout;
 #   edit_base/edit_creative: removed score promise numbers ("Adds 0.X"), explain WHY not WHAT;
 #   transferable_advice/byline_1/byline_2/mentor_technical: all bulleted, blank line between;
 #   card labels consistent with 110.5 template labels)
@@ -766,7 +768,20 @@ Return this exact JSON structure:
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
   "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. FAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. If uncertain, do NOT mention species at all. Write around it — describe behaviour, light, moment. WILDLIFE BEHAVIOUR RULE: if species research block is present, name the species geographic rarity and why this frame matters. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
-  "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. BULLET FORMAT — 3 bullets. Each bullet is 2 lines: observation + what it means. Blank line between bullets. EXIF-INFORMED: read focal length, aperture, shutter, ISO, time of day before writing. Apply sharpness chain, composition, time-of-day, catchlight rules (see above). FORMAT:\n\n▪ [One observation about what the settings/timing/position reveal.]\n  [One sentence: what this means. What to try next time.]\n\n▪ [Second observation.]\n  [What to try.]\n\n▪ [Third — strongest strength or clearest gap.]\n  [What this means going forward.]>",
+  "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. BULLET FORMAT — 3 bullets. Each bullet is 2 lines: observation + what it means. Blank line between bullets.
+
+CRITICAL EXIF HONESTY RULE: If the EXIF context says partial camera data, metadata missing, or no specific values are confirmed — DO NOT INVENT SETTINGS. Never write 1/1600s with a 600mm lens unless those exact values appear in the EXIF block. A wrong setting stated confidently destroys trust immediately. If EXIF is absent or partial: write around what is VISUALLY OBSERVABLE only — composition, light, subject placement, background quality. Apply sharpness chain, time-of-day, catchlight rules ONLY when the relevant EXIF values are explicitly confirmed.
+
+FORMAT:
+
+▪ [If EXIF confirmed: about settings and what they reveal. If EXIF absent/partial: about what is visually evident.]
+  [What this means. What to try next time.]
+
+▪ [Compositional or light observation.]
+  [What to try.]
+
+▪ [Strongest strength or clearest gap.]
+  [What this means going forward.]>",
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
   "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max. No positional corrections.>",
   "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs.\n\n▪ [What this score level means for this photographer in plain English — one sentence.]\n\n▪ [What 9+ looks like for this specific image — concrete visual description, two sentences max.]\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
