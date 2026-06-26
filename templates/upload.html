@@ -147,7 +147,7 @@
   .shot-on-option input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary); }
   .shot-on-option input[type="radio"]:checked + label .shot-text { color: #2C3E6B; }
   .shot-on-option label:hover { border-color: var(--border-strong); background: #111111; }
-  .shot-on-required-hint { font-size: 16px; color: var(--red); margin-top: 6px; display: none; }
+  .shot-on-required-hint { font-size: 16px; font-weight: 600; color: var(--red); margin-top: 8px; display: none; background: rgba(220,53,69,0.08); padding: 6px 10px; border-radius: 4px; border-left: 3px solid var(--red); }
 
   .legal-box {
     margin-top: 24px; padding: 16px 18px; background: #F5F0E8;
@@ -371,7 +371,7 @@
 <div class="upload-wrap">
   <div class="page-header">
     <h1>Upload Image</h1>
-    <p>Upload your photograph and get a detailed score with feedback.</p>
+    <p>Upload your photograph and get a detailed evaluation with feedback.</p>
   </div>
 
   <!-- ── UPLOAD CAROUSEL ── -->
@@ -454,7 +454,7 @@
       <div class="form-group">
         <label for="genre">What did you photograph?</label>
         <select id="genre" name="genre">
-          <option value="" selected hidden>Select a genre…</option>
+          <option value="" selected hidden>Select an interest…</option>
           {% if genre_choices %}
             {% for gid, glabel in genre_choices %}
             <option value="{{ gid }}">{{ glabel }}</option>
@@ -543,14 +543,14 @@
         <label for="legal_declaration">
           I confirm this is my original photograph and not AI-generated. I understand any image may be selected for RAW verification and that fraud results in permanent account deletion and forfeiture of all awards. I agree to the
           <a href="/terms" target="_blank">Terms &amp; Conditions</a> and
-          <a href="/contest-rules" target="_blank">Programme Rules</a>.
+          <a href="/programme-rules" target="_blank">Programme Rules</a>.
         </label>
       </div>
 
       <div style="margin-top:16px; padding:16px 18px; background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div>
-          <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Leaderboard</div>
-          <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); letter-spacing:.5px;">Hidden images are scored privately.</div>
+          <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Programme Standings</div>
+          <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); letter-spacing:.5px;">Hidden images are evaluated privately.</div>
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
