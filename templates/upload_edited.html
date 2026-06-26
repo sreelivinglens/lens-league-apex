@@ -23,7 +23,7 @@
   font-weight: 700;
   margin: 0 0 6px;
   color: var(--text-primary);
-  line-height: 1.2;
+  line-height: 1.5;
 }
 .ue-header p {
   font-size: 16px;
@@ -64,7 +64,7 @@
 }
 .ue-version-label {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--gold);
@@ -81,7 +81,7 @@
   color: var(--text-secondary);
 }
 .ue-version-private {
-  font-size: 12px;
+  font-size: 13px;
   font-family: var(--font-mono);
   color: var(--text-secondary);
   opacity: 0.6;
@@ -98,7 +98,7 @@
 }
 .ue-label {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text-primary);
@@ -195,16 +195,16 @@
   {# ── Wallet balance summary ──────────────────────────────────── #}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);flex-wrap:wrap;gap:8px;">
     <div style="font-size:14px;color:var(--text-secondary);">
-      <span style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:0.6;">Your Balance</span>
+      <span style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:0.6;">Your Balance</span>
       <span style="font-size:20px;font-weight:700;color:var(--text-primary);margin-left:10px;">{{ points_balance }} pts</span>
-      <span style="font-size:13px;color:var(--text-secondary);margin-left:6px;">(≈ ₹{{ (points_balance * 0.1) | int }})</span>
+      <span style="font-size:14px;color:var(--text-secondary);margin-left:6px;">(≈ ₹{{ (points_balance * 0.1) | int }})</span>
     </div>
     {% if version_num == 2 %}
-    <div style="font-size:13px;font-family:var(--font-mono);color:#14532D;background:#F0FDF4;border:1px solid #86EFAC;padding:4px 12px;border-radius:20px;font-weight:700;">🎁 This edit is FREE — subsequent edits cost {{ edit_pts_cost }} pts each</div>
+    <div style="font-size:14px;font-family:var(--font-mono);color:#14532D;background:#F0FDF4;border:1px solid #86EFAC;padding:4px 12px;border-radius:20px;font-weight:700;">🎁 This edit is FREE — subsequent edits cost {{ edit_pts_cost }} pts each</div>
     {% elif points_balance >= edit_pts_cost %}
-    <div style="font-size:13px;font-family:var(--font-mono);color:#1E3A5F;background:#EFF6FF;border:1px solid #93C5FD;padding:4px 12px;border-radius:20px;font-weight:700;">💳 {{ edit_pts_cost }} pts will be deducted</div>
+    <div style="font-size:14px;font-family:var(--font-mono);color:#1E3A5F;background:#EFF6FF;border:1px solid #93C5FD;padding:4px 12px;border-radius:20px;font-weight:700;">💳 {{ edit_pts_cost }} pts will be deducted</div>
     {% else %}
-    <div style="font-size:13px;font-family:var(--font-mono);color:#7C4A00;background:#FFF7ED;border:1px solid #FBBF24;padding:4px 12px;border-radius:20px;font-weight:700;">⚠ 1 upload slot will be used</div>
+    <div style="font-size:14px;font-family:var(--font-mono);color:#7C4A00;background:#FFF7ED;border:1px solid #FBBF24;padding:4px 12px;border-radius:20px;font-weight:700;">⚠ 1 upload slot will be used</div>
     {% endif %}
   </div>
 
@@ -224,9 +224,9 @@
         <div class="ue-version-score">{{ '%.2f'|format(v.score) }}</div>
         <div class="ue-version-tier">{{ v.tier or '' }}</div>
         {% elif v.status == 'processing' %}
-        <div class="ue-version-score" style="font-size:12px;opacity:0.6;">Scoring…</div>
+        <div class="ue-version-score" style="font-size:13px;opacity:0.6;">Scoring…</div>
         {% else %}
-        <div class="ue-version-score" style="font-size:12px;opacity:0.5;">Pending</div>
+        <div class="ue-version-score" style="font-size:13px;opacity:0.5;">Pending</div>
         {% endif %}
         {% if not v.is_public %}
         <div class="ue-version-private">Private</div>
@@ -235,10 +235,13 @@
     </a>
     {% endfor %}
     {# New version slot #}
-    <div class="ue-version-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:100px;opacity:0.4;">
+    <div class="ue-version-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:100px;cursor:pointer;"
+         onclick="document.getElementById('drop-zone').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){document.getElementById('drop-zone').style.borderColor='var(--gold)';document.getElementById('drop-zone').style.background='rgba(245,197,24,0.04)';},400);"
+         title="Click to upload V{{ version_num }}">
       <div style="text-align:center;padding:12px;">
         <div style="font-size:24px;">+</div>
-        <div style="font-size:12px;font-family:var(--font-mono);">V{{ version_num }}</div>
+        <div style="font-size:13px;font-family:var(--font-mono);">V{{ version_num }}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Click to upload</div>
       </div>
     </div>
   </div>
@@ -272,7 +275,7 @@
       <strong>⛔ No points or upload slots available</strong><br>
       You have {{ points_balance }} pts ({{ edit_pts_cost }} pts needed to redeem with points) and no upload slots remaining this month.
       <ul style="margin:10px 0 10px;padding-left:20px;line-height:2.2;">
-        <li><strong>Top-up ₹99</strong> (or 1,000 pts) — get 5 scored images, use one for this edit — <a href="{{ url_for('pricing') }}" style="color:#7F1D1D;font-weight:700;">Top up →</a></li>
+        <li><strong>Top-up ₹99</strong> (or 1,000 pts) — get 5 evaluated photographs, use one for this edit — <a href="{{ url_for('pricing') }}" style="color:#7F1D1D;font-weight:700;">Top up →</a></li>
         <li><strong>Subscribe from ₹99/mo</strong> — 8 images/month included, no per-edit fees — <a href="{{ url_for('pricing') }}" style="color:#7F1D1D;font-weight:700;">See plans →</a></li>
         <li><strong>Rate peer images</strong> — earn 10 pts per rating, 10 pts unlocks this edit — <a href="{{ url_for('rate') }}" style="color:#7F1D1D;font-weight:700;">Rate now →</a></li>
       </ul>
@@ -302,7 +305,7 @@
       <div class="ue-info-box">
         <strong>Before you upload:</strong>
         <ul style="margin:8px 0 0;padding-left:20px;line-height:2;">
-          <li>Your edited version scores independently — it does not replace the original.</li>
+          <li>Your edited version is evaluated independently — it does not replace the original.</li>
           <li>It starts <strong>private</strong>. You decide if and when to make it public.</li>
           <li>The <strong>highest-scoring version</strong> automatically counts toward your programme standing.</li>
           <li>
@@ -322,18 +325,17 @@
       <div style="margin-bottom:20px;padding:14px 16px;background:#FFF8E8;border:1px solid #E8D08A;border-radius:var(--radius-sm);font-size:14px;line-height:1.7;color:#4A4020;">
         <strong style="display:block;margin-bottom:6px;">Important — please read before uploading</strong>
         Edit guidance provided by the Apex DDI Engine is <strong>directional feedback</strong> to help you improve your craft —
-        it is not a guarantee of a higher score. Each version is scored independently on its own merits.
-        An edited version may score higher, lower, or the same as the original depending on the changes made.
+        it is not a guarantee of a higher evaluation result. Each version is assessed independently on its own merits.
+        An edited version may result in a higher, lower, or equal evaluation depending on the changes made.
         <br><br>
-        By uploading an edited version, you acknowledge that <strong>Shutter League does not guarantee score
-        improvement</strong> and is not liable for outcomes on re-scored images. Your original score is
+        By uploading an edited version, you acknowledge that <strong>Shutter League does not guarantee an improved evaluation</strong> and is not liable for outcomes on re-assessed images. Your original result is
         preserved and continues to count toward your standing regardless of the edited version's result.
       </div>
 
       <div style="margin-bottom:16px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:14px;line-height:1.6;color:var(--text-primary);">
           <input type="checkbox" id="ack-checkbox" style="margin-top:3px;flex-shrink:0;width:16px;height:16px;cursor:pointer;" onchange="updateUploadBtn()">
-          <span>I understand that edit guidance is directional and <strong>Shutter League does not guarantee a higher score</strong>. I accept that the assessment outcome is independent and final.
+          <span>I understand that edit guidance is directional and <strong>Shutter League does not guarantee a higher evaluation result</strong>. I accept that the assessment outcome is independent and final.
           {% if version_num > 2 %}
             {% if points_balance >= edit_pts_cost %}
               I authorise the deduction of <strong>{{ edit_pts_cost }} points (≈ ₹{{ (edit_pts_cost * 0.1) | int }})</strong> from my balance.
@@ -345,7 +347,7 @@
         </label>
       </div>
 
-      <button type="submit" class="ue-submit" id="upload-btn" disabled>Upload &amp; Score V{{ version_num }} →</button>
+      <button type="submit" class="ue-submit" id="upload-btn" disabled>Evaluate V{{ version_num }} →</button>
       <a href="{{ url_for('image_detail', image_id=parent.id) }}" class="ue-back">← Cancel</a>
     </div>
 
@@ -376,7 +378,13 @@ function updateUploadBtn() {
     updateUploadBtn();
   }
 
-  input.addEventListener('change', () => { showFile(input.files[0]); updateUploadBtn(); });
+  input.addEventListener('change', () => {
+    showFile(input.files[0]);
+    updateUploadBtn();
+    // Reset gold highlight once user has interacted with the drop zone
+    dropZone.style.borderColor = '';
+    dropZone.style.background = '';
+  });
 
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
