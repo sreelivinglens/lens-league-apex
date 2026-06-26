@@ -1,5 +1,8 @@
 """
-# SL-VERSION: 110.3 (Session 110 — full mentor scorecard redesign:
+# SL-VERSION: 110.4 (Session 110 — max_tokens 2500→4000: new mentor fields generate
+#   ~3500+ tokens, 2500 caused truncation mid-string (JSONDecodeError char 9565);
+#   hard length caps added to mentor_location_1/2/3 (3 sentences max),
+#   byline_1 (3 paragraphs max), byline_2 (3 sentences max))
 #   score-range opening register, EXIF detective logic, sharpness chain,
 #   composition inference, famous location gate, catchlight rule,
 #   award-winning 9+ gap analysis, score plain-English growth map,
@@ -744,8 +747,8 @@ Return this exact JSON structure:
   "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. Three bullets. Each bullet: what the eye/camera did + what it means for next time. Separated by blank lines. EXIF-INFORMED: read the actual focal length, aperture, shutter, ISO, and time of day before writing. SHARPNESS CHAIN: if focal_length >= 200mm and shutter slow — address it directly and plainly (see rules above). COMPOSITION: if subject is centred, address it (see rules above). TIME OF DAY: read EXIF datetime and give time-specific advice (see rules above). CATCHLIGHT: if living subject present, address catchlight (see rules above). FORMAT example:\n\n▪ [Observation about what the settings/timing/position tell us.]\n  [One sentence: what this means. What to do differently.]\n\n▪ [Second observation.]\n  [What to do.]\n\n▪ [Third observation — strongest strength or clearest gap.]\n  [What this means for next time.]>",
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why this instant was the one. For lower scores: name the specific moment that would have been stronger. Return null if moment is not relevant to genre.>",
   "mentor_next": "<ONE creative direction — framed as possibility, never correction. For Soul Bonus: what would make the next image in this series untouchable. For lower scores: redirect the creative energy toward one specific thing. No positional corrections (shift right, move left). Two sentences max.>",
-  "byline_1": "<CARD 3 — WHAT THE SCORE MEANS AND HOW TO REACH 9+. This card answers the question the photographer is really asking: how do I make this award-winning? FORMAT: use line breaks between sections. Structure:\n\n[Plain English description of the score in growth terms — what does this score level mean for where the photographer's eye currently lives? No dimension names.]\n\n[What 9+ looks like for this specific image — not abstract, a concrete visual description of the frame that would score 9+.]\n\n[The one habit or change that gets there — specific, executable, gear-aware.]\n\n[Master reference: name + specific image/series + search term. Bold the master name.]\n\n[If portfolio_context has trend data: one sentence on trajectory — 'Your timing scores have been climbing across your last 5 uploads — keep pushing on this.'] FORMAT RULE: each section separated by blank line. Short sentences. Plain English.>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. One paragraph. One exercise. Executable before next upload. Uses actual gear from EXIF — if 300mm zoom, the assignment uses that lens. Genre-specific. Then one philosophy line from the rotation pool (see rules) — vary it, never repeat recently used. FORMAT:\n\n[The exercise — specific, practical, joyful. One or two sentences.]\n\n[Philosophy line — italicised in rendering, warm, brief.]>",
+  "byline_1": "<CARD 3 — WHAT THE SCORE MEANS AND HOW TO REACH 9+. HARD LENGTH LIMIT: 3 short paragraphs maximum — do not exceed. Token budget is constrained. Structure:\n\n[1 sentence: plain English description of what this score level means for this photographer's eye.]\n\n[2 sentences: what 9+ looks like for this specific image — concrete and visual.]\n\n[1-2 sentences: the one habit or change. If portfolio_context has trend data, add one trend sentence here. **Bold the master name** + search term.]>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. HARD LENGTH LIMIT: 3 sentences maximum. [Exercise sentence — specific, gear-aware, genre-specific.] [Philosophy line from rotation pool — one sentence, warm, brief.]>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
@@ -759,9 +762,9 @@ Return this exact JSON structure:
   "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. Score 9+/Soul Bonus: two sentences. Others: three sentences. Opens with applause adjective + the specific decision most photographers at this scene would not have made. Then the master reference — bold, specific image/series named, search term given. Then the story verdict: why this image has a story and what the story is. FORMAT:\n\n[Applause adjective + specific decision.]\n\n[**Master name** — specific connection to their practice. Search: [search term].]\n\n[One line: why this image has a story. What the story is.] PLAIN ENGLISH. No jargon. No 'compositional tension', no 'tonal relationship'.>",
   "background_check": "<CARD 3 BODY — passed to byline_1 in rendering. Same content as byline_1 — the 9+ gap analysis and award-winning guidance. Return the same text here for backward compatibility with templates that read this field.>",
   "calibration_line": "<PERCENTILE AND CONTEXT. One or two sentences. Plain English. 'This places you in the top [X]% of [genre] images evaluated on Shutter League.' Then: 'Your [plain English weakest dimension description] score of [X] is [above/below] the [genre] average of [Y] — [one plain English sentence on what that means and what to work on].' Use plain English for dimension names: 'how striking the image is to a stranger' not 'Visual Disruption'. 'how well you captured the right moment' not 'DM score'.>",
-  "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. Include: what is active NOW this season, distance from user_city (estimate from pincode if available), best time of day, what the frame worth making looks like. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). If no seasonal_context provided, return null.>",
-  "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window — plan ahead. Same voice. Null if only one location relevant.>",
-  "mentor_location_3": "<LOCATION ADVISORY 3. Only when seasonal_context lists a genuine third concurrent urgent window. Null otherwise.>",
+  "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. Include: what is active NOW this season, distance from user_city (estimate from pincode if available), best time of day, what the frame worth making looks like. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). HARD LENGTH LIMIT: 3 sentences maximum. Do not exceed 3 sentences — token budget is constrained. If no seasonal_context provided, return null.>",
+  "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window — plan ahead. Same voice. HARD LENGTH LIMIT: 2 sentences maximum. Null if only one location relevant.>",
+  "mentor_location_3": "<LOCATION ADVISORY 3. Only when seasonal_context lists a genuine third concurrent urgent window. HARD LENGTH LIMIT: 2 sentences maximum. Null otherwise.>",
   "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
   "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>"
 }}
@@ -3813,7 +3816,9 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     payload = {
         "model":       MODEL,
-        "max_tokens":  2500,
+        "max_tokens":  4000,  # Increased 110.3→110.4: new mentor fields (transferable_advice,
+                               # byline_1, byline_2, mentor_location, calibration_line) generate
+                               # ~3500+ tokens. 2500 caused truncation mid-string on long responses.
         "temperature": 0.2,
         "system":      effective_system,
         "messages": [
