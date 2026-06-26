@@ -1,5 +1,6 @@
-# SL-VERSION: 110.2 (Session 110 — R2-FIX: originals/ R2 key; stage4 model fix:
-#   claude-sonnet-4-20250514 → claude-sonnet-4-6)
+# SL-VERSION: 110.3 (Session 110 — variety history extraction in portfolio_summary:
+#   uploads route + retry_score now fetch last 5 audit JSONs to populate
+#   recent_masters, recent_openings, recent_locations for scorecard variety mandate)
 import os
 import re
 import uuid
@@ -4894,22 +4895,6 @@ def upload():
         _device_tier   = get_device_tier(exif_data)
         _exif_context  = build_exif_context(exif_data, camera_track=_camera_track_for_tier)
 
-        # ── R2-FIX (Session 110) — upload original JPEG before ephemeral delete ──
-        # raw_path is still on disk here (EXIF extracted above, thumb created).
-        # Upload to originals/ so stage 4 vision comparison has a real file to
-        # fetch. stored_filename will be set to this full R2 key (not basename)
-        # so the '/' is present and the old thumbs/ prefix hack is never needed.
-        _orig_ext      = os.path.splitext(raw_path)[1].lower() or '.jpg'
-        _original_r2_key = f'originals/{uid}{_orig_ext}'
-        try:
-            _orig_url = r2.upload_file(raw_path, _original_r2_key, content_type='image/jpeg')
-            if not _orig_url:
-                app.logger.warning(f'[upload] R2 original upload returned None for key={_original_r2_key}; falling back to thumb basename')
-                _original_r2_key = os.path.basename(thumb_path)
-        except Exception as _orig_r2_err:
-            app.logger.warning(f'[upload] R2 original upload failed (non-fatal): {_orig_r2_err}; falling back to thumb basename')
-            _original_r2_key = os.path.basename(thumb_path)
-
         if os.path.exists(raw_path): os.remove(raw_path)
 
         from engine.processor import hash_similarity_pct
@@ -5218,7 +5203,7 @@ def upload():
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
-            stored_filename   = _original_r2_key,   # R2-FIX: full originals/ key, not thumb basename
+            stored_filename   = os.path.basename(thumb_path),
             thumb_path        = thumb_path,
             thumb_url         = thumb_url,
             file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
@@ -5809,6 +5794,53 @@ def upload():
                                         'timing':     [r.dm_score  for r in _sc_recent if r.dm_score  is not None],
                                         'difficulty': [r.dod_score for r in _sc_recent if r.dod_score is not None],
                                     }
+                                    # ── Variety history — last 5 audit JSONs ──────────────
+                                    # Extract what masters, openings, locations, philosophy
+                                    # lines were used recently so the engine avoids repeating.
+                                    try:
+                                        _recent_audits = db.session.execute(
+                                            db.text("SELECT audit_json FROM images WHERE user_id=:uid AND status='scored' ORDER BY scored_at DESC LIMIT 5"),
+                                            {'uid': _img.user_id}
+                                        ).fetchall()
+                                        _r_masters, _r_openings, _r_locations, _r_philosophy = [], [], [], []
+                                        import re as _re_var
+                                        _open_rx = _re_var.compile(
+                                            r'^(Brilliantly|Beautifully|Exceptionally|Wonderfully|Remarkably|'
+                                            r'Impressively|Expertly|Perfectly|Powerfully|Elegantly|Sharply|'
+                                            r'Boldly|Quietly|Instinctively|Patiently|Decisively|Confidently|'
+                                            r'Sensitively|Fearlessly|Generously)', _re_var.IGNORECASE
+                                        )
+                                        for (_aj,) in _recent_audits:
+                                            if not _aj:
+                                                continue
+                                            try:
+                                                _ad = json.loads(_aj)
+                                            except Exception:
+                                                continue
+                                            # Extract master name from transferable_advice bold line
+                                            _ta = _ad.get('transferable_advice') or ''
+                                            for _bold in _re_var.findall(r'\*\*([^*]+)\*\*', _ta):
+                                                _first_word = _bold.split()[0] if _bold.split() else ''
+                                                if _first_word and len(_first_word) > 2:
+                                                    _r_masters.append(_bold[:60])
+                                                    break
+                                            # Extract opening adjective from hard_truth
+                                            _ht = _ad.get('hard_truth') or ''
+                                            _om = _open_rx.match(_ht.strip())
+                                            if _om:
+                                                _r_openings.append(_om.group(1))
+                                            # Extract location from mentor_location_1
+                                            _ml = _ad.get('mentor_location_1') or ''
+                                            if _ml:
+                                                _loc_first = _ml.split('.')[0][:50].strip()
+                                                if _loc_first:
+                                                    _r_locations.append(_loc_first)
+                                        _sc_portfolio['recent_masters']    = _r_masters[:5]
+                                        _sc_portfolio['recent_openings']   = _r_openings[:5]
+                                        _sc_portfolio['recent_locations']  = _r_locations[:3]
+                                        _sc_portfolio['recent_philosophy'] = []  # tracked by index in future
+                                    except Exception as _var_err:
+                                        app.logger.debug(f'[auto_score] variety history extraction failed: {_var_err}')
                         except Exception as _sp_err:
                             app.logger.warning(f'[auto_score] portfolio context error: {_sp_err}')
                             _sc_portfolio = None
@@ -6590,6 +6622,48 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                             "timing":     [r.dm_score  for r in _recent if r.dm_score  is not None],
                             "difficulty": [r.dod_score for r in _recent if r.dod_score is not None],
                         }
+                        # ── Variety history — last 5 audit JSONs ──────────────
+                        try:
+                            _recent_audits = db.session.execute(
+                                db.text("SELECT audit_json FROM images WHERE user_id=:uid AND status='scored' ORDER BY scored_at DESC LIMIT 5"),
+                                {'uid': _owner.id}
+                            ).fetchall()
+                            _r_masters, _r_openings, _r_locations = [], [], []
+                            import re as _re_var2
+                            _open_rx2 = _re_var2.compile(
+                                r'^(Brilliantly|Beautifully|Exceptionally|Wonderfully|Remarkably|'
+                                r'Impressively|Expertly|Perfectly|Powerfully|Elegantly|Sharply|'
+                                r'Boldly|Quietly|Instinctively|Patiently|Decisively|Confidently|'
+                                r'Sensitively|Fearlessly|Generously)', _re_var2.IGNORECASE
+                            )
+                            for (_aj,) in _recent_audits:
+                                if not _aj:
+                                    continue
+                                try:
+                                    _ad = json.loads(_aj)
+                                except Exception:
+                                    continue
+                                _ta = _ad.get('transferable_advice') or ''
+                                for _bold in _re_var2.findall(r'\*\*([^*]+)\*\*', _ta):
+                                    _first_word = _bold.split()[0] if _bold.split() else ''
+                                    if _first_word and len(_first_word) > 2:
+                                        _r_masters.append(_bold[:60])
+                                        break
+                                _ht = _ad.get('hard_truth') or ''
+                                _om = _open_rx2.match(_ht.strip())
+                                if _om:
+                                    _r_openings.append(_om.group(1))
+                                _ml = _ad.get('mentor_location_1') or ''
+                                if _ml:
+                                    _loc_first = _ml.split('.')[0][:50].strip()
+                                    if _loc_first:
+                                        _r_locations.append(_loc_first)
+                            _portfolio_summary['recent_masters']   = _r_masters[:5]
+                            _portfolio_summary['recent_openings']  = _r_openings[:5]
+                            _portfolio_summary['recent_locations'] = _r_locations[:3]
+                            _portfolio_summary['recent_philosophy'] = []
+                        except Exception as _var_err2:
+                            app.logger.debug(f'[retry_score] variety history extraction failed: {_var_err2}')
 
             result = auto_score(
                 image_path        = thumb_path,
@@ -17270,11 +17344,7 @@ def _run_raw_analysis(submission, img):
                 from storage import get_client, BUCKET
                 import io as _io3
                 _orig_buf = _io3.BytesIO()
-                # R2-FIX (Session 110): stored_filename is now the full R2 key
-                # (originals/{uid}.jpg for new uploads). The old thumbs/ prefix
-                # hack below is kept for backward compat with existing images
-                # that still have a bare basename — they will still go to manual
-                # review (acceptable for UAT phase), but new uploads will resolve.
+                # stored_filename is basename only; R2 key is under thumbs/ prefix
                 _r2_key = img.stored_filename
                 if '/' not in _r2_key:
                     _r2_key = f'thumbs/{_r2_key}'
@@ -17415,7 +17485,7 @@ def _run_raw_analysis(submission, img):
                 ) if diff_b64 else ''
 
                 _vision_payload = {
-                    'model': 'claude-sonnet-4-6',
+                    'model': 'claude-sonnet-4-20250514',
                     'max_tokens': 500,
                     'messages': [{
                         'role': 'user',
