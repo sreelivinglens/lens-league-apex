@@ -17145,7 +17145,12 @@ def _run_raw_analysis(submission, img):
                 from storage import get_client, BUCKET
                 import io as _io3
                 _orig_buf = _io3.BytesIO()
-                get_client().download_fileobj(BUCKET, img.stored_filename, _orig_buf)
+                # stored_filename is the basename only (e.g. 'abc123.jpg')
+                # R2 key is under thumbs/ prefix — try both forms
+                _r2_key = img.stored_filename
+                if '/' not in _r2_key:
+                    _r2_key = f'thumbs/{_r2_key}'
+                get_client().download_fileobj(BUCKET, _r2_key, _orig_buf)
                 _orig_bytes = _orig_buf.getvalue()
                 # Normalise to JPEG for vision API (stored file may be JPEG or converted)
                 from PIL import Image as _PIL_orig
