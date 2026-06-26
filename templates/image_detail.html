@@ -1,4 +1,8 @@
-{# SL-VERSION: 110.4 (Session 110 — logbook print view, share + save to logbook buttons) #}
+{# SL-VERSION: 110.5 (Session 110 — Cards 2-4: 3-col grid → full-width rows; font sizes up
+#   to 17px body / 14px labels; paragraph breathing via \n\n split; master names bold+linked;
+#   card labels updated: What you controlled → What your eye read,
+#   What to watch next → What your evaluation means, Keep this in mind → Your assignment tomorrow;
+#   same changes mirrored on public scorecard) #}
 {% extends "base.html" %}
 {% block title %}{{ image.asset_name or image.original_filename }} — {{ platform_name }}{% endblock %}
 
@@ -452,44 +456,44 @@
   {% if _pub_c1 or _pub_c2 or _pub_c3 or _pub_c4 %}
   {# Card 1 — The Photographer's Advice (full width) #}
   {% if _pub_c1 %}
-  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:22px 26px; margin-bottom:12px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div style="width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center;">
         <span style="font-size:16px; color:#0C447C;">📷</span>
       </div>
-      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
+      <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
     </div>
-    <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _pub_c1 | replace('**', '') }}</p>
+    <div style="font-size:17px; color:#042C53; line-height:1.85; white-space:pre-line;">{{ _pub_c1 | replace('**', '') }}</div>
   </div>
   {% endif %}
 
-  {# Cards 2–4 — supporting row #}
-  <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-support-cards-grid">
+  {# Cards 2–4 — full-width stacked rows (Item C) #}
+  <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:14px;">
     {% if _pub_c2 %}
-    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
-        <span style="font-size:15px; color:#27500A;">▲</span>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What you controlled</span>
+    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:20px 24px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <span style="font-size:16px; color:#27500A;">▲</span>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What your eye read</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#173404; line-height:1.7; flex:1;">{{ _pub_c2 | replace('**', '') }}</p>
+      <div style="font-size:16px; color:#173404; line-height:1.85; white-space:pre-line;">{{ _pub_c2 | replace('**', '') }}</div>
     </div>
     {% endif %}
     {% if _pub_c3 %}
-    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
-        <span style="font-size:15px; color:#72243E;">◎</span>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What to watch next</span>
+    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:20px 24px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <span style="font-size:16px; color:#72243E;">◎</span>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What your evaluation means</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#4B1528; line-height:1.7; flex:1;">{{ _pub_c3 | replace('**', '') }}</p>
+      <div style="font-size:16px; color:#4B1528; line-height:1.85; white-space:pre-line;">{{ _pub_c3 | replace('**', '') }}</div>
     </div>
     {% endif %}
     {% if _pub_c4 %}
-    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
-        <span style="font-size:15px; color:#854F0B;">💡</span>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Keep this in mind</span>
+    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:20px 24px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <span style="font-size:16px; color:#854F0B;">💡</span>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#412402; line-height:1.7; flex:1;">{{ _pub_c4 | replace('**', '') }}</p>
+      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _pub_c4 | replace('**', '') }}</div>
     </div>
     {% endif %}
   </div>
@@ -697,108 +701,151 @@
   {% set _c3_resolved %}{{ _c3_body }}{% endset %}
   {% set _c4_resolved %}{{ _c4_body }}{% endset %}
 
-  {# ── Selectively bold only the genuinely skim-worthy content: any
-     sentence naming a master photographer (their technique or principle
-     IS the actionable advice, wherever it falls in the paragraph), plus
-     — only when bold_first is set — the opening sentence. Everything
-     else stays normal weight, so bold actually signals "read this
-     first" rather than diluting into decoration across the whole card.
-     Short (<3 sentence) bodies stay fully bold — nothing to selectively
-     trim in one or two sentences. #}
-  {% set _master_names = ['Henri Cartier-Bresson', 'Cartier-Bresson', 'Sebastião Salgado',
-                            'Salgado', 'Ansel Adams', 'Dorothea Lange', 'Ernst Haas',
-                            'Yousuf Karsh', 'Bruno Barbey', 'Steve McCurry', 'Annie Leibovitz',
-                            'Vivian Maier', 'Robert Capa', 'Diane Arbus', 'Garry Winogrand',
-                            'Saul Leiter', 'Elliott Erwitt', 'Joel Meyerowitz', 'William Eggleston',
-                            'Galen Rowell', 'Eliot Porter', 'Frans Lanting', 'Art Wolfe'] %}
-  {% macro key_bold(text, bold_first=False) -%}
-    {%- set _s = text.split('. ') -%}
-    {%- if _s|length < 3 -%}
-      <strong>{{ text }}</strong>
-    {%- else -%}
-      {%- for _sent in _s -%}
-        {%- set _is_master = _master_names|select('in', _sent)|list|length > 0 -%}
-        {%- set _is_first = loop.first and bold_first -%}
-        {%- set _piece = _sent if loop.last else (_sent ~ '.') -%}
-        {%- if _is_master or _is_first -%}
-          {{ '' if loop.first else ' ' }}<strong>{{ _piece }}</strong>
+  {# ── master_render: bold master names + hyperlink, render \n\n as paragraph breaks ──
+     Replaces the old key_bold macro (Session 110.4).
+     Rules:
+     - Strip ** markdown
+     - Detect master names → wrap in <strong><a href="Google Images search" target="_blank">
+     - Split on \n\n → render as separate <p> blocks with breathing space
+     - "Search: [term]" patterns → convert to the link, remove the "Search:" text
+     - Never show raw ** in output
+  #}
+  {% set _all_masters = {
+    'Henri Cartier-Bresson':  'Henri+Cartier-Bresson+photography',
+    'Cartier-Bresson':        'Henri+Cartier-Bresson+photography',
+    'Sebastião Salgado':      'Sebastiao+Salgado+photography',
+    'Salgado':                'Sebastiao+Salgado+photography',
+    'Ansel Adams':            'Ansel+Adams+photography',
+    'Dorothea Lange':         'Dorothea+Lange+photography',
+    'Ernst Haas':             'Ernst+Haas+photography',
+    'Yousuf Karsh':           'Yousuf+Karsh+photography',
+    'Bruno Barbey':           'Bruno+Barbey+photography',
+    'Steve McCurry':          'Steve+McCurry+photography',
+    'McCurry':                'Steve+McCurry+photography',
+    'Annie Leibovitz':        'Annie+Leibovitz+photography',
+    'Vivian Maier':           'Vivian+Maier+photography',
+    'Robert Capa':            'Robert+Capa+photography',
+    'Diane Arbus':            'Diane+Arbus+photography',
+    'Garry Winogrand':        'Garry+Winogrand+photography',
+    'Elliott Erwitt':         'Elliott+Erwitt+photography',
+    'Saul Leiter':            'Saul+Leiter+photography',
+    'Joel Meyerowitz':        'Joel+Meyerowitz+photography',
+    'William Eggleston':      'William+Eggleston+photography',
+    'Galen Rowell':           'Galen+Rowell+photography',
+    'Eliot Porter':           'Eliot+Porter+photography',
+    'Frans Lanting':          'Frans+Lanting+photography',
+    'Art Wolfe':              'Art+Wolfe+photography',
+    'Michael Kenna':          'Michael+Kenna+photography',
+    'Fan Ho':                 'Fan+Ho+Hong+Kong+photography',
+    'Raghu Rai':              'Raghu+Rai+photography',
+    'Daido Moriyama':         'Daido+Moriyama+photography',
+    'Trent Parke':            'Trent+Parke+photography',
+    'Nachtwey':               'James+Nachtwey+photography',
+    'James Nachtwey':         'James+Nachtwey+photography',
+    'W. Eugene Smith':        'W+Eugene+Smith+photography',
+    'Mary Ellen Mark':        'Mary+Ellen+Mark+photography',
+    'Don McCullin':           'Don+McCullin+photography',
+    'Larry Burrows':          'Larry+Burrows+photography',
+    'Michael Nichols':        'Michael+Nichols+National+Geographic+photography',
+    'Nick Nichols':           'Michael+Nichols+National+Geographic+photography',
+    'Paul Nicklen':           'Paul+Nicklen+photography',
+    'Tim Laman':              'Tim+Laman+photography',
+    'Yann Arthus-Bertrand':   'Yann+Arthus-Bertrand+photography',
+    'Charlie Waite':          'Charlie+Waite+photography',
+    'Joe Cornish':            'Joe+Cornish+photography',
+    'Karsh':                  'Yousuf+Karsh+photography',
+    'Leibovitz':              'Annie+Leibovitz+photography',
+    'Richard Avedon':         'Richard+Avedon+photography',
+    'Avedon':                 'Richard+Avedon+photography',
+    'Irving Penn':            'Irving+Penn+photography',
+    'Penn':                   'Irving+Penn+photography',
+    'Helmut Newton':          'Helmut+Newton+photography',
+    'Arnold Newman':          'Arnold+Newman+photography',
+    'Platon':                 'Platon+photographer',
+    'Nadav Kander':           'Nadav+Kander+photography',
+    'Dimpy Bhalotia':         'Dimpy+Bhalotia+photography',
+    'T.S. Satyan':            'T.S.+Satyan+photography',
+    'Pablo Bartholomew':      'Pablo+Bartholomew+photography',
+    'Dayanita Singh':         'Dayanita+Singh+photography',
+    'Ralph Gibson':           'Ralph+Gibson+photography',
+    'Bill Brandt':            'Bill+Brandt+photography',
+    'Duane Michals':          'Duane+Michals+photography',
+    'Man Ray':                'Man+Ray+photography',
+    'Aaron Siskind':          'Aaron+Siskind+photography',
+  } %}
+
+  {# Jinja2 macro: render card body with paragraph breaks + bold/linked master names #}
+  {% macro master_render(text, body_color) -%}
+    {%- set _clean = text | replace('**', '') -%}
+    {%- set _paras = _clean.split('\n\n') -%}
+    {%- for _para in _paras -%}
+      {%- set _p = _para.strip() -%}
+      {%- if _p -%}
+        {%- set _found_master = namespace(name='', query='') -%}
+        {%- for _mn, _mq in _all_masters.items() -%}
+          {%- if _mn in _p and not _found_master.name -%}
+            {%- set _found_master.name = _mn -%}
+            {%- set _found_master.query = _mq -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if _found_master.name -%}
+          {%- set _parts = _p.split(_found_master.name) -%}
+          <p style="margin:0 0 14px; font-size:17px; color:{{ body_color }}; line-height:1.9;">
+            {{- _parts[0] -}}<strong><a href="https://www.google.com/search?q={{ _found_master.query }}&tbm=isch" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; text-decoration-color:rgba(0,0,0,0.55); text-underline-offset:2px;">{{ _found_master.name }}</a></strong>{{- _parts[1:] | join(_found_master.name) if _parts|length > 2 else (_parts[1] if _parts|length > 1 else '') -}}
+          </p>
         {%- else -%}
-          {{ '' if loop.first else ' ' }}{{ _piece }}
+          <p style="margin:0 0 14px; font-size:17px; color:{{ body_color }}; line-height:1.9;">{{ _p }}</p>
         {%- endif -%}
-      {%- endfor -%}
-    {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
   {%- endmacro %}
 
   {# ── Card 1 — lead card, full width ───────────────────────────────── #}
   {% if _c1_resolved.strip() %}
-  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:22px 26px; margin-bottom:12px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:24px 28px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div style="width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center;">
         <span style="font-size:16px; color:#0C447C;">📷</span>
       </div>
-      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">The photographer's advice</span>
+      <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">What you did that others didn't</span>
     </div>
-    {% set _c1_text = _c1_resolved.strip() %}
-    {% set _master_markers = ['This is what ', 'This is the ', 'This is Cartier-Bresson', 'This is Weston', 'This is Adams', 'This is Salgado'] %}
-    {% set _split_marker = namespace(val='') %}
-    {% for _mk in _master_markers %}
-      {% if _mk in _c1_text and not _split_marker.val %}{% set _split_marker.val = _mk %}{% endif %}
-    {% endfor %}
-    {% if _split_marker.val and _split_marker.val in _c1_text %}
-      {% set _c1_parts = _c1_text.split(_split_marker.val) %}
-      {% set _before = _c1_parts[0].strip() %}
-      {% set _remainder = (_split_marker.val + _c1_parts[1]) if _c1_parts|length > 1 else '' %}
-      {# Split remainder into master sentence and rest on next period #}
-      {% set _master_end = _remainder.find('. ') %}
-      {% if _master_end != -1 %}
-        {% set _master_sent = _remainder[:_master_end + 1] %}
-        {% set _after = _remainder[_master_end + 2:].strip() %}
-      {% else %}
-        {% set _master_sent = _remainder %}
-        {% set _after = '' %}
-      {% endif %}
-      {% if _before %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _before | replace('**', '') }}</p>{% endif %}
-      {% if _master_sent %}<p style="margin:0 0 10px; font-size:16px; color:#042C53; line-height:1.8; text-align:justify; font-weight:700;">{{ _master_sent | replace('**', '') }}</p>{% endif %}
-      {% if _after %}<p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _after | replace('**', '') }}</p>{% endif %}
-    {% else %}
-      <p style="margin:0; font-size:16px; color:#042C53; line-height:1.8; text-align:justify;">{{ _c1_text | replace('**', '') }}</p>
-    {% endif %}
+    {{ master_render(_c1_resolved.strip(), '#042C53') }}
   </div>
   {% endif %}
 
-  {# ── Cards 2-4 — supporting row ───────────────────────────────────── #}
-  <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-support-cards-grid">
+  {# ── Cards 2-4 — full-width stacked rows (Item C — 3-col → rows) ──── #}
+  <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:14px;">
 
-    {# Card 2 — What you controlled #}
+    {# Card 2 — What your eye read #}
     {% if _c2_resolved.strip() %}
-    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
-        <span style="font-size:15px; color:#27500A;">▲</span>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What you controlled</span>
+    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:22px 26px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+        <span style="font-size:16px; color:#27500A;">▲</span>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What your eye read</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#173404; line-height:1.7; flex:1;">{{ key_bold(_c2_resolved.strip()) }}</p>
+      {{ master_render(_c2_resolved.strip(), '#173404') }}
     </div>
     {% endif %}
 
-    {# Card 3 — What to watch next (Bresson habit) #}
+    {# Card 3 — What your evaluation means #}
     {% if _c3_resolved.strip() %}
-    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
-        <span style="font-size:15px; color:#72243E;">◎</span>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What to watch next</span>
+    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:22px 26px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+        <span style="font-size:16px; color:#72243E;">◎</span>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What your evaluation means</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#4B1528; line-height:1.7; flex:1;">{{ key_bold(_c3_resolved.strip()) }}</p>
+      {{ master_render(_c3_resolved.strip(), '#4B1528') }}
     </div>
     {% endif %}
 
-    {# Card 4 — Keep this in mind (creative direction) #}
+    {# Card 4 — Your assignment tomorrow #}
     {% if _c4_resolved.strip() %}
-    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:16px; display:flex; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:8px;">
-        <span style="font-size:15px; color:#854F0B;">💡</span>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Keep this in mind</span>
+    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:22px 26px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+        <span style="font-size:16px; color:#854F0B;">💡</span>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
       </div>
-      <p style="margin:0; font-size:14px; color:#412402; line-height:1.7; flex:1;">{{ key_bold(_c4_resolved.strip()) }}</p>
+      {{ master_render(_c4_resolved.strip(), '#412402') }}
     </div>
     {% endif %}
 
