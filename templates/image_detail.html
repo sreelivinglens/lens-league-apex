@@ -1,4 +1,6 @@
-{# SL-VERSION: 110.5 (Session 110 — Cards 2-4: 3-col grid → full-width rows; font sizes up
+{# SL-VERSION: 110.6 (Session 110 — hero headline: bold removed, pre-line breathing;
+#   EXIF honesty: Card 2 never invents settings when partial/absent;
+#   previously 110.5 — Cards 2-4: 3-col grid → full-width rows; font sizes up
 #   to 17px body / 14px labels; paragraph breathing via \n\n split; master names bold+linked;
 #   card labels updated: What you controlled → What your eye read,
 #   What to watch next → What your evaluation means, Keep this in mind → Your assignment tomorrow;
@@ -431,7 +433,7 @@
       </div>
       <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
     </div>
-    <p style="margin:0; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7; text-align:justify;">{{ _public_wso }}</p>
+    <p style="margin:0; font-size:20px; font-weight:400; color:var(--text-primary); line-height:1.85; white-space:pre-line;">{{ _public_wso }}</p>
   </div>
   {% endif %}
 
@@ -569,26 +571,14 @@
   {# Option A fallback: what_stood_out → hard_truth #}
   {% set _hero_headline = audit.what_stood_out if audit.what_stood_out else audit.hard_truth %}
   {% if _hero_headline %}
-  {% set _has_right_col = audit.mentor_technical or audit.mentor_moment %}
-  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; display:grid; grid-template-columns:{{ '1fr 1fr' if _has_right_col else '1fr' }}; gap:22px;" class="sc-verdict-grid">
-    <div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center;">
-          <span style="font-size:16px;">★</span>
-        </div>
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center;">
+        <span style="font-size:16px;">★</span>
       </div>
-      <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7; text-align:justify;">{{ _hero_headline }}</p>
+      <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
     </div>
-    {% if _has_right_col %}
-    <div style="border-left:1px solid var(--border); padding-left:22px; display:flex; align-items:center;">
-      {% if audit.mentor_technical %}
-      <p style="margin:0; font-size:16px; color:var(--text-primary); line-height:1.9; font-style:italic;">"{{ audit.mentor_technical }}"</p>
-      {% elif audit.mentor_moment %}
-      <p style="margin:0; font-size:16px; color:var(--text-primary); line-height:1.9; font-style:italic;">"{{ audit.mentor_moment }}"</p>
-      {% endif %}
-    </div>
-    {% endif %}
+    <div style="font-size:19px; font-weight:400; color:var(--text-primary); line-height:1.85; white-space:pre-line;">{{ _hero_headline }}</div>
   </div>
   {% endif %}
   {% endif %}
