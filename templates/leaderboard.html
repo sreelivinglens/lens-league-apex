@@ -207,6 +207,38 @@
   display: flex; align-items: center; gap: 3px;
 }
 .peer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.tile-score {
+  font-family: var(--font-mono); font-size: 17px; font-weight: 700;
+  color: #F5C518; letter-spacing: .5px; line-height: 1;
+}
+.tile-soul { font-size: 13px; opacity: .85; margin-left: 2px; vertical-align: middle; }
+/* Analysis panel — slides up on hover (desktop only) */
+.tile-analysis {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+  background: rgba(13,13,11,0.93);
+  padding: 10px 12px 12px;
+  transform: translateY(100%);
+  transition: transform .22s ease;
+  pointer-events: none;
+}
+.lb-tile:hover .tile-analysis { transform: translateY(0); }
+.tile-analysis-label {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: #F5C518; margin-bottom: 5px;
+}
+.tile-analysis-text {
+  font-size: 13px; color: rgba(255,255,255,0.88); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tile-analysis-cta {
+  font-family: var(--font-mono); font-size: 13px; color: #F5C518;
+  margin-top: 6px; letter-spacing: .5px;
+}
+@media (max-width: 768px) {
+  .tile-analysis { display: none; }
+}
 
 /* Tile body */
 .tile-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -453,7 +485,7 @@ a.lb-page-btn:focus-visible {
   </div>
 
   <div class="score-notice">
-    🔒 &nbsp; Evaluations are private. Tier classifications shown only. Your full evaluation is visible on your personal dashboard.
+    🔍 &nbsp; Tap any image to read the full evaluation — score, dimension breakdown, and the analysis behind it.
   </div>
 
   <!-- FILTERS -->
@@ -534,8 +566,8 @@ a.lb-page-btn:focus-visible {
     {%- set pc = 'podium-'~rank if rank<=3 else '' -%}
     {%- set tk = (image.tier or 'apprentice') | lower | replace(' ', '-') -%}
 
-    <a href="{{ url_for('share_image', image_id=image.id) }}"
-       class="lb-tile {{ pc }}" target="_blank">
+    <a href="{{ url_for('image_detail', image_id=image.id) }}"
+       class="lb-tile {{ pc }}">
 
       <!-- Rank -->
       <div class="tile-rank {{ rc }}">{{ rank }}</div>
@@ -565,13 +597,23 @@ a.lb-page-btn:focus-visible {
                     pointer-events:none;">🏆</div>
         {% endif %}
 
-        <!-- Tier + peer ratings ribbon -->
+        <!-- Tier + score + peer ratings ribbon -->
         <div class="tile-tier-ribbon">
           <span class="tile-tier-pill tier-{{ tk }}">{{ image.tier or '—' }}</span>
+          <span class="tile-score">{{ '%.2f'|format(image.score) }}{% if image.soul_bonus %}<span class="tile-soul">✦</span>{% endif %}</span>
           {% if image.peer_rating_count and image.peer_rating_count > 0 %}
           <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
           {% endif %}
         </div>
+
+        <!-- Hover analysis panel — archetype + why (desktop) -->
+        {% if image.archetype %}
+        <div class="tile-analysis">
+          <div class="tile-analysis-label">Why this evaluation</div>
+          <div class="tile-analysis-text">{{ image.archetype }}</div>
+          <div class="tile-analysis-cta">Read full evaluation →</div>
+        </div>
+        {% endif %}
       </div>
 
       <!-- Info -->
