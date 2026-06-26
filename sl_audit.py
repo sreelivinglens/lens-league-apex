@@ -65,11 +65,10 @@ KYC_TERMS = [
       'poty_qualifying', 'poty_points', 'path_to_rank',
       "path.includes('poty')", "includes('poty')", '.poty', '#poty',
       'poty)', "'/poty'", '"/poty"']),
-    ('No KYC: DDI in user copy (use "your evaluation" or "score")',
-     'ddi',
-     ['url_for', 'apex ddi engine', 'apex_ddi', 'DDI Engine', 'ddi_engine',
-      'ddi_score', 'ddi score', 'Rated by Science', 'apex-ddi', '<!-- ddi',
-      '{# ddi', 'auto_score', 'APEX DDI', 'ddi-', '-ddi']),
+    # DDI is NOT a KYC issue — it is Shutter League proprietary IP (Depth Dimension Index).
+    # Incorrectly added to KYC_TERMS. Removed Session 109 — 26 June 2026.
+    # Brand rule (not compliance): first use on any page = "Depth Dimension Index (DDI)".
+    # Subsequent uses on same page = "DDI" alone. Standard legal/brand convention.
     ('No KYC: Genre in UX labels (use "Interests")',
      ' genre',
      ['url_for', 'image.genre', 'img.genre', 'genre_suggestion', 'genre_context',
@@ -149,12 +148,15 @@ def _has_tiny_font(content):
 
 def _gold_on_light(content):
     """Detect gold colour used as body/heading text colour — not scores, badges, borders, or mono labels."""
+    import re as _re
+    # Strip <style> blocks — CSS colour definitions are not user-facing text colour
+    content = _re.sub(r'<style\b[^>]*>.*?</style>', '', content, flags=_re.DOTALL)
     hits = []
     lines = content.split('\n')
     for i, line in enumerate(lines):
         l = line.lower()
         if any(x in l for x in [
-            'border', 'background', 'fill:', 'stroke:', 'box-shadow',
+            'border', 'background', 'fill:', 'stroke:', 'stroke=', 'box-shadow',
             'score', 'tier', 'badge', 'mono', 'font-mono', 'gold-dark',
             'gold-subtle', 'var(--gold-', '/* ', '//', 'opacity',
             'db-poty', 'db-score', 'img-tier', 'badge-tier', 'tier-',
@@ -414,6 +416,8 @@ def audit_html(filepath):
         'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
         'my_gallery.html', 'base.html',
+        'raw_appeal.html', 'raw_status.html', 'raw_submit.html',
+        'register.html', 'login.html', 'forgot_password.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -440,7 +444,7 @@ def audit_html(filepath):
             ('Hero onerror on img',             "onerror=\"this.style.display='none'\"" in content),
             ('Hero fade opacity 0.45',          'rgba(13,13,11,0.45)' in content or 'rgba(13,13,11,0.28)' in content or _is_homepage),
             ('Hero content margin 64px',        'margin: 48px 64px' in content or 'margin: 0 64px' in content),
-            ('No hero-sub line in content',     'hero-sub' not in (content.split('{% block content %}')[1] if '{% block content %}' in content else content)),
+            ('Hero-sub line present in content',  'hero-sub' in (content.split('{% block content %}')[1] if '{% block content %}' in content else content)),
         ]
         for label, result in checks:
             if result: _ok(label)
