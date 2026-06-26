@@ -426,7 +426,7 @@
             {# rescore-form removed — admin_force_rescore now called via fetch() XHR #}
             <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
             <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
-              <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
+              <input type="hidden" name="reason" id="reject-reason-{{ img.id }}" value="">
             </form>
 
             <div class="admin-tile-img-wrap">
@@ -503,7 +503,7 @@
                 <button type="button" onclick="adminPost('unflag-form-' + {{ img.id }}, 'Unflag and restore?')" class="act-btn act-unflag">✓ Unflag</button>
               {% elif img.needs_review %}
                 <button type="button" onclick="adminPost('approve-form-' + {{ img.id }}, 'Approve and make public?')" class="act-btn act-approve">✓ OK</button>
-                <button type="button" onclick="adminPost('reject-form-' + {{ img.id }}, 'Reject? User notified.')" class="act-btn act-reject">✗ Reject</button>
+                <button type="button" onclick="rejectWithReason({{ img.id }})" class="act-btn act-reject">✗ Reject</button>
                 <button type="button" onclick="adminPost('flag-form-' + {{ img.id }}, 'Flag as AI-generated?')" class="act-btn act-flag">🚫</button>
               {% else %}
                 <button type="button" onclick="adminPost('flag-form-' + {{ img.id }}, 'Flag as AI-generated?')" class="act-btn act-flag">🚫 Flag</button>
@@ -1477,5 +1477,66 @@ function adminPostFields(url, fields, confirmMsg) {
     .catch(e => alert('Network error: ' + e));
 }
 /* ── End v34 fetch helpers ─────────────────────────────────────────────────── */
+/* ── RAW Rejection Modal ────────────────────────────────────────────────────── */
+function rejectWithReason(imgId) {
+  // Build modal overlay
+  var overlay = document.createElement('div');
+  overlay.id = 'reject-modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#1a1a18;border:1px solid #C8A84B;border-radius:6px;padding:28px 32px;width:480px;max-width:90vw;font-family:Arial,sans-serif;';
+
+  box.innerHTML =
+    '<p style="margin:0 0 6px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;font-weight:700;">RAW VERIFICATION</p>' +
+    '<h3 style="margin:0 0 18px;font-size:18px;color:#fff;">Reject Image</h3>' +
+    '<label style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:6px;">Reason <span style="color:#f08080;">*</span> — sent to photographer & logged</label>' +
+    '<textarea id="reject-modal-reason" rows="4" placeholder="e.g. RAW file submitted does not match the evaluated JPEG — different framing and exposure." ' +
+    'style="width:100%;box-sizing:border-box;background:#2a2a28;border:1px solid #444;border-radius:4px;color:#fff;font-size:14px;padding:10px 12px;resize:vertical;font-family:Arial,sans-serif;"></textarea>' +
+    '<p id="reject-modal-err" style="color:#f08080;font-size:12px;margin:6px 0 0;display:none;">A reason is required before rejecting.</p>' +
+    '<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">' +
+      '<button id="reject-modal-cancel" style="padding:9px 20px;background:transparent;border:1px solid #555;border-radius:4px;color:#aaa;cursor:pointer;font-size:13px;">Cancel</button>' +
+      '<button id="reject-modal-confirm" style="padding:9px 20px;background:#7a1a1a;border:1px solid #f08080;border-radius:4px;color:#fff;cursor:pointer;font-size:13px;font-weight:700;">✗ Confirm Reject</button>' +
+    '</div>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('reject-modal-reason').focus();
+
+  // Cancel
+  document.getElementById('reject-modal-cancel').onclick = function() {
+    document.body.removeChild(overlay);
+  };
+  overlay.onclick = function(e) {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  };
+
+  // Confirm
+  document.getElementById('reject-modal-confirm').onclick = function() {
+    var reason = document.getElementById('reject-modal-reason').value.trim();
+    if (!reason) {
+      document.getElementById('reject-modal-err').style.display = 'block';
+      document.getElementById('reject-modal-reason').focus();
+      return;
+    }
+    // Set reason on the hidden form input and submit
+    var reasonInput = document.getElementById('reject-reason-' + imgId);
+    if (!reasonInput) { alert('Form input not found for image ' + imgId); return; }
+    reasonInput.value = reason;
+
+    document.body.removeChild(overlay);
+
+    var form = document.getElementById('reject-form-' + imgId);
+    var body = new URLSearchParams(new FormData(form));
+    fetch(form.action, {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: body.toString()
+    }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Reject failed (' + r.status + ')'); } })
+      .catch(e => alert('Network error: ' + e));
+  };
+}
+/* ── End RAW Rejection Modal ─────────────────────────────────────────────────── */
+
 </script>
 {% endblock %}
