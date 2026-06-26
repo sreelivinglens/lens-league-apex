@@ -1,5 +1,5 @@
-# SL-VERSION: 109.1 (Session 109 — RAW resubmission system, email spam fix, stage4 R2 fix
-#   context block, portfolio trend all-genre fallback)
+# SL-VERSION: 110.1 (Session 110 — R2-FIX: upload original JPEG to originals/ prefix before
+#   ephemeral delete; stored_filename now full R2 key; stage4 backward compat retained)
 import os
 import re
 import uuid
@@ -4894,6 +4894,22 @@ def upload():
         _device_tier   = get_device_tier(exif_data)
         _exif_context  = build_exif_context(exif_data, camera_track=_camera_track_for_tier)
 
+        # ── R2-FIX (Session 110) — upload original JPEG before ephemeral delete ──
+        # raw_path is still on disk here (EXIF extracted above, thumb created).
+        # Upload to originals/ so stage 4 vision comparison has a real file to
+        # fetch. stored_filename will be set to this full R2 key (not basename)
+        # so the '/' is present and the old thumbs/ prefix hack is never needed.
+        _orig_ext      = os.path.splitext(raw_path)[1].lower() or '.jpg'
+        _original_r2_key = f'originals/{uid}{_orig_ext}'
+        try:
+            _orig_url = r2.upload_file(raw_path, _original_r2_key, content_type='image/jpeg')
+            if not _orig_url:
+                app.logger.warning(f'[upload] R2 original upload returned None for key={_original_r2_key}; falling back to thumb basename')
+                _original_r2_key = os.path.basename(thumb_path)
+        except Exception as _orig_r2_err:
+            app.logger.warning(f'[upload] R2 original upload failed (non-fatal): {_orig_r2_err}; falling back to thumb basename')
+            _original_r2_key = os.path.basename(thumb_path)
+
         if os.path.exists(raw_path): os.remove(raw_path)
 
         from engine.processor import hash_similarity_pct
@@ -5202,7 +5218,7 @@ def upload():
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
-            stored_filename   = os.path.basename(thumb_path),
+            stored_filename   = _original_r2_key,   # R2-FIX: full originals/ key, not thumb basename
             thumb_path        = thumb_path,
             thumb_url         = thumb_url,
             file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
@@ -17254,7 +17270,11 @@ def _run_raw_analysis(submission, img):
                 from storage import get_client, BUCKET
                 import io as _io3
                 _orig_buf = _io3.BytesIO()
-                # stored_filename is basename only; R2 key is under thumbs/ prefix
+                # R2-FIX (Session 110): stored_filename is now the full R2 key
+                # (originals/{uid}.jpg for new uploads). The old thumbs/ prefix
+                # hack below is kept for backward compat with existing images
+                # that still have a bare basename — they will still go to manual
+                # review (acceptable for UAT phase), but new uploads will resolve.
                 _r2_key = img.stored_filename
                 if '/' not in _r2_key:
                     _r2_key = f'thumbs/{_r2_key}'
