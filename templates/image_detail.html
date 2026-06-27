@@ -1,4 +1,7 @@
-{# SL-VERSION: 110.6 (Session 110 — hero headline: bold removed, pre-line breathing;
+{# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
+#   Save button: renamed "Print / Save as PDF", sky-blue fill added;
+#   Days-since + share block moved to bottom of page (below metadata grid, above visibility row);
+#   previously 110.6 — hero headline: bold removed, pre-line breathing;
 #   EXIF honesty: Card 2 never invents settings when partial/absent;
 #   previously 110.5 — Cards 2-4: 3-col grid → full-width rows; font sizes up
 #   to 17px body / 14px labels; paragraph breathing via \n\n split; master names bold+linked;
@@ -944,7 +947,9 @@
           <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Balanced · Light editing</p>
         </div>
       </div>
-      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ audit.edit_base }}</p>
+      {% for _bullet in audit.edit_base.split('▪') if _bullet.strip() %}
+      <p style="margin:0 0 10px; font-size:16px; color:var(--text-secondary); line-height:1.85;">▪ {{ _bullet.strip() }}</p>
+      {% endfor %}
     </div>
     {% endif %}
     {% if audit.edit_creative %}
@@ -958,7 +963,9 @@
           <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Artistic · Heavy editing</p>
         </div>
       </div>
-      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ audit.edit_creative }}</p>
+      {% for _bullet in audit.edit_creative.split('▪') if _bullet.strip() %}
+      <p style="margin:0 0 10px; font-size:16px; color:var(--text-secondary); line-height:1.85;">▪ {{ _bullet.strip() }}</p>
+      {% endfor %}
     </div>
     {% endif %}
   </div>
@@ -1050,74 +1057,7 @@
   </div>
   {% endif %}
 
-  {# ── DAYS SINCE + SHARE ────────────────────────────────────────── #}
-  {% if image.scored_at %}
-  {% set _days = ((now - image.scored_at).days) if now else 0 %}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-days-share-grid">
-    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
-      <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
-      <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
-      {# 3-mode motivational nudge #}
-      {% if _days <= 3 %}
-        {# Fresh — eye is still sharp #}
-        <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">Your eye is still sharp from this. What did you see today?</p>
-      {% elif _days <= 14 %}
-        {# Mid-range — use engine line if available, else genre-specific nudge #}
-        {% if audit and audit.days_since_language %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ audit.days_since_language }}</p>
-        {% else %}
-          {% if image.genre in ('Wildlife', 'Nature') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The behaviour you were watching for doesn&#39;t wait for a convenient morning.</p>
-          {% elif image.genre == 'Street' %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The pre-dawn market light you needed is happening right now without you.</p>
-          {% elif image.genre in ('Documentary', 'Photojournalism') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The story doesn&#39;t pause while you decide whether to go back.</p>
-          {% elif image.genre in ('Landscape', 'Landscapes') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The light on that valley is different every morning. Most mornings it&#39;s extraordinary.</p>
-          {% elif image.genre in ('People', 'Wedding') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The face that let you this close won&#39;t always be available.</p>
-          {% else %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The eye you trained on this image needs a new frame to work on.</p>
-          {% endif %}
-        {% endif %}
-      {% else %}
-        {# 15+ days — seasonal window urgency #}
-        {% if image.genre in ('Wildlife', 'Nature') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The season that made this possible doesn&#39;t stay open. It&#39;s been {{ _days }} days.</p>
-        {% elif image.genre == 'Street' %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since this. The street has changed. So have you. Go find out how.</p>
-        {% elif image.genre in ('Documentary', 'Photojournalism') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The window on this story narrows every week you don&#39;t return.</p>
-        {% elif image.genre in ('Landscape', 'Landscapes') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The season that lit this valley is already shifting.</p>
-        {% elif image.genre in ('People', 'Wedding') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The people who made this possible are still there. Are you?</p>
-        {% else %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since your last photograph was evaluated. The eye goes quiet when it isn&#39;t used.</p>
-        {% endif %}
-      {% endif %}
-    </div>
-    <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
-      {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
-
-      {# ── Share button #}
-      {% if image.share_token %}
-      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
-        ↗ Share this evaluation
-      </a>
-      {% else %}
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
-        ↗ Share this evaluation
-      </a>
-      {% endif %}
-
-      {# ── Save to Logbook / Print #}
-      <button onclick="window.print()" class="btn sc-share-btn" style="font-size:15px; padding:14px; text-align:center; cursor:pointer;">
-        📓 Save to my logbook
-      </button>
-    </div>
-  </div>
-  {% endif %}
+  {# ── DAYS SINCE + SHARE moved to below metadata grid — see anchor below #}
 
   {# ══════════════════════════════════════════════════════════════════ #}
   {# LOGBOOK PRINT VIEW — hidden on screen, shown on print              #}
@@ -1488,6 +1428,72 @@
     <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:8px;">🏆 Programme Result — Published</div>
     <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--gold);">{{ image.judge_final_score }}</div>
     <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">Final evaluation · {{ image.genre }}</div>
+  </div>
+  {% endif %}
+
+  {# ── DAYS SINCE + SHARE ────────────────────────────────────────── #}
+  {% if image.scored_at %}
+  {% set _days = ((now - image.scored_at).days) if now else 0 %}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-days-share-grid">
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+      <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
+      <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
+      {# 3-mode motivational nudge #}
+      {% if _days <= 3 %}
+        <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">Your eye is still sharp from this. What did you see today?</p>
+      {% elif _days <= 14 %}
+        {% if audit and audit.days_since_language %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ audit.days_since_language }}</p>
+        {% else %}
+          {% if image.genre in ('Wildlife', 'Nature') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The behaviour you were watching for doesn&#39;t wait for a convenient morning.</p>
+          {% elif image.genre == 'Street' %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The pre-dawn market light you needed is happening right now without you.</p>
+          {% elif image.genre in ('Documentary', 'Photojournalism') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The story doesn&#39;t pause while you decide whether to go back.</p>
+          {% elif image.genre in ('Landscape', 'Landscapes') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The light on that valley is different every morning. Most mornings it&#39;s extraordinary.</p>
+          {% elif image.genre in ('People', 'Wedding') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The face that let you this close won&#39;t always be available.</p>
+          {% else %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The eye you trained on this image needs a new frame to work on.</p>
+          {% endif %}
+        {% endif %}
+      {% else %}
+        {% if image.genre in ('Wildlife', 'Nature') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The season that made this possible doesn&#39;t stay open. It&#39;s been {{ _days }} days.</p>
+        {% elif image.genre == 'Street' %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since this. The street has changed. So have you. Go find out how.</p>
+        {% elif image.genre in ('Documentary', 'Photojournalism') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The window on this story narrows every week you don&#39;t return.</p>
+        {% elif image.genre in ('Landscape', 'Landscapes') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The season that lit this valley is already shifting.</p>
+        {% elif image.genre in ('People', 'Wedding') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The people who made this possible are still there. Are you?</p>
+        {% else %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since your last photograph was evaluated. The eye goes quiet when it isn&#39;t used.</p>
+        {% endif %}
+      {% endif %}
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
+      {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
+
+      {# ── Share button #}
+      {% if image.share_token %}
+      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
+        ↗ Share this evaluation
+      </a>
+      {% else %}
+      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
+        ↗ Share this evaluation
+      </a>
+      {% endif %}
+
+      {# ── Print / Save as PDF #}
+      <button onclick="window.print()" class="btn sc-share-btn" style="font-size:15px; padding:14px; text-align:center; cursor:pointer; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE;">
+        🖨 Print / Save as PDF
+      </button>
+    </div>
   </div>
   {% endif %}
 
