@@ -34,7 +34,8 @@ from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEn
                     RatingAssignment, PeerRating, PeerPoolEntry, GenreSuggestion, LocationSuggestion,
                     WeeklyChallenge, WeeklySubmission,
                     BowSubmission, ContestPeriod, BrandContest, BrandEntry, ContestAnnouncement,
-                    get_or_assign_next_image, submit_peer_rating)
+                    get_or_assign_next_image, get_daily_eval_queue, submit_peer_rating,
+                    PeerRecognition, TIER_RANK)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
                               OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES,
@@ -594,6 +595,27 @@ def _run_startup_tasks():
                         UNIQUE (user_id, phash, genre)
                     )""",
                     "ALTER TABLE scored_phash_cache ADD COLUMN IF NOT EXISTS audit_json TEXT",
+                    "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS what_struck TEXT",
+                    "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS improvement TEXT",
+                    "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS tier_slot VARCHAR(40)",
+                    "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS reassign_count INTEGER DEFAULT 0",
+                    "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP",
+                    "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS what_struck TEXT",
+                    "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS improvement TEXT",
+                    """CREATE TABLE IF NOT EXISTS peer_recognitions (
+                        id              SERIAL PRIMARY KEY,
+                        image_id        INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                        rater_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        rater_tier      VARCHAR(40) NOT NULL,
+                        peer_ll_score   FLOAT NOT NULL,
+                        engine_score    FLOAT NOT NULL,
+                        delta_pct       FLOAT,
+                        what_struck     TEXT,
+                        improvement     TEXT,
+                        recognised_at   TIMESTAMP DEFAULT NOW(),
+                        UNIQUE (image_id, rater_id)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_peer_recognitions_image ON peer_recognitions (image_id)",
                     "CREATE INDEX IF NOT EXISTS ix_scored_phash_cache_user_phash ON scored_phash_cache (user_id, phash)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
@@ -3627,6 +3649,21 @@ def dashboard():
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
+    # ── Peer evaluation queue for dashboard (Session 111) ────────────────────
+    _peer_queue = []
+    if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
+        try:
+            _peer_queue = get_daily_eval_queue(current_user.id, limit=3)
+            # Start any assigned ones so they're tracked
+            for _pq in _peer_queue:
+                if _pq.status == 'assigned':
+                    _pq.status     = 'started'
+                    _pq.started_at = datetime.utcnow()
+            if any(p.status == 'started' for p in _peer_queue):
+                db.session.commit()
+        except Exception as _pqe:
+            app.logger.warning(f'[dashboard] peer queue: {_pqe}')
+
     return render_template('dashboard.html', images=images, stats=stats,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
                            query=query, search_enabled=(total_images >= 20),
@@ -3657,7 +3694,8 @@ def dashboard():
                            weather=_weather,
                            mission_due=_mission_due,
                            mission_done=_mission_done,
-                           dash_advisory=_dash_advisory)
+                           dash_advisory=_dash_advisory,
+                           peer_queue=_peer_queue)
 
 
 # ---------------------------------------------------------------------------
@@ -13971,6 +14009,49 @@ def bulk_upload_one():
 # Peer Rating Routes
 # ---------------------------------------------------------------------------
 
+def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
+    """
+    Haiku moderation on peer evaluation text fields.
+    Returns {ok: bool, reason: str|None}.
+    Rejects: profanity, religious expressions, abusive language, off-topic content,
+    meaningless filler. Supports English + common Indian languages.
+    Fails open — returns ok=True if API call fails, to avoid blocking evaluators.
+    """
+    try:
+        from auto_score import MODEL_HAIKU
+        _mod_model = MODEL_HAIKU
+    except ImportError:
+        _mod_model = 'claude-haiku-4-5-20251001'
+
+    _prompt = (
+        "You are a moderation assistant for a photography peer evaluation platform. "
+        "Two text fields from an evaluation are below. Decide if both are acceptable.\n\n"
+        "REJECT if either field contains:\n"
+        "- Profanity, cuss words, or abusive language (English or Indian languages: Hindi, Tamil, Kannada, Telugu, Marathi)\n"
+        "- Religious expressions used as expletives or filler\n"
+        "- Personal attacks on the photographer\n"
+        "- Content unrelated to the photograph (gear complaints, platform feedback, social commentary)\n"
+        "- Meaningless filler only: 'looks great', 'nice photo', 'perfect as is', 'nothing to improve'\n\n"
+        "ACCEPT if both fields provide specific observations about the photograph's "
+        "technical or compositional qualities — even if brief.\n\n"
+        f"WHAT STRUCK THE EVALUATOR:\n{what_struck}\n\n"
+        f"ONE THING TO IMPROVE:\n{improvement}\n\n"
+        'Respond ONLY with JSON: {"ok": true, "reason": null} or {"ok": false, "reason": "short reason"}'
+    )
+    try:
+        import anthropic as _ant
+        _client = _ant.Anthropic()
+        _resp = _client.messages.create(
+            model=_mod_model, max_tokens=80,
+            messages=[{'role': 'user', 'content': _prompt}]
+        )
+        import json as _json
+        return _json.loads(_resp.content[0].text.strip())
+    except Exception as _e:
+        app.logger.warning(f'[eval_moderation] failed (non-fatal): {_e}')
+        return {'ok': True, 'reason': None}
+
+
 @app.route('/rate')
 @login_required
 def rate():
@@ -14087,26 +14168,56 @@ def submit_rating():
     wonder     = clamp(wonder)
     aq         = clamp(aq)
 
+    # ── Mandatory text fields ────────────────────────────────────────────────
+    what_struck = (request.form.get('what_struck') or '').strip()
+    improvement = (request.form.get('improvement') or '').strip()
+    if len(what_struck) < 20:
+        flash('Please describe what struck you about this image (at least 20 characters).', 'warning')
+        return redirect(url_for('rate'))
+    if len(improvement) < 20:
+        flash('Please suggest one thing that would strengthen this image (at least 20 characters).', 'warning')
+        return redirect(url_for('rate'))
+
+    # ── Haiku moderation ─────────────────────────────────────────────────────
+    _mod = _moderate_eval_text(what_struck, improvement)
+    if not _mod.get('ok', True):
+        _mod_reason = _mod.get('reason') or 'Please focus your feedback on the photograph itself.'
+        flash(f'Your feedback was not accepted. {_mod_reason}', 'warning')
+        return redirect(url_for('rate'))
+
     try:
         rating = submit_peer_rating(
-            assignment = assignment,
-            dod        = dod,
-            disruption = disruption,
-            dm         = dm,
-            wonder     = wonder,
-            aq         = aq,
-            time_spent = time_spent,
+            assignment  = assignment,
+            dod         = dod,
+            disruption  = disruption,
+            dm          = dm,
+            wonder      = wonder,
+            aq          = aq,
+            time_spent  = time_spent,
+            what_struck = what_struck,
+            improvement = improvement,
         )
-        # Sprint 2 — award P2P rating points (+2, subscribers only)
+        # Award base points (+2) + calibration bonus (+2 if within ±10%)
+        _base_pts  = 2.0
+        _bonus_pts = 0.0
         try:
             if current_user.is_subscribed:
-                award_points(current_user, 2.0, 'peer_rating')
+                award_points(current_user, _base_pts, 'peer_rating')
+                # Check if calibrated within ±10%
+                _engine_score = assignment.image.score or 0
+                if _engine_score > 0:
+                    _delta_pct = abs(rating.peer_ll_score - _engine_score) / _engine_score * 100
+                    if _delta_pct <= 10.0:
+                        _bonus_pts = 2.0
+                        award_points(current_user, _bonus_pts, 'peer_rating')
         except Exception as _pe:
             app.logger.error(f'[points hook] peer_rating error: {_pe}')
 
-        flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} . +1 credit earned.', 'success')
-        if (current_user.lifetime_ratings_given or 0) % 5 == 0:
-            flash(' You\'ve unlocked a peer pool slot! Go to your dashboard to choose an image for peer rating.', 'info')
+        _calibrated = _bonus_pts > 0
+        _flash_msg = 'Evaluation submitted. +2 points earned.'
+        if _calibrated:
+            _flash_msg = 'Evaluation submitted. Your read matched the engine. +4 points earned.'
+        flash(_flash_msg, 'success')
 
         # Zone notifications
         img = assignment.image
