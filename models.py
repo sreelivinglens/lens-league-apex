@@ -330,6 +330,11 @@ class RatingAssignment(db.Model):
     dod          = db.Column(db.Float); disruption = db.Column(db.Float)
     dm           = db.Column(db.Float); wonder     = db.Column(db.Float)
     aq           = db.Column(db.Float); peer_ll_score = db.Column(db.Float)
+    what_struck  = db.Column(db.Text, nullable=True)   # mandatory: what worked
+    improvement  = db.Column(db.Text, nullable=True)   # mandatory: one thing to improve
+    tier_slot    = db.Column(db.String(40), nullable=True)  # which tier slot this fills
+    reassign_count = db.Column(db.Integer, default=0)       # how many times reassigned
+    expires_at   = db.Column(db.DateTime, nullable=True)    # 72h expiry for reassignment
     rater  = db.relationship('User',  foreign_keys=[rater_id],  backref='rating_assignments', lazy=True)
     image  = db.relationship('Image', foreign_keys=[image_id],  backref='rating_assignments', lazy=True)
     __table_args__ = (db.UniqueConstraint('rater_id', 'image_id', name='uq_rating_assignment'),)
@@ -349,6 +354,8 @@ class PeerRating(db.Model):
     peer_ll_score      = db.Column(db.Float, nullable=False)
     delta_from_ddi     = db.Column(db.Float, nullable=True)
     time_spent_seconds = db.Column(db.Integer, nullable=True)
+    what_struck        = db.Column(db.Text, nullable=True)
+    improvement        = db.Column(db.Text, nullable=True)
     rated_at           = db.Column(db.DateTime, default=datetime.utcnow)
     rater  = db.relationship('User',  foreign_keys=[rater_id],  backref='peer_ratings_given',    lazy=True)
     image  = db.relationship('Image', foreign_keys=[image_id],  backref='peer_ratings_received', lazy=True)
@@ -366,6 +373,42 @@ class PeerPoolEntry(db.Model):
     user  = db.relationship('User',  foreign_keys=[user_id],  backref='pool_entries', lazy=True)
     image = db.relationship('Image', foreign_keys=[image_id], backref='pool_entries', lazy=True)
     __table_args__ = (db.UniqueConstraint('user_id', 'unlock_number', name='uq_pool_entry_unlock'),)
+
+
+# ── Tier rank map — used for tiered evaluation chain ──────────────────────────
+# Higher number = higher tier. Evaluator must be >= image owner's rank.
+TIER_RANK = {
+    'Rookie':      1,
+    'Shooter':     2,
+    'Contender':   3,
+    'Craftsman':   4,
+    'Maverick':    5,
+    'Master':      6,
+    'Grandmaster': 7,
+    'Legend':      8,
+}
+
+
+class PeerRecognition(db.Model):
+    """
+    Fired when an evaluator's DDI read is within ±10% of the engine score.
+    Stores the recognition event for display on the scorecard.
+    Blended score mechanic removed — DDI is the score. This is recognition only.
+    """
+    __tablename__ = 'peer_recognitions'
+    id              = db.Column(db.Integer, primary_key=True)
+    image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    rater_id        = db.Column(db.Integer, db.ForeignKey('users.id'),  nullable=False)
+    rater_tier      = db.Column(db.String(40), nullable=False)
+    peer_ll_score   = db.Column(db.Float, nullable=False)
+    engine_score    = db.Column(db.Float, nullable=False)
+    delta_pct       = db.Column(db.Float, nullable=True)   # abs % diff from engine
+    what_struck     = db.Column(db.Text, nullable=True)    # evaluator's comment
+    improvement     = db.Column(db.Text, nullable=True)    # mandatory improvement field
+    recognised_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    image  = db.relationship('Image', foreign_keys=[image_id], backref='peer_recognitions', lazy=True)
+    rater  = db.relationship('User',  foreign_keys=[rater_id],  backref='recognitions_given', lazy=True)
+    __table_args__ = (db.UniqueConstraint('image_id', 'rater_id', name='uq_peer_recognition'),)
 
 
 class ContestEntry(db.Model):
@@ -993,62 +1036,126 @@ class ContestAnnouncement(db.Model):
 
 # ── Peer rating helpers — unchanged from v27 ──────────────────────────────────
 
-def get_or_assign_next_image(rater_id: int):
+def get_daily_eval_queue(rater_id: int, limit: int = 3) -> list:
+    """
+    Return up to `limit` RatingAssignment objects for today's evaluation queue.
+
+    Tiered chain rules:
+    - Rater may only evaluate images from photographers at the same tier or below.
+    - Images are assigned one per tier slot (same, one-below, two-below...).
+    - Daily limit: max `limit` evaluations per rater per IST day.
+    - 72-hour expiry: stale assignments are expired and reassigned to next eligible
+      rater at the same tier (never downward). Max 2 reassignments per slot.
+
+    Returns list of RatingAssignment (already started or freshly assigned).
+    """
     from datetime import timedelta
-    cutoff = datetime.utcnow() - timedelta(minutes=30)
-    stale  = RatingAssignment.query.filter(
-        RatingAssignment.rater_id   == rater_id,
-        RatingAssignment.status     == 'assigned',
-        RatingAssignment.assigned_at < cutoff,
+    from zoneinfo import ZoneInfo
+
+    IST = ZoneInfo('Asia/Kolkata')
+    now_utc       = datetime.utcnow()
+    now_ist       = now_utc.replace(tzinfo=ZoneInfo('UTC')).astimezone(IST)
+    day_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_start_utc = day_start_ist.astimezone(ZoneInfo('UTC')).replace(tzinfo=None)
+
+    rater = User.query.get(rater_id)
+    if not rater:
+        return []
+
+    rater_tier_rank = TIER_RANK.get(rater.tier or '', 0)
+
+    # ── Expire stale assignments (72h window) ────────────────────────────────
+    expiry_cutoff = now_utc - timedelta(hours=72)
+    stale = RatingAssignment.query.filter(
+        RatingAssignment.status == 'assigned',
+        RatingAssignment.assigned_at < expiry_cutoff,
     ).all()
     for s in stale:
         s.status = 'expired'
     if stale:
         db.session.commit()
 
-    in_progress = RatingAssignment.query.filter_by(rater_id=rater_id, status='started').first()
-    if in_progress:
-        return in_progress
-    fresh = RatingAssignment.query.filter_by(rater_id=rater_id, status='assigned').first()
-    if fresh:
-        return fresh
+    # ── Count today's completed evaluations for this rater ──────────────────
+    done_today = RatingAssignment.query.filter(
+        RatingAssignment.rater_id   == rater_id,
+        RatingAssignment.status     == 'submitted',
+        RatingAssignment.submitted_at >= day_start_utc,
+    ).count()
 
-    rater = User.query.get(rater_id)
-    if not rater:
-        return None
+    remaining_slots = limit - done_today
+    if remaining_slots <= 0:
+        return []
 
+    # ── Return any in-progress or freshly assigned from today ────────────────
+    active = RatingAssignment.query.filter(
+        RatingAssignment.rater_id == rater_id,
+        RatingAssignment.status.in_(['assigned', 'started']),
+    ).all()
+    if active:
+        return active[:remaining_slots]
+
+    # ── Images already seen by this rater ────────────────────────────────────
     already_seen = db.session.query(RatingAssignment.image_id).filter(
         RatingAssignment.rater_id == rater_id,
-        RatingAssignment.status.in_(['assigned', 'started', 'submitted']),
     ).subquery()
 
-    eligible = (
+    # ── Find eligible images: same tier or below rater, not rater's own ──────
+    # Eligible tiers: all tiers with rank <= rater_tier_rank
+    eligible_tiers = [t for t, r in TIER_RANK.items() if r <= rater_tier_rank]
+
+    eligible_images = (
         Image.query
         .join(User, Image.user_id == User.id)
         .filter(
-            Image.status      == 'scored',
-            Image.is_public   == True,
-            Image.is_flagged  == False,
-            Image.needs_review== False,
-            Image.score       != None,
-            Image.user_id     != rater_id,
-            User.is_subscribed== True,
+            Image.status        == 'scored',
+            Image.is_public     == True,
+            Image.is_flagged    == False,
+            Image.needs_review  == False,
+            Image.score         != None,
+            Image.user_id       != rater_id,
+            User.is_subscribed  == True,
+            User.tier.in_(eligible_tiers),
             Image.id.notin_(already_seen),
         )
-        .order_by(Image.peer_rating_count.asc().nullsfirst(), Image.scored_at.asc())
-        .first()
+        .order_by(Image.peer_rating_count.asc().nullsfirst(), Image.scored_at.desc())
+        .limit(remaining_slots * 3)
+        .all()
     )
 
-    if not eligible:
-        return None
+    if not eligible_images:
+        return []
 
-    assignment = RatingAssignment(rater_id=rater_id, image_id=eligible.id, status='assigned')
-    db.session.add(assignment)
-    db.session.commit()
-    return assignment
+    # ── Assign up to remaining_slots images ──────────────────────────────────
+    assigned = []
+    for img in eligible_images[:remaining_slots]:
+        try:
+            a = RatingAssignment(
+                rater_id    = rater_id,
+                image_id    = img.id,
+                status      = 'assigned',
+                tier_slot   = img.user.tier or 'Unknown',
+                expires_at  = now_utc + timedelta(hours=72),
+            )
+            db.session.add(a)
+            db.session.flush()
+            assigned.append(a)
+        except Exception:
+            db.session.rollback()
+            continue
+
+    if assigned:
+        db.session.commit()
+
+    return assigned
 
 
-def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
+def get_or_assign_next_image(rater_id: int):
+    """Legacy single-image wrapper — kept for backward compatibility with /rate route."""
+    queue = get_daily_eval_queue(rater_id, limit=1)
+    return queue[0] if queue else None
+
+
+def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent, what_struck="", improvement=""):
     from engine.scoring import calculate_score, normalise_genre
     image    = assignment.image
     genre    = normalise_genre(image.genre)
@@ -1059,6 +1166,7 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
         rater_id=assignment.rater_id, image_id=assignment.image_id,
         genre=genre, dod=dod, disruption=disruption, dm=dm, wonder=wonder, aq=aq,
         peer_ll_score=peer_ll, delta_from_ddi=delta, time_spent_seconds=time_spent,
+        what_struck=what_struck or '', improvement=improvement or '',
     )
     db.session.add(rating)
 
@@ -1068,6 +1176,28 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
     assignment.dod        = dod;  assignment.disruption = disruption
     assignment.dm         = dm;   assignment.wonder     = wonder
     assignment.aq         = aq;   assignment.peer_ll_score = peer_ll
+    assignment.what_struck    = what_struck or ''
+    assignment.improvement    = improvement or ''
+
+    # ── Recognition: fire if calibrated within ±10% of engine score ──────────
+    engine_score = image.score or 0
+    if engine_score > 0:
+        delta_pct = abs(peer_ll - engine_score) / engine_score * 100
+        if delta_pct <= 10.0:
+            try:
+                recognition = PeerRecognition(
+                    image_id      = image.id,
+                    rater_id      = assignment.rater_id,
+                    rater_tier    = assignment.rater.tier or 'Unknown',
+                    peer_ll_score = peer_ll,
+                    engine_score  = engine_score,
+                    delta_pct     = round(delta_pct, 1),
+                    what_struck   = what_struck or '',
+                    improvement   = improvement or '',
+                )
+                db.session.add(recognition)
+            except Exception:
+                pass  # unique constraint — already recognised, skip
 
     all_ratings = PeerRating.query.filter_by(image_id=image.id).all()
     all_scores  = [r.peer_ll_score for r in all_ratings] + [peer_ll]
@@ -1085,7 +1215,8 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
     image.peer_avg_dm         = round(sum(all_dm_v)   / n, 2)
     image.peer_avg_wonder     = round(sum(all_won)    / n, 2)
     image.peer_avg_aq         = round(sum(all_aq_v)   / n, 2)
-    image.update_blended_score()
+    # Blended score mechanic removed (Session 111) — DDI is the score.
+    # Peer evaluation feeds recognition only, not score modification.
 
     rater = assignment.rater
     rater.reset_credits_if_needed()
