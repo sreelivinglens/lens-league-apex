@@ -1,4 +1,6 @@
-{# SL-VERSION: 111.4 (Session 111 — gold left border on all right column cards via class;
+{# SL-VERSION: 111.5 (Session 111 — scoring banner: 60s auto-dismiss, sessionStorage cleared;
+   AEA banner: pre-season shows "Opens September 2026" not "is open";
+   previously 111.4 — gold left border on all right column cards via class;
    Shooting Near You: dark navy label + Get directions (no gold on light bg);
    portfolio CTA: explicit white text (#FFFFFF); scoring banner: stale sessionStorage cleared;
    previously 111.3 — right column restructured: Standing→Yesterday→Portfolio→Points→AEA→Location→Referral;
@@ -1377,6 +1379,12 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
     banner.style.display = 'flex';
 
+    // Auto-dismiss after 60 seconds — clears itself and sessionStorage
+    var _autoDismiss = setTimeout(function() {
+      banner.style.display = 'none';
+      try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
+    }, 60000);
+
     function checkScore() {
       fetch('/score-status/' + imageId)
         .then(function(r) { return r.json(); })
@@ -1384,6 +1392,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           if (data.status === 'processing' || data.status === 'pending') {
             setTimeout(checkScore, 8000);
           } else if (data.status === 'scored' || data.redirect) {
+            clearTimeout(_autoDismiss);
             icon.textContent  = '✓';
             icon.style.color  = '#5A9E3A';
             label.textContent = 'Evaluation complete';
@@ -1391,12 +1400,15 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
             banner.style.borderLeftColor = '#5A9E3A';
             msg.innerHTML = 'Your photograph has been evaluated. <a href="{{ url_for('my_gallery') }}" style="color:#1a3a6e; font-weight:700;">See your evaluation in My Gallery →</a>';
             try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
+            // Auto-dismiss the success state after 8 seconds
+            setTimeout(function() { banner.style.display = 'none'; }, 8000);
           } else {
-            // error or flagged
+            clearTimeout(_autoDismiss);
             icon.textContent  = '⚠';
             label.textContent = 'Evaluation update';
             msg.innerHTML = 'Your photograph has been received. <a href="/dashboard/my-gallery" style="color:#1a3a6e;">Check My Gallery →</a>';
             try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
+            setTimeout(function() { banner.style.display = 'none'; }, 8000);
           }
         })
         .catch(function() { setTimeout(checkScore, 12000); });
@@ -1464,10 +1476,12 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   <div class="sl-aea-banner">
     <span class="sl-aea-banner__badge">Award</span>
     <div style="flex:1">
-      <div class="sl-aea-banner__txt">Annual Excellence Award 2026 is open</div>
+      <div class="sl-aea-banner__txt">
+        {% if _pre_season %}Annual Excellence Award 2026{% else %}Annual Excellence Award 2026 is open{% endif %}
+      </div>
       <div class="sl-aea-banner__sub">
         {% if _pre_season %}
-          Keep shooting — your standing builds continuously
+          Opens September 2026 — keep shooting, your standing builds now
         {% else %}
           Shoot at least once a month to stay eligible
         {% endif %}
