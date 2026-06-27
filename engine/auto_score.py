@@ -4053,8 +4053,18 @@ def _species_display(species_id):
 
     import re as _re
 
-    # Strip parenthetical qualifiers and trailing clauses after , ; – — -
+    # Strip parenthetical qualifiers only (not hyphens — those are part of species names)
     cleaned = _re.sub(r'\s*\(.*?\)\s*', '', species_id).strip()
+
+    # SESSION 110: Full-name rule for hyphenated species — check BEFORE any split.
+    # A compound species hyphen is always letter-hyphen-letter (no spaces): "Plum-headed".
+    # A separator dash has spaces around it: "Unknown - out of focus". Distinguish them.
+    if _re.search(r'[A-Za-z]-[A-Za-z]', cleaned):
+        # Compound species name — strip trailing clauses after , ; – — (NOT after -)
+        _pre_hyphen_clean = _re.split(r'\s*[,;\u2013\u2014]\s*', cleaned)[0].strip()
+        return _pre_hyphen_clean if _pre_hyphen_clean else None
+
+    # For non-hyphenated names (and separator-dash cases): strip trailing clauses after , ; – — -
     cleaned = _re.split(r'\s*[,;\u2013\u2014-]\s*', cleaned)[0].strip()
 
     # Gate: uncertain / generic terms — hide card entirely
@@ -4071,11 +4081,6 @@ def _species_display(species_id):
         return None
     if _re.match(r'^[A-Z][a-z]+ [a-z]+$', cleaned):
         return None
-
-    # SESSION 110: Full-name rule for hyphenated species (e.g. Lion-tailed Macaque)
-    # A hyphen in the original species_id signals a compound/endemic name — return in full.
-    if '-' in species_id.split('(')[0]:
-        return cleaned
 
     # SESSION 110: Known endemic / compound species that must never be truncated
     _keep_full = {
