@@ -1,5 +1,6 @@
 """
-# SL-VERSION: 111.2 (Session 111 — delta scoring: previous_score + previous_audit params added
+# SL-VERSION: 111.3 (Session 111 — catchlight global ban: suppressed across ALL cards when eye
+#   not clearly visible (was leaking into Card 2 prose); previously 111.2 — delta scoring params)
 #   to auto_score(); delta context injected into scoring prompt for near-match resubmissions;
 #   previously 111.1 — geographic plausibility gate in vision_analyse())
 #   user_city + location now passed to vision call, geo gate fires BEFORE species_id assigned;
@@ -564,6 +565,10 @@ CATCHLIGHT RULE (Bird/Wildlife/People — any living subject):
   apply the catchlight advisory. Skip it entirely. Never invent or assume eye visibility.
   A catchlight advisory on an image where the eye is not clearly visible is worse than
   no advisory — it tells the photographer you did not look at their image.
+  THIS BAN IS GLOBAL — applies to ALL cards, not just the dedicated catchlight block.
+  Do NOT mention "catchlight", "light in the eye", "eye lit up", or "eye would light up"
+  ANYWHERE in mentor_technical, transferable_advice, byline_1, or the assignment
+  if the eye pre-condition above is not met. Not even as a passing suggestion.
 - If eye IS clearly visible and catchlight present → "The light in the eye makes the
   connection. That small bright spot is why this image feels alive. Always look for it —
   in birds, animals, people. When you see light near a subject's eye, that is the frame
