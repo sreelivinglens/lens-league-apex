@@ -1,4 +1,6 @@
-# SL-VERSION: 111.2 (Session 111 — phash cache: audit_json column added, survives image deletion;
+# SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
+#   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
+#   previously 111.2 — phash cache audit_json, delta scoring, similarity check)
 #   similarity check: exact match (>=99%) passes to cache, near-match (85-98%) enables delta scoring;
 #   delta scoring: previous_score + previous_audit passed to auto_score() for resubmissions;
 #   previously 110.3 — variety history extraction)
@@ -4920,7 +4922,7 @@ def upload():
                 # Near-match — this is an edited version of a previously scored image.
                 # Allow upload. Capture previous score + audit for delta scoring.
                 if ex.status == 'scored' and ex.score:
-                    _prev_audit_json = ex.audit_json or ''
+                    _prev_audit_json = ex._audit_json or ''
                     try:
                         import json as _json
                         _prev_audit = _json.loads(_prev_audit_json) if _prev_audit_json else {}
@@ -5475,15 +5477,15 @@ def upload():
                 # fall back to original image if cache predates audit_json column.
                 _cached_audit = _anchored_score.get('audit_json')
                 if _cached_audit:
-                    img.audit_json = _cached_audit
+                    img._audit_json = _cached_audit
                     app.logger.info(f'[upload] audit_json restored from phash cache')
                 else:
                     _orig_id = _anchored_score.get('original_image_id')
                     if _orig_id:
                         try:
                             _orig = Image.query.get(_orig_id)
-                            if _orig and _orig.audit_json:
-                                img.audit_json = _orig.audit_json
+                            if _orig and _orig._audit_json:
+                                img._audit_json = _orig._audit_json
                                 app.logger.info(f'[upload] audit_json restored from original image {_orig_id}')
                         except Exception as _ae:
                             app.logger.warning(f'[upload] audit copy failed: {_ae}')
@@ -6133,7 +6135,7 @@ def upload():
                                         'dm':    _img.dm_score, 'wonder':_img.wonder_score,
                                         'aq':    _img.aq_score, 'arch':  _img.archetype,
                                         'soul':  bool(_img.soul_bonus), 'iid': _img.id,
-                                        'audit_json': _img.audit_json or None,
+                                        'audit_json': _img._audit_json or None,
                                     })
                                     db.session.commit()
                                     app.logger.info(
