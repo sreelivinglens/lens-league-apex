@@ -120,7 +120,7 @@
      removes the collision class of bug entirely rather than working around
      it at one breakpoint. */
   .sc-wm { position: absolute; pointer-events: none; }
-  .sc-wm-credit { bottom: 0; right: 0; font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.88); background: rgba(0,0,0,0.42); padding: 2px 8px 3px; border-radius: 6px 0 0 0; white-space: nowrap; letter-spacing: 0.2px; }
+  .sc-wm-credit { bottom: 12px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.88); background: rgba(0,0,0,0.45); padding: 3px 10px 4px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.2px; }
 
   .status-banner { border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
   .status-banner.flagged { background: var(--red-dim); border: 1px solid var(--red); border-left: 4px solid var(--red); }
@@ -351,7 +351,7 @@
          stylesheet rule trying to move it, since inline styles beat plain class selectors). #}
       {% if image.photographer_name %}
       {% set _wm_parts = image.photographer_name.split() %}
-      <div class="sc-wm sc-wm-credit">© {{ _wm_parts[0] }}{% if _wm_parts|length > 1 %} {{ _wm_parts|last|first }}{% endif %}</div>
+      <div class="sc-wm sc-wm-credit">© {{ image.photographer_name }}</div>
       {% endif %}
     </div>
     {% else %}
