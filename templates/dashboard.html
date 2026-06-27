@@ -1,4 +1,7 @@
-{# SL-VERSION: 111.3 (Session 111 — right column restructured: Standing→Yesterday→Portfolio→Points→AEA→Location→Referral;
+{# SL-VERSION: 111.4 (Session 111 — gold left border on all right column cards via class;
+   Shooting Near You: dark navy label + Get directions (no gold on light bg);
+   portfolio CTA: explicit white text (#FFFFFF); scoring banner: stale sessionStorage cleared;
+   previously 111.3 — right column restructured: Standing→Yesterday→Portfolio→Points→AEA→Location→Referral;
    My Gallery CTA removed (duplicate); Yesterday removed from left column; Portfolio moved to right;
    copyright © bottom-centre on hero image; AEA bar navy not gold;
    previously 111.2 — peer eval block, recent work always visible (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
@@ -1031,6 +1034,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     background: var(--sl-card);
     border-radius: var(--r-card);
     border: 1px solid var(--sl-border);
+    border-left: 3px solid var(--sl-yellow);
     padding: 16px 18px;
   }
   .sl-desktop-section-label {
@@ -1355,6 +1359,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     var imageId = params.get('scoring');
     if (!imageId) {
       try { imageId = sessionStorage.getItem('sl_pending_score'); } catch(e) {}
+    }
+    // If we arrived without a scoring param and have no stored ID, nothing to show.
+    // Also: if the page loads without ?scoring= param, clear any stale sessionStorage
+    // from a previous session so the banner doesn't haunt future dashboard visits.
+    if (!params.get('scoring') && !imageId) {
+      try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
+      return;
     }
     if (!imageId) return;
 
@@ -2214,7 +2225,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {# ── Portfolio (desktop right col — Session 111) ── #}
   {% if show_portfolio_banner %}
-  <div id="sl-portfolio-banner-right" class="sl-desktop-right-section" style="border-left:3px solid var(--sl-border);">
+  <div id="sl-portfolio-banner-right" class="sl-desktop-right-section">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
       <div>
         <div style="font-size:15px; font-weight:700; color:var(--sl-text); margin-bottom:2px;">
@@ -2225,7 +2236,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         </div>
       </div>
       <a href="{{ url_for('portfolio_manager') }}"
-         style="flex-shrink:0; background:var(--sl-text); color:var(--sl-cream); font-size:13px;
+         style="flex-shrink:0; background:#151515; color:#FFFFFF; font-size:13px;
                 font-weight:700; padding:8px 14px; border-radius:10px; text-decoration:none;
                 min-height:44px; display:inline-flex; align-items:center; white-space:nowrap;">
         {% if portfolio_is_public %}Manage →{% else %}Set up →{% endif %}
@@ -2286,9 +2297,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {# ── Location advisory (desktop right col) ── #}
   {% if current_user.city %}
-  <div class="sl-desktop-right-section" style="border-left:3px solid var(--sl-yellow);">
+  <div class="sl-desktop-right-section">
     <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                color:var(--sl-yellow-dark); margin-bottom:4px;">Shooting near you</div>
+                color:#1A2744; margin-bottom:4px;">Shooting near you</div>
     {% if dash_advisory %}
     <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
       {{ dash_advisory.location_name }}{% if dash_advisory.state_country %}, {{ dash_advisory.state_country }}{% endif %}
@@ -2298,7 +2309,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       {{ dash_advisory.what_is_happening }}
     </div>
     <a href="{{ dash_advisory.url }}" target="_blank" rel="noopener"
-       style="display:inline-block; margin-top:6px; font-size:13px; font-weight:700; color:var(--sl-yellow-dark); text-decoration:none;">
+       style="display:inline-block; margin-top:6px; font-size:13px; font-weight:700; color:#1A2744; text-decoration:underline;">
       Get directions →
     </a>
     {% else %}
@@ -2316,7 +2327,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {# ── Referral (desktop right col) ── #}
   {% if referral_code %}
-  <div class="sl-desktop-right-section" style="border-left:3px solid var(--sl-yellow);">
+  <div class="sl-desktop-right-section">
     <span class="sl-desktop-section-label">Invite a photographer</span>
     <div style="font-size:14px; color:var(--sl-text-light); margin-bottom:10px; line-height:1.5;">
       They save ₹20 · you earn 200 pts
