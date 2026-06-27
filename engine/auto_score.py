@@ -1,6 +1,9 @@
 """
-# SL-VERSION: 110.8 (Session 110 — EXIF hallucination gate: Card 2 must never invent
-#   settings when EXIF is partial/absent; hero headline: bold removed, pre-line added;
+# SL-VERSION: 110.9 (Session 111 — _species_display fix: hyphenated names no longer
+#   truncated at first word (Plum-headed Parakeet, Orange-bellied Parrot, Lion-tailed Macaque);
+#   geographic plausibility gate added to SPECIES RULE: geographically impossible
+#   identifications return null; master reference rule: ONE master per scorecard,
+#   same master may not appear in two cards; previously 110.8 — EXIF hallucination gate)
 #   previously: all four cards + edit fields: bullet format throughout;
 #   edit_base/edit_creative: removed score promise numbers ("Adds 0.X"), explain WHY not WHAT;
 #   transferable_advice/byline_1/byline_2/mentor_technical: all bulleted, blank line between;
@@ -449,6 +452,15 @@ SPECIES RULE — ABSOLUTE:
   Write around it — describe the behaviour, the moment, the light, the geometry.
 - Wikipedia link is shown ONLY when species_id is a confirmed, specific identification.
   Never show a Wikipedia link for a guessed or uncertain species.
+- GEOGRAPHIC PLAUSIBILITY GATE — MANDATORY: Before confirming any species_id, apply
+  a range check. If the species has a documented wild range that does NOT include the
+  image location (from EXIF GPS, user city, or context clues), return null UNLESS the
+  species is commonly held in captivity or zoos at that location.
+  Examples of invalid identifications to reject:
+  Orange-bellied Parrot (range: southern Australia/Tasmania only) → null if image is from India.
+  Kakapo, Kiwi, Quetzal → null if image is from India or Southeast Asia.
+  When in doubt about range: return null. A geographically impossible species is a
+  hallucination, not an identification.
 
 FORMATTING RULE — EVERY CARD:
 - Each thought gets its own line. Breathe between ideas.
@@ -562,6 +574,10 @@ MASTER PHOTOGRAPHER REFERENCES:
 - Format: "Search: [Photographer name] [specific image/series]" — give a search term
   the photographer can use to find it.
 - Or if URL is known and stable: provide the URL.
+- ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
+  ONCE across the entire scorecard. If transferable_advice names Paul Nicklen,
+  then background_check and mentor_technical must NOT name Paul Nicklen again.
+  Check all four cards before finalising. A master who appears twice shows no effort.
 - VARIETY RULE: If portfolio_context shows recent scorecards, do not repeat a master
   already used in the last 3 evaluations for this photographer.
 - Pool: Cartier-Bresson, Raghu Rai, Vivian Maier, Ernst Haas, Daido Moriyama,
