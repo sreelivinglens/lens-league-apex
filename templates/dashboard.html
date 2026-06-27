@@ -1,4 +1,6 @@
-{# SL-VERSION: 81.1 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
+{# SL-VERSION: 111.2 (Session 111 — peer evaluation block with tiered chain, Sherpa framing,
+   Option A heading, 3-image queue, calibration bonus copy; recent work always visible;
+   Rate CTA removed from right column; previously 81.1 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
 {% extends "base.html" %}
 {% block title %}Dashboard — {{ platform_name }}{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
@@ -988,9 +990,12 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     max-width: 1200px;
     padding: 0 32px;
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 340px;
     gap: 0 28px;
     align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .sl-today__inner { grid-template-columns: 1fr 380px !important; }
   }
   /* Hero banner: full viewport width on desktop, break out of grid */
   .sl-dash-hero-banner {
@@ -1087,6 +1092,171 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   .sl-today__inner { max-width: 1200px !important; }
 }
 
+
+
+/* ── Peer evaluation block (Session 111) ── */
+.sl-peer-eval {
+  background: var(--sl-card);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--r-card);
+  padding: 20px 20px 16px;
+}
+.sl-peer-eval__hdr {
+  margin-bottom: 14px;
+}
+.sl-peer-eval__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--sl-text);
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+.sl-peer-eval__sub {
+  font-size: 15px;
+  color: var(--sl-text-light);
+  margin: 0;
+  line-height: 1.5;
+}
+.sl-peer-eval__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sl-peer-eval__card {
+  border: 1px solid var(--sl-border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  background: var(--sl-bg);
+  transition: border-color 0.15s;
+}
+.sl-peer-eval__card:hover { border-color: var(--sl-purple); }
+.sl-peer-eval__thumb {
+  aspect-ratio: 1;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  background: var(--sl-bg);
+}
+.sl-peer-eval__meta {
+  padding: 8px 10px 10px;
+}
+.sl-peer-eval__genre {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+  margin: 0 0 2px;
+}
+.sl-peer-eval__tier {
+  font-size: 14px;
+  color: var(--sl-text-light);
+  margin: 0 0 8px;
+}
+.sl-peer-eval__btn {
+  display: block;
+  width: 100%;
+  padding: 8px 0;
+  background: var(--sl-purple);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 44px;
+  line-height: 28px;
+  box-sizing: border-box;
+}
+.sl-peer-eval__pts {
+  font-size: 15px;
+  color: var(--sl-text-light);
+  text-align: center;
+  margin: 0;
+}
+.sl-peer-eval__done {
+  text-align: center;
+  padding: 20px 0 6px;
+  font-size: 15px;
+  color: var(--sl-text-light);
+  line-height: 1.6;
+}
+.sl-peer-eval__empty {
+  text-align: center;
+  padding: 16px 0 8px;
+  font-size: 15px;
+  color: var(--sl-text-light);
+}
+/* Recent work grid — always visible */
+.sl-recent-work {
+  margin-top: 4px;
+}
+.sl-recent-work__hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sl-recent-work__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sl-text);
+}
+.sl-recent-work__link {
+  font-size: 14px;
+  color: var(--sl-text);
+  text-decoration: underline;
+  font-weight: 600;
+}
+.sl-recent-work__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.sl-recent-work__item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  display: block;
+  background: #0D0D0B;
+}
+.sl-recent-work__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-recent-work__score {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 100%);
+  padding: 5px 7px 6px;
+}
+.sl-recent-work__score-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+@media (max-width: 480px) {
+  .sl-peer-eval__grid { grid-template-columns: 1fr; gap: 8px; }
+  .sl-peer-eval__card { display: grid; grid-template-columns: 100px 1fr; }
+  .sl-peer-eval__thumb { aspect-ratio: 1; width: 100px; height: 100px; }
+  .sl-peer-eval__meta { padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; }
+  .sl-peer-eval__btn { min-height: 44px; line-height: 28px; }
+  .sl-recent-work__grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 768px) {
+  .sl-peer-eval__grid { grid-template-columns: repeat(3, 1fr); }
+}
 
 /* ── Focus visible (keyboard navigation) ── */
 .sl-btn-mission:focus-visible,
@@ -1851,6 +2021,86 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   </a>
 
   {# ══════════════════════════════════════════
+     PEER EVALUATION BLOCK (Session 111)
+     Shown to subscribers only. Below mission, above free tier nudge.
+  ══════════════════════════════════════════ #}
+  {% if current_user.is_authenticated and current_user.is_subscribed and peer_queue is defined %}
+  <div class="sl-peer-eval">
+    <div class="sl-peer-eval__hdr">
+      <p class="sl-peer-eval__title">Become a better judge of photography</p>
+      <p class="sl-peer-eval__sub">Evaluate these {{ peer_queue|length if peer_queue else 3 }} images today and earn points too.</p>
+    </div>
+
+    {% if peer_queue %}
+      {% set submitted_today = peer_queue | selectattr('status', 'equalto', 'submitted') | list | length %}
+      {% set pending = peer_queue | rejectattr('status', 'equalto', 'submitted') | list %}
+
+      {% if pending %}
+      <div class="sl-peer-eval__grid">
+        {% for assignment in pending %}
+        {% set img = assignment.image %}
+        {% if img %}
+        <a href="{{ url_for('rate') }}?assignment={{ assignment.id }}" class="sl-peer-eval__card">
+          {% if img.thumb_url %}
+          <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photograph' }}" class="sl-peer-eval__thumb" loading="lazy" onerror="this.style.display='none'">
+          {% else %}
+          <div class="sl-peer-eval__thumb" style="display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:24px;color:var(--sl-border);">⊞</span>
+          </div>
+          {% endif %}
+          <div class="sl-peer-eval__meta">
+            <p class="sl-peer-eval__genre">{{ img.genre or 'Photography' }}</p>
+            <p class="sl-peer-eval__tier">{{ assignment.tier_slot or (img.user.tier if img.user else '') }}</p>
+            <span class="sl-peer-eval__btn">Evaluate →</span>
+          </div>
+        </a>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <p class="sl-peer-eval__pts">2 pts per image · +2 bonus if your eye matches the engine</p>
+
+      {% else %}
+      <div class="sl-peer-eval__done">
+        You've used your eye well today.<br>
+        <span style="font-size:14px;">Your evaluations have been submitted. Come back tomorrow.</span>
+      </div>
+      {% endif %}
+
+    {% else %}
+    <div class="sl-peer-eval__empty">
+      No images in your evaluation queue right now. Check back tomorrow.
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════
+     RECENT WORK — always visible, 6 images, 3-col
+     Vaibhav's retention anchor. No toggle, no collapse.
+  ══════════════════════════════════════════ #}
+  {% set _scored_images = images.items | selectattr('score') | selectattr('thumb_url') | list %}
+  {% if _scored_images %}
+  <div class="sl-recent-work">
+    <div class="sl-recent-work__hdr">
+      <span class="sl-recent-work__title">Recent work</span>
+      {% if stats.total > 6 %}
+      <a href="{{ url_for('my_gallery') }}" class="sl-recent-work__link">View all {{ stats.total }} →</a>
+      {% endif %}
+    </div>
+    <div class="sl-recent-work__grid">
+      {% for img in _scored_images[:6] %}
+      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-recent-work__item">
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" class="sl-recent-work__img" loading="lazy" onerror="this.style.display='none'">
+        <div class="sl-recent-work__score">
+          <span class="sl-recent-work__score-val">{{ '%.1f'|format(img.score) }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════
      FREE TIER NUDGE (no subscription)
      States:
        new user (used=0, balance=3)  — welcome, no CTA
@@ -2005,21 +2255,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       {{ upload_credits_balance or 0 }} upload credit{{ 's' if (upload_credits_balance or 0) != 1 else '' }} remaining
     </div>
     {% endif %}
-    {% if rating_widget %}
-    <a href="{{ url_for('rate') }}"
-       style="display:flex; align-items:center; justify-content:space-between;
-              background:var(--sl-purple); border-radius:12px; padding:10px 14px;
-              text-decoration:none; margin-top:10px;">
-      <div>
-        <div style="font-size:14px; font-weight:700; color:#fff;">Rate a photograph</div>
-        <div style="font-size:13px; color:rgba(255,255,255,0.75); margin-top:2px; line-height:1.5;">
-          Study how other photographers see.<br>
-          Every 5 ratings unlocks peer review for your own work.
-        </div>
-      </div>
-      <span style="font-size:14px; font-weight:800; color:#F4C20D;">+2 pts</span>
-    </a>
-    {% endif %}
+    {# Rate CTA removed — evaluation now shown in main left column (Session 111) #}
   </div>
   {% endif %}
 
@@ -2241,16 +2477,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
         {# Peer rating CTA — earn 2 points, daily habit #}
         {% if rating_widget %}
-        <a href="{{ url_for('rate') }}" class="sl-peer-cta">
-          <div class="sl-peer-cta__left">
-            <span style="font-size:22px">★</span>
-            <div>
-              <div class="sl-peer-cta__txt">Rate a photograph</div>
-              <div class="sl-peer-cta__sub">Study how others see · every 5 ratings unlocks peer review for your own work</div>
-            </div>
-          </div>
-          <span class="sl-peer-cta__pts">+2 pts</span>
-        </a>
+        {# peer CTA moved to main column #}
         {% endif %}
       </div>
     </div>
