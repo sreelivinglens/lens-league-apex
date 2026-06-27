@@ -1,7 +1,9 @@
 """
-# SL-VERSION: 111.0 (Session 111 — catchlight pre-condition: only fires when eye clearly visible;
-#   hard_truth: 9+ gap analysis banned from What Stood Out (background_check only);
-#   _species_display fix: hyphenated names no longer
+# SL-VERSION: 111.2 (Session 111 — delta scoring: previous_score + previous_audit params added
+#   to auto_score(); delta context injected into scoring prompt for near-match resubmissions;
+#   previously 111.1 — geographic plausibility gate in vision_analyse())
+#   user_city + location now passed to vision call, geo gate fires BEFORE species_id assigned;
+#   previously 111.0 — catchlight pre-condition, hard_truth 9+ gap ban, _species_display fix)
 #   truncated at first word (Plum-headed Parakeet, Orange-bellied Parrot, Lion-tailed Macaque);
 #   geographic plausibility gate added to SPECIES RULE: geographically impossible
 #   identifications return null; master reference rule: ONE master per scorecard,
@@ -2885,7 +2887,7 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
-def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "", filename: str = "") -> dict:
+def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "", filename: str = "", user_city: str = "", location: str = "") -> dict:
     """
     Call 1 of the two-call architecture.
     Sends the image to the API with a pure description prompt — no scoring.
@@ -2900,8 +2902,30 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
     filename: original upload filename (e.g. "Lady_Amherst_by_Kishore_Reddy.jpg").
               Lowest-confidence hint — may contain species or subject information.
               Injected as contextual clue only; Vision is not bound by it.
+    user_city / location: geographic context for species plausibility gate.
     """
     prompt = VISION_PROMPT
+
+    # Geographic plausibility gate — injected BEFORE any other hints.
+    # This is the authoritative location for the geographic check: the vision call
+    # is where species_id is first assigned. Prevents geographically impossible
+    # identifications (e.g. Orange-bellied Parrot from Bengaluru, India).
+    _geo = (location or user_city or "").strip()
+    if _geo:
+        geo_gate = (
+            f"\nGEOGRAPHIC CONTEXT — MANDATORY SPECIES GATE: This image was uploaded from {_geo}. "
+            f"Before assigning any species_id, apply a geographic range check. "
+            f"If the species you are considering has a documented wild range that does NOT include {_geo} "
+            f"or the broader region, return null for species_id — unless the species is commonly held "
+            f"in captivity or at zoos and aviaries in that region. "
+            f"Examples to reject for images from India: "
+            f"Orange-bellied Parrot (range: southern Australia/Tasmania only), "
+            f"Kakapo (New Zealand only), Kiwi (New Zealand only), Quetzal (Central America only). "
+            f"When in doubt about whether a species occurs in {_geo}: return null. "
+            f"A geographically impossible species identification is a hallucination."
+        )
+        prompt = prompt + geo_gate
+
     # Inject title and subject as hints — not as constraints
     if title or subject:
         hint = f"\nImage title: {title or 'Not provided'}. Subject field: {subject or 'Not provided'}.\nUse these as hints only — do not assume they are accurate. Describe what you actually see."
@@ -3676,7 +3700,7 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     return "\n" + "\n".join(lines) + "\n"
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1):
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1, previous_score=None, previous_audit=None):
     """
     Score an image using the Apex DDI Engine.
 
@@ -3753,7 +3777,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     _filename     = os.path.basename(image_path)
     _t_vision_start = _time.time()
-    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=_filename)
+    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=_filename, user_city=user_city, location=location)
     print(f"[auto_score][timing] vision_analyse: {_time.time() - _t_vision_start:.2f}s")
     scene_context = build_scene_context(vision, genre=genre)
 
@@ -3881,6 +3905,37 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         seasonal_context     = seasonal_context or '',
         portfolio_context    = _build_portfolio_context(portfolio_summary, image_number),
     )
+
+    # ── Delta context — near-match resubmission (Session 111) ────────────────
+    # When a photographer uploads an edited version of a previously scored image
+    # (85–98% phash similarity), inject the previous score and key card text so
+    # the engine compares against the original rather than scoring from scratch.
+    # This implements the resubmit scoring contract (Item P9).
+    if previous_score is not None and previous_audit:
+        _prev_hard_truth  = previous_audit.get('hard_truth', '')
+        _prev_edit_base   = previous_audit.get('edit_base', '')
+        _prev_cal_line    = previous_audit.get('calibration_line', '')
+        _delta_block = (
+            f"\n\nREEDIT CONTEXT — THIS IS A RESUBMISSION OF A PREVIOUSLY SCORED IMAGE:\n"
+            f"Previous DDI score: {previous_score:.2f}\n"
+            f"Previous opening verdict: {_prev_hard_truth[:200] if _prev_hard_truth else 'Not available'}\n"
+            f"Previous edit directions given: {_prev_edit_base[:400] if _prev_edit_base else 'Not available'}\n"
+            f"Previous calibration line: {_prev_cal_line[:200] if _prev_cal_line else 'Not available'}\n\n"
+            f"DELTA SCORING RULES:\n"
+            f"1. Compare this version against the previous score. Score strictly on what you see NOW.\n"
+            f"2. In hard_truth: acknowledge this is an edited version. Open with what changed for the better.\n"
+            f"   Example: 'The edit worked — the background is cleaner and the subject reads faster.'\n"
+            f"3. In byline_1 (Card 3): explicitly state the score delta and why.\n"
+            f"   Example: 'Your edit moved this from 6.2 to 7.1 — the background darkening removed the\n"
+            f"   main distraction. The remaining gap to 9+ is now entirely in the behaviour, not the light.'\n"
+            f"4. In mentor_technical (Card 2): acknowledge which edit directions were followed and which were not.\n"
+            f"5. If score is lower than previous: be honest but warm. Name exactly what did not improve\n"
+            f"   and what the photographer should try next.\n"
+            f"6. Never hide the comparison. The photographer submitted again to see if they improved.\n"
+            f"   They deserve a direct answer.\n"
+        )
+        prompt = prompt + _delta_block
+        print(f"[auto_score] delta context injected: previous_score={previous_score:.2f}")
 
     payload = {
         "model":       MODEL,
