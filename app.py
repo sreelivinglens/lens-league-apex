@@ -1,4 +1,7 @@
-# SL-VERSION: 110.3 (Session 110 — variety history extraction in portfolio_summary:
+# SL-VERSION: 111.2 (Session 111 — phash cache: audit_json column added, survives image deletion;
+#   similarity check: exact match (>=99%) passes to cache, near-match (85-98%) enables delta scoring;
+#   delta scoring: previous_score + previous_audit passed to auto_score() for resubmissions;
+#   previously 110.3 — variety history extraction)
 #   uploads route + retry_score now fetch last 5 audit JSONs to populate
 #   recent_masters, recent_openings, recent_locations for scorecard variety mandate)
 import os
@@ -584,9 +587,11 @@ def _run_startup_tasks():
                         archetype    VARCHAR(120),
                         soul_bonus   BOOLEAN DEFAULT FALSE,
                         original_image_id INTEGER,
+                        audit_json   TEXT,
                         scored_at    TIMESTAMP DEFAULT NOW(),
                         UNIQUE (user_id, phash, genre)
                     )""",
+                    "ALTER TABLE scored_phash_cache ADD COLUMN IF NOT EXISTS audit_json TEXT",
                     "CREATE INDEX IF NOT EXISTS ix_scored_phash_cache_user_phash ON scored_phash_cache (user_id, phash)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
@@ -4898,16 +4903,40 @@ def upload():
         if os.path.exists(raw_path): os.remove(raw_path)
 
         from engine.processor import hash_similarity_pct
+        _near_match_previous = None   # (score, audit_json) for delta scoring
         existing = Image.query.filter(Image.phash.isnot(None)).all()
         for ex in existing:
             sim = hash_similarity_pct(phash, ex.phash)
-            if ex.user_id == current_user.id and sim >= 90.0:
-                if os.path.exists(thumb_path): os.remove(thumb_path)
-                return jsonify({'error': True, 'message':
-                    f'A similar image already exists in your uploads ("{ex.asset_name or ex.original_filename}"). '
-                    'Please delete the previous version and upload a fresh image, or submit a different photograph. '
-                    'If you feel this image is not similar, write to us at support@shutterleague.com and we will review it.'
-                }), 409
+            if ex.user_id == current_user.id and sim >= 99.0:
+                # Exact re-upload of a file the user already has in their gallery.
+                # Do NOT block — the phash cache will return the anchored score below.
+                # Just break out of the loop; cache hit handles it.
+                app.logger.info(
+                    f'[upload] exact phash match (sim={sim:.1f}%) on existing image '
+                    f'{ex.id} — cache will anchor score, not blocking'
+                )
+                break
+            elif ex.user_id == current_user.id and sim >= 85.0:
+                # Near-match — this is an edited version of a previously scored image.
+                # Allow upload. Capture previous score + audit for delta scoring.
+                if ex.status == 'scored' and ex.score:
+                    _prev_audit_json = ex.audit_json or ''
+                    try:
+                        import json as _json
+                        _prev_audit = _json.loads(_prev_audit_json) if _prev_audit_json else {}
+                    except Exception:
+                        _prev_audit = {}
+                    _near_match_previous = {
+                        'score':      float(ex.score),
+                        'audit':      _prev_audit,
+                        'image_id':   ex.id,
+                        'similarity': sim,
+                    }
+                    app.logger.info(
+                        f'[upload] near-match edit detected (sim={sim:.1f}%) — '
+                        f'previous score={ex.score} image={ex.id} — delta scoring enabled'
+                    )
+                break
             elif ex.user_id != current_user.id and sim >= 98.0:
                 if os.path.exists(thumb_path): os.remove(thumb_path)
                 return jsonify({'error': True, 'message':
@@ -4937,7 +4966,7 @@ def upload():
             _cache_row = db.session.execute(
                 db.text(
                     "SELECT score, tier, dod_score, disruption_score, dm_score, "
-                    "wonder_score, aq_score, archetype, soul_bonus, original_image_id "
+                    "wonder_score, aq_score, archetype, soul_bonus, original_image_id, audit_json "
                     "FROM scored_phash_cache "
                     "WHERE user_id = :uid AND phash = :ph AND genre = :genre "
                     "ORDER BY scored_at DESC LIMIT 1"
@@ -5442,18 +5471,22 @@ def upload():
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
                 img.scoring_flash    = f'Score anchored: {img.score} ({img.tier})'
-                # Copy audit_json from the original image so the scorecard
-                # (What stood out, 4 story cards, edit suggestions etc.) is
-                # populated — without this, anchored re-uploads show an
-                # empty scorecard (only score/tier/dimensions, no copy).
-                _orig_id = _anchored_score.get('original_image_id')
-                if _orig_id:
-                    try:
-                        _orig = Image.query.get(_orig_id)
-                        if _orig and _orig.audit_json:
-                            img.audit_json = _orig.audit_json
-                    except Exception as _ae:
-                        app.logger.warning(f'[upload] audit copy failed: {_ae}')
+                # Restore audit_json: prefer cached copy (survives image deletion),
+                # fall back to original image if cache predates audit_json column.
+                _cached_audit = _anchored_score.get('audit_json')
+                if _cached_audit:
+                    img.audit_json = _cached_audit
+                    app.logger.info(f'[upload] audit_json restored from phash cache')
+                else:
+                    _orig_id = _anchored_score.get('original_image_id')
+                    if _orig_id:
+                        try:
+                            _orig = Image.query.get(_orig_id)
+                            if _orig and _orig.audit_json:
+                                img.audit_json = _orig.audit_json
+                                app.logger.info(f'[upload] audit_json restored from original image {_orig_id}')
+                        except Exception as _ae:
+                            app.logger.warning(f'[upload] audit copy failed: {_ae}')
                 db.session.commit()
                 app.logger.info(
                     f'[upload] score anchored from cache: image={img.id} '
@@ -5867,6 +5900,8 @@ def upload():
                             user_city         = _sc_user_city,
                             primary_genre     = _sc_primary_genre,
                             image_number      = _sc_image_number,
+                            previous_score    = _near_match_previous['score'] if _near_match_previous else None,
+                            previous_audit    = _near_match_previous['audit'] if _near_match_previous else None,
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
@@ -6071,11 +6106,11 @@ def upload():
                                         "(user_id, phash, genre, score, tier, "
                                         " dod_score, disruption_score, dm_score, "
                                         " wonder_score, aq_score, archetype, "
-                                        " soul_bonus, original_image_id, scored_at) "
+                                        " soul_bonus, original_image_id, audit_json, scored_at) "
                                         "VALUES "
                                         "(:uid, :ph, :genre, :score, :tier, "
                                         " :dod, :dis, :dm, :wonder, :aq, :arch, "
-                                        " :soul, :iid, NOW()) "
+                                        " :soul, :iid, :audit_json, NOW()) "
                                         "ON CONFLICT (user_id, phash, genre) "
                                         "DO UPDATE SET "
                                         " score=EXCLUDED.score, tier=EXCLUDED.tier, "
@@ -6087,6 +6122,7 @@ def upload():
                                         " archetype=EXCLUDED.archetype, "
                                         " soul_bonus=EXCLUDED.soul_bonus, "
                                         " original_image_id=EXCLUDED.original_image_id, "
+                                        " audit_json=EXCLUDED.audit_json, "
                                         " scored_at=NOW()"
                                     )
                                     db.session.execute(db.text(_cache_sql), {
@@ -6097,6 +6133,7 @@ def upload():
                                         'dm':    _img.dm_score, 'wonder':_img.wonder_score,
                                         'aq':    _img.aq_score, 'arch':  _img.archetype,
                                         'soul':  bool(_img.soul_bonus), 'iid': _img.id,
+                                        'audit_json': _img.audit_json or None,
                                     })
                                     db.session.commit()
                                     app.logger.info(
