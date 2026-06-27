@@ -1,6 +1,7 @@
-{# SL-VERSION: 111.2 (Session 111 — peer evaluation block with tiered chain, Sherpa framing,
-   Option A heading, 3-image queue, calibration bonus copy; recent work always visible;
-   Rate CTA removed from right column; previously 81.1 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
+{# SL-VERSION: 111.3 (Session 111 — right column restructured: Standing→Yesterday→Portfolio→Points→AEA→Location→Referral;
+   My Gallery CTA removed (duplicate); Yesterday removed from left column; Portfolio moved to right;
+   copyright © bottom-centre on hero image; AEA bar navy not gold;
+   previously 111.2 — peer eval block, recent work always visible (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
 {% extends "base.html" %}
 {% block title %}Dashboard — {{ platform_name }}{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
@@ -1296,7 +1297,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <div>
       <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(_hero_img.score) }}</span>
       <span class="sl-dash-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
-      <span class="sl-dash-hero-banner__by">by {{ _hero_img.photographer_name or '' }}</span>
     </div>
     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
       <span class="sl-dash-hero-banner__genre">{{ _hero_img.genre or '' }}</span>
@@ -1305,6 +1305,15 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
                    border-radius:6px;">Explore →</span>
     </div>
   </div>
+  {# Copyright: bottom-centre, always visible, deters misuse #}
+  {% if _hero_img.photographer_name %}
+  <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+              font-size:13px; font-weight:600; color:rgba(255,255,255,0.75);
+              background:rgba(0,0,0,0.45); padding:3px 10px; border-radius:6px;
+              letter-spacing:.04em; white-space:nowrap; pointer-events:none;">
+    © {{ _hero_img.photographer_name }}
+  </div>
+  {% endif %}
 </div>
 </a>
 {% endif %}
@@ -1938,73 +1947,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
   </div>
 
-  {# ══════════════════════════════════════════
-     YESTERDAY'S STATS
-  ══════════════════════════════════════════ #}
-  {% if progress_data %}
-  <div class="sl-yesterday">
-    <span class="sl-yesterday__top-label">Yesterday</span>
-    <div class="sl-yesterday__row">
-      <div class="sl-yesterday__col">
-        <span class="sl-yesterday__label">Evaluation</span>
-        <div class="sl-yesterday__score-val">{{ '%.1f'|format(progress_data.avg_score) }}</div>
-        <div class="sl-yesterday__stars">
-          {% set _s = progress_data.avg_score | int %}
-          {% for i in range(5) %}{{ '★' if i < (_s // 2) else '☆' }}{% endfor %}
-        </div>
-        {% if progress_data.trend and progress_data.trend|length >= 2 %}
-          {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
-          {% if _diff > 0 %}
-          <div class="sl-yesterday__trend">▲ {{ '%.1f'|format(_diff) }}</div>
-          {% elif _diff < 0 %}
-          <div class="sl-yesterday__trend" style="color:#E74C3C">▼ {{ '%.1f'|format(_diff|abs) }}</div>
-          {% endif %}
-        {% endif %}
-      </div>
-      <div class="sl-yesterday__col">
-        <span class="sl-yesterday__label">Season</span>
-        {% if _pre_season %}
-        <div class="sl-yesterday__streak-val" style="font-size:13px;font-weight:700;letter-spacing:.02em">September</div>
-        <div class="sl-yesterday__streak-sub">2026 opens</div>
-        {% else %}
-        <div class="sl-yesterday__streak-val">
-          <span style="color:#E74C3C">&#9679;</span>
-          {{ _months_active or 0 }}
-        </div>
-        <div class="sl-yesterday__streak-sub">month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
+  {# Yesterday moved to right column — after Your Standing (Session 111) #}
 
-  {# ── Portfolio setup banner ── #}
-  {% if show_portfolio_banner %}
-  <div id="sl-portfolio-banner" class="sl-alert amber" style="justify-content:space-between; align-items:center;">
-    <div style="display:flex; gap:12px; align-items:flex-start; flex:1;">
-      <span style="font-size:18px; flex-shrink:0;">⊞</span>
-      <div>
-        <div style="font-weight:700; margin-bottom:2px;">
-          {% if portfolio_is_public %}Continue enhancing your portfolio{% else %}Set up your portfolio{% endif %}
-        </div>
-        <div style="font-size:15px; line-height:1.5;">
-          {% if portfolio_is_public %}Add more work, update your bio, or share your link.{% else %}Make your best work public — share a link, get discovered.{% endif %}
-        </div>
-      </div>
-    </div>
-    <div style="display:flex; gap:8px; flex-shrink:0; margin-left:12px; align-items:center;">
-      <a href="{{ url_for('portfolio_manager') }}"
-         style="background:#F5C518; color:#1A1A18; font-size:14px; font-weight:700;
-                padding:8px 14px; border-radius:10px; text-decoration:none; white-space:nowrap;
-                min-height:44px; display:inline-flex; align-items:center;">
-        {% if portfolio_is_public %}Manage →{% else %}Set up →{% endif %}
-      </a>
-      <button onclick="fetch('{{ url_for('dismiss_portfolio_banner') }}',{method:'POST'}).then(function(){document.getElementById('sl-portfolio-banner').style.display='none';})"
-              style="background:none; border:none; color:rgba(90,70,0,.45); font-size:20px;
-                     cursor:pointer; padding:4px; line-height:1; min-height:44px;">×</button>
-    </div>
-  </div>
-  {% endif %}
+  {# Portfolio banner moved to right column (Session 111) #}
 
   {# ══════════════════════════════════════════
      UPLOAD BANNER — standalone, always available, no mission required
@@ -2236,6 +2181,59 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   </div>
   {% endif %}
 
+  {# ── Yesterday (desktop right col — Session 111) ── #}
+  {% if progress_data %}
+  <div class="sl-desktop-right-section">
+    <span class="sl-desktop-section-label">Yesterday</span>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-radius:8px; overflow:hidden; border:1px solid var(--sl-border);">
+      <div style="padding:14px 16px; border-right:1px solid var(--sl-border);">
+        <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">Evaluation</div>
+        <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.1f'|format(progress_data.avg_score) }}</div>
+        {% if progress_data.trend and progress_data.trend|length >= 2 %}
+          {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
+          {% if _diff > 0 %}
+          <div style="font-size:14px; font-weight:700; color:#27500A; margin-top:4px;">▲ {{ '%.1f'|format(_diff) }}</div>
+          {% elif _diff < 0 %}
+          <div style="font-size:14px; font-weight:700; color:#A32D2D; margin-top:4px;">▼ {{ '%.1f'|format(_diff|abs) }}</div>
+          {% endif %}
+        {% endif %}
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">Season</div>
+        {% if _pre_season %}
+        <div style="font-size:16px; font-weight:700; color:var(--sl-text);">September</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">2026 opens</div>
+        {% else %}
+        <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ _months_active or 0 }}</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Portfolio (desktop right col — Session 111) ── #}
+  {% if show_portfolio_banner %}
+  <div id="sl-portfolio-banner-right" class="sl-desktop-right-section" style="border-left:3px solid var(--sl-border);">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div>
+        <div style="font-size:15px; font-weight:700; color:var(--sl-text); margin-bottom:2px;">
+          {% if portfolio_is_public %}Enhance your portfolio{% else %}Set up your portfolio{% endif %}
+        </div>
+        <div style="font-size:13px; color:var(--sl-text-light); line-height:1.5;">
+          {% if portfolio_is_public %}Add work, update bio, share your link.{% else %}Make your best work public — share a link, get discovered.{% endif %}
+        </div>
+      </div>
+      <a href="{{ url_for('portfolio_manager') }}"
+         style="flex-shrink:0; background:var(--sl-text); color:var(--sl-cream); font-size:13px;
+                font-weight:700; padding:8px 14px; border-radius:10px; text-decoration:none;
+                min-height:44px; display:inline-flex; align-items:center; white-space:nowrap;">
+        {% if portfolio_is_public %}Manage →{% else %}Set up →{% endif %}
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
   {# ── Points (desktop right col) ── #}
   {% if wallet_hud %}
   <div class="sl-desktop-right-section">
@@ -2273,7 +2271,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div style="font-size:22px; font-weight:800; color:var(--sl-text);">{{ '%.2f'|format(_best_genre.top6_avg) }}</div>
     </div>
     <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden; margin-bottom:6px;">
-      <div style="height:100%; width:{{ _best_genre.bar_pct }}%; background:var(--sl-yellow); border-radius:3px;"></div>
+      <div style="height:100%; width:{{ _best_genre.bar_pct }}%; background:#1A2744; border-radius:3px;"></div>
     </div>
     {% else %}
     <div style="font-size:13px; color:var(--sl-text-light); line-height:1.6;">
@@ -2314,20 +2312,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   </div>
   {% endif %}
 
-  {# ── My Gallery CTA (desktop right col) ── #}
-  <a href="{{ url_for('my_gallery') }}"
-     style="display:flex; align-items:center; justify-content:space-between;
-            background:#1A2744; border:1px solid #1A2744;
-            border-radius:var(--r-card); padding:14px 16px;
-            text-decoration:none; gap:10px;">
-    <div>
-      <div style="font-size:15px; font-weight:700; color:#FFFFFF;">My Gallery</div>
-      <div style="font-size:13px; color:rgba(255,255,255,0.60); margin-top:2px;">
-        {{ stats.total }} uploaded · {{ stats.scored }} evaluated
-      </div>
-    </div>
-    <span style="font-size:18px; color:#F5C518; font-weight:700;">→</span>
-  </a>
+  {# My Gallery CTA removed — duplicate of nav + Recent Work "View all" link (Session 111) #}
 
   {# ── Referral (desktop right col) ── #}
   {% if referral_code %}
