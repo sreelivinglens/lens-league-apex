@@ -1065,7 +1065,7 @@ def get_daily_eval_queue(rater_id: int, limit: int = 3) -> list:
     if not rater:
         return []
 
-    rater_tier_rank = TIER_RANK.get(rater.tier or '', 0)
+    rater_tier_rank = TIER_RANK.get(rater.tier or '', 8)
 
     # ── Expire stale assignments (72h window) ────────────────────────────────
     expiry_cutoff = now_utc - timedelta(hours=72)
