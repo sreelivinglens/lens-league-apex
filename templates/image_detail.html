@@ -1152,6 +1152,40 @@
 
   {# ── DAYS SINCE + SHARE moved to below metadata grid — see anchor below #}
 
+  {# ── P6: PEER EVAL FEEDBACK — shown to image owner only (Session 113) ── #}
+  {% if current_user.is_authenticated and image.user_id == current_user.id
+        and image.peer_ratings_received %}
+  <div id="peer-eval-feedback" style="margin-bottom:20px; scroll-margin-top:80px;">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+                color:var(--text-secondary); margin-bottom:10px;">&#x1F465; What peers saw</div>
+    {% for _pr in image.peer_ratings_received | sort(attribute='rated_at', reverse=True) %}
+    {% if _pr.what_struck or _pr.improvement %}
+    <div style="background:#F8F7F3; border:1px solid #E8E5DD; border-radius:14px;
+                padding:16px 18px; margin-bottom:10px;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                  color:#6A3EF0; margin-bottom:12px;">
+        {{ _pr.rater.tier if _pr.rater and _pr.rater.tier else 'Photographer' }} · Peer Evaluator
+      </div>
+      {% if _pr.what_struck %}
+      <div style="margin-bottom:10px;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+                    color:#B8892A; margin-bottom:4px;">What stood out</div>
+        <div style="font-size:15px; line-height:1.65; color:#1a1a18;">{{ _pr.what_struck }}</div>
+      </div>
+      {% endif %}
+      {% if _pr.improvement %}
+      <div>
+        <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+                    color:#4A4840; margin-bottom:4px;">One thing to improve</div>
+        <div style="font-size:15px; line-height:1.65; color:#1a1a18;">{{ _pr.improvement }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {# ══════════════════════════════════════════════════════════════════ #}
   {# LOGBOOK PRINT VIEW — hidden on screen, shown on print              #}
   {# Owner gets a clean, beautiful, shareable PDF of their evaluation.  #}
