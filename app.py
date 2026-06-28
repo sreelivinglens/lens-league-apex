@@ -14157,13 +14157,42 @@ def rate():
     queue_remaining = 0
 
     if is_subscriber:
-        assignment = get_or_assign_next_image(user.id)
-        if assignment:
-            if assignment.status == 'assigned':
-                assignment.status     = 'started'
-                assignment.started_at = datetime.utcnow()
+        # Direct assignment — no tier chain dependency (Session 112)
+        try:
+            from datetime import timedelta as _td2
+            _already_rated = db.session.query(RatingAssignment.image_id).filter(
+                RatingAssignment.rater_id == user.id,
+            ).subquery()
+            _next_img = (
+                Image.query.join(User, Image.user_id == User.id)
+                .filter(
+                    Image.status      == 'scored',
+                    Image.is_public   == True,
+                    Image.is_flagged  == False,
+                    Image.needs_review == False,
+                    Image.score       != None,
+                    Image.user_id     != user.id,
+                    User.is_subscribed == True,
+                    Image.id.notin_(_already_rated),
+                )
+                .order_by(Image.peer_rating_count.asc().nullsfirst(), Image.scored_at.desc())
+                .first()
+            )
+            if _next_img:
+                assignment = RatingAssignment(
+                    rater_id   = user.id,
+                    image_id   = _next_img.id,
+                    status     = 'started',
+                    tier_slot  = 'any',
+                    started_at = datetime.utcnow(),
+                    expires_at = datetime.utcnow() + _td2(hours=72),
+                )
+                db.session.add(assignment)
                 db.session.commit()
-            image = assignment.image
+                image = assignment.image
+        except Exception as _re:
+            app.logger.warning(f'[rate] assignment error: {_re}')
+            db.session.rollback()
 
         already = db.session.query(RatingAssignment.image_id).filter(
             RatingAssignment.rater_id == user.id,
