@@ -15,687 +15,295 @@
 {% block extra_css %}
 <style>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SCIENCE PAGE
-   Inter only · #F7F5F2 light · #EDEAE4 warm
-   #1A1A18 text · #F5C518 gold (dark bg only)
-   #1A2744 slate — ALL dark sections (no black)
+   SCIENCE PAGE — REDESIGN SESSION 112
+   Inter only · argument-first structure
+   Dimensions as rows, gradient fills
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-sci, .sl-sci * { font-family: 'Inter', sans-serif !important; }
 
-.sl-sci, .sl-sci * {
-  font-family: 'Inter', sans-serif !important;
+/* ── SHARED ──────────────────────────────── */
+.sl-sci-sec    { padding: 80px 64px; }
+.sl-sci-inner  { max-width: 1080px; margin: 0 auto; }
+.sl-sci-eyebrow {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 6px;
+}
+.sl-sci-gold-rule { width: 32px; height: 2px; background: #F5C518; margin-bottom: 20px; }
+.sl-sci-h2 {
+  font-size: 38px; font-weight: 600; letter-spacing: -0.03em;
+  color: #1A1A18; line-height: 1.5; margin-bottom: 20px;
+}
+.sl-sci-h2 em { font-style: normal; color: #F5C518; }
+.sl-sci-body {
+  font-size: 17px; font-weight: 500; color: rgba(26,26,24,0.68);
+  line-height: 1.78; margin-bottom: 16px;
+}
+.sl-sci-body strong { color: #1A1A18; font-weight: 700; }
+.sl-sci-body-bold {
+  font-size: 17px; font-weight: 700; color: #1A1A18; line-height: 1.78;
 }
 
-/* ━━ PHOTOGRAPHER CREDIT PILL ━━━━━━━━━━━━ */
-/* Applies to all three image containers:
-   hero (.sl-sci-hero), mid (.sl-sci-feature-img), cta (.sl-sci-cta-img)
-   All three are position:relative or position:absolute-ready */
+/* ── CREDIT PILL ─────────────────────────── */
 .sl-sci-credit {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(13,11,8,0.52);
-  color: rgba(255,255,255,0.88);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding: 3px 10px;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 3;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(13,11,8,0.52); color: rgba(255,255,255,0.88);
+  font-size: 13px; font-weight: 500; letter-spacing: 0.04em;
+  padding: 3px 10px; border-radius: 4px; white-space: nowrap;
+  pointer-events: none; z-index: 3;
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
 }
-/* Hero: already position:relative with overflow:hidden — credit works as-is */
-/* Mid and CTA containers need position:relative — add here defensively */
-.sl-sci-feature-img { position: relative; }
-.sl-sci-cta-img     { position: relative; }
 
-/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-sci-hero {
-  position: relative;
-  width: 100%;
-  height: 480px;
-  max-height: 480px;
-  background: #1A2744;
-  display: flex;
-  align-items: flex-end-end;
-  overflow: hidden;
+  position: relative; width: 100%; height: 480px; max-height: 480px;
+  background: #1A2744; overflow: hidden;
 }
 .sl-sci-hero-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center; display: block;
 }
-.sl-sci-hero-fade {
-  position: absolute;
-  inset: 0;
-  background: rgba(13,13,11,0.45);
-}
+.sl-sci-hero-fade { position: absolute; inset: 0; background: rgba(13,13,11,0.45); }
 .sl-sci-hero-content {
-  position: absolute;
-  z-index: 2;
-  padding: 24px 32px 28px;
-  width: 380px;
-  display: flex;
-  flex-direction: column;
-  background: rgba(13,11,8,0.12);
-  
-  margin: 0 64px;
-  bottom: 15px;
-  left: clamp(16px, 4vw, 48px);
-  }
-.sl-sci-eyebrow {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #F5C518;
-  margin-bottom: 8px;
-}
-.sl-sci-gold-rule {
-  width: 32px;
-  height: 2px;
-  background: #F5C518;
-  margin-bottom: 16px;
-}
-.sl-sci-ddi-expand {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.04em;
-  margin-bottom: 14px;
-}
-.sl-sci-ddi-expand em {
-  font-style: normal;
-  color: #F5C518;
+  position: absolute; z-index: 2;
+  padding: 28px 36px 32px; width: 420px;
+  margin: 0 64px; bottom: 20px;
 }
 .sl-sci-hero-h1 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1.5;
-  letter-spacing: -0.03em;
-  margin-bottom: 16px;
+  font-size: 30px; font-weight: 700; color: #FFFFFF;
+  line-height: 1.5; letter-spacing: -0.03em; margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
-.sl-sci-hero-h1 em {
-  font-style: normal;
-  color: #F5C518;
-}
+.sl-sci-hero-h1 em { font-style: normal; color: #F5C518; }
 .sl-sci-hero-body {
-  font-size: 15px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.76);
-  line-height: 1.65;
-  text-align: left;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  font-size: 15px; font-weight: 400; color: rgba(255,255,255,0.76);
+  line-height: 1.65; text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+.sl-sci-ddi-tag {
+  display: inline-block; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: #F5C518; border: 1px solid rgba(245,197,24,0.4);
+  padding: 4px 12px; margin-bottom: 16px;
 }
 
-/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
-.sl-sci-sec {
-  padding: 80px 64px;
+/* ━━ PROBLEM SECTION ━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-problem { background: #F7F5F2; }
+.sl-sci-problem-grid {
+  max-width: 1080px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start;
 }
-.sl-sci-inner {
-  max-width: 1080px;
-  margin: 0 auto;
+.sl-sci-problem-table {
+  width: 100%; border-collapse: collapse; margin-top: 24px;
 }
-.sl-sci-sec-eyebrow {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(26,26,24,0.45);
-  margin-bottom: 6px;
+.sl-sci-problem-table th {
+  text-align: left; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: rgba(26,26,24,0.45); padding: 10px 14px;
+  border-bottom: 2px solid rgba(26,26,24,0.10);
 }
-.sl-sci-sec-rule {
-  width: 32px;
-  height: 2px;
-  background: #F5C518;
-  margin-bottom: 26px;
+.sl-sci-problem-table td {
+  vertical-align: top; font-size: 15px; font-weight: 500;
+  color: rgba(26,26,24,0.70); line-height: 1.6;
+  padding: 12px 14px; border-bottom: 1px solid rgba(26,26,24,0.07);
 }
-.sl-sci-h2 {
-  font-size: 40px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  color: #1A1A18;
-  line-height: 1.5;
-  margin-bottom: 18px;
+.sl-sci-problem-table td:first-child { font-weight: 700; color: #1A1A18; }
+.sl-sci-truth-box {
+  background: #1A2744; color: rgba(255,255,255,0.88);
+  padding: 28px 32px; margin-top: 40px;
+  border-left: 4px solid #F5C518;
 }
-.sl-sci-h2 em {
-  font-style: normal;
-  color: #F5C518;
+.sl-sci-truth-box p {
+  font-size: 17px; font-weight: 500; line-height: 1.7; margin: 0;
 }
-.sl-sci-body {
-  font-size: 17px;
-  font-weight: 500;
-  color: rgba(26,26,24,0.72);
-  line-height: 1.78;
-  text-align: justify;
-  margin-bottom: 14px;
+.sl-sci-truth-box strong { color: #F5C518; }
+
+/* ━━ ACT OF PHOTOGRAPHY ━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-act { background: #EDEAE4; }
+.sl-sci-act-grid {
+  max-width: 1080px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
 }
-.sl-sci-body-bold {
-  font-size: 17px;
-  font-weight: 700;
-  color: #1A1A18;
-  line-height: 1.78;
-  text-align: justify;
+.sl-sci-act-card {
+  padding: 36px 32px; border-radius: 2px;
+}
+.sl-sci-act-card-head {
+  font-size: 20px; font-weight: 700; margin-bottom: 16px; color: #1A2744;
+}
+.sl-sci-act-card-sub {
+  font-size: 15px; font-weight: 500; color: rgba(26,26,24,0.55);
+  margin-bottom: 20px; line-height: 1.6;
+}
+.sl-sci-act-item {
+  display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;
+}
+.sl-sci-act-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 7px;
+}
+.sl-sci-act-item-text { font-size: 15px; font-weight: 500; color: #1A1A18; line-height: 1.55; }
+.sl-sci-act-item-text em { font-style: normal; color: rgba(26,26,24,0.55); font-weight: 400; }
+
+/* ━━ FIVE DIMENSIONS ━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-dims-intro {
+  text-align: center; max-width: 700px; margin: 0 auto 56px;
+}
+.sl-sci-dims-intro-h {
+  font-size: 34px; font-weight: 600; letter-spacing: -0.02em;
+  color: #1A1A18; margin-bottom: 12px;
+}
+.sl-sci-dims-intro-sub {
+  font-size: 17px; font-weight: 500; color: rgba(26,26,24,0.55); line-height: 1.65;
 }
 
-/* ━━ WHY DDI — 2 col ━━━━━━━━━━━━━━━━━━━ */
-.sl-sci-why-grid {
-  max-width: 1080px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-  align-items: center;
+/* Each dimension = full-width row */
+.sl-sci-dim-row {
+  display: grid; grid-template-columns: 280px 1fr;
+  margin-bottom: 4px; overflow: hidden;
+}
+.sl-sci-dim-row:last-child { margin-bottom: 0; }
+
+.sl-sci-dim-num-col {
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  padding: 40px 24px; text-align: center;
+}
+.sl-sci-dim-index {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.16em;
+  text-transform: uppercase; opacity: 0.50; margin-bottom: 8px;
+}
+.sl-sci-dim-numeral {
+  font-size: 56px; font-weight: 800; line-height: 1;
+  letter-spacing: -0.04em; opacity: 0.18;
+}
+.sl-sci-dim-short {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-top: 10px; opacity: 0.65;
 }
 
-/* ━━ FIVE DIMENSIONS ━━━━━━━━━━━━━━━━━━━ */
-.sl-sci-dims-head {
-  text-align: center;
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #1A1A18;
-  margin-bottom: 6px;
-}
-.sl-sci-dims-sub {
-  text-align: center;
-  font-size: 17px;
-  font-weight: 500;
-  color: rgba(26,26,24,0.58);
-  line-height: 1.65;
-  margin-bottom: 48px;
-}
-.sl-sci-dims-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 24px;
-  max-width: 1080px;
-  margin: 0 auto;
-}
-.sl-sci-dim {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.sl-sci-dim-icon {
-  width: 52px;
-  height: 52px;
-  border: 1.5px solid rgba(26,26,24,0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-.sl-sci-dim-num {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: rgba(26,26,24,0.40);
-  margin-bottom: 6px;
+.sl-sci-dim-body-col {
+  padding: 40px 48px;
+  display: flex; flex-direction: column; justify-content: center;
 }
 .sl-sci-dim-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1A1A18;
-  margin-bottom: 10px;
+  font-size: 22px; font-weight: 700; color: #1A2744;
+  margin-bottom: 6px; letter-spacing: -0.01em;
 }
-.sl-sci-dim-body {
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(26,26,24,0.58);
-  line-height: 1.65;
-  text-align: justify;
+.sl-sci-dim-question {
+  font-size: 16px; font-weight: 600; color: rgba(26,26,24,0.60);
+  margin-bottom: 16px; font-style: italic;
 }
-.sl-sci-dim-detail {
-  font-size: 14px;
-  font-weight: 400;
-  color: rgba(26,26,24,0.45);
-  line-height: 1.6;
-  margin-top: 8px;
-  text-align: justify;
+.sl-sci-dim-desc {
+  font-size: 16px; font-weight: 500; color: #1A1A18; line-height: 1.72;
+  margin-bottom: 16px;
+}
+.sl-sci-dim-example {
+  font-size: 14px; font-weight: 500; color: rgba(26,26,24,0.58);
+  line-height: 1.65; border-left: 3px solid rgba(26,26,24,0.15);
+  padding-left: 14px; margin-top: 4px;
+}
+.sl-sci-dim-example strong {
+  color: rgba(26,26,24,0.80); font-weight: 700;
 }
 
-/* ━━ HUMAN + DDI — image left / text right ━━ */
-.sl-sci-feature {
-  background: #EDEAE4;
-}
+/* Per-dimension gradient fills */
+.sl-sci-dim-1 .sl-sci-dim-num-col  { background: linear-gradient(160deg, #E8F2FF 0%, #D0E4FA 100%); color: #1A3A6A; }
+.sl-sci-dim-1 .sl-sci-dim-body-col { background: linear-gradient(160deg, #F0F7FF 0%, #E8F2FF 100%); }
+.sl-sci-dim-2 .sl-sci-dim-num-col  { background: linear-gradient(160deg, #FFF3D0 0%, #FFE8A0 100%); color: #5A3A00; }
+.sl-sci-dim-2 .sl-sci-dim-body-col { background: linear-gradient(160deg, #FFFBF0 0%, #FFF3D0 100%); }
+.sl-sci-dim-3 .sl-sci-dim-num-col  { background: linear-gradient(160deg, #E8F5E9 0%, #C8E6C9 100%); color: #1A4A20; }
+.sl-sci-dim-3 .sl-sci-dim-body-col { background: linear-gradient(160deg, #F1FAF1 0%, #E8F5E9 100%); }
+.sl-sci-dim-4 .sl-sci-dim-num-col  { background: linear-gradient(160deg, #F3E8FF 0%, #E1C8FF 100%); color: #3A1A6A; }
+.sl-sci-dim-4 .sl-sci-dim-body-col { background: linear-gradient(160deg, #FAF2FF 0%, #F3E8FF 100%); }
+.sl-sci-dim-5 .sl-sci-dim-num-col  { background: linear-gradient(160deg, #FFE8E8 0%, #FFC8C8 100%); color: #6A1A1A; }
+.sl-sci-dim-5 .sl-sci-dim-body-col { background: linear-gradient(160deg, #FFF2F2 0%, #FFE8E8 100%); }
+
+/* ━━ HUMAN + ENGINE ━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-feature { background: #EDEAE4; }
 .sl-sci-feature-grid {
-  max-width: 1080px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: stretch;
+  max-width: 1080px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; align-items: stretch;
 }
-.sl-sci-feature-img {
-  min-height: 400px;
-  overflow: hidden;
-  background: #1A2744;
-  position: relative;
-}
-.sl-sci-feature-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.sl-sci-feature-text {
-  padding: 64px 56px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: #EDEAE4;
-}
+.sl-sci-feature-img { min-height: 400px; overflow: hidden; background: #1A2744; position: relative; }
+.sl-sci-feature-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sl-sci-feature-text { padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; background: #EDEAE4; }
 
-/* ━━ INTEGRITY 4-COL ━━━━━━━━━━━━━━━━━━━ */
-.sl-sci-integ-head {
-  text-align: center;
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #1A1A18;
-  margin-bottom: 48px;
-}
-.sl-sci-integ-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px;
-  max-width: 1080px;
-  margin: 0 auto;
-  border-top: 1px solid rgba(26,26,24,0.10);
-  padding-top: 40px;
-}
-.sl-sci-integ-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 16px;
-  border-right: 1px solid rgba(26,26,24,0.10);
-}
-.sl-sci-integ-card:last-child {
-  border-right: none;
-}
-.sl-sci-integ-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1A1A18;
-}
-.sl-sci-integ-body {
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(26,26,24,0.62);
-  line-height: 1.65;
-  text-align: justify;
-}
+/* ━━ INTEGRITY 4-COL ━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-integ-head { text-align: center; font-size: 34px; font-weight: 600; letter-spacing: -0.02em; color: #1A1A18; margin-bottom: 48px; }
+.sl-sci-integ-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; max-width: 1080px; margin: 0 auto; border-top: 1px solid rgba(26,26,24,0.10); padding-top: 40px; }
+.sl-sci-integ-card { display: flex; flex-direction: column; gap: 10px; padding-right: 16px; border-right: 1px solid rgba(26,26,24,0.10); }
+.sl-sci-integ-card:last-child { border-right: none; }
+.sl-sci-integ-title { font-size: 16px; font-weight: 700; color: #1A1A18; }
+.sl-sci-integ-body { font-size: 16px; font-weight: 500; color: rgba(26,26,24,0.62); line-height: 1.65; }
 
-/* ━━ WHAT DDI DOES NOT DO ━━━━━━━━━━━━━━ */
-.sl-sci-not-head {
-  text-align: center;
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #1A1A18;
-  margin-bottom: 48px;
-}
-.sl-sci-not-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  max-width: 1080px;
-  margin: 0 auto;
-  border-top: 1px solid rgba(26,26,24,0.10);
-  padding-top: 40px;
-}
-.sl-sci-not-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-}
-.sl-sci-not-x {
-  font-size: 20px;
-  font-weight: 300;
-  color: #9A9890;
-  line-height: 1;
-}
-.sl-sci-not-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1A1A18;
-  line-height: 1.5;
-}
-.sl-sci-not-body {
-  font-size: 15px;
-  font-weight: 500;
-  color: rgba(26,26,24,0.58);
-  line-height: 1.65;
-}
+/* ━━ WHAT DDI DOES NOT DO ━━━━━━━━━━━━━━━ */
+.sl-sci-not-head { text-align: center; font-size: 34px; font-weight: 600; letter-spacing: -0.02em; color: #1A1A18; margin-bottom: 48px; }
+.sl-sci-not-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; max-width: 1080px; margin: 0 auto; border-top: 1px solid rgba(26,26,24,0.10); padding-top: 40px; }
+.sl-sci-not-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.sl-sci-not-x { font-size: 20px; font-weight: 300; color: #9A9890; line-height: 1; }
+.sl-sci-not-title { font-size: 15px; font-weight: 700; color: #1A1A18; line-height: 1.5; }
+.sl-sci-not-body { font-size: 15px; font-weight: 500; color: rgba(26,26,24,0.58); line-height: 1.65; }
 
-/* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-sci-cta {
-  background: #1A2744;
-  padding: 0;
-}
-.sl-sci-cta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: stretch;
-}
-.sl-sci-cta-img {
-  min-height: 360px;
-  overflow: hidden;
-  background: #243260;
-  position: relative;
-}
-.sl-sci-cta-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.sl-sci-cta-text {
-  padding: 64px 56px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.sl-sci-cta-h {
-  font-size: 38px;
-  font-weight: 600;
-  color: #FFFFFF;
-  letter-spacing: -0.02em;
-  line-height: 1.5;
-  margin-bottom: 14px;
-}
-.sl-sci-cta-h em {
-  font-style: normal;
-  color: #F5C518;
-}
-.sl-sci-cta-body {
-  font-size: 17px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.58);
-  line-height: 1.78;
-  margin-bottom: 32px;
-  text-align: justify;
-}
-.sl-sci-cta-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.sl-sci-cta-btn {
-  display: inline-block;
-  background: #F5C518;
-  color: #FFFFFF;
-  font-family: 'Inter', sans-serif !important;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 14px 32px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-}
+/* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-cta { background: #1A2744; padding: 0; }
+.sl-sci-cta-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
+.sl-sci-cta-img { min-height: 360px; overflow: hidden; background: #243260; position: relative; }
+.sl-sci-cta-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sl-sci-cta-text { padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; }
+.sl-sci-cta-h { font-size: 38px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.02em; line-height: 1.5; margin-bottom: 14px; }
+.sl-sci-cta-h em { font-style: normal; color: #F5C518; }
+.sl-sci-cta-body { font-size: 17px; font-weight: 500; color: rgba(255,255,255,0.58); line-height: 1.78; margin-bottom: 32px; }
+.sl-sci-cta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.sl-sci-cta-btn { display: inline-block; background: #F5C518; color: #1A1A18; font-size: 14px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; padding: 14px 32px; text-decoration: none; cursor: pointer; white-space: nowrap; }
 .sl-sci-cta-btn:hover { opacity: 0.88; }
-.sl-sci-cta-btn-ghost {
-  display: inline-block;
-  background: transparent;
-  color: #FFFFFF;
-  font-family: 'Inter', sans-serif !important;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 13px 28px;
-  text-decoration: none;
-  border: 1.5px solid rgba(255,255,255,0.40);
-  cursor: pointer;
-  white-space: nowrap;
-}
+.sl-sci-cta-btn-ghost { display: inline-block; background: transparent; color: #FFFFFF; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 13px 28px; text-decoration: none; border: 1.5px solid rgba(255,255,255,0.40); cursor: pointer; white-space: nowrap; }
 .sl-sci-cta-btn-ghost:hover { border-color: rgba(255,255,255,0.70); }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MOBILE — max-width 768px
+   MOBILE ≤768px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-/* ── iPad 900px ── */
-@media (min-width: 769px) and (max-width: 900px) {
-  .sl-sci-hero { align-items: flex-end-end; }
-  .sl-sci-hero-content {
-    width: 360px;
-    padding: 20px 24px 24px;
-  bottom: 15px;
-  left: clamp(16px, 4vw, 48px);
-  }
-}
-
 @media (max-width: 600px) {
   [class*="grid"], [class*="Grid"] { grid-template-columns: 1fr !important; }
 }
-
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-sci-hero-content { width: 360px; padding: 20px 24px 24px; }
+}
 @media (max-width: 768px) {
   a[href], button { min-height: 44px; }
-
-  /* HERO */
-  .sl-sci-hero {
-    height: auto;
-    max-height: none;
-    flex-direction: column;
-    align-items: flex-end;
-  }
-  .sl-sci-hero-img {
-    position: static;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    height: auto;
-    object-fit: cover;
-    display: block;
-  }
-  .sl-sci-hero-fade {
-    display: none;
-  }
-  .sl-sci-hero-content {
-    position: static;
-    background: rgba(13,11,8,0.55);
-    margin: 0;
-    padding: 12px 16px 20px;
-    width: 100%;
-    max-width: none;
-    display: block;
-    
-    text-shadow: none;
-  bottom: 15px;
-  left: clamp(16px, 4vw, 48px);
-  }
-  .sl-sci-hero-h1 {
-    font-size: 26px;
-    font-weight: 700;
-    color: #FFFFFF;
-    line-height: 1.5;
-    letter-spacing: -0.02em;
-    margin-bottom: 0;
-    text-shadow: none;
-  }
-  .sl-sci-hero-h1 em { color: #F5C518; }
-  .sl-sci-eyebrow { text-shadow: none; }
+  .sl-sci-hero { height: auto; max-height: none; flex-direction: column; }
+  .sl-sci-hero-img { position: static; width: 100%; aspect-ratio: 16/9; height: auto; display: block; }
+  .sl-sci-hero-fade { display: none; }
+  .sl-sci-hero-content { position: static; background: rgba(13,11,8,0.55); margin: 0; padding: 16px 16px 24px; width: 100%; max-width: none; display: block; }
+  .sl-sci-hero-h1 { font-size: 24px; margin-bottom: 0; text-shadow: none; }
   .sl-sci-hero-body { display: none; }
-
-  /* SECTIONS */
-  .sl-sci-sec {
-    padding: 56px 20px;
-  }
-
-  /* WHY DDI */
-  .sl-sci-why-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  .sl-sci-h2 {
-    font-size: 30px;
-    text-wrap: balance;
-  }
-
-  /* FIVE DIMENSIONS — vertical list */
-  .sl-sci-dims-head {
-    font-size: 26px;
-    text-align: left;
-  }
-  .sl-sci-dims-sub {
-    text-align: left;
-    font-size: 16px;
-    margin-bottom: 32px;
-  }
-  .sl-sci-dims-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  .sl-sci-dim {
-    display: grid;
-    grid-template-columns: 52px 1fr;
-    grid-template-rows: auto auto auto auto;
-    text-align: left;
-    padding: 20px 0;
-    border-bottom: 1px solid rgba(26,26,24,0.08);
-    gap: 0 16px;
-    align-items: start;
-  }
-  .sl-sci-dim:last-child { border-bottom: none; }
-  .sl-sci-dim-icon {
-    grid-column: 1;
-    grid-row: 1 / 3;
-    margin-bottom: 0;
-    margin-top: 2px;
-    width: 36px;
-    height: 36px;
-  }
-  .sl-sci-dim-num {
-    grid-column: 2;
-    grid-row: 1;
-    text-align: left;
-    margin-bottom: 2px;
-  }
-  .sl-sci-dim-title {
-    grid-column: 2;
-    grid-row: 2;
-    font-size: 17px;
-    margin-bottom: 6px;
-    text-align: left;
-  }
-  .sl-sci-dim-body {
-    grid-column: 2;
-    grid-row: 3;
-    font-size: 16px;
-    text-align: left;
-  }
-  .sl-sci-dim-detail {
-    grid-column: 2;
-    grid-row: 4;
-    text-align: left;
-    margin-top: 4px;
-    font-size: 14px;
-  }
-
-  /* HUMAN + DDI */
-  .sl-sci-feature-grid {
-    grid-template-columns: 1fr;
-  }
-  .sl-sci-feature-img {
-    min-height: auto;
-    aspect-ratio: 16 / 9;
-  }
-  .sl-sci-feature-text {
-    padding: 40px 20px;
-  }
-
-  /* INTEGRITY */
-  .sl-sci-integ-head {
-    font-size: 26px;
-    text-align: left;
-  }
-  .sl-sci-integ-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    padding-top: 0;
-    border-top: none;
-  }
-  .sl-sci-integ-card {
-    padding: 20px 16px;
-    border-right: none;
-    border-bottom: 1px solid rgba(26,26,24,0.10);
-  }
-  .sl-sci-integ-card:nth-child(odd) {
-    border-right: 1px solid rgba(26,26,24,0.10);
-  }
-  .sl-sci-integ-card:nth-child(3),
-  .sl-sci-integ-card:nth-child(4) {
-    border-bottom: none;
-  }
-
-  /* WHAT DDI NOT */
-  .sl-sci-not-head {
-    font-size: 26px;
-    text-align: left;
-  }
-  .sl-sci-not-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    border-top: none;
-    padding-top: 0;
-  }
-  .sl-sci-not-card {
-    padding: 16px 12px;
-    border-bottom: 1px solid rgba(26,26,24,0.08);
-  }
-  .sl-sci-not-card:nth-child(odd) {
-    border-right: 1px solid rgba(26,26,24,0.08);
-  }
-  .sl-sci-not-card:nth-child(3),
-  .sl-sci-not-card:nth-child(4) {
-    border-bottom: none;
-  }
-
-  /* CTA */
-  .sl-sci-cta-grid {
-    grid-template-columns: 1fr;
-  }
-  .sl-sci-cta-img {
-    min-height: auto;
-    aspect-ratio: 16 / 9;
-  }
-  .sl-sci-cta-text {
-    padding: 40px 20px 56px;
-  }
-  .sl-sci-cta-h {
-    font-size: 30px;
-  }
-  .sl-sci-cta-body {
-    font-size: 17px;
-  }
-  .sl-sci-cta-btn,
-  .sl-sci-cta-btn-ghost {
-    width: 100%;
-    text-align: center;
-    padding: 16px 20px;
-    font-size: 14px;
-  }
-  .sl-sci-cta-row {
-    flex-direction: column;
-    gap: 12px;
-  }
+  .sl-sci-sec { padding: 48px 20px; }
+  .sl-sci-problem-grid { grid-template-columns: 1fr; gap: 32px; }
+  .sl-sci-h2 { font-size: 26px; }
+  .sl-sci-act-grid { grid-template-columns: 1fr; }
+  /* Dimensions: stack left panel above body panel */
+  .sl-sci-dim-row { grid-template-columns: 1fr; }
+  .sl-sci-dim-num-col { flex-direction: row; justify-content: flex-start; gap: 16px; padding: 20px 20px; }
+  .sl-sci-dim-numeral { font-size: 36px; }
+  .sl-sci-dim-body-col { padding: 20px 20px 32px; }
+  .sl-sci-dims-intro-h { font-size: 24px; }
+  .sl-sci-feature-grid { grid-template-columns: 1fr; }
+  .sl-sci-feature-img { min-height: auto; aspect-ratio: 16/9; }
+  .sl-sci-feature-text { padding: 40px 20px; }
+  .sl-sci-integ-grid { grid-template-columns: 1fr 1fr; gap: 0; padding-top: 0; border-top: none; }
+  .sl-sci-integ-card { padding: 20px 16px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.10); }
+  .sl-sci-integ-card:nth-child(odd) { border-right: 1px solid rgba(26,26,24,0.10); }
+  .sl-sci-integ-card:nth-child(3), .sl-sci-integ-card:nth-child(4) { border-bottom: none; }
+  .sl-sci-not-grid { grid-template-columns: 1fr 1fr; gap: 0; border-top: none; padding-top: 0; }
+  .sl-sci-not-card { padding: 16px 12px; border-bottom: 1px solid rgba(26,26,24,0.08); }
+  .sl-sci-not-card:nth-child(odd) { border-right: 1px solid rgba(26,26,24,0.08); }
+  .sl-sci-not-card:nth-child(3), .sl-sci-not-card:nth-child(4) { border-bottom: none; }
+  .sl-sci-cta-grid { grid-template-columns: 1fr; }
+  .sl-sci-cta-img { min-height: auto; aspect-ratio: 16/9; }
+  .sl-sci-cta-text { padding: 40px 20px 56px; }
+  .sl-sci-cta-h { font-size: 28px; }
+  .sl-sci-cta-btn, .sl-sci-cta-btn-ghost { width: 100%; text-align: center; padding: 16px 20px; font-size: 14px; }
+  .sl-sci-cta-row { flex-direction: column; gap: 12px; }
+  .sl-sci-integ-head, .sl-sci-not-head { font-size: 24px; text-align: left; }
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
 }
 </style>
 {% endblock %}
@@ -703,223 +311,307 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
 {% block content %}
 <div class="sl-sci">
 
-  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <!-- ── HERO ─────────────────────────────────────────────────────── -->
   <section class="sl-sci-hero">
     {% if sci_hero and sci_hero.thumb_url %}
-    <img
-      class="sl-sci-hero-img"
-      src="{{ sci_hero.thumb_url }}"
+    <img class="sl-sci-hero-img" src="{{ sci_hero.thumb_url }}"
       alt="Photograph by a Shutter League member — Master level or above"
-      onerror="this.style.display='none'"
-    >
+      onerror="this.style.display='none'">
     {% if sci_hero.photographer_name %}
-    <span class="sl-sci-credit sl-sci-credit-hero">© {{ sci_hero.photographer_name }}</span>
+    <span class="sl-sci-credit">© {{ sci_hero.photographer_name }}</span>
     {% endif %}
     {% endif %}
     <div class="sl-sci-hero-fade"></div>
     <div class="sl-sci-hero-content">
-      <p class="sl-sci-eyebrow">Science of Photographic Evaluation</p>
-      <div class="sl-sci-gold-rule"></div>
-      <p class="sl-sci-ddi-expand"><em>Depth Dimension Index</em></p>
+      <span class="sl-sci-ddi-tag">Depth Dimension Index</span>
       <h1 class="sl-sci-hero-h1">Beyond opinion.<br>Toward photographic<br><em>understanding.</em></h1>
-      <p class="sl-sci-hero-body">The Dimensional Depth Index was developed to evaluate the dimensions that shape photographic impact — beyond technical perfection alone. It examines how images communicate, resonate, and hold attention across five distinct photographic dimensions.</p>
+      <p class="sl-sci-hero-body hero-sub">Five dimensions. One consistent standard. An evaluation that tells you what worked, what didn't, and what to practise — not just what someone thought of your photograph.</p>
     </div>
   </section>
 
-  <!-- ── WHY DDI EXISTS ─────────────────────────────────────────── -->
-  <section class="sl-sci-sec" style="background: #F7F5F2;">
-    <div class="sl-sci-why-grid">
+  <!-- ── THE PROBLEM ──────────────────────────────────────────────── -->
+  <section class="sl-sci-sec sl-sci-problem">
+    <div class="sl-sci-problem-grid">
       <div>
-        <p class="sl-sci-sec-eyebrow">Why This Exists</p>
-        <div class="sl-sci-sec-rule"></div>
-        <h2 class="sl-sci-h2">Most photographs today are validated. Very few are <em>evaluated.</em></h2>
+        <p class="sl-sci-eyebrow">Why This Exists</p>
+        <div class="sl-sci-gold-rule"></div>
+        <h2 class="sl-sci-h2">Most photographs today are <em>validated.</em><br>Very few are evaluated.</h2>
+        <p class="sl-sci-body">Every photographer who has entered a programme or submitted work for evaluation has felt it: you submitted your best work, someone else placed higher, and you had no honest answer about why.</p>
+        <p class="sl-sci-body">The three systems that exist today all fail in the same direction.</p>
       </div>
       <div>
-        <p class="sl-sci-body">Social approval is not the same as photographic impact. The Dimensional Depth Index was created to examine the deeper dimensions that influence how an image communicates — including timing, emotional response, difficulty, composition, and visual attention.</p>
-        <p class="sl-sci-body">The goal is not to replace human judgment.</p>
-        <p class="sl-sci-body-bold">The goal is to make photographic evaluation more consistent, structured, and honest.</p>
+        <table class="sl-sci-problem-table">
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>What it actually measures</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Social voting<br><span style="font-weight:400;font-size:13px;color:rgba(26,26,24,0.45)">GuruShots, Instagram</span></td>
+              <td>The most popular image at that moment, in that community, by people who have no obligation to look carefully. Recency bias. Follow-back bias. A technically excellent image uploaded on a Sunday loses to a mediocre image uploaded on a Monday with 200 friends voting.</td>
+            </tr>
+            <tr>
+              <td>Panel judging<br><span style="font-weight:400;font-size:13px;color:rgba(26,26,24,0.45)">Camera clubs, awards</span></td>
+              <td>What the panel agrees on — determined by who is on the panel, what they have seen recently, and what the rest of the pool looks like. Same image, same panel, different week: different result. This is not evaluation. It is opinion under peer pressure.</td>
+            </tr>
+            <tr>
+              <td>Generic AI scoring<br><span style="font-weight:400;font-size:13px;color:rgba(26,26,24,0.45)">Galaxy.ai, free tools</span></td>
+              <td>A number with no context, no memory, no understanding of what you were trying to do. It cannot tell you: <em>your evaluation is 7.2, which places you in the top 14% of Wildlife images this month, and your weakest dimension is how striking it is to a stranger.</em></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="sl-sci-truth-box">
+          <p>The common thread: <strong>the judgment depends on the pool, the panel, or the moment — not on a verifiable standard.</strong> A tiger portrait wins a camera club evaluation because no one else shot a tiger that month. The same image places nowhere at Wildlife Photographer of the Year because the pool has 50,000 tiger portraits. The image did not change. The context did. The evaluation was never about the image.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ── FIVE DIMENSIONS ───────────────────────────────────────── -->
-  <section class="sl-sci-sec" id="dimensions" style="background: #EDEAE4;">
-    <div class="sl-sci-dims-head">The five dimensions of photographic impact</div>
-    <p class="sl-sci-dims-sub">Every photograph communicates differently.<br>The engine examines the dimensions that contribute to that communication.</p>
-    <div class="sl-sci-dims-grid">
-
-      <div class="sl-sci-dim">
-        <div class="sl-sci-dim-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l4-8 4 4 3-6 4 10"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+  <!-- ── THE COMPLETE ACT ──────────────────────────────────────────── -->
+  <section class="sl-sci-sec sl-sci-act">
+    <div class="sl-sci-inner">
+      <p class="sl-sci-eyebrow" style="text-align:center;">The Framework</p>
+      <div class="sl-sci-gold-rule" style="margin:6px auto 20px;"></div>
+      <h2 class="sl-sci-h2" style="text-align:center;max-width:680px;margin:0 auto 16px;">A photograph is the intersection<br>of two things.</h2>
+      <p class="sl-sci-body" style="text-align:center;max-width:600px;margin:0 auto 40px;">The five DDI dimensions are not arbitrary. They are the complete decomposition of what every photograph consists of — the physical act of making it, and the emotional transmission it achieves.</p>
+      <div class="sl-sci-act-grid">
+        <div class="sl-sci-act-card" style="background:linear-gradient(135deg,#EAF2FB 0%,#D8E8F8 100%);">
+          <div class="sl-sci-act-card-head">The physical act</div>
+          <div class="sl-sci-act-card-sub">What the photographer did to make this image exist.</div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#2A5FA8;"></div>
+            <div class="sl-sci-act-item-text"><strong>Access</strong> <em>— Getting to the location, the situation, the proximity to the subject.</em></div>
+          </div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#2A5FA8;"></div>
+            <div class="sl-sci-act-item-text"><strong>The moment chosen</strong> <em>— The decision about when to press the shutter. For action: the peak of the act. For landscape: the quality of light. For still life: the angle of shadow.</em></div>
+          </div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#2A5FA8;"></div>
+            <div class="sl-sci-act-item-text"><strong>Technical execution</strong> <em>— Managing the instrument. Shutter, aperture, light, focus.</em></div>
+          </div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#2A5FA8;"></div>
+            <div class="sl-sci-act-item-text"><strong>Visual intelligence</strong> <em>— The deliberate choice to break convention or follow it, and the skill to execute that choice.</em></div>
+          </div>
         </div>
-        <p class="sl-sci-dim-num">1.</p>
-        <p class="sl-sci-dim-title">Depth of Difficulty</p>
-        <p class="sl-sci-dim-body">How difficult was it to create this image?</p>
-        <p class="sl-sci-dim-detail">Includes access, rarity, timing, environmental challenge, and technical execution difficulty.</p>
-      </div>
-
-      <div class="sl-sci-dim">
-        <div class="sl-sci-dim-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <div class="sl-sci-act-card" style="background:linear-gradient(135deg,#FDE8E8 0%,#F8D4D4 100%);">
+          <div class="sl-sci-act-card-head">The emotional transmission</div>
+          <div class="sl-sci-act-card-sub">What the image does to a viewer who had no part in making it.</div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#AD3A3A;"></div>
+            <div class="sl-sci-act-item-text"><strong>Transportation</strong> <em>— Does it take the viewer somewhere they could not go without the photographer?</em></div>
+          </div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#AD3A3A;"></div>
+            <div class="sl-sci-act-item-text"><strong>Arrest</strong> <em>— Does the eye stop, or does it scroll past? Visual surprise creates the involuntary pause.</em></div>
+          </div>
+          <div class="sl-sci-act-item">
+            <div class="sl-sci-act-dot" style="background:#AD3A3A;"></div>
+            <div class="sl-sci-act-item-text"><strong>Emotional specificity</strong> <em>— Not "nice." Not "beautiful." A named feeling — loneliness, awe, defiance, tenderness, dread.</em></div>
+          </div>
         </div>
-        <p class="sl-sci-dim-num">2.</p>
-        <p class="sl-sci-dim-title">Visual Disruption</p>
-        <p class="sl-sci-dim-body">Does this image break from convention?</p>
-        <p class="sl-sci-dim-detail">Visual surprise, unconventional framing, layered reflections, unexpected perspectives — does it stop the viewer?</p>
       </div>
-
-      <div class="sl-sci-dim">
-        <div class="sl-sci-dim-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <p class="sl-sci-dim-num">3.</p>
-        <p class="sl-sci-dim-title">Timing</p>
-        <p class="sl-sci-dim-body">Was the right moment captured?</p>
-        <p class="sl-sci-dim-detail">Includes timing, anticipation, gesture, emotional peak, and fleeting interaction.</p>
-      </div>
-
-      <div class="sl-sci-dim">
-        <div class="sl-sci-dim-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <p class="sl-sci-dim-num">4.</p>
-        <p class="sl-sci-dim-title">Wonder</p>
-        <p class="sl-sci-dim-body">What does this image make the viewer feel?</p>
-        <p class="sl-sci-dim-detail">Eye Wonder (compositional find), Access Wonder (proximity and trust), Cultural Wonder (a world you cannot enter), Emotional Wonder (specific named feeling). Primary signal for Landscape and Nature.</p>
-      </div>
-
-      <div class="sl-sci-dim">
-        <div class="sl-sci-dim-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        </div>
-        <p class="sl-sci-dim-num">5.</p>
-        <p class="sl-sci-dim-title">Affective Quotient</p>
-        <p class="sl-sci-dim-body">What specific emotion does the image create?</p>
-        <p class="sl-sci-dim-detail">Not technical polish — the named feeling: loneliness, joy, defiance, tenderness, awe. Cannot evaluate above 7.5 without a specific emotion. Primary signal for People, Portraits, and Street.</p>
-      </div>
-
     </div>
   </section>
 
-  <!-- ── HUMAN + DDI — image left / text right ──────────────────── -->
+  <!-- ── FIVE DIMENSIONS ───────────────────────────────────────────── -->
+  <section class="sl-sci-sec" id="dimensions" style="background:#F7F5F2;padding-top:80px;padding-bottom:0;">
+    <div class="sl-sci-inner">
+      <div class="sl-sci-dims-intro">
+        <p class="sl-sci-eyebrow">The Five Dimensions</p>
+        <div class="sl-sci-gold-rule" style="margin:6px auto 20px;"></div>
+        <h2 class="sl-sci-dims-intro-h">Five questions. One complete evaluation.</h2>
+        <p class="sl-sci-dims-intro-sub">Each dimension is a distinct, non-overlapping question. Together they cover the complete photographic act — the physical side and the transmission side. None of them is about whether the photograph is "nice."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dimension rows — full bleed, outside .sl-sci-inner -->
+  <div style="max-width:1080px;margin:0 auto 80px;">
+
+    <div class="sl-sci-dim-row sl-sci-dim-1">
+      <div class="sl-sci-dim-num-col">
+        <div class="sl-sci-dim-index">Dimension</div>
+        <div class="sl-sci-dim-numeral">1</div>
+        <div class="sl-sci-dim-short">Difficulty</div>
+      </div>
+      <div class="sl-sci-dim-body-col">
+        <div class="sl-sci-dim-title">Depth of Difficulty</div>
+        <div class="sl-sci-dim-question">How hard was it to make this image exist?</div>
+        <div class="sl-sci-dim-desc">This dimension recognises the physical and technical cost of the image — the things the viewer may never consciously notice, but which are the reason the image is possible at all. Access (did you need to be somewhere dangerous, rare, or restricted?), environmental challenge, and the precision of technical execution. A rating of 10 does not mean the image is "better" — it means only this photographer, in this situation, with this level of skill, could have made this frame.</div>
+        <div class="sl-sci-dim-example"><strong>In practice:</strong> A kingfisher caught mid-dive evaluates higher than a perched kingfisher — not because the perched image is less beautiful, but because the dive is harder to capture. A still life lit at the exact right angle of late window light evaluates higher than one lit at noon with no thought about shadow. A landscape at 4,500 metres in sub-zero conditions evaluates higher than the same mountain from a viewpoint car park.</div>
+      </div>
+    </div>
+
+    <div class="sl-sci-dim-row sl-sci-dim-2">
+      <div class="sl-sci-dim-num-col">
+        <div class="sl-sci-dim-index">Dimension</div>
+        <div class="sl-sci-dim-numeral">2</div>
+        <div class="sl-sci-dim-short">Disruption</div>
+      </div>
+      <div class="sl-sci-dim-body-col">
+        <div class="sl-sci-dim-title">Visual Disruption</div>
+        <div class="sl-sci-dim-question">Does this image break the viewer's trained pattern?</div>
+        <div class="sl-sci-dim-desc">The human eye has learned to scan and discard. It has seen 10,000 sunset photographs. 5,000 flamingo shots. 3,000 street portraits. Visual Disruption asks: does this image do something the eye has not been trained to expect? Not disorder — purposeful departure. An unusual angle, a layered reflection, a compositional choice that forces the eye to re-enter the frame and look again. This is the dimension that separates a well-crafted photograph from a memorable one. As the Shutter League pool grows, this dimension becomes more sophisticated: an image that was disruptive in 2020 may be predictable in 2026 because the pool has absorbed thousands like it.</div>
+        <div class="sl-sci-dim-example"><strong>Expected vs. Disruptive:</strong> Flamingos from above at midday, vibrant pink against blue sky — expected. Flamingos at water level, muted pink against storm-grey, the flock reflected and doubled — disruptive. A monk in a temple — expected. The same monk reflected in a puddle outside a neon-lit market — disruptive.</div>
+      </div>
+    </div>
+
+    <div class="sl-sci-dim-row sl-sci-dim-3">
+      <div class="sl-sci-dim-num-col">
+        <div class="sl-sci-dim-index">Dimension</div>
+        <div class="sl-sci-dim-numeral">3</div>
+        <div class="sl-sci-dim-short">Moment</div>
+      </div>
+      <div class="sl-sci-dim-body-col">
+        <div class="sl-sci-dim-title">The Moment Chosen</div>
+        <div class="sl-sci-dim-question">Of all the instants available, was this the right one?</div>
+        <div class="sl-sci-dim-desc">This is the most misunderstood dimension. It is not exclusively about action photography, and it does not ask whether the bird was mid-flight. It asks: of all the moments available to the photographer, did they choose the one that carries the most meaning for this specific image?<br><br>
+        For <strong>action</strong>: the peak of the behavioural act — the catch, the leap, the collision, the instant of contact.<br>
+        For <strong>landscape</strong>: the quality of light — the storm cloud that created the mood, the mist that appeared for four minutes, the moment the colour temperature shifted.<br>
+        For <strong>still life</strong>: the shadow angle, the rim light on the bowl, the moment the arrangement was exactly as intended.<br>
+        For <strong>street</strong>: the geometric alignment — the moment the figure was at the precise point that completes the composition.<br><br>
+        A rating of 5 does not mean this dimension does not apply. It means: the timing was considered but not exceptional — a better moment was available.</div>
+        <div class="sl-sci-dim-example"><strong>Flamingos under storm cloud:</strong> DM = 7.4 — the atmospheric conditions were recognised and used, but the individual subject placement was not resolved. <strong>A still life at noon under harsh light:</strong> DM = 3 — the moment was unconsidered. <strong>The same still life shot when soft late-afternoon light created a graduated shadow:</strong> DM = 7.</div>
+      </div>
+    </div>
+
+    <div class="sl-sci-dim-row sl-sci-dim-4">
+      <div class="sl-sci-dim-num-col">
+        <div class="sl-sci-dim-index">Dimension</div>
+        <div class="sl-sci-dim-numeral">4</div>
+        <div class="sl-sci-dim-short">WOW</div>
+      </div>
+      <div class="sl-sci-dim-body-col">
+        <div class="sl-sci-dim-title">The WOW Factor</div>
+        <div class="sl-sci-dim-question">Does this image take the viewer somewhere they could not go alone?</div>
+        <div class="sl-sci-dim-desc">This is the transportation dimension. It is the quality that makes a viewer stop and feel the presence of somewhere, something, or someone they could not access without the photographer. There are four kinds of WOW:<br><br>
+        <strong>Eye Wonder</strong> — a compositional find so unlikely it feels impossible: the reflection, the geometry, the layering that no one else saw.<br>
+        <strong>Access Wonder</strong> — the photographer got closer, stayed longer, was trusted more than you could have been. A National Geographic photographer in a wolf den for three weeks.<br>
+        <strong>Cultural Wonder</strong> — a world the viewer cannot enter: a ritual, a way of life, a place that is closed to outsiders.<br>
+        <strong>Emotional Wonder</strong> — a human moment so specific and unguarded that witnessing it feels like a gift.<br><br>
+        This is the primary signal for Landscape, Wildlife, Nature, and Documentary photography. But it exists across all photography types — a street portrait with eyes that have seen more than you can imagine carries Wonder.</div>
+        <div class="sl-sci-dim-example"><strong>Sri's flamingo image:</strong> 8.6 — the double reflection creates a world that exists twice, once in reality and once in the still water. The viewer is transported to a place they could not stand. <strong>The sugar bowl still life:</strong> 4.8 — a well-made image, but the viewer is not transported. They appreciate the craft. Those are different things.</div>
+      </div>
+    </div>
+
+    <div class="sl-sci-dim-row sl-sci-dim-5">
+      <div class="sl-sci-dim-num-col">
+        <div class="sl-sci-dim-index">Dimension</div>
+        <div class="sl-sci-dim-numeral">5</div>
+        <div class="sl-sci-dim-short">Emotion</div>
+      </div>
+      <div class="sl-sci-dim-body-col">
+        <div class="sl-sci-dim-title">The Emotion It Creates</div>
+        <div class="sl-sci-dim-question">What specific feeling does this image transmit to a stranger?</div>
+        <div class="sl-sci-dim-desc">This is the transmission dimension — not what the photographer felt, but what a stranger who knows nothing about the photograph, the photographer, or the location would feel when they stop and look. It is not asking whether the image is "nice" or "beautiful." It is asking whether it creates a specific, nameable emotion: loneliness, awe, defiance, tenderness, joy, dread, exhilaration, grief. A technically perfect portrait with no emotional transmission receives a 5. That is honest, not cruel. This dimension cannot reach above 7.5 without a specific emotion that a stranger would name without prompting.</div>
+        <div class="sl-sci-dim-example"><strong>Sri's flamingos:</strong> 9.1 — the engine read stillness, melancholy, the specific quiet of a world that does not know you are watching. That is a named emotion. <strong>The sugar bowl:</strong> 6.2 — it creates appreciation for the craft and the composition. That is a feeling, but it is not the kind of feeling that makes a stranger stop. The gap between 6.2 and 9.1 is the gap between a well-made image and one that does something irreversible to the person looking at it.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── HUMAN + DDI ───────────────────────────────────────────────── -->
   <section class="sl-sci-feature">
     <div class="sl-sci-feature-grid">
-
       <div class="sl-sci-feature-img">
         {% if sci_mid and sci_mid.thumb_url %}
-        <img
-          src="{{ sci_mid.thumb_url }}"
+        <img src="{{ sci_mid.thumb_url }}"
           alt="Shutter League community photograph — high-scoring image"
-          onerror="this.style.display='none'"
-        >
+          onerror="this.style.display='none'">
         {% if sci_mid.photographer_name %}
         <span class="sl-sci-credit">© {{ sci_mid.photographer_name }}</span>
         {% endif %}
         {% endif %}
       </div>
-
       <div class="sl-sci-feature-text">
-        <p class="sl-sci-sec-eyebrow">Human + Engine</p>
-        <div class="sl-sci-sec-rule"></div>
-        <h2 class="sl-sci-h2" style="font-size:32px;">Technology can measure patterns.<br>Humans understand <em>meaning.</em></h2>
-        <p class="sl-sci-body">The engine does not replace photographers, mentors, or jury members.</p>
-        <p class="sl-sci-body">It exists to create a more structured foundation for evaluation — helping reduce inconsistency while preserving human interpretation, context, and artistic judgment.</p>
-        <p class="sl-sci-body">Human review remains essential across mentor feedback, Body of Work evaluation, and final recognitions.</p>
+        <p class="sl-sci-eyebrow">Human + Engine</p>
+        <div class="sl-sci-gold-rule"></div>
+        <h2 class="sl-sci-h2" style="font-size:30px;">Technology can measure patterns.<br>Humans understand <em>meaning.</em></h2>
+        <p class="sl-sci-body">The engine does not replace photographers, mentors, or jury members. It exists to create a more consistent foundation for evaluation — reducing the variability of panel opinion while preserving human interpretation, context, and artistic judgment.</p>
+        <p class="sl-sci-body">Human review remains essential across mentor feedback, Body of Work evaluation, and final recognitions. The engine is the first reader, not the last word.</p>
       </div>
-
     </div>
   </section>
 
-  <!-- ── BUILT ON INTEGRITY ────────────────────────────────────── -->
+  <!-- ── BUILT ON INTEGRITY ────────────────────────────────────────── -->
   <section class="sl-sci-sec" style="background: #F7F5F2;">
     <div class="sl-sci-integ-head">Built on photographic integrity</div>
     <div class="sl-sci-integ-grid">
-
       <div class="sl-sci-integ-card">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
         <p class="sl-sci-integ-title">AI Authenticity Checks</p>
         <p class="sl-sci-integ-body">Multi-layer analysis helps identify manipulated or synthetic imagery. Photography remains a human pursuit.</p>
       </div>
-
       <div class="sl-sci-integ-card">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
         <p class="sl-sci-integ-title">Metadata &amp; File Integrity</p>
         <p class="sl-sci-integ-body">EXIF and structural validation help maintain upload consistency.</p>
       </div>
-
       <div class="sl-sci-integ-card">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <p class="sl-sci-integ-title">RAW Verification</p>
         <p class="sl-sci-integ-body">Finalist-level images may undergo extra RAW review. Fairness always comes first.</p>
       </div>
-
       <div class="sl-sci-integ-card">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><polyline points="16 11 17 13 21 9"/></svg>
         <p class="sl-sci-integ-title">Human Escalation Review</p>
         <p class="sl-sci-integ-body">Complex cases are reviewed internally when required. Fairness always comes first.</p>
       </div>
-
     </div>
   </section>
 
-  <!-- ── WHAT DDI DOES NOT DO ──────────────────────────────────── -->
+  <!-- ── WHAT DDI DOES NOT DO ──────────────────────────────────────── -->
   <section class="sl-sci-sec" style="background: #F7F5F2; padding-top: 0;">
     <div class="sl-sci-not-head">What the engine does NOT do</div>
     <div class="sl-sci-not-grid">
-
       <div class="sl-sci-not-card">
         <span class="sl-sci-not-x">✕</span>
         <p class="sl-sci-not-title">The engine does not replace artistic interpretation.</p>
         <p class="sl-sci-not-body">Photography remains subjective and deeply human.</p>
       </div>
-
       <div class="sl-sci-not-card">
         <span class="sl-sci-not-x">✕</span>
         <p class="sl-sci-not-title">The engine is not designed to favour trends.</p>
         <p class="sl-sci-not-body">Images are evaluated for communication and impact — not popularity.</p>
       </div>
-
       <div class="sl-sci-not-card">
         <span class="sl-sci-not-x">✕</span>
         <p class="sl-sci-not-title">The engine is not social voting.</p>
         <p class="sl-sci-not-body">Scores are independent of followers, reach, or engagement.</p>
       </div>
-
       <div class="sl-sci-not-card">
         <span class="sl-sci-not-x">✕</span>
         <p class="sl-sci-not-title">The engine is not perfect.</p>
         <p class="sl-sci-not-body">It is an evolving evaluation framework designed to improve consistency and fairness over time.</p>
       </div>
-
     </div>
   </section>
 
-  <!-- ── CTA BANNER ────────────────────────────────────────────── -->
+  <!-- ── CTA ──────────────────────────────────────────────────────── -->
   <section class="sl-sci-cta">
     <div class="sl-sci-cta-grid">
-
       <div class="sl-sci-cta-img">
         {% if sci_cta and sci_cta.thumb_url %}
-        <img
-          src="{{ sci_cta.thumb_url }}"
+        <img src="{{ sci_cta.thumb_url }}"
           alt="Shutter League — photographic excellence"
-          onerror="this.style.display='none'"
-        >
+          onerror="this.style.display='none'">
         {% if sci_cta.photographer_name %}
         <span class="sl-sci-credit">© {{ sci_cta.photographer_name }}</span>
         {% endif %}
         {% endif %}
       </div>
-
       <div class="sl-sci-cta-text">
         <h2 class="sl-sci-cta-h">Photography deserves<br><em>more than validation.</em></h2>
         <p class="sl-sci-cta-body">The purpose of Shutter League is not simply to evaluate photographs. It is to help photographers understand how their work communicates — and how it can grow stronger over time.</p>
         <div class="sl-sci-cta-row">
-          <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-sci-cta-btn">GET MY FIRST REVIEW</a>
+          <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-sci-cta-btn">GET MY FIRST EVALUATION</a>
           <a href="{{ url_for('mentors') }}" class="sl-sci-cta-btn-ghost">EXPLORE MENTOR PERSPECTIVES →</a>
         </div>
       </div>
-
     </div>
   </section>
 
