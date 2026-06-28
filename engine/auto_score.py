@@ -659,20 +659,14 @@ State what the edit does to the visual, and why that makes the image stronger.
 "Reducing the brightness by one step — the image earns its mood instead of borrowing it from the exposure."
 No numbers. No promises. Just the reason the edit works.
 
-LOCATION ADVISORY — CITY-AWARE RULE:
-- mentor_location_1, mentor_location_2, mentor_location_3 MUST ONLY be populated when
-  seasonal_context is provided. If seasonal_context is empty, ALL three must return null.
-  DO NOT invent or hallucinate locations when no seasonal_context is present.
-- When seasonal_context IS provided: draw locations exclusively from it. Never substitute
-  locations from a different city.
-- The user's city is user_city. NEVER recommend locations belonging to a different city.
-  If user_city is Thrissur, recommend locations near Thrissur — not Bengaluru.
-  If user_city is Mumbai, recommend locations near Mumbai — not Bengaluru.
+LOCATION ADVISORY — VARIETY RULE:
 - NEVER show the same location twice in the same session.
-- Rotate across location types local to user_city: urban markets, parks, or heritage areas;
-  peri-urban nature or wetlands; wildlife or nature reserves within half-day drive.
-- Estimate distance from user_city. Categories: walking distance (<3km), 30 minutes,
-  1 hour, half day drive.
+- NEVER default to only Kabini, BR Hills, Nagarhole every time.
+- Rotate across: urban (Cubbon Park, Church Street, Lalbagh, Ulsoor Lake, Russell Market,
+  Fraser Town, Shivajinagar), peri-urban (Hesaraghatta, Manchanabele, Savandurga, Nandi Hills),
+  wildlife (Kabini, BR Hills, Bhadra, Nagarhole, Bannerghatta, Cauvery fishing camp).
+- Estimate distance from user_city using pincode if available. Categories:
+  walking distance (<3km), 30 minutes, 1 hour, half day drive.
 - Format: "[Location] is [distance] from you. [What is active NOW this season].
   [What time of day]. [What the frame worth making looks like]."
 
@@ -805,6 +799,11 @@ Return this exact JSON structure:
   "dm": <float 0-10>,
   "wonder": <float 0-10>,
   "aq": <float 0-10>,
+  "dod_reasoning": "<WHY THIS DOD SCORE. One sentence, image-specific. Name the access difficulty, environmental challenge, or technical execution that determined this number. Reference the specific subject, location, or conditions in this image. Plain English. No jargon. Example: 'Getting to eye level with an Indian Grey Wolf in open grassland without flushing the animal requires sustained field access that most photographers never achieve.' Never write a generic definition of the dimension.>",
+  "disruption_reasoning": "<WHY THIS DISRUPTION SCORE. One sentence, image-specific. Name the specific compositional choice, angle, or treatment that is either breaking or following convention — and whether that was enough. Example: 'The direct eye-contact frame is the most common composition for a sitting wildlife subject — the grass foreground adds layering but the overall treatment is familiar.' Never write a generic definition of the dimension.>",
+  "dm_reasoning": "<WHY THIS MOMENT SCORE. One sentence, image-specific. Name what the chosen moment achieved and specifically what stronger moment was available — or if this was the peak, confirm exactly why. This is the answer to 'why did I get X and not higher'. Example: 'The alert gaze is strong but the grass stems are sharp and competing — the decisive frame was the gaze with the foreground fallen into blur, and that window existed but was not taken.' Never write a generic definition of the dimension.>",
+  "wonder_reasoning": "<WHY THIS WONDER SCORE. One sentence, image-specific. Name the specific type of wonder present (access, eye, cultural, emotional) and what created it — or what would have elevated it. Example: 'The proximity to a wild Indian Grey Wolf and the direct gaze confirm access wonder — the viewer is placed inside a moment they could not achieve without this photographer.' Never write a generic definition of the dimension.>",
+  "aq_reasoning": "<WHY THIS AQ SCORE. One sentence, image-specific. Name the specific emotion a stranger would feel and what in the image creates it — or if no specific emotion is present, name what the image creates instead and why that stops it from scoring higher. Example: 'The still before something happens — the wolf is watching, the viewer feels watched back, and that mutual awareness creates a specific tension that is closer to recognition than fear.' Never write a generic definition of the dimension.>",
   "score": <float>,
   "tier": "<Apprentice|Shooter|Contender|Craftsman|Maverick|Master|Grandmaster|Legend>",
   "archetype": "<archetype name>",
@@ -829,7 +828,7 @@ FORMAT:
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
   "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max. No positional corrections.>",
   "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs.\n\n▪ [What this score level means for this photographer in plain English — one sentence.]\n\n▪ [What 9+ looks like for this specific image — concrete visual description, two sentences max.]\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 2 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply it to a type of location or light condition — near user_city if seasonal_context is available, or any future opportunity if not. CITY RULE: only name a specific neighbourhood or location if it appears in seasonal_context and belongs to user_city. If seasonal_context is empty, make the assignment location-agnostic (e.g. 'next time you find this quality of light').\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition. Gear-specific. One sentence.]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 2 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
@@ -843,9 +842,9 @@ FORMAT:
   "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. BULLET FORMAT — 3 bullets. Blank line between bullets.\n\n▪ [Applause adjective + the specific decision most photographers at this scene would not have made.]\n\n▪ [**Master name** — specific connection to their practice, linked. One sentence.]\n\n▪ [Why this image has a story. What the story is. One sentence.]>",
   "background_check": "<CARD 3 BODY — same content as byline_1. Return identical text here for backward compatibility.>",
   "calibration_line": "<PERCENTILE AND CONTEXT. One or two sentences. Plain English. 'This places you in the top [X]% of [genre] images evaluated on Shutter League.' Then: 'Your [plain English weakest dimension description] score of [X] is [above/below] the [genre] average of [Y] — [one plain English sentence on what that means and what to work on].' Use plain English for dimension names: 'how striking the image is to a stranger' not 'Visual Disruption'. 'how well you captured the right moment' not 'DM score'.>",
-  "mentor_location_1": "<LOCATION ADVISORY 1. HARD RULE: If seasonal_context is empty or not provided, return null — do NOT invent locations. If seasonal_context IS provided: Sherpa voice — warm, like a friend who knows the area. Locations must be near user_city ONLY — never from a different city. This must NEVER be the same location where this image was shot. Include: what is active NOW this season (from seasonal_context), distance from user_city, best time of day, what the frame worth making looks like. Do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options local to user_city. HARD LENGTH LIMIT: 3 sentences maximum.>",
-  "mentor_location_2": "<LOCATION ADVISORY 2. HARD RULE: Null if seasonal_context is empty. Different location from mentor_location_1. The upcoming window — plan ahead. Same voice. Near user_city only. HARD LENGTH LIMIT: 2 sentences maximum.>",
-  "mentor_location_3": "<LOCATION ADVISORY 3. HARD RULE: Null if seasonal_context is empty. Only when seasonal_context lists a genuine third concurrent urgent window near user_city. HARD LENGTH LIMIT: 2 sentences maximum.>",
+  "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. CRITICAL: This must NEVER be the same location where this image was shot. If the image was shot in Bharatpur, do NOT recommend Bharatpur. If the image was shot in Varanasi, do NOT recommend Varanasi. The advisory must be somewhere the photographer can go near their user_city — a new place, a new opportunity. Include: what is active NOW this season, distance from user_city (estimate from pincode if available), best time of day, what the frame worth making looks like. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). HARD LENGTH LIMIT: 3 sentences maximum. If no seasonal_context provided, return null.>",
+  "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window — plan ahead. Same voice. HARD LENGTH LIMIT: 2 sentences maximum. Null if only one location relevant.>",
+  "mentor_location_3": "<LOCATION ADVISORY 3. Only when seasonal_context lists a genuine third concurrent urgent window. HARD LENGTH LIMIT: 2 sentences maximum. Null otherwise.>",
   "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
   "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>"
 }}
@@ -4265,4 +4264,10 @@ def build_audit_data(result, image_obj):
         "days_since_language": result.get("days_since_language", ""),
         "emoji_rating":      result.get("emoji_rating", ""),
         "calibration_line":  result.get("calibration_line", ""),
+        # ── Option A — per-dimension reasoning (Session 112) ─────────────────
+        "dod_reasoning":      result.get("dod_reasoning", ""),
+        "disruption_reasoning": result.get("disruption_reasoning", ""),
+        "dm_reasoning":       result.get("dm_reasoning", ""),
+        "wonder_reasoning":   result.get("wonder_reasoning", ""),
+        "aq_reasoning":       result.get("aq_reasoning", ""),
     }
