@@ -2133,7 +2133,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
 
     {# Sparklines — one per dimension, from dim_trends data #}
-    {% set _dim_labels = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Disruption'} %}
+    {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
     <div class="sl-sparkline-row">
     {% for dim, avg in progress_data.dim_avgs.items() %}
