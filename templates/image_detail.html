@@ -487,11 +487,11 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Depth Dimension Index (DDI) breakdown</p>
     <div class="ddi-grid">
       {% set _pub_dims = [
-        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'sc-dim-dod'),
-        (image.disruption_score, 'VISUAL',        'DISRUPTION',      'sc-dim-dis'),
-        (image.dm_score,         'THE MOMENT',    'CHOSEN',          'sc-dim-dm'),
-        (image.wonder_score,     'THE WOW',       'FACTOR',          'sc-dim-won'),
-        (image.aq_score,         'THE EMOTION',   'IT CREATES',      'sc-dim-aq'),
+        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'sc-what-eye-read'),
+        (image.disruption_score, 'VISUAL',        'DISRUPTION',      'sc-what-eye-read'),
+        (image.dm_score,         'THE MOMENT',    'CHOSEN',          'sc-what-eye-read'),
+        (image.wonder_score,     'THE WOW',       'FACTOR',          'sc-what-eye-read'),
+        (image.aq_score,         'THE EMOTION',   'IT CREATES',      'sc-what-eye-read'),
       ] %}
       {% for val, line1, line2, anchor in _pub_dims %}
       <div class="ddi-dim">
@@ -513,8 +513,8 @@
   {% set _cal_line = _audit_d.get('calibration_line', '') %}
   <div class="sc-dim-detail-wrap">
     <p class="sc-dim-detail-intro">
-      What do these numbers mean for this image?
-      <a href="/science#dimensions" class="sc-dim-sci-link">How dimensions are calculated →</a>
+      What each dimension measures
+      <a href="/science#dimensions" class="sc-dim-sci-link">Full explanation →</a>
     </p>
 
     <div class="sc-dim-row" id="sc-dim-dod">
@@ -958,7 +958,7 @@
 
     {# Card 2 — What your eye read #}
     {% if _c2_resolved.strip() %}
-    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:22px 26px;">
+    <div id="sc-what-eye-read" style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:22px 26px; scroll-margin-top: 80px;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
         <span style="font-size:16px; color:#27500A;">▲</span>
         <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What your eye read</span>
@@ -1166,11 +1166,11 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension breakdown</a></p>
     <div class="ddi-grid">
       {% set dims = [
-        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS',         'sc-dim-dod'),
-        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION',     'sc-dim-dis'),
-        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN',         'sc-dim-dm'),
-        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR',         'sc-dim-won'),
-        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES',     'sc-dim-aq'),
+        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS',         'sc-what-eye-read'),
+        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION',     'sc-what-eye-read'),
+        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN',         'sc-what-eye-read'),
+        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR',         'sc-what-eye-read'),
+        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES',     'sc-what-eye-read'),
       ] %}
       {% for lbl, val, title, line1, line2, anchor in dims %}
       <div class="ddi-dim">
