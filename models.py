@@ -3,6 +3,7 @@ models.py — Lens League Apex
 v30: Added jury system + RAW verification models
   - Image: 9 new columns for jury scoring and RAW verification
   - New: Judge, JudgeCategoryAssignment, ContestJudgeConfig,
+# SL-VERSION: 111.2 — Session 112: tier column on User, peer_recognitions, rating_assignments what_struck
          JudgeAssignment, JudgeScore, RawSubmission
 """
 
