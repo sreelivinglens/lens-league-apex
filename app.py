@@ -742,6 +742,8 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_started_at TIMESTAMP",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_tier VARCHAR(60)",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_checked_at TIMESTAMP",
+                    # Session 112 — user current tier for peer eval queue
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(60)",
                     # v37 — mentor profiles system
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_mentor BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_bio TEXT",
