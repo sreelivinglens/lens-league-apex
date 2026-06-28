@@ -476,20 +476,21 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Depth Dimension Index (DDI) breakdown</p>
     <div class="ddi-grid">
       {% set _pub_dims = [
-        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'dod',        'sc-what-eye-read'),
-        (image.disruption_score, 'VISUAL',        'DISRUPTION',      'disruption', 'sc-what-eye-read'),
-        (image.dm_score,         'THE MOMENT',    'CHOSEN',          'dm',         'sc-what-eye-read'),
-        (image.wonder_score,     'THE WOW',       'FACTOR',          'wonder',     'sc-what-eye-read'),
-        (image.aq_score,         'THE EMOTION',   'IT CREATES',      'aq',         'sc-what-eye-read'),
+        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'dod'),
+        (image.disruption_score, 'VISUAL',        'DISRUPTION',      'disruption'),
+        (image.dm_score,         'THE MOMENT',    'CHOSEN',          'dm'),
+        (image.wonder_score,     'THE WOW',       'FACTOR',          'wonder'),
+        (image.aq_score,         'THE EMOTION',   'IT CREATES',      'aq'),
       ] %}
-      {% for val, line1, line2, dim_key, anchor in _pub_dims %}
+      {% for val, line1, line2, dim_key in _pub_dims %}
       <div class="ddi-dim">
-        <a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="sc-dim-anchor-link">
-          <div class="ddi-val">{{ val or '—' }}</div>
-        </a>
-        <div class="ddi-lbl" id="sc-ddi-lbl-{{ dim_key }}"><a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="glink-inline">{{ line1 }}<br>{{ line2 }}</a></div>
+        <div class="ddi-val">{{ val or '—' }}</div>
+        <div class="ddi-lbl" id="sc-ddi-lbl-{{ dim_key }}">{{ line1 }}<br>{{ line2 }}</div>
       </div>
       {% endfor %}
+    </div>
+    <div style="text-align:right; margin-top:12px;">
+      <a href="/science#dimensions" class="glink-inline" style="font-size:13px; font-weight:600; letter-spacing:0.04em;">Understanding dimensions →</a>
     </div>
   </div>
   {% endif %}
@@ -1194,23 +1195,22 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension breakdown</a></p>
     <div class="ddi-grid">
       {% set dims = [
-        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS',         'dod'),
-        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION',     'disruption'),
-        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN',         'dm'),
-        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR',         'wonder'),
-        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES',     'aq'),
+        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS'),
+        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION'),
+        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN'),
+        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR'),
+        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES'),
       ] %}
-      {% for lbl, val, title, line1, line2, dim_key in dims %}
+      {% for lbl, val, title, line1, line2 in dims %}
       <div class="ddi-dim">
-        <a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="sc-dim-anchor-link">
-          <div class="ddi-val">{{ val or '—' }}</div>
-        </a>
-        <div class="ddi-lbl" id="sc-ddi-lbl-{{ dim_key }}-2"><a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="glink-inline" title="{{ title }}">{{ line1 }}<br>{{ line2 }}</a></div>
+        <div class="ddi-val">{{ val or '—' }}</div>
+        <div class="ddi-lbl">{{ line1 }}<br>{{ line2 }}</div>
       </div>
       {% endfor %}
     </div>
-  </div>
-  {% endif %}
+    <div style="text-align:right; margin-top:12px;">
+      <a href="/science#dimensions" class="glink-inline" style="font-size:13px; font-weight:600; letter-spacing:0.04em;">Understanding dimensions →</a>
+    </div>
 
   {# ── PEER VALIDATION ───────────────────────────────────────────── #}
   {% if image.peer_rating_count and image.peer_rating_count > 0 %}
