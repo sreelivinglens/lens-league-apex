@@ -97,72 +97,61 @@
     border-bottom: 2px solid #F5C518; padding-bottom: 2px;
   }
 
-  /* ── Dimension detail strip ──────────────────────────────── */
+  /* ── Dimension reasoning drawer (Option A, Session 112) ─── */
   .sc-dim-detail-wrap {
     background: var(--surface-1); border: 1px solid var(--border);
-    border-radius: 14px; padding: 18px 22px; margin-bottom: 14px;
-    margin-top: -8px;
+    border-left: 3px solid #F5C518;
+    border-radius: 0 14px 14px 0;
+    padding: 20px 24px; margin-bottom: 14px; margin-top: -8px;
   }
-  .sc-dim-detail-intro {
-    font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
-    color: var(--text-muted); text-transform: uppercase;
-    margin: 0 0 16px; display: flex; align-items: center;
-    gap: 12px; flex-wrap: wrap;
+  .sc-dim-drawer-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; margin-bottom: 14px;
   }
-  .sc-dim-sci-link {
-    font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: var(--accent, #2C3E6B);
-    text-decoration: underline; text-underline-offset: 2px;
-    text-decoration-color: rgba(44,62,107,0.55);
-    white-space: nowrap;
-  }
-  .sc-dim-sci-link:hover { text-decoration-color: var(--accent, #2C3E6B); }
-  .sc-dim-row {
-    display: grid; grid-template-columns: 148px 1fr; gap: 0 20px;
-    padding: 12px 0; border-bottom: 1px solid var(--border-subtle);
-    align-items: start; scroll-margin-top: 80px;
-  }
-  .sc-dim-row:last-child { border-bottom: none; }
-  .sc-dim-row-left {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-  }
-  .sc-dim-row-num {
-    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
-    color: var(--text-primary); line-height: 1;
-    border-bottom: 2px solid #F5C518; padding-bottom: 2px;
-  }
-  .sc-dim-row-label {
+  .sc-dim-drawer-dim {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 0.10em; text-transform: uppercase;
-    color: var(--text-muted); line-height: 1.3; max-width: 136px;
+    color: #F5C518; margin-bottom: 4px;
   }
-  .sc-dim-row-right {
-    display: flex; flex-direction: column; gap: 6px; padding-top: 2px;
+  .sc-dim-drawer-score {
+    font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+    color: var(--text-primary); line-height: 1;
+    border-bottom: 2px solid #F5C518; padding-bottom: 2px;
+    display: inline-block;
   }
-  .sc-dim-row-what {
-    font-size: 14px; font-weight: 500; color: var(--text-muted);
-    line-height: 1.6; margin: 0;
+  .sc-dim-drawer-title {
+    font-size: 14px; font-weight: 600; color: var(--text-muted); margin-top: 4px;
   }
-  .sc-dim-row-specific {
-    font-size: 14px; font-weight: 600; line-height: 1.55; margin: 0;
+  .sc-dim-drawer-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 22px; color: var(--text-muted); padding: 0 4px;
+    line-height: 1; font-family: inherit;
   }
-  .sc-dim-strength { color: #2C7A3A; }
-  .sc-dim-gap      { color: #1A5FA8; }
-  .sc-dim-row-calibration {
-    font-size: 14px; font-weight: 500; color: var(--text-muted);
-    line-height: 1.6; margin: 4px 0 0; padding: 8px 12px;
-    background: rgba(245,197,24,0.07); border-left: 2px solid #F5C518;
+  .sc-dim-drawer-close:hover { color: var(--text-primary); }
+  .sc-dim-drawer-why {
+    font-size: 16px; font-weight: 500; color: var(--text-primary);
+    line-height: 1.7; margin-bottom: 14px; padding: 14px 16px;
+    background: var(--surface-0); border-radius: 8px;
+  }
+  .sc-dim-drawer-what {
+    font-size: 13px; color: var(--text-muted); line-height: 1.6;
+    border-top: 1px solid var(--border); padding-top: 12px;
+  }
+  .sc-dim-sci-link {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted);
+    text-decoration: underline; text-underline-offset: 2px;
+    text-decoration-color: rgba(245,197,24,0.40);
+  }
+  .sc-dim-sci-link:hover { text-decoration-color: #F5C518; }
+  .sc-ddi-active {
+    color: var(--text-primary) !important;
+    text-decoration-color: #F5C518 !important;
   }
   @media (max-width: 600px) {
-    .sc-dim-row { grid-template-columns: 1fr; gap: 8px; }
-    .sc-dim-row-left { flex-direction: row; align-items: baseline; gap: 10px; }
-    .sc-dim-row-label { max-width: none; font-size: 14px; }
-    .sc-dim-row-num { font-size: 20px; }
-
-    .sc-dim-detail-intro { font-size: 14px; }
-    .sc-dim-row-what { font-size: 15px; }
-    .sc-dim-row-specific { font-size: 15px; }
-    .sc-dim-row-calibration { font-size: 15px; }
+    .sc-dim-drawer-score { font-size: 24px; }
+    .sc-dim-drawer-why { font-size: 15px; padding: 12px 14px; }
+    .sc-dim-detail-wrap { padding: 16px; }
   }
 
   .peer-strip { display: flex; gap: 24px; flex-wrap: wrap; padding: 14px 0 0; border-top: 1px solid var(--border-subtle); margin-top: 4px; }
@@ -487,93 +476,110 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Depth Dimension Index (DDI) breakdown</p>
     <div class="ddi-grid">
       {% set _pub_dims = [
-        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'sc-what-eye-read'),
-        (image.disruption_score, 'VISUAL',        'DISRUPTION',      'sc-what-eye-read'),
-        (image.dm_score,         'THE MOMENT',    'CHOSEN',          'sc-what-eye-read'),
-        (image.wonder_score,     'THE WOW',       'FACTOR',          'sc-what-eye-read'),
-        (image.aq_score,         'THE EMOTION',   'IT CREATES',      'sc-what-eye-read'),
+        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'dod',        'sc-what-eye-read'),
+        (image.disruption_score, 'VISUAL',        'DISRUPTION',      'disruption', 'sc-what-eye-read'),
+        (image.dm_score,         'THE MOMENT',    'CHOSEN',          'dm',         'sc-what-eye-read'),
+        (image.wonder_score,     'THE WOW',       'FACTOR',          'wonder',     'sc-what-eye-read'),
+        (image.aq_score,         'THE EMOTION',   'IT CREATES',      'aq',         'sc-what-eye-read'),
       ] %}
-      {% for val, line1, line2, anchor in _pub_dims %}
+      {% for val, line1, line2, dim_key, anchor in _pub_dims %}
       <div class="ddi-dim">
-        <a href="#{{ anchor }}" class="sc-dim-anchor-link">
+        <a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="sc-dim-anchor-link">
           <div class="ddi-val">{{ val or '—' }}</div>
         </a>
-        <div class="ddi-lbl"><a href="#{{ anchor }}" class="glink-inline">{{ line1 }}<br>{{ line2 }}</a></div>
+        <div class="ddi-lbl" id="sc-ddi-lbl-{{ dim_key }}"><a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="glink-inline">{{ line1 }}<br>{{ line2 }}</a></div>
       </div>
       {% endfor %}
     </div>
   </div>
   {% endif %}
 
-  {# ── DDI dimension detail strip — per-anchor explanations ─── #}
+  {# ── DDI dimension reasoning drawer — Option A (Session 112) ────── #}
   {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
   {% set _audit_d = image.get_audit() or {} %}
-  {% set _badges_g = _audit_d.get('badges_g', []) %}
-  {% set _badges_w = _audit_d.get('badges_w', []) %}
+  {% set _dod_r   = _audit_d.get('dod_reasoning', '') %}
+  {% set _dis_r   = _audit_d.get('disruption_reasoning', '') %}
+  {% set _dm_r    = _audit_d.get('dm_reasoning', '') %}
+  {% set _wow_r   = _audit_d.get('wonder_reasoning', '') %}
+  {% set _aq_r    = _audit_d.get('aq_reasoning', '') %}
   {% set _cal_line = _audit_d.get('calibration_line', '') %}
-  <div class="sc-dim-detail-wrap">
-    <p class="sc-dim-detail-intro">
-      What each dimension measures
-      <a href="/science#dimensions" class="sc-dim-sci-link">Full explanation →</a>
-    </p>
-
-    <div class="sc-dim-row" id="sc-dim-dod">
-      <div class="sc-dim-row-left">
-        <span class="sc-dim-row-num">{{ '%.1f'|format(image.dod_score) if image.dod_score else '—' }}</span>
-        <span class="sc-dim-row-label">HOW DIFFICULT IT WAS</span>
+  <div class="sc-dim-detail-wrap" id="sc-dim-drawer-wrap" style="display:none;">
+    <div class="sc-dim-drawer-inner" id="sc-dim-drawer-inner">
+      <div class="sc-dim-drawer-header">
+        <div>
+          <div class="sc-dim-drawer-dim" id="sc-dim-drawer-dim"></div>
+          <div class="sc-dim-drawer-score" id="sc-dim-drawer-score"></div>
+          <div class="sc-dim-drawer-title">Why this number?</div>
+        </div>
+        <button class="sc-dim-drawer-close" onclick="slCloseDimDrawer()" aria-label="Close">×</button>
       </div>
-      <div class="sc-dim-row-right">
-        <p class="sc-dim-row-what">Access, physical challenge, timing window, and technical execution — how hard was it to make this frame exist at all?</p>
-        {% if _badges_g %}<p class="sc-dim-row-specific sc-dim-strength">✦ {{ _badges_g[0] }}</p>{% endif %}
-        {% if _badges_w %}<p class="sc-dim-row-specific sc-dim-gap">↑ {{ _badges_w[0] }}</p>{% endif %}
-      </div>
-    </div>
-
-    <div class="sc-dim-row" id="sc-dim-dis">
-      <div class="sc-dim-row-left">
-        <span class="sc-dim-row-num">{{ '%.1f'|format(image.disruption_score) if image.disruption_score else '—' }}</span>
-        <span class="sc-dim-row-label">VISUAL DISRUPTION</span>
-      </div>
-      <div class="sc-dim-row-right">
-        <p class="sc-dim-row-what">Does this image break the viewer's trained pattern? Visual surprise, unconventional framing, a compositional choice the eye was not expecting.</p>
-        {% if _badges_g and _badges_g|length > 1 %}<p class="sc-dim-row-specific sc-dim-strength">✦ {{ _badges_g[1] }}</p>{% endif %}
-        {% if _badges_w and _badges_w|length > 1 %}<p class="sc-dim-row-specific sc-dim-gap">↑ {{ _badges_w[1] }}</p>{% endif %}
-      </div>
-    </div>
-
-    <div class="sc-dim-row" id="sc-dim-dm">
-      <div class="sc-dim-row-left">
-        <span class="sc-dim-row-num">{{ '%.1f'|format(image.dm_score) if image.dm_score else '—' }}</span>
-        <span class="sc-dim-row-label">THE MOMENT CHOSEN</span>
-      </div>
-      <div class="sc-dim-row-right">
-        <p class="sc-dim-row-what">Of all the instants available, was this the right one? For action: the peak of the act. For landscape: the quality of light. For still life: the shadow angle. For street: the geometric alignment.</p>
-        {% if _badges_g and _badges_g|length > 2 %}<p class="sc-dim-row-specific sc-dim-strength">✦ {{ _badges_g[2] }}</p>{% endif %}
-        {% if _badges_w and _badges_w|length > 2 %}<p class="sc-dim-row-specific sc-dim-gap">↑ {{ _badges_w[2] }}</p>{% endif %}
-      </div>
-    </div>
-
-    <div class="sc-dim-row" id="sc-dim-won">
-      <div class="sc-dim-row-left">
-        <span class="sc-dim-row-num">{{ '%.1f'|format(image.wonder_score) if image.wonder_score else '—' }}</span>
-        <span class="sc-dim-row-label">THE WOW FACTOR</span>
-      </div>
-      <div class="sc-dim-row-right">
-        <p class="sc-dim-row-what">Does this image take the viewer somewhere they could not go without the photographer? Eye wonder, access wonder, cultural wonder, emotional wonder.</p>
-      </div>
-    </div>
-
-    <div class="sc-dim-row" id="sc-dim-aq">
-      <div class="sc-dim-row-left">
-        <span class="sc-dim-row-num">{{ '%.1f'|format(image.aq_score) if image.aq_score else '—' }}</span>
-        <span class="sc-dim-row-label">THE EMOTION IT CREATES</span>
-      </div>
-      <div class="sc-dim-row-right">
-        <p class="sc-dim-row-what">Not technical polish — the named feeling a stranger would experience: loneliness, awe, defiance, tenderness, joy. Cannot reach above 7.5 without a specific, identifiable emotion.</p>
-        {% if _cal_line %}<p class="sc-dim-row-calibration">{{ _cal_line }}</p>{% endif %}
-      </div>
+      <div class="sc-dim-drawer-why" id="sc-dim-drawer-why"></div>
+      <div class="sc-dim-drawer-what" id="sc-dim-drawer-what"></div>
+      <a href="/science#dimensions" class="sc-dim-sci-link" style="display:inline-block;margin-top:10px;">What this dimension measures →</a>
     </div>
   </div>
+
+  <script>
+  (function(){
+    var _dimData = {
+      'dod': {
+        label: 'Depth of Difficulty',
+        score: '{{ "%.1f"|format(image.dod_score) if image.dod_score else "—" }}',
+        why: {{ _dod_r | tojson if _dod_r else '"See What Your Eye Read above."' }},
+        what: 'How hard was it to make this image exist? Access, physical challenge, timing window, and technical execution.'
+      },
+      'disruption': {
+        label: 'Visual Disruption',
+        score: '{{ "%.1f"|format(image.disruption_score) if image.disruption_score else "—" }}',
+        why: {{ _dis_r | tojson if _dis_r else '"See What Your Eye Read above."' }},
+        what: 'Does this image break the viewer\'s trained pattern? Not disorder — purposeful departure from expectation.'
+      },
+      'dm': {
+        label: 'The Moment Chosen',
+        score: '{{ "%.1f"|format(image.dm_score) if image.dm_score else "—" }}',
+        why: {{ _dm_r | tojson if _dm_r else '"See What Your Eye Read above."' }},
+        what: 'Of all the instants available, was this the right one? Applies to every genre — action, landscape, still life, street.'
+      },
+      'wonder': {
+        label: 'The WOW Factor',
+        score: '{{ "%.1f"|format(image.wonder_score) if image.wonder_score else "—" }}',
+        why: {{ _wow_r | tojson if _wow_r else '"See What Your Eye Read above."' }},
+        what: 'Does this image take the viewer somewhere they could not go without the photographer? Access, eye, cultural, or emotional wonder.'
+      },
+      'aq': {
+        label: 'The Emotion It Creates',
+        score: '{{ "%.1f"|format(image.aq_score) if image.aq_score else "—" }}',
+        why: {{ _aq_r | tojson if _aq_r else '"See What Your Eye Read above."' }},
+        what: 'What specific feeling does a stranger experience? Cannot reach above 7.5 without a named, identifiable emotion.'
+      }
+    };
+
+    window.slOpenDimDrawer = function(dim) {
+      var d = _dimData[dim];
+      if (!d) return;
+      var wrap = document.getElementById('sc-dim-drawer-wrap');
+      document.getElementById('sc-dim-drawer-dim').textContent   = d.label.toUpperCase();
+      document.getElementById('sc-dim-drawer-score').textContent = d.score;
+      document.getElementById('sc-dim-drawer-why').textContent   = d.why;
+      document.getElementById('sc-dim-drawer-what').textContent  = d.what;
+      wrap.style.display = 'block';
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      ['dod','disruption','dm','wonder','aq'].forEach(function(k) {
+        var el = document.getElementById('sc-ddi-lbl-' + k);
+        if (el) el.classList.toggle('sc-ddi-active', k === dim);
+      });
+    };
+
+    window.slCloseDimDrawer = function() {
+      var wrap = document.getElementById('sc-dim-drawer-wrap');
+      if (wrap) wrap.style.display = 'none';
+      ['dod','disruption','dm','wonder','aq'].forEach(function(k) {
+        var el = document.getElementById('sc-ddi-lbl-' + k);
+        if (el) el.classList.remove('sc-ddi-active');
+      });
+    };
+  })();
+  </script>
   {% endif %}
   {% if _public_wso %}
   <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
@@ -912,6 +918,28 @@
     'Duane Michals':          'Duane+Michals+photography',
     'Man Ray':                'Man+Ray+photography',
     'Aaron Siskind':          'Aaron+Siskind+photography',
+    'Helen Levitt':           'Helen+Levitt+photography',
+    'Levitt':                 'Helen+Levitt+photography',
+    'Weegee':                 'Weegee+photographer+Arthur+Fellig',
+    'Lisette Model':          'Lisette+Model+photography',
+    'Robert Frank':           'Robert+Frank+photography',
+    'Walker Evans':           'Walker+Evans+photography',
+    'Evans':                  'Walker+Evans+photography',
+    'Berenice Abbott':        'Berenice+Abbott+photography',
+    'Brassai':                'Brassai+photography',
+    'André Kertész':          'Andre+Kertesz+photography',
+    'Kertész':                'Andre+Kertesz+photography',
+    'Josef Koudelka':         'Josef+Koudelka+photography',
+    'Koudelka':               'Josef+Koudelka+photography',
+    'Edward Weston':          'Edward+Weston+photography',
+    'Weston':                 'Edward+Weston+photography',
+    'Paul Strand':            'Paul+Strand+photography',
+    'Alfred Stieglitz':       'Alfred+Stieglitz+photography',
+    'Imogen Cunningham':      'Imogen+Cunningham+photography',
+    'Minor White':            'Minor+White+photography',
+    'Hiroshi Sugimoto':       'Hiroshi+Sugimoto+photography',
+    'Sugimoto':               'Hiroshi+Sugimoto+photography',
+    'Sebastiao Salgado':      'Sebastiao+Salgado+photography',
   } %}
 
   {# Jinja2 macro: render card body with paragraph breaks + bold/linked master names #}
@@ -1166,18 +1194,18 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension breakdown</a></p>
     <div class="ddi-grid">
       {% set dims = [
-        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS',         'sc-what-eye-read'),
-        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION',     'sc-what-eye-read'),
-        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN',         'sc-what-eye-read'),
-        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR',         'sc-what-eye-read'),
-        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES',     'sc-what-eye-read'),
+        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS',         'dod'),
+        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION',     'disruption'),
+        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN',         'dm'),
+        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR',         'wonder'),
+        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES',     'aq'),
       ] %}
-      {% for lbl, val, title, line1, line2, anchor in dims %}
+      {% for lbl, val, title, line1, line2, dim_key in dims %}
       <div class="ddi-dim">
-        <a href="#{{ anchor }}" class="sc-dim-anchor-link">
+        <a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="sc-dim-anchor-link">
           <div class="ddi-val">{{ val or '—' }}</div>
         </a>
-        <div class="ddi-lbl"><a href="#{{ anchor }}" class="glink-inline" title="{{ title }}">{{ line1 }}<br>{{ line2 }}</a></div>
+        <div class="ddi-lbl" id="sc-ddi-lbl-{{ dim_key }}-2"><a href="#" onclick="slOpenDimDrawer('{{ dim_key }}'); return false;" class="glink-inline" title="{{ title }}">{{ line1 }}<br>{{ line2 }}</a></div>
       </div>
       {% endfor %}
     </div>
