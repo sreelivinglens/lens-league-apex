@@ -1,3 +1,5 @@
+# SL-VERSION: 112.1 (Session 112 — MPO conversion fix; science route distinct photographers;
+#   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
 #   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
 #   previously 111.2 — phash cache audit_json, delta scoring, similarity check)
