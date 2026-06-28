@@ -26,6 +26,33 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   font-family: 'Inter', sans-serif !important;
 }
 
+/* ━━ PHOTOGRAPHER CREDIT PILL ━━━━━━━━━━━━ */
+/* Applies to all three image containers:
+   hero (.sl-sci-hero), mid (.sl-sci-feature-img), cta (.sl-sci-cta-img)
+   All three are position:relative or position:absolute-ready */
+.sl-sci-credit {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13,11,8,0.52);
+  color: rgba(255,255,255,0.88);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+/* Hero: already position:relative with overflow:hidden — credit works as-is */
+/* Mid and CTA containers need position:relative — add here defensively */
+.sl-sci-feature-img { position: relative; }
+.sl-sci-cta-img     { position: relative; }
+
 /* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-sci-hero {
   position: relative;
@@ -685,6 +712,9 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
     >
+    {% if sci_hero.photographer_name %}
+    <span class="sl-sci-credit sl-sci-credit-hero">© {{ sci_hero.photographer_name }}</span>
+    {% endif %}
     {% endif %}
     <div class="sl-sci-hero-fade"></div>
     <div class="sl-sci-hero-content">
@@ -713,7 +743,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   </section>
 
   <!-- ── FIVE DIMENSIONS ───────────────────────────────────────── -->
-  <section class="sl-sci-sec" style="background: #EDEAE4;">
+  <section class="sl-sci-sec" id="dimensions" style="background: #EDEAE4;">
     <div class="sl-sci-dims-head">The five dimensions of photographic impact</div>
     <p class="sl-sci-dims-sub">Every photograph communicates differently.<br>The engine examines the dimensions that contribute to that communication.</p>
     <div class="sl-sci-dims-grid">
@@ -782,6 +812,9 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
           alt="Shutter League community photograph — high-scoring image"
           onerror="this.style.display='none'"
         >
+        {% if sci_mid.photographer_name %}
+        <span class="sl-sci-credit">© {{ sci_mid.photographer_name }}</span>
+        {% endif %}
         {% endif %}
       </div>
 
@@ -872,6 +905,9 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
           alt="Shutter League — photographic excellence"
           onerror="this.style.display='none'"
         >
+        {% if sci_cta.photographer_name %}
+        <span class="sl-sci-credit">© {{ sci_cta.photographer_name }}</span>
+        {% endif %}
         {% endif %}
       </div>
 
