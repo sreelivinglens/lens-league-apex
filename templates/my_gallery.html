@@ -304,6 +304,21 @@
   text-decoration: none; min-height: 44px;
 }
 
+/* ── Peer eval badge — top of card, highest tier evaluator ── */
+.mg-peer-badge {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: linear-gradient(to bottom, rgba(106,62,240,.85) 0%, transparent 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 6px 8px 16px;
+  border-radius: var(--mg-r) var(--mg-r) 0 0;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
 /* ── Pagination ── */
 .mg-pagination {
   display: flex;
@@ -428,6 +443,20 @@
           {% endif %}
 
           <div class="mg-img-card__overlay"></div>
+
+          {# Peer eval badge — highest tier evaluator #}
+          {% set _ratings = img.peer_ratings_received if img.peer_ratings_received else [] %}
+          {% set _best = namespace(name='', rank=0) %}
+          {% for _r in _ratings %}
+            {% set _rrank = tier_rank.get(_r.rater.tier or '', 0) if _r.rater else 0 %}
+            {% if _rrank > _best.rank %}
+              {% set _best.rank = _rrank %}
+              {% set _best.name = _r.rater.tier %}
+            {% endif %}
+          {% endfor %}
+          {% if _best.name %}
+          <div class="mg-peer-badge">👁 {{ _best.name }}</div>
+          {% endif %}
 
           {# Status badge #}
           {% if img.is_flagged %}
