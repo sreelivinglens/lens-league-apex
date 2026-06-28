@@ -108,6 +108,8 @@ class User(db.Model, UserMixin):
     total_uploads_ever        = db.Column(db.Integer, default=0, nullable=False)
     # Session 68 — upload credits balance (carry-forward model, replaces monthly hard reset)
     upload_credits_balance    = db.Column(db.Integer, default=0, nullable=False)
+    # Session 112 — user's current tier, updated on every score, used for peer eval queue
+    tier                      = db.Column(db.String(60), nullable=True)
 
     images = db.relationship('Image', backref='author', lazy=True)
 
