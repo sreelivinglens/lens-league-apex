@@ -1246,6 +1246,19 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   object-fit: cover;
   display: block;
 }
+.sl-recent-work__peer-badge {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: linear-gradient(to bottom, rgba(106,62,240,.85) 0%, transparent 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 5px 7px 14px;
+  border-radius: var(--r-img) var(--r-img) 0 0;
+  line-height: 1.2;
+  pointer-events: none;
+}
 .sl-recent-work__score {
   position: absolute;
   bottom: 0;
@@ -2094,11 +2107,23 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     <div class="sl-recent-work__grid">
       {% for img in _scored_images[:6] %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-recent-work__item">
+      {% set _ratings = img.peer_ratings_received if img.peer_ratings_received else [] %}
+      {% set _best_tier = namespace(name='', rank=0) %}
+      {% for _r in _ratings %}
+        {% set _rrank = tier_rank.get(_r.rater.tier or '', 0) if _r.rater else 0 %}
+        {% if _rrank > _best_tier.rank %}
+          {% set _best_tier.rank = _rrank %}
+          {% set _best_tier.name = _r.rater.tier %}
+        {% endif %}
+      {% endfor %}
+      <a href="{{ url_for('image_detail', image_id=img.id) }}{% if _best_tier.name %}#peer-eval-feedback{% endif %}" class="sl-recent-work__item">
         <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" class="sl-recent-work__img" loading="lazy" onerror="this.style.display='none'">
         <div class="sl-recent-work__score">
           <span class="sl-recent-work__score-val">{{ '%.1f'|format(img.score) }}</span>
         </div>
+        {% if _best_tier.name %}
+        <div class="sl-recent-work__peer-badge">👁 {{ _best_tier.name }}</div>
+        {% endif %}
       </a>
       {% endfor %}
     </div>
