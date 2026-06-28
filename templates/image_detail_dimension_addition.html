@@ -1,0 +1,309 @@
+<!--
+===========================================================================
+  DIMENSION DETAIL BLOCK — image_detail.html addition
+  Session 112 · 28 Jun 2026
+
+  INSERTION POINT:
+  Find the existing DIMENSION BREAKDOWN block in image_detail.html.
+  It renders the 5 score numbers (dod_score, disruption_score, dm_score,
+  wonder_score, aq_score) with their plain-English labels.
+
+  STEP 1 — Make dimension scores anchor links:
+  In the existing dimension breakdown block, find each score number
+  and wrap it (or its container div) with:
+    <a href="#sc-dim-dod">   for HOW DIFFICULT IT WAS
+    <a href="#sc-dim-dis">   for VISUAL DISRUPTION
+    <a href="#sc-dim-dm">    for WHETHER THE TIMING WAS RIGHT
+    <a href="#sc-dim-won">   for WHETHER IT MAKES ONE FEEL SOMETHING
+    <a href="#sc-dim-aq">    for THE EMOTION IT CREATES
+
+  Style: text-decoration: none; color: inherit; cursor: pointer;
+  The click scrolls the page to the detail row below.
+
+  STEP 2 — Paste the entire block below immediately AFTER the closing
+  tag of the existing dimension breakdown section.
+
+  STEP 3 — The "How evaluation works →" link that currently points to
+  /science or /science#dimensions — KEEP IT. It becomes the secondary
+  "understand the methodology" link. The new block is image-specific.
+===========================================================================
+-->
+
+{% set _audit = image.get_audit() or {} %}
+{% set _badges_g = _audit.get('badges_g', []) %}
+{% set _badges_w = _audit.get('badges_w', []) %}
+{% set _cal_line = _audit.get('calibration_line', '') %}
+
+{# Only render if the image has been scored #}
+{% if image.status == 'scored' and image.dod_score %}
+
+<div class="sc-dim-detail-wrap">
+
+  <!-- Anchor link row: "What do these scores mean for this image?" -->
+  <p class="sc-dim-detail-intro">
+    What do these scores mean for this image?
+    <a href="{{ url_for('science') }}#dimensions" class="sc-dim-sci-link">
+      How dimensions are calculated →
+    </a>
+  </p>
+
+  <!-- 5 dimension detail rows -->
+
+  <div class="sc-dim-row" id="sc-dim-dod">
+    <div class="sc-dim-row-left">
+      <span class="sc-dim-row-num">{{ "%.1f"|format(image.dod_score) }}</span>
+      <span class="sc-dim-row-label">HOW DIFFICULT IT WAS</span>
+    </div>
+    <div class="sc-dim-row-right">
+      <p class="sc-dim-row-what">Access, physical challenge, timing window, and technical execution difficulty — how hard was it to make this frame?</p>
+      {% if _badges_g %}
+        {% for b in _badges_g[:1] %}
+        <p class="sc-dim-row-specific sc-dim-strength">✦ {{ b }}</p>
+        {% endfor %}
+      {% endif %}
+      {% if _badges_w %}
+        {% for b in _badges_w[:1] %}
+        <p class="sc-dim-row-specific sc-dim-gap">↑ {{ b }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sc-dim-row" id="sc-dim-dis">
+    <div class="sc-dim-row-left">
+      <span class="sc-dim-row-num">{{ "%.1f"|format(image.disruption_score) }}</span>
+      <span class="sc-dim-row-label">VISUAL DISRUPTION</span>
+    </div>
+    <div class="sc-dim-row-right">
+      <p class="sc-dim-row-what">Does this image break from convention? Visual surprise, unconventional framing, or unexpected perspective — does it stop the viewer?</p>
+      {% if _badges_g and _badges_g|length > 1 %}
+        <p class="sc-dim-row-specific sc-dim-strength">✦ {{ _badges_g[1] }}</p>
+      {% endif %}
+      {% if _badges_w and _badges_w|length > 1 %}
+        <p class="sc-dim-row-specific sc-dim-gap">↑ {{ _badges_w[1] }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sc-dim-row" id="sc-dim-dm">
+    <div class="sc-dim-row-left">
+      <span class="sc-dim-row-num">{{ "%.1f"|format(image.dm_score) }}</span>
+      <span class="sc-dim-row-label">WHETHER THE TIMING WAS RIGHT</span>
+    </div>
+    <div class="sc-dim-row-right">
+      <p class="sc-dim-row-what">Was the right moment captured? Includes gesture, emotional peak, behavioural act at completion, and the unrepeatable instant.</p>
+      {% if _badges_g and _badges_g|length > 2 %}
+        <p class="sc-dim-row-specific sc-dim-strength">✦ {{ _badges_g[2] }}</p>
+      {% endif %}
+      {% if _badges_w and _badges_w|length > 2 %}
+        <p class="sc-dim-row-specific sc-dim-gap">↑ {{ _badges_w[2] }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sc-dim-row" id="sc-dim-won">
+    <div class="sc-dim-row-left">
+      <span class="sc-dim-row-num">{{ "%.1f"|format(image.wonder_score) }}</span>
+      <span class="sc-dim-row-label">WHETHER IT MAKES ONE FEEL SOMETHING</span>
+    </div>
+    <div class="sc-dim-row-right">
+      <p class="sc-dim-row-what">What does this image make a stranger feel? Eye wonder, access wonder, cultural wonder, emotional wonder — does it make someone stop?</p>
+    </div>
+  </div>
+
+  <div class="sc-dim-row" id="sc-dim-aq">
+    <div class="sc-dim-row-left">
+      <span class="sc-dim-row-num">{{ "%.1f"|format(image.aq_score) }}</span>
+      <span class="sc-dim-row-label">THE EMOTION IT CREATES</span>
+    </div>
+    <div class="sc-dim-row-right">
+      <p class="sc-dim-row-what">Not technical polish — the named feeling: loneliness, joy, defiance, tenderness, awe. A score above 7.5 requires a specific, identifiable emotion.</p>
+      {% if _cal_line %}
+        <p class="sc-dim-row-calibration">{{ _cal_line }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>{# end sc-dim-detail-wrap #}
+
+{% endif %}{# end scored check #}
+
+
+<!-- =========================================================
+     CSS — add to the <style> block in image_detail.html
+     (or append to the existing scorecard CSS section)
+     ========================================================= -->
+<style>
+/* ── Dimension detail block ─────────────────────────────── */
+.sc-dim-detail-wrap {
+  margin: 0;
+  border-top: 1px solid rgba(26,26,24,0.08);
+  padding: 20px 0 4px;
+}
+
+.sc-dim-detail-intro {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(26,26,24,0.50);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sc-dim-sci-link {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #2C3E6B;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(44,62,107,0.30);
+  padding-bottom: 1px;
+  white-space: nowrap;
+}
+.sc-dim-sci-link:hover {
+  border-bottom-color: #2C3E6B;
+}
+
+/* Each dimension row */
+.sc-dim-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(26,26,24,0.06);
+  align-items: start;
+  scroll-margin-top: 80px; /* offset for sticky nav */
+}
+.sc-dim-row:last-child {
+  border-bottom: none;
+}
+
+.sc-dim-row-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.sc-dim-row-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A18;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  border-bottom: 2px solid #F5C518;
+  padding-bottom: 2px;
+}
+
+.sc-dim-row-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  line-height: 1.3;
+  max-width: 140px;
+}
+
+.sc-dim-row-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.sc-dim-row-what {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.sc-dim-row-specific {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+  margin: 0;
+}
+.sc-dim-strength {
+  color: #2C7A3A; /* green — positive signal */
+}
+.sc-dim-gap {
+  color: #1A5FA8; /* blue — growth direction */
+}
+
+.sc-dim-row-calibration {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.60);
+  line-height: 1.6;
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  background: rgba(26,26,24,0.04);
+  border-left: 2px solid #F5C518;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sc-dim-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .sc-dim-row-left {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .sc-dim-row-num {
+    font-size: 20px;
+  }
+  .sc-dim-row-label {
+    max-width: none;
+  }
+}
+</style>
+
+
+<!--
+===========================================================================
+  STEP 1 DETAIL — how to make the existing scores clickable:
+
+  In the existing dimension breakdown, each score probably renders like:
+    <div class="sc-dim-score-block">
+      <span class="sc-score-val">{{ image.dod_score }}</span>
+      <span class="sc-dim-lbl">HOW DIFFICULT IT WAS</span>
+    </div>
+
+  Wrap the entire block (or just the number) in an anchor:
+    <a href="#sc-dim-dod" class="sc-dim-anchor-link">
+      <div class="sc-dim-score-block">
+        <span class="sc-score-val">{{ image.dod_score }}</span>
+        <span class="sc-dim-lbl">HOW DIFFICULT IT WAS</span>
+      </div>
+    </a>
+
+  Add this CSS for the anchor wrapper:
+    .sc-dim-anchor-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      cursor: pointer;
+    }
+    .sc-dim-anchor-link:hover .sc-score-val {
+      border-bottom: 2px solid #F5C518;
+    }
+
+  The 5 href targets:
+    HOW DIFFICULT IT WAS          → href="#sc-dim-dod"
+    VISUAL DISRUPTION             → href="#sc-dim-dis"
+    WHETHER THE TIMING WAS RIGHT  → href="#sc-dim-dm"
+    WHETHER IT MAKES ONE FEEL...  → href="#sc-dim-won"
+    THE EMOTION IT CREATES        → href="#sc-dim-aq"
+===========================================================================
+-->
