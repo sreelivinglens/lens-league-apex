@@ -3749,6 +3749,26 @@ def dashboard():
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
+    # ── P6: Peer eval notifications — images owned by current user evaluated in last 24hrs ──
+    _peer_eval_notifications = []
+    try:
+        from models import PeerRating as _PR
+        from datetime import timedelta as _td24
+        _since = datetime.utcnow() - _td24(hours=24)
+        _notifs = (
+            _PR.query
+            .join(Image, _PR.image_id == Image.id)
+            .filter(
+                Image.user_id == current_user.id,
+                _PR.rated_at >= _since,
+            )
+            .order_by(_PR.rated_at.desc())
+            .all()
+        )
+        _peer_eval_notifications = _notifs
+    except Exception as _pen:
+        app.logger.warning(f'[dashboard] peer_eval_notifications: {_pen}')
+
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
@@ -3826,7 +3846,8 @@ def dashboard():
                            mission_due=_mission_due,
                            mission_done=_mission_done,
                            dash_advisory=_dash_advisory,
-                           peer_queue=_peer_queue)
+                           peer_queue=_peer_queue,
+                           peer_eval_notifications=_peer_eval_notifications)
 
 
 # ---------------------------------------------------------------------------
@@ -14496,6 +14517,49 @@ def submit_rating():
                     )
                 except Exception as mail_err:
                     app.logger.error(f'[zone2 photographer email] {mail_err}')
+
+            # ── P6: Owner notification — always send on every peer eval (Session 113) ──
+            # Blind: evaluator tier shown, name never shown.
+            # Sent regardless of zone — zone emails above are divergence alerts,
+            # this is the learning loop notification.
+            try:
+                _rater_tier = getattr(current_user, 'tier', None) or 'Photographer'
+                _genre      = img.genre or 'Photography'
+                _img_url    = (os.getenv('SITE_URL', 'https://shutterleague.com')
+                               + '/image/' + str(img.id))
+                send_email(
+                    photographer.email,
+                    f'Your {_genre} image was evaluated by a {_rater_tier} photographer — Shutter League',
+                    f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                    f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
+                    f'text-transform:uppercase;color:#B8892A;">Shutter League · Peer Evaluation</p>'
+                    f'<h2 style="font-size:22px;font-weight:700;margin:16px 0 8px;color:#1a1a18;">'
+                    f'A {_rater_tier} photographer evaluated your {_genre} image</h2>'
+                    f'<p style="font-size:15px;line-height:1.7;color:#4A4840;margin-bottom:24px;">'
+                    f'Their read is below. The evaluator is anonymous — only their tier is shown.</p>'
+                    f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
+                    f'padding:16px 20px;margin-bottom:16px;">'
+                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                    f'color:#B8892A;margin:0 0 8px;">What stood out</p>'
+                    f'<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0;">{what_struck}</p>'
+                    f'</div>'
+                    f'<div style="background:#F8F7F3;border-left:3px solid #4A4840;border-radius:0 8px 8px 0;'
+                    f'padding:16px 20px;margin-bottom:24px;">'
+                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                    f'color:#4A4840;margin:0 0 8px;">One thing to improve</p>'
+                    f'<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0;">{improvement}</p>'
+                    f'</div>'
+                    f'<a href="{_img_url}" style="display:inline-block;background:#B8892A;color:#fff;'
+                    f'font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;'
+                    f'text-decoration:none;margin-bottom:24px;">See your evaluation card →</a>'
+                    f'<p style="font-size:13px;color:#8A8478;margin-top:8px;">'
+                    f'Questions? Contact <a href="mailto:{CONTACT_EMAIL}" style="color:#B8892A;">'
+                    f'{CONTACT_EMAIL}</a></p>'
+                    f'</div>'
+                )
+                app.logger.info(f'[peer_eval_notify] owner={photographer.id} image={img.id} rater_tier={_rater_tier}')
+            except Exception as _pen:
+                app.logger.error(f'[peer_eval_notify] {_pen}')
 
     except Exception as e:
         db.session.rollback()
