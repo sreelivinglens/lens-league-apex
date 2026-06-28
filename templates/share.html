@@ -51,6 +51,7 @@
 
   .photo-wrap { position: relative; background: var(--surface-3); overflow: hidden; }
   .photo-wrap img { width: 100%; display: block; max-height: 480px; object-fit: cover;
+    object-position: center center;
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
     -webkit-touch-callout: none; }
 
@@ -238,8 +239,11 @@
 
   <!-- Photo — always visible -->
   <div class="photo-wrap" style="position:relative;">
+    {% set _is_portrait = image.height and image.width and image.height > image.width %}
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
-         alt="{{ image.asset_name }}" style="display:block; width:100%;">
+         alt="{{ image.asset_name }}"
+         style="display:block; width:100%; object-fit:cover;
+                object-position:{{ 'center 15%' if _is_portrait else 'center center' }};">
     <!-- Photographer credit pill — bottom-right corner -->
     <div style="position:absolute; bottom:0; right:0;
                 font-family:var(--font-mono); font-size:13px; font-weight:500;
