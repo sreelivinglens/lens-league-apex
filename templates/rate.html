@@ -187,6 +187,22 @@
         Please spend at least 15 seconds viewing the image before rating.
       </div>
 
+      <div style="margin-bottom:20px;">
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:6px;">What stood out <span style="color:var(--gold);">*</span></div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">What specifically worked in this image? Be precise — at least 20 characters.</div>
+        <textarea name="what_struck" id="what_struck" required minlength="20" rows="2"
+                  style="width:100%; padding:10px 12px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-3); color:var(--text-primary); resize:vertical; box-sizing:border-box;"
+                  placeholder="e.g. The timing caught the exact peak of the action — nothing else would have worked."></textarea>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:6px;">One thing to improve <span style="color:var(--gold);">*</span></div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">What one change would lift this image? Be specific — at least 20 characters.</div>
+        <textarea name="improvement" id="improvement" required minlength="20" rows="2"
+                  style="width:100%; padding:10px 12px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-3); color:var(--text-primary); resize:vertical; box-sizing:border-box;"
+                  placeholder="e.g. A slightly lower angle would have removed the cluttered background."></textarea>
+      </div>
+
       <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
         <button type="submit" class="btn btn-solid" id="submitBtn">Submit Rating →</button>
         <form method="POST" action="{{ url_for('skip_rating') }}" style="display:inline;">
