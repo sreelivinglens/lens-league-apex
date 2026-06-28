@@ -131,6 +131,10 @@
     </div>
   </div>
 
+  <p style="text-align:center; font-size:14px; color:var(--text-secondary); margin:-8px 0 20px;">
+    Rate this image across all 5 dimensions · 2 pts · +2 if your eye matches the engine
+  </p>
+
   {% if bias_flag %}
   <div style="background:var(--red-dim); border:1px solid var(--red); border-left:4px solid var(--red); border-radius:var(--radius-md); padding:14px 18px; margin-bottom:24px; font-size:14px; color:var(--red);">
     <strong>Rating pattern flagged.</strong> Your ratings have been flagged for review. You may continue rating, but credits are paused pending admin review.
@@ -205,12 +209,13 @@
 
       <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
         <button type="submit" class="btn btn-solid" id="submitBtn">Submit Rating →</button>
-        <form method="POST" action="{{ url_for('skip_rating') }}" style="display:inline;">
-          <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
-          <button type="submit" class="btn">Skip</button>
-        </form>
       </div>
 
+    </form>
+
+    <form method="POST" action="{{ url_for('skip_rating') }}" style="margin-top:12px;">
+      <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+      <button type="submit" class="btn">Skip</button>
     </form>
   </div>
 
