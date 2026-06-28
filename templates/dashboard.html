@@ -2006,6 +2006,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       {% set pending = peer_queue | rejectattr('status', 'equalto', 'submitted') | list %}
 
       {% if pending %}
+      <p class="sl-peer-eval__pts">2 pts per image · +2 bonus if your eye matches the engine</p>
       <div class="sl-peer-eval__grid">
         {% for assignment in pending %}
         {% set img = assignment.image %}
@@ -2027,7 +2028,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         {% endif %}
         {% endfor %}
       </div>
-      <p class="sl-peer-eval__pts">2 pts per image · +2 bonus if your eye matches the engine</p>
 
       {% else %}
       <div class="sl-peer-eval__done">
