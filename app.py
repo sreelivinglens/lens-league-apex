@@ -3750,12 +3750,13 @@ def dashboard():
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
     # ── P6: Peer eval notifications — images owned by current user evaluated in last 24hrs ──
+    # Deduplicated by image_id — show most recent eval per image, max 3 banners.
     _peer_eval_notifications = []
     try:
         from models import PeerRating as _PR
         from datetime import timedelta as _td24
         _since = datetime.utcnow() - _td24(hours=24)
-        _notifs = (
+        _all_notifs = (
             _PR.query
             .join(Image, _PR.image_id == Image.id)
             .filter(
@@ -3765,7 +3766,14 @@ def dashboard():
             .order_by(_PR.rated_at.desc())
             .all()
         )
-        _peer_eval_notifications = _notifs
+        # Deduplicate: one notification per image, most recent eval wins
+        _seen_images = set()
+        for _n in _all_notifs:
+            if _n.image_id not in _seen_images:
+                _peer_eval_notifications.append(_n)
+                _seen_images.add(_n.image_id)
+            if len(_peer_eval_notifications) >= 3:
+                break
     except Exception as _pen:
         app.logger.warning(f'[dashboard] peer_eval_notifications: {_pen}')
 
@@ -3847,7 +3855,8 @@ def dashboard():
                            mission_done=_mission_done,
                            dash_advisory=_dash_advisory,
                            peer_queue=_peer_queue,
-                           peer_eval_notifications=_peer_eval_notifications)
+                           peer_eval_notifications=_peer_eval_notifications,
+                           tier_rank=TIER_RANK)
 
 
 # ---------------------------------------------------------------------------
@@ -3910,7 +3919,8 @@ def my_gallery():
     }
     return render_template('my_gallery.html',
                            images=images, stats=stats, genres=genres,
-                           query=query, genre=genre, sort=sort)
+                           query=query, genre=genre, sort=sort,
+                           tier_rank=TIER_RANK)
 
 
 # ---------------------------------------------------------------------------
