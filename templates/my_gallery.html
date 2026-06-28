@@ -448,10 +448,12 @@
           {% set _ratings = img.peer_ratings_received if img.peer_ratings_received else [] %}
           {% set _best = namespace(name='', rank=0) %}
           {% for _r in _ratings %}
-            {% set _rrank = tier_rank.get(_r.rater.tier or '', 0) if _r.rater else 0 %}
-            {% if _rrank > _best.rank %}
-              {% set _best.rank = _rrank %}
-              {% set _best.name = _r.rater.tier %}
+            {% if _r.what_struck %}
+              {% set _rrank = tier_rank.get(_r.rater.tier or '', 0) if _r.rater else 0 %}
+              {% if _rrank > _best.rank %}
+                {% set _best.rank = _rrank %}
+                {% set _best.name = _r.rater.tier %}
+              {% endif %}
             {% endif %}
           {% endfor %}
           {% if _best.name %}
