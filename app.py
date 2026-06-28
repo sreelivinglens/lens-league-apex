@@ -4919,6 +4919,23 @@ def upload():
         raw_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
         file.save(raw_path)
 
+        # ── MPO format guard — convert to JPEG before pipeline ─────────────────
+        # MPO (Multi Picture Object, iPhone Portrait mode) causes the vision API
+        # to hang indefinitely. Detect and convert to standard JPEG before ingestion.
+        try:
+            from PIL import Image as _PILImage
+            with _PILImage.open(raw_path) as _pil_img:
+                if getattr(_pil_img, 'format', '').upper() == 'MPO':
+                    app.logger.info(f'[upload] MPO detected — converting to JPEG: {raw_path}')
+                    _pil_rgb = _pil_img.convert('RGB')
+                    _jpeg_path = raw_path.rsplit('.', 1)[0] + '_converted.jpg'
+                    _pil_rgb.save(_jpeg_path, 'JPEG', quality=95)
+                    if os.path.exists(raw_path):
+                        os.remove(raw_path)
+                    raw_path = _jpeg_path
+        except Exception as _mpo_err:
+            app.logger.warning(f'[upload] MPO check failed (continuing): {_mpo_err}')
+
         try:
             thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
@@ -7155,6 +7172,19 @@ def upload_edited_version(image_id):
         filename   = secure_filename(file.filename)
         raw_path   = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
         file.save(raw_path)
+        # ── MPO format guard ────────────────────────────────────────────────────
+        try:
+            from PIL import Image as _PILImage
+            with _PILImage.open(raw_path) as _pil_img:
+                if getattr(_pil_img, 'format', '').upper() == 'MPO':
+                    app.logger.info(f'[upload-edit] MPO detected — converting to JPEG: {raw_path}')
+                    _pil_rgb = _pil_img.convert('RGB')
+                    _jpeg_path = raw_path.rsplit('.', 1)[0] + '_converted.jpg'
+                    _pil_rgb.save(_jpeg_path, 'JPEG', quality=95)
+                    if os.path.exists(raw_path): os.remove(raw_path)
+                    raw_path = _jpeg_path
+        except Exception as _mpo_err:
+            app.logger.warning(f'[upload-edit] MPO check failed (continuing): {_mpo_err}')
         try:
             thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
@@ -9509,6 +9539,19 @@ def score_single_image():
         filename  = secure_filename(file.filename)
         raw_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f'{uid}_{filename}')
         file.save(raw_path)
+        # ── MPO format guard ────────────────────────────────────────────────
+        try:
+            from PIL import Image as _PILImage
+            with _PILImage.open(raw_path) as _pil_img:
+                if getattr(_pil_img, 'format', '').upper() == 'MPO':
+                    app.logger.info(f'[bulk-upload] MPO detected — converting to JPEG: {raw_path}')
+                    _pil_rgb = _pil_img.convert('RGB')
+                    _jpeg_path = raw_path.rsplit('.', 1)[0] + '_converted.jpg'
+                    _pil_rgb.save(_jpeg_path, 'JPEG', quality=95)
+                    if os.path.exists(raw_path): os.remove(raw_path)
+                    raw_path = _jpeg_path
+        except Exception as _mpo_err:
+            app.logger.warning(f'[bulk-upload] MPO check failed (continuing): {_mpo_err}')
         thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         if os.path.exists(raw_path): os.remove(raw_path)
 
@@ -11294,39 +11337,19 @@ def mentor_review_session(session_id):
 @app.route('/science')
 def science():
     try:
-        # Fetch a pool of 12 candidates in one query (single random() call —
-        # no re-seeding between .first() calls). Then pick 3 with distinct
-        # user_ids so the same photographer never appears twice on the page.
-        _sci_pool = (Image.query
-                     .filter(Image.status    == 'scored',
-                             Image.score     != None,
+        _sci_base = (Image.query
+                     .filter(Image.status == 'scored',
+                             Image.score  != None,
                              Image.is_public == True,
                              Image.is_flagged == False,
                              Image.thumb_url  != None,
                              Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
                              Image.score >= 8.0,
                              Image.width > Image.height)
-                     .order_by(db.func.random())
-                     .limit(12)
-                     .all())
-        # Walk pool: pick 3 with distinct user_ids first
-        sci_picks = []
-        _seen_users = set()
-        for _img in _sci_pool:
-            if _img.user_id not in _seen_users:
-                sci_picks.append(_img)
-                _seen_users.add(_img.user_id)
-            if len(sci_picks) == 3:
-                break
-        # Pad with any remaining if fewer than 3 distinct photographers
-        for _img in _sci_pool:
-            if len(sci_picks) == 3:
-                break
-            if _img not in sci_picks:
-                sci_picks.append(_img)
-        sci_hero = sci_picks[0] if len(sci_picks) > 0 else None
-        sci_mid  = sci_picks[1] if len(sci_picks) > 1 else None
-        sci_cta  = sci_picks[2] if len(sci_picks) > 2 else None
+                     .order_by(db.func.random()))
+        sci_hero = _sci_base.first()
+        sci_mid  = _sci_base.offset(1).first()
+        sci_cta  = _sci_base.offset(2).first()
     except Exception:
         sci_hero = sci_mid = sci_cta = None
     return render_template('science.html',
