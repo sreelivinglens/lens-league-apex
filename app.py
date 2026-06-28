@@ -11294,19 +11294,39 @@ def mentor_review_session(session_id):
 @app.route('/science')
 def science():
     try:
-        _sci_base = (Image.query
-                     .filter(Image.status == 'scored',
-                             Image.score  != None,
+        # Fetch a pool of 12 candidates in one query (single random() call —
+        # no re-seeding between .first() calls). Then pick 3 with distinct
+        # user_ids so the same photographer never appears twice on the page.
+        _sci_pool = (Image.query
+                     .filter(Image.status    == 'scored',
+                             Image.score     != None,
                              Image.is_public == True,
                              Image.is_flagged == False,
                              Image.thumb_url  != None,
                              Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
                              Image.score >= 8.0,
                              Image.width > Image.height)
-                     .order_by(db.func.random()))
-        sci_hero = _sci_base.first()
-        sci_mid  = _sci_base.offset(1).first()
-        sci_cta  = _sci_base.offset(2).first()
+                     .order_by(db.func.random())
+                     .limit(12)
+                     .all())
+        # Walk pool: pick 3 with distinct user_ids first
+        sci_picks = []
+        _seen_users = set()
+        for _img in _sci_pool:
+            if _img.user_id not in _seen_users:
+                sci_picks.append(_img)
+                _seen_users.add(_img.user_id)
+            if len(sci_picks) == 3:
+                break
+        # Pad with any remaining if fewer than 3 distinct photographers
+        for _img in _sci_pool:
+            if len(sci_picks) == 3:
+                break
+            if _img not in sci_picks:
+                sci_picks.append(_img)
+        sci_hero = sci_picks[0] if len(sci_picks) > 0 else None
+        sci_mid  = sci_picks[1] if len(sci_picks) > 1 else None
+        sci_cta  = sci_picks[2] if len(sci_picks) > 2 else None
     except Exception:
         sci_hero = sci_mid = sci_cta = None
     return render_template('science.html',
