@@ -3767,9 +3767,10 @@ def dashboard():
             .all()
         )
         # Deduplicate: one notification per image, most recent eval wins
+        # Only show if rating has actual comments (what_struck populated)
         _seen_images = set()
         for _n in _all_notifs:
-            if _n.image_id not in _seen_images:
+            if _n.image_id not in _seen_images and (_n.what_struck or '').strip():
                 _peer_eval_notifications.append(_n)
                 _seen_images.add(_n.image_id)
             if len(_peer_eval_notifications) >= 3:
