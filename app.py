@@ -14157,42 +14157,56 @@ def rate():
     queue_remaining = 0
 
     if is_subscriber:
-        # Direct assignment — no tier chain dependency (Session 112)
-        try:
-            from datetime import timedelta as _td2
-            _already_rated = db.session.query(RatingAssignment.image_id).filter(
-                RatingAssignment.rater_id == user.id,
-            ).subquery()
-            _next_img = (
-                Image.query.join(User, Image.user_id == User.id)
-                .filter(
-                    Image.status      == 'scored',
-                    Image.is_public   == True,
-                    Image.is_flagged  == False,
-                    Image.needs_review == False,
-                    Image.score       != None,
-                    Image.user_id     != user.id,
-                    User.is_subscribed == True,
-                    Image.id.notin_(_already_rated),
+        # If a specific assignment_id is passed (from dashboard card), load that one
+        _requested_assignment_id = request.args.get('assignment', type=int)
+        if _requested_assignment_id:
+            _req_a = RatingAssignment.query.filter_by(
+                id=_requested_assignment_id, rater_id=user.id
+            ).first()
+            if _req_a and _req_a.status in ('assigned', 'started'):
+                if _req_a.status == 'assigned':
+                    _req_a.status = 'started'
+                    _req_a.started_at = datetime.utcnow()
+                    db.session.commit()
+                assignment = _req_a
+                image = _req_a.image
+        if not assignment:
+            # Direct assignment — no tier chain dependency (Session 112)
+            try:
+                from datetime import timedelta as _td2
+                _already_rated = db.session.query(RatingAssignment.image_id).filter(
+                    RatingAssignment.rater_id == user.id,
+                ).subquery()
+                _next_img = (
+                    Image.query.join(User, Image.user_id == User.id)
+                    .filter(
+                        Image.status      == 'scored',
+                        Image.is_public   == True,
+                        Image.is_flagged  == False,
+                        Image.needs_review == False,
+                        Image.score       != None,
+                        Image.user_id     != user.id,
+                        User.is_subscribed == True,
+                        Image.id.notin_(_already_rated),
+                    )
+                    .order_by(Image.peer_rating_count.asc().nullsfirst(), Image.scored_at.desc())
+                    .first()
                 )
-                .order_by(Image.peer_rating_count.asc().nullsfirst(), Image.scored_at.desc())
-                .first()
-            )
-            if _next_img:
-                assignment = RatingAssignment(
-                    rater_id   = user.id,
-                    image_id   = _next_img.id,
-                    status     = 'started',
-                    tier_slot  = 'any',
-                    started_at = datetime.utcnow(),
-                    expires_at = datetime.utcnow() + _td2(hours=72),
-                )
-                db.session.add(assignment)
-                db.session.commit()
-                image = assignment.image
-        except Exception as _re:
-            app.logger.warning(f'[rate] assignment error: {_re}')
-            db.session.rollback()
+                if _next_img:
+                    assignment = RatingAssignment(
+                        rater_id   = user.id,
+                        image_id   = _next_img.id,
+                        status     = 'started',
+                        tier_slot  = 'any',
+                        started_at = datetime.utcnow(),
+                        expires_at = datetime.utcnow() + _td2(hours=72),
+                    )
+                    db.session.add(assignment)
+                    db.session.commit()
+                    image = assignment.image
+            except Exception as _re:
+                app.logger.warning(f'[rate] assignment error: {_re}')
+                db.session.rollback()
 
         already = db.session.query(RatingAssignment.image_id).filter(
             RatingAssignment.rater_id == user.id,
