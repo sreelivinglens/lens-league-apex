@@ -3666,7 +3666,34 @@ def dashboard():
             if any(p.status == 'started' for p in _peer_queue):
                 db.session.commit()
         except Exception as _pqe:
-            app.logger.warning(f'[dashboard] peer queue: {_pqe}')
+            # Fallback: simple queue ignoring tier chain (used until user.tier is populated)
+            try:
+                from models import RatingAssignment as _RA
+                from datetime import timedelta as _td
+                _already = db.session.query(_RA.image_id).filter(_RA.rater_id == current_user.id).subquery()
+                _eligible = Image.query.filter(
+                    Image.status    == 'scored',
+                    Image.is_public == True,
+                    Image.is_flagged == False,
+                    Image.needs_review == False,
+                    Image.score     != None,
+                    Image.user_id   != current_user.id,
+                    Image.id.notin_(_already),
+                ).order_by(Image.peer_rating_count.asc().nullsfirst(), Image.scored_at.desc()).limit(9).all()
+                for _img in _eligible[:3]:
+                    try:
+                        _a = _RA(rater_id=current_user.id, image_id=_img.id, status='assigned',
+                                 tier_slot='any', expires_at=datetime.utcnow() + _td(hours=72))
+                        db.session.add(_a)
+                        db.session.flush()
+                        _a.status = 'started'; _a.started_at = datetime.utcnow()
+                        _peer_queue.append(_a)
+                    except Exception:
+                        db.session.rollback()
+                if _peer_queue:
+                    db.session.commit()
+            except Exception as _fallback_err:
+                app.logger.warning(f'[dashboard] peer queue fallback: {_fallback_err}')
 
     return render_template('dashboard.html', images=images, stats=stats,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
