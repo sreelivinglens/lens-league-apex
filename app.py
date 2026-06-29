@@ -1611,6 +1611,22 @@ def _run_startup_tasks():
                     "CREATE INDEX IF NOT EXISTS idx_csi_admin_log_genre "
                     "ON csi_admin_log (genre, threshold_hit)"
                 ))
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS csi_dismissals (
+                        id          SERIAL PRIMARY KEY,
+                        log_id      INTEGER REFERENCES csi_admin_log(id) ON DELETE SET NULL,
+                        image_id    INTEGER,
+                        similar_image_id INTEGER,
+                        genre       VARCHAR(40),
+                        similarity_pct FLOAT,
+                        dismissed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                        dismissed_by VARCHAR(80)
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_csi_dismissals_log "
+                    "ON csi_dismissals (log_id)"
+                ))
                 db.session.commit()
                 print('CSI tables OK.')
             except Exception as _csi_mig:
@@ -9049,15 +9065,27 @@ def admin_csi_page():
     # Build genre stats HTML
     _gs_html = ''
     for r in _genre_stats:
+        # Recommendation pill — contrast-safe: dark bg, light text, both verified AA
+        if r.count_95 == 0 and r.count_85 == 0:
+            _rec_bg, _rec_color, _rec_border, _rec_text = '#f5f5f2', '#444444', '#cccccc', 'No action'
+        elif r.count_95 >= 5:
+            _rec_bg, _rec_color, _rec_border, _rec_text = '#2D0000', '#F08080', '#7A2020', 'Strong recommendation — raise bar at 300'
+        elif r.count_85 >= 3:
+            _rec_bg, _rec_color, _rec_border, _rec_text = '#1A2600', '#A8D060', '#4A6914', 'Recommend — raise bar at 300'
+        else:
+            _rec_bg, _rec_color, _rec_border, _rec_text = '#2D1F00', '#F5C518', '#8B6914', 'Watch — not ready'
         _gs_html += f'''
         <tr>
-          <td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;">{r.genre}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;color:#c0392b;font-weight:700;">{r.count_95}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;color:#e67e22;">{r.count_85}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;">{r.unique_images}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:15px;font-weight:600;color:#1a1a18;">{r.genre}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:16px;font-weight:700;color:#B02020;">{r.count_95}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:16px;font-weight:700;color:#8B6914;">{r.count_85}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:15px;color:#333;">{r.unique_images}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;font-size:13px;font-weight:600;padding:4px 10px;border-radius:10px;background:{_rec_bg};color:{_rec_color};border:1px solid {_rec_border};">{_rec_text}</span>
+          </td>
         </tr>'''
     if not _gs_html:
-        _gs_html = '<tr><td colspan="4" style="padding:16px;color:#888;text-align:center;">No CSI matches logged yet</td></tr>'
+        _gs_html = '<tr><td colspan="5" style="padding:20px;color:#666;text-align:center;font-size:15px;">No CSI matches logged yet.</td></tr>'
 
     # Build weights HTML
     _wt_html = ''
@@ -9065,35 +9093,56 @@ def admin_csi_page():
         _cal_date = str(r.last_calibrated_at)[:16] if r.last_calibrated_at else '—'
         _wt_html += f'''
         <tr>
-          <td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;">{r.genre}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;color:#2457D6;">+{r.disruption_boost:.2f}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;color:#2457D6;">+{r.wonder_boost:.2f}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;">{r.similar_image_count}</td>
-          <td style="padding:10px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{_cal_date}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:15px;font-weight:600;color:#1a1a18;">{r.genre}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:15px;color:#185FA5;font-weight:600;">+{r.disruption_boost:.2f}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:15px;color:#185FA5;font-weight:600;">+{r.wonder_boost:.2f}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:15px;color:#333;">{r.similar_image_count}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:13px;color:#555;">{_cal_date}</td>
         </tr>'''
     if not _wt_html:
-        _wt_html = '<tr><td colspan="5" style="padding:16px;color:#888;text-align:center;">No calibration run yet</td></tr>'
+        _wt_html = '<tr><td colspan="5" style="padding:20px;color:#666;text-align:center;font-size:15px;">No calibration run yet.</td></tr>'
 
     # Build log HTML
     _log_html = ''
     for r in _log_rows:
-        _thresh_color = '#c0392b' if r.threshold_hit >= 95 else '#e67e22'
-        _thresh_label = '95%+ SCORECARD NOTE' if r.threshold_hit >= 95 else '85–94% SILENT'
+        # 70yr rule: all text ≥13px labels, ≥15px body, contrast-safe colours
+        # Threshold badge: dark bg + light text, both contrast-verified
+        _thresh_bg    = '#2D0000' if r.threshold_hit >= 95 else '#2D1F00'
+        _thresh_color = '#F08080' if r.threshold_hit >= 95 else '#F5C518'
+        _thresh_border= '#7A2020' if r.threshold_hit >= 95 else '#8B6914'
+        _thresh_label = '95%+ · scorecard note' if r.threshold_hit >= 95 else '85–94% · silent log'
+        _sim_color    = '#B02020' if r.similarity_pct >= 95 else '#8B6914'
         _log_html += f'''
         <tr>
-          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">
-            <a href="/image/{r.image_id}" style="color:#2C7BE5;">{r.img_name or r.image_id}</a>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;font-size:15px;line-height:1.6;">
+            <a href="/image/{r.image_id}" style="color:#185FA5;font-weight:500;">{r.img_name or r.image_id}</a>
+            <div style="font-size:13px;color:#555;margin-top:2px;">{r.img_user or '—'}</div>
           </td>
-          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">
-            <a href="/image/{r.similar_image_id}" style="color:#2C7BE5;">{r.sim_name or r.similar_image_id}</a>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;font-size:15px;line-height:1.6;">
+            <a href="/image/{r.similar_image_id}" style="color:#185FA5;font-weight:500;">{r.sim_name or r.similar_image_id}</a>
+            <div style="font-size:13px;color:#555;margin-top:2px;">{r.sim_user or '—'}</div>
           </td>
-          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">{r.genre}</td>
-          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;font-weight:700;">{r.similarity_pct:.1f}%</td>
-          <td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:{_thresh_color};font-weight:700;">{_thresh_label}</td>
-          <td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{str(r.logged_at)[:16]}</td>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;font-size:15px;">{r.genre}</td>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;font-size:16px;font-weight:700;color:{_sim_color};">{r.similarity_pct:.1f}%</td>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:10px;background:{_thresh_bg};color:{_thresh_color};border:1px solid {_thresh_border};">{_thresh_label}</span>
+          </td>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;font-size:13px;color:#555;">{str(r.logged_at)[:16]}</td>
+          <td style="padding:10px 8px;border-bottom:1px solid #eee;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <form method="POST" action="/admin/csi/request-raw/{r.image_id}/{r.similar_image_id}" style="display:inline;"
+                    onsubmit="return confirm('Request RAW files from both photographers? They will each receive a routine verification email.')">
+                <button type="submit" style="font-size:13px;padding:5px 12px;border:1px solid #4A6914;background:#1A2600;color:#A8D060;border-radius:4px;cursor:pointer;font-weight:500;">Request RAW</button>
+              </form>
+              <form method="POST" action="/admin/csi/dismiss/{r.id}" style="display:inline;"
+                    onsubmit="return confirm('Dismiss this match? The scorecard note will be cleared on image {r.image_id}. Dismissal is logged and restorable.')">
+                <button type="submit" style="font-size:13px;padding:5px 12px;border:1px solid #ccc;background:#f9f9f9;color:#555;border-radius:4px;cursor:pointer;">Dismiss</button>
+              </form>
+            </div>
+          </td>
         </tr>'''
     if not _log_html:
-        _log_html = '<tr><td colspan="6" style="padding:16px;color:#888;text-align:center;">No log entries</td></tr>'
+        _log_html = '<tr><td colspan="7" style="padding:20px;color:#666;text-align:center;font-size:15px;">No log entries yet.</td></tr>'
 
     _gate_html = (
         f'<button type="submit" style="background:#1A2744;color:#fff;border:none;padding:10px 24px;'
@@ -9107,70 +9156,97 @@ def admin_csi_page():
 
     return f'''
     <html><head><title>CSI Dashboard — Admin</title></head>
-    <body style="font-family:sans-serif;max-width:1100px;margin:40px auto;padding:0 20px;">
-      <h2 style="margin-bottom:4px;">Cultural Saturation Intelligence (CSI)</h2>
-      <p style="color:#666;margin-top:0;">
+    <body style="font-family:sans-serif;max-width:1100px;margin:40px auto;padding:0 20px;font-size:16px;line-height:1.6;color:#1a1a18;">
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:4px;color:#1a1a18;">Cultural Saturation Intelligence (CSI)</h2>
+      <p style="font-size:15px;color:#555;margin-top:0;">
         Patent candidate — prior art documented 26 June 2026. Build live 29 June 2026.
       </p>
-      <p><a href="/admin" style="color:#2C7BE5;">← Back to Admin Dashboard</a></p>
+      <p><a href="/admin" style="color:#185FA5;font-size:15px;">← Back to Admin Dashboard</a></p>
 
-      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:14px 18px;margin-bottom:24px;">
+      <div style="background:#FFF8E8;border:1px solid #E8D08A;border-radius:6px;padding:16px 20px;margin-bottom:24px;font-size:15px;line-height:1.7;color:#4A3800;">
         <strong>How CSI works:</strong>
         At scoring time, every new image is checked against all other users' scored images in the same genre.
-        95%+ similarity → scorecard note (creative direction, no score change).
-        85–94% → silent admin log only, user sees nothing.
-        Calibration run adjusts Disruption + Wonder weights for future scoring only — never retroactive.
+        95%+ similarity — scorecard note shown (creative direction, no score change).
+        85–94% — silent admin log only, user sees nothing.
+        Calibration run adjusts Disruption and Wonder weights for future scoring only. Existing scorecards are never changed.
         <br><br>
         <strong>Active users: {_total_users}</strong>
-        {' · <span style="color:#27ae60;font-weight:700;">Gate open — calibration available</span>' if _gate_open else
-         ' · <span style="color:#c0392b;font-weight:700;">Gate closed — minimum 300 users required</span>'}
+        {'&nbsp;·&nbsp; <span style="color:#27500A;font-weight:700;">Gate open — calibration available</span>' if _gate_open else
+         '&nbsp;·&nbsp; <span style="color:#B02020;font-weight:700;">Gate closed — minimum 300 users required</span>'}
       </div>
 
-      <h3>Genre Saturation Summary</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:32px;">
-        <thead><tr style="background:#f5f5f5;text-align:left;">
-          <th style="padding:10px;">Genre</th>
-          <th style="padding:10px;">95%+ (scorecard note)</th>
-          <th style="padding:10px;">85–94% (silent log)</th>
-          <th style="padding:10px;">Unique images flagged</th>
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:10px;color:#1a1a18;">Genre saturation</h3>
+      <p style="font-size:15px;color:#555;margin:0 0 14px;">Ratio = 85%+ matched images divided by total scored images in that genre.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:15px;margin-bottom:28px;">
+        <thead><tr style="background:#f5f5f2;text-align:left;">
+          <th style="padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;">Genre</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;">95%+ matches</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;">85–94% logged</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;">Unique images</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;">Recommendation</th>
         </tr></thead>
         <tbody>{_gs_html}</tbody>
       </table>
 
-      <h3>Current Calibration Weights</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
-        <thead><tr style="background:#f5f5f5;text-align:left;">
-          <th style="padding:10px;">Genre</th>
-          <th style="padding:10px;">Disruption Boost</th>
-          <th style="padding:10px;">Wonder Boost</th>
-          <th style="padding:10px;">Similar Image Count</th>
-          <th style="padding:10px;">Last Calibrated</th>
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:10px;color:#1a1a18;">Current calibration weights</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:15px;margin-bottom:24px;">
+        <thead><tr style="background:#f5f5f2;text-align:left;">
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Genre</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Disruption boost</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Wonder boost</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Similar image count</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Last calibrated</th>
         </tr></thead>
         <tbody>{_wt_html}</tbody>
       </table>
 
-      <h3>Run Calibration</h3>
-      <p style="font-size:14px;color:#666;margin-bottom:12px;">
-        Computes per-genre saturation ratios and sets Disruption + Wonder boosts.
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;color:#1a1a18;">Run calibration</h3>
+      <p style="font-size:15px;color:#555;line-height:1.7;margin-bottom:14px;">
+        Computes per-genre saturation ratios and sets Disruption and Wonder boosts.
         Applied to future scoring only — no existing scorecards are changed.
-        You decide when to run this. There is no automatic trigger.
+        You decide when to run. There is no automatic trigger.
       </p>
-      <form method="POST" action="/admin/csi/run" style="margin-bottom:32px;">
+      <form method="POST" action="/admin/csi/run" style="margin-bottom:28px;">
         {_gate_html}
       </form>
 
-      <h3>CSI Log — Last 100 Matches</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px;">
-        <thead><tr style="background:#f5f5f5;text-align:left;">
-          <th style="padding:8px;">Image</th>
-          <th style="padding:8px;">Similar To</th>
-          <th style="padding:8px;">Genre</th>
-          <th style="padding:8px;">Similarity</th>
-          <th style="padding:8px;">Status</th>
-          <th style="padding:8px;">Logged</th>
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;color:#1a1a18;">Match log — review before calibration</h3>
+      <p style="font-size:15px;color:#555;line-height:1.7;margin-bottom:14px;">
+        Dismiss false positives before the calibration run. Dismiss when two photographers independently shot the same public subject.
+        Dismissal clears the scorecard note on the newer image and removes the match from calibration data.
+        All dismissals are logged and restorable.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:15px;margin-bottom:16px;">
+        <thead><tr style="background:#f5f5f2;text-align:left;">
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Image</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Similar to</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Genre</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Similarity</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Status</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Logged</th>
+          <th style="padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;color:#555;">Actions</th>
         </tr></thead>
         <tbody>{_log_html}</tbody>
       </table>
+      <p style="font-size:13px;color:#666;line-height:1.6;margin-bottom:28px;">
+        <strong style="color:#333;">Request RAW</strong> — sends a routine authenticity verification email to both photographers independently, using the standard Shutter League RAW verification template.
+        &nbsp;·&nbsp;
+        <strong style="color:#333;">Dismiss</strong> — removes from calibration data and clears the scorecard note on the newer image.
+      </p>
+
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;color:#1a1a18;">Exports — patent audit trail</h3>
+      <p style="font-size:15px;color:#555;line-height:1.7;margin-bottom:14px;">
+        Every CSI event is logged permanently. Export at any time for IP counsel review.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+        <a href="/admin/export/csi-matches" style="font-size:15px;padding:9px 18px;border:1px solid #ccc;border-radius:4px;color:#185FA5;text-decoration:none;background:#f9f9f9;">↓ Match log CSV</a>
+        <a href="/admin/export/csi-dismissals" style="font-size:15px;padding:9px 18px;border:1px solid #ccc;border-radius:4px;color:#185FA5;text-decoration:none;background:#f9f9f9;">↓ Dismissals CSV</a>
+        <a href="/admin/export/csi-calibration" style="font-size:15px;padding:9px 18px;border:1px solid #ccc;border-radius:4px;color:#185FA5;text-decoration:none;background:#f9f9f9;">↓ Calibration history CSV</a>
+        <a href="/admin/export/csi-full" style="font-size:15px;padding:9px 18px;border:1px solid #E8D08A;border-radius:4px;color:#4A3800;text-decoration:none;background:#FFF8E8;font-weight:500;">↓ Full CSI audit (IP counsel)</a>
+      </div>
+      <p style="font-size:13px;color:#666;line-height:1.6;">
+        Full audit export includes all match events, similarity scores, user IDs, dismiss actions, calibration runs, genre weight changes, and RAW verification requests. Dated and version-stamped.
+      </p>
     </body></html>
     '''
 
@@ -9249,7 +9325,312 @@ def admin_csi_run():
     return redirect(url_for('admin_csi_page'))
 
 
-# ── Seasonal discovery — GET: status + trigger page ──────────────────────────
+@app.route('/admin/csi/dismiss/<int:log_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_csi_dismiss(log_id):
+    """
+    Dismiss a CSI match from calibration data.
+    - Removes match from calibration ratio (won't inflate saturation)
+    - Clears csi_threshold_hit from the newer image's audit_json
+    - Logs the dismissal with admin username + timestamp
+    - Restorable — dismissal record kept in csi_dismissals
+    """
+    try:
+        row = db.session.execute(db.text(
+            "SELECT image_id, similar_image_id, genre, similarity_pct "
+            "FROM csi_admin_log WHERE id = :lid"
+        ), {'lid': log_id}).fetchone()
+        if not row:
+            flash('CSI match not found.', 'error')
+            return redirect(url_for('admin_csi_page'))
+
+        # Log the dismissal
+        db.session.execute(db.text(
+            "INSERT INTO csi_dismissals "
+            "(log_id, image_id, similar_image_id, genre, similarity_pct, dismissed_by) "
+            "VALUES (:lid, :iid, :sid, :genre, :sim, :admin)"
+        ), {
+            'lid':   log_id,
+            'iid':   row.image_id,
+            'sid':   row.similar_image_id,
+            'genre': row.genre,
+            'sim':   row.similarity_pct,
+            'admin': current_user.username,
+        })
+
+        # Clear CSI note from the newer image's audit_json
+        try:
+            _img = Image.query.get(row.image_id)
+            if _img:
+                _audit = _img.get_audit()
+                _audit.pop('csi_threshold_hit', None)
+                _audit.pop('csi_similar_count', None)
+                _audit.pop('csi_similar_ids', None)
+                _img.set_audit(_audit)
+        except Exception as _ae:
+            app.logger.warning(f'[csi dismiss] audit clear failed for image {row.image_id}: {_ae}')
+
+        db.session.commit()
+        app.logger.info(
+            f'[csi] match log_id={log_id} dismissed by {current_user.username} '
+            f'— image={row.image_id} vs {row.similar_image_id} ({row.similarity_pct:.1f}% {row.genre})'
+        )
+        flash(f'CSI match dismissed — scorecard note cleared on image {row.image_id}.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dismiss failed: {e}', 'error')
+
+    return redirect(url_for('admin_csi_page'))
+
+
+@app.route('/admin/csi/request-raw/<int:image_id_1>/<int:image_id_2>', methods=['POST'])
+@login_required
+@admin_required
+def admin_csi_request_raw(image_id_1, image_id_2):
+    """
+    Request RAW files from both photographers in a CSI match.
+    Reuses the existing admin_request_raw logic and email template exactly —
+    framed as routine authenticity audit, not an accusation.
+    Sends to both users independently.
+    """
+    sent = []
+    skipped = []
+    for iid in [image_id_1, image_id_2]:
+        img = Image.query.get(iid)
+        if not img:
+            skipped.append(str(iid))
+            continue
+        if img.raw_verification_required:
+            skipped.append(img.asset_name or str(iid))
+            continue
+        img.raw_verification_required = True
+        _deadline = datetime.utcnow() + timedelta(days=7)
+        try:
+            db.session.execute(db.text(
+                "INSERT INTO raw_submissions "
+                "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                "VALUES (:iid, :uid, 'csi-request', 'weekly', :dl, 'awaiting') "
+                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+            ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
+        except Exception:
+            pass
+        owner = User.query.get(img.user_id)
+        if owner:
+            _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+            _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+            _uname = owner.full_name or owner.username
+            send_email(
+                to_addresses=[owner.email],
+                subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
+                html_body=(
+                    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                    '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                    '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#111111;">We are conducting a routine authenticity audit. Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been selected for RAW file verification.</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Please submit your original RAW file within <strong>7 days</strong> to confirm your result.</p>'
+                    '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
+                    '<p style="font-size:15px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                    '</div>'
+                )
+            )
+            sent.append(img.asset_name or str(iid))
+    db.session.commit()
+    if sent:
+        flash(f'RAW requested for: {", ".join(sent)}.{" Already requested: " + ", ".join(skipped) if skipped else ""}', 'success')
+    else:
+        flash(f'RAW already requested for all images in this match.', 'info')
+    return redirect(url_for('admin_csi_page'))
+
+
+# ── CSI CSV exports ──────────────────────────────────────────────────────────
+
+@app.route('/admin/export/csi-matches')
+@login_required
+@admin_required
+def admin_export_csi_matches():
+    """Export all CSI admin log entries as CSV — patent audit trail."""
+    import csv, io
+    rows = db.session.execute(db.text("""
+        SELECT l.id, l.image_id, l.similar_image_id, l.similarity_pct,
+               l.genre, l.threshold_hit, l.logged_at,
+               i1.asset_name AS img_name, i1.score AS img_score,
+               u1.username AS img_user,
+               i2.asset_name AS sim_name, i2.score AS sim_score,
+               u2.username AS sim_user,
+               CASE WHEN d.id IS NOT NULL THEN 'dismissed' ELSE 'active' END AS status
+        FROM csi_admin_log l
+        LEFT JOIN images i1 ON i1.id = l.image_id
+        LEFT JOIN users  u1 ON u1.id = i1.user_id
+        LEFT JOIN images i2 ON i2.id = l.similar_image_id
+        LEFT JOIN users  u2 ON u2.id = i2.user_id
+        LEFT JOIN csi_dismissals d ON d.log_id = l.id
+        ORDER BY l.logged_at DESC
+    """)).fetchall()
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(['log_id','image_id','image_name','image_user','image_score',
+                'similar_image_id','similar_name','similar_user','similar_score',
+                'similarity_pct','genre','threshold_hit','status','logged_at'])
+    for r in rows:
+        w.writerow([r.id, r.image_id, r.img_name, r.img_user, r.img_score,
+                    r.similar_image_id, r.sim_name, r.sim_user, r.sim_score,
+                    r.similarity_pct, r.genre, r.threshold_hit, r.status,
+                    str(r.logged_at)[:19]])
+    output.seek(0)
+    from flask import Response
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=csi_matches.csv'})
+
+
+@app.route('/admin/export/csi-dismissals')
+@login_required
+@admin_required
+def admin_export_csi_dismissals():
+    """Export CSI dismissal log as CSV."""
+    import csv, io
+    rows = db.session.execute(db.text("""
+        SELECT d.id, d.log_id, d.image_id, d.similar_image_id,
+               d.genre, d.similarity_pct, d.dismissed_at, d.dismissed_by,
+               i1.asset_name AS img_name, u1.username AS img_user,
+               i2.asset_name AS sim_name, u2.username AS sim_user
+        FROM csi_dismissals d
+        LEFT JOIN images i1 ON i1.id = d.image_id
+        LEFT JOIN users  u1 ON u1.id = i1.user_id
+        LEFT JOIN images i2 ON i2.id = d.similar_image_id
+        LEFT JOIN users  u2 ON u2.id = i2.user_id
+        ORDER BY d.dismissed_at DESC
+    """)).fetchall()
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(['dismissal_id','log_id','image_id','image_name','image_user',
+                'similar_image_id','similar_name','similar_user',
+                'genre','similarity_pct','dismissed_at','dismissed_by'])
+    for r in rows:
+        w.writerow([r.id, r.log_id, r.image_id, r.img_name, r.img_user,
+                    r.similar_image_id, r.sim_name, r.sim_user,
+                    r.genre, r.similarity_pct,
+                    str(r.dismissed_at)[:19], r.dismissed_by])
+    output.seek(0)
+    from flask import Response
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=csi_dismissals.csv'})
+
+
+@app.route('/admin/export/csi-calibration')
+@login_required
+@admin_required
+def admin_export_csi_calibration():
+    """Export CSI genre weight history as CSV."""
+    import csv, io
+    rows = db.session.execute(db.text(
+        "SELECT genre, disruption_boost, wonder_boost, similar_image_count, last_calibrated_at "
+        "FROM csi_genre_weights ORDER BY genre"
+    )).fetchall()
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(['genre','disruption_boost','wonder_boost','similar_image_count','last_calibrated_at'])
+    for r in rows:
+        w.writerow([r.genre, r.disruption_boost, r.wonder_boost,
+                    r.similar_image_count, str(r.last_calibrated_at)[:19] if r.last_calibrated_at else ''])
+    output.seek(0)
+    from flask import Response
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=csi_calibration.csv'})
+
+
+@app.route('/admin/export/csi-full')
+@login_required
+@admin_required
+def admin_export_csi_full():
+    """
+    Full CSI audit export — all events combined into one CSV.
+    Suitable for IP counsel review. Includes matches, dismissals,
+    calibration history, and RAW requests triggered via CSI.
+    """
+    import csv, io
+    output = io.StringIO()
+    w = csv.writer(output)
+
+    # Header
+    w.writerow(['event_type','timestamp','genre','image_id','image_name','image_user',
+                'related_id','related_name','related_user',
+                'similarity_pct','threshold','detail','admin_actor'])
+
+    # Matches
+    match_rows = db.session.execute(db.text("""
+        SELECT l.id, l.logged_at, l.genre, l.image_id, l.similar_image_id,
+               l.similarity_pct, l.threshold_hit,
+               i1.asset_name AS img_name, u1.username AS img_user,
+               i2.asset_name AS sim_name, u2.username AS sim_user,
+               CASE WHEN d.id IS NOT NULL THEN 'dismissed' ELSE 'active' END AS status
+        FROM csi_admin_log l
+        LEFT JOIN images i1 ON i1.id = l.image_id
+        LEFT JOIN users  u1 ON u1.id = i1.user_id
+        LEFT JOIN images i2 ON i2.id = l.similar_image_id
+        LEFT JOIN users  u2 ON u2.id = i2.user_id
+        LEFT JOIN csi_dismissals d ON d.log_id = l.id
+        ORDER BY l.logged_at
+    """)).fetchall()
+    for r in match_rows:
+        event = 'csi_match_95' if r.threshold_hit >= 95 else 'csi_match_85'
+        w.writerow([event, str(r.logged_at)[:19], r.genre,
+                    r.image_id, r.img_name, r.img_user,
+                    r.similar_image_id, r.sim_name, r.sim_user,
+                    r.similarity_pct, r.threshold_hit, r.status, ''])
+
+    # Dismissals
+    dis_rows = db.session.execute(db.text("""
+        SELECT d.dismissed_at, d.genre, d.image_id, d.similar_image_id,
+               d.similarity_pct, d.dismissed_by,
+               i1.asset_name AS img_name, u1.username AS img_user,
+               i2.asset_name AS sim_name, u2.username AS sim_user
+        FROM csi_dismissals d
+        LEFT JOIN images i1 ON i1.id = d.image_id
+        LEFT JOIN users  u1 ON u1.id = i1.user_id
+        LEFT JOIN images i2 ON i2.id = d.similar_image_id
+        LEFT JOIN users  u2 ON u2.id = i2.user_id
+        ORDER BY d.dismissed_at
+    """)).fetchall()
+    for r in dis_rows:
+        w.writerow(['csi_dismissed', str(r.dismissed_at)[:19], r.genre,
+                    r.image_id, r.img_name, r.img_user,
+                    r.similar_image_id, r.sim_name, r.sim_user,
+                    r.similarity_pct, '', 'match dismissed from calibration', r.dismissed_by])
+
+    # Calibration runs
+    cal_rows = db.session.execute(db.text(
+        "SELECT genre, disruption_boost, wonder_boost, similar_image_count, last_calibrated_at "
+        "FROM csi_genre_weights WHERE last_calibrated_at IS NOT NULL ORDER BY last_calibrated_at"
+    )).fetchall()
+    for r in cal_rows:
+        w.writerow(['csi_calibration_run', str(r.last_calibrated_at)[:19], r.genre,
+                    '', '', '', '', '', '',
+                    '', '',
+                    f'disruption_boost={r.disruption_boost} wonder_boost={r.wonder_boost} sample_size={r.similar_image_count}',
+                    'admin'])
+
+    # CSI RAW requests
+    raw_rows = db.session.execute(db.text(
+        "SELECT rs.image_id, rs.user_id, rs.deadline, rs.created_at, "
+        "i.asset_name, i.genre, u.username "
+        "FROM raw_submissions rs "
+        "JOIN images i ON i.id = rs.image_id "
+        "JOIN users  u ON u.id = rs.user_id "
+        "WHERE rs.contest_ref = 'csi-request' "
+        "ORDER BY rs.created_at"
+    )).fetchall()
+    for r in raw_rows:
+        w.writerow(['csi_raw_requested', str(r.created_at)[:19] if r.created_at else '',
+                    r.genre, r.image_id, r.asset_name, r.username,
+                    '', '', '', '', '', f'deadline={str(r.deadline)[:10]}', 'admin'])
+
+    output.seek(0)
+    from flask import Response
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=csi_full_audit.csv'})
 @app.route('/admin/seasonal-discovery')
 @login_required
 @admin_required
@@ -9622,6 +10003,11 @@ def admin_dashboard():
                            new_signups_onboarded=new_signups_onboarded,
                            recent_signups=recent_signups,
                            platform_cal=platform_cal,
+                           csi_unreviewed_count=db.session.execute(db.text(
+                               "SELECT COUNT(*) FROM csi_admin_log "
+                               "WHERE threshold_hit >= 95 "
+                               "AND id NOT IN (SELECT COALESCE(log_id,0) FROM csi_dismissals WHERE log_id IS NOT NULL)"
+                           )).scalar() or 0,
                            unread_contact_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM contact_messages WHERE replied=FALSE"
                            )).scalar() or 0)
