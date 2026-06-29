@@ -846,7 +846,7 @@ def audit_email(filepath):
     _section('Email rendering')
     checks = [
         ('No wide fixed px widths (>600px)',    not bool(re.search(r'(?<!max-)(?<!min-)width:\s*[6-9]\d\d\s*px', content))),
-        ('Font size >= 14px in email body',     'font-size: 14px' in content or 'font-size: 15px' in content or 'font-size: 16px' in content),
+        ('Font size >= 14px in email body',     bool(re.search(r'font-size:\s*(1[4-9]|2\d)px', content))),
         ('No raw apostrophes (use &#39;)',       not bool(re.search(r"[a-zA-Z]'[a-zA-Z]", content.replace("&#39;", '')))),
         ('Line height set',                     'line-height' in content),
         ('max-width on container',              'max-width' in content),
@@ -897,7 +897,11 @@ def audit_email(filepath):
 
     lh_vals = re.findall(r'line-height:\s*([0-9.]+)', content)
     lh_floats = [float(v) for v in lh_vals if re.match(r'^[0-9.]+$', v)]
-    lh_bad = [v for v in lh_floats if v < 1.5]
+    # Pair each line-height with its context — display headings (font-size ≥32px) use 1.2-1.4 legitimately
+    lh_pairs = re.findall(r'font-size:\s*(\d+)px[^}]*?line-height:\s*([0-9.]+)', content)
+    display_lh = {float(lh) for fs, lh in lh_pairs if int(fs) >= 32}
+    lh_bad = [v for v in lh_floats if v < 1.5 and v not in display_lh]
+    lh_display_tight = [v for v in lh_floats if v < 1.5 and v in display_lh]
     if lh_bad:
         _fail(f'[email/mobile] Line-height below 1.5: {lh_bad} -- use 1.6+ for readability')
         fails += 1
@@ -905,6 +909,8 @@ def audit_email(filepath):
         _note('[email/mobile] No line-height values -- verify paragraphs have line-height >= 1.6')
     else:
         _ok('[email/mobile] Line-height all >= 1.5')
+    if lh_display_tight:
+        _note(f'[email/mobile] Display heading line-height {lh_display_tight} -- acceptable for large type (≥32px), verify visually')
 
     cta_em = re.findall(r'display:inline-block[^"]{0,300}padding:\s*(\d+)px\s+(\d+)px', content)
     cta_v = [int(t) for t, _ in cta_em]
@@ -918,7 +924,7 @@ def audit_email(filepath):
 
     _section('70-year-old readability -- Email Desktop (Outlook / Apple Mail)')
 
-    if any(f'font-size: {s}px' in content for s in range(15, 25)):
+    if bool(re.search(r'font-size:\s*(1[5-9]|2\d)px', content)):
         _ok('[email/desktop] Body font size >= 15px for desktop email clients')
     else:
         _fail('[email/desktop] No body font >= 15px -- desktop email clients need at least 15px')
