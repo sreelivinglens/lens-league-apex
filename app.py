@@ -1,4 +1,4 @@
-# SL-VERSION: 114.5 (Session 114 — feel something → one feel something ×2; mentor sort by tier; greeting font reduced; diamond icon removed; FAB smaller)
+# SL-VERSION: 114.7 (Session 114 — Eye of Judge query + peer_ratings_given to dashboard render)
 #   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
 #   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
@@ -698,6 +698,7 @@ def _run_startup_tasks():
                     "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS tier_slot VARCHAR(40)",
                     "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS reassign_count INTEGER DEFAULT 0",
                     "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP",
+                    "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS genre VARCHAR(64)",
                     "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS what_struck TEXT",
                     "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS improvement TEXT",
                     """CREATE TABLE IF NOT EXISTS peer_recognitions (
@@ -3785,9 +3786,11 @@ def dashboard():
             from models import RatingAssignment as _RA
             from datetime import timedelta as _td
             from sqlalchemy import text as _sqlt
-            # Direct query — no tier chain dependency
+            # Only exclude images the user has *submitted* a rating for.
+            # Expired/skipped assignments re-enter the pool — prevents depletion.
             _already = db.session.query(_RA.image_id).filter(
-                _RA.rater_id == current_user.id
+                _RA.rater_id == current_user.id,
+                _RA.status   == 'submitted'
             ).subquery()
             _eligible = Image.query.join(
                 User, Image.user_id == User.id
@@ -3811,6 +3814,7 @@ def dashboard():
                         image_id   = _img.id,
                         status     = 'started',
                         tier_slot  = 'any',
+                        genre      = _img.genre,
                         started_at = datetime.utcnow(),
                         expires_at = datetime.utcnow() + _td(hours=72),
                     )
@@ -3823,6 +3827,39 @@ def dashboard():
                 db.session.commit()
         except Exception as _pqe:
             app.logger.warning(f'[dashboard] peer queue: {_pqe}')
+
+    # ── Eye of Judge — calibration trend (shows when ≥5 peer evals submitted) ──
+    _eye_of_judge = None
+    _peer_ratings_given = getattr(current_user, 'lifetime_ratings_given', 0) or 0
+    if _peer_ratings_given >= 5 and getattr(current_user, 'is_subscribed', False):
+        try:
+            from models import PeerRating as _PRJ
+            _judge_ratings = (
+                _PRJ.query
+                .filter(
+                    _PRJ.rater_id == current_user.id,
+                    _PRJ.delta_from_ddi != None,
+                )
+                .order_by(_PRJ.rated_at.desc())
+                .limit(10)
+                .all()
+            )
+            if len(_judge_ratings) >= 3:
+                _deltas    = [abs(r.delta_from_ddi) for r in reversed(_judge_ratings)]
+                _avg_delta = round(sum(_deltas) / len(_deltas), 2)
+                # Trend: is calibration improving (delta shrinking)?
+                _half      = len(_deltas) // 2
+                _early_avg = sum(_deltas[:_half]) / _half if _half else _avg_delta
+                _late_avg  = sum(_deltas[_half:]) / (len(_deltas) - _half) if _half else _avg_delta
+                _improving = _late_avg < _early_avg
+                _eye_of_judge = {
+                    'count':      _peer_ratings_given,
+                    'avg_delta':  _avg_delta,
+                    'deltas':     _deltas,
+                    'improving':  _improving,
+                }
+        except Exception as _eje:
+            app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
     return render_template('dashboard.html', images=images, stats=stats,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
@@ -3858,6 +3895,8 @@ def dashboard():
                            peer_queue=_peer_queue,
                            peer_eval_notifications=_peer_eval_notifications,
                            tier_rank=TIER_RANK,
+                           eye_of_judge=_eye_of_judge,
+                           peer_ratings_given=_peer_ratings_given,
                            last_eval_result=session.get('last_eval_result'))
 
 
