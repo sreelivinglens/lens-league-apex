@@ -88,7 +88,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 }
 
 .sl-greeting__name {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.2;
   color: var(--sl-text);
@@ -100,10 +100,11 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
 .sl-greeting__sub {
   font-size: 15px;
-  color: var(--sl-text-light);
-  margin-top: 2px;
+  color: var(--sl-text);
+  margin-top: 3px;
   margin-bottom: 16px;
-  font-weight: 400;
+  font-weight: 500;
+  opacity: .55;
 }
 
 /* ══════════════════════════════════════════
@@ -976,7 +977,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 /* Mobile first: all grids default to single column, expand at breakpoints */
 @media (max-width: 400px) {
   .sl-assignment__title { font-size: 24px; }
-  .sl-greeting__name    { font-size: 26px; }
+  .sl-greeting__name    { font-size: 22px; }
   .sl-standing-row      { grid-template-columns: 1fr; }
   .sl-points-row        { grid-template-columns: 1fr; }
   .sl-dim-grid          { grid-template-columns: 1fr; }
@@ -1167,22 +1168,22 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   z-index: 200;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--sl-yellow);
   color: var(--sl-text);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1;
-  padding: 0 18px 0 14px;
-  height: 52px;
-  border-radius: 26px;
+  padding: 0 14px 0 10px;
+  height: 40px;
+  border-radius: 20px;
   text-decoration: none;
-  box-shadow: 0 4px 16px rgba(244,194,13,.40);
+  box-shadow: 0 3px 12px rgba(244,194,13,.35);
   -webkit-tap-highlight-color: transparent;
   transition: background .15s, box-shadow .15s;
 }
 .sl-upload-fab:hover,
-.sl-upload-fab:active { background: var(--sl-yellow-dark); box-shadow: 0 6px 20px rgba(244,194,13,.35); }
+.sl-upload-fab:active { background: var(--sl-yellow-dark); box-shadow: 0 4px 16px rgba(244,194,13,.30); }
 .sl-upload-fab svg { flex-shrink: 0; }
 
 
@@ -1759,7 +1760,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <div style="background:{{ _dc[0] }};
                 border-bottom:1px solid {{ _dc[1] }};
                 border-radius:var(--r-hero) var(--r-hero) 0 0;
-                padding:20px 18px 16px; display:flex; align-items:flex-end; justify-content:space-between;
+                padding:20px 18px 16px;
                 min-height:88px;">
       <div>
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
@@ -1769,7 +1770,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
       </div>
-      <div style="font-size:28px; opacity:.15; line-height:1; flex-shrink:0; padding-left:10px;">{{ _dc[2] }}</div>
     </div>
 
     {# ── Genre pill ── #}
@@ -2848,7 +2848,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
 {# ── Upload FAB — mobile only, fixed, shown to all users ── #}
 <a href="{{ url_for('upload') }}" class="sl-upload-fab" aria-label="Upload a photograph">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   Upload
 </a>
 
