@@ -3873,10 +3873,15 @@ def dashboard():
                     ).first()
                     if _existing:
                         _existing.status     = 'started'
-                        _existing.genre      = _img.genre
                         _existing.started_at = datetime.utcnow()
                         _existing.expires_at = datetime.utcnow() + _td(hours=72)
                         db.session.flush()
+                        try:
+                            db.session.execute(db.text(
+                                "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                            ), {'g': _img.genre, 'id': _existing.id})
+                        except Exception:
+                            pass
                         _peer_queue.append(_existing)
                     else:
                         _a = _RA(
@@ -3884,12 +3889,17 @@ def dashboard():
                             image_id   = _img.id,
                             status     = 'started',
                             tier_slot  = 'any',
-                            genre      = _img.genre,
                             started_at = datetime.utcnow(),
                             expires_at = datetime.utcnow() + _td(hours=72),
                         )
                         db.session.add(_a)
                         db.session.flush()
+                        try:
+                            db.session.execute(db.text(
+                                "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                            ), {'g': _img.genre, 'id': _a.id})
+                        except Exception:
+                            pass
                         _peer_queue.append(_a)
                 except Exception as _pq_assign_err:
                     app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
@@ -15403,6 +15413,13 @@ def rate():
                         expires_at = datetime.utcnow() + _td2(hours=72),
                     )
                     db.session.add(assignment)
+                    db.session.flush()
+                    try:
+                        db.session.execute(db.text(
+                            "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                        ), {'g': _next_img.genre, 'id': assignment.id})
+                    except Exception:
+                        pass
                     db.session.commit()
                     image = assignment.image
             except Exception as _re:
