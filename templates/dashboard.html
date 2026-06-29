@@ -1168,15 +1168,12 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   z-index: 200;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   background: var(--sl-yellow);
   color: var(--sl-text);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-  padding: 0 14px 0 10px;
-  height: 40px;
-  border-radius: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   text-decoration: none;
   box-shadow: 0 3px 12px rgba(244,194,13,.35);
   -webkit-tap-highlight-color: transparent;
@@ -1761,8 +1758,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
                 border-bottom:1px solid {{ _dc[1] }};
                 border-radius:var(--r-hero) var(--r-hero) 0 0;
                 padding:20px 18px 16px;
+                display:flex; align-items:flex-start; justify-content:space-between;
                 min-height:88px;">
-      <div>
+      <div style="flex:1; min-width:0;">
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
                     color:rgba(21,21,21,.45); margin-bottom:5px;">
           Today's lesson · {{ lesson.dim_short if lesson else 'Timing' }}
@@ -1770,6 +1768,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
       </div>
+      <button onclick="slSkipMission()"
+              aria-label="Collapse mission"
+              style="background:rgba(21,21,21,.06); border:none; border-radius:8px;
+                     width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                     cursor:pointer; flex-shrink:0; margin-left:10px; margin-top:2px;
+                     font-size:14px; color:rgba(21,21,21,.45); font-family:inherit;
+                     -webkit-tap-highlight-color:transparent;">▾</button>
     </div>
 
     {# ── Genre pill ── #}
@@ -2569,6 +2574,62 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   </div>
   {% endif %}
 
+  {# ── Becoming a better judge (Eye of Judge) — shown when ≥5 peer evals submitted ── #}
+  {% if eye_of_judge %}
+  <div class="sl-rc-sec" id="rc-eye">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-eye')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Becoming a better judge</span>
+        <span class="sl-rc-sec__summary">{{ eye_of_judge.count }} evaluations · avg ±{{ eye_of_judge.avg_delta }} from engine</span>
+      </div>
+      <span class="sl-rc-sec__chev">▼</span>
+    </div>
+    <div class="sl-rc-sec__body">
+      <div style="padding-top:14px;">
+        <div style="font-size:13px; color:var(--sl-text-light); line-height:1.6; margin-bottom:12px;">
+          How close your eye has been to the DDI engine across your last {{ eye_of_judge.deltas|length }} evaluations. Smaller gap = sharper calibration.
+        </div>
+        {# Delta sparkline — lower is better #}
+        {% if eye_of_judge.deltas|length >= 3 %}
+        <div style="margin-bottom:8px;">
+          <svg width="100%" height="36" viewBox="0 0 300 36" preserveAspectRatio="none"
+               aria-label="Calibration trend — distance from engine over time">
+            {# Normalise deltas to 0–1 range, invert (lower delta = higher on chart) #}
+            {% set _dvals = eye_of_judge.deltas %}
+            {% set _dmax = _dvals | max %}
+            {% set _dmin = _dvals | min %}
+            {% set _drange = (_dmax - _dmin) if (_dmax - _dmin) > 0.1 else 0.1 %}
+            {% set _pts = namespace(v='') %}
+            {% for _d in _dvals %}
+              {% set _x = (loop.index0 / (_dvals|length - 1) * 280 + 10) | round(1) %}
+              {% set _y = ((_d - _dmin) / _drange * 28 + 4) | round(1) %}
+              {% set _pts.v = _pts.v + _x|string + ',' + _y|string + ' ' %}
+            {% endfor %}
+            <polyline fill="none"
+                      stroke="{% if eye_of_judge.improving %}#27500A{% else %}#B8892A{% endif %}"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      points="{{ _pts.v.strip() }}"/>
+            {# Last point dot #}
+            {% set _lx = 290 %}
+            {% set _ly = ((_dvals[-1] - _dmin) / _drange * 28 + 4) | round(1) %}
+            <circle cx="{{ _lx }}" cy="{{ _ly }}" r="3.5"
+                    fill="{% if eye_of_judge.improving %}#27500A{% else %}#B8892A{% endif %}"/>
+          </svg>
+          <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--sl-text-light); font-family:monospace; margin-top:2px;">
+            <span>Older</span>
+            <span>Latest ±{{ eye_of_judge.deltas[-1] | round(1) }}</span>
+          </div>
+        </div>
+        {% endif %}
+        <div style="font-size:13px; font-weight:700; padding:6px 10px; border-radius:8px; display:inline-block;
+                    {% if eye_of_judge.improving %}background:#EAF3DE; color:#27500A;{% else %}background:#FAEEDA; color:#854F0B;{% endif %}">
+          {% if eye_of_judge.improving %}↑ Calibration improving{% else %}— Keep evaluating to sharpen{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 </div>{# /sl-today__right #}
 
 </div>{# /sl-today__inner — desktop grid ends here #}
@@ -2848,8 +2909,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
 {# ── Upload FAB — mobile only, fixed, shown to all users ── #}
 <a href="{{ url_for('upload') }}" class="sl-upload-fab" aria-label="Upload a photograph">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-  Upload
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
 </a>
 
 {% endblock %}
@@ -2961,7 +3021,7 @@ function slRestoreSections() {
     if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
   // Desktop right column sections
-  var rcIds = ['rc-standing', 'rc-portfolio', 'rc-points', 'rc-aea', 'rc-location', 'rc-referral'];
+  var rcIds = ['rc-standing', 'rc-portfolio', 'rc-points', 'rc-aea', 'rc-location', 'rc-referral', 'rc-eye'];
   rcIds.forEach(function(id) {
     var s = document.getElementById(id);
     if (!s) return;
