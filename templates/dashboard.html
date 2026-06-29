@@ -1163,7 +1163,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 .sl-upload-fab {
   position: fixed;
   bottom: 88px;
-  right: 16px;
+  left: 16px;
   z-index: 200;
   display: flex;
   align-items: center;
@@ -2081,20 +2081,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {# Yesterday moved to right column — after Your Standing (Session 111) #}
 
   {# Portfolio banner moved to right column (Session 111) #}
-
-  {# ══════════════════════════════════════════
-     UPLOAD BANNER — standalone, always available, no mission required
-  ══════════════════════════════════════════ #}
-  <a href="{{ url_for('upload') }}" class="sl-upload-banner" id="sl-upload-banner">
-    <div class="sl-upload-banner__left">
-      <div class="sl-upload-banner__icon">▲</div>
-      <div class="sl-upload-banner__text">
-        <span class="sl-upload-banner__title">Upload any photograph</span>
-        <span class="sl-upload-banner__sub">Independent evaluation · no mission needed</span>
-      </div>
-    </div>
-    <span class="sl-upload-banner__arrow">→</span>
-  </a>
+  {# Upload banner removed — FAB handles mobile, right col CTA handles desktop (Session 114) #}
 
   {# ══════════════════════════════════════════
      P6: PEER EVAL RECEIVED NOTIFICATIONS (Session 113)
@@ -2312,7 +2299,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {# ── Desktop Upload CTA — top of right column, always visible ── #}
   <a href="{{ url_for('upload') }}"
      style="display:flex; align-items:center; justify-content:space-between;
-            background:#151515; color:#FFFFFF; border-radius:var(--r-card);
+            background:#13254B; color:#FFFFFF; border-radius:var(--r-card);
             padding:14px 18px; text-decoration:none; font-size:15px; font-weight:700;
             min-height:44px; transition:opacity .15s;"
      onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
@@ -2891,16 +2878,14 @@ function slToggleMaster() {
   }
 }
 
-// ── Skip Mission — collapses assignment card to a compact pill, scrolls to upload banner ──
+// ── Skip Mission — collapses assignment card to pill, session-persistent ──
 function slSkipMission() {
   var card = document.getElementById('sl-mission-card');
   var pill = document.getElementById('sl-mission-pill');
-  var banner = document.getElementById('sl-upload-banner');
-
   if (card) {
     card.style.transition = 'max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease';
     card.style.maxHeight = card.scrollHeight + 'px';
-    card.offsetHeight; // force reflow
+    card.offsetHeight;
     card.style.maxHeight = '0';
     card.style.opacity = '0';
     card.style.overflow = 'hidden';
@@ -2917,11 +2902,7 @@ function slSkipMission() {
       }, 20);
     }, 300);
   }
-  if (banner) {
-    setTimeout(function() {
-      banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 380);
-  }
+  try { sessionStorage.setItem('sl_mission_collapsed', '1'); } catch(e) {}
 }
 
 function slExpandMission() {
@@ -2936,45 +2917,74 @@ function slExpandMission() {
     card.style.marginBottom = '';
     card.style.padding = '';
   }
+  try { sessionStorage.removeItem('sl_mission_collapsed'); } catch(e) {}
 }
 
-// ── Section toggle — NO localStorage, clean slate every load ──
+// ── Section toggle — sessionStorage persistence within session ──
+var _SL_SS_KEY = 'sl_sec_state';
+
+function _slSS_load() {
+  try { return JSON.parse(sessionStorage.getItem(_SL_SS_KEY) || '{}'); } catch(e) { return {}; }
+}
+function _slSS_save(state) {
+  try { sessionStorage.setItem(_SL_SS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
 function slToggle(id) {
   var s = document.getElementById(id);
   if (!s) return;
   var open = s.classList.toggle('is-open');
   var h = s.querySelector('.sl-sec__hdr');
   if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+  var st = _slSS_load(); st[id] = open; _slSS_save(st);
 }
 
-// ── Desktop right column toggle — no persistence ──
 function slToggleRC(id) {
   var s = document.getElementById(id);
   if (!s) return;
   var open = s.classList.toggle('is-open');
   var h = s.querySelector('.sl-rc-sec__hdr');
   if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+  var st = _slSS_load(); st[id] = open; _slSS_save(st);
 }
 
 function slRestoreSections() {
-  // Clean slate every load — all mobile sections collapsed on page load
+  var state = _slSS_load();
+  // Mobile collapsible sections
   var secIds = ['sec-standing', 'sec-points', 'sec-weekly', 'sec-referral', 'sec-photos', 'sec-aea', 'sec-location'];
   secIds.forEach(function(id) {
     var s = document.getElementById(id);
     if (!s) return;
     var h = s.querySelector('.sl-sec__hdr');
-    s.classList.remove('is-open');
-    if (h) h.setAttribute('aria-expanded', 'false');
+    var open = state[id] === true;
+    s.classList.toggle('is-open', open);
+    if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
-  // Desktop right col — all collapsed on load
+  // Desktop right column sections
   var rcIds = ['rc-standing', 'rc-portfolio', 'rc-points', 'rc-aea', 'rc-location', 'rc-referral'];
   rcIds.forEach(function(id) {
     var s = document.getElementById(id);
     if (!s) return;
     var h = s.querySelector('.sl-rc-sec__hdr');
-    s.classList.remove('is-open');
-    if (h) h.setAttribute('aria-expanded', 'false');
+    var open = state[id] === true;
+    s.classList.toggle('is-open', open);
+    if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  // Mission collapse — restore from sessionStorage
+  try {
+    if (sessionStorage.getItem('sl_mission_collapsed') === '1') {
+      var card = document.getElementById('sl-mission-card');
+      var pill = document.getElementById('sl-mission-pill');
+      if (card) {
+        card.style.maxHeight = '0';
+        card.style.opacity = '0';
+        card.style.overflow = 'hidden';
+        card.style.marginBottom = '0';
+        card.style.padding = '0';
+      }
+      if (pill) { pill.style.display = 'flex'; }
+    }
+  } catch(e) {}
 }
 
 // ── Keyboard nav for collapsible sections ──
