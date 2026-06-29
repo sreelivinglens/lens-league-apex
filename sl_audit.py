@@ -845,7 +845,7 @@ def audit_email(filepath):
 
     _section('Email rendering')
     checks = [
-        ('No wide fixed px widths (>600px)',    not bool(re.search(r'width:\s*[6-9]\d\d\s*px', content))),
+        ('No wide fixed px widths (>600px)',    not bool(re.search(r'(?<!max-)(?<!min-)width:\s*[6-9]\d\d\s*px', content))),
         ('Font size >= 14px in email body',     'font-size: 14px' in content or 'font-size: 15px' in content or 'font-size: 16px' in content),
         ('No raw apostrophes (use &#39;)',       not bool(re.search(r"[a-zA-Z]'[a-zA-Z]", content.replace("&#39;", '')))),
         ('Line height set',                     'line-height' in content),
@@ -941,7 +941,7 @@ def audit_email(filepath):
     # ── Email Safari iOS / Gmail / Outlook compatibility ──────────────────────
     _section('Safari iOS Mail / Gmail App / Outlook compatibility')
 
-    if re.search(r'width:\s*[6-9]\d\d\s*px', content):
+    if re.search(r'(?<!max-)(?<!min-)width:\s*[6-9]\d\d\s*px', content):
         _fail('[email] Fixed width > 600px -- breaks on mobile email clients (iOS Mail, Gmail app)')
         fails += 1
     else:
@@ -1351,7 +1351,7 @@ def audit_apppy(filepath):
     # Safari iOS Mail / Gmail / Outlook — inline email
     _section('Safari iOS Mail / Gmail / Outlook -- Inline email HTML')
 
-    if re.search(r'width:\s*[6-9]\d\d\s*px', _all_inline_html):
+    if re.search(r'(?<!max-)(?<!min-)width:\s*[6-9]\d\d\s*px', _all_inline_html):
         _fail('Inline email: fixed width > 600px -- breaks in iOS Mail and Gmail app')
         fails += 1
         def _chk_wide(blk):
