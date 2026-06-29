@@ -1,4 +1,4 @@
-# SL-VERSION: 114.2 (Session 114 — email HTML fixes: font-size, line-height, width, subject KYC)
+# SL-VERSION: 114.3 (Session 114 — P8 hotfix: _audit_json → audit_json in drawer gate SQL + rollback on exception)
 #   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
 #   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
@@ -8073,10 +8073,11 @@ def image_detail(image_id):
     _drawer_active = False
     try:
         _drawer_count = db.session.execute(db.text(
-            "SELECT COUNT(*) FROM images WHERE _audit_json LIKE '%dod_reasoning%' AND status='scored'"
+            "SELECT COUNT(*) FROM images WHERE audit_json LIKE '%dod_reasoning%' AND status='scored'"
         )).scalar() or 0
         _drawer_active = (_drawer_count > 50)
     except Exception as _dge:
+        db.session.rollback()
         app.logger.warning(f'[image_detail] drawer gate: {_dge}')
 
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
