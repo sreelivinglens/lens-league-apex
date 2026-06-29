@@ -2039,6 +2039,56 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {% endif %}
 
   {# ══════════════════════════════════════════
+     P5: LAST EVAL RESULT — 24hr persistent block (Session 114)
+     Shows calibration result of most recent peer eval submission.
+     Clears after 24 hours via submitted_at timestamp check.
+  ══════════════════════════════════════════ #}
+  {% if last_eval_result and last_eval_result.submitted_at %}
+  {% set _ler_age = (namespace(ok=false)) %}
+  {# 86400 = 24 hours in seconds — JS handles the live check; Jinja2 always shows if key present #}
+  <div id="sl-last-eval-result" style="margin-bottom:16px; display:none;">
+    {% if last_eval_result.calibrated %}
+    <div style="display:flex; align-items:flex-start; gap:14px; background:#FFFFFF;
+                border:1px solid #C8A8E8; border-left:4px solid #7C3AED;
+                border-radius:16px; padding:16px 18px;">
+      <span style="font-size:22px; flex-shrink:0; margin-top:1px;">🎯</span>
+      <div>
+        <div style="font-size:15px; font-weight:700; color:#4C1D95; line-height:1.4;">
+          You have the eye of the judge — +2 bonus credited
+        </div>
+        <div style="font-size:14px; color:#5B21B6; margin-top:4px; font-family: var(--font-mono, 'Courier New', monospace); letter-spacing:0.02em;">
+          Your read: {{ last_eval_result.peer_score }}&nbsp;|&nbsp;Engine: {{ last_eval_result.engine_score }}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div style="display:flex; align-items:flex-start; gap:14px; background:#FFFFFF;
+                border:1px solid var(--sl-border, #E0D8C8); border-left:4px solid #B8892A;
+                border-radius:16px; padding:16px 18px;">
+      <span style="font-size:22px; flex-shrink:0; margin-top:1px;">👁</span>
+      <div>
+        <div style="font-size:15px; font-weight:700; color:#1a1a18; line-height:1.4;">
+          You were {{ last_eval_result.pts_delta }} points off — keep judging to hone your eye
+        </div>
+        <div style="font-size:14px; color:#8A7040; margin-top:4px; font-family: var(--font-mono, 'Courier New', monospace); letter-spacing:0.02em;">
+          Your read: {{ last_eval_result.peer_score }}&nbsp;|&nbsp;Engine: {{ last_eval_result.engine_score }}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <script>
+  (function(){
+    var _ler = document.getElementById('sl-last-eval-result');
+    if (!_ler) return;
+    var _ts = {{ last_eval_result.submitted_at | int }};
+    var _age = (Date.now() / 1000) - _ts;
+    if (_age < 86400) { _ler.style.display = 'block'; }
+  })();
+  </script>
+  {% endif %}
+
+  {# ══════════════════════════════════════════
      PEER EVALUATION BLOCK (Session 111)
      Shown to subscribers only. Below mission, above free tier nudge.
   ══════════════════════════════════════════ #}
