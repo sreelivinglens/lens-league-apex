@@ -1477,6 +1477,43 @@
   {% endif %}{# end owner/admin location advisory gate #}
 
 
+  {# ── CSI Note Cards — same-user near-duplicate + cross-user saturation ── #}
+  {% if audit %}
+
+  {# Card A — same-user near-duplicate (own portfolio, 85%+) #}
+  {% if audit.csi_own_duplicate %}
+  <div style="margin-bottom:28px; padding:20px 24px; background:#2D1F00; border:1px solid #8B6914; border-radius:var(--radius-md);">
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#F5C518; margin-bottom:10px;">A SIMILAR IMAGE IS ALREADY IN YOUR PORTFOLIO</div>
+    <p style="margin:0; font-size:15px; color:#E8D5A3; line-height:1.75;">
+      When two frames from the same scene are submitted, the engine evaluates each on its own terms —
+      but it has already seen this composition. The craft of photography includes the edit:
+      choosing your single strongest frame before submitting is itself a skill.
+      Magnum photographers call this the contact sheet decision — the choosing is half the work.
+    </p>
+  </div>
+  {% endif %}
+
+  {# Card B — cross-user CSI match (95%+ similarity, different user) #}
+  {% if audit.csi_threshold_hit and audit.csi_threshold_hit >= 95 %}
+  <div style="margin-bottom:28px; padding:20px 24px; background:#1A1A2E; border:1px solid #4A4A7A; border-radius:var(--radius-md);">
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#A0A8D4; margin-bottom:10px;">THIS SUBJECT HAS BEEN SEEN IN THE SHUTTER LEAGUE POOL</div>
+    <p style="margin:0 0 12px; font-size:15px; color:#C8CCE8; line-height:1.75;">
+      A closely similar image exists in the Shutter League community — another photographer has submitted
+      a frame with a near-identical composition and subject. This is not a penalty. It is information
+      the platform is uniquely positioned to give you, because it sees the entire pool.
+    </p>
+    <p style="margin:0; font-size:15px; color:#C8CCE8; line-height:1.75;">
+      When a subject or scene appears repeatedly, the bar for originality rises. The frame that separates
+      now is the one that shows something the previous versions did not — different light, a moment no one
+      has caught before, or a compositional choice that makes a familiar subject feel seen for the first
+      time. That is what makes a high score here worth more than it would be anywhere else.
+    </p>
+  </div>
+  {% endif %}
+
+  {% endif %}{# end audit CSI cards #}
+
+
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
     {% set audit_meta = image.get_audit() %}
