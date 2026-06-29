@@ -3856,6 +3856,7 @@ def dashboard():
                 Image.is_flagged  == False,
                 Image.needs_review == False,
                 Image.score       != None,
+                Image.genre       != None,
                 Image.user_id     != current_user.id,
                 User.is_subscribed == True,
                 Image.id.notin_(_already),
@@ -3890,7 +3891,8 @@ def dashboard():
                         db.session.add(_a)
                         db.session.flush()
                         _peer_queue.append(_a)
-                except Exception:
+                except Exception as _pq_assign_err:
+                    app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
                     db.session.rollback()
             if _peer_queue:
                 db.session.commit()
@@ -15383,6 +15385,7 @@ def rate():
                         Image.is_flagged  == False,
                         Image.needs_review == False,
                         Image.score       != None,
+                        Image.genre       != None,
                         Image.user_id     != user.id,
                         User.is_subscribed == True,
                         Image.id.notin_(_already_rated),
