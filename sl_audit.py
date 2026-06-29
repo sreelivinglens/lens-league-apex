@@ -1428,8 +1428,11 @@ def audit_apppy(filepath):
          bool(re.search(r'peer queue assignment error', src))),
         ('_peer_queue passed to render_template',
          'peer_queue=_peer_queue' in src),
-        ('RatingAssignment genre column not removed from insert',
-         bool(re.search(r"genre\s*=\s*_img\.genre", src))),
+        # SESSION116: check 4 updated — new system stores stood_out_tags via raw SQL UPDATE
+        # REVERT NOTE: original check was: bool(re.search(r"genre\s*=\s*_img\.genre", src))
+        ('SESSION116: stood_out_tags stored via raw SQL UPDATE (not in constructor)',
+         bool(re.search(r'stood_out_tags.*raw SQL|UPDATE peer_ratings SET stood_out_tags', src)) or
+         'stood_out_json' in src),
     ]
     for label, result in _peer_queue_checks:
         if result: _ok(label)
