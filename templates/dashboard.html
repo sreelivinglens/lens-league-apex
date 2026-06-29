@@ -1753,27 +1753,27 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   <div class="sl-assignment" id="sl-mission-card">
   {% endif %}
 
-    {# ── Band header — same palette for both principle and master days ── #}
-    <div style="background:{{ _dc[0] }};
-                border-bottom:1px solid {{ _dc[1] }};
+    {# ── Band header — dark navy bg, gold fonts ── #}
+    <div style="background:#13254B;
+                border-bottom:1px solid #1A3060;
                 border-radius:var(--r-hero) var(--r-hero) 0 0;
                 padding:20px 18px 16px;
                 display:flex; align-items:flex-start; justify-content:space-between;
                 min-height:88px;">
       <div style="flex:1; min-width:0;">
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                    color:rgba(21,21,21,.45); margin-bottom:5px;">
+                    color:rgba(245,197,24,.65); margin-bottom:5px;">
           Today's lesson · {{ lesson.dim_short if lesson else 'Timing' }}
         </div>
-        <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
+        <div style="font-size:19px; font-weight:800; color:#F5C518; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
       </div>
       <button onclick="slSkipMission()"
               aria-label="Collapse mission"
-              style="background:rgba(21,21,21,.06); border:none; border-radius:8px;
+              style="background:rgba(255,255,255,.10); border:none; border-radius:8px;
                      width:32px; height:32px; display:flex; align-items:center; justify-content:center;
                      cursor:pointer; flex-shrink:0; margin-left:10px; margin-top:2px;
-                     font-size:14px; color:rgba(21,21,21,.45); font-family:inherit;
+                     font-size:14px; color:rgba(245,197,24,.70); font-family:inherit;
                      -webkit-tap-highlight-color:transparent;">▾</button>
     </div>
 
