@@ -1812,6 +1812,27 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     else:
         _note('CSI card checks skipped — not a detail/scorecard page')
 
+    _section('DELIVERY STANDARD — CSI exports in admin.html (admin page only)')
+    _is_admin = 'admin' in fname.lower() and 'admin_user' not in fname.lower()
+    if _is_admin:
+        _csi_admin_checks = [
+            ('CSI nav button present',
+             'admin_csi_page' in content or 'csi_unreviewed_count' in content),
+            ('CSI export section present',
+             'admin_export_csi' in content or 'Cultural Saturation' in content),
+            ('CSI match log export link',
+             'admin_export_csi_matches' in content or 'csi-matches' in content),
+            ('CSI full audit export link',
+             'admin_export_csi_full' in content or 'csi-full' in content),
+            ('CSI nav button — no font below 13px in nav area',
+             'font-size:10px' not in content or 'badge-count' in content),
+        ]
+        for label, result in _csi_admin_checks:
+            if result: _ok(label)
+            else: _fail(label); fails += 1
+    else:
+        _note('CSI admin export checks skipped — not admin page')
+
     _section('DELIVERY STANDARD — Summary')
     _note('Standard covers: KYC · Mobile · iPad · 70yr rule · Google meta tags')
     _note('Run on every HTML template before delivery — Rule 9 applies')
