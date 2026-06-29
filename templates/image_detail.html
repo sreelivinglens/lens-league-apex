@@ -954,7 +954,7 @@
       <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
       <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
     </div>
-    <a href="{{ url_for('weekly_challenge') }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
+    <a href="{{ url_for('challenge_detail', challenge_id=weekly_challenge.id) }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
   </div>
   {% endif %}
 
@@ -1162,37 +1162,17 @@
 
   {# ── DAYS SINCE + SHARE moved to below metadata grid — see anchor below #}
 
-  {# ── P6: PEER EVAL FEEDBACK — shown to image owner only (Session 113) ── #}
+  {# ── P6: PEER EVAL FEEDBACK — SESSION116: free-text removed from scorecard #}
+  {# Comments now email-only. Scorecard shows count only. #}
+  {# REVERT NOTE: original block preserved in image_detail_backup_session116.html lines 1165–1197 #}
   {% if current_user.is_authenticated and image.user_id == current_user.id
         and image.peer_ratings_received %}
-  <div id="peer-eval-feedback" style="margin-bottom:20px; scroll-margin-top:80px;">
-    <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
-                color:var(--text-secondary); margin-bottom:10px;">&#x1F465; What peers saw</div>
-    {% for _pr in image.peer_ratings_received | sort(attribute='rated_at', reverse=True) %}
-    {% if _pr.what_struck or _pr.improvement %}
-    <div style="background:#F8F7F3; border:1px solid #E8E5DD; border-radius:14px;
-                padding:16px 18px; margin-bottom:10px;">
-      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                  color:#6A3EF0; margin-bottom:12px;">
-        {{ _pr.rater.tier if _pr.rater and _pr.rater.tier else 'Photographer' }} · Peer Evaluator
-      </div>
-      {% if _pr.what_struck %}
-      <div style="margin-bottom:10px;">
-        <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
-                    color:#B8892A; margin-bottom:4px;">What stood out</div>
-        <div style="font-size:15px; line-height:1.65; color:#1a1a18;">{{ _pr.what_struck }}</div>
-      </div>
-      {% endif %}
-      {% if _pr.improvement %}
-      <div>
-        <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
-                    color:#4A4840; margin-bottom:4px;">One thing to improve</div>
-        <div style="font-size:15px; line-height:1.65; color:#1a1a18;">{{ _pr.improvement }}</div>
-      </div>
-      {% endif %}
+  <div id="peer-eval-feedback" style="margin-bottom:14px;">
+    <div style="background:#F8F7F3; border:1px solid #E8E5DD; border-radius:10px; padding:12px 18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#6A3EF0;">&#x1F465; Peer reads</span>
+      <span style="font-size:15px; color:var(--text-primary); font-weight:600;">{{ image.peer_ratings_received | length }} photographer{{ 's' if (image.peer_ratings_received | length) != 1 else '' }} evaluated this image</span>
+      <span style="font-size:13px; color:var(--text-muted);">Detailed feedback sent by email</span>
     </div>
-    {% endif %}
-    {% endfor %}
   </div>
   {% endif %}
 
