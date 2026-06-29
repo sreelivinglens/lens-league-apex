@@ -1148,14 +1148,14 @@
       {% if image.blended_score %}<div class="peer-item">Combined evaluation <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
     </div>
   </div>
-  {% elif image.score is not none and current_user.is_authenticated and image.user_id == current_user.id %}
-  <div class="peer-block peer-block-nudge" style="margin-bottom:14px;">
-    <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
-    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">Your AI evaluation is live. Want human photographers to validate it?</div>
+  {% elif image.score is not none and current_user.is_authenticated and image.user_id == current_user.id and has_pending_eval %}
+  <div style="border-left:3px solid var(--text-muted); padding:14px 18px; margin-bottom:14px; background:var(--surface-1); border-radius:0 10px 10px 0;">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;">&#x1F465; Peer Validation</div>
+    <div style="font-size:15px; color:var(--text-primary); line-height:1.6; margin-bottom:10px;">You have images waiting to be evaluated. Evaluate them to sharpen your eye — and unlock peer reads on your own work.</div>
     {% if current_user.is_subscribed %}
-    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Rate others to unlock &#x2192;</a>
+    <a href="{{ url_for('rate') }}" style="font-size:14px; font-weight:700; color:var(--text-primary); text-decoration:underline; text-underline-offset:3px; display:inline-flex; align-items:center; min-height:44px;">Go to your queue &#x2192;</a>
     {% else %}
-    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Unlock peer validation &#x2192;</a>
+    <a href="{{ url_for('pricing') }}" style="font-size:14px; font-weight:700; color:var(--text-primary); text-decoration:underline; text-underline-offset:3px; display:inline-flex; align-items:center; min-height:44px;">Unlock peer validation &#x2192;</a>
     {% endif %}
   </div>
   {% endif %}
