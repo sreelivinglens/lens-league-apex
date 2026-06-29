@@ -15440,11 +15440,11 @@ def bulk_upload_one():
 
 def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
     """
-    Haiku moderation on peer evaluation text fields.
+    Haiku moderation on peer evaluation comment field.
     Returns {ok: bool, reason: str|None}.
-    Rejects: profanity, religious expressions, abusive language, off-topic content,
-    meaningless filler. Supports English + common Indian languages.
-    Fails open — returns ok=True if API call fails, to avoid blocking evaluators.
+    SESSION116b: strengthened for optional comment field — single field, stricter rules.
+    Fails CLOSED — returns ok=False if API call fails, to protect photographer's inbox.
+    REVERT NOTE: original fail-open version in app_backup_session116.py ~line 15300
     """
     try:
         from auto_score import MODEL_HAIKU
@@ -15452,20 +15452,36 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
     except ImportError:
         _mod_model = 'claude-haiku-4-5-20251001'
 
+    # Use whichever field has content (called with one empty, one populated)
+    _text = (improvement or what_struck or '').strip()
+    if not _text:
+        return {'ok': True, 'reason': None}
+
     _prompt = (
         "You are a moderation assistant for a photography peer evaluation platform. "
-        "Two text fields from an evaluation are below. Decide if both are acceptable.\n\n"
-        "REJECT if either field contains:\n"
-        "- Profanity, cuss words, or abusive language (English or Indian languages: Hindi, Tamil, Kannada, Telugu, Marathi)\n"
-        "- Religious expressions used as expletives or filler\n"
-        "- Personal attacks on the photographer\n"
-        "- Content unrelated to the photograph (gear complaints, platform feedback, social commentary)\n"
-        "- Meaningless filler only: 'looks great', 'nice photo', 'perfect as is', 'nothing to improve'\n\n"
-        "ACCEPT if both fields provide specific observations about the photograph's "
-        "technical or compositional qualities — even if brief.\n\n"
-        f"WHAT STRUCK THE EVALUATOR:\n{what_struck}\n\n"
-        f"ONE THING TO IMPROVE:\n{improvement}\n\n"
-        'Respond ONLY with JSON: {"ok": true, "reason": null} or {"ok": false, "reason": "short reason"}'
+        "A user has written an optional comment about a photograph they evaluated. "
+        "This comment will be emailed privately to the photographer. Decide if it is acceptable.\n\n"
+        "REJECT if the comment contains any of the following:\n"
+        "- Profanity, cuss words, or abusive language in any language "
+        "(English, Hindi, Tamil, Kannada, Telugu, Marathi, or any other)\n"
+        "- Religious expressions used as expletives, blessings, or filler\n"
+        "- Personal attacks, insults, or derogatory remarks about the photographer "
+        "as a person (e.g. 'you should quit', 'terrible photographer', 'waste of time')\n"
+        "- Inflammatory, discriminatory, or politically charged content\n"
+        "- Special characters, gibberish, or keyboard spam "
+        "(e.g. '....%%$****', 'jkjk22211$$>>>', random symbols)\n"
+        "- Content completely unrelated to the photograph "
+        "(gear rants, platform complaints, personal opinions unrelated to the image)\n"
+        "- Meaningless one-word filler: 'Amazing', 'Wow', 'Nice', 'Good', 'Bad', 'Ok', "
+        "'Perfect', 'Terrible' with no photographic context\n"
+        "- Haiku or poetry unrelated to the photograph\n\n"
+        "ACCEPT if the comment:\n"
+        "- Makes a specific observation about the photograph's technical or compositional qualities\n"
+        "- Offers constructive photographic advice, even if brief\n"
+        "- Is neutral or positive about the image in a photograph-specific way\n\n"
+        f"COMMENT TO MODERATE:\n{_text}\n\n"
+        'Respond ONLY with JSON: {"ok": true, "reason": null} or '
+        '{"ok": false, "reason": "one short sentence explaining why"}'
     )
     try:
         import anthropic as _ant
@@ -15475,10 +15491,11 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
             messages=[{'role': 'user', 'content': _prompt}]
         )
         import json as _json
-        return _json.loads(_resp.content[0].text.strip())
+        result = _json.loads(_resp.content[0].text.strip())
+        return result
     except Exception as _e:
-        app.logger.warning(f'[eval_moderation] failed (non-fatal): {_e}')
-        return {'ok': True, 'reason': None}
+        app.logger.warning(f'[eval_moderation] API failed (fail-closed): {_e}')
+        return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
 
 
 def _make_flag_token(peer_rating_id: int) -> str:
@@ -15742,9 +15759,11 @@ def submit_rating():
     # "Mandatory text fields" + "Haiku moderation" blocks preserved in
     # app_backup_session116.py lines 15622–15650. Also restore rate.html textareas.
     #
-    # stood_out_tags: JSON list of "What stood out" checkbox values (1–3 required)
-    # improve_tags:   JSON list of "One thing to improve" checkbox values (exactly 1 required)
+    # stood_out_tags: optional JSON list of "What stood out" checkbox values (0–3)
+    # improve_tags:   optional JSON list of "One thing to improve" checkbox values (0–1)
     # optional_comment: free-text, email-only, moderated if present, not shown on scorecard
+    # SESSION116b: checkboxes made optional — sliders carry the eval signal.
+    # Comment moderation is now fail-closed (API down → comment rejected, not passed through).
     import json as _json
     _stood_out_raw = request.form.getlist('stood_out_tags')
     _improve_raw   = request.form.getlist('improve_tags')
@@ -15765,21 +15784,15 @@ def submit_rating():
 
     _stood_out_tags = [t for t in _stood_out_raw if t in _valid_stood_out][:3]
     _improve_tags   = [t for t in _improve_raw   if t in _valid_improve][:1]
+    # No mandatory validation — both sections optional. Sliders carry the signal.
 
-    if not _stood_out_tags:
-        flash('Please select at least one thing that stood out.', 'warning')
-        return redirect(url_for('rate'))
-    if not _improve_tags:
-        flash('Please select one thing to improve.', 'warning')
-        return redirect(url_for('rate'))
-
-    # Moderate optional comment only (if provided) — free-text still goes through Haiku
-    # _moderate_eval_text() kept intact for revert; only called when comment is present
+    # Moderate optional comment — fail-closed: if API unavailable, reject comment
+    # to protect photographer from unmoderated content reaching their inbox.
     if optional_comment:
         _mod = _moderate_eval_text('', optional_comment)
-        if not _mod.get('ok', True):
-            _mod_reason = _mod.get('reason') or 'Please keep comments focused on the photograph.'
-            flash(f'Your comment was not accepted. {_mod_reason}', 'warning')
+        if not _mod.get('ok', False):  # fail-closed: default False not True
+            _mod_reason = _mod.get('reason') or 'Please keep your comment focused on the photograph.'
+            flash(f'Your comment was not accepted — {_mod_reason} You can still submit your rating without a comment.', 'warning')
             return redirect(url_for('rate'))
 
     stood_out_json = _json.dumps(_stood_out_tags)
