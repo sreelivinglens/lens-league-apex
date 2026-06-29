@@ -3844,10 +3844,11 @@ def dashboard():
             from sqlalchemy import text as _sqlt
             # Only exclude images the user has *submitted* a rating for.
             # Expired/skipped assignments re-enter the pool — prevents depletion.
+            # Use select() not .subquery() — notin_() requires a select construct.
             _already = db.session.query(_RA.image_id).filter(
                 _RA.rater_id == current_user.id,
                 _RA.status   == 'submitted'
-            ).subquery()
+            )
             _eligible = Image.query.join(
                 User, Image.user_id == User.id
             ).filter(
@@ -15263,14 +15264,14 @@ def rate():
                 from datetime import timedelta as _td2
                 _already_rated = db.session.query(RatingAssignment.image_id).filter(
                     RatingAssignment.rater_id == user.id,
-                ).subquery()
+                )
                 _next_img = (
                     Image.query.join(User, Image.user_id == User.id)
                     .filter(
                         Image.status      == 'scored',
                         Image.is_public   == True,
-                        Image.is_flagged  == False,
-                        Image.needs_review == False,
+                        Image.is_flagged.isnot(True),
+                        Image.needs_review.isnot(True),
                         Image.score       != None,
                         Image.user_id     != user.id,
                         User.is_subscribed == True,
@@ -15297,13 +15298,13 @@ def rate():
 
         already = db.session.query(RatingAssignment.image_id).filter(
             RatingAssignment.rater_id == user.id,
-        ).subquery()
+        )
         queue_remaining = (
             Image.query
             .join(User, Image.user_id == User.id)
             .filter(
                 Image.status == 'scored', Image.is_public == True,
-                Image.is_flagged == False, Image.needs_review == False,
+                Image.is_flagged.isnot(True), Image.needs_review.isnot(True),
                 Image.score != None, Image.user_id != user.id,
                 User.is_subscribed == True,
                 Image.id.notin_(already),
