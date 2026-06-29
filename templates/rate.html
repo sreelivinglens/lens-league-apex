@@ -218,7 +218,8 @@
           <label style="display:flex; align-items:flex-start; gap:10px; background:var(--surface-3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; transition:border-color .15s;" class="cb-label">
             <input type="checkbox" name="stood_out_tags" value="{{ val }}"
                    style="margin-top:3px; width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:var(--gold);"
-                   onchange="enforceMax(this, 'stood_out_tags', 3)">
+                   onchange="enforceMax(this, 'stood_out_tags', 3)"
+                   {% if prefill_stood_out and val in prefill_stood_out %}checked{% endif %}>
             <span>
               <span style="font-size:14px; font-weight:600; color:var(--text-primary); display:block; line-height:1.6;">{{ val }}</span>
               <span style="font-size:12px; color:var(--text-muted); line-height:1.6; display:block;">{{ sub }}</span>
@@ -249,7 +250,8 @@
           <label style="display:flex; align-items:flex-start; gap:10px; background:var(--surface-3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; transition:border-color .15s;" class="cb-label">
             <input type="checkbox" name="improve_tags" value="{{ val }}"
                    style="margin-top:3px; width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:var(--gold);"
-                   onchange="enforceMax(this, 'improve_tags', 1)">
+                   onchange="enforceMax(this, 'improve_tags', 1)"
+                   {% if prefill_improve and val in prefill_improve %}checked{% endif %}>
             <span>
               <span style="font-size:14px; font-weight:600; color:var(--text-primary); display:block; line-height:1.6;">{{ val }}</span>
               <span style="font-size:12px; color:var(--text-muted); line-height:1.6; display:block;">{{ sub }}</span>
@@ -262,10 +264,16 @@
 
       <div style="margin-bottom:20px;">
         <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">Additional comment <span style="font-size:13px; font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">— optional, sent by email only</span></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Any specific observation? This goes to the photographer privately and never appears on the platform.</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Specific observations about the photograph only. Please respect the photographer — comments about the person or their abilities will not be accepted.</div>
+        {% if comment_error %}
+        <div style="background:var(--bg-warning); border:1px solid var(--border-warning); border-radius:8px; padding:10px 14px; margin-bottom:8px; font-size:14px; color:var(--text-warning); line-height:1.6;">
+          <strong>Comment not accepted</strong> — {{ comment_error }}<br>
+          <span style="font-size:13px;">Edit your comment below and resubmit, or clear it to submit without one.</span>
+        </div>
+        {% endif %}
         <textarea name="optional_comment" id="optional_comment" rows="2" maxlength="500"
-                  style="width:100%; padding:10px 12px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-3); color:var(--text-primary); resize:vertical; box-sizing:border-box;"
-                  placeholder="e.g. The catchlight in the left eye is what made this frame."></textarea>
+                  style="width:100%; padding:10px 12px; font-size:15px; border:1px solid {% if comment_error %}var(--border-warning){% else %}var(--border){% endif %}; border-radius:var(--radius-sm); background:var(--surface-3); color:var(--text-primary); resize:vertical; box-sizing:border-box;"
+                  placeholder="e.g. The catchlight in the left eye is what made this frame. — Please be specific and respectful. Comments are about the photograph, not the photographer.">{% if prefill_comment %}{{ prefill_comment }}{% endif %}</textarea>
       </div>
 
       <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
@@ -345,6 +353,30 @@
 // Track time spent viewing
 var startTs = Date.now();
 document.getElementById('clientStartTs') && (document.getElementById('clientStartTs').value = startTs);
+
+// Restore prefilled slider values if returning from a comment error
+{% if prefill_sliders %}
+var _prefill = {{ prefill_sliders | tojson }};
+['dod','disruption','dm','wonder','aq'].forEach(function(f) {
+  var sl = document.getElementById('slider_' + f);
+  if (sl && _prefill[f]) { sl.value = _prefill[f]; updateVal(f, _prefill[f]); }
+});
+{% endif %}
+
+// Restore checked state visual highlight for prefilled checkboxes
+document.querySelectorAll('.cb-label input[type="checkbox"]').forEach(function(cb) {
+  if (cb.checked) {
+    cb.closest('label').style.borderColor = 'var(--gold)';
+  }
+});
+
+{% if comment_error %}
+// Auto-scroll to comment error on page load
+window.addEventListener('load', function() {
+  var ta = document.getElementById('optional_comment');
+  if (ta) { ta.scrollIntoView({behavior: 'smooth', block: 'center'}); ta.focus(); }
+});
+{% endif %}
 
 // Live timer display
 var timerEl = document.getElementById('timerDisplay');
