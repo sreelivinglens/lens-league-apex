@@ -1,4 +1,4 @@
-# SL-VERSION: 114.4 (Session 114 — peer validation nudge gated on has_pending_eval; passed to image_detail render)
+# SL-VERSION: 114.5 (Session 114 — feel something → one feel something ×2; mentor sort by tier; greeting font reduced; diamond icon removed; FAB smaller)
 #   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
 #   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
@@ -7671,7 +7671,7 @@ def public_card(token):
 
                 _dims = []
                 for _lbl, _vals, _color, _flat_color in [
-                    ('Whether it made you feel something', _feeling,    '#F5C518', '#BA7517'),
+                    ('Whether it made one feel something', _feeling,    '#F5C518', '#BA7517'),
                     ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
                     ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
                 ]:
@@ -7964,7 +7964,7 @@ def image_detail(image_id):
 
                     _dims = []
                     for _label, _vals, _color, _flat_color in [
-                        ('Whether it made you feel something', _feeling,    '#F5C518', '#BA7517'),
+                        ('Whether it made one feel something', _feeling,    '#F5C518', '#BA7517'),
                         ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
                         ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
                     ]:
@@ -12447,6 +12447,13 @@ def mentors():
         except Exception:
             pass
         mentors_data[slug] = merged
+
+    # Sort by tier — Legend first, then Master, then others
+    _tier_order = {'legend': 0, 'master': 1, 'grandmaster': 2}
+    mentors_data = dict(sorted(
+        mentors_data.items(),
+        key=lambda x: _tier_order.get(x[1].get('tier_class', ''), 99)
+    ))
 
     return render_template('mentors.html', men_hero=men_hero, mentors_data=mentors_data)
 
