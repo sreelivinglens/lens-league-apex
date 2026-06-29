@@ -1048,6 +1048,64 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     margin-bottom: 12px;
     display: block;
   }
+  /* ── Desktop right column collapsible sections ── */
+  .sl-rc-sec {
+    background: var(--sl-card);
+    border-radius: var(--r-card);
+    border: 1px solid var(--sl-border);
+    border-left: 3px solid var(--sl-yellow);
+    overflow: hidden;
+  }
+  .sl-rc-sec__hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    min-height: 44px;
+    gap: 8px;
+  }
+  .sl-rc-sec__hdr:hover { background: rgba(0,0,0,.02); }
+  .sl-rc-sec__hdr-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+  .sl-rc-sec__label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--sl-text-light);
+    line-height: 1.2;
+  }
+  .sl-rc-sec__summary {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sl-text);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sl-rc-sec__chev {
+    font-size: 13px;
+    color: var(--sl-text-light);
+    flex-shrink: 0;
+    transition: transform .18s ease;
+    line-height: 1;
+  }
+  .sl-rc-sec.is-open .sl-rc-sec__chev { transform: rotate(180deg); }
+  .sl-rc-sec__body {
+    display: none;
+    padding: 0 18px 16px;
+    border-top: 1px solid var(--sl-border);
+  }
+  .sl-rc-sec.is-open .sl-rc-sec__body { display: block; }
   /* Sparkline container */
   .sl-sparkline-row {
     display: flex;
@@ -1097,7 +1155,35 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   .sl-desktop-section-label { display: block !important; }
   /* Remove mobile max-width constraint on inner */
   .sl-today__inner { max-width: 1200px !important; }
+  /* FAB hidden on desktop */
+  .sl-upload-fab { display: none !important; }
 }
+
+/* ── Upload FAB — mobile only, fixed bottom-right ── */
+.sl-upload-fab {
+  position: fixed;
+  bottom: 88px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sl-yellow);
+  color: var(--sl-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 18px 0 14px;
+  height: 52px;
+  border-radius: 26px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(244,194,13,.40);
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, box-shadow .15s;
+}
+.sl-upload-fab:hover,
+.sl-upload-fab:active { background: var(--sl-yellow-dark); box-shadow: 0 6px 20px rgba(244,194,13,.35); }
+.sl-upload-fab svg { flex-shrink: 0; }
 
 
 
@@ -2150,7 +2236,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {% if _scored_images %}
   <div class="sl-recent-work">
     <div class="sl-recent-work__hdr">
-      <span class="sl-recent-work__title">Recent work</span>
+      <span class="sl-recent-work__title">My recent work</span>
       {% if stats.total > 6 %}
       <a href="{{ url_for('my_gallery') }}" class="sl-recent-work__link">View all {{ stats.total }} →</a>
       {% endif %}
@@ -2223,253 +2309,276 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 </div>{# /sl-today__left #}
 <div class="sl-today__right">
 
-  {# ── Desktop right column: standing (always expanded) + points + AEA ── #}
-  {# On mobile this div has no styling — content is hidden, left col has collapsible sections #}
+  {# ── Desktop Upload CTA — top of right column, always visible ── #}
+  <a href="{{ url_for('upload') }}"
+     style="display:flex; align-items:center; justify-content:space-between;
+            background:#151515; color:#FFFFFF; border-radius:var(--r-card);
+            padding:14px 18px; text-decoration:none; font-size:15px; font-weight:700;
+            min-height:44px; transition:opacity .15s;"
+     onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+    <span>Upload a photograph</span>
+    <span style="font-size:18px; line-height:1;">↑</span>
+  </a>
 
+  {# ── Standing (collapsible) ── #}
   {% if progress_data %}
-  <div class="sl-desktop-right-section">
-    <span class="sl-desktop-section-label">Your standing</span>
-    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:12px;">
-      <div>
-        <div style="font-size:32px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.2f'|format(progress_data.avg_score) }}</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px;">{{ progress_data.count }} photographs evaluated</div>
+  <div class="sl-rc-sec" id="rc-standing">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-standing')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Your standing</span>
+        <span class="sl-rc-sec__summary">{{ progress_data.avg_tier }} · {{ '%.2f'|format(progress_data.avg_score) }}{% if progress_data.overall_pct %} · Top {{ progress_data.overall_pct }}%{% endif %}</span>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                    color:var(--sl-purple); background:#EEEDFE; padding:4px 10px; border-radius:10px;
-                    margin-bottom:4px; display:inline-block;">{{ progress_data.avg_tier }}</div>
-        {% if progress_data.overall_pct %}
-        <div style="font-size:13px; color:var(--sl-text-light);">Top {{ progress_data.overall_pct }}%</div>
-        {% endif %}
-      </div>
+      <span class="sl-rc-sec__chev">▼</span>
     </div>
-
-    {# Sparklines — one per dimension, from dim_trends data #}
-    {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-    {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
-    <div class="sl-sparkline-row">
-    {% for dim, avg in progress_data.dim_avgs.items() %}
-      {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
-      {% set _trend_vals = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
-      {% set _dcolor = _dim_colours.get(dim, '#2C3E6B') %}
-      <div class="sl-sparkline-item">
-        <div class="sl-sparkline-header">
-          <span class="sl-sparkline-label">{{ _dim_labels.get(dim, dim|title) }}</span>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span class="sl-sparkline-val">{{ '%.1f'|format(avg) }}</span>
-            {% if _pill == 'up' %}<span class="sl-sparkline-pill up">↑ climbing</span>
-            {% elif _pill == 'down' %}<span class="sl-sparkline-pill down">↓ dipped</span>
-            {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
+    <div class="sl-rc-sec__body">
+      <div style="display:flex; align-items:flex-end; justify-content:space-between; margin:14px 0 12px;">
+        <div>
+          <div style="font-size:32px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.2f'|format(progress_data.avg_score) }}</div>
+          <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px;">{{ progress_data.count }} photographs evaluated</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                      color:var(--sl-purple); background:#EEEDFE; padding:4px 10px; border-radius:10px;
+                      margin-bottom:4px; display:inline-block;">{{ progress_data.avg_tier }}</div>
+          {% if progress_data.overall_pct %}
+          <div style="font-size:13px; color:var(--sl-text-light);">Top {{ progress_data.overall_pct }}%</div>
+          {% endif %}
+        </div>
+      </div>
+      {# Tier bar #}
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">
+          <span>{{ progress_data.avg_tier }}</span>
+          <span>→ {{ progress_data.next_tier or 'Peak' }}</span>
+        </div>
+        <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden;">
+          <div style="height:100%; width:{{ progress_data.tier_pct or 0 }}%; background:var(--sl-purple); border-radius:3px;"></div>
+        </div>
+      </div>
+      {# Sparklines #}
+      {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
+      {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
+      <div class="sl-sparkline-row">
+      {% for dim, avg in progress_data.dim_avgs.items() %}
+        {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
+        {% set _trend_vals = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
+        {% set _dcolor = _dim_colours.get(dim, '#2C3E6B') %}
+        <div class="sl-sparkline-item">
+          <div class="sl-sparkline-header">
+            <span class="sl-sparkline-label">{{ _dim_labels.get(dim, dim|title) }}</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="sl-sparkline-val">{{ '%.1f'|format(avg) }}</span>
+              {% if _pill == 'up' %}<span class="sl-sparkline-pill up">↑ climbing</span>
+              {% elif _pill == 'down' %}<span class="sl-sparkline-pill down">↓ dipped</span>
+              {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
+            </div>
+          </div>
+          {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
+          {% set _raw = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
+          {% if _sp and _sp.polyline %}
+          <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none" aria-label="{{ _dim_labels.get(dim, dim) }} trend">
+            <rect x="0" y="0" width="300" height="28" fill="none"/>
+            <polyline fill="none" stroke="{{ _dcolor }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{ _sp.polyline }}"/>
+            {% if _sp.points %}{% for _pt in _sp.points %}
+            <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
+            {% endfor %}{% endif %}
+            {% set _mission_idxs = progress_data.dim_mission_indices.get(dim, []) if progress_data.dim_mission_indices is defined else [] %}
+            {% for _mi in _mission_idxs %}{% if _sp.points and _mi < (_sp.points | length) %}
+            <circle cx="{{ _sp.points[_mi].x }}" cy="{{ _sp.points[_mi].y }}" r="5" fill="#C8A84B" opacity="0.9"/>
+            {% endif %}{% endfor %}
+          </svg>
+          {% if _raw %}
+          <div style="display:flex; justify-content:space-between; margin-top:3px;">
+            {% for _v in _raw %}{% if _v != none %}
+            <span style="font-size:13px; color:var(--sl-text-light); font-family:monospace;">{{ '%.1f'|format(_v) }}</span>
+            {% endif %}{% endfor %}
+          </div>
+          {% endif %}
+          {% else %}
+          <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      </div>
+      {# Yesterday — folded into standing body #}
+      <div style="margin-top:14px; border-top:1px solid var(--sl-border); padding-top:12px;">
+        <div style="font-size:12px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:8px;">Season</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-radius:8px; overflow:hidden; border:1px solid var(--sl-border);">
+          <div style="padding:12px 14px; border-right:1px solid var(--sl-border);">
+            <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:3px;">Avg evaluation</div>
+            <div style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.1f'|format(progress_data.avg_score) }}</div>
+            {% if progress_data.trend and progress_data.trend|length >= 2 %}
+              {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
+              {% if _diff > 0 %}<div style="font-size:13px; font-weight:700; color:#27500A; margin-top:3px;">▲ {{ '%.1f'|format(_diff) }}</div>
+              {% elif _diff < 0 %}<div style="font-size:13px; font-weight:700; color:#A32D2D; margin-top:3px;">▼ {{ '%.1f'|format(_diff|abs) }}</div>
+              {% endif %}
+            {% endif %}
+          </div>
+          <div style="padding:12px 14px;">
+            <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:3px;">Active months</div>
+            {% if _pre_season %}
+            <div style="font-size:16px; font-weight:700; color:var(--sl-text);">September</div>
+            <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">2026 opens</div>
+            {% else %}
+            <div style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1;">{{ _months_active or 0 }}</div>
+            <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
+            {% endif %}
           </div>
         </div>
-        {# SVG sparkline — points pre-computed in Python (_dash_spark) — no Jinja2 loop scoping issues #}
-        {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
-        {% set _raw = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
-        {% if _sp and _sp.polyline %}
-        <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
-             aria-label="{{ _dim_labels.get(dim, dim) }} trend">
-          <rect x="0" y="0" width="300" height="28" fill="none"/>
-          <polyline
-            fill="none"
-            stroke="{{ _dcolor }}"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            points="{{ _sp.polyline }}"
-          />
-          {% if _sp.points %}
-          {% for _pt in _sp.points %}
-          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
-          {% endfor %}
-          {% endif %}
-          {# Mission upload dots — gold filled circle overlay on mission positions #}
-          {% set _mission_idxs = progress_data.dim_mission_indices.get(dim, []) if progress_data.dim_mission_indices is defined else [] %}
-          {% for _mi in _mission_idxs %}
-          {% if _sp.points and _mi < (_sp.points | length) %}
-          <circle cx="{{ _sp.points[_mi].x }}" cy="{{ _sp.points[_mi].y }}" r="5" fill="#C8A84B" opacity="0.9"/>
-          {% endif %}
-          {% endfor %}
-        </svg>
-        {# Score values x-axis — matches scorecard style #}
-        {% if _raw %}
-        <div style="display:flex; justify-content:space-between; margin-top:3px;">
-          {% for _v in _raw %}{% if _v != none %}
-          <span style="font-size:13px; color:var(--sl-text-light); font-family:monospace;">{{ '%.1f'|format(_v) }}</span>
-          {% endif %}{% endfor %}
-        </div>
-        {% endif %}
-        {% else %}
-        <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
-        {% endif %}
-      </div>
-    {% endfor %}
-    </div>
-
-    {# Tier bar #}
-    <div style="margin-top:14px;">
-      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">
-        <span>{{ progress_data.avg_tier }}</span>
-        <span>→ {{ progress_data.next_tier or 'Peak' }}</span>
-      </div>
-      <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden;">
-        <div style="height:100%; width:{{ progress_data.tier_pct or 0 }}%; background:var(--sl-purple); border-radius:3px;"></div>
       </div>
     </div>
   </div>
   {% endif %}
 
-  {# ── Yesterday (desktop right col — Session 111) ── #}
-  {% if progress_data %}
-  <div class="sl-desktop-right-section">
-    <span class="sl-desktop-section-label">Yesterday</span>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-radius:8px; overflow:hidden; border:1px solid var(--sl-border);">
-      <div style="padding:14px 16px; border-right:1px solid var(--sl-border);">
-        <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">Evaluation</div>
-        <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.1f'|format(progress_data.avg_score) }}</div>
-        {% if progress_data.trend and progress_data.trend|length >= 2 %}
-          {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
-          {% if _diff > 0 %}
-          <div style="font-size:14px; font-weight:700; color:#27500A; margin-top:4px;">▲ {{ '%.1f'|format(_diff) }}</div>
-          {% elif _diff < 0 %}
-          <div style="font-size:14px; font-weight:700; color:#A32D2D; margin-top:4px;">▼ {{ '%.1f'|format(_diff|abs) }}</div>
-          {% endif %}
-        {% endif %}
-      </div>
-      <div style="padding:14px 16px;">
-        <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">Season</div>
-        {% if _pre_season %}
-        <div style="font-size:16px; font-weight:700; color:var(--sl-text);">September</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">2026 opens</div>
-        {% else %}
-        <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ _months_active or 0 }}</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {# ── Portfolio (desktop right col — Session 111) ── #}
+  {# ── Portfolio (collapsible) ── #}
   {% if show_portfolio_banner %}
-  <div id="sl-portfolio-banner-right" class="sl-desktop-right-section">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-      <div>
-        <div style="font-size:15px; font-weight:700; color:var(--sl-text); margin-bottom:2px;">
-          {% if portfolio_is_public %}Enhance your portfolio{% else %}Set up your portfolio{% endif %}
-        </div>
+  <div class="sl-rc-sec" id="rc-portfolio">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-portfolio')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Portfolio</span>
+        <span class="sl-rc-sec__summary">{% if portfolio_is_public %}Enhance your portfolio{% else %}Set up your portfolio{% endif %}</span>
+      </div>
+      <span class="sl-rc-sec__chev">▼</span>
+    </div>
+    <div class="sl-rc-sec__body">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:14px;">
         <div style="font-size:13px; color:var(--sl-text-light); line-height:1.5;">
           {% if portfolio_is_public %}Add work, update bio, share your link.{% else %}Make your best work public — share a link, get discovered.{% endif %}
         </div>
+        <a href="{{ url_for('portfolio_manager') }}"
+           style="flex-shrink:0; background:#151515; color:#FFFFFF; font-size:13px;
+                  font-weight:700; padding:8px 14px; border-radius:10px; text-decoration:none;
+                  min-height:44px; display:inline-flex; align-items:center; white-space:nowrap;">
+          {% if portfolio_is_public %}Manage →{% else %}Set up →{% endif %}
+        </a>
       </div>
-      <a href="{{ url_for('portfolio_manager') }}"
-         style="flex-shrink:0; background:#151515; color:#FFFFFF; font-size:13px;
-                font-weight:700; padding:8px 14px; border-radius:10px; text-decoration:none;
-                min-height:44px; display:inline-flex; align-items:center; white-space:nowrap;">
-        {% if portfolio_is_public %}Manage →{% else %}Set up →{% endif %}
-      </a>
     </div>
   </div>
   {% endif %}
 
-  {# ── Points (desktop right col) ── #}
+  {# ── Points & redemptions (collapsible) ── #}
   {% if wallet_hud %}
-  <div class="sl-desktop-right-section">
-    <span class="sl-desktop-section-label">Points & redemptions</span>
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-      <div>
-        <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ wallet_hud.balance | int }}</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">points balance</div>
+  <div class="sl-rc-sec" id="rc-points">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-points')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Points &amp; redemptions</span>
+        <span class="sl-rc-sec__summary">{{ wallet_hud.balance | int }} pts{% if upload_credits_balance is defined and upload_credits_balance %} · {{ upload_credits_balance }} upload credit{{ 's' if upload_credits_balance != 1 else '' }}{% endif %}</span>
       </div>
-      <a href="{{ url_for('redeem') }}"
-         style="background:var(--sl-bg); border:1px solid var(--sl-border); border-radius:10px;
-                font-size:13px; font-weight:700; color:var(--sl-text); padding:8px 14px;
-                text-decoration:none;">Redeem →</a>
+      <span class="sl-rc-sec__chev">▼</span>
     </div>
-    {% if upload_credits_balance is defined %}
-    <div style="font-size:13px; color:var(--sl-text-light); border-top:1px solid var(--sl-border); padding-top:8px;">
-      {{ upload_credits_balance or 0 }} upload credit{{ 's' if (upload_credits_balance or 0) != 1 else '' }} remaining
+    <div class="sl-rc-sec__body">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px; margin-bottom:10px;">
+        <div>
+          <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ wallet_hud.balance | int }}</div>
+          <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">points balance</div>
+        </div>
+        <a href="{{ url_for('redeem') }}"
+           style="background:var(--sl-bg); border:1px solid var(--sl-border); border-radius:10px;
+                  font-size:13px; font-weight:700; color:var(--sl-text); padding:8px 14px;
+                  text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">Redeem →</a>
+      </div>
+      {% if upload_credits_balance is defined %}
+      <div style="font-size:13px; color:var(--sl-text-light); border-top:1px solid var(--sl-border); padding-top:8px;">
+        {{ upload_credits_balance or 0 }} upload credit{{ 's' if (upload_credits_balance or 0) != 1 else '' }} remaining
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
-    {# Rate CTA removed — evaluation now shown in main left column (Session 111) #}
   </div>
   {% endif %}
 
-  {# ── AEA tracker (desktop right col) ── #}
+  {# ── Annual Excellence Award (collapsible) ── #}
   {% if poty_tracker and poty_tracker.genre_rows %}
   {% set _best_genre = poty_tracker.genre_rows[0] %}
-  <div class="sl-desktop-right-section">
-    <span class="sl-desktop-section-label">Annual Excellence Award</span>
-    {% if _best_genre.top6_avg %}
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-      <div>
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text);">{{ _best_genre.genre }}</div>
-        <div style="font-size:13px; color:var(--sl-text-light);">{{ _best_genre.count }} photographs · best 6 avg</div>
+  <div class="sl-rc-sec" id="rc-aea">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-aea')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Annual Excellence Award</span>
+        <span class="sl-rc-sec__summary">{% if _best_genre.top6_avg %}{{ _best_genre.genre }} · {{ '%.2f'|format(_best_genre.top6_avg) }}{% else %}Keep shooting{% endif %}</span>
       </div>
-      <div style="font-size:22px; font-weight:800; color:var(--sl-text);">{{ '%.2f'|format(_best_genre.top6_avg) }}</div>
+      <span class="sl-rc-sec__chev">▼</span>
     </div>
-    <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden; margin-bottom:6px;">
-      <div style="height:100%; width:{{ _best_genre.bar_pct }}%; background:#1A2744; border-radius:3px;"></div>
-    </div>
-    {% else %}
-    <div style="font-size:13px; color:var(--sl-text-light); line-height:1.6;">
-      Keep shooting. Your standing builds automatically as evaluations accumulate.
-    </div>
-    {% endif %}
-    <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px;">
-      {% if _pre_season %}Season opens September 2026{% else %}{{ _months_active or 0 }} active month{{ 's' if (_months_active or 0) != 1 else '' }} this season{% endif %}
+    <div class="sl-rc-sec__body">
+      <div style="padding-top:14px;">
+        {% if _best_genre.top6_avg %}
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--sl-text);">{{ _best_genre.genre }}</div>
+            <div style="font-size:13px; color:var(--sl-text-light);">{{ _best_genre.count }} photographs · best 6 avg</div>
+          </div>
+          <div style="font-size:22px; font-weight:800; color:var(--sl-text);">{{ '%.2f'|format(_best_genre.top6_avg) }}</div>
+        </div>
+        <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden; margin-bottom:6px;">
+          <div style="height:100%; width:{{ _best_genre.bar_pct }}%; background:#1A2744; border-radius:3px;"></div>
+        </div>
+        {% else %}
+        <div style="font-size:13px; color:var(--sl-text-light); line-height:1.6;">
+          Keep shooting. Your standing builds automatically as evaluations accumulate.
+        </div>
+        {% endif %}
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px;">
+          {% if _pre_season %}Season opens September 2026{% else %}{{ _months_active or 0 }} active month{{ 's' if (_months_active or 0) != 1 else '' }} this season{% endif %}
+        </div>
+      </div>
     </div>
   </div>
   {% endif %}
 
-  {# ── Location advisory (desktop right col) ── #}
+  {# ── Shooting near you (collapsible) ── #}
   {% if current_user.city %}
-  <div class="sl-desktop-right-section">
-    <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                color:#1A2744; margin-bottom:4px;">Shooting near you</div>
-    {% if dash_advisory %}
-    <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
-      {{ dash_advisory.location_name }}{% if dash_advisory.state_country %}, {{ dash_advisory.state_country }}{% endif %}
-      {% if dash_advisory.distance_hours %}<span style="font-weight:500; color:var(--sl-text-light);">· {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+  <div class="sl-rc-sec" id="rc-location">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-location')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Shooting near you</span>
+        <span class="sl-rc-sec__summary">{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</span>
+      </div>
+      <span class="sl-rc-sec__chev">▼</span>
     </div>
-    <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">
-      {{ dash_advisory.what_is_happening }}
+    <div class="sl-rc-sec__body">
+      <div style="padding-top:12px;">
+        {% if dash_advisory %}
+        <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
+          {{ dash_advisory.location_name }}{% if dash_advisory.state_country %}, {{ dash_advisory.state_country }}{% endif %}
+          {% if dash_advisory.distance_hours %}<span style="font-weight:500; color:var(--sl-text-light);">· {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+        </div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">{{ dash_advisory.what_is_happening }}</div>
+        <a href="{{ dash_advisory.url }}" target="_blank" rel="noopener"
+           style="display:inline-block; margin-top:6px; font-size:13px; font-weight:700; color:#1A2744; text-decoration:underline; min-height:44px; display:inline-flex; align-items:center;">
+          Get directions →
+        </a>
+        {% else %}
+        <div style="font-size:14px; font-weight:700; color:var(--sl-text);">{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">
+          Your daily brief is tuned to your location.
+        </div>
+        {% endif %}
+      </div>
     </div>
-    <a href="{{ dash_advisory.url }}" target="_blank" rel="noopener"
-       style="display:inline-block; margin-top:6px; font-size:13px; font-weight:700; color:#1A2744; text-decoration:underline;">
-      Get directions →
-    </a>
-    {% else %}
-    <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
-      {{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}
-    </div>
-    <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">
-      Your daily brief is tuned to your location. Upload a photograph to get local seasonal context on your next evaluation card.
-    </div>
-    {% endif %}
   </div>
   {% endif %}
 
-  {# My Gallery CTA removed — duplicate of nav + Recent Work "View all" link (Session 111) #}
-
-  {# ── Referral (desktop right col) ── #}
+  {# ── Referral (collapsible) ── #}
   {% if referral_code %}
-  <div class="sl-desktop-right-section">
-    <span class="sl-desktop-section-label">Invite a photographer</span>
-    <div style="font-size:14px; color:var(--sl-text-light); margin-bottom:10px; line-height:1.5;">
-      They save ₹20 · you earn 200 pts
+  <div class="sl-rc-sec" id="rc-referral">
+    <div class="sl-rc-sec__hdr" onclick="slToggleRC('rc-referral')" role="button" tabindex="0" aria-expanded="false">
+      <div class="sl-rc-sec__hdr-left">
+        <span class="sl-rc-sec__label">Invite a photographer</span>
+        <span class="sl-rc-sec__summary">They save ₹20 · you earn 200 pts</span>
+      </div>
+      <span class="sl-rc-sec__chev">▼</span>
     </div>
-    <div style="background:var(--sl-bg); border-radius:10px; padding:10px 12px;
-                font-family:monospace; font-size:13px; color:var(--sl-text);
-                word-break:break-all; margin-bottom:10px;">
-      {{ referral_url }}
+    <div class="sl-rc-sec__body">
+      <div style="padding-top:12px;">
+        <div style="background:var(--sl-bg); border-radius:10px; padding:10px 12px;
+                    font-family:monospace; font-size:13px; color:var(--sl-text);
+                    word-break:break-all; margin-bottom:10px;">{{ referral_url }}</div>
+        <a href="{{ url_for('referral_page') }}"
+           style="display:block; text-align:center; background:#13254B; color:#F5C518;
+                  font-size:14px; font-weight:700; padding:12px; border-radius:var(--r-btn);
+                  text-decoration:none;">
+          See your referral dashboard →
+        </a>
+      </div>
     </div>
-    <a href="{{ url_for('referral_page') }}"
-       style="display:block; text-align:center; background:#13254B; color:#F5C518;
-              font-size:14px; font-weight:700; padding:12px; border-radius:var(--r-btn);
-              text-decoration:none; transition:opacity .2s;"
-       onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-      See your referral dashboard →
-    </a>
   </div>
   {% endif %}
 
@@ -2750,6 +2859,12 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
 </div>{# /sl-today #}
 
+{# ── Upload FAB — mobile only, fixed, shown to all users ── #}
+<a href="{{ url_for('upload') }}" class="sl-upload-fab" aria-label="Upload a photograph">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  Upload
+</a>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -2823,59 +2938,47 @@ function slExpandMission() {
   }
 }
 
-// ── Section toggle — with localStorage state ──
-var _SL_STORE_KEY = 'sl_sec_state';
-
-function slLoadSections() {
-  var stored = {};
-  try { stored = JSON.parse(localStorage.getItem(_SL_STORE_KEY) || '{}'); } catch(e) {}
-  return stored;
-}
-
-function slSaveSections(state) {
-  try { localStorage.setItem(_SL_STORE_KEY, JSON.stringify(state)); } catch(e) {}
-}
-
+// ── Section toggle — NO localStorage, clean slate every load ──
 function slToggle(id) {
   var s = document.getElementById(id);
   if (!s) return;
   var open = s.classList.toggle('is-open');
   var h = s.querySelector('.sl-sec__hdr');
   if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-  // Save state
-  var state = slLoadSections();
-  state[id] = open;
-  slSaveSections(state);
+}
+
+// ── Desktop right column toggle — no persistence ──
+function slToggleRC(id) {
+  var s = document.getElementById(id);
+  if (!s) return;
+  var open = s.classList.toggle('is-open');
+  var h = s.querySelector('.sl-rc-sec__hdr');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 function slRestoreSections() {
-  var state = slLoadSections();
-  var isFirstVisit = Object.keys(state).length === 0;
+  // Clean slate every load — all mobile sections collapsed on page load
   var secIds = ['sec-standing', 'sec-points', 'sec-weekly', 'sec-referral', 'sec-photos', 'sec-aea', 'sec-location'];
   secIds.forEach(function(id) {
     var s = document.getElementById(id);
     if (!s) return;
     var h = s.querySelector('.sl-sec__hdr');
-    // First visit — open standing, close the rest
-    var shouldOpen = isFirstVisit ? (id === 'sec-standing') : (state[id] === true);
-    if (shouldOpen) {
-      s.classList.add('is-open');
-      if (h) h.setAttribute('aria-expanded', 'true');
-    } else {
-      s.classList.remove('is-open');
-      if (h) h.setAttribute('aria-expanded', 'false');
-    }
+    s.classList.remove('is-open');
+    if (h) h.setAttribute('aria-expanded', 'false');
   });
-  // Save first-visit defaults
-  if (isFirstVisit) {
-    var defaults = {};
-    secIds.forEach(function(id) { defaults[id] = (id === 'sec-standing'); });
-    slSaveSections(defaults);
-  }
+  // Desktop right col — all collapsed on load
+  var rcIds = ['rc-standing', 'rc-portfolio', 'rc-points', 'rc-aea', 'rc-location', 'rc-referral'];
+  rcIds.forEach(function(id) {
+    var s = document.getElementById(id);
+    if (!s) return;
+    var h = s.querySelector('.sl-rc-sec__hdr');
+    s.classList.remove('is-open');
+    if (h) h.setAttribute('aria-expanded', 'false');
+  });
 }
 
 // ── Keyboard nav for collapsible sections ──
-document.querySelectorAll('.sl-sec__hdr').forEach(function(hdr) {
+document.querySelectorAll('.sl-sec__hdr, .sl-rc-sec__hdr').forEach(function(hdr) {
   hdr.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
