@@ -3844,18 +3844,17 @@ def dashboard():
             from sqlalchemy import text as _sqlt
             # Only exclude images the user has *submitted* a rating for.
             # Expired/skipped assignments re-enter the pool — prevents depletion.
-            # Use select() not .subquery() — notin_() requires a select construct.
             _already = db.session.query(_RA.image_id).filter(
                 _RA.rater_id == current_user.id,
                 _RA.status   == 'submitted'
-            )
+            ).subquery()
             _eligible = Image.query.join(
                 User, Image.user_id == User.id
             ).filter(
                 Image.status      == 'scored',
                 Image.is_public   == True,
-                Image.is_flagged.isnot(True),
-                Image.needs_review.isnot(True),
+                Image.is_flagged  == False,
+                Image.needs_review == False,
                 Image.score       != None,
                 Image.user_id     != current_user.id,
                 User.is_subscribed == True,
@@ -9824,10 +9823,121 @@ def admin_check_user_location():
     '''
 
 
-@app.route('/admin')
+@app.route('/admin/check-peer-queue')
 @login_required
 @admin_required
-def admin_dashboard():
+def admin_check_peer_queue():
+    """
+    Diagnostic: shows exactly what the peer queue query sees for each user.
+    Runs the exact same SQL as the dashboard peer queue — no guessing.
+    Read-only. Use when peer eval block shows empty on dashboard.
+    """
+    users = User.query.filter(
+        User.role != 'admin',
+        User.is_subscribed == True
+    ).order_by(User.username.asc()).all()
+
+    rows_html = ''
+    for u in users:
+        try:
+            # Exact same query as dashboard peer queue, but for each user
+            from models import RatingAssignment as _RA
+            _already = db.session.query(_RA.image_id).filter(
+                _RA.rater_id == u.id,
+                _RA.status   == 'submitted'
+            ).subquery()
+            _eligible_count = Image.query.join(
+                User, Image.user_id == User.id
+            ).filter(
+                Image.status      == 'scored',
+                Image.is_public   == True,
+                Image.is_flagged  == False,
+                Image.needs_review == False,
+                Image.score       != None,
+                Image.user_id     != u.id,
+                User.is_subscribed == True,
+                Image.id.notin_(_already),
+            ).count()
+
+            _total_eligible = Image.query.join(
+                User, Image.user_id == User.id
+            ).filter(
+                Image.status      == 'scored',
+                Image.is_public   == True,
+                Image.is_flagged  == False,
+                Image.needs_review == False,
+                Image.score       != None,
+                Image.user_id     != u.id,
+                User.is_subscribed == True,
+            ).count()
+
+            _submitted_count = db.session.query(_RA).filter(
+                _RA.rater_id == u.id,
+                _RA.status   == 'submitted'
+            ).count()
+
+            _started_count = db.session.query(_RA).filter(
+                _RA.rater_id == u.id,
+                _RA.status   == 'started'
+            ).count()
+
+            _color = '#27ae60' if _eligible_count > 0 else '#c0392b'
+            rows_html += f'''
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #eee;">
+                <strong>{u.username}</strong><br>
+                <span style="font-size:12px;color:#888;">{u.email}</span>
+              </td>
+              <td style="padding:10px;border-bottom:1px solid #eee;font-size:16px;font-weight:700;color:{_color};">{_eligible_count}</td>
+              <td style="padding:10px;border-bottom:1px solid #eee;">{_total_eligible}</td>
+              <td style="padding:10px;border-bottom:1px solid #eee;">{_submitted_count}</td>
+              <td style="padding:10px;border-bottom:1px solid #eee;">{_started_count}</td>
+              <td style="padding:10px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{u.subscription_track or '—'} / {u.subscription_plan or '—'}</td>
+            </tr>'''
+        except Exception as e:
+            rows_html += f'<tr><td colspan="6" style="padding:10px;color:#c00;">{u.username}: error — {e}</td></tr>'
+
+    # Also show total pool stats
+    try:
+        total_public_scored = Image.query.join(User, Image.user_id == User.id).filter(
+            Image.status == 'scored', Image.is_public == True,
+            Image.is_flagged == False, Image.needs_review == False,
+            Image.score != None, User.is_subscribed == True
+        ).count()
+        total_subscribed = User.query.filter_by(is_subscribed=True).count()
+    except Exception:
+        total_public_scored = '?'
+        total_subscribed = '?'
+
+    return f'''
+    <html><body style="font-family:sans-serif;max-width:1000px;margin:40px auto;padding:0 20px;">
+      <h2>Peer Queue Diagnostic</h2>
+      <p style="color:#666;">Runs the exact dashboard peer queue query for each subscribed user. Read-only.</p>
+      <p><a href="/admin" style="color:#2C7BE5;">← Admin</a>
+         &nbsp;·&nbsp; <a href="/admin/check-user-location" style="color:#2C7BE5;">User Location Check</a></p>
+      <div style="background:#f5f5f2;border-radius:6px;padding:14px 18px;margin-bottom:20px;font-size:15px;">
+        <strong>Pool totals:</strong>
+        {total_subscribed} subscribed users &nbsp;·&nbsp;
+        {total_public_scored} scored public unflagged images from subscribed users
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead><tr style="background:#f5f5f5;text-align:left;">
+          <th style="padding:10px;">User</th>
+          <th style="padding:10px;">Eligible (queue sees)</th>
+          <th style="padding:10px;">Total from others</th>
+          <th style="padding:10px;">Submitted ratings</th>
+          <th style="padding:10px;">Started assignments</th>
+          <th style="padding:10px;">Plan</th>
+        </tr></thead>
+        <tbody>{rows_html if rows_html else '<tr><td colspan="6" style="padding:16px;color:#888;">No subscribed users found.</td></tr>'}</tbody>
+      </table>
+      <p style="font-size:13px;color:#666;margin-top:16px;">
+        <strong>Eligible</strong> = images from other subscribed users that this user has NOT yet submitted a rating for.<br>
+        If Eligible = 0 but Total from others &gt; 0, all available images have been submitted already — pool exhausted for this user.<br>
+        If Total from others = 0, there are no public scored images from other subscribed users in the DB.
+      </p>
+    </body></html>
+    '''
     total_users  = User.query.count()
     total_images = Image.query.count()
     scored       = Image.query.filter_by(status='scored').count()
@@ -15264,14 +15374,14 @@ def rate():
                 from datetime import timedelta as _td2
                 _already_rated = db.session.query(RatingAssignment.image_id).filter(
                     RatingAssignment.rater_id == user.id,
-                )
+                ).subquery()
                 _next_img = (
                     Image.query.join(User, Image.user_id == User.id)
                     .filter(
                         Image.status      == 'scored',
                         Image.is_public   == True,
-                        Image.is_flagged.isnot(True),
-                        Image.needs_review.isnot(True),
+                        Image.is_flagged  == False,
+                        Image.needs_review == False,
                         Image.score       != None,
                         Image.user_id     != user.id,
                         User.is_subscribed == True,
@@ -15298,13 +15408,13 @@ def rate():
 
         already = db.session.query(RatingAssignment.image_id).filter(
             RatingAssignment.rater_id == user.id,
-        )
+        ).subquery()
         queue_remaining = (
             Image.query
             .join(User, Image.user_id == User.id)
             .filter(
                 Image.status == 'scored', Image.is_public == True,
-                Image.is_flagged.isnot(True), Image.needs_review.isnot(True),
+                Image.is_flagged == False, Image.needs_review == False,
                 Image.score != None, Image.user_id != user.id,
                 User.is_subscribed == True,
                 Image.id.notin_(already),
