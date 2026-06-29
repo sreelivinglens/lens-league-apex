@@ -1787,6 +1787,31 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         _ok('All meta tags present')
 
     # ── Summary ───────────────────────────────────────────────────────────────
+    _section('DELIVERY STANDARD — CSI note cards (image_detail.html only)')
+    if is_detail_page:
+        _csi_checks = [
+            ('CSI Card A — csi_own_duplicate condition present',
+             'csi_own_duplicate' in content),
+            ('CSI Card A — dark amber background (#2D1F00)',
+             '#2D1F00' in content),
+            ('CSI Card A — contact sheet copy present',
+             'contact sheet' in content),
+            ('CSI Card B — csi_threshold_hit condition present',
+             'csi_threshold_hit' in content),
+            ('CSI Card B — dark navy background (#1A1A2E)',
+             '#1A1A2E' in content),
+            ('CSI Card B — Sherpa pool copy present',
+             'seen in the Shutter League' in content or 'SHUTTER LEAGUE POOL' in content),
+            ('CSI cards — no score-change language',
+             'score reduced' not in content and 'score lowered' not in content
+             and 'score is lower' not in content and 'score has been reduced' not in content),
+        ]
+        for label, result in _csi_checks:
+            if result: _ok(label)
+            else: _fail(label); fails += 1
+    else:
+        _note('CSI card checks skipped — not a detail/scorecard page')
+
     _section('DELIVERY STANDARD — Summary')
     _note('Standard covers: KYC · Mobile · iPad · 70yr rule · Google meta tags')
     _note('Run on every HTML template before delivery — Rule 9 applies')
