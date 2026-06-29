@@ -1,3 +1,7 @@
+# SL-VERSION: 115.1 (Session 115 — CSI (Cultural Saturation Intelligence): cross-user 95% phash note,
+#   85% silent admin log, csi_genre_weights + csi_admin_log tables, /admin/csi dashboard,
+#   calibration run with 300-user gate, csi_genre_weights boost passed to auto_score;
+#   _score_edit parity fix: portfolio context, parent delta, EXIF context now passed on edit path)
 # SL-VERSION: 114.8 (Session 114 — peer queue upsert fix (unique constraint); Eye of Judge two-line chart data)
 #   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
@@ -1576,6 +1580,42 @@ def _run_startup_tasks():
             except Exception as _ps_mig:
                 db.session.rollback()
                 print(f'Photo School columns migration warning: {_ps_mig}')
+
+            # ── CSI (Cultural Saturation Intelligence) tables ─────────────────
+            try:
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS csi_genre_weights (
+                        genre                VARCHAR(40) PRIMARY KEY,
+                        disruption_boost     FLOAT       NOT NULL DEFAULT 0.0,
+                        wonder_boost         FLOAT       NOT NULL DEFAULT 0.0,
+                        similar_image_count  INTEGER     NOT NULL DEFAULT 0,
+                        last_calibrated_at   TIMESTAMP
+                    )
+                """))
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS csi_admin_log (
+                        id               SERIAL PRIMARY KEY,
+                        image_id         INTEGER NOT NULL,
+                        similar_image_id INTEGER NOT NULL,
+                        similarity_pct   FLOAT   NOT NULL,
+                        genre            VARCHAR(40),
+                        threshold_hit    INTEGER NOT NULL DEFAULT 85,
+                        logged_at        TIMESTAMP NOT NULL DEFAULT NOW()
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_csi_admin_log_image "
+                    "ON csi_admin_log (image_id)"
+                ))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_csi_admin_log_genre "
+                    "ON csi_admin_log (genre, threshold_hit)"
+                ))
+                db.session.commit()
+                print('CSI tables OK.')
+            except Exception as _csi_mig:
+                db.session.rollback()
+                print(f'CSI tables migration warning: {_csi_mig}')
 
             print('Columns migrated OK.')
 
@@ -6156,6 +6196,26 @@ def upload():
                             _sc_portfolio = None
                             _sc_image_number = 1
 
+                        # ── CSI genre weight boosts (post-calibration) ────────────────
+                        # Read per-genre saturation boosts set by admin CSI calibration run.
+                        # Injected as context into the scoring prompt — no direct score math.
+                        _csi_boost_ctx = ''
+                        try:
+                            _csi_w = db.session.execute(db.text(
+                                "SELECT disruption_boost, wonder_boost FROM csi_genre_weights "
+                                "WHERE genre = :genre"
+                            ), {'genre': _img.genre}).fetchone()
+                            if _csi_w and (_csi_w[0] > 0 or _csi_w[1] > 0):
+                                _csi_boost_ctx = (
+                                    f"\nCSI CALIBRATION ACTIVE — {_img.genre} pool saturation detected. "
+                                    f"Disruption dimension: apply +{_csi_w[0]:.1f} weighting. "
+                                    f"Wonder dimension: apply +{_csi_w[1]:.1f} weighting. "
+                                    f"This reflects the volume of similar images already in the scored pool — "
+                                    f"reward genuine departure from established compositions."
+                                )
+                        except Exception:
+                            _csi_boost_ctx = ''
+
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
@@ -6172,7 +6232,7 @@ def upload():
                                 },
                                 camera_track=_img.camera_track,
                             ) if _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
-                            seasonal_context  = _sc_seasonal_ctx,
+                            seasonal_context  = _sc_seasonal_ctx + _csi_boost_ctx,
                             portfolio_summary = _sc_portfolio,
                             user_city         = _sc_user_city,
                             primary_genre     = _sc_primary_genre,
@@ -6423,7 +6483,84 @@ def upload():
                                 )
                             # ── END scored_phash_cache write ───────────────────────────────
 
-                            # Sprint 2 — award points for scored image (subscribers only)
+                            # ── CSI — Cultural Saturation Intelligence scan ─────────────
+                            # Runs on main upload path only. Skipped for edit versions
+                            # (parent_image_id set = edit path) — the edit is the same
+                            # photographer improving their own image; rescanning would
+                            # re-trigger the same cross-user flag already on the parent.
+                            # No score changes. Ever. Detection and logging only.
+                            try:
+                                _csi_parent_row = db.session.execute(db.text(
+                                    "SELECT parent_image_id FROM images WHERE id = :iid"
+                                ), {'iid': _img.id}).fetchone()
+                                _csi_is_edit = bool(_csi_parent_row and _csi_parent_row[0])
+
+                                if not _csi_is_edit and _img.phash and _img.genre and not _img.is_flagged:
+                                    from engine.processor import hash_similarity_pct as _csi_sim
+                                    _csi_others = db.session.execute(db.text(
+                                        "SELECT id, phash FROM images "
+                                        "WHERE user_id != :uid AND genre = :genre "
+                                        "AND phash IS NOT NULL AND status = 'scored' "
+                                        "AND id != :iid"
+                                    ), {'uid': _img.user_id, 'genre': _img.genre, 'iid': _img.id}).fetchall()
+
+                                    _csi_95_ids  = []
+                                    _csi_85_ids  = []
+                                    for _co in _csi_others:
+                                        try:
+                                            _sim = _csi_sim(_img.phash, _co[1])
+                                            if _sim >= 95.0:
+                                                _csi_95_ids.append((_co[0], _sim))
+                                            elif _sim >= 85.0:
+                                                _csi_85_ids.append((_co[0], _sim))
+                                        except Exception:
+                                            continue
+
+                                    # Log all 85%+ matches to admin log
+                                    _csi_all_matches = [(iid, s, 95) for iid, s in _csi_95_ids] + \
+                                                       [(iid, s, 85) for iid, s in _csi_85_ids]
+                                    for _cm_id, _cm_sim, _cm_thresh in _csi_all_matches:
+                                        try:
+                                            db.session.execute(db.text(
+                                                "INSERT INTO csi_admin_log "
+                                                "(image_id, similar_image_id, similarity_pct, genre, threshold_hit) "
+                                                "VALUES (:iid, :sid, :sim, :genre, :thresh)"
+                                            ), {
+                                                'iid':   _img.id,
+                                                'sid':   _cm_id,
+                                                'sim':   round(_cm_sim, 1),
+                                                'genre': _img.genre,
+                                                'thresh': _cm_thresh,
+                                            })
+                                        except Exception:
+                                            pass
+                                    if _csi_all_matches:
+                                        db.session.commit()
+
+                                    # 95%+ → inject into audit_json as scorecard note trigger
+                                    if _csi_95_ids:
+                                        try:
+                                            _csi_audit = _img.get_audit()
+                                            _csi_audit['csi_threshold_hit']  = 95
+                                            _csi_audit['csi_similar_count']  = len(_csi_95_ids)
+                                            _csi_audit['csi_similar_ids']    = [iid for iid, _ in _csi_95_ids[:3]]
+                                            _img.set_audit(_csi_audit)
+                                            db.session.commit()
+                                            app.logger.info(
+                                                f'[csi] image={_img.id} genre={_img.genre} '
+                                                f'95%+ matches={len(_csi_95_ids)} — scorecard note set'
+                                            )
+                                        except Exception as _csi_audit_err:
+                                            app.logger.warning(f'[csi] audit update failed: {_csi_audit_err}')
+                                    elif _csi_85_ids:
+                                        app.logger.info(
+                                            f'[csi] image={_img.id} genre={_img.genre} '
+                                            f'85-94% matches={len(_csi_85_ids)} — admin log only'
+                                        )
+
+                            except Exception as _csi_err:
+                                app.logger.warning(f'[csi] scan failed (non-fatal): {_csi_err}')
+                            # ── END CSI scan ────────────────────────────────────────────
                             try:
                                 _pts_user = User.query.get(_img.user_id)
                                 if (_pts_user and _pts_user.is_subscribed
@@ -7488,16 +7625,99 @@ def upload_edited_version(image_id):
 
             def _score_edit(image_id_inner, uid_inner, root_id_inner):
                 import traceback
-                from engine.auto_score import auto_score, build_audit_data
+                from engine.auto_score import auto_score, build_audit_data, build_exif_context
                 from engine.compositor import build_card1
                 with app.app_context():
                     try:
                         _img = Image.query.get(image_id_inner)
                         if not _img: return
+
+                        # ── Build full context — parity with main scoring path ──────
+                        # Previously this path called auto_score() cold (no portfolio,
+                        # no parent delta, no EXIF, no seasonal) — causing Mahesh's
+                        # "followed advice, score dropped" problem. Fixed Session 115.
+
+                        # EXIF context
+                        _edit_exif_ctx = build_exif_context(
+                            {
+                                'make': _img.exif_make, 'model': _img.exif_model,
+                                'focal_length_35mm': _img.exif_focal_length_35mm,
+                                'focal_length': _img.exif_settings,
+                                'aperture': None, 'shutter': None, 'iso': None,
+                                'lens': _img.exif_lens, 'software': _img.exif_software,
+                                'has_gps': _img.exif_has_gps,
+                            },
+                            camera_track=_img.camera_track,
+                        ) if (_img.exif_make or _img.exif_model or _img.exif_focal_length_35mm) else ''
+
+                        # Portfolio context from history
+                        _edit_portfolio = None
+                        _edit_image_number = 1
+                        try:
+                            _edit_sc_count = db.session.query(Image).filter(
+                                Image.user_id == _img.user_id,
+                                Image.status  == 'scored',
+                            ).count()
+                            _edit_image_number = _edit_sc_count + 1
+                            if _edit_sc_count >= 2:
+                                _edit_recent = db.session.query(
+                                    Image.aq_score, Image.dm_score, Image.dod_score
+                                ).filter(
+                                    Image.user_id == _img.user_id,
+                                    Image.status  == 'scored',
+                                    Image.genre   == _img.genre,
+                                ).order_by(Image.scored_at.desc()).limit(8).all()
+                                if _edit_recent:
+                                    _edit_recent = list(reversed(_edit_recent))
+                                    _edit_portfolio = {
+                                        'feeling':    [r.aq_score  for r in _edit_recent if r.aq_score  is not None],
+                                        'timing':     [r.dm_score  for r in _edit_recent if r.dm_score  is not None],
+                                        'difficulty': [r.dod_score for r in _edit_recent if r.dod_score is not None],
+                                    }
+                        except Exception as _ep_err:
+                            app.logger.warning(f'[upload_edit scoring] portfolio context error: {_ep_err}')
+                            _edit_portfolio = None
+                            _edit_image_number = 1
+
+                        # Parent image audit + score as delta reference
+                        _edit_prev_score = None
+                        _edit_prev_audit = None
+                        try:
+                            _edit_parent = Image.query.get(root_id_inner)
+                            if _edit_parent and _edit_parent.status == 'scored' and _edit_parent.score:
+                                _edit_prev_score = float(_edit_parent.score)
+                                _edit_prev_audit = _edit_parent.get_audit() or None
+                        except Exception as _ed_err:
+                            app.logger.warning(f'[upload_edit scoring] parent delta error: {_ed_err}')
+
+                        # Seasonal context
+                        _edit_seasonal_ctx = ''
+                        try:
+                            from engine.seasonal_calendar import build_seasonal_context, get_primary_genre
+                            _edit_u = User.query.get(_img.user_id)
+                            _edit_primary_genre = get_primary_genre(_edit_u) if _edit_u else (_img.genre or '')
+                            _edit_user_city = getattr(_edit_u, 'city', '') or '' if _edit_u else ''
+                            _edit_seasonal_ctx, _ = build_seasonal_context(
+                                db_session    = db.session,
+                                user_city     = _edit_user_city,
+                                primary_genre = _edit_primary_genre or _img.genre or '',
+                                current_month = datetime.utcnow().month,
+                                user_id       = _img.user_id,
+                            )
+                        except Exception as _es_err:
+                            app.logger.warning(f'[upload_edit scoring] seasonal context error: {_es_err}')
+                            _edit_seasonal_ctx = ''
+
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
-                            subject=_img.subject, location=_img.location
+                            subject=_img.subject, location=_img.location,
+                            exif_context      = _edit_exif_ctx,
+                            seasonal_context  = _edit_seasonal_ctx,
+                            portfolio_summary = _edit_portfolio,
+                            image_number      = _edit_image_number,
+                            previous_score    = _edit_prev_score,
+                            previous_audit    = _edit_prev_audit,
                         )
                         _img.dod_score        = float(result.get('dod', 0))
                         _img.disruption_score = float(result.get('disruption', 0))
@@ -8767,6 +8987,268 @@ def admin_seed_date_bound_events():
     return redirect(url_for('admin_dashboard'))
 
 
+
+
+# ── CSI — Cultural Saturation Intelligence admin dashboard ────────────────────
+
+@app.route('/admin/csi')
+@login_required
+@admin_required
+def admin_csi_page():
+    """
+    CSI admin dashboard. Shows:
+    - Per-genre saturation: 95%+ flagged (scorecard note), 85-94% silent log
+    - User count vs 300-user minimum gate for calibration run
+    - Current csi_genre_weights (post-calibration boosts)
+    - Full csi_admin_log table (recent 100 entries)
+    """
+    # User count for gate check
+    try:
+        _total_users = User.query.filter(User.role != 'admin').count()
+    except Exception:
+        _total_users = 0
+    _gate_open = _total_users >= 300
+
+    # Per-genre summary from csi_admin_log
+    try:
+        _genre_stats = db.session.execute(db.text("""
+            SELECT genre,
+                   COUNT(*) FILTER (WHERE threshold_hit >= 95) AS count_95,
+                   COUNT(*) FILTER (WHERE threshold_hit >= 85 AND threshold_hit < 95) AS count_85,
+                   COUNT(DISTINCT image_id) AS unique_images
+            FROM csi_admin_log
+            GROUP BY genre
+            ORDER BY count_95 DESC, count_85 DESC
+        """)).fetchall()
+    except Exception:
+        _genre_stats = []
+
+    # Current calibration weights
+    try:
+        _weights = db.session.execute(db.text(
+            "SELECT genre, disruption_boost, wonder_boost, similar_image_count, last_calibrated_at "
+            "FROM csi_genre_weights ORDER BY genre"
+        )).fetchall()
+    except Exception:
+        _weights = []
+
+    # Recent log entries
+    try:
+        _log_rows = db.session.execute(db.text("""
+            SELECT l.id, l.image_id, l.similar_image_id, l.similarity_pct,
+                   l.genre, l.threshold_hit, l.logged_at,
+                   i1.asset_name AS img_name, i2.asset_name AS sim_name
+            FROM csi_admin_log l
+            LEFT JOIN images i1 ON i1.id = l.image_id
+            LEFT JOIN images i2 ON i2.id = l.similar_image_id
+            ORDER BY l.logged_at DESC LIMIT 100
+        """)).fetchall()
+    except Exception:
+        _log_rows = []
+
+    # Build genre stats HTML
+    _gs_html = ''
+    for r in _genre_stats:
+        _gs_html += f'''
+        <tr>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;">{r.genre}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;color:#c0392b;font-weight:700;">{r.count_95}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;color:#e67e22;">{r.count_85}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;">{r.unique_images}</td>
+        </tr>'''
+    if not _gs_html:
+        _gs_html = '<tr><td colspan="4" style="padding:16px;color:#888;text-align:center;">No CSI matches logged yet</td></tr>'
+
+    # Build weights HTML
+    _wt_html = ''
+    for r in _weights:
+        _cal_date = str(r.last_calibrated_at)[:16] if r.last_calibrated_at else '—'
+        _wt_html += f'''
+        <tr>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;">{r.genre}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;color:#2457D6;">+{r.disruption_boost:.2f}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;color:#2457D6;">+{r.wonder_boost:.2f}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;">{r.similar_image_count}</td>
+          <td style="padding:10px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{_cal_date}</td>
+        </tr>'''
+    if not _wt_html:
+        _wt_html = '<tr><td colspan="5" style="padding:16px;color:#888;text-align:center;">No calibration run yet</td></tr>'
+
+    # Build log HTML
+    _log_html = ''
+    for r in _log_rows:
+        _thresh_color = '#c0392b' if r.threshold_hit >= 95 else '#e67e22'
+        _thresh_label = '95%+ SCORECARD NOTE' if r.threshold_hit >= 95 else '85–94% SILENT'
+        _log_html += f'''
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">
+            <a href="/image/{r.image_id}" style="color:#2C7BE5;">{r.img_name or r.image_id}</a>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">
+            <a href="/image/{r.similar_image_id}" style="color:#2C7BE5;">{r.sim_name or r.similar_image_id}</a>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">{r.genre}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;font-weight:700;">{r.similarity_pct:.1f}%</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:{_thresh_color};font-weight:700;">{_thresh_label}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{str(r.logged_at)[:16]}</td>
+        </tr>'''
+    if not _log_html:
+        _log_html = '<tr><td colspan="6" style="padding:16px;color:#888;text-align:center;">No log entries</td></tr>'
+
+    _gate_html = (
+        f'<button type="submit" style="background:#1A2744;color:#fff;border:none;padding:10px 24px;'
+        f'border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;">▶ Run CSI Calibration</button>'
+        if _gate_open else
+        f'<button disabled style="background:#ccc;color:#888;border:none;padding:10px 24px;'
+        f'border-radius:4px;font-weight:700;font-size:14px;cursor:not-allowed;">▶ Run CSI Calibration</button>'
+        f'<span style="font-size:13px;color:#c0392b;margin-left:12px;">'
+        f'Pool too small — {_total_users} users active, minimum 300 required</span>'
+    )
+
+    return f'''
+    <html><head><title>CSI Dashboard — Admin</title></head>
+    <body style="font-family:sans-serif;max-width:1100px;margin:40px auto;padding:0 20px;">
+      <h2 style="margin-bottom:4px;">Cultural Saturation Intelligence (CSI)</h2>
+      <p style="color:#666;margin-top:0;">
+        Patent candidate — prior art documented 26 June 2026. Build live 29 June 2026.
+      </p>
+      <p><a href="/admin" style="color:#2C7BE5;">← Back to Admin Dashboard</a></p>
+
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:14px 18px;margin-bottom:24px;">
+        <strong>How CSI works:</strong>
+        At scoring time, every new image is checked against all other users' scored images in the same genre.
+        95%+ similarity → scorecard note (creative direction, no score change).
+        85–94% → silent admin log only, user sees nothing.
+        Calibration run adjusts Disruption + Wonder weights for future scoring only — never retroactive.
+        <br><br>
+        <strong>Active users: {_total_users}</strong>
+        {' · <span style="color:#27ae60;font-weight:700;">Gate open — calibration available</span>' if _gate_open else
+         ' · <span style="color:#c0392b;font-weight:700;">Gate closed — minimum 300 users required</span>'}
+      </div>
+
+      <h3>Genre Saturation Summary</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:32px;">
+        <thead><tr style="background:#f5f5f5;text-align:left;">
+          <th style="padding:10px;">Genre</th>
+          <th style="padding:10px;">95%+ (scorecard note)</th>
+          <th style="padding:10px;">85–94% (silent log)</th>
+          <th style="padding:10px;">Unique images flagged</th>
+        </tr></thead>
+        <tbody>{_gs_html}</tbody>
+      </table>
+
+      <h3>Current Calibration Weights</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
+        <thead><tr style="background:#f5f5f5;text-align:left;">
+          <th style="padding:10px;">Genre</th>
+          <th style="padding:10px;">Disruption Boost</th>
+          <th style="padding:10px;">Wonder Boost</th>
+          <th style="padding:10px;">Similar Image Count</th>
+          <th style="padding:10px;">Last Calibrated</th>
+        </tr></thead>
+        <tbody>{_wt_html}</tbody>
+      </table>
+
+      <h3>Run Calibration</h3>
+      <p style="font-size:14px;color:#666;margin-bottom:12px;">
+        Computes per-genre saturation ratios and sets Disruption + Wonder boosts.
+        Applied to future scoring only — no existing scorecards are changed.
+        You decide when to run this. There is no automatic trigger.
+      </p>
+      <form method="POST" action="/admin/csi/run" style="margin-bottom:32px;">
+        {_gate_html}
+      </form>
+
+      <h3>CSI Log — Last 100 Matches</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px;">
+        <thead><tr style="background:#f5f5f5;text-align:left;">
+          <th style="padding:8px;">Image</th>
+          <th style="padding:8px;">Similar To</th>
+          <th style="padding:8px;">Genre</th>
+          <th style="padding:8px;">Similarity</th>
+          <th style="padding:8px;">Status</th>
+          <th style="padding:8px;">Logged</th>
+        </tr></thead>
+        <tbody>{_log_html}</tbody>
+      </table>
+    </body></html>
+    '''
+
+
+@app.route('/admin/csi/run', methods=['POST'])
+@login_required
+@admin_required
+def admin_csi_run():
+    """
+    Manual CSI calibration run. Gated at 300 active users.
+    Computes per-genre saturation ratio → maps to Disruption + Wonder boosts.
+    Writes to csi_genre_weights. Future scoring reads these boosts.
+    Never touches existing scorecards.
+    """
+    try:
+        _total_users = User.query.filter(User.role != 'admin').count()
+        if _total_users < 300:
+            flash(f'CSI calibration blocked — only {_total_users} active users (minimum 300 required).', 'error')
+            return redirect(url_for('admin_csi_page'))
+
+        # Compute saturation ratio per genre:
+        # ratio = unique 85%+ flagged images / total scored images in genre
+        _genre_totals = db.session.execute(db.text(
+            "SELECT genre, COUNT(*) as total FROM images WHERE status='scored' AND genre IS NOT NULL "
+            "GROUP BY genre"
+        )).fetchall()
+        _genre_flagged = db.session.execute(db.text(
+            "SELECT genre, COUNT(DISTINCT image_id) as flagged FROM csi_admin_log "
+            "GROUP BY genre"
+        )).fetchall()
+
+        _totals  = {r.genre: r.total   for r in _genre_totals}
+        _flagged = {r.genre: r.flagged for r in _genre_flagged}
+
+        _calibrated = 0
+        for genre, flagged_count in _flagged.items():
+            total = _totals.get(genre, 0)
+            if not total:
+                continue
+            ratio = flagged_count / total  # 0.0 – 1.0
+
+            # Boost scale: ratio 0–5% → 0.0, 5–15% → 0.2, 15–30% → 0.4, 30%+ → 0.5
+            if ratio < 0.05:
+                d_boost = 0.0
+                w_boost = 0.0
+            elif ratio < 0.15:
+                d_boost = 0.2
+                w_boost = 0.2
+            elif ratio < 0.30:
+                d_boost = 0.4
+                w_boost = 0.3
+            else:
+                d_boost = 0.5
+                w_boost = 0.5
+
+            db.session.execute(db.text("""
+                INSERT INTO csi_genre_weights
+                    (genre, disruption_boost, wonder_boost, similar_image_count, last_calibrated_at)
+                VALUES (:genre, :d, :w, :cnt, NOW())
+                ON CONFLICT (genre) DO UPDATE SET
+                    disruption_boost    = EXCLUDED.disruption_boost,
+                    wonder_boost        = EXCLUDED.wonder_boost,
+                    similar_image_count = EXCLUDED.similar_image_count,
+                    last_calibrated_at  = NOW()
+            """), {'genre': genre, 'd': d_boost, 'w': w_boost, 'cnt': flagged_count})
+            _calibrated += 1
+
+        db.session.commit()
+        flash(f'CSI calibration complete — {_calibrated} genre(s) updated.', 'success')
+        app.logger.info(f'[csi] calibration run complete: {_calibrated} genres updated by admin')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'CSI calibration error: {e}', 'error')
+
+    return redirect(url_for('admin_csi_page'))
+
+
 # ── Seasonal discovery — GET: status + trigger page ──────────────────────────
 @app.route('/admin/seasonal-discovery')
 @login_required
@@ -8878,6 +9360,8 @@ def admin_seasonal_discovery_page():
       <p style="font-size:13px;color:#888;">
         Also useful: <a href="/admin/check-user-location" style="color:#2C7BE5;">/admin/check-user-location</a>
         — shows each user's current city, state, genre interests, and onboarding flags.
+        &nbsp;·&nbsp; <a href="/admin/csi" style="color:#2C7BE5;">/admin/csi</a>
+        — Cultural Saturation Intelligence dashboard (similar image detection, calibration).
       </p>
     </body></html>
     '''
