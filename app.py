@@ -15484,15 +15484,31 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
         '{"ok": false, "reason": "one short sentence explaining why"}'
     )
     try:
-        import anthropic as _ant
-        _client = _ant.Anthropic()
-        _resp = _client.messages.create(
-            model=_mod_model, max_tokens=80,
-            messages=[{'role': 'user', 'content': _prompt}]
-        )
+        import urllib.request as _ur
         import json as _json
-        result = _json.loads(_resp.content[0].text.strip())
-        return result
+        _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if not _api_key:
+            app.logger.warning('[eval_moderation] no API key — fail-closed')
+            return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
+        _payload = _json.dumps({
+            'model': _mod_model,
+            'max_tokens': 80,
+            'messages': [{'role': 'user', 'content': _prompt}]
+        }).encode('utf-8')
+        _req = _ur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': _api_key,
+                'anthropic-version': '2023-06-01',
+            },
+            method='POST'
+        )
+        with _ur.urlopen(_req, timeout=10) as _resp:
+            _data = _json.loads(_resp.read().decode())
+        _text = _data.get('content', [{}])[0].get('text', '{}').strip()
+        return _json.loads(_text)
     except Exception as _e:
         app.logger.warning(f'[eval_moderation] API failed (fail-closed): {_e}')
         return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
