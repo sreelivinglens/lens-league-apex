@@ -364,21 +364,27 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
             "location is cleared to fly."
             if _genre_lower == "drone" else ''
         )
+        # NOTE: the entire content string is parenthesised so the ternary
+        # covers ALL f-strings in the with-month branch, not just the last one.
+        # Previously the ternary bound only to the final f-string, silently
+        # dropping _month_rule and the "Current month:" line every time
+        # current_month was supplied — causing LLM to generate rows for its
+        # own preferred season rather than the requested month.
+        _extraction_content = (
+            (
+                f"{_EXTRACTION_SYSTEM}{_month_rule}{_drone_extraction_rule}\n\n"
+                f"Base city: {normalized_city}\n"
+                f"Genre: {genre}\n"
+                f"Current month: {_month_name} (month {current_month})\n"
+            ) if current_month else (
+                f"{_EXTRACTION_SYSTEM}{_drone_extraction_rule}\n\n"
+                f"Base city: {normalized_city}\n"
+                f"Genre: {genre}\n"
+            )
+        ) + f"Current date: {date.today().isoformat()}\n\nSearch results:\n{search_summary[:6000]}"
+
         extraction_resp = _anthropic_call(
-            messages=[{
-                'role': 'user',
-                'content': (
-                    f"{_EXTRACTION_SYSTEM}{_month_rule}{_drone_extraction_rule}\n\n"
-                    f"Base city: {normalized_city}\n"
-                    f"Genre: {genre}\n"
-                    f"Current month: {_month_name} (month {current_month})\n" if current_month else
-                    f"{_EXTRACTION_SYSTEM}{_drone_extraction_rule}\n\n"
-                    f"Base city: {normalized_city}\n"
-                    f"Genre: {genre}\n"
-                )
-                + f"Current date: {date.today().isoformat()}\n\n"
-                + f"Search results:\n{search_summary[:6000]}"
-            }],
+            messages=[{'role': 'user', 'content': _extraction_content}],
             max_tokens=1500,
         )
         extraction_text = _extract_text_blocks(extraction_resp).strip()
@@ -413,6 +419,31 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
         inserted = 0
         for item in items[:2]:  # cap at 2 rows per combo
             try:
+                _ms = int(item.get("month_start", 1) or 1)
+                _me = int(item.get("month_end", 12) or 12)
+
+                # Server-side month clamp — even with the corrected prompt the
+                # LLM can still return a window that doesn't cover current_month
+                # (e.g. it finds a Nov–Feb season when we asked for June).
+                # If current_month is set and the row wouldn't pass
+                # build_seasonal_context's filter, widen the window to include
+                # it rather than silently inserting a row that's invisible.
+                # We log the correction so it's visible in the scoring thread.
+                if current_month:
+                    _original = (_ms, _me)
+                    if _ms > current_month:
+                        _ms = current_month
+                    if _me < current_month:
+                        _me = current_month
+                    if (_ms, _me) != _original:
+                        print(
+                            f"[seasonal_discovery] month clamp applied for "
+                            f"({normalized_city}, {genre}): "
+                            f"LLM returned month_start={_original[0]} month_end={_original[1]}, "
+                            f"clamped to month_start={_ms} month_end={_me} "
+                            f"to cover current_month={current_month}"
+                        )
+
                 db_session.execute(_sql_text("""
                     INSERT INTO seasonal_calendar
                         (base_city, genre, location_name, state_country, distance_hours,
@@ -430,8 +461,8 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
                     "location_name":     item.get("location_name", "")[:120],
                     "state_country":     item.get("state_country", "")[:80],
                     "distance_hours":    float(item.get("distance_hours", 0.0) or 0.0),
-                    "month_start":       int(item.get("month_start", 1) or 1),
-                    "month_end":         int(item.get("month_end", 12) or 12),
+                    "month_start":       _ms,
+                    "month_end":         _me,
                     "subject":           item.get("subject", ""),
                     "what_is_happening": item.get("what_is_happening", ""),
                     "why_it_matters":    item.get("why_it_matters", ""),
@@ -446,7 +477,33 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
                 continue
 
         db_session.commit()
-        print(f"[seasonal_discovery] Discovered {inserted} row(s) for ({normalized_city}, {genre})")
+
+        # Post-insert validation: confirm the rows we just wrote will actually
+        # be found by build_seasonal_context for current_month. If not, the
+        # clamp above should have prevented it — but log clearly so any future
+        # regression is immediately visible rather than silently producing the
+        # "inserted N row(s) but month filter returned no context" warning.
+        if current_month and inserted > 0:
+            _matched = db_session.execute(_sql_text(
+                "SELECT COUNT(*) FROM seasonal_calendar "
+                "WHERE LOWER(base_city) = LOWER(:city) AND LOWER(genre) = LOWER(:genre) "
+                "AND month_start <= :m AND month_end >= :m"
+            ), {"city": normalized_city, "genre": genre, "m": current_month}).scalar() or 0
+            if _matched > 0:
+                print(
+                    f"[seasonal_discovery] Discovered {inserted} row(s) for "
+                    f"({normalized_city}, {genre}) — month={current_month} MATCHED "
+                    f"({_matched} row(s) visible to build_seasonal_context)"
+                )
+            else:
+                print(
+                    f"[seasonal_discovery] WARNING: Discovered {inserted} row(s) for "
+                    f"({normalized_city}, {genre}) but NONE match month={current_month} "
+                    f"— clamp may have failed, advisory will still be missing"
+                )
+        else:
+            print(f"[seasonal_discovery] Discovered {inserted} row(s) for ({normalized_city}, {genre})")
+
         return inserted
 
     except Exception as e:
