@@ -1,4 +1,4 @@
-# SL-VERSION: 114.7 (Session 114 — Eye of Judge query + peer_ratings_given to dashboard render)
+# SL-VERSION: 114.8 (Session 114 — peer queue upsert fix (unique constraint); Eye of Judge two-line chart data)
 #   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
 #   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
@@ -3809,18 +3809,31 @@ def dashboard():
             ).limit(9).all()
             for _img in _eligible[:3]:
                 try:
-                    _a = _RA(
-                        rater_id   = current_user.id,
-                        image_id   = _img.id,
-                        status     = 'started',
-                        tier_slot  = 'any',
-                        genre      = _img.genre,
-                        started_at = datetime.utcnow(),
-                        expires_at = datetime.utcnow() + _td(hours=72),
-                    )
-                    db.session.add(_a)
-                    db.session.flush()
-                    _peer_queue.append(_a)
+                    # Reuse existing non-submitted assignment if present (unique constraint)
+                    _existing = _RA.query.filter_by(
+                        rater_id=current_user.id,
+                        image_id=_img.id
+                    ).first()
+                    if _existing:
+                        _existing.status     = 'started'
+                        _existing.genre      = _img.genre
+                        _existing.started_at = datetime.utcnow()
+                        _existing.expires_at = datetime.utcnow() + _td(hours=72)
+                        db.session.flush()
+                        _peer_queue.append(_existing)
+                    else:
+                        _a = _RA(
+                            rater_id   = current_user.id,
+                            image_id   = _img.id,
+                            status     = 'started',
+                            tier_slot  = 'any',
+                            genre      = _img.genre,
+                            started_at = datetime.utcnow(),
+                            expires_at = datetime.utcnow() + _td(hours=72),
+                        )
+                        db.session.add(_a)
+                        db.session.flush()
+                        _peer_queue.append(_a)
                 except Exception:
                     db.session.rollback()
             if _peer_queue:
@@ -3845,18 +3858,22 @@ def dashboard():
                 .all()
             )
             if len(_judge_ratings) >= 3:
-                _deltas    = [abs(r.delta_from_ddi) for r in reversed(_judge_ratings)]
-                _avg_delta = round(sum(_deltas) / len(_deltas), 2)
-                # Trend: is calibration improving (delta shrinking)?
-                _half      = len(_deltas) // 2
-                _early_avg = sum(_deltas[:_half]) / _half if _half else _avg_delta
-                _late_avg  = sum(_deltas[_half:]) / (len(_deltas) - _half) if _half else _avg_delta
-                _improving = _late_avg < _early_avg
+                _ratings_asc = list(reversed(_judge_ratings))
+                _deltas       = [abs(r.delta_from_ddi) for r in _ratings_asc]
+                _peer_scores  = [round(r.peer_ll_score, 1) for r in _ratings_asc]
+                _engine_scores= [round(r.peer_ll_score - r.delta_from_ddi, 1) for r in _ratings_asc]
+                _avg_delta    = round(sum(_deltas) / len(_deltas), 2)
+                _half         = len(_deltas) // 2
+                _early_avg    = sum(_deltas[:_half]) / _half if _half else _avg_delta
+                _late_avg     = sum(_deltas[_half:]) / (len(_deltas) - _half) if _half else _avg_delta
+                _improving    = _late_avg < _early_avg
                 _eye_of_judge = {
-                    'count':      _peer_ratings_given,
-                    'avg_delta':  _avg_delta,
-                    'deltas':     _deltas,
-                    'improving':  _improving,
+                    'count':         _peer_ratings_given,
+                    'avg_delta':     _avg_delta,
+                    'deltas':        _deltas,
+                    'peer_scores':   _peer_scores,
+                    'engine_scores': _engine_scores,
+                    'improving':     _improving,
                 }
         except Exception as _eje:
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
