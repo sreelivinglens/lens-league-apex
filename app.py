@@ -3853,8 +3853,8 @@ def dashboard():
             ).filter(
                 Image.status      == 'scored',
                 Image.is_public   == True,
-                Image.is_flagged  == False,
-                Image.needs_review == False,
+                Image.is_flagged.isnot(True),
+                Image.needs_review.isnot(True),
                 Image.score       != None,
                 Image.user_id     != current_user.id,
                 User.is_subscribed == True,
