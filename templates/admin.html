@@ -273,6 +273,10 @@
     <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
     <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
     <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
+    <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn{% if csi_unreviewed_count > 0 %} gold{% endif %}"
+       style="{% if csi_unreviewed_count > 0 %}background:#2D1F00; border-color:#8B6914; color:#F5C518;{% endif %}">
+      👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count" style="background:#F5C518; color:#2D1F00;">{{ csi_unreviewed_count }}</span>{% endif %}
+    </a>
     <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
     <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">&#127979; Mentors</a>
     <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn">⬆ Bulk Upload</a>
@@ -1259,7 +1263,50 @@
           <div><div class="export-title">Ratings Audit</div><div class="export-desc">Peer ratings export</div></div>
         </a>
       </div>
-      <div style="font-size:13px; color:var(--text-muted);">All exports download as CSV.</div>
+
+      {# ── CSI Exports — Cultural Saturation Intelligence audit trail ── #}
+      <div style="margin-top:24px; margin-bottom:12px; padding-top:20px; border-top:1px solid var(--border);">
+        <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px;">Cultural Saturation Intelligence — CSI</div>
+        <div style="font-size:15px; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">
+          Patent audit trail. Every CSI event is logged permanently — matches detected, notes shown, dismissals, calibration runs, and genre weight changes. Export at any time for IP counsel review.
+        </div>
+        <div class="export-grid" style="margin-bottom:12px;">
+          <a href="{{ url_for('admin_export_csi_matches') }}" class="export-btn">
+            <span class="export-icon">👁</span>
+            <div>
+              <div class="export-title">CSI Match Log</div>
+              <div class="export-desc">All 85%+ matches · similarity · genre · date</div>
+            </div>
+          </a>
+          <a href="{{ url_for('admin_export_csi_dismissals') }}" class="export-btn">
+            <span class="export-icon">✕</span>
+            <div>
+              <div class="export-title">CSI Dismissals</div>
+              <div class="export-desc">Admin-dismissed false positives · reason · date</div>
+            </div>
+          </a>
+          <a href="{{ url_for('admin_export_csi_calibration') }}" class="export-btn">
+            <span class="export-icon">⚙</span>
+            <div>
+              <div class="export-title">Calibration History</div>
+              <div class="export-desc">All runs · genre boosts · user count at run</div>
+            </div>
+          </a>
+          <a href="{{ url_for('admin_export_csi_full') }}" class="export-btn" style="border-color:var(--gold-dark);">
+            <span class="export-icon">📋</span>
+            <div>
+              <div class="export-title">Full CSI Audit</div>
+              <div class="export-desc">All events · timestamps · suitable for IP counsel</div>
+            </div>
+          </a>
+        </div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+          Full audit export includes all match events, similarity scores, user IDs, dismiss actions, calibration runs, genre weight changes, and RAW verification requests triggered via CSI. Dated and version-stamped.
+          &nbsp;·&nbsp; <a href="{{ url_for('admin_csi_page') }}" style="color:var(--gold);">Open CSI dashboard →</a>
+        </div>
+      </div>
+
+      <div style="font-size:13px; color:var(--text-muted); margin-top:12px;">All exports download as CSV.</div>
 
     </div>
   </div>
