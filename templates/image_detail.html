@@ -474,6 +474,13 @@
   {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
   <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Depth Dimension Index (DDI) breakdown</p>
+    {# P8: drawer gate — drawer_active passed from app.py (True when >50 images have dod_reasoning) #}
+    {% set _ddi_audit = image.get_audit() or {} %}
+    {% set _drawer_on = drawer_active and (
+        _ddi_audit.get('dod_reasoning') or _ddi_audit.get('disruption_reasoning') or
+        _ddi_audit.get('dm_reasoning')  or _ddi_audit.get('wonder_reasoning')      or
+        _ddi_audit.get('aq_reasoning')
+    ) %}
     <div class="ddi-grid">
       {% set _pub_dims = [
         (image.dod_score,        'HOW DIFFICULT', 'IT WAS',          'dod'),
@@ -483,13 +490,16 @@
         (image.aq_score,         'THE EMOTION',   'IT CREATES',      'aq'),
       ] %}
       {% for val, line1, line2, dim_key in _pub_dims %}
-      <div class="ddi-dim">
+      <div class="ddi-dim"{% if _drawer_on %} onclick="slOpenDimDrawer('{{ dim_key }}')" style="cursor:pointer;"{% endif %}>
         <div class="ddi-val">{{ val or '—' }}</div>
         <div class="ddi-lbl" id="sc-ddi-lbl-{{ dim_key }}">{{ line1 }}<br>{{ line2 }}</div>
       </div>
       {% endfor %}
     </div>
     <div style="text-align:right; margin-top:12px;">
+      {% if _drawer_on %}
+      <span style="font-size:13px; color:var(--text-muted); font-style:italic; margin-right:12px;">Tap a dimension to see the engine's reasoning</span>
+      {% endif %}
       <a href="/science#dimensions" class="glink-inline" style="font-size:13px; font-weight:600; letter-spacing:0.04em;">Understanding dimensions →</a>
     </div>
   </div>
