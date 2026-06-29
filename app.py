@@ -993,6 +993,48 @@ def _run_startup_tasks():
                     "CREATE INDEX IF NOT EXISTS ix_upload_history_log_user ON upload_history_log(user_id)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS share_token VARCHAR(64)",
                     "CREATE UNIQUE INDEX IF NOT EXISTS ix_images_share_token ON images(share_token) WHERE share_token IS NOT NULL",
+                    # v-Session116 — structured peer eval (checkbox system)
+                    # stood_out_tags / improve_tags: JSON array of tag strings e.g. '["Light quality","Composition"]'
+                    # optional_comment: free-text, email-only, never shown on scorecard
+                    # what_struck / improvement kept for backward compat with old evals
+                    "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS stood_out_tags TEXT",
+                    "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS improve_tags TEXT",
+                    "ALTER TABLE peer_ratings ADD COLUMN IF NOT EXISTS optional_comment TEXT",
+                    # eval_flags: photographer can flag an optional_comment as abusive
+                    # token is a short HMAC used in the one-click flag link in the email
+                    """CREATE TABLE IF NOT EXISTS eval_flags (
+                        id               SERIAL PRIMARY KEY,
+                        peer_rating_id   INTEGER NOT NULL REFERENCES peer_ratings(id) ON DELETE CASCADE,
+                        flagged_by       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        reason           VARCHAR(40) NOT NULL DEFAULT 'abusive',
+                        flagged_at       TIMESTAMP DEFAULT NOW(),
+                        status           VARCHAR(20) DEFAULT 'pending',
+                        admin_note       TEXT,
+                        resolved_at      TIMESTAMP,
+                        resolved_by      INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        UNIQUE(peer_rating_id, flagged_by)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_eval_flags_status ON eval_flags(status)",
+                    "CREATE INDEX IF NOT EXISTS ix_eval_flags_peer_rating ON eval_flags(peer_rating_id)",
+                    # v-Session116b — peer eval email digest queue
+                    # Tracks whether a "first eval" immediate email has been sent for an image today.
+                    # Subsequent evals within 24hrs are batched by the digest cron.
+                    # first_email_sent_at: set when immediate email fires on eval #1
+                    # digest_pending: True when ≥2 evals received, digest not yet sent
+                    # digest_sent_at: cleared after digest fires
+                    """CREATE TABLE IF NOT EXISTS peer_eval_digest_queue (
+                        id                  SERIAL PRIMARY KEY,
+                        image_id            INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                        owner_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        first_email_sent_at TIMESTAMP,
+                        digest_pending      BOOLEAN DEFAULT FALSE,
+                        digest_due_at       TIMESTAMP,
+                        digest_sent_at      TIMESTAMP,
+                        created_at          TIMESTAMP DEFAULT NOW(),
+                        updated_at          TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(image_id)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_peer_eval_digest_pending ON peer_eval_digest_queue(digest_pending, digest_due_at)",
                 ]
                 for sql in _migrations:
                     try:
@@ -3806,35 +3848,6 @@ def dashboard():
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
-    # ── P6: Peer eval notifications — images owned by current user evaluated in last 24hrs ──
-    # Deduplicated by image_id — show most recent eval per image, max 3 banners.
-    _peer_eval_notifications = []
-    try:
-        from models import PeerRating as _PR
-        from datetime import timedelta as _td24
-        _since = datetime.utcnow() - _td24(hours=24)
-        _all_notifs = (
-            _PR.query
-            .join(Image, _PR.image_id == Image.id)
-            .filter(
-                Image.user_id == current_user.id,
-                _PR.rated_at >= _since,
-            )
-            .order_by(_PR.rated_at.desc())
-            .all()
-        )
-        # Deduplicate: one notification per image, most recent eval wins
-        # Only show if rating has actual comments (what_struck populated)
-        _seen_images = set()
-        for _n in _all_notifs:
-            if _n.image_id not in _seen_images and (_n.what_struck or '').strip():
-                _peer_eval_notifications.append(_n)
-                _seen_images.add(_n.image_id)
-            if len(_peer_eval_notifications) >= 3:
-                break
-    except Exception as _pen:
-        app.logger.warning(f'[dashboard] peer_eval_notifications: {_pen}')
-
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
@@ -3978,7 +3991,6 @@ def dashboard():
                            mission_done=_mission_done,
                            dash_advisory=_dash_advisory,
                            peer_queue=_peer_queue,
-                           peer_eval_notifications=_peer_eval_notifications,
                            tier_rank=TIER_RANK,
                            eye_of_judge=_eye_of_judge,
                            peer_ratings_given=_peer_ratings_given,
@@ -3988,6 +4000,98 @@ def dashboard():
 # ---------------------------------------------------------------------------
 # My Gallery — user's full image history with search/filter
 # ---------------------------------------------------------------------------
+
+@app.route('/dashboard/peer-eval-strip')
+@login_required
+def dashboard_peer_eval_strip():
+    """
+    SESSION116: AJAX endpoint — returns HTML fragment for the peer eval
+    notification strip. Called by visibilitychange JS on dashboard tab focus.
+    Returns empty string when no notifications — strip hidden by JS.
+    Lightweight: no session writes, read-only, max 3 images.
+    """
+    import json as _json
+    _strip_items = []
+    try:
+        from models import PeerRating as _PR
+        from datetime import timedelta as _td24
+        _since = datetime.utcnow() - _td24(hours=24)
+        _all = (
+            _PR.query
+            .join(Image, _PR.image_id == Image.id)
+            .filter(
+                Image.user_id == current_user.id,
+                _PR.rated_at  >= _since,
+            )
+            .order_by(_PR.rated_at.desc())
+            .all()
+        )
+        _seen = set()
+        for _n in _all:
+            _has = (getattr(_n, 'stood_out_tags', None) or
+                    (_n.what_struck or '').strip())
+            if _n.image_id not in _seen and _has:
+                _sot = []
+                _imp = []
+                try:
+                    if getattr(_n, 'stood_out_tags', None):
+                        _sot = _json.loads(_n.stood_out_tags)
+                    if getattr(_n, 'improve_tags', None):
+                        _imp = _json.loads(_n.improve_tags)
+                except Exception: pass
+                _has_comment = bool(getattr(_n, 'optional_comment', None))
+                _strip_items.append({
+                    'genre':       _n.image.genre if _n.image else 'Photography',
+                    'image_id':    _n.image_id,
+                    'sot':         _sot,
+                    'imp':         _imp,
+                    'has_comment': _has_comment,
+                })
+                _seen.add(_n.image_id)
+            if len(_strip_items) >= 3:
+                break
+    except Exception as _e:
+        app.logger.warning(f'[peer_eval_strip] {_e}')
+        return '', 200
+
+    if not _strip_items:
+        return '', 200
+
+    # Build HTML fragment matching dashboard's sl-peer-eval__notif-strip class
+    _count = len(_strip_items)
+    _html = (
+        f'<div class="sl-peer-eval__notif-strip" id="sl-peer-eval-notif">'
+        f'<div class="sl-peer-eval__notif-title">'
+        f'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        f'stroke-width="2" style="flex-shrink:0;margin-right:6px;vertical-align:-2px;">'
+        f'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+        f'<circle cx="9" cy="7" r="4"/>'
+        f'<path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'
+        f'<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+        f'</svg>'
+        f'{_count} of your image{"s were" if _count>1 else " was"} evaluated today</div>'
+    )
+    for _item in _strip_items:
+        _href = f'/image/{_item["image_id"]}'
+        _pills = ''.join(
+            f'<span class="sl-peer-eval__notif-pill sl-peer-eval__notif-pill--amber">{t}</span>'
+            for t in _item['sot']
+        )
+        _pills += ''.join(
+            f'<span class="sl-peer-eval__notif-pill sl-peer-eval__notif-pill--green">{t}</span>'
+            for t in _item['imp']
+        )
+        if _item['has_comment']:
+            _pills += '<span class="sl-peer-eval__notif-pill sl-peer-eval__notif-pill--note">+ comment in email</span>'
+        _html += (
+            f'<div class="sl-peer-eval__notif-row">'
+            f'<span class="sl-peer-eval__notif-genre">{_item["genre"]}</span>'
+            f'{_pills}'
+            f'</div>'
+        )
+    _html += '</div>'
+    return _html, 200
+
 
 @app.route('/my-gallery')
 @login_required
@@ -9950,12 +10054,6 @@ def admin_check_peer_queue():
       </p>
     </body></html>
     '''
-
-
-@app.route('/admin')
-@login_required
-@admin_required
-def admin_dashboard():
     total_users  = User.query.count()
     total_images = Image.query.count()
     scored       = Image.query.filter_by(status='scored').count()
@@ -15346,6 +15444,95 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
         return {'ok': True, 'reason': None}
 
 
+def _make_flag_token(peer_rating_id: int) -> str:
+    """Short HMAC token for one-click flag link in evaluation email."""
+    import hmac, hashlib
+    secret = os.getenv('SECRET_KEY', 'sl-flag-secret')
+    msg = f'flag:{peer_rating_id}'.encode()
+    return hmac.new(secret.encode(), msg, hashlib.sha256).hexdigest()[:24]
+
+
+@app.route('/peer-flag/<int:rating_id>/<token>')
+@login_required
+def peer_flag_comment(rating_id, token):
+    """
+    One-click flag route embedded in peer eval email.
+    Photographer clicks link → comment flagged → admin notified.
+    SESSION116: structured eval system — flags optional_comment only.
+    """
+    # Verify token
+    if token != _make_flag_token(rating_id):
+        flash('Invalid flag link.', 'error')
+        return redirect(url_for('dashboard'))
+
+    from models import PeerRating as _PR
+    pr = _PR.query.get(rating_id)
+    if not pr:
+        flash('Evaluation not found.', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Only the image owner can flag
+    img = Image.query.get(pr.image_id)
+    if not img or img.user_id != current_user.id:
+        flash('You can only flag evaluations on your own images.', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Check if already flagged
+    existing = db.session.execute(db.text(
+        "SELECT id FROM eval_flags WHERE peer_rating_id=:rid AND flagged_by=:uid"
+    ), {'rid': rating_id, 'uid': current_user.id}).fetchone()
+
+    if existing:
+        flash('You have already flagged this comment.', 'warning')
+        return redirect(url_for('image_detail', image_id=img.id))
+
+    # Insert flag
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO eval_flags (peer_rating_id, flagged_by, reason, status) "
+            "VALUES (:rid, :uid, 'abusive', 'pending')"
+        ), {'rid': rating_id, 'uid': current_user.id})
+        db.session.commit()
+        app.logger.warning(
+            f'[eval_flag] rating_id={rating_id} flagged_by={current_user.id} '
+            f'image={img.id} comment="{(pr.optional_comment or "")[:80]}"'
+        )
+    except Exception as _fe:
+        db.session.rollback()
+        app.logger.error(f'[eval_flag] insert error: {_fe}')
+        flash('Could not submit flag. Please contact support.', 'error')
+        return redirect(url_for('image_detail', image_id=img.id))
+
+    # Notify admin by email
+    try:
+        _admin_emails = _admin_notify_emails()
+        if _admin_emails:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            _rater_tier = getattr(pr.rater, 'tier', None) or 'Photographer' if hasattr(pr, 'rater') else 'Photographer'
+            send_email(
+                _admin_emails,
+                f'[Flag] Peer eval comment flagged — image #{img.id}',
+                f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                f'<p style="font-size:14px;font-weight:700;color:#C0392B;">PEER EVAL FLAG</p>'
+                f'<p style="font-size:14px;line-height:1.7;">'
+                f'Image: <a href="{_site}/image/{img.id}">{img.asset_name or "Untitled"}</a> (ID: {img.id})<br>'
+                f'Photographer: {current_user.username} ({current_user.email})<br>'
+                f'Rater tier: {_rater_tier}<br>'
+                f'Rating ID: {rating_id}</p>'
+                f'<p style="font-size:13px;font-weight:700;color:#C0392B;margin-top:16px;">Flagged comment:</p>'
+                f'<p style="font-size:14px;background:#fef2f2;border-left:3px solid #C0392B;padding:12px 16px;">'
+                f'{pr.optional_comment or "(no comment)"}</p>'
+                f'<p style="font-size:13px;color:#8A8478;margin-top:24px;">'
+                f'Action needed: review and resolve at /admin · Rule: warn on first flag, ban on repeat.</p>'
+                f'</div>'
+            )
+    except Exception as _me:
+        app.logger.error(f'[eval_flag] admin email error: {_me}')
+
+    flash('Comment flagged. Our team will review it shortly.', 'success')
+    return redirect(url_for('image_detail', image_id=img.id))
+
+
 @app.route('/rate')
 @login_required
 def rate():
@@ -15513,22 +15700,58 @@ def submit_rating():
     wonder     = clamp(wonder)
     aq         = clamp(aq)
 
-    # ── Mandatory text fields ────────────────────────────────────────────────
-    what_struck = (request.form.get('what_struck') or '').strip()
-    improvement = (request.form.get('improvement') or '').strip()
-    if len(what_struck) < 20:
-        flash('Please describe what struck you about this image (at least 20 characters).', 'warning')
+    # ── SESSION116: Structured checkbox eval (replaces free-text fields) ────────
+    # REVERT NOTE: to restore old system, replace this block with the original
+    # "Mandatory text fields" + "Haiku moderation" blocks preserved in
+    # app_backup_session116.py lines 15622–15650. Also restore rate.html textareas.
+    #
+    # stood_out_tags: JSON list of "What stood out" checkbox values (1–3 required)
+    # improve_tags:   JSON list of "One thing to improve" checkbox values (exactly 1 required)
+    # optional_comment: free-text, email-only, moderated if present, not shown on scorecard
+    import json as _json
+    _stood_out_raw = request.form.getlist('stood_out_tags')
+    _improve_raw   = request.form.getlist('improve_tags')
+    optional_comment = (request.form.get('optional_comment') or '').strip()[:500]
+
+    _valid_stood_out = {
+        'Subject isolation', 'Light quality', 'Decisive moment',
+        'Emotional resonance', 'Composition', 'Colour harmony',
+        'Unique perspective', 'Texture / detail', 'Story in frame',
+        'Technical execution',
+    }
+    _valid_improve = {
+        'Distracting background', 'Horizon / tilt', 'Crop tighter',
+        'Crop wider', 'Exposure — highlights', 'Exposure — shadows',
+        'Colour cast', 'Wait for better moment', 'Focus point',
+        'Less processing',
+    }
+
+    _stood_out_tags = [t for t in _stood_out_raw if t in _valid_stood_out][:3]
+    _improve_tags   = [t for t in _improve_raw   if t in _valid_improve][:1]
+
+    if not _stood_out_tags:
+        flash('Please select at least one thing that stood out.', 'warning')
         return redirect(url_for('rate'))
-    if len(improvement) < 20:
-        flash('Please suggest one thing that would strengthen this image (at least 20 characters).', 'warning')
+    if not _improve_tags:
+        flash('Please select one thing to improve.', 'warning')
         return redirect(url_for('rate'))
 
-    # ── Haiku moderation ─────────────────────────────────────────────────────
-    _mod = _moderate_eval_text(what_struck, improvement)
-    if not _mod.get('ok', True):
-        _mod_reason = _mod.get('reason') or 'Please focus your feedback on the photograph itself.'
-        flash(f'Your feedback was not accepted. {_mod_reason}', 'warning')
-        return redirect(url_for('rate'))
+    # Moderate optional comment only (if provided) — free-text still goes through Haiku
+    # _moderate_eval_text() kept intact for revert; only called when comment is present
+    if optional_comment:
+        _mod = _moderate_eval_text('', optional_comment)
+        if not _mod.get('ok', True):
+            _mod_reason = _mod.get('reason') or 'Please keep comments focused on the photograph.'
+            flash(f'Your comment was not accepted. {_mod_reason}', 'warning')
+            return redirect(url_for('rate'))
+
+    stood_out_json = _json.dumps(_stood_out_tags)
+    improve_json   = _json.dumps(_improve_tags)
+
+    # what_struck / improvement passed as empty string — old columns preserved for
+    # backward compat with existing scorecards and admin views
+    what_struck = ''
+    improvement = ''
 
     try:
         rating = submit_peer_rating(
@@ -15542,6 +15765,14 @@ def submit_rating():
             what_struck = what_struck,
             improvement = improvement,
         )
+        # Store new structured fields via raw SQL (migration-only columns — Rule 13)
+        if rating and rating.id:
+            db.session.execute(db.text(
+                "UPDATE peer_ratings SET stood_out_tags=:sot, improve_tags=:it, optional_comment=:oc "
+                "WHERE id=:id"
+            ), {'sot': stood_out_json, 'it': improve_json,
+                'oc': optional_comment if optional_comment else None, 'id': rating.id})
+            db.session.commit()
         # Award base points (+2) + calibration bonus (+2 if within ±10%)
         _base_pts  = 2.0
         _bonus_pts = 0.0
@@ -15643,46 +15874,117 @@ def submit_rating():
                 except Exception as mail_err:
                     app.logger.error(f'[zone2 photographer email] {mail_err}')
 
-            # ── P6: Owner notification — always send on every peer eval (Session 113) ──
-            # Blind: evaluator tier shown, name never shown.
-            # Sent regardless of zone — zone emails above are divergence alerts,
-            # this is the learning loop notification.
+            # ── P6: Owner notification — SESSION116: digest system ────────────────
+            # REVERT NOTE: immediate email preserved in app_backup_session116.py ~15817
+            # Logic: 1st eval on image today → send immediately.
+            #        2nd+ eval within 24hrs → mark digest_pending, cron sends digest.
+            # REVERT NOTE for old immediate system: restore send_email() call directly.
             try:
-                _rater_tier = getattr(current_user, 'tier', None) or 'Photographer'
-                _genre      = img.genre or 'Photography'
-                _img_url    = (os.getenv('SITE_URL', 'https://shutterleague.com')
-                               + '/image/' + str(img.id))
-                send_email(
-                    photographer.email,
-                    f'Your {_genre} image was evaluated by a {_rater_tier} photographer — Shutter League',
-                    f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                    f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
-                    f'text-transform:uppercase;color:#B8892A;">Shutter League · Peer Evaluation</p>'
-                    f'<h2 style="font-size:22px;font-weight:700;margin:16px 0 8px;color:#1a1a18;">'
-                    f'A {_rater_tier} photographer evaluated your {_genre} image</h2>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#4A4840;margin-bottom:24px;">'
-                    f'Their read is below. The evaluator is anonymous — only their tier is shown.</p>'
-                    f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
-                    f'padding:16px 20px;margin-bottom:16px;">'
-                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-                    f'color:#B8892A;margin:0 0 8px;">What stood out</p>'
-                    f'<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0;">{what_struck}</p>'
-                    f'</div>'
-                    f'<div style="background:#F8F7F3;border-left:3px solid #4A4840;border-radius:0 8px 8px 0;'
-                    f'padding:16px 20px;margin-bottom:24px;">'
-                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-                    f'color:#4A4840;margin:0 0 8px;">One thing to improve</p>'
-                    f'<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0;">{improvement}</p>'
-                    f'</div>'
-                    f'<a href="{_img_url}" style="display:inline-block;background:#B8892A;color:#fff;'
-                    f'font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;'
-                    f'text-decoration:none;margin-bottom:24px;">See your evaluation card →</a>'
-                    f'<p style="font-size:13px;color:#8A8478;margin-top:8px;">'
-                    f'Questions? Contact <a href="mailto:{CONTACT_EMAIL}" style="color:#B8892A;">'
-                    f'{CONTACT_EMAIL}</a></p>'
-                    f'</div>'
-                )
-                app.logger.info(f'[peer_eval_notify] owner={photographer.id} image={img.id} rater_tier={_rater_tier}')
+                _rater_tier  = getattr(current_user, 'tier', None) or 'Photographer'
+                _genre       = img.genre or 'Photography'
+                _site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+                _img_url     = _site_url + '/image/' + str(img.id)
+                _now_utc     = datetime.utcnow()
+
+                def _pill(text, color):
+                    return (f'<span style="display:inline-block;background:{color};color:#fff;'
+                            f'font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;'
+                            f'margin:2px 4px 2px 0;letter-spacing:.03em;">{text}</span>')
+
+                def _comment_html(pr_id, comment):
+                    if not comment: return ''
+                    _ft  = _make_flag_token(pr_id)
+                    _fu  = f'{_site_url}/peer-flag/{pr_id}/{_ft}'
+                    return (
+                        f'<div style="background:#F8F7F3;border-left:3px solid #888;border-radius:0 8px 8px 0;'
+                        f'padding:14px 18px;margin-bottom:16px;">'
+                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                        f'color:#888;margin:0 0 6px;">Additional comment</p>'
+                        f'<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 10px;">{comment}</p>'
+                        f'<a href="{_fu}" style="font-size:12px;color:#C0392B;text-decoration:none;">'
+                        f'Flag this comment as inappropriate</a></div>'
+                    )
+
+                def _send_single_eval_email(sot_tags, imp_tags, opt_comment, pr_id, rater_tier, genre, count_label=''):
+                    _sot_pills = ''.join(_pill(t, '#B8892A') for t in sot_tags)
+                    _imp_pills = ''.join(_pill(t, '#4A7C59') for t in imp_tags)
+                    _cb        = _comment_html(pr_id, opt_comment)
+                    _subject   = (f'Your {genre} image received {count_label}evaluation — Shutter League'
+                                  if count_label else
+                                  f'Your {genre} image was evaluated by a {rater_tier} — Shutter League')
+                    send_email(
+                        photographer.email, _subject,
+                        f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
+                        f'text-transform:uppercase;color:#B8892A;">Shutter League · Peer Evaluation</p>'
+                        f'<h2 style="font-size:22px;font-weight:700;margin:16px 0 8px;color:#1a1a18;">'
+                        f'A {rater_tier} evaluated your {genre} image</h2>'
+                        f'<p style="font-size:15px;line-height:1.7;color:#4A4840;margin-bottom:20px;">'
+                        f'The evaluator is anonymous — only their tier is shown.</p>'
+                        f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
+                        f'padding:14px 18px;margin-bottom:12px;">'
+                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                        f'color:#B8892A;margin:0 0 8px;">What stood out</p>{_sot_pills}</div>'
+                        f'<div style="background:#F8F7F3;border-left:3px solid #4A7C59;border-radius:0 8px 8px 0;'
+                        f'padding:14px 18px;margin-bottom:16px;">'
+                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                        f'color:#4A7C59;margin:0 0 8px;">One thing to improve</p>{_imp_pills}</div>'
+                        f'{_cb}'
+                        f'<a href="{_img_url}" style="display:inline-block;background:#B8892A;color:#fff;'
+                        f'font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;'
+                        f'text-decoration:none;margin-bottom:24px;">See your evaluation card →</a>'
+                        f'<p style="font-size:13px;color:#8A8478;margin-top:8px;">Questions? '
+                        f'<a href="mailto:{CONTACT_EMAIL}" style="color:#B8892A;">{CONTACT_EMAIL}</a></p>'
+                        f'</div>'
+                    )
+
+                # Check digest queue for this image
+                _dq = db.session.execute(db.text(
+                    "SELECT id, first_email_sent_at, digest_pending FROM peer_eval_digest_queue "
+                    "WHERE image_id=:iid"
+                ), {'iid': img.id}).fetchone()
+
+                if not _dq:
+                    # First eval ever — send immediately, create queue row
+                    _send_single_eval_email(
+                        _stood_out_tags, _improve_tags, optional_comment,
+                        rating.id if rating else 0, _rater_tier, _genre
+                    )
+                    db.session.execute(db.text(
+                        "INSERT INTO peer_eval_digest_queue "
+                        "(image_id, owner_id, first_email_sent_at, digest_pending, digest_due_at) "
+                        "VALUES (:iid, :oid, :now, FALSE, :due) "
+                        "ON CONFLICT (image_id) DO NOTHING"
+                    ), {'iid': img.id, 'oid': photographer.id,
+                        'now': _now_utc, 'due': _now_utc + timedelta(hours=24)})
+                    db.session.commit()
+                    app.logger.info(f'[peer_eval_notify] immediate email owner={photographer.id} image={img.id}')
+
+                elif _dq.first_email_sent_at and (
+                    _now_utc - _dq.first_email_sent_at
+                ).total_seconds() < 86400:
+                    # Within 24hrs of first email — queue for digest, don't send now
+                    db.session.execute(db.text(
+                        "UPDATE peer_eval_digest_queue SET digest_pending=TRUE, "
+                        "digest_due_at=:due, updated_at=:now WHERE image_id=:iid"
+                    ), {'due': _dq.first_email_sent_at + timedelta(hours=24),
+                        'now': _now_utc, 'iid': img.id})
+                    db.session.commit()
+                    app.logger.info(f'[peer_eval_notify] queued for digest image={img.id}')
+
+                else:
+                    # >24hrs since first email — treat as fresh, send immediately, reset window
+                    _send_single_eval_email(
+                        _stood_out_tags, _improve_tags, optional_comment,
+                        rating.id if rating else 0, _rater_tier, _genre
+                    )
+                    db.session.execute(db.text(
+                        "UPDATE peer_eval_digest_queue SET first_email_sent_at=:now, "
+                        "digest_pending=FALSE, digest_sent_at=NULL, updated_at=:now WHERE image_id=:iid"
+                    ), {'now': _now_utc, 'iid': img.id})
+                    db.session.commit()
+                    app.logger.info(f'[peer_eval_notify] reset+immediate email owner={photographer.id} image={img.id}')
+
             except Exception as _pen:
                 app.logger.error(f'[peer_eval_notify] {_pen}')
 
@@ -21784,6 +22086,147 @@ try:
 except OSError:
     pass  # another worker already holds the lock
 
+def run_peer_eval_digest():
+    """
+    SESSION116: Peer eval digest emailer — runs hourly.
+    For each image with digest_pending=TRUE and digest_due_at <= now:
+      - Aggregates all peer_ratings since first_email_sent_at
+      - Counts tag frequency for stood_out_tags and improve_tags
+      - Sends one summary email to image owner
+      - Marks digest_sent_at, clears digest_pending
+    Fails open per image — one failure doesn't block others.
+    """
+    import json as _json
+    from collections import Counter as _Counter
+    _now = datetime.utcnow()
+    try:
+        _due = db.session.execute(db.text(
+            "SELECT id, image_id, owner_id, first_email_sent_at "
+            "FROM peer_eval_digest_queue "
+            "WHERE digest_pending=TRUE AND digest_due_at <= :now "
+            "LIMIT 50"
+        ), {'now': _now}).fetchall()
+    except Exception as _de:
+        app.logger.error(f'[peer_eval_digest] query error: {_de}')
+        return
+
+    sent = 0
+    for _row in _due:
+        try:
+            with app.app_context():
+                _img = Image.query.get(_row.image_id)
+                _owner = User.query.get(_row.owner_id)
+                if not _img or not _owner:
+                    continue
+
+                # Fetch all ratings since first email
+                _ratings = db.session.execute(db.text(
+                    "SELECT id, stood_out_tags, improve_tags, optional_comment "
+                    "FROM peer_ratings WHERE image_id=:iid AND rated_at > :since"
+                ), {'iid': _row.image_id, 'since': _row.first_email_sent_at}).fetchall()
+
+                if not _ratings:
+                    db.session.execute(db.text(
+                        "UPDATE peer_eval_digest_queue SET digest_pending=FALSE, "
+                        "digest_sent_at=:now WHERE id=:id"
+                    ), {'now': _now, 'id': _row.id})
+                    db.session.commit()
+                    continue
+
+                _count = len(_ratings)
+                _sot_counter = _Counter()
+                _imp_counter = _Counter()
+                _comments = []
+
+                for _r in _ratings:
+                    try:
+                        if _r.stood_out_tags:
+                            for t in _json.loads(_r.stood_out_tags): _sot_counter[t] += 1
+                        if _r.improve_tags:
+                            for t in _json.loads(_r.improve_tags): _imp_counter[t] += 1
+                        if _r.optional_comment:
+                            _ft = _make_flag_token(_r.id)
+                            _fu = (os.getenv('SITE_URL','https://shutterleague.com')
+                                   + f'/peer-flag/{_r.id}/{_ft}')
+                            _comments.append((_r.optional_comment, _fu))
+                    except Exception: pass
+
+                _genre   = _img.genre or 'Photography'
+                _img_url = os.getenv('SITE_URL','https://shutterleague.com') + f'/image/{_img.id}'
+
+                def _pill(text, color):
+                    return (f'<span style="display:inline-block;background:{color};color:#fff;'
+                            f'font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;'
+                            f'margin:2px 4px 2px 0;">{text}</span>')
+
+                _sot_html = ''.join(
+                    _pill(f'{t} ×{n}', '#B8892A')
+                    for t, n in _sot_counter.most_common(5)
+                )
+                _imp_html = ''.join(
+                    _pill(f'{t} ×{n}', '#4A7C59')
+                    for t, n in _imp_counter.most_common(3)
+                )
+                _comments_html = ''
+                if _comments:
+                    _comments_html = (
+                        f'<div style="margin-top:16px;border-top:1px solid #E8E5DD;padding-top:14px;">'
+                        f'<p style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                        f'color:#888;margin:0 0 10px;">Written comments ({len(_comments)})</p>'
+                    )
+                    for _c, _fu in _comments:
+                        _comments_html += (
+                            f'<div style="background:#F8F7F3;border-left:3px solid #888;'
+                            f'border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:8px;">'
+                            f'<p style="font-size:14px;line-height:1.7;color:#1a1a18;margin:0 0 6px;">{_c}</p>'
+                            f'<a href="{_fu}" style="font-size:11px;color:#C0392B;text-decoration:none;">'
+                            f'Flag as inappropriate</a></div>'
+                        )
+                    _comments_html += '</div>'
+
+                send_email(
+                    _owner.email,
+                    f'Your {_genre} image received {_count} more evaluation{"s" if _count!=1 else ""} — Shutter League',
+                    f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                    f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
+                    f'text-transform:uppercase;color:#B8892A;">Shutter League · Peer Evaluation</p>'
+                    f'<h2 style="font-size:22px;font-weight:700;margin:16px 0 8px;">'
+                    f'{_count} photographer{"s" if _count!=1 else ""} evaluated your {_genre} image</h2>'
+                    f'<p style="font-size:15px;line-height:1.7;color:#4A4840;margin-bottom:20px;">'
+                    f'Here\'s what they collectively noticed.</p>'
+                    f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
+                    f'padding:14px 18px;margin-bottom:12px;">'
+                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                    f'color:#B8892A;margin:0 0 8px;">What stood out</p>{_sot_html}</div>'
+                    f'<div style="background:#F8F7F3;border-left:3px solid #4A7C59;border-radius:0 8px 8px 0;'
+                    f'padding:14px 18px;margin-bottom:16px;">'
+                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                    f'color:#4A7C59;margin:0 0 8px;">One thing to improve</p>{_imp_html}</div>'
+                    f'{_comments_html}'
+                    f'<a href="{_img_url}" style="display:inline-block;background:#B8892A;color:#fff;'
+                    f'font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;'
+                    f'text-decoration:none;margin-bottom:24px;">See your evaluation card →</a>'
+                    f'<p style="font-size:13px;color:#8A8478;">Questions? '
+                    f'<a href="mailto:{CONTACT_EMAIL}" style="color:#B8892A;">{CONTACT_EMAIL}</a></p>'
+                    f'</div>'
+                )
+
+                db.session.execute(db.text(
+                    "UPDATE peer_eval_digest_queue SET digest_pending=FALSE, "
+                    "digest_sent_at=:now, updated_at=:now WHERE id=:id"
+                ), {'now': _now, 'id': _row.id})
+                db.session.commit()
+                sent += 1
+                app.logger.info(f'[peer_eval_digest] sent digest image={_row.image_id} count={_count}')
+
+        except Exception as _ie:
+            app.logger.error(f'[peer_eval_digest] image={_row.image_id} error: {_ie}')
+            try: db.session.rollback()
+            except Exception: pass
+
+    app.logger.info(f'[peer_eval_digest] Run complete. {sent} digests sent.')
+
+
 if _sched_lock_held:
     _scheduler = BackgroundScheduler(timezone='UTC')
     _scheduler.add_job(
@@ -21863,6 +22306,15 @@ if _sched_lock_held:
         trigger          = CronTrigger(day_of_week='sun', hour=4, minute=0, timezone='UTC'),
         id               = 'seasonal_discovery',
         name             = 'Weekly seasonal calendar auto-discovery (item D)',
+        replace_existing = True,
+    )
+    # SESSION116 — peer eval digest — runs every hour at :00
+    # Sends batched eval summaries for images where digest_pending=TRUE and digest_due_at <= now
+    _scheduler.add_job(
+        func             = run_peer_eval_digest,
+        trigger          = CronTrigger(minute=0, timezone='UTC'),
+        id               = 'peer_eval_digest',
+        name             = 'Peer eval digest emailer — batched per-image summaries',
         replace_existing = True,
     )
     _scheduler.start()
