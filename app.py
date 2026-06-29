@@ -3906,7 +3906,7 @@ def dashboard():
                 Image.id.notin_(_already),
             ).order_by(
                 Image.peer_rating_count.asc().nullsfirst(),
-                Image.scored_at.desc()
+                db.func.random()   # tiebreak: shuffle within same rating count
             ).limit(9).all()
             for _img in _eligible[:3]:
                 try:
