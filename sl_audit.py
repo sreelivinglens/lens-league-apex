@@ -1260,10 +1260,28 @@ def audit_apppy(filepath):
                 fails += 1
 
     # ── 70-yr readability — inline email HTML (all viewports) ─────────────────
-    _all_inline_html = ' '.join(re.findall(
+    _email_block_matches = list(re.finditer(
         r'html_body\s*=\s*[\s\S]{0,8000}?(?=\n\s*(?:msg\.|send_|flash|return|#))', src
     ))
+    _all_inline_html = ' '.join(m.group(0) for m in _email_block_matches)
     _flash_texts = re.findall(r"flash\s*\(\s*[f]?['\"]([^'\"]{0,200})['\"]", src)
+
+    # ── Helper: print per-block patch report for a given check ───────────────
+    def _email_patch_report(check_fn, fix_label):
+        """
+        For each email block, run check_fn(block_text) → list of (old, new) pairs.
+        Prints FIX lines with source line numbers. Used by Option B patch reporting.
+        """
+        seen = set()
+        for _m in _email_block_matches:
+            _blk = _m.group(0)
+            _ln  = src[:_m.start()].count('\n') + 1
+            _hits = check_fn(_blk)
+            for old, new in _hits:
+                key = (old, new)
+                if key not in seen:
+                    seen.add(key)
+                    print(f'    ~~  FIX ~line {_ln}: {fix_label}: {old!r}  →  {new!r}')
 
     _section('70-year-old readability -- Inline email HTML (mobile + desktop)')
 
@@ -1273,6 +1291,10 @@ def audit_apppy(filepath):
     if em_tiny:
         _fail(f'Inline email: font-size below 12px {em_tiny} -- unreadable on any device')
         fails += 1
+        def _chk_tiny(blk):
+            return [(f'font-size:{s}px', f'font-size:13px')
+                    for s in set(int(x) for x in re.findall(r'font-size:\s*(\d+)px', blk) if int(x) < 12)]
+        _email_patch_report(_chk_tiny, 'bump tiny font')
     else:
         _ok('No font below 12px in inline email HTML')
     if em_small:
@@ -1285,6 +1307,17 @@ def audit_apppy(filepath):
     if p_em_small:
         _fail(f'Inline email: <p> font-size below 15px: {p_em_small} -- use 15-16px minimum')
         fails += 1
+        def _chk_p_small(blk):
+            hits = []
+            for m2 in re.finditer(r'(<p[^>]*?)(font-size:\s*)(\d+)(px)', blk):
+                if int(m2.group(3)) < 15:
+                    old_fs = m2.group(2) + m2.group(3) + m2.group(4)
+                    new_fs = m2.group(2) + '15' + m2.group(4)
+                    prefix = (m2.group(1)[-25:]).lstrip('<p ')
+                    label  = (f'..{prefix} ' if prefix.strip() else '') + old_fs
+                    hits.append((label[:70], label[:70].replace(old_fs, new_fs)))
+            return list(dict.fromkeys(hits))
+        _email_patch_report(_chk_p_small, 'bump <p> font to 15px')
     else:
         _ok('Inline email <p> body font-size >= 15px')
 
@@ -1293,6 +1326,13 @@ def audit_apppy(filepath):
     if lh_em_bad:
         _fail(f'Inline email: line-height below 1.5: {lh_em_bad} -- use 1.6+ for readability')
         fails += 1
+        def _chk_lh(blk):
+            hits = []
+            for m2 in re.finditer(r'line-height:\s*([0-9.]+)', blk):
+                if float(m2.group(1)) < 1.5:
+                    hits.append((f'line-height:{m2.group(1)}', 'line-height:1.6'))
+            return list(dict.fromkeys(hits))  # dedup preserving order
+        _email_patch_report(_chk_lh, 'bump line-height to 1.6')
     elif not lh_em:
         _note('Inline email: no line-height values detected -- verify paragraphs have line-height >= 1.6')
     else:
@@ -1314,6 +1354,14 @@ def audit_apppy(filepath):
     if re.search(r'width:\s*[6-9]\d\d\s*px', _all_inline_html):
         _fail('Inline email: fixed width > 600px -- breaks in iOS Mail and Gmail app')
         fails += 1
+        def _chk_wide(blk):
+            hits = []
+            for m2 in re.finditer(r'width:\s*([6-9]\d\d)\s*px', blk):
+                val = int(m2.group(1))
+                if val > 600:
+                    hits.append((f'width:{m2.group(1)}px', 'width:600px'))
+            return list(dict.fromkeys(hits))
+        _email_patch_report(_chk_wide, 'cap width to 600px')
     else:
         _ok('Inline email: no fixed width > 600px (safe for iOS Mail / Gmail app)')
 
