@@ -9950,6 +9950,12 @@ def admin_check_peer_queue():
       </p>
     </body></html>
     '''
+
+
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_dashboard():
     total_users  = User.query.count()
     total_images = Image.query.count()
     scored       = Image.query.filter_by(status='scored').count()
