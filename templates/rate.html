@@ -199,8 +199,8 @@
       </div>
 
       <div style="margin-bottom:24px;">
-        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">What stood out <span style="color:#B8892A;">*</span></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Select 1–3 things that worked in this image.</div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">What stood out <span style="font-size:11px; font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">— optional</span></div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Select 1–3 things that worked in this image, if any stood out.</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="sl-cb-grid">
           {% set stood_out_options = [
             ('Subject isolation',   'Background fell away cleanly'),
@@ -230,8 +230,8 @@
       </div>
 
       <div style="margin-bottom:24px;">
-        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">One thing to improve <span style="color:#B8892A;">*</span></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Select the single most important improvement.</div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">One thing to improve <span style="font-size:11px; font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">— optional</span></div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Select the single most important improvement, if any.</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="sl-cb-grid">
           {% set improve_options = [
             ('Distracting background', 'Something pulls focus from subject'),
@@ -376,7 +376,7 @@ function enforceMax(el, name, max) {
   });
 }
 
-// Enforce minimum 15 seconds + checkbox validation before submit
+// Enforce minimum 15 seconds + clear any advisory errors before submit
 var form = document.getElementById('ratingForm');
 if (form) {
   form.addEventListener('submit', function(e) {
@@ -388,19 +388,11 @@ if (form) {
       setTimeout(function() { if (warn) warn.style.display = 'none'; }, 4000);
       return;
     }
-    var sot = document.querySelectorAll('input[name="stood_out_tags"]:checked');
-    var imp = document.querySelectorAll('input[name="improve_tags"]:checked');
+    // Checkboxes are optional — clear any advisory messages and allow submit
     var sotErr = document.getElementById('stood_out_error');
     var impErr = document.getElementById('improve_error');
-    var ok = true;
-    if (sot.length === 0) {
-      if (sotErr) sotErr.style.display = 'block';
-      e.preventDefault(); ok = false;
-    } else { if (sotErr) sotErr.style.display = 'none'; }
-    if (imp.length === 0) {
-      if (impErr) impErr.style.display = 'block';
-      e.preventDefault(); ok = false;
-    } else { if (impErr) impErr.style.display = 'none'; }
+    if (sotErr) sotErr.style.display = 'none';
+    if (impErr) impErr.style.display = 'none';
   });
 }
 </script>
