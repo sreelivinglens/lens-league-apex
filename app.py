@@ -15485,6 +15485,7 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
     )
     try:
         import urllib.request as _ur
+        import urllib.error as _ue
         import json as _json
         _api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if not _api_key:
@@ -15505,12 +15506,29 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
             },
             method='POST'
         )
-        with _ur.urlopen(_req, timeout=10) as _resp:
-            _data = _json.loads(_resp.read().decode())
+        try:
+            with _ur.urlopen(_req, timeout=10) as _resp:
+                _body = _resp.read().decode()
+        except _ue.HTTPError as _he:
+            _err_body = _he.read().decode()[:200]
+            app.logger.warning(f'[eval_moderation] HTTP {_he.code} fail-closed: {_err_body}')
+            return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
+
+        if not _body.strip():
+            app.logger.warning('[eval_moderation] empty response body — fail-closed')
+            return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
+
+        _data = _json.loads(_body)
         _text = _data.get('content', [{}])[0].get('text', '{}').strip()
+        # Strip markdown fences if model wraps response
+        _text = _text.lstrip('`').replace('json', '', 1).strip('`').strip()
+        if not _text:
+            app.logger.warning('[eval_moderation] empty content text — fail-closed')
+            return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
         return _json.loads(_text)
+
     except Exception as _e:
-        app.logger.warning(f'[eval_moderation] API failed (fail-closed): {_e}')
+        app.logger.warning(f'[eval_moderation] failed (fail-closed): {_e}')
         return {'ok': False, 'reason': 'Comment could not be verified right now. Please try again or submit without a comment.'}
 
 
@@ -15808,8 +15826,56 @@ def submit_rating():
         _mod = _moderate_eval_text('', optional_comment)
         if not _mod.get('ok', False):  # fail-closed: default False not True
             _mod_reason = _mod.get('reason') or 'Please keep your comment focused on the photograph.'
-            flash(f'Your comment was not accepted — {_mod_reason} You can still submit your rating without a comment.', 'warning')
-            return redirect(url_for('rate'))
+            # Re-render the rate page in-place — preserve sliders, checkboxes, comment text
+            # so the user can fix just the comment without starting the eval over.
+            from datetime import date as _date2, timedelta as _td3
+            _user = current_user
+            _credits   = _user.rating_credits or 0
+            _lifetime  = _user.lifetime_ratings_given or 0
+            from sqlalchemy import extract as _ext
+            _now2 = datetime.utcnow()
+            _month_given = db.session.query(PeerRating).filter(
+                PeerRating.rater_id == _user.id,
+                _ext('month', PeerRating.rated_at) == _now2.month,
+                _ext('year',  PeerRating.rated_at) == _now2.year,
+            ).count()
+            _today2 = _date2.today()
+            _next_reset2 = _date2(_today2.year + 1, 1, 1) if _today2.month == 12 else _date2(_today2.year, _today2.month + 1, 1)
+            _already2 = db.session.query(RatingAssignment.image_id).filter(
+                RatingAssignment.rater_id == _user.id,
+            ).subquery()
+            from models import Image as _Img2, User as _User2
+            _qr2 = (
+                _Img2.query.join(_User2, _Img2.user_id == _User2.id)
+                .filter(
+                    _Img2.status == 'scored', _Img2.is_public == True,
+                    _Img2.is_flagged == False, _Img2.needs_review == False,
+                    _Img2.score != None, _Img2.user_id != _user.id,
+                    _User2.is_subscribed == True, _Img2.id.notin_(_already2),
+                ).count()
+            )
+            return render_template('rate.html',
+                is_subscriber    = getattr(_user, 'is_subscribed', False),
+                credits          = _credits,
+                lifetime_given   = _lifetime,
+                month_given      = _month_given,
+                assignment       = assignment,
+                image            = assignment.image if assignment else None,
+                queue_remaining  = _qr2,
+                next_reset       = _next_reset2.strftime('%-d %B'),
+                bias_flag        = getattr(_user, 'rating_bias_flag', False),
+                comment_error    = _mod_reason,
+                prefill_comment  = optional_comment,
+                prefill_stood_out = _stood_out_raw,
+                prefill_improve  = _improve_raw,
+                prefill_sliders  = {
+                    'dod':        request.form.get('dod', '5'),
+                    'disruption': request.form.get('disruption', '5'),
+                    'dm':         request.form.get('dm', '5'),
+                    'wonder':     request.form.get('wonder', '5'),
+                    'aq':         request.form.get('aq', '5'),
+                },
+            )
 
     stood_out_json = _json.dumps(_stood_out_tags)
     improve_json   = _json.dumps(_improve_tags)
@@ -15972,12 +16038,37 @@ def submit_rating():
                     )
 
                 def _send_single_eval_email(sot_tags, imp_tags, opt_comment, pr_id, rater_tier, genre, count_label=''):
-                    _sot_pills = ''.join(_pill(t, '#B8892A') for t in sot_tags)
-                    _imp_pills = ''.join(_pill(t, '#4A7C59') for t in imp_tags)
-                    _cb        = _comment_html(pr_id, opt_comment)
-                    _subject   = (f'Your {genre} image received {count_label}evaluation — Shutter League'
-                                  if count_label else
-                                  f'Your {genre} image was evaluated by a {rater_tier} — Shutter League')
+                    _cb = _comment_html(pr_id, opt_comment)
+                    _subject = (f'Your {genre} image received {count_label}evaluation — Shutter League'
+                                if count_label else
+                                f'Your {genre} image was evaluated by a {rater_tier} — Shutter League')
+
+                    # Only build tag sections if content exists — never send empty boxes
+                    _tag_blocks = ''
+                    if sot_tags:
+                        _sot_pills = ''.join(_pill(t, '#B8892A') for t in sot_tags)
+                        _tag_blocks += (
+                            f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
+                            f'padding:14px 18px;margin-bottom:12px;">'
+                            f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                            f'color:#B8892A;margin:0 0 8px;">What stood out</p>{_sot_pills}</div>'
+                        )
+                    if imp_tags:
+                        _imp_pills = ''.join(_pill(t, '#4A7C59') for t in imp_tags)
+                        _tag_blocks += (
+                            f'<div style="background:#F8F7F3;border-left:3px solid #4A7C59;border-radius:0 8px 8px 0;'
+                            f'padding:14px 18px;margin-bottom:16px;">'
+                            f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                            f'color:#4A7C59;margin:0 0 8px;">One thing to improve</p>{_imp_pills}</div>'
+                        )
+                    # If no tags and no comment — note that scores-only feedback was given
+                    if not _tag_blocks and not _cb:
+                        _tag_blocks = (
+                            f'<p style="font-size:15px;line-height:1.7;color:#6a6458;margin-bottom:16px;">'
+                            f'The evaluator rated your image on all five dimensions. '
+                            f'No written observations were left.</p>'
+                        )
+
                     send_email(
                         photographer.email, _subject,
                         f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
@@ -15987,14 +16078,7 @@ def submit_rating():
                         f'A {rater_tier} evaluated your {genre} image</h2>'
                         f'<p style="font-size:15px;line-height:1.7;color:#4A4840;margin-bottom:20px;">'
                         f'The evaluator is anonymous — only their tier is shown.</p>'
-                        f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
-                        f'padding:14px 18px;margin-bottom:12px;">'
-                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-                        f'color:#B8892A;margin:0 0 8px;">What stood out</p>{_sot_pills}</div>'
-                        f'<div style="background:#F8F7F3;border-left:3px solid #4A7C59;border-radius:0 8px 8px 0;'
-                        f'padding:14px 18px;margin-bottom:16px;">'
-                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-                        f'color:#4A7C59;margin:0 0 8px;">One thing to improve</p>{_imp_pills}</div>'
+                        f'{_tag_blocks}'
                         f'{_cb}'
                         f'<a href="{_img_url}" style="display:inline-block;background:#B8892A;color:#fff;'
                         f'font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;'
@@ -16004,52 +16088,59 @@ def submit_rating():
                         f'</div>'
                     )
 
-                # Check digest queue for this image
-                _dq = db.session.execute(db.text(
-                    "SELECT id, first_email_sent_at, digest_pending FROM peer_eval_digest_queue "
-                    "WHERE image_id=:iid"
-                ), {'iid': img.id}).fetchone()
-
-                if not _dq:
-                    # First eval ever — send immediately, create queue row
-                    _send_single_eval_email(
-                        _stood_out_tags, _improve_tags, optional_comment,
-                        rating.id if rating else 0, _rater_tier, _genre
-                    )
-                    db.session.execute(db.text(
-                        "INSERT INTO peer_eval_digest_queue "
-                        "(image_id, owner_id, first_email_sent_at, digest_pending, digest_due_at) "
-                        "VALUES (:iid, :oid, :now, FALSE, :due) "
-                        "ON CONFLICT (image_id) DO NOTHING"
-                    ), {'iid': img.id, 'oid': photographer.id,
-                        'now': _now_utc, 'due': _now_utc + timedelta(hours=24)})
-                    db.session.commit()
-                    app.logger.info(f'[peer_eval_notify] immediate email owner={photographer.id} image={img.id}')
-
-                elif _dq.first_email_sent_at and (
-                    _now_utc - _dq.first_email_sent_at
-                ).total_seconds() < 86400:
-                    # Within 24hrs of first email — queue for digest, don't send now
-                    db.session.execute(db.text(
-                        "UPDATE peer_eval_digest_queue SET digest_pending=TRUE, "
-                        "digest_due_at=:due, updated_at=:now WHERE image_id=:iid"
-                    ), {'due': _dq.first_email_sent_at + timedelta(hours=24),
-                        'now': _now_utc, 'iid': img.id})
-                    db.session.commit()
-                    app.logger.info(f'[peer_eval_notify] queued for digest image={img.id}')
-
+                # SESSION116: Only notify if evaluator left observable content.
+                # Slider-only submissions (no tags, no comment) affect the DDI score
+                # but carry nothing worth emailing — skip notification entirely.
+                _has_observable = bool(_stood_out_tags or _improve_tags or optional_comment)
+                if not _has_observable:
+                    app.logger.info(f'[peer_eval_notify] skipped — slider-only submission image={img.id}')
                 else:
-                    # >24hrs since first email — treat as fresh, send immediately, reset window
-                    _send_single_eval_email(
-                        _stood_out_tags, _improve_tags, optional_comment,
-                        rating.id if rating else 0, _rater_tier, _genre
-                    )
-                    db.session.execute(db.text(
-                        "UPDATE peer_eval_digest_queue SET first_email_sent_at=:now, "
-                        "digest_pending=FALSE, digest_sent_at=NULL, updated_at=:now WHERE image_id=:iid"
-                    ), {'now': _now_utc, 'iid': img.id})
-                    db.session.commit()
-                    app.logger.info(f'[peer_eval_notify] reset+immediate email owner={photographer.id} image={img.id}')
+                # Check digest queue for this image
+                    _dq = db.session.execute(db.text(
+                        "SELECT id, first_email_sent_at, digest_pending FROM peer_eval_digest_queue "
+                        "WHERE image_id=:iid"
+                    ), {'iid': img.id}).fetchone()
+
+                    if not _dq:
+                        # First eval with observable content — send immediately, create queue row
+                        _send_single_eval_email(
+                            _stood_out_tags, _improve_tags, optional_comment,
+                            rating.id if rating else 0, _rater_tier, _genre
+                        )
+                        db.session.execute(db.text(
+                            "INSERT INTO peer_eval_digest_queue "
+                            "(image_id, owner_id, first_email_sent_at, digest_pending, digest_due_at) "
+                            "VALUES (:iid, :oid, :now, FALSE, :due) "
+                            "ON CONFLICT (image_id) DO NOTHING"
+                        ), {'iid': img.id, 'oid': photographer.id,
+                            'now': _now_utc, 'due': _now_utc + timedelta(hours=24)})
+                        db.session.commit()
+                        app.logger.info(f'[peer_eval_notify] immediate email owner={photographer.id} image={img.id}')
+
+                    elif _dq.first_email_sent_at and (
+                        _now_utc - _dq.first_email_sent_at
+                    ).total_seconds() < 86400:
+                        # Within 24hrs of first email — queue for digest, don't send now
+                        db.session.execute(db.text(
+                            "UPDATE peer_eval_digest_queue SET digest_pending=TRUE, "
+                            "digest_due_at=:due, updated_at=:now WHERE image_id=:iid"
+                        ), {'due': _dq.first_email_sent_at + timedelta(hours=24),
+                            'now': _now_utc, 'iid': img.id})
+                        db.session.commit()
+                        app.logger.info(f'[peer_eval_notify] queued for digest image={img.id}')
+
+                    else:
+                        # >24hrs since first email — treat as fresh, send immediately, reset window
+                        _send_single_eval_email(
+                            _stood_out_tags, _improve_tags, optional_comment,
+                            rating.id if rating else 0, _rater_tier, _genre
+                        )
+                        db.session.execute(db.text(
+                            "UPDATE peer_eval_digest_queue SET first_email_sent_at=:now, "
+                            "digest_pending=FALSE, digest_sent_at=NULL, updated_at=:now WHERE image_id=:iid"
+                        ), {'now': _now_utc, 'iid': img.id})
+                        db.session.commit()
+                        app.logger.info(f'[peer_eval_notify] reset+immediate email owner={photographer.id} image={img.id}')
 
             except Exception as _pen:
                 app.logger.error(f'[peer_eval_notify] {_pen}')
@@ -22250,6 +22341,29 @@ def run_peer_eval_digest():
                         )
                     _comments_html += '</div>'
 
+                # Only render tag sections when content exists
+                _digest_tag_blocks = ''
+                if _sot_html:
+                    _digest_tag_blocks += (
+                        f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
+                        f'padding:14px 18px;margin-bottom:12px;">'
+                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                        f'color:#B8892A;margin:0 0 8px;">What stood out</p>{_sot_html}</div>'
+                    )
+                if _imp_html:
+                    _digest_tag_blocks += (
+                        f'<div style="background:#F8F7F3;border-left:3px solid #4A7C59;border-radius:0 8px 8px 0;'
+                        f'padding:14px 18px;margin-bottom:16px;">'
+                        f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
+                        f'color:#4A7C59;margin:0 0 8px;">One thing to improve</p>{_imp_html}</div>'
+                    )
+                if not _digest_tag_blocks and not _comments_html:
+                    _digest_tag_blocks = (
+                        f'<p style="font-size:15px;line-height:1.7;color:#6a6458;margin-bottom:16px;">'
+                        f'All {_count} evaluator{"s" if _count!=1 else ""} rated using the dimension sliders only — '
+                        f'no written observations were left.</p>'
+                    )
+
                 send_email(
                     _owner.email,
                     f'Your {_genre} image received {_count} more evaluation{"s" if _count!=1 else ""} — Shutter League',
@@ -22260,14 +22374,7 @@ def run_peer_eval_digest():
                     f'{_count} photographer{"s" if _count!=1 else ""} evaluated your {_genre} image</h2>'
                     f'<p style="font-size:15px;line-height:1.7;color:#4A4840;margin-bottom:20px;">'
                     f'Here\'s what they collectively noticed.</p>'
-                    f'<div style="background:#F8F7F3;border-left:3px solid #B8892A;border-radius:0 8px 8px 0;'
-                    f'padding:14px 18px;margin-bottom:12px;">'
-                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-                    f'color:#B8892A;margin:0 0 8px;">What stood out</p>{_sot_html}</div>'
-                    f'<div style="background:#F8F7F3;border-left:3px solid #4A7C59;border-radius:0 8px 8px 0;'
-                    f'padding:14px 18px;margin-bottom:16px;">'
-                    f'<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-                    f'color:#4A7C59;margin:0 0 8px;">One thing to improve</p>{_imp_html}</div>'
+                    f'{_digest_tag_blocks}'
                     f'{_comments_html}'
                     f'<a href="{_img_url}" style="display:inline-block;background:#B8892A;color:#fff;'
                     f'font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;'
