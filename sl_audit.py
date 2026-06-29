@@ -1415,6 +1415,26 @@ def audit_apppy(filepath):
     else:
         _ok('No duplicate routes')
 
+    # ── Peer queue safety — genre filter must be present ─────────────────────
+    # RatingAssignment.genre is nullable=False. If _eligible images have genre=None,
+    # all inserts fail silently → _peer_queue stays empty → "No images" message
+    # even when 100+ images exist in the pool. This is the known regression point.
+    _section('Peer queue safety')
+    _peer_queue_checks = [
+        ('Dashboard peer queue has Image.genre != None filter',
+         'Image.genre' in src and 'peer_queue' in src and
+         bool(re.search(r'Image\.genre\s*!=\s*None', src))),
+        ('Dashboard peer queue exception is not silent (logs the error)',
+         bool(re.search(r'peer queue assignment error', src))),
+        ('_peer_queue passed to render_template',
+         'peer_queue=_peer_queue' in src),
+        ('RatingAssignment genre column not removed from insert',
+         bool(re.search(r"genre\s*=\s*_img\.genre", src))),
+    ]
+    for label, result in _peer_queue_checks:
+        if result: _ok(label)
+        else: _fail(label); fails += 1
+
     # ── Template name KYC compliance ──────────────────────────────────────────
     _section('Template name KYC compliance')
     old_templates = ['contest_enter.html', 'my_entries.html']
