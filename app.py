@@ -1,4 +1,4 @@
-# SL-VERSION: 114.3 (Session 114 — P8 hotfix: _audit_json → audit_json in drawer gate SQL + rollback on exception)
+# SL-VERSION: 114.4 (Session 114 — peer validation nudge gated on has_pending_eval; passed to image_detail render)
 #   tier column backfill; peer queue fix)
 # SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
 #   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
@@ -8080,6 +8080,17 @@ def image_detail(image_id):
         db.session.rollback()
         app.logger.warning(f'[image_detail] drawer gate: {_dge}')
 
+    # ── Pending peer eval check — show nudge only when user has work waiting ──
+    _has_pending_eval = False
+    try:
+        if current_user.is_authenticated and getattr(current_user, 'is_subscribed', False):
+            _has_pending_eval = db.session.query(RatingAssignment).filter(
+                RatingAssignment.rater_id == current_user.id,
+                RatingAssignment.status == 'started'
+            ).first() is not None
+    except Exception as _hpe:
+        app.logger.warning(f'[image_detail] pending eval check: {_hpe}')
+
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
                            percentile=percentile_data,
                            image_versions=_versions,
@@ -8091,6 +8102,7 @@ def image_detail(image_id):
                            is_first_eval=_is_first_eval,
                            all_masters=ALL_MASTERS,
                            drawer_active=_drawer_active,
+                           has_pending_eval=_has_pending_eval,
                            now=_now)
 
 
