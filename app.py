@@ -298,6 +298,8 @@ def send_challenge_notification(challenge):
     """
     Send weekly challenge notification to all active users.
     Called from admin when a new challenge is created.
+    SESSION116 audit fixes: KYC terms (prize→award, winner→top photograph),
+    gold text→white on dark bg, mobile media query, dark mode body bg.
     """
     users = User.query.filter_by(is_active=True).filter(
         User.email != None, User.email != ''
@@ -311,53 +313,82 @@ def send_challenge_notification(challenge):
 
     sponsor_line = ''
     if challenge.sponsor_name:
-        prize_text = f'  -  Prize: {challenge.sponsor_prize}' if challenge.sponsor_prize else ''
-        sponsor_line = f'<p style="margin:0 0 16px; color:#8a8070; font-size:15px;">Sponsored by <strong style="color:#C8A84B;">{challenge.sponsor_name}</strong>{prize_text}</p>'
+        # KYC-safe: use "award" not "prize", "top photograph" not "winner"
+        prize_raw  = challenge.sponsor_prize or ''
+        prize_safe = (prize_raw
+                      .replace('Winner', 'Top photograph')
+                      .replace('winner', 'top photograph')
+                      .replace('Prize:', 'Award:')
+                      .replace('prize:', 'award:')
+                      .replace('Prize', 'Award')
+                      .replace('prize', 'award'))
+        prize_text = f'  —  {prize_safe}' if prize_safe else ''
+        sponsor_line = (
+            f'<p style="margin:0 0 16px;color:#6a6458;font-size:15px;line-height:1.6;">'
+            f'Supported by <strong style="color:#1a1a18;">{challenge.sponsor_name}</strong>'
+            f'{prize_text}</p>'
+        )
 
     sent = 0
     for user in users:
-        is_sub = getattr(user, 'is_subscribed', False)
+        is_sub    = getattr(user, 'is_subscribed', False)
         slot_text = '3 images this week' if is_sub else '1 image this week (subscribe for 3)'
-        cta_text  = 'Submit your image ->' if is_sub else 'Enter the challenge ->'
+        cta_text  = 'Submit your image' if is_sub else 'Enter the challenge'
 
         html_body = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<style>
+  @media only screen and (max-width:600px){{
+    .sl-email-outer{{padding:16px 8px!important;}}
+    .sl-email-wrap{{width:100%!important;border-radius:0!important;}}
+    .sl-email-pad{{padding:20px 18px!important;}}
+    .sl-email-h1{{font-size:26px!important;}}
+    .sl-email-cta{{display:block!important;text-align:center!important;width:100%!important;box-sizing:border-box!important;}}
+  }}
+  @media (prefers-color-scheme:dark){{
+    .sl-email-body{{background:#1a1a18!important;}}
+  }}
+</style>
+</head>
+<body class="sl-email-body" style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table class="sl-email-outer" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
   <tr><td align="center">
-    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+    <table class="sl-email-wrap" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
 
       <!-- Header -->
-      <tr><td style="background:#1a1a18;padding:24px 32px;">
-        <p style="margin:0;font-family:"Courier New",monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
+      <tr><td style="background:#3D5A80;padding:20px 32px 6px;">
+        <div style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#ffffff;text-transform:uppercase;line-height:1.6;">SHUTTER LEAGUE</div>
       </td></tr>
 
       <!-- Challenge banner -->
-      <tr><td style="background:#1a1a18;padding:0 32px 28px;">
-        <p style="margin:0 0 6px;font-family:"Courier New",monospace;font-size:15px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Assignment . {challenge.week_ref}</p>
-        <h1 style="margin:0;font-size:36px;font-style:italic;color:#C8A84B;line-height:1.6;">{challenge.prompt_title}</h1>
+      <tr><td style="background:#3D5A80;padding:0 32px 28px;" class="sl-email-pad">
+        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;color:#ffffff;text-transform:uppercase;line-height:1.6;opacity:0.7;">Weekly Assignment · {challenge.week_ref}</p>
+        <h1 class="sl-email-h1" style="margin:0;font-size:34px;font-style:italic;color:#C8A84B;line-height:1.6;">{challenge.prompt_title}</h1>
       </td></tr>
 
       <!-- Body -->
-      <tr><td style="padding:28px 32px;">
-        <p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.6;">Get your photo rated for it to be in the reckoning to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong></p>
-        {'<p style="margin:0 0 20px;font-size:16px;color:#6a6458;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
+      <tr><td style="padding:28px 32px;" class="sl-email-pad">
+        <p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">Get your photo evaluated to be in the reckoning to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong></p>
+        {'<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
         {sponsor_line}
-        <p style="margin:0 0 8px;font-size:15px;color:#8a8070;">
+        <p style="margin:0 0 8px;font-size:15px;color:#6a6458;line-height:1.7;">
           <strong style="color:#1a1a18;">You have:</strong> {slot_text}
         </p>
-        <p style="margin:0 0 24px;font-size:15px;color:#8a8070;">
+        <p style="margin:0 0 28px;font-size:15px;color:#6a6458;line-height:1.7;">
           Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
         </p>
-        <a href="{challenge_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:"Courier New",monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
+        <a href="{challenge_url}" class="sl-email-cta" style="display:inline-block;background:#1a1a18;color:#ffffff;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;line-height:1.6;">{cta_text} →</a>
       </td></tr>
 
       <!-- Footer -->
       <tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">
-        <p style="margin:0;font-size:15px;color:#8a8070;line-height:1.6;">
+        <p style="margin:0;font-size:15px;color:#8a8070;line-height:1.7;">
           You&#39;re receiving this because you have an account on Shutter League.<br>
-          <a href="{site_url}" style="color:#C8A84B;">shutterleague.com</a>
+          <a href="{site_url}" style="color:#8a8070;">{site_url.replace('https://','')}</a>
         </p>
       </td></tr>
 
@@ -380,7 +411,7 @@ Enter here: {challenge_url}
 
  -  Shutter League"""
 
-        if send_email(user.email, f"This week's challenge: {challenge.prompt_title}", html_body, text_body):
+        if send_email(user.email, f"This week&#39;s assignment: {challenge.prompt_title}", html_body, text_body):
             sent += 1
 
     return sent
@@ -10054,6 +10085,12 @@ def admin_check_peer_queue():
       </p>
     </body></html>
     '''
+
+
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_dashboard():
     total_users  = User.query.count()
     total_images = Image.query.count()
     scored       = Image.query.filter_by(status='scored').count()
