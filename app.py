@@ -10881,6 +10881,7 @@ def admin_feedback(image_id):
     img     = Image.query.get_or_404(image_id)
     module  = request.form.get('module', 'overall').strip()
     reason  = request.form.get('reason', '').strip()
+    caveat  = request.form.get('caveat', '').strip()
     orig    = request.form.get('original_score', '')
     corr    = request.form.get('corrected_score', '')
 
@@ -10904,9 +10905,25 @@ def admin_feedback(image_id):
         img.tier = get_tier(img.score)
         img.status = 'scored'
         img.is_calibration_example = True
+
+        # SESSION117: persist the admin's reasoning onto the image itself —
+        # not just the genre-wide CalibrationNote row, which is disconnected
+        # from this specific image and never read by get_calibration_examples()
+        # in full. Storing on audit_json means this note travels with the
+        # image wherever it's referenced: recalibrate_audit() (below) and
+        # get_calibration_examples() (future scoring of OTHER images in this
+        # genre, once this image is marked as a REF/calibration example).
+        # caveat is optional — the specific exception/limit on the reasoning,
+        # so a future image isn't scored as if the reason were a blanket rule
+        # (e.g. "foreground blur is fine here" must not become "foreground
+        # blur is always fine for Wildlife" — the caveat is what stops that).
+        _audit = img.get_audit() or {}
+        _audit['admin_calibration_reason'] = reason
+        _audit['admin_calibration_caveat'] = caveat
+        img.set_audit(_audit)
         db.session.commit()
 
-        # SESSION117: regenerate scorecard prose to match the new score/tier.
+        # Regenerate scorecard prose to match the new score/tier.
         # Without this, the card shows the new score/tier badge but the prose
         # (hard_truth, 4 cards, dimension reasoning, watermark) stays frozen
         # at whatever the original auto_score() pass produced — a visible
@@ -10916,7 +10933,7 @@ def admin_feedback(image_id):
         # Does NOT touch img.score or img.tier again; only the audit JSON.
         threading.Thread(
             target=_recalibrate_audit_in_background,
-            args=(image_id, reason),
+            args=(image_id, reason, caveat),
             daemon=True
         ).start()
 
@@ -10928,7 +10945,7 @@ def admin_feedback(image_id):
     return redirect(url_for('image_detail', image_id=image_id))
 
 
-def _recalibrate_audit_in_background(image_id, admin_reason):
+def _recalibrate_audit_in_background(image_id, admin_reason, admin_caveat=''):
     """
     Background worker for admin_feedback()'s overall-score correction path.
     Regenerates scorecard PROSE ONLY via engine.auto_score.recalibrate_audit()
@@ -10974,12 +10991,20 @@ def _recalibrate_audit_in_background(image_id, admin_reason):
                 locked_wonder      = img.wonder_score or 0,
                 locked_aq          = img.aq_score or 0,
                 admin_reason       = admin_reason,
+                admin_caveat       = admin_caveat,
                 subject            = img.subject or '',
                 location           = img.location or '',
                 effective_subgenre = _audit.get('effective_subgenre'),
             )
 
             new_audit = build_audit_data(result, img)
+            # build_audit_data() returns a fresh dict with no knowledge of the
+            # admin_calibration_reason/caveat fields admin_feedback() wrote
+            # just before this thread started — preserve them explicitly or
+            # this regeneration silently erases the note that's the entire
+            # point of this feature.
+            new_audit['admin_calibration_reason'] = admin_reason
+            new_audit['admin_calibration_caveat']  = admin_caveat
             img.set_audit(new_audit)
             db.session.commit()
 
