@@ -512,6 +512,7 @@ def audit_html(filepath):
         'onboarding_interests', 'onboarding.html', 'referral_landing',
         'dashboard.html', 'mission_detail.html', 'first_login.html',
         'faq.html', 'pricing.html', 'programmes.html', 'redeem.html',
+        'challenge.html',
         'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
         'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
@@ -1662,6 +1663,14 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     KYC · Mobile · iPad · 70yr rule · Google meta tags
     """
     fname = os.path.basename(filepath)
+    # NARROW flag — only the actual image_detail/scorecard page, never
+    # dashboard/pricing/faq/etc. Session 119: separated from the broad
+    # is_detail_page flag (which means "skip homepage-only checks") after
+    # dashboard.html was incorrectly failing CSI Card checks meant only for
+    # the scorecard page — both flags were collapsed into one before this.
+    _is_scorecard_page = any(x in fname.lower() for x in [
+        'image_detail', 'scorecard', 'rating_card',
+    ])
     _is_mobile_app_page = any(x in fname.lower() for x in [
         'dashboard.html', 'onboarding.html', 'onboarding_interests',
         'referral_landing', 'redeem.html',
@@ -1911,7 +1920,7 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
 
     # ── Summary ───────────────────────────────────────────────────────────────
     _section('DELIVERY STANDARD — CSI note cards (image_detail.html only)')
-    if is_detail_page:
+    if _is_scorecard_page:
         _csi_checks = [
             ('CSI Card A — csi_own_duplicate condition present',
              'csi_own_duplicate' in content),
