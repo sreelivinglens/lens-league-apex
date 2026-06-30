@@ -4120,6 +4120,264 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     return result
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# RECALIBRATION — Session 117
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Built for the admin "calibration override" case: an admin has manually
+# decided a different score/tier than the engine originally produced
+# (e.g. an award-winning image the engine under-scored on technical
+# difficulty), via admin_feedback() in app.py. That route updates
+# img.score directly but does NOT touch the audit JSON — so the scorecard
+# prose (hard_truth, the 4 cards, dimension reasoning, the watermark tier)
+# stays frozen at the OLD score/tier, creating a visible mismatch
+# ("GRANDMASTER 9.13" badge next to "A Maverick-tier score (7.94) means...").
+#
+# recalibrate_audit() regenerates ONLY the prose — never the score. The
+# score and tier are passed in as locked, non-negotiable facts; the model
+# is told explicitly not to second-guess them, and the five dimension
+# scores are also passed in unchanged (the admin's correction is a single
+# overall-score override, not a dimension-by-dimension rescore) so the
+# DDI breakdown on the card stays internally consistent with the new tier.
+#
+# Reuses vision_analyse(), species_research(), build_scene_context(),
+# build_species_context() exactly as auto_score() does — the image facts
+# haven't changed, only the score has. Skips vision_analyse's subgenre
+# detection entirely; effective_subgenre is passed in from the original
+# audit so a recalibration can never silently change what subgenre the
+# image is filed under.
+
+RECALIBRATE_PROMPT = """An admin has manually reviewed this photograph and corrected its score.
+Your task is NOT to evaluate this image. Your task is to write the scorecard prose that
+explains and justifies the score the admin has already decided. Do not question, recalculate,
+or second-guess the locked values below — treat them as ground truth.
+
+Genre: {genre}
+Photographer: {photographer}
+Title: {title}
+Subject: {subject}
+Location: {location}
+
+LOCKED — DO NOT CHANGE:
+Final score: {locked_score}
+Tier: {locked_tier}
+DoD: {locked_dod}   Disruption: {locked_disruption}   DM: {locked_dm}   Wonder: {locked_wonder}   AQ: {locked_aq}
+
+ADMIN'S REASON FOR THE CORRECTION:
+{admin_reason}
+
+GENRE CONTEXT: {genre_context}
+
+{scene_context}
+{species_context}
+
+Write scorecard prose consistent with a {locked_tier} tier image scoring {locked_score}.
+Use the admin's reason above as the central insight — it is the thing the original
+engine pass missed or under-weighted. Build the prose AROUND that insight, not around
+generic praise.
+
+═══════════════════════════════════════════════════════════
+WRITING RULES — SAME STANDARD AS NORMAL SCORING
+═══════════════════════════════════════════════════════════
+
+PLAIN ENGLISH TEST: Would a passionate weekend photographer who has never read a
+photography textbook understand this immediately AND feel respected by it?
+NEVER use: DoD, AQ, DDI, DM, disruption score, bokeh, dynamic range, tonal relationship,
+compositional tension, visual disruption, decisive moment (write "the right moment" instead),
+depth of field (write "background blur" or "everything sharp" instead).
+
+SPECIES RULE — ABSOLUTE: Only mention species if clearly identifiable. Never guess.
+
+FORMATTING: Each thought on its own line. Bullets separated by blank lines. Short sentences.
+One idea per sentence. Bold the single most important line in each card.
+
+SCORE-RANGE OPENING REGISTER (apply based on locked_score above):
+Score 4-6: warm, specific, joyful encouragement.
+Score 7-8: peer-level applause, name the specific thing done right.
+Score 9+: recognition of rarity — name what makes this frame different from the thousands
+of similar attempts. This register applies if locked_score >= 9.0.
+
+Return this exact JSON structure — same fields as a normal scorecard, OMITTING dod/
+disruption/dm/wonder/aq/score/tier/soul_bonus/judge_referral/composition_technique
+(those are locked and already set — do not return them):
+{{
+  "dod_reasoning": "<one sentence, image-specific, consistent with the locked DoD score and the admin's reason>",
+  "disruption_reasoning": "<one sentence, image-specific, consistent with the locked Disruption score>",
+  "dm_reasoning": "<one sentence, image-specific, consistent with the locked DM score>",
+  "wonder_reasoning": "<one sentence, image-specific, consistent with the locked Wonder score>",
+  "aq_reasoning": "<one sentence, image-specific, consistent with the locked AQ score>",
+  "hard_truth": "<scorecard opening line — see SCORE-RANGE OPENING REGISTER above. One or two short sentences.>",
+  "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. 3 bullets, blank line between. Each: observation + what it means.>",
+  "mentor_moment": "<ONE sentence on whether this was the right moment, consistent with locked DM score.>",
+  "mentor_next": "<ONE creative direction. Two sentences max.>",
+  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets, blank line between.>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. 2 bullets, blank line between.>",
+  "badges_g": ["<specific strength>", "<specific strength>", "<specific strength>"],
+  "badges_w": ["<specific gap>", "<specific gap>"],
+  "edit_base": "<BASE EDITS. 2-3 bullets. If locked_score >= 8.0, do not undo what earned the score.>",
+  "edit_creative": "<ONE creative edit bullet.>",
+  "what_stood_out": "<same as hard_truth, for backward compatibility>",
+  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, blank line between. Include a master reference and the admin's reason as the central insight.>",
+  "background_check": "<same content as byline_1, for backward compatibility>",
+  "calibration_line": "<one or two sentences, percentile/context framing consistent with locked_score and locked_tier>",
+  "emoji_rating": "<emoji count matching locked_score (per the normal scale) + tier in caps>"
+}}
+"""
+
+
+def recalibrate_audit(image_path, genre, title, photographer, locked_score, locked_tier,
+                       locked_dod, locked_disruption, locked_dm, locked_wonder, locked_aq,
+                       admin_reason, subject="", location="", effective_subgenre=None,
+                       species_hint=""):
+    """
+    Regenerate scorecard PROSE ONLY for an image whose score/tier was manually
+    overridden by an admin (via admin_feedback() in app.py). Never touches the
+    score — the five locked_* values are written into the returned dict
+    unchanged and used verbatim in the prose-generation prompt.
+
+    Use this instead of auto_score() when: an admin has decided a different
+    score is correct (e.g. the engine under-valued technical difficulty), but
+    a full fresh auto_score() re-run is undesirable because it might land on
+    a different score than the admin's considered judgment.
+
+    Returns a dict with the same key shape as auto_score()'s return value
+    (so build_audit_data() can consume it unchanged), with dod/disruption/dm/
+    wonder/aq/score/tier/soul_bonus/judge_referral/composition_technique set
+    to the locked values rather than model output.
+
+    Raises ValueError if ANTHROPIC_API_KEY is unset or the API call fails
+    after retries — same failure contract as auto_score().
+    """
+    if not ANTHROPIC_API_KEY:
+        raise ValueError("ANTHROPIC_API_KEY not set")
+
+    img_data, media_type = encode_image(image_path)
+    _filename = os.path.basename(image_path)
+
+    vision = vision_analyse(img_data, media_type, title, subject, species_hint=species_hint,
+                             filename=_filename, location=location)
+    scene_context = build_scene_context(vision, genre=genre)
+
+    species_context = ""
+    _wikipedia_url = ""
+    _wikipedia_title = ""
+    if genre in ("Wildlife", "Nature") and vision.get("species_id"):
+        try:
+            _research = species_research(vision["species_id"])
+            species_context = build_species_context(_research)
+            _wikipedia_url = _research.get('wikipedia_url', '')
+            _wikipedia_title = _research.get('wikipedia_title', '')
+        except Exception as e:
+            print(f"[recalibrate_audit] species_research failed (non-fatal): {e}")
+
+    prompt = RECALIBRATE_PROMPT.format(
+        genre              = genre,
+        photographer       = photographer,
+        title              = title,
+        subject            = subject or "Not specified",
+        location           = location or "Not specified",
+        locked_score       = f"{locked_score:.2f}",
+        locked_tier        = locked_tier,
+        locked_dod         = f"{locked_dod:.1f}",
+        locked_disruption  = f"{locked_disruption:.1f}",
+        locked_dm          = f"{locked_dm:.1f}",
+        locked_wonder      = f"{locked_wonder:.1f}",
+        locked_aq          = f"{locked_aq:.1f}",
+        admin_reason       = admin_reason,
+        genre_context      = get_genre_context(genre, sub_genre=effective_subgenre),
+        scene_context      = scene_context,
+        species_context    = species_context,
+    )
+
+    payload = {
+        "model":       MODEL,
+        "max_tokens":  3000,
+        "temperature": 0.2,
+        "system":      SYSTEM_BRIEF,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": media_type, "data": img_data},
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+    }
+
+    response = None
+    last_error = None
+    for attempt in range(5):
+        try:
+            response = httpx.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key":         ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type":      "application/json",
+                },
+                json=payload,
+                timeout=90,
+            )
+            if response.status_code == 529:
+                wait = (attempt + 1) * 20
+                print(f"[recalibrate_audit] API overloaded (529), retrying in {wait}s... (attempt {attempt+1}/5)")
+                _time.sleep(wait)
+                continue
+            break
+        except httpx.TimeoutException as e:
+            last_error = e
+            wait = (attempt + 1) * 15
+            print(f"[recalibrate_audit] Timeout on attempt {attempt+1}/5, retrying in {wait}s...")
+            _time.sleep(wait)
+            continue
+        except Exception as e:
+            last_error = e
+            print(f"[recalibrate_audit] Request error on attempt {attempt+1}/5: {e}")
+            break
+
+    if response is None:
+        raise ValueError(f"All retry attempts failed. Last error: {last_error}")
+
+    if response.status_code != 200:
+        raise ValueError(f"API error {response.status_code}: {response.text}")
+
+    content = response.json()
+    text = ""
+    for block in content.get("content", []):
+        if block.get("type") == "text":
+            text += block.get("text", "")
+    text = re.sub(r"```json|```", "", text).strip()
+
+    try:
+        result = json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"[recalibrate_audit] JSON parse failed: {e}")
+        print(f"[recalibrate_audit] Full response text:\n{text}")
+        raise ValueError(f"Failed to parse recalibration response: {e}\nResponse: {text[:500]}")
+
+    # Write locked values verbatim — the model was never asked to produce
+    # these, so this also acts as a safety net if it tried to anyway.
+    result['dod']                    = locked_dod
+    result['disruption']             = locked_disruption
+    result['dm']                     = locked_dm
+    result['wonder']                 = locked_wonder
+    result['aq']                     = locked_aq
+    result['score']                  = locked_score
+    result['tier']                   = locked_tier
+    result['_wikipedia_url']         = _wikipedia_url
+    result['_wikipedia_title']       = _wikipedia_title
+    result['_effective_subgenre']    = effective_subgenre
+    result['_subgenre_overridden']   = False
+    result['_vision_subgenre_reason'] = ''
+
+    print(f"[recalibrate_audit] regenerated prose for locked score={locked_score:.2f} tier={locked_tier}")
+    return result
+
+
 def _species_display(species_id):
     """
     Convert a full vision species ID to a display-safe name.
