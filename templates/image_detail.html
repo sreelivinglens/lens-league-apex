@@ -954,7 +954,7 @@
       <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
       <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
     </div>
-    <a href="{{ url_for('challenge_detail', challenge_id=weekly_challenge.id) }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
+    <a href="{{ url_for('weekly_challenge') }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
   </div>
   {% endif %}
 
@@ -1933,4 +1933,4 @@ function pollRescoreStatus(imgId) {
 {% endif %}{# end if image.status == 'scored' and image.score #}
 {% endblock %}
 
-{# Session 116 — challenge_detail url_for fix — 2026-06-29 #}
+{# Session 116 — challenge_detail url_for fix — deployed 2026-06-30 #}
