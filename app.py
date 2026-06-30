@@ -1667,6 +1667,25 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'Photo School columns migration warning: {_ps_mig}')
 
+            # ── Session 119 — onboarding phone/address were never persisted ────
+            # onboarding.html has had required phone + address fields since
+            # before this session, but the onboarding() POST handler never
+            # read or saved them, and no column existed for either. Form data
+            # was collected by the browser and silently discarded server-side
+            # for every user who has ever completed onboarding.
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL"
+                ))
+                db.session.commit()
+                print('Onboarding phone/address columns OK.')
+            except Exception as _pa_mig:
+                db.session.rollback()
+                print(f'Onboarding phone/address migration warning: {_pa_mig}')
+
             # ── CSI (Cultural Saturation Intelligence) tables ─────────────────
             try:
                 db.session.execute(db.text("""
@@ -2600,7 +2619,6 @@ def register():
             password_hash       = generate_password_hash(password),
             is_active           = False,
             onboarding_complete = False,
-            agreed_at           = datetime.utcnow(),
             signup_ip           = request.remote_addr,
         )
         # Store token via direct attribute (column added by migration)
@@ -2806,7 +2824,7 @@ def auth_google_callback():
             full_name=name,
             google_id=google_id,
             onboarding_complete=False,
-            agreed_at=datetime.utcnow(),
+            signup_ip=request.remote_addr,
             is_active=True,
         )
         db.session.add(user)
@@ -2857,11 +2875,24 @@ def onboarding():
         country = request.form.get('country', '').strip()
         state   = request.form.get('state', '').strip()
         city    = request.form.get('city', '').strip()
+        phone   = request.form.get('phone', '').strip()
+        address = request.form.get('address', '').strip()
         agreed  = request.form.get('agreed')
         terms   = request.form.get('terms')
 
         if not country or not state or not city:
             flash('Please select your country, state/province, and city.', 'error')
+            return redirect(url_for('onboarding'))
+
+        # Session 119 — phone and address are required fields on the form
+        # (and have been since onboarding.html was first built) but were
+        # never validated or saved server-side. Adding the same pattern
+        # used for the other required fields above.
+        if not phone:
+            flash('Please enter your mobile number.', 'error')
+            return redirect(url_for('onboarding'))
+        if not address:
+            flash('Please enter your address.', 'error')
             return redirect(url_for('onboarding'))
 
         # For countries without detailed state/city data, State and City
@@ -2893,6 +2924,17 @@ def onboarding():
         current_user.signup_ip           = request.remote_addr
         current_user.onboarding_complete = True
         db.session.commit()
+        # phone/address: migration-only columns (Session 119), not yet
+        # verified as mapped ORM attributes in deployed models.py — raw SQL
+        # UPDATE per Rule 13 rather than ORM attribute assignment.
+        try:
+            db.session.execute(db.text(
+                "UPDATE users SET phone = :phone, address = :address WHERE id = :uid"
+            ), {'phone': phone, 'address': address, 'uid': current_user.id})
+            db.session.commit()
+        except Exception as _pa_save:
+            db.session.rollback()
+            app.logger.error(f'[onboarding] phone/address save failed user={current_user.id}: {_pa_save}')
         try:
             send_welcome_email(current_user)
         except Exception as _we:
