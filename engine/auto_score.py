@@ -2858,12 +2858,32 @@ def get_calibration_examples(genre, limit=3):
             lines.append('These are admin-verified scores. Use them as anchors.\n')
             for ex in examples:
                 audit = ex.get_audit()
+                # SESSION117: surface the admin's actual reasoning for the
+                # correction, with caveat, instead of only the AI-generated
+                # byline_1 snippet. Without this the model anchoring against
+                # this example has no idea WHY it scored what it did (e.g.
+                # "foreground blur is intentional at this shutter speed and
+                # water-level position") and could apply the score as a bare
+                # number with no understanding of the technique behind it —
+                # or worse, treat the admin's reasoning as a blanket rule for
+                # the genre rather than an exception specific to this image.
+                _admin_reason = audit.get('admin_calibration_reason', '')
+                _admin_caveat = audit.get('admin_calibration_caveat', '')
+                _reason_line = ''
+                if _admin_reason:
+                    _reason_line = f'Admin reasoning: {_admin_reason}\n'
+                    if _admin_caveat:
+                        _reason_line += (
+                            f'Caveat (this is an exception, not a rule — apply with this limit): '
+                            f'{_admin_caveat}\n'
+                        )
                 lines.append(
                     f'Title: {ex.asset_name or "Untitled"}\n'
                     f'Score: {ex.score} | Tier: {ex.tier}\n'
                     f'DoD: {ex.dod_score} | Disruption: {ex.disruption_score} | '
                     f'DM: {ex.dm_score} | Wonder: {ex.wonder_score} | AQ: {ex.aq_score}\n'
                     f'Archetype: {ex.archetype}\n'
+                    f'{_reason_line}'
                     f'Gap Analysis: {audit.get("byline_1", "")[:200]}\n'
                     f'---'
                 )
@@ -4165,7 +4185,7 @@ DoD: {locked_dod}   Disruption: {locked_disruption}   DM: {locked_dm}   Wonder: 
 
 ADMIN'S REASON FOR THE CORRECTION:
 {admin_reason}
-
+{admin_caveat_block}
 GENRE CONTEXT: {genre_context}
 
 {scene_context}
@@ -4174,7 +4194,10 @@ GENRE CONTEXT: {genre_context}
 Write scorecard prose consistent with a {locked_tier} tier image scoring {locked_score}.
 Use the admin's reason above as the central insight — it is the thing the original
 engine pass missed or under-weighted. Build the prose AROUND that insight, not around
-generic praise.
+generic praise. If a caveat is given above, you MUST include it somewhere in the prose
+(byline_2 or edit_creative are good places) — it tells the photographer the one thing
+that would have made this image score even higher. Never present the admin's reason as
+a blanket rule for this genre — it is an exception specific to this image's technique.
 
 ═══════════════════════════════════════════════════════════
 WRITING RULES — SAME STANDARD AS NORMAL SCORING
@@ -4227,13 +4250,23 @@ disruption/dm/wonder/aq/score/tier/soul_bonus/judge_referral/composition_techniq
 
 def recalibrate_audit(image_path, genre, title, photographer, locked_score, locked_tier,
                        locked_dod, locked_disruption, locked_dm, locked_wonder, locked_aq,
-                       admin_reason, subject="", location="", effective_subgenre=None,
-                       species_hint=""):
+                       admin_reason, admin_caveat="", subject="", location="",
+                       effective_subgenre=None, species_hint=""):
     """
     Regenerate scorecard PROSE ONLY for an image whose score/tier was manually
     overridden by an admin (via admin_feedback() in app.py). Never touches the
     score — the five locked_* values are written into the returned dict
     unchanged and used verbatim in the prose-generation prompt.
+
+    admin_caveat: optional — the specific exception/limit on admin_reason, so
+    the prose doesn't present a one-off judgment call as a blanket rule for
+    the genre. E.g. reason="foreground/background blur is unavoidable and
+    intentional at this shutter speed and water-level position", caveat=
+    "one bird in full sharp focus at the peak of a feeding motion would have
+    scored even higher — this isn't a license to ignore sharpness generally".
+    When set, the prompt requires the model to surface this in the prose
+    (typically byline_2 / edit_creative) so the photographer also sees the
+    ceiling, not just the exception that got them here.
 
     Use this instead of auto_score() when: an admin has decided a different
     score is correct (e.g. the engine under-valued technical difficulty), but
@@ -4270,6 +4303,11 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
         except Exception as e:
             print(f"[recalibrate_audit] species_research failed (non-fatal): {e}")
 
+    _admin_caveat_block = (
+        f"\nCAVEAT — THE EXCEPTION HAS A LIMIT:\n{admin_caveat}\n"
+        if admin_caveat else ""
+    )
+
     prompt = RECALIBRATE_PROMPT.format(
         genre              = genre,
         photographer       = photographer,
@@ -4284,6 +4322,7 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
         locked_wonder      = f"{locked_wonder:.1f}",
         locked_aq          = f"{locked_aq:.1f}",
         admin_reason       = admin_reason,
+        admin_caveat_block = _admin_caveat_block,
         genre_context      = get_genre_context(genre, sub_genre=effective_subgenre),
         scene_context      = scene_context,
         species_context    = species_context,
