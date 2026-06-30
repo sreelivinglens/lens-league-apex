@@ -1004,6 +1004,19 @@ def _run_startup_tasks():
                     # v79 — ddi_score on pixabay_reference_cache for rows created
                     # before this column existed (idempotent on rerun).
                     "ALTER TABLE pixabay_reference_cache ADD COLUMN IF NOT EXISTS ddi_score NUMERIC(4,2)",
+                    # SESSION117 — pixabay_refresh_lock: prevents concurrent
+                    # refresh_reference_cache() runs for the same (genre,
+                    # dimension) combo, and tracks failure cooldown so a combo
+                    # with no 8.5+ Pixabay candidate doesn't re-run the full
+                    # 8-candidate auto_score() pipeline on every cache-miss
+                    # request. See engine/stock_images.py for the lock logic.
+                    """CREATE TABLE IF NOT EXISTS pixabay_refresh_lock (
+                        genre                   VARCHAR(40) NOT NULL,
+                        dimension               VARCHAR(20) NOT NULL,
+                        locked_at               TIMESTAMP,
+                        last_attempt_failed_at  TIMESTAMP,
+                        CONSTRAINT uq_pixabay_lock UNIQUE (genre, dimension)
+                    )""",
                     # v80 — lightweight delete log so the free-tier quota
                     # message can explain itself (e.g. "1 photograph here +
                     # 2 uploaded and deleted earlier") instead of looking
