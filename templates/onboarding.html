@@ -8,6 +8,11 @@
 {% block extra_css %}
 <style>
   .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  /* Session 119 — "State / Province" wraps to two lines while "Country" and
+     "City" stay on one, pushing the state dropdown out of alignment with
+     the other two. Reserve consistent label height across the row instead
+     of letting each column size independently. */
+  .location-row .form-group label { display: block; min-height: 34px; }
   @media (max-width: 600px) {
     .ob-wrap { padding: 56px 16px 40px !important; }
   }
