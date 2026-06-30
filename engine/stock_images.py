@@ -83,6 +83,17 @@ _DIMENSION_TERMS = {
     'disruption':  'unconventional angle',
 }
 
+# How long a genre/dimension combo that found no candidate >= min_score
+# waits before refresh_reference_cache() will try it again. Without this,
+# a combo Pixabay genuinely has no 8.5+ image for would re-run the full
+# 8-candidate auto_score() pipeline on every single uncached page request.
+_FAILURE_COOLDOWN_HOURS = 6
+
+# How long an in-flight lock is considered stale and can be reclaimed by a
+# new request — covers the case where a previous run crashed/was killed
+# without reaching _release_lock().
+_LOCK_STALE_MINUTES = 15
+
 
 def _build_query(genre: str, dimension: str) -> str:
     """
@@ -217,14 +228,69 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
     used everywhere else in this codebase for auto_score calls (e.g.
     _force_rescore_in_background in app.py).
 
+    LOCK + COOLDOWN (added after observing duplicate concurrent runs):
+    Multiple users opening the same uncached genre/dimension combo within
+    seconds of each other each independently triggered this full pipeline
+    — same combo, same 8 Pixabay candidates, same auto_score() calls,
+    running 2-3x in parallel for one cache slot. A DB-backed lock (atomic
+    INSERT ... ON CONFLICT DO NOTHING — works across Railway's separate
+    worker processes, unlike an in-memory lock) now ensures only one
+    thread runs this pipeline per combo at a time; any other thread that
+    arrives while a run is in flight exits immediately.
+    A combo that fails to find any candidate >= min_score also will not
+    retry for 6 hours (_FAILURE_COOLDOWN_HOURS) — without this, a combo
+    Pixabay genuinely has no good image for would re-run the entire
+    8-candidate pipeline on every single uncached page request, forever.
+
     Returns True if a candidate was cached, False otherwise (no usable
-    candidates, none cleared min_score, or PIXABAY_API_KEY not set).
-    Never raises — failures are logged and treated as "try again on the
-    next cache-miss".
+    candidates, none cleared min_score, already locked, in cooldown, or
+    PIXABAY_API_KEY not set). Never raises — failures are logged and
+    treated as "try again later".
     """
     api_key = os.getenv('PIXABAY_API_KEY', '')
     if not api_key:
         return False
+
+    # ── Lock + cooldown gate ────────────────────────────────────────────
+    # Atomic claim: only the thread whose INSERT actually lands gets to
+    # proceed. Anyone else (any other concurrent request, any other
+    # worker process) finds the row already present and exits.
+    try:
+        _claimed = db_session.execute(
+            _sql_text(f"""
+                INSERT INTO pixabay_refresh_lock (genre, dimension, locked_at)
+                VALUES (:genre, :dimension, NOW())
+                ON CONFLICT (genre, dimension) DO UPDATE SET
+                    locked_at = NOW()
+                WHERE pixabay_refresh_lock.locked_at IS NULL
+                   OR pixabay_refresh_lock.locked_at < NOW() - INTERVAL '{_LOCK_STALE_MINUTES} minutes'
+                RETURNING genre
+            """),
+            {'genre': genre, 'dimension': dimension}
+        ).fetchone()
+        db_session.commit()
+        if not _claimed:
+            print(f'[stock_images] {genre}/{dimension} already locked or in flight — skipping')
+            return False
+    except Exception as e:
+        db_session.rollback()
+        print(f'[stock_images] lock acquisition failed (non-fatal, proceeding without lock): {e}')
+
+    try:
+        _cooldown = db_session.execute(
+            _sql_text(f"""
+                SELECT last_attempt_failed_at FROM pixabay_refresh_lock
+                WHERE genre = :genre AND dimension = :dimension
+                  AND last_attempt_failed_at >= NOW() - INTERVAL '{_FAILURE_COOLDOWN_HOURS} hours'
+            """),
+            {'genre': genre, 'dimension': dimension}
+        ).fetchone()
+        if _cooldown:
+            print(f'[stock_images] {genre}/{dimension} in failure cooldown — skipping until cooldown expires')
+            return False
+    except Exception as e:
+        print(f'[stock_images] cooldown check failed (non-fatal): {e}')
+    # ── End lock + cooldown gate ────────────────────────────────────────
 
     try:
         from engine.auto_score import auto_score
@@ -238,6 +304,7 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
 
     if not candidates:
         print(f'[stock_images] no usable Pixabay candidates for {genre}/{dimension} (query={query!r})')
+        _release_lock(db_session, genre, dimension, failed=True)
         return False
 
     for hit in candidates:
@@ -308,10 +375,44 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
         except Exception as e:
             db_session.rollback()
             print(f'[stock_images] cache write failed (non-fatal): {e}')
+            _release_lock(db_session, genre, dimension, failed=False)
             return False
 
         print(f'[stock_images] cached pixabay id={hit.get("id")} for {genre}/{dimension} — DDI score {score:.2f}')
+        _release_lock(db_session, genre, dimension, failed=False)
         return True
 
     print(f'[stock_images] no candidate cleared {min_score} for {genre}/{dimension} out of {len(candidates)} tried')
+    _release_lock(db_session, genre, dimension, failed=True)
     return False
+
+
+def _release_lock(db_session, genre: str, dimension: str, failed: bool):
+    """
+    Clears the in-flight lock so a future request can try again immediately
+    on success, or records the failure timestamp so the 6-hour cooldown in
+    refresh_reference_cache() takes effect on failure. Never raises.
+    """
+    try:
+        if failed:
+            db_session.execute(
+                _sql_text("""
+                    UPDATE pixabay_refresh_lock
+                    SET locked_at = NULL, last_attempt_failed_at = NOW()
+                    WHERE genre = :genre AND dimension = :dimension
+                """),
+                {'genre': genre, 'dimension': dimension}
+            )
+        else:
+            db_session.execute(
+                _sql_text("""
+                    UPDATE pixabay_refresh_lock
+                    SET locked_at = NULL, last_attempt_failed_at = NULL
+                    WHERE genre = :genre AND dimension = :dimension
+                """),
+                {'genre': genre, 'dimension': dimension}
+            )
+        db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        print(f'[stock_images] lock release failed (non-fatal): {e}')
