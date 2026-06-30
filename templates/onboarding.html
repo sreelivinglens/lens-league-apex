@@ -7,12 +7,19 @@
 
 {% block extra_css %}
 <style>
-  .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .location-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   /* Session 119 — "State / Province" wraps to two lines while "Country" and
      "City" stay on one, pushing the state dropdown out of alignment with
      the other two. Reserve consistent label height across the row instead
      of letting each column size independently. */
   .location-row .form-group label { display: block; min-height: 34px; }
+  /* Session 119 — gold field labels (COUNTRY, MOBILE NUMBER, ADDRESS etc.)
+     inherit color:var(--gold) from a global .form-group label rule in
+     base.html — gold-on-white fails the 70yr contrast rule. Overriding
+     locally on this page rather than touching base.html, which isn't
+     available here and may affect other pages too (worth a separate check). */
+  .ob-wrap .form-group label { color: #854F0B !important; }
+  .ob-wrap .form-group label span { color: var(--red); }
   @media (max-width: 600px) {
     .ob-wrap { padding: 56px 16px 40px !important; }
   }
