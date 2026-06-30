@@ -2,9 +2,9 @@
 {% block title %}Sign In — Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="Sign in to Shutter League. Upload a photograph and get your DDI score in 60 seconds.">
+<meta name="description" content="Sign in to Shutter League. Upload a photograph and get your evaluation in 60 seconds.">
 <meta property="og:title" content="Sign In — Shutter League">
-<meta property="og:description" content="Sign in to Shutter League. Upload a photograph and get your DDI score in 60 seconds.">
+<meta property="og:description" content="Sign in to Shutter League. Upload a photograph and get your evaluation in 60 seconds.">
 {% endblock %}
 {% block extra_css %}<style>
   /* ── v47 3-COLOUR RULE ── */
@@ -36,9 +36,9 @@
   <div style="width:100%; max-width:420px;">
 
     <div style="text-align:center; margin-bottom:40px;">
-      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">SHUTTER LEAGUE</div>
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:#854F0B; margin-bottom:12px;">SHUTTER LEAGUE</div>
       <h1 style="font-size:28px; font-weight:700; color:var(--text-primary); margin-bottom:8px;">Welcome to Shutter League</h1>
-      <p style="font-size:17px; color:var(--text-primary); font-weight:600;">Upload a photo. Get your score in 60 seconds.</p>
+      <p style="font-size:17px; color:var(--text-primary); font-weight:600;">Upload a photo. Get your evaluation in 60 seconds.</p>
     </div>
 
     <div class="card" style="padding:32px;">
@@ -95,14 +95,14 @@
       </form>
 
       <div style="margin-top:16px; text-align:center; font-size:14px; color:var(--text-primary);">
-        <a href="{{ url_for('forgot_password') }}" style="color:var(--gold); text-decoration:none;">Forgot password?</a>
+        <a href="{{ url_for('forgot_password') }}" style="color:#854F0B; text-decoration:none;">Forgot password?</a>
       </div>
 
       <div style="margin-top:20px; font-size:14px; color:var(--text-primary); text-align:center; line-height:1.7;">
         By continuing you agree to our
-        <a href="{{ url_for('terms') }}" style="color:var(--gold); text-decoration:none;">Terms &amp; Conditions</a>
+        <a href="{{ url_for('terms') }}" style="color:#854F0B; text-decoration:none;">Terms &amp; Conditions</a>
         and
-        <a href="{{ url_for('contest_rules') }}" style="color:var(--gold); text-decoration:none;">Programme Rules</a>.
+        <a href="{{ url_for('contest_rules') }}" style="color:#854F0B; text-decoration:none;">Programme Rules</a>.
       </div>
 
       <!-- Data usage notice -->
@@ -110,7 +110,7 @@
                   border:1px solid var(--border); border-radius:var(--radius-sm);
                   font-size:13px; color:var(--text-primary); text-align:center; line-height:1.65;">
         &#x1F512; We never sell your data or share it with advertisers.
-        &nbsp;<a href="/privacy" style="color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold-dark);">Privacy Policy &#8594;</a>
+        &nbsp;<a href="/privacy" style="color:#854F0B; text-decoration:none; border-bottom:1px solid var(--gold-dark);">Privacy Policy &#8594;</a>
       </div>
 
     </div>
@@ -123,11 +123,11 @@
         </div>
         <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
           <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
-          3 free scored images &nbsp;&#xB7;&nbsp; No credit card
+          3 free photographs evaluated &nbsp;&#xB7;&nbsp; No credit card
         </div>
         <div style="margin-top:6px; font-size:14px;">
           Don&#39;t have an account?
-          <a href="{{ url_for('register') }}" style="color:var(--gold); text-decoration:none; font-weight:600;">Create one &#8594;</a>
+          <a href="{{ url_for('register') }}" style="color:#854F0B; text-decoration:none; font-weight:600;">Create one &#8594;</a>
         </div>
       </div>
     </div>
