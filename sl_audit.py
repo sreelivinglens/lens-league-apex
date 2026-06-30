@@ -367,7 +367,7 @@ def _run_readability_and_browser_checks(content, fails, viewport='desktop', is_m
     else:
         _ok(f'[{viewport}] No 12-13px fonts used as body copy')
 
-    if any(f'font-size: {s}px' in content for s in range(min_body_px, 25)):
+    if re.search(rf'font-size:\s*(?:{"|".join(str(s) for s in range(min_body_px, 25))})px', content):
         _ok(f'[{viewport}] Body font size >= {min_body_px}px present')
     else:
         _fail(f'[{viewport}] No body font >= {min_body_px}px found -- elderly users need {min_body_px}px minimum')
@@ -693,14 +693,14 @@ def audit_html(filepath):
         _fail('[mobile] Font below 12px found in content area -- unreadable on mobile')
         fails += 1
 
-    if any(f'font-size: {s}px' in content for s in range(16, 25)):
+    if re.search(r'font-size:\s*(1[6-9]|2[0-4])px', content):
         _ok('[mobile] Body font size >= 16px present')
     else:
         _fail('[mobile] Body font size < 16px -- elderly users on mobile need 16px minimum')
         fails += 1
 
     # Line height mobile
-    if any(f'line-height: {v}' in content for v in ['1.5', '1.6', '1.7', '1.75', '1.8']):
+    if re.search(r'line-height:\s*1\.[5-8]', content):
         _ok('[mobile] Line-height >= 1.5 on body text')
     else:
         _fail('[mobile] No line-height >= 1.5 -- body text too cramped for elderly mobile users')
@@ -798,13 +798,13 @@ def audit_html(filepath):
     # ── 70-yr readability: iPad ───────────────────────────────────────────────
     _section('70-year-old readability -- iPad (768px-1024px)')
 
-    if any(f'font-size: {s}px' in content for s in range(16, 25)):
+    if re.search(r'font-size:\s*(1[6-9]|2[0-4])px', content):
         _ok('[iPad] Body font size >= 16px present')
     else:
         _fail('[iPad] Body font size < 16px -- elderly iPad users need 16px minimum')
         fails += 1
 
-    if any(f'line-height: {v}' in content for v in ['1.5', '1.6', '1.7', '1.75', '1.8']):
+    if re.search(r'line-height:\s*1\.[5-8]', content):
         _ok('[iPad] Line-height >= 1.5 on body text')
     else:
         _fail('[iPad] No line-height >= 1.5 -- cramped text for elderly iPad users')
@@ -860,13 +860,13 @@ def audit_html(filepath):
     # ── 70-yr readability: Desktop ────────────────────────────────────────────
     _section('70-year-old readability -- Desktop (>1024px)')
 
-    if any(f'font-size: {s}px' in content for s in range(16, 25)):
+    if re.search(r'font-size:\s*(1[6-9]|2[0-4])px', content):
         _ok('[desktop] Body font size >= 16px present')
     else:
         _fail('[desktop] Body font size < 16px -- elderly desktop users also need 16px minimum')
         fails += 1
 
-    if any(f'line-height: {v}' in content for v in ['1.5', '1.6', '1.7', '1.75', '1.8']):
+    if re.search(r'line-height:\s*1\.[5-8]', content):
         _ok('[desktop] Line-height >= 1.5 on body text')
     else:
         _fail('[desktop] No line-height >= 1.5 -- cramped body text for elderly desktop users')
@@ -1764,7 +1764,7 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         ('Buttons full-width on mobile or 44px tap targets',
          '44px' in content or 'min-height: 44' in content or 'width: 100%' in content),
         ('Font sizes scale on mobile (16px+ body)',
-         any(f'font-size: {s}px' in content for s in range(16, 26))),
+         bool(re.search(r'font-size:\s*(1[6-9]|2[0-5])px', content))),
         ('Single column stack on mobile',
          'grid-template-columns: 1fr !important' in content or 'flex-direction: column !important' in content
          or 'auto-fit' in content or 'auto-fill' in content or _is_mobile_app_page or is_detail_page),
