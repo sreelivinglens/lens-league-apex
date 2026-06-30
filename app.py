@@ -22448,25 +22448,34 @@ def run_peer_eval_digest():
       - Sends one summary email to image owner
       - Marks digest_sent_at, clears digest_pending
     Fails open per image — one failure doesn't block others.
-    """
-    import json as _json
-    from collections import Counter as _Counter
-    _now = datetime.utcnow()
-    try:
-        _due = db.session.execute(db.text(
-            "SELECT id, image_id, owner_id, first_email_sent_at "
-            "FROM peer_eval_digest_queue "
-            "WHERE digest_pending=TRUE AND digest_due_at <= :now "
-            "LIMIT 50"
-        ), {'now': _now}).fetchall()
-    except Exception as _de:
-        app.logger.error(f'[peer_eval_digest] query error: {_de}')
-        return
 
-    sent = 0
-    for _row in _due:
+    SESSION117 BUGFIX: the top-level query that finds due digests ran
+    OUTSIDE app.app_context() — only the per-image loop body was wrapped.
+    APScheduler calls this with no request context active, so db.session
+    has no app bound to it at that point and the query crashed every run:
+    "[peer_eval_digest] query error: Working outside of application
+    context." Fixed by wrapping the entire function body in one
+    app_context(), matching the pattern every other cron job in this file
+    uses (see run_reengagement_emailer, run_mentor_reminders).
+    """
+    with app.app_context():
+        import json as _json
+        from collections import Counter as _Counter
+        _now = datetime.utcnow()
         try:
-            with app.app_context():
+            _due = db.session.execute(db.text(
+                "SELECT id, image_id, owner_id, first_email_sent_at "
+                "FROM peer_eval_digest_queue "
+                "WHERE digest_pending=TRUE AND digest_due_at <= :now "
+                "LIMIT 50"
+            ), {'now': _now}).fetchall()
+        except Exception as _de:
+            app.logger.error(f'[peer_eval_digest] query error: {_de}')
+            return
+
+        sent = 0
+        for _row in _due:
+            try:
                 _img = Image.query.get(_row.image_id)
                 _owner = User.query.get(_row.owner_id)
                 if not _img or not _owner:
@@ -22588,12 +22597,12 @@ def run_peer_eval_digest():
                 sent += 1
                 app.logger.info(f'[peer_eval_digest] sent digest image={_row.image_id} count={_count}')
 
-        except Exception as _ie:
-            app.logger.error(f'[peer_eval_digest] image={_row.image_id} error: {_ie}')
-            try: db.session.rollback()
-            except Exception: pass
+            except Exception as _ie:
+                app.logger.error(f'[peer_eval_digest] image={_row.image_id} error: {_ie}')
+                try: db.session.rollback()
+                except Exception: pass
 
-    app.logger.info(f'[peer_eval_digest] Run complete. {sent} digests sent.')
+        app.logger.info(f'[peer_eval_digest] Run complete. {sent} digests sent.')
 
 
 if _sched_lock_held:
