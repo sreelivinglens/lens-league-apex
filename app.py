@@ -10947,10 +10947,17 @@ def admin_feedback(image_id):
 
 def _recalibrate_audit_in_background(image_id, admin_reason, admin_caveat=''):
     """
-    Background worker for admin_feedback()'s overall-score correction path.
+    Background worker for BOTH admin score-correction paths:
+      - admin_feedback() — "Calibration Feedback" form on image_detail.html,
+        single corrected_score field
+      - admin_recalibrate_image() — "Recalibrate Image" modal on admin.html,
+        per-dimension score inputs
     Regenerates scorecard PROSE ONLY via engine.auto_score.recalibrate_audit()
-    — never touches img.score or img.tier (those are already set and
-    committed by admin_feedback() before this thread starts).
+    — never touches img.score/img.tier/dimension scores (those are already
+    set and committed by the calling route before this thread starts).
+    Also rebuilds the scorecard image (engine.compositor.build_card1) AFTER
+    the new prose is written — rebuilding it before would bake the stale
+    pre-correction prose into the new card file.
     Runs in its own thread/app context — same pattern as
     _force_rescore_in_background.
     """
@@ -10999,16 +11006,38 @@ def _recalibrate_audit_in_background(image_id, admin_reason, admin_caveat=''):
 
             new_audit = build_audit_data(result, img)
             # build_audit_data() returns a fresh dict with no knowledge of the
-            # admin_calibration_reason/caveat fields admin_feedback() wrote
-            # just before this thread started — preserve them explicitly or
-            # this regeneration silently erases the note that's the entire
-            # point of this feature.
+            # admin_calibration_reason/caveat fields the calling route wrote
+            # just before this thread started — preserve them explicitly, and
+            # also preserve recalibration_log if admin_recalibrate_image() set
+            # one (the dimension-by-dimension audit trail), or this
+            # regeneration silently erases both.
             new_audit['admin_calibration_reason'] = admin_reason
             new_audit['admin_calibration_caveat']  = admin_caveat
+            if _audit.get('recalibration_log'):
+                new_audit['recalibration_log'] = _audit['recalibration_log']
             img.set_audit(new_audit)
             db.session.commit()
 
             app.logger.info(f'[recalibrate] image={image_id} prose regenerated for score={img.score:.2f} tier={img.tier}')
+
+            # Rebuild the scorecard image now that prose is current — must
+            # happen AFTER the commit above, using new_audit not old audit.
+            try:
+                from engine.compositor import build_card1 as build_card
+                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                              f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                              f"{img.genre}_{img.score}.jpg")
+                card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                build_card(thumb_path, new_audit, card_path)
+                img.card_path = card_path
+                uid = str(uuid.uuid4())
+                card_url = _r2_upload_card(card_path, uid + '_card')
+                if card_url:
+                    img.card_url = card_url
+                db.session.commit()
+                app.logger.info(f'[recalibrate] image={image_id} scorecard rebuilt')
+            except Exception as card_err:
+                app.logger.warning(f'[recalibrate] card rebuild failed for image={image_id}: {card_err}')
 
         except Exception as e:
             import traceback as _tb
@@ -20339,6 +20368,17 @@ def admin_recalibrate_image(image_id):
     Rebuilds: score, tier, soul_bonus, audit_json, and scorecard.
     Does NOT re-run the AI engine — dimensions come entirely from the admin form.
     Scores are permanent records; only use when a specific identifiable error exists.
+
+    SESSION117: previously this route updated score/tier/dimensions but left
+    every prose field (hard_truth, byline_1, byline_2, mentor_technical, the
+    watermark tier text, dimension reasoning) frozen at whatever the ORIGINAL
+    auto_score() pass wrote — same bug as admin_feedback() had. A recalibrated
+    Grandmaster image would still read "A Maverick-tier score means..." in
+    its own body copy. Now triggers the same prose regeneration as
+    admin_feedback() via _recalibrate_audit_in_background(), using the new
+    optional `caveat` field alongside `reason` (see RECALIBRATE_PROMPT in
+    auto_score.py — the caveat stops the reason being read as a blanket rule
+    for the genre on future scoring).
     """
     img = Image.query.get_or_404(image_id)
 
@@ -20349,6 +20389,7 @@ def admin_recalibrate_image(image_id):
         wonder      = round(float(request.form.get('wonder',      img.wonder_score     or 0)), 2)
         aq          = round(float(request.form.get('aq',          img.aq_score         or 0)), 2)
         reason      = request.form.get('reason', '').strip()
+        caveat      = request.form.get('caveat', '').strip()
 
         # Clamp all dimensions to valid range
         for val, name in [(dod,'DoD'),(disruption,'Disruption'),(dm,'DM'),(wonder,'Wonder'),(aq,'AQ')]:
@@ -20375,12 +20416,19 @@ def admin_recalibrate_image(image_id):
                 ('AQ',  aq),
             ],
         }
+        # SESSION117: stored under the same keys admin_feedback() uses, so
+        # get_calibration_examples() surfaces this regardless of which of the
+        # two admin tools produced the correction.
+        if reason:
+            audit['admin_calibration_reason'] = reason
+            audit['admin_calibration_caveat'] = caveat
         # Log who did this and why, stored in audit for traceability
         audit['recalibration_log'] = audit.get('recalibration_log') or []
         audit['recalibration_log'].append({
             'admin':       current_user.username,
             'at':          datetime.utcnow().isoformat(),
             'reason':      reason,
+            'caveat':      caveat,
             'old_score':   float(img.score or 0),
             'new_score':   final_score,
             'old_dims':    [float(img.dod_score or 0), float(img.disruption_score or 0),
@@ -20397,29 +20445,50 @@ def admin_recalibrate_image(image_id):
         img.tier             = tier
         img.soul_bonus       = soul_bonus
         img.set_audit(audit)
-
-        # Rebuild scorecard
-        try:
-            from engine.compositor import build_card1 as build_card
-            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
-                          f"{img.genre}_{final_score}.jpg")
-            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-            build_card(img.thumb_path, audit, card_path)
-            img.card_path = card_path
-            uid = str(uuid.uuid4())
-            card_url = _r2_upload_card(card_path, uid + '_card')
-            if card_url:
-                img.card_url = card_url
-        except Exception as card_err:
-            app.logger.warning(f'[recalibrate] card rebuild failed for image {image_id}: {card_err}')
-
         db.session.commit()
-        flash(
-            f'Recalibrated "{img.asset_name or img.id}": '
-            f'{final_score} {tier}{"  ·  Soul Bonus" if soul_bonus else ""}',
-            'success'
-        )
+
+        if reason:
+            # SESSION117: regenerate scorecard prose to match the corrected
+            # score/tier/dimensions — same fix as admin_feedback(). Card
+            # rebuild (engine.compositor.build_card1) now happens INSIDE
+            # _recalibrate_audit_in_background() after the prose is
+            # regenerated, not here — rebuilding it here would bake the
+            # stale pre-correction prose into the new card image.
+            threading.Thread(
+                target=_recalibrate_audit_in_background,
+                args=(image_id, reason, caveat),
+                daemon=True
+            ).start()
+            flash(
+                f'Recalibrated "{img.asset_name or img.id}": '
+                f'{final_score} {tier}{"  ·  Soul Bonus" if soul_bonus else ""}. '
+                f'Regenerating scorecard text in the background — refresh in a few seconds.',
+                'success'
+            )
+        else:
+            # No reason given — old behaviour (numbers updated, but no audit
+            # trail and no prose regeneration trigger). The reason field is
+            # marked required in the modal's JS, so this path should be rare.
+            try:
+                from engine.compositor import build_card1 as build_card
+                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                              f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                              f"{img.genre}_{final_score}.jpg")
+                card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                build_card(img.thumb_path, audit, card_path)
+                img.card_path = card_path
+                uid = str(uuid.uuid4())
+                card_url = _r2_upload_card(card_path, uid + '_card')
+                if card_url:
+                    img.card_url = card_url
+                db.session.commit()
+            except Exception as card_err:
+                app.logger.warning(f'[recalibrate] card rebuild failed for image {image_id}: {card_err}')
+            flash(
+                f'Recalibrated "{img.asset_name or img.id}": '
+                f'{final_score} {tier}{"  ·  Soul Bonus" if soul_bonus else ""}',
+                'success'
+            )
 
     except Exception as e:
         db.session.rollback()
