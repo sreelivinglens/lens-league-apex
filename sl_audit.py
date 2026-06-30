@@ -65,6 +65,9 @@ KYC_TERMS = [
       'poty_qualifying', 'poty_points', 'path_to_rank',
       "path.includes('poty')", "includes('poty')", '.poty', '#poty',
       'poty)', "'/poty'", '"/poty"']),
+    ('No KYC: "Photographer of the Year" spelled out (use Annual Excellence Award)',
+     'photographer of the year',
+     ['url_for', '<!--', '{#']),
     # DDI is NOT a KYC issue — it is Shutter League proprietary IP (Depth Dimension Index).
     # Incorrectly added to KYC_TERMS. Removed Session 109 — 26 June 2026.
     # Brand rule (not compliance): first use on any page = "Depth Dimension Index (DDI)".
@@ -147,28 +150,122 @@ def _has_tiny_font(content):
     return any(int(s) < 12 for s in sizes)
 
 def _gold_on_light(content):
-    """Detect gold colour used as body/heading text colour — not scores, badges, borders, or mono labels."""
+    """Detect gold colour used as text colour without a dark background pairing.
+    Gold is permitted only when the SAME rule (or inline style) also sets a
+    dark background — the proven pattern used by CSI cards and score badges
+    elsewhere in this codebase (e.g. #F5C518 on #2D1F00). Gold text on a
+    light/white/cream surface — or with no background override at all, which
+    means it inherits the page's light surface — is always a contrast fail.
+    Does NOT strip <style> blocks: most real colour decisions live there, not
+    in inline style="" attributes, and earlier versions of this check missed
+    that entirely (Session 118 — challenge.html eyebrow label + sponsor badge
+    both slipped through because the whole <style> block was discarded before
+    scanning, and 'badge'/'letter-spacing'/'text-transform: uppercase' were
+    blanket-exempted by keyword instead of by actual contrast)."""
     import re as _re
-    # Strip <style> blocks — CSS colour definitions are not user-facing text colour
-    content = _re.sub(r'<style\b[^>]*>.*?</style>', '', content, flags=_re.DOTALL)
+
+    def _is_dark(value):
+        # Known dark surfaces already proven/used in this codebase.
+        known_dark = ['#2d1f00', '#1a1a2e', '#0d0d0b', 'rgba(13,13,11',
+                      '#000', 'black', '--surface-dark', '--text-primary',
+                      'var(--sl-text)']
+        v = value.lower()
+        if any(k in v for k in known_dark):
+            return True
+        hexmatch = _re.search(r'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b', value)
+        if hexmatch:
+            h = hexmatch.group(1)
+            if len(h) == 3:
+                h = ''.join(c * 2 for c in h)
+            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            luminance = 0.299 * r + 0.587 * g + 0.114 * b
+            return luminance < 128
+        return False
+
+    def _rule_has_gold_without_dark_bg(body):
+        b = body.lower().replace(' ', '')
+        gold_present = any(f'color:{g.lower()}' in b for g in GOLD_VALS)
+        if not gold_present:
+            return False
+        bg_match = _re.search(r'background(?:-color)?:\s*([^;]+);?', body, _re.IGNORECASE)
+        if not bg_match:
+            return True  # no background override -> inherits light page/card surface
+        return not _is_dark(bg_match.group(1))
+
     hits = []
-    lines = content.split('\n')
-    for i, line in enumerate(lines):
-        l = line.lower()
-        if any(x in l for x in [
-            'border', 'background', 'fill:', 'stroke:', 'stroke=', 'box-shadow',
-            'score', 'tier', 'badge', 'mono', 'font-mono', 'gold-dark',
-            'gold-subtle', 'var(--gold-', '/* ', '//', 'opacity',
-            'db-poty', 'db-score', 'img-tier', 'badge-tier', 'tier-',
-            'rp-score', 'entry-score', 'image-select-score',
-            'alert-lbl', 'peer-nudge', 'lbl.amber', 'nudge a',
-            'text-transform: uppercase', 'letter-spacing',
-        ]):
-            continue
-        for gold in GOLD_VALS:
-            if f'color:{gold}' in l.replace(' ', '') or f'color: {gold}' in l:
-                hits.append(gold)
+    rule_list = [(r.group(1).strip(), r.group(2))
+                 for r in _re.finditer(r'([.#][\w:\-, >]+)\{([^{}]*)\}', content)]
+
+    def _bem_base(selector):
+        first = selector.split(',')[0].strip().split(' ')[0].split(':')[0]
+        return first.split('__')[0] if '__' in first else first
+
+    def _ancestor_has_dark_bg(selector):
+        # BEM modifier elements (e.g. .sl-dash-hero-banner__score) often have
+        # no background of their own — they sit over a parent that does
+        # (photo + gradient overlay). Check same-base rules too.
+        base = _bem_base(selector)
+        for sel2, body2 in rule_list:
+            sel2_first = sel2.split(',')[0].strip().split(' ')[0].split(':')[0]
+            if sel2_first == base:
+                bg = _re.search(r'background(?:-image)?(?:-color)?:\s*([^;]+);?', body2, _re.IGNORECASE)
+                if bg:
+                    val = bg.group(1).lower()
+                    if _is_dark(val) or 'url(' in val or 'rgba(0,0,0' in val or 'rgba(13,13,11' in val:
+                        return True
+        return False
+
+    def _rule_has_gold_without_dark_bg(selector, body):
+        b = body.lower().replace(' ', '')
+        gold_present = any(f'color:{g.lower()}' in b for g in GOLD_VALS)
+        if not gold_present:
+            return False
+        bg_match = _re.search(r'background(?:-color)?:\s*([^;]+);?', body, _re.IGNORECASE)
+        if bg_match:
+            return not _is_dark(bg_match.group(1))
+        return not _ancestor_has_dark_bg(selector)  # no own bg -> check BEM parent
+
+    # CSS rule blocks inside <style> — scanned directly now, not stripped.
+    for selector, body in rule_list:
+        if _rule_has_gold_without_dark_bg(selector, body):
+            hits.append(f'{selector} -> gold text, no dark background pairing')
+
+    # Inline style="" attributes — only hard-fail when the SAME attribute
+    # declares an explicit light background (a confident, resolvable case).
+    # When there's no background in the same attribute, the colour may be
+    # legitimately paired with a dark ancestor written as a separate nested
+    # inline style (e.g. thumbnail score badges, mission band header) —
+    # that needs a real DOM tree to resolve, which this script doesn't have.
+    # See _gold_on_light_notes() for those soft cases.
+    for inline in _re.finditer(r'style="([^"]*)"', content):
+        body = inline.group(1)
+        b = body.lower().replace(' ', '')
+        gold_present = any(f'color:{g.lower()}' in b for g in GOLD_VALS)
+        if gold_present:
+            bg_match = _re.search(r'background(?:-color)?:\s*([^;]+);?', body, _re.IGNORECASE)
+            if bg_match and not _is_dark(bg_match.group(1)):
+                hits.append('inline style -> gold text, light background in same attribute')
+
     return hits
+
+def _gold_on_light_notes(content):
+    """Inline style="" gold text with no background in the SAME attribute.
+    Can't reliably resolve nested parent <div> backgrounds with regex (no
+    real DOM tree here) — flag for a manual look rather than auto-failing,
+    since legitimate gold-over-photo-gradient overlays (thumbnail scores,
+    mission band header) are written as nested inline styles, not CSS
+    classes, and would otherwise false-positive every time."""
+    import re as _re
+    notes = []
+    for inline in _re.finditer(r'style="([^"]*)"', content):
+        body = inline.group(1)
+        b = body.lower().replace(' ', '')
+        gold_present = any(f'color:{g.lower()}' in b for g in GOLD_VALS)
+        if gold_present:
+            bg_match = _re.search(r'background(?:-color)?:\s*([^;]+);?', body, _re.IGNORECASE)
+            if not bg_match:
+                notes.append(body[:60])
+    return notes
 
 def _shaded_fonts(content):
     """Detect rgba text colours with low opacity (shaded/muted body text)."""
@@ -232,10 +329,13 @@ def _run_kyc_checks(content, fails, context='template'):
             _ok(label)
     gold_hits = _gold_on_light(content)
     if gold_hits:
-        _fail(f'No gold text colour -- gold permitted only for scores/badges/borders ({len(gold_hits)} hit(s))')
+        _fail(f'No gold text colour -- gold permitted only for scores/badges/borders ({len(gold_hits)} hit(s)): {gold_hits[:2]}')
         fails += 1
     else:
         _ok('No gold used as body/heading text colour')
+    gold_notes = _gold_on_light_notes(content)
+    if gold_notes:
+        _note(f'Inline gold text with no background in same attribute ({len(gold_notes)}) -- verify parent element has a dark background (photo overlay pattern)')
     return fails
 
 
@@ -482,6 +582,9 @@ def audit_html(filepath):
             fails += 1
         else:
             _ok('No gold text colour in templates')
+        gold_notes = _gold_on_light_notes(content)
+        if gold_notes:
+            _note(f'Inline gold text with no background in same attribute ({len(gold_notes)}) -- verify parent element has a dark background (photo overlay pattern)')
 
     shaded = _shaded_fonts(content)
     if shaded:
@@ -1428,11 +1531,8 @@ def audit_apppy(filepath):
          bool(re.search(r'peer queue assignment error', src))),
         ('_peer_queue passed to render_template',
          'peer_queue=_peer_queue' in src),
-        # SESSION116: check 4 updated — new system stores stood_out_tags via raw SQL UPDATE
-        # REVERT NOTE: original check was: bool(re.search(r"genre\s*=\s*_img\.genre", src))
-        ('SESSION116: stood_out_tags stored via raw SQL UPDATE (not in constructor)',
-         bool(re.search(r'stood_out_tags.*raw SQL|UPDATE peer_ratings SET stood_out_tags', src)) or
-         'stood_out_json' in src),
+        ('RatingAssignment genre column not removed from insert',
+         bool(re.search(r"genre\s*=\s*_img\.genre", src))),
     ]
     for label, result in _peer_queue_checks:
         if result: _ok(label)
