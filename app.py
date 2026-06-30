@@ -10901,14 +10901,99 @@ def admin_feedback(image_id):
 
     if corr and module == 'overall':
         img.score = float(corr)
+        img.tier = get_tier(img.score)
         img.status = 'scored'
         img.is_calibration_example = True
-        flash(f'Correction saved. Image score updated to {corr} and marked as REF example.', 'success')
+        db.session.commit()
+
+        # SESSION117: regenerate scorecard prose to match the new score/tier.
+        # Without this, the card shows the new score/tier badge but the prose
+        # (hard_truth, 4 cards, dimension reasoning, watermark) stays frozen
+        # at whatever the original auto_score() pass produced — a visible
+        # mismatch (e.g. "GRANDMASTER 9.13" badge next to "A Maverick-tier
+        # score (7.94) means..." in the body text).
+        # Runs in background — same pattern as _force_rescore_in_background.
+        # Does NOT touch img.score or img.tier again; only the audit JSON.
+        threading.Thread(
+            target=_recalibrate_audit_in_background,
+            args=(image_id, reason),
+            daemon=True
+        ).start()
+
+        flash(f'Correction saved. Image score updated to {corr} ({img.tier}). Regenerating scorecard text in the background — refresh in a few seconds.', 'success')
     else:
+        db.session.commit()
         flash(f'Calibration correction saved for {module.upper()}. Will influence future {img.genre} scoring.', 'success')
 
-    db.session.commit()
     return redirect(url_for('image_detail', image_id=image_id))
+
+
+def _recalibrate_audit_in_background(image_id, admin_reason):
+    """
+    Background worker for admin_feedback()'s overall-score correction path.
+    Regenerates scorecard PROSE ONLY via engine.auto_score.recalibrate_audit()
+    — never touches img.score or img.tier (those are already set and
+    committed by admin_feedback() before this thread starts).
+    Runs in its own thread/app context — same pattern as
+    _force_rescore_in_background.
+    """
+    with app.app_context():
+        img = Image.query.get(image_id)
+        if not img or img.score is None or not img.tier:
+            app.logger.warning(f'[recalibrate] image={image_id} missing score/tier — aborting')
+            return
+
+        temp_file = None
+        try:
+            import tempfile
+            from engine.auto_score import recalibrate_audit, build_audit_data
+
+            thumb_path = img.thumb_path
+            if not thumb_path or not os.path.exists(thumb_path):
+                from storage import get_client, BUCKET
+                tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                get_client().download_fileobj(
+                    BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
+                )
+                tf.close()
+                thumb_path = temp_file = tf.name
+
+            _audit = img.get_audit() or {}
+            _owner = User.query.get(img.user_id)
+
+            result = recalibrate_audit(
+                image_path         = thumb_path,
+                genre              = img.genre or 'Wildlife',
+                title              = img.asset_name or img.original_filename or 'Untitled',
+                photographer       = img.photographer_name or (_owner.full_name if _owner else '') or '',
+                locked_score       = img.score,
+                locked_tier        = img.tier,
+                locked_dod         = img.dod_score or 0,
+                locked_disruption  = img.disruption_score or 0,
+                locked_dm          = img.dm_score or 0,
+                locked_wonder      = img.wonder_score or 0,
+                locked_aq          = img.aq_score or 0,
+                admin_reason       = admin_reason,
+                subject            = img.subject or '',
+                location           = img.location or '',
+                effective_subgenre = _audit.get('effective_subgenre'),
+            )
+
+            new_audit = build_audit_data(result, img)
+            img.set_audit(new_audit)
+            db.session.commit()
+
+            app.logger.info(f'[recalibrate] image={image_id} prose regenerated for score={img.score:.2f} tier={img.tier}')
+
+        except Exception as e:
+            import traceback as _tb
+            app.logger.error(f'[recalibrate] image={image_id} failed: {_tb.format_exc()}')
+        finally:
+            if temp_file and os.path.exists(temp_file):
+                try:
+                    os.remove(temp_file)
+                except Exception:
+                    pass
 
 
 @app.route('/image/score-single', methods=['POST'])
