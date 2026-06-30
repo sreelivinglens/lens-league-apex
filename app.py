@@ -2879,6 +2879,11 @@ def onboarding():
         address = request.form.get('address', '').strip()
         agreed  = request.form.get('agreed')
         terms   = request.form.get('terms')
+        app.logger.info(
+            f'[onboarding] raw form received user={current_user.id} '
+            f'phone={phone!r} address={address!r} '
+            f'phone_in_form={"phone" in request.form} address_in_form={"address" in request.form}'
+        )
 
         if not country or not state or not city:
             flash('Please select your country, state/province, and city.', 'error')
@@ -2932,6 +2937,13 @@ def onboarding():
                 "UPDATE users SET phone = :phone, address = :address WHERE id = :uid"
             ), {'phone': phone, 'address': address, 'uid': current_user.id})
             db.session.commit()
+            _check = db.session.execute(db.text(
+                "SELECT phone, address FROM users WHERE id = :uid"
+            ), {'uid': current_user.id}).fetchone()
+            app.logger.info(
+                f'[onboarding] phone/address write confirmed user={current_user.id} '
+                f'stored_phone={_check[0]!r} stored_address={_check[1]!r}'
+            )
         except Exception as _pa_save:
             db.session.rollback()
             app.logger.error(f'[onboarding] phone/address save failed user={current_user.id}: {_pa_save}')
