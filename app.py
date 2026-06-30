@@ -3891,7 +3891,7 @@ def dashboard():
             _already = db.session.query(_RA.image_id).filter(
                 _RA.rater_id == current_user.id,
                 _RA.status   == 'submitted'
-            ).subquery()
+            )
             _eligible = Image.query.join(
                 User, Image.user_id == User.id
             ).filter(
@@ -9992,7 +9992,7 @@ def admin_check_peer_queue():
             _already = db.session.query(_RA.image_id).filter(
                 _RA.rater_id == u.id,
                 _RA.status   == 'submitted'
-            ).subquery()
+            )
             _eligible_count = Image.query.join(
                 User, Image.user_id == User.id
             ).filter(
@@ -15667,7 +15667,7 @@ def rate():
                 from datetime import timedelta as _td2
                 _already_rated = db.session.query(RatingAssignment.image_id).filter(
                     RatingAssignment.rater_id == user.id,
-                ).subquery()
+                )
                 _next_img = (
                     Image.query.join(User, Image.user_id == User.id)
                     .filter(
@@ -15709,7 +15709,7 @@ def rate():
 
         already = db.session.query(RatingAssignment.image_id).filter(
             RatingAssignment.rater_id == user.id,
-        ).subquery()
+        )
         queue_remaining = (
             Image.query
             .join(User, Image.user_id == User.id)
@@ -15825,7 +15825,11 @@ def submit_rating():
     if optional_comment:
         _mod = _moderate_eval_text('', optional_comment)
         if not _mod.get('ok', False):  # fail-closed: default False not True
-            _mod_reason = _mod.get('reason') or 'Please keep your comment focused on the photograph.'
+            # Always show a friendly fixed message — never expose the raw AI reason
+            app.logger.info(f'[eval_moderation] rejected comment user={current_user.id} reason={_mod.get("reason","")}')
+            _mod_reason = ('Try to be specific about the photograph — for example, mention the light, '
+                           'the composition, the moment, or a technical detail. '
+                           'General reactions like "good photo" aren\'t detailed enough to be useful to the photographer.')
             # Re-render the rate page in-place — preserve sliders, checkboxes, comment text
             # so the user can fix just the comment without starting the eval over.
             from datetime import date as _date2, timedelta as _td3
@@ -15843,7 +15847,7 @@ def submit_rating():
             _next_reset2 = _date2(_today2.year + 1, 1, 1) if _today2.month == 12 else _date2(_today2.year, _today2.month + 1, 1)
             _already2 = db.session.query(RatingAssignment.image_id).filter(
                 RatingAssignment.rater_id == _user.id,
-            ).subquery()
+            )
             from models import Image as _Img2, User as _User2
             _qr2 = (
                 _Img2.query.join(_User2, _Img2.user_id == _User2.id)
