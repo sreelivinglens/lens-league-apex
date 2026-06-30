@@ -1819,6 +1819,8 @@
           <input type="number" name="corrected_score" step="0.1" min="0" max="10" placeholder="Corrected" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px;">
         </div>
         <input type="text" name="reason" required placeholder="Reason for correction" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px;">
+        <input type="text" name="caveat" placeholder="Caveat (optional) — the limit on this exception, e.g. 'one bird in sharp focus would have scored even higher'" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px;">
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">Reason and caveat are written into this image's scorecard prose and shown to the engine when scoring future images in this category marked as a calibration reference. The caveat stops the reason from being read as a blanket rule.</div>
         <button type="submit" class="btn btn-solid" style="font-size: 14px;">Save Calibration Note</button>
       </form>
     </details>
