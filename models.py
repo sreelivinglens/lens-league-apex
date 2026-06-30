@@ -38,6 +38,16 @@ class User(db.Model, UserMixin):
     state             = db.Column(db.String(80),  nullable=True)
     city              = db.Column(db.String(80),  nullable=True)
 
+    # Onboarding contact details (Session 119) — phone/address columns
+    # already existed in the deployed DB via migration and were being
+    # written correctly via raw SQL, but were never declared here on the
+    # ORM class. admin_user_detail.html reads user.phone/user.address —
+    # without a mapped column, Jinja silently resolves these to Undefined,
+    # so the template always fell back to "Not provided" regardless of
+    # what was actually stored. Types match the migration exactly.
+    phone             = db.Column(db.String(20),  nullable=True)
+    address           = db.Column(db.Text,        nullable=True)
+
     # Item B — passive location-change detection (GPS EXIF vs declared city)
     # last_gps_city/since: tracks how long uploads have shown a DIFFERENT city
     # than `city` (reset to NULL whenever GPS city matches `city`).
