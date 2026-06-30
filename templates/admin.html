@@ -419,6 +419,7 @@
               <input type="hidden" name="wonder"     id="recal-f-wonder-{{ img.id }}"     value="{{ img.wonder_score or 0 }}">
               <input type="hidden" name="aq"         id="recal-f-aq-{{ img.id }}"         value="{{ img.aq_score or 0 }}">
               <input type="hidden" name="reason"     id="recal-f-reason-{{ img.id }}">
+              <input type="hidden" name="caveat"     id="recal-f-caveat-{{ img.id }}">
             </form>
             {% endif %}
             <form id="flag-form-{{ img.id }}"   method="POST" action="{{ url_for('admin_flag_image', image_id=img.id) }}" style="display:none;">
@@ -1067,6 +1068,13 @@
              style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:13px; background:var(--bg); color:var(--text); box-sizing:border-box;">
     </div>
 
+    <div style="margin-bottom:16px;">
+      <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Caveat (optional) — the limit on this exception</label>
+      <input id="recal-modal-caveat" type="text" maxlength="200" placeholder="e.g. would have scored higher still with full sharpness on the subject"
+             style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:13px; background:var(--bg); color:var(--text); box-sizing:border-box;">
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px; line-height:1.5;">Stops this reason being read as a blanket rule for the genre when used as a calibration reference for future scoring.</div>
+    </div>
+
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button type="button" onclick="closeRecalModal()"
               style="padding:9px 18px; font-size:13px; border:1px solid var(--border); border-radius:4px; background:transparent; cursor:pointer; color:var(--text);">
@@ -1101,6 +1109,7 @@
       document.getElementById('recal-slider-'+f).value = vals[f];
     });
     document.getElementById('recal-modal-reason').value = '';
+    document.getElementById('recal-modal-caveat').value = '';
     recalLiveCompute();
     document.getElementById('recal-modal').style.display = 'flex';
     setTimeout(function(){ document.getElementById('recal-modal-reason').focus(); }, 100);
@@ -1126,6 +1135,7 @@
     if(!_activeImageId){ closeRecalModal(); return; }
     var reason = document.getElementById('recal-modal-reason').value.trim();
     if(!reason){ alert('A reason is required for the audit log.'); return; }
+    var caveat = document.getElementById('recal-modal-caveat').value.trim();
     var dims = ['dod','disruption','dm','wonder','aq'];
     var vals = dims.map(function(f){ return parseFloat(document.getElementById('recal-slider-'+f).value); });
     if(vals.some(function(v){ return isNaN(v)||v<0||v>10; })){ alert('All values must be between 0 and 10.'); return; }
@@ -1133,6 +1143,7 @@
       document.getElementById('recal-f-'+f+'-'+_activeImageId).value = vals[i];
     });
     document.getElementById('recal-f-reason-'+_activeImageId).value = reason;
+    document.getElementById('recal-f-caveat-'+_activeImageId).value = caveat;
     var submitId = _activeImageId;
     closeRecalModal();
     // Use adminPost (fetch + credentials:include) to match v34 pattern
