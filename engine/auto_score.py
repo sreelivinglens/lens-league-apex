@@ -2728,7 +2728,15 @@ CREATIVE sub-genres:
     Only use this when there is no creature or person functioning as the primary focal
     point — the graphic structure alone carries the image.
   creative_fineart — constructed, staged, or conceptually directed work. The photograph
-    was built, not found.
+    was built, not found. EXCEPTION — HYBRID SCENES: if a genuinely wild, autonomous
+    animal appears in the frame and its specific position, pose, or behaviour was not
+    and could not have been directed by the photographer, do NOT describe the image as
+    fully "constructed" or "not found" in suggested_subgenre_reason — a wild animal
+    cannot be art-directed. Any staged elements (a set, a posed human figure, controlled
+    lighting) can still be named as staged, but the wild subject's presence and
+    behaviour within that setting is a found moment, not a built one. State this
+    distinction explicitly rather than making an unqualified "clearly constructed" claim
+    when a wild subject is present.
   creative_icm — intentional camera movement; consistent directional blur across frame.
   creative_longexp — long exposure: silky water, light trails, star trails.
   creative_multiexp — multiple exposures layered as single statement.
@@ -3089,6 +3097,20 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
     else:
         lines.append("Object in bill/talons: none visible")
     lines.append(f"Scene summary: {summary}")
+
+    subgenre_reason = vision.get("suggested_subgenre_reason", "")
+    suggested_subgenre = vision.get("suggested_subgenre", "")
+    if subgenre_reason and suggested_subgenre and suggested_subgenre.startswith("creative_"):
+        lines.append("")
+        lines.append("COMPOSITIONAL CLASSIFICATION — GROUND TRUTH (do not contradict):")
+        lines.append(f"Sub-genre classification and reasoning: {subgenre_reason}")
+        lines.append("- hard_truth and what_stood_out MUST be consistent with this reasoning.")
+        lines.append("- If it names specific staged elements (a set, a posed figure, controlled")
+        lines.append("  lighting), do not describe the image overall as a spontaneous or 'found'")
+        lines.append("  moment.")
+        lines.append("- If it distinguishes a staged element from a genuinely wild, undirected")
+        lines.append("  subject, preserve that same distinction — do not flatten it into either")
+        lines.append("  'fully constructed' or 'fully found'.")
     lines.append("")
     lines.append("SCORING RULES BASED ON SCENE DESCRIPTION:")
     if contact:
