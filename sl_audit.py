@@ -100,7 +100,7 @@ KYC_TERMS = [
       'score desc', 'score asc', 'score filter', 'score threshold',
       'score_genre', 'score_phash', 'scored_at', 'score_cache',
       'sort by score', 'order by score', 'score.*float', 'score.*column',
-      'calculate_score', 'auto_score', 'get_tier',
+      'calculate_score', 'auto_score', 'get_tier', 'scorecard',
       'sl-gitem-score', 'sl-dash-hero', 'sl-mob-sc-score', 'sl-mob-ar-score',
       'sl-mob-gitem-score', 'sl-hero-score', 'score-badge', 'score_badge',
       '<!-- score', '{# score', '# score',
