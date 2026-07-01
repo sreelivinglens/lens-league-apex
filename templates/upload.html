@@ -96,6 +96,10 @@
     background: #F5F0E8; position: relative; margin-bottom: 8px;
   }
   .drop-zone:hover, .drop-zone.dragover { background: #111111; border-color: var(--gold); }
+  .drop-zone:hover .dz-label, .drop-zone.dragover .dz-label,
+  .drop-zone:hover .dz-hint,  .drop-zone.dragover .dz-hint {
+    color: #FFFFFF;
+  }
   .drop-zone input[type="file"] {
     position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
   }
