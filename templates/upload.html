@@ -173,7 +173,7 @@
   /* ══ SCORING OVERLAY ══ */
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(10,10,8,.97); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    background: rgba(247,245,242,.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     flex-direction: column; align-items: center; justify-content: space-between;
     padding: 32px 32px 40px;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -184,7 +184,7 @@
   #scoringOverlay.active { display: flex; }
   .overlay-engine-tag {
     font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
+    letter-spacing: 4px; color: #854F0B; text-transform: uppercase;
     margin-bottom: 44px;
   }
   .breath-hero {
@@ -193,8 +193,8 @@
   }
   .breath-ring-hero {
     width: 140px; height: 140px; border-radius: 50%;
-    border: 3px solid rgba(245,197,24,0.6);
-    background: radial-gradient(circle, rgba(245,197,24,0.08) 0%, rgba(245,197,24,0.08) 70%, transparent 100%);
+    border: 3px solid rgba(133,79,11,0.6);
+    background: radial-gradient(circle, rgba(133,79,11,0.08) 0%, rgba(133,79,11,0.08) 70%, transparent 100%);
     /* start at scale(0.82) — matches keyframe 0%, eliminates jerk entirely */
     transform: scale(0.82);
     animation: breatheHero 8s ease-in-out infinite both;
@@ -245,7 +245,7 @@
   }
   .breath-inner-dot {
     width: 16px; height: 16px; border-radius: 50%;
-    background: var(--gold);
+    background: #854F0B;
     transform: scale(1.4);
     opacity: 0.6;
     animation: breatheInner 8s ease-in-out infinite both;
@@ -258,37 +258,37 @@
   }
   .breath-word {
     font-family: var(--font-mono); font-size: 22px; font-weight: 700;
-    letter-spacing: 6px; color: #FFFFFF; text-transform: uppercase;
+    letter-spacing: 6px; color: var(--text-primary); text-transform: uppercase;
     text-align: center; min-width: 160px;
   }
   .breath-counts {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 3px;
-    color: var(--gold); text-transform: uppercase;
+    color: #854F0B; text-transform: uppercase;
     text-align: center; white-space: normal;
   }
-  .breath-tagline { font-size: 17px; color:#FFFFFF; font-style: italic; }
+  .breath-tagline { font-size: 17px; color: var(--text-primary); font-style: italic; }
   .overlay-copy {
     display: flex; flex-direction: column; align-items: center; gap: 5px;
     margin-bottom: 32px;
   }
   .overlay-phase {
     font-family: var(--font-mono); font-size: 16px; font-weight: 700;
-    letter-spacing: 3px; color: #F5C518; text-transform: uppercase;
+    letter-spacing: 3px; color: #854F0B; text-transform: uppercase;
   }
   .overlay-status {
-    font-size: 16px; font-weight: 500; color:#FFFFFF;
+    font-size: 16px; font-weight: 500; color: var(--text-primary);
     text-align: center; max-width: 340px; line-height: 1.5;
   }
   .overlay-substatus {
-    font-family: var(--font-mono); font-size: 16px; color:#FFFFFF;
+    font-family: var(--font-mono); font-size: 16px; color: var(--text-primary);
     text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px;
   }
   .mini-timer { display: flex; flex-direction: column; align-items: center; }
   .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
   .mini-clock-svg { transform: rotate(-90deg); }
-  .mini-ring-bg   { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+  .mini-ring-bg   { fill: none; stroke: rgba(26,26,24,0.10); stroke-width: 4; }
   .mini-ring-fill {
-    fill: none; stroke: #F5C518; stroke-width: 4;
+    fill: none; stroke: #854F0B; stroke-width: 4;
     stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195;
     transition: stroke-dashoffset .9s linear;
   }
@@ -297,12 +297,12 @@
     align-items: center; justify-content: center;
   }
   .mini-clock-secs {
-    font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #F5C518; /* mono countdown digit — gold permitted */
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #854F0B;
     line-height: 1;
   }
   .mini-clock-unit {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 1.5px;
-    color:#FFFFFF; text-transform: uppercase; margin-top: 2px;
+    color: var(--text-primary); text-transform: uppercase; margin-top: 2px;
   }
 
   /* ── ROTATING CONTENT CARDS ── */
@@ -316,29 +316,29 @@
     width: 100%; border-radius: 14px;
     padding: 22px 22px 18px; text-align: center;
     display: flex; flex-direction: column; align-items: center; gap: 10px;
-    background: #1A1508; border: 1px solid #F5C518;
+    background: #FFFFFF; border: 1px solid #E0D8C8;
     transition: opacity 0.6s ease;
   }
   .overlay-card.card-quote {
-    background: #0D1A14; border-color: #3ECFA0;
+    background: #EAF3DE; border-color: #2E7D4F;
   }
   .overlay-card-accent {
-    width: 28px; height: 2px; background: #F5C518; border-radius: 2px;
+    width: 28px; height: 2px; background: #854F0B; border-radius: 2px;
   }
-  .overlay-card.card-quote .overlay-card-accent { background: #3ECFA0; }
+  .overlay-card.card-quote .overlay-card-accent { background: #2E7D4F; }
   .overlay-card-headline {
-    font-size: 18px; font-weight: 500; color: #FFFFFF;
+    font-size: 18px; font-weight: 500; color: var(--text-primary);
     line-height: 1.55; letter-spacing: 0.01em;
   }
   .overlay-card-body {
-    font-size: 17px; color: #F5C518;
+    font-size: 17px; color: #854F0B;
     line-height: 1.75; letter-spacing: 0.01em;
   }
   .overlay-card.card-quote .overlay-card-body {
-    font-size: 16px; color: #FFFFFF; line-height: 1.7;
+    font-size: 16px; color: var(--text-primary); line-height: 1.7;
   }
   .overlay-card-attr {
-    font-size: 13px; letter-spacing: 0.18em; color: #3ECFA0;
+    font-size: 13px; letter-spacing: 0.18em; color: #2E7D4F;
     font-family: var(--font-mono); margin-top: 2px;
   }
   .overlay-pips {
@@ -346,10 +346,10 @@
   }
   .overlay-pip {
     width: 5px; height: 5px; border-radius: 50%;
-    background: #3a3420; transition: all 0.3s ease;
+    background: #E0D8C8; transition: all 0.3s ease;
   }
   .overlay-pip.active {
-    background: #F5C518; width: 14px; border-radius: 3px;
+    background: #854F0B; width: 14px; border-radius: 3px;
   }
   /* Mobile — tighten card on small screens */
   @media (max-height: 750px), (max-width: 430px) {
@@ -616,9 +616,9 @@
   </div>
   <div id="backToDashboardWrap" style="display:block; margin-top:18px; text-align:center;">
     <a href="/dashboard" id="backToDashboardLink"
-       style="display:inline-block; padding:10px 20px; border:1px solid var(--gold); border-radius:var(--radius-sm);
-              color:var(--gold); font-family:var(--font-mono); font-size:13px; font-weight:600;
-              letter-spacing:1px; text-transform:uppercase; text-decoration:none; background:rgba(245,197,24,0.08);">
+       style="display:inline-block; padding:10px 20px; border:1px solid #854F0B; border-radius:var(--radius-sm);
+              color:#854F0B; font-family:var(--font-mono); font-size:13px; font-weight:600;
+              letter-spacing:1px; text-transform:uppercase; text-decoration:none; background:rgba(133,79,11,0.08);">
       Skip to Dashboard →
     </a>
   </div>
