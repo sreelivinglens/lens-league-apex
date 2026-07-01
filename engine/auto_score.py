@@ -2728,15 +2728,29 @@ CREATIVE sub-genres:
     Only use this when there is no creature or person functioning as the primary focal
     point — the graphic structure alone carries the image.
   creative_fineart — constructed, staged, or conceptually directed work. The photograph
-    was built, not found. EXCEPTION — HYBRID SCENES: if a genuinely wild, autonomous
-    animal appears in the frame and its specific position, pose, or behaviour was not
-    and could not have been directed by the photographer, do NOT describe the image as
-    fully "constructed" or "not found" in suggested_subgenre_reason — a wild animal
-    cannot be art-directed. Any staged elements (a set, a posed human figure, controlled
-    lighting) can still be named as staged, but the wild subject's presence and
-    behaviour within that setting is a found moment, not a built one. State this
-    distinction explicitly rather than making an unqualified "clearly constructed" claim
-    when a wild subject is present.
+    was built, not found.
+    EVIDENTIARY BAR — do not classify as constructed/directed/staged without SPECIFIC
+    evidence of staging: studio lighting/backdrop, formal posing, direct posed eye
+    contact with camera, fashion/editorial styling, wedding-staged setup, props visibly
+    arranged for the shot, OR the image is inherently a staged genre by nature — product
+    photography, food photography, still life, commercial/advertising work. These genres
+    ARE built, not found, by definition; call them constructed freely. A dramatic
+    silhouette, flowing fabric, or visually striking composition is NOT evidence of
+    direction by itself — candid documentary and street photography can look just as
+    visually composed as staged work. Example: a woman working in a field wearing a
+    saree that catches the wind is a candid moment, not a directed one, even if the
+    drape reads as sculptural. When uncertain whether a human-involving scene was
+    directed or candid, default to describing it as observed/candid — do not assert
+    authorial intent (posing, direction, construction) that cannot be verified from the
+    image.
+    EXCEPTION — HYBRID SCENES: if a genuinely wild, autonomous animal appears in the
+    frame and its specific position, pose, or behaviour was not and could not have been
+    directed by the photographer, do NOT describe the image as fully "constructed" or
+    "not found" in suggested_subgenre_reason — a wild animal cannot be art-directed.
+    Any staged elements (a set, a posed human figure, controlled lighting) can still be
+    named as staged, but the wild subject's presence and behaviour within that setting
+    is a found moment, not a built one. State this distinction explicitly rather than
+    making an unqualified "clearly constructed" claim when a wild subject is present.
   creative_icm — intentional camera movement; consistent directional blur across frame.
   creative_longexp — long exposure: silky water, light trails, star trails.
   creative_multiexp — multiple exposures layered as single statement.
