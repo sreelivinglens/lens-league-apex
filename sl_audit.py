@@ -268,8 +268,10 @@ def _gold_on_light_notes(content):
     return notes
 
 def _shaded_fonts(content):
-    """Detect rgba text colours with low opacity (shaded/muted body text)."""
-    hits = re.findall(r'color:\s*rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\.[0-3]\d*\s*\)', content)
+    """Detect rgba text colours with low opacity (shaded/muted body text).
+    Negative lookbehind excludes border-color/background-color/outline-color
+    etc. -- those are not text colours and were false-flagging (Session 120)."""
+    hits = re.findall(r'(?<!-)color:\s*rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\.[0-3]\d*\s*\)', content)
     return hits
 
 def _non_black_white_body_text(content):
@@ -1750,7 +1752,8 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         ('Mobile breakpoint present',
          'max-width: 600px' in content or 'max-width: 480px' in content or 'max-width: 520px' in content),
         ('4-col grid collapses on mobile',
-         'sc-four-grid' in content or 'repeat(4' not in content or 'grid-template-columns: 1fr !important' in content),
+         'sc-four-grid' in content or 'repeat(4' not in content or 'grid-template-columns: 1fr !important' in content
+         or bool(re.search(r'@media[^{]*\{[^@]*?\.grid-4\s*\{[^}]*grid-template-columns:\s*(1fr\b|repeat\(1|repeat\(2)', content, re.DOTALL))),
         ('2-col grid collapses on mobile',
          'sc-two-grid' in content or ('1fr 1fr' not in content) or 'grid-template-columns: 1fr !important' in content
          or _is_mobile_app_page),
@@ -1810,51 +1813,60 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     # ── 4. 70-year rule ───────────────────────────────────────────────────────
     _section('DELIVERY STANDARD 4/5 — 70-year readability rule')
 
-    # Determine scope — new scorecard section if present, else full file
+    # Determine scope — new scorecard section if present, else full file.
+    # EXCEPTION (Session 120): base.html is the layout shell, not a content
+    # page -- it has no scorecard section and never will. Falling back to a
+    # full-file scan there catches nav chrome (chevron icons at 9px, the
+    # brand-tag label at 11px, logo/h1 line-height 1.2) which are not
+    # scorecard body text. Every other template still gets the full scan.
+    _is_layout_shell = fname.lower() == 'base.html'
     sc_start = content.find('NEW SCORECARD LAYOUT')
     check_scope = content[sc_start:] if sc_start != -1 else content
 
-    all_sizes = [int(s) for s in re.findall(r'font-size\s*:\s*(\d+)px', check_scope)]
-    tiny  = [s for s in all_sizes if s < 13]
-    small = [s for s in all_sizes if 13 <= s < 15]
-    ok_sz = [s for s in all_sizes if s >= 15]
+    if sc_start == -1 and _is_layout_shell and not _is_scorecard_page:
+        _note('[70yr] Skipped — base.html is the layout shell, no scorecard section present')
+    else:
+        all_sizes = [int(s) for s in re.findall(r'font-size\s*:\s*(\d+)px', check_scope)]
+        tiny  = [s for s in all_sizes if s < 13]
+        small = [s for s in all_sizes if 13 <= s < 15]
+        ok_sz = [s for s in all_sizes if s >= 15]
 
-    if tiny:
-        if _is_mobile_app_page and all(s >= 12 for s in tiny):
-            _note(f'[70yr] Fonts {sorted(set(tiny))}px present — verify these are UI eyebrow/metadata labels only (mobile-app page)')
+        if tiny:
+            if _is_mobile_app_page and all(s >= 12 for s in tiny):
+                _note(f'[70yr] Fonts {sorted(set(tiny))}px present — verify these are UI eyebrow/metadata labels only (mobile-app page)')
+            else:
+                _fail(f'[70yr] Fonts below 13px in scorecard: {sorted(set(tiny))} — unreadable for elderly users')
+                fails += 1
         else:
-            _fail(f'[70yr] Fonts below 13px in scorecard: {sorted(set(tiny))} — unreadable for elderly users')
-            fails += 1
-    else:
-        _ok('[70yr] No fonts below 13px in scorecard section')
+            _ok('[70yr] No fonts below 13px in scorecard section')
 
-    if small:
-        _note(f'[70yr] Fonts 13-14px: {sorted(set(small))} — acceptable for labels/captions only, not body copy')
-    else:
-        _ok('[70yr] No 13-14px fonts (all labels are 15px+)')
-
-    if not ok_sz:
-        _fail('[70yr] No body fonts ≥15px found — need minimum 15px for body copy')
-        fails += 1
-    else:
-        _ok(f'[70yr] Body fonts ≥15px present (min={min(ok_sz)}px, max={max(ok_sz)}px)')
-
-    # Line height — check new scorecard section scope only
-    lh_scope = check_scope  # already scoped to new section or full file
-    # Only match CSS line-height (colon syntax), not SVG attributes or other 1-digit hits
-    lh_vals = [float(v) for v in re.findall(r'line-height\s*:\s*([0-9]+\.[0-9]+)', lh_scope)
-               if re.match(r'^[0-9]+\.[0-9]+$', v)]
-    lh_bad = [v for v in lh_vals if v < 1.5]
-    if lh_bad:
-        if _is_mobile_app_page and all(v >= 1.0 for v in lh_bad):
-            _note(f'[70yr] Line-height {lh_bad} present — verify these are display/title elements only (mobile-app page). Body copy must use 1.6+.')
+        if small:
+            _note(f'[70yr] Fonts 13-14px: {sorted(set(small))} — acceptable for labels/captions only, not body copy')
         else:
-            _fail(f'[70yr] Line-height below 1.5: {lh_bad} — use 1.7+ for elderly readability')
+            _ok('[70yr] No 13-14px fonts (all labels are 15px+)')
+
+        if not ok_sz:
+            _fail('[70yr] No body fonts ≥15px found — need minimum 15px for body copy')
             fails += 1
-    elif lh_vals:
-        _ok(f'[70yr] Line-height ≥1.5 throughout (min={min(lh_vals):.1f})')
-    else:
-        _note('[70yr] No explicit line-height found — verify body text has line-height ≥1.7')
+        else:
+            _ok(f'[70yr] Body fonts ≥15px present (min={min(ok_sz)}px, max={max(ok_sz)}px)')
+
+        # Line height — check new scorecard section scope only
+        lh_scope = check_scope  # already scoped to new section or full file
+        # Only match CSS line-height (colon syntax), not SVG attributes or other 1-digit hits
+        lh_vals = [float(v) for v in re.findall(r'line-height\s*:\s*([0-9]+\.[0-9]+)', lh_scope)
+                   if re.match(r'^[0-9]+\.[0-9]+$', v)]
+        lh_bad = [v for v in lh_vals if v < 1.5]
+        if lh_bad:
+            if _is_mobile_app_page and all(v >= 1.0 for v in lh_bad):
+                _note(f'[70yr] Line-height {lh_bad} present — verify these are display/title elements only (mobile-app page). Body copy must use 1.6+.')
+            else:
+                _fail(f'[70yr] Line-height below 1.5: {lh_bad} — use 1.7+ for elderly readability')
+                fails += 1
+        elif lh_vals:
+            _ok(f'[70yr] Line-height ≥1.5 throughout (min={min(lh_vals):.1f})')
+        else:
+            _note('[70yr] No explicit line-height found — verify body text has line-height ≥1.7')
 
     # CTA buttons large enough
     cta_pads = [int(p) for p in re.findall(r'padding\s*:\s*(\d+)px', check_scope)]
@@ -1866,7 +1878,8 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         _ok(f'[70yr] Button padding ≥12px present')
 
     # Contrast — no rgba text with opacity < 0.4
-    low_opacity = re.findall(r'color\s*:\s*rgba\([^)]+,\s*0\.[0-3]\d*\s*\)', check_scope)
+    # Negative lookbehind excludes border-color/background-color etc. (Session 120)
+    low_opacity = re.findall(r'(?<!-)color\s*:\s*rgba\([^)]+,\s*0\.[0-3]\d*\s*\)', check_scope)
     if low_opacity:
         _fail(f'[70yr] Low-opacity text colour: {low_opacity[:2]} — fails contrast for elderly users')
         fails += 1
