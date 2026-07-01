@@ -80,6 +80,13 @@
     border-radius: 0 2px 0 0;
     transition: width 2.5s linear;
   }
+  @media (max-width: 480px) {
+    .upload-carousel { height: auto; }
+    .carousel-track   { height: auto; }
+    .carousel-slide   { min-height: 88px; height: auto; padding: 12px 20px; }
+    .carousel-msg     { font-size: 15px; line-height: 1.6; }
+    .carousel-sub     { font-size: 13px; }
+  }
 
   .drop-zone {
     border: 2px dashed var(--border-strong);
