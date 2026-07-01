@@ -2743,6 +2743,18 @@ CREATIVE sub-genres:
     directed or candid, default to describing it as observed/candid — do not assert
     authorial intent (posing, direction, construction) that cannot be verified from the
     image.
+    TECHNICAL EXPOSURE VS. SUBJECT DIRECTION — these are NOT the same evidence. A
+    photographer choosing to expose for the brightest or key subject (letting the rest
+    of the frame fall into shadow, silhouette, or near-black) is a deliberate
+    TECHNICAL/lighting choice. It says nothing about whether a human figure that fell
+    into that shadow was posed, styled, directed, or had their identity deliberately
+    concealed. Do NOT describe a silhouetted or heavily-shadowed human figure as
+    "posed," "styled for visual effect," or having identity "deliberately obscured"
+    unless there is independent evidence of actual posing — a directed stance, posed
+    eye contact with camera, arranged clothing or props — separate from the tonal
+    rendering caused by exposure. A dramatic silhouette created by exposing for a
+    different subject is evidence of photographic exposure skill, not of directing the
+    silhouetted subject.
     EXCEPTION — HYBRID SCENES: if a genuinely wild, autonomous animal appears in the
     frame and its specific position, pose, or behaviour was not and could not have been
     directed by the photographer, do NOT describe the image as fully "constructed" or
