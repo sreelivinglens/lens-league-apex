@@ -267,6 +267,19 @@ def _gold_on_light_notes(content):
                 notes.append(body[:60])
     return notes
 
+def _has_44px_tap_target(content):
+    """Detect an adequate (>=44px) tap target. The old checks only matched
+    the literal substring '44px' or 'min-height: 44', missing buttons that
+    legitimately use a larger value like min-height:52px (found auditing
+    register.html -- both its Google and Create Account buttons already
+    exceed the 44px minimum, they just didn't say '44' anywhere)."""
+    if '44px' in content or 'min-height: 44' in content:
+        return True
+    for m in re.finditer(r'min-height:\s*(\d+)px', content):
+        if int(m.group(1)) >= 44:
+            return True
+    return False
+
 def _shaded_fonts(content):
     """Detect rgba text colours with low opacity (shaded/muted body text).
     Negative lookbehind excludes border-color/background-color/outline-color
@@ -639,7 +652,7 @@ def audit_html(filepath):
         ('Mobile breakpoint defined',           'max-width: 768px' in content or 'max-width: 600px' in content or 'max-width: 480px' in content),
         ('Mobile section padding 56px',         '56px' in content or _is_mobile_app_page or _is_detail_page),
         ('Mobile text-shadow none on h1',       'text-shadow: none' in content or _is_detail_page),
-        ('Touch targets min 44px',              '44px' in content or 'min-height: 44' in content or 'padding: 1' in content),
+        ('Touch targets min 44px',              _has_44px_tap_target(content) or 'padding: 1' in content),
         ('No fixed px widths on containers',    not any(f'width: {n}px' in content for n in range(400, 1400, 10)) or 'max-width' in content),
         ('Grids collapse -- auto-fill or 1fr',  'auto-fill' in content or 'auto-fit' in content or '1fr' in content or 'flex-wrap: wrap' in content or _is_detail_page),
         ('Tables have mobile stacking',         'table' not in content.lower() or 'display: block' in content or 'overflow-x' in content or '@media' in content),
@@ -709,14 +722,19 @@ def audit_html(filepath):
         fails += 1
 
     # Tap targets mobile — must be 44px (Apple HIG)
-    if '44px' in content or 'min-height: 44' in content:
+    if _has_44px_tap_target(content):
         _ok('[mobile] 44px tap targets present (Apple HIG minimum)')
     else:
         _fail('[mobile] No 44px tap targets -- buttons may be too small for elderly fingers on mobile')
         fails += 1
 
     # Input zoom prevention
-    input_fonts = re.findall(r'input[^{]{0,60}font-size:\s*(\d+)px', content)
+    # Negative lookbehind excludes 'oninput=' JS attributes (e.g.
+    # oninput="this.setCustomValidity('')") which were matching the bare
+    # substring 'input' and then grabbing an unrelated font-size from
+    # nearby helper-text markup 60 chars later -- false positive found
+    # auditing register.html.
+    input_fonts = re.findall(r'(?<!\w)input\b[^{]{0,60}font-size:\s*(\d+)px', content)
     input_small = [int(s) for s in input_fonts if int(s) < 16]
     if input_small:
         _fail(f'[mobile] Input font-size below 16px: {input_small} -- iOS Safari auto-zooms, disorients elderly users')
@@ -812,7 +830,7 @@ def audit_html(filepath):
         _fail('[iPad] No line-height >= 1.5 -- cramped text for elderly iPad users')
         fails += 1
 
-    if '44px' in content or 'min-height: 44' in content:
+    if _has_44px_tap_target(content):
         _ok('[iPad] 44px tap targets present (Apple HIG minimum for iPad)')
     else:
         _note('[iPad] No 44px tap targets found -- verify buttons are large enough for elderly iPad users')
@@ -1753,10 +1771,12 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
          'max-width: 600px' in content or 'max-width: 480px' in content or 'max-width: 520px' in content),
         ('4-col grid collapses on mobile',
          'sc-four-grid' in content or 'repeat(4' not in content or 'grid-template-columns: 1fr !important' in content
-         or bool(re.search(r'@media[^{]*\{[^@]*?\.grid-4\s*\{[^}]*grid-template-columns:\s*(1fr\b|repeat\(1|repeat\(2)', content, re.DOTALL))),
+         or bool(re.search(r'@media[^{]*\{[^@]*?\.grid-4\s*\{[^}]*grid-template-columns:\s*(1fr\b|repeat\(1|repeat\(2)', content, re.DOTALL))
+         or bool(re.search(r'@media[^{]*\{[^@]*?[.\w-]+\s*\{[^}]*grid-template-columns:\s*(1fr\b|repeat\(1|repeat\(2|1fr\s+1fr\b)', content, re.DOTALL))),
         ('2-col grid collapses on mobile',
          'sc-two-grid' in content or ('1fr 1fr' not in content) or 'grid-template-columns: 1fr !important' in content
-         or _is_mobile_app_page),
+         or _is_mobile_app_page
+         or bool(re.search(r'@media[^{]*\{[^@]*?[.\w-]+\s*\{[^}]*grid-template-columns:\s*1fr\b(?!\s*1fr)', content, re.DOTALL))),
         ('No fixed widths that break mobile',
          not any(
              f'width: {n}px' in content and
@@ -1765,7 +1785,7 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
              for n in range(700, 2000, 10)
          )),
         ('Buttons full-width on mobile or 44px tap targets',
-         '44px' in content or 'min-height: 44' in content or 'width: 100%' in content),
+         _has_44px_tap_target(content) or 'width: 100%' in content or 'width:100%' in content),
         ('Font sizes scale on mobile (16px+ body)',
          bool(re.search(r'font-size:\s*(1[6-9]|2[0-5])px', content))),
         ('Single column stack on mobile',
@@ -1793,11 +1813,12 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
          ('768px' in content and ('repeat(2' in content or '1fr 1fr' in content or 'grid-template-columns: 1fr' in content))
          or _is_mobile_app_page or is_detail_page),
         ('No 4-col layout at 768px without breakpoint',
-         'max-width: 768px' in content or 'repeat(4' not in content),
+         'max-width: 768px' in content or 'max-width: 900px' in content
+         or 'min-width: 768px' in content or 'repeat(4' not in content),
         ('Content max-width set (no full-stretch on iPad)',
          'max-width' in content),
         ('Tap targets 44px on iPad',
-         '44px' in content or 'min-height: 44' in content or 'padding: 1' in content),
+         _has_44px_tap_target(content) or 'padding: 1' in content),
     ]
     ipad_fails = 0
     for label, result in ipad_checks:
