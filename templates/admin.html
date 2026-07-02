@@ -22,7 +22,12 @@
     white-space: nowrap;
   }
   .admin-nav-btn:hover { border-color: var(--gold); color: #1a1a18; background: var(--gold-subtle); }
-  .admin-nav-btn.gold { border-color: var(--gold-dark); color: #1a1a18; }
+  .admin-nav-btn.gold { background: var(--gold); border-color: var(--gold-dark); color: #0D0D0B; }
+  .admin-nav-btn.gold:hover { background: var(--gold-dark); }
+  .admin-nav-btn.slate { background: #4A6FA5; border-color: #35507A; color: #FFFFFF; }
+  .admin-nav-btn.slate:hover { background: #35507A; }
+  .admin-nav-btn.brown { background: #8B5A2B; border-color: #64401D; color: #FFFFFF; }
+  .admin-nav-btn.brown:hover { background: #64401D; }
   .admin-nav-btn.red  { border-color: #7a2222; color: var(--red); }
   .admin-nav-btn .badge-count {
     background: var(--red); color: #fff;
@@ -263,7 +268,7 @@
   {# ── Top nav ── #}
   <div class="admin-nav">
     <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
-    <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn gold">🎯 Bulk Special Run</a>
+    <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
     <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
     <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
       ⚑ Reports
@@ -275,13 +280,12 @@
     <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
     <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
     <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
-    <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn{% if csi_unreviewed_count > 0 %} gold{% endif %}"
-       style="{% if csi_unreviewed_count > 0 %}background:#2D1F00; border-color:#8B6914; color:#F5C518;{% endif %}">
-      👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count" style="background:#F5C518; color:#2D1F00;">{{ csi_unreviewed_count }}</span>{% endif %}
+    <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn gold">
+      👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
     </a>
     <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
     <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">&#127979; Mentors</a>
-    <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn">⬆ Bulk Upload</a>
+    <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn brown">⬆ Bulk Upload</a>
     <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
       ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
     </a>
