@@ -891,11 +891,12 @@
         {%- endfor -%}
         {%- if _found_master.name -%}
           {%- set _parts = _p.split(_found_master.name) -%}
+          {%- set _remainder = (_parts[1:] | join(_found_master.name)) if _parts|length > 2 else (_parts[1] if _parts|length > 1 else '') -%}
           <p style="margin:0 0 14px; font-size:17px; color:{{ body_color }}; line-height:1.9;">
-            {{- _parts[0] -}}<strong><a href="https://www.google.com/search?q={{ _found_master.query }}&tbm=isch" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; text-decoration-color:rgba(0,0,0,0.55); text-underline-offset:2px;">{{ _found_master.name }}</a></strong>{{- _parts[1:] | join(_found_master.name) if _parts|length > 2 else (_parts[1] if _parts|length > 1 else '') -}}
+            {{- _parts[0] | linkify_search -}}<strong><a href="https://www.google.com/search?q={{ _found_master.query }}&tbm=isch" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; text-decoration-color:rgba(0,0,0,0.55); text-underline-offset:2px;">{{ _found_master.name }}</a></strong>{{- _remainder | linkify_search -}}
           </p>
         {%- else -%}
-          <p style="margin:0 0 14px; font-size:17px; color:{{ body_color }}; line-height:1.9;">{{ _p }}</p>
+          <p style="margin:0 0 14px; font-size:17px; color:{{ body_color }}; line-height:1.9;">{{ _p | linkify_search }}</p>
         {%- endif -%}
       {%- endif -%}
     {%- endfor -%}
