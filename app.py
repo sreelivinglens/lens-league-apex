@@ -4087,6 +4087,7 @@ def dashboard():
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
     return render_template('dashboard.html', images=images, stats=stats,
+                           all_masters=ALL_MASTERS,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
