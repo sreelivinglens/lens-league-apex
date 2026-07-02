@@ -110,6 +110,11 @@
 
     <form class="contact-form" method="POST" action="{{ url_for('contact') }}">
 
+      <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+        <label for="cf-website">Website</label>
+        <input type="text" id="cf-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
       <div class="form-row">
         <div>
           <label for="cf-name">Your name</label>
