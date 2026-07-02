@@ -536,7 +536,7 @@ def audit_html(filepath):
         'register.html', 'login.html', 'forgot_password.html', 'contact.html',
         'admin_raw_detail.html', 'admin_raw_verification.html', 'admin_raw_poty.html',
         'admin.html', 'admin_user_detail.html', 'admin_ratings.html',
-        'admin_users.html',
+        'admin_users.html', 'admin_curation.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -1980,7 +1980,13 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         _note('CSI card checks skipped — not a detail/scorecard page')
 
     _section('DELIVERY STANDARD — CSI exports in admin.html (admin page only)')
-    _is_admin = 'admin' in fname.lower() and 'admin_user' not in fname.lower()
+    # Exact filename match only -- the previous 'admin' in fname and 'admin_user'
+    # not in fname substring check was written when admin.html was the only
+    # non-admin_user admin page. It silently matched every NEW admin page added
+    # since (e.g. admin_curation.html), wrongly demanding CSI nav/export markup
+    # that only ever belonged on the main admin dashboard. Found auditing
+    # admin_curation.html (Session 122).
+    _is_admin = fname.lower() == 'admin.html'
     if _is_admin:
         _csi_admin_checks = [
             ('CSI nav button present',
