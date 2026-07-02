@@ -10768,13 +10768,23 @@ def admin_users():
 
 ADMIN_CURATION_MIN_DIMENSION = 800  # short side, px — hard reject below this
 
+_DEFAULT_MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 20971520))
+
 @app.before_request
 def _admin_curation_content_length_override():
     # Curation uploads may be higher-res than the site-wide 20MB cap allows
-    # for regular users. Scoped to this one endpoint only — MAX_CONTENT_LENGTH
-    # stays untouched everywhere else.
+    # for regular users. request.max_content_length has no setter in this
+    # Flask/Werkzeug version (confirmed in prod — AttributeError, "property
+    # ... has no setter") so this mutates app.config['MAX_CONTENT_LENGTH']
+    # directly instead, which is always a plain mutable dict regardless of
+    # Flask version. Safe because gunicorn workers here are 'sync' (one
+    # request fully processed at a time per worker process) — this resets
+    # to the site-wide default on every single request, admin curation or
+    # not, so there's no window where another request sees the raised limit.
     if request.endpoint == 'admin_curation_upload':
-        request.max_content_length = 50 * 1024 * 1024  # 50MB, admin curation only
+        app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB, admin curation only
+    else:
+        app.config['MAX_CONTENT_LENGTH'] = _DEFAULT_MAX_CONTENT_LENGTH
 
 
 @app.route('/admin/curation')
