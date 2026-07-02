@@ -2978,13 +2978,16 @@ def onboarding():
         current_user.signup_ip           = request.remote_addr
         current_user.onboarding_complete = True
         db.session.commit()
-        # phone/address: migration-only columns (Session 119), not yet
-        # verified as mapped ORM attributes in deployed models.py — raw SQL
-        # UPDATE per Rule 13 rather than ORM attribute assignment.
+        # phone/address: migration-only columns (Session 119) — now confirmed
+        # mapped on the User ORM class in models.py, so this uses standard
+        # attribute assignment instead of the raw SQL UPDATE workaround.
+        # Kept as its own try/commit (rather than folded into the block
+        # above) so a phone/address save failure never blocks onboarding
+        # completion — the user still lands on interests either way, and
+        # the failure is logged for follow-up.
         try:
-            db.session.execute(db.text(
-                "UPDATE users SET phone = :phone, address = :address WHERE id = :uid"
-            ), {'phone': phone, 'address': address, 'uid': current_user.id})
+            current_user.phone   = phone
+            current_user.address = address
             db.session.commit()
         except Exception as _pa_save:
             db.session.rollback()
