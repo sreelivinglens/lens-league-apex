@@ -4651,11 +4651,20 @@ Plateau Penalty, Identity Cap). Calculate the final weighted score using
 the genre weights above. Assign the correct tier and the closest-matching
 archetype.
 
-Respond ONLY with this exact JSON shape, no other fields, no preamble,
-no markdown:
+CRITICAL OUTPUT CONSTRAINT — READ BEFORE RESPONDING:
+This is a numbers-only request. Do NOT write hard_truth, what_stood_out,
+mentor_technical, mentor_moment, mentor_next, transferable_advice,
+byline_1, byline_2, calibration_line, judge_referral, soul_bonus_active,
+composition_technique, or any other narrative, commentary, or explanatory
+text. Do not explain your reasoning. Do not justify the score in prose.
+The ONLY acceptable output is the exact 8-key JSON object below — nothing
+before it, nothing after it, no markdown fences, no extra keys of any kind:
+
 {{"dod": <float>, "disruption": <float>, "dm": <float>, "wonder": <float>,
 "aq": <float>, "score": <float>, "tier": "<tier name>",
 "archetype": "<archetype name>"}}
+
+Output exactly those 8 keys now. Any additional key is a failure.
 """
 
 
@@ -4680,7 +4689,13 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None):
 
     payload = {
         "model":       MODEL,
-        "max_tokens":  300,
+        "max_tokens":  800,  # raised from 300 — the model sometimes leaks a
+                             # narrative field despite the prompt's explicit
+                             # ban (observed in production: hard_truth,
+                             # what_stood_out); 300 truncated mid-string and
+                             # broke JSON parsing entirely. This is headroom
+                             # against that, not an invitation to use it —
+                             # still far below the 4000 used for full auto_score().
         "temperature": 0.2,
         "system":      SYSTEM_BRIEF,
         "messages": [
@@ -4749,8 +4764,29 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None):
 
     try:
         result = json.loads(text)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse DDI-fast JSON response: {e}. Raw text: {text[:300]}")
+    except json.JSONDecodeError:
+        # Strict parse failed — most likely the model leaked a narrative
+        # field despite the prompt's ban and got cut off mid-string before
+        # closing the JSON object. Rather than losing the whole score,
+        # pull the 8 required fields out directly with regex; they appear
+        # early in the model's output (per DDI_FAST_PROMPT's field order)
+        # so they're reliably present even when the tail is truncated.
+        print(f"[auto_score_ddi_fast] strict JSON parse failed, trying regex fallback. Raw text: {text[:200]}")
+        result = {}
+        for key in ('dod', 'disruption', 'dm', 'wonder', 'aq', 'score'):
+            m = re.search(rf'"{key}"\s*:\s*([\d.]+)', text)
+            if m:
+                result[key] = float(m.group(1))
+        for key in ('tier', 'archetype'):
+            m = re.search(rf'"{key}"\s*:\s*"([^"]*)"', text)
+            if m:
+                result[key] = m.group(1)
+        if len(result) < 8:
+            raise ValueError(
+                f"Failed to parse DDI-fast response, regex fallback incomplete "
+                f"({len(result)}/8 fields recovered). Raw text: {text[:300]}"
+            )
+        print(f"[auto_score_ddi_fast] regex fallback recovered all 8 fields successfully")
 
     required = ('dod', 'disruption', 'dm', 'wonder', 'aq', 'score', 'tier', 'archetype')
     missing = [k for k in required if k not in result]
