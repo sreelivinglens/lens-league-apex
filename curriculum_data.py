@@ -40,8 +40,8 @@ _CURRICULUM = [
         'id': 'D1.2', 'dim': 'dod', 'depth': 2,
         'title': 'The Harder Position',
         'principle': 'The harder position always exists. Most photographers do not take it.',
-        'commons_file': 'File:Ansel_Adams_-_National_Archives_111-SC-558045.jpg',
-        'commons_caption': 'Ansel Adams at work, 1942 · US National Archives · Public domain',
+        'commons_file': 'File:Ansel_Adams_and_camera.jpg',
+        'commons_caption': 'Ansel Adams with his camera, c. 1950 · Public domain',
         'master': 'Ansel Adams', 'master_quote': 'Twelve significant photographs in any one year is a good crop.',
         'assignments': {
             'Wildlife':     'Find the angle that takes real patience to reach safely — get to eye level, stay downwind, wait in cover. The effort is the difficulty, never the distance to the animal.',
