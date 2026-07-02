@@ -11009,9 +11009,24 @@ def admin_curation_delete_bulk():
 @login_required
 @admin_required
 def admin_curation_download_bulk():
-    """Zip and download selected curation images. Fetches from thumb_url
-    (R2, permanent) rather than local thumb_path — the container disk is
-    not guaranteed to persist across restarts, R2 is."""
+    """Zip and download selected curation images.
+
+    Fetches directly from the R2 bucket via the storage client (same
+    pattern used elsewhere in this file, e.g. the PDF-scorecard route)
+    rather than an HTTP GET against the public thumb_url. Two real
+    production bugs led here:
+      1. Plain urllib GETs against thumb_url got 403'd by R2/Cloudflare's
+         bot protection — a direct authenticated bucket download has no
+         such risk.
+      2. Fetching 10+ images sequentially over HTTP inside a single
+         request ran long enough to pin the gunicorn sync worker and
+         trip the site's maintenance-mode fallback (a known failure mode
+         in this codebase — see the compositor build in image_detail's
+         download route for the established fix pattern, reused here):
+         do the slow work in a background thread with a hard timeout,
+         and fail gracefully with a clear message instead of hanging
+         the worker.
+    """
     ids_raw = request.form.get('image_ids', '')
     try:
         ids = [int(x) for x in ids_raw.split(',') if x.strip()]
@@ -11033,37 +11048,56 @@ def admin_curation_download_bulk():
         flash('No matching images found.', 'error')
         return redirect(url_for('admin_curation'))
 
-    import zipfile, io, urllib.request as _dl_ur
+    import zipfile, io, threading
+    from storage import get_client, BUCKET
 
     buf = io.BytesIO()
-    added = 0
-    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for img in imgs:
-            if not img.thumb_url:
-                continue
-            try:
-                # R2/Cloudflare returns 403 to plain urllib requests with the
-                # default 'Python-urllib/3.x' User-Agent — it reads as a bot.
-                # Browsers work fine (full headers), but a bare server-side
-                # fetch needs an explicit User-Agent to get through. Confirmed
-                # in production: every fetch 403'd until this header was added.
-                _dl_req = _dl_ur.Request(img.thumb_url, headers={
-                    'User-Agent': 'Mozilla/5.0 (compatible; ShutterLeagueAdmin/1.0)'
-                })
-                with _dl_ur.urlopen(_dl_req, timeout=15) as resp:
-                    data = resp.read()
-                score_str = f"{img.score:.2f}" if img.score is not None else "unscored"
-                safe_name = secure_filename(img.original_filename or img.asset_name or f"image_{img.id}")
-                # Grouped by genre, prefixed by score — sorted-by-name in
-                # any file browser lines up with the dashboard's ranking.
-                zip_entry_name = f"{img.genre or 'Unspecified'}/{score_str}_{safe_name}"
-                zf.writestr(zip_entry_name, data)
-                added += 1
-            except Exception as _dl_err:
-                app.logger.warning(f'[admin_curation] download fetch failed for image={img.id}: {_dl_err}')
+    result = {'added': 0, 'exc': None}
 
-    if added == 0:
-        flash('Could not fetch any of the selected images — they may not have finished uploading to storage.', 'error')
+    def _build_zip():
+        try:
+            client = get_client()
+            with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for img in imgs:
+                    if not img.thumb_url:
+                        continue
+                    try:
+                        key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+                        img_buf = io.BytesIO()
+                        client.download_fileobj(BUCKET, key, img_buf)
+                        score_str = f"{img.score:.2f}" if img.score is not None else "unscored"
+                        safe_name = secure_filename(img.original_filename or img.asset_name or f"image_{img.id}")
+                        # Grouped by genre, prefixed by score — sorted-by-name
+                        # in any file browser lines up with dashboard ranking.
+                        zip_entry_name = f"{img.genre or 'Unspecified'}/{score_str}_{safe_name}"
+                        zf.writestr(zip_entry_name, img_buf.getvalue())
+                        result['added'] += 1
+                    except Exception as _dl_err:
+                        app.logger.warning(f'[admin_curation] download fetch failed for image={img.id}: {_dl_err}')
+        except Exception as _outer_err:
+            result['exc'] = _outer_err
+
+    # 45s hard ceiling — well under gunicorn's worker timeout, so a slow
+    # or stuck batch fails cleanly instead of pinning the worker and
+    # tripping site-wide maintenance mode (confirmed in production: this
+    # is exactly what happened with 10+ images fetched over plain HTTP).
+    _t = threading.Thread(target=_build_zip, daemon=True)
+    _t.start()
+    _t.join(timeout=45)
+
+    if _t.is_alive():
+        app.logger.error(f'[admin_curation] download-bulk timed out, {result["added"]} of {len(imgs)} completed before timeout')
+        flash(f'Download took too long and was stopped ({result["added"]} of {len(imgs)} images fetched). '
+              f'Try downloading a smaller batch at a time.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    if result['exc'] is not None:
+        app.logger.error(f'[admin_curation] download-bulk failed: {result["exc"]}')
+        flash('Download failed unexpectedly. Please try again with fewer images.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    if result['added'] == 0:
+        flash('Could not fetch any of the selected images from storage.', 'error')
         return redirect(url_for('admin_curation'))
 
     buf.seek(0)
