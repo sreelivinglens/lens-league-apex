@@ -1453,6 +1453,32 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'contact_messages migration warning: {_cme}')
 
+            # admin_sent_emails — audit log for admin-composed outbound emails.
+            # One row per recipient (even for future segment/broadcast sends)
+            # so there's always a clear record of exactly who was emailed,
+            # when, by whom, and with what content -- important on a KYC
+            # platform where outbound comms may need to be reviewable.
+            try:
+                db.session.execute(db.text(
+                    """CREATE TABLE IF NOT EXISTS admin_sent_emails (
+                        id SERIAL PRIMARY KEY,
+                        admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        recipient_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        recipient_email VARCHAR(255) NOT NULL,
+                        subject VARCHAR(255) NOT NULL,
+                        body TEXT NOT NULL,
+                        send_type VARCHAR(20) DEFAULT 'single',
+                        success BOOLEAN DEFAULT TRUE,
+                        error_message TEXT,
+                        sent_at TIMESTAMP DEFAULT NOW()
+                    )"""
+                ))
+                db.session.commit()
+                print('admin_sent_emails schema OK.')
+            except Exception as _ase:
+                db.session.rollback()
+                print(f'admin_sent_emails migration warning: {_ase}')
+
             # upload_disputes — add user_reason and resolved_at columns if missing
             try:
                 for _sql in [
@@ -10725,6 +10751,76 @@ def admin_user_detail(user_id):
         mentor_sessions = mentor_sessions,
         genre_interests_display = genre_interests_display,
     )
+
+
+@app.route('/admin/user/<int:user_id>/send-email', methods=['POST'])
+@login_required
+@admin_required
+def admin_send_user_email(user_id):
+    user = User.query.get_or_404(user_id)
+
+    subject = request.form.get('subject', '').strip()
+    body    = request.form.get('body', '').strip()
+
+    if not subject or not body:
+        flash('Subject and message are both required.', 'error')
+        return redirect(url_for('admin_user_detail', user_id=user_id))
+
+    if len(subject) > 255:
+        flash('Subject is too long (max 255 characters).', 'error')
+        return redirect(url_for('admin_user_detail', user_id=user_id))
+
+    if len(body) > 5000:
+        flash('Message is too long (max 5000 characters).', 'error')
+        return redirect(url_for('admin_user_detail', user_id=user_id))
+
+    html_body = (
+        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+        '<div style="background:#1A2744;padding:20px 32px;">'
+        '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">'
+        + PLATFORM_NAME.upper() +
+        '</p>'
+        '</div>'
+        '<div style="padding:32px;">'
+        f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {user.full_name or user.username},</p>'
+        '<p style="font-size:16px;color:#1A1A18;margin:0;line-height:1.7;">' + body.replace('\n', '<br>') + '</p>'
+        '</div>'
+        '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+        f'<p style="color:#888888;font-size:12px;margin:0;">{PLATFORM_NAME} &nbsp;&middot;&nbsp; '
+        f'{ADMIN_NOTIFY_EMAIL}</p>'
+        '</div>'
+        '</div>'
+    )
+    text_body = f'Hi {user.full_name or user.username},\n\n{body}\n\n-- {PLATFORM_NAME}'
+
+    ok = False
+    err = None
+    try:
+        ok = send_email(user.email, subject, html_body, text_body)
+    except Exception as _se:
+        err = str(_se)
+        app.logger.warning(f'[admin_send_user_email] Send failed for user {user_id}: {_se}')
+
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO admin_sent_emails "
+            "(admin_id, recipient_user_id, recipient_email, subject, body, send_type, success, error_message) "
+            "VALUES (:admin_id, :ruid, :remail, :subj, :body, 'single', :ok, :err)"
+        ), {
+            'admin_id': current_user.id, 'ruid': user_id, 'remail': user.email,
+            'subj': subject, 'body': body, 'ok': bool(ok), 'err': err,
+        })
+        db.session.commit()
+    except Exception as _log_err:
+        db.session.rollback()
+        app.logger.warning(f'[admin_send_user_email] Could not log send: {_log_err}')
+
+    if ok:
+        flash(f'Email sent to {user.email}.', 'success')
+    else:
+        flash(f'Could not send email to {user.email}. Check logs.', 'error')
+
+    return redirect(url_for('admin_user_detail', user_id=user_id))
 
 
 
