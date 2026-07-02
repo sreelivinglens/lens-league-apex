@@ -7,7 +7,7 @@
 {% block extra_css %}
 <style>
 body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
-.sl-aud { background: #F7F5F2; min-height: 100vh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif; }
+.sl-aud { background: #F7F5F2; min-height: 100vh; min-height: 100dvh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif; }
 .sl-aud * { font-family: 'Inter', sans-serif; }
 
 .sl-aud-back {
@@ -26,7 +26,7 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
 .sl-aud-meta { font-size: 14px; color: rgba(26,26,24,0.50); }
 .sl-aud-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .sl-aud-badge {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   padding: 4px 12px; border-radius: 2px;
 }
 .sl-aud-badge.active   { background: #e8f5ec; color: #2d7a3a; }
@@ -42,7 +42,7 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
   background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px 28px 24px;
 }
 .sl-aud-card-title {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
   color: rgba(26,26,24,0.40); margin-bottom: 20px;
   padding-bottom: 12px; border-bottom: 1px solid rgba(26,26,24,0.07);
 }
@@ -53,15 +53,15 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
 }
 .sl-aud-row:last-child { border-bottom: none; padding-bottom: 0; }
 .sl-aud-key { font-size: 13px; color: rgba(26,26,24,0.45); white-space: nowrap; flex-shrink: 0; }
-.sl-aud-val { font-size: 14px; font-weight: 600; color: #1A1A18; text-align: right; word-break: break-word; }
-.sl-aud-val.missing { color: rgba(26,26,24,0.30); font-weight: 400; font-style: italic; }
+.sl-aud-val { font-size: 16px; line-height: 1.5; font-weight: 600; color: #1A1A18; text-align: right; word-break: break-word; }
+.sl-aud-val.missing { color: var(--text-muted); font-weight: 400; font-style: italic; }
 
 .sl-aud-full { grid-column: 1 / -1; }
 
 /* Mentor sessions table */
 .sl-aud-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .sl-aud-table th {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   color: rgba(26,26,24,0.40); padding: 8px 12px; text-align: left;
   border-bottom: 1px solid rgba(26,26,24,0.10); white-space: nowrap;
 }
@@ -69,12 +69,17 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
 .sl-aud-table tr:last-child td { border-bottom: none; }
 .sl-aud-table tr:hover td { background: rgba(26,26,24,0.02); }
 
-.sl-aud-empty { font-size: 14px; color: rgba(26,26,24,0.35); padding: 16px 0; }
+.sl-aud-empty { font-size: 14px; color: var(--text-muted); padding: 16px 0; }
 
 @media (max-width: 768px) {
   .sl-aud { padding: 20px 16px 56px; }
   .sl-aud-grid { grid-template-columns: 1fr; }
   .sl-aud-full { grid-column: 1; }
+}
+@media (max-width: 480px) {
+  .sl-aud-card { padding: 20px 20px 18px; }
+  .sl-aud-name { font-size: 22px; }
+  .sl-aud-val { font-size: 16px; }
 }
 </style>
 {% endblock %}
@@ -115,13 +120,13 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
       <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=user.id) }}">
         <input type="hidden" name="track" value="{{ user.subscription_track or 'camera' }}">
         <input type="hidden" name="plan"  value="{{ user.subscription_plan  or 'monthly' }}">
-        <button type="submit" class="btn" style="font-size:12px; padding:8px 16px;"
+        <button type="submit" class="btn" style="font-size:13px; padding:8px 16px; min-height:44px; box-sizing:border-box;"
                 onclick="return confirm('Toggle subscription for this user?')">
           {{ 'Deactivate Sub' if user.is_subscribed else 'Activate Sub' }}
         </button>
       </form>
       <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}">
-        <button type="submit" class="btn btn-danger" style="font-size:12px; padding:8px 16px;"
+        <button type="submit" class="btn btn-danger" style="font-size:13px; padding:8px 16px; min-height:44px; box-sizing:border-box;"
                 onclick="return confirm('Permanently delete {{ user.full_name or user.username }}? This cannot be undone.')">
           Delete User
         </button>
@@ -308,6 +313,35 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
       {% else %}
         <p class="sl-aud-empty">No mentor sessions yet.</p>
       {% endif %}
+    </div>
+
+    <!-- SEND EMAIL -->
+    <div class="sl-aud-card sl-aud-full">
+      <div class="sl-aud-card-title">Send Email</div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div style="margin-bottom:16px; padding:12px 16px; border-radius:2px; font-size:14px; line-height:1.5;
+                      background:{% if cat == 'error' %}#fde8e8{% else %}#e8f5ec{% endif %};
+                      color:{% if cat == 'error' %}#c0392b{% else %}#2d7a3a{% endif %};">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST" action="{{ url_for('admin_send_user_email', user_id=user.id) }}">
+        <div style="margin-bottom:14px;">
+          <label for="ase-subject" style="display:block; font-size:13px; font-weight:600; color:rgba(26,26,24,0.55); margin-bottom:6px;">Subject</label>
+          <input type="text" id="ase-subject" name="subject" required maxlength="255"
+                 style="width:100%; padding:10px 12px; font-size:14px; box-sizing:border-box;
+                        border:0.5px solid rgba(26,26,24,0.20); border-radius:2px; outline:none;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label for="ase-body" style="display:block; font-size:13px; font-weight:600; color:rgba(26,26,24,0.55); margin-bottom:6px;">Message</label>
+          <textarea id="ase-body" name="body" required maxlength="5000" rows="6"
+                    style="width:100%; padding:10px 12px; font-size:14px; line-height:1.5; box-sizing:border-box;
+                           border:0.5px solid rgba(26,26,24,0.20); border-radius:2px; outline:none; resize:vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-solid" style="font-size:13px; padding:10px 20px; min-height:44px; box-sizing:border-box;">
+          Send Email →
+        </button>
+      </form>
     </div>
 
   </div>
