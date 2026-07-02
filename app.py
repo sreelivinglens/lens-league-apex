@@ -1444,6 +1444,9 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS spam_marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL"
                 ))
+                db.session.execute(db.text(
+                    "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS ip_address VARCHAR(64)"
+                ))
                 db.session.commit()
                 print('contact_messages schema OK.')
             except Exception as _cme:
@@ -13456,6 +13459,14 @@ def sitemap_cards():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
+        # Honeypot -- hidden field real visitors never see or fill.
+        # Bots that auto-fill every input in a form will fill this one.
+        # Pretend success, do nothing else: no email, no DB write, no
+        # tip-off that the submission was caught.
+        if request.form.get('website', '').strip():
+            flash('Your message has been sent. We respond within 3 working days.', 'success')
+            return render_template('contact.html')
+
         name    = request.form.get('name',    '').strip()
         email   = request.form.get('email',   '').strip()
         subject = request.form.get('subject', '').strip()
@@ -13474,10 +13485,23 @@ def contact():
                                    form_name=name, form_email=email,
                                    form_subject=subject, form_message=message)
 
-        # Simple rate limit — one submission per session per 60 seconds
-        import time as _time
-        last_sent = session.get('contact_last_sent', 0)
-        if _time.time() - last_sent < 60:
+        # IP-based rate limit, backed by the database rather than the
+        # session -- the app runs multiple gunicorn worker processes, so
+        # an in-memory or session counter can be bypassed just by which
+        # worker handles the request, and resets on every deploy. A DB
+        # count of recent rows from the same IP is consistent across
+        # workers and survives restarts.
+        client_ip = request.remote_addr
+        try:
+            recent_count = db.session.execute(db.text(
+                "SELECT COUNT(*) FROM contact_messages "
+                "WHERE ip_address = :ip AND received_at > NOW() - INTERVAL '10 minutes'"
+            ), {'ip': client_ip}).scalar()
+        except Exception as _rl_err:
+            app.logger.warning(f'[contact] Rate limit check failed: {_rl_err}')
+            recent_count = 0
+
+        if recent_count and recent_count >= 5:
             flash('Please wait a moment before sending another message.', 'warning')
             return render_template('contact.html',
                                    form_name=name, form_email=email,
@@ -13506,13 +13530,12 @@ def contact():
         ok = send_email(admin_to, mail_subject, html_body, text_body)
 
         if ok:
-            session['contact_last_sent'] = _time.time()
             # Store message in DB
             try:
                 db.session.execute(db.text(
-                    "INSERT INTO contact_messages (name, email, subject, message) "
-                    "VALUES (:n, :e, :s, :m)"
-                ), {'n': name, 'e': email, 's': subject, 'm': message})
+                    "INSERT INTO contact_messages (name, email, subject, message, ip_address) "
+                    "VALUES (:n, :e, :s, :m, :ip)"
+                ), {'n': name, 'e': email, 's': subject, 'm': message, 'ip': client_ip})
                 db.session.commit()
             except Exception as _cm_err:
                 db.session.rollback()
