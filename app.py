@@ -10928,6 +10928,101 @@ def admin_curation_delete(image_id):
     return redirect(url_for('admin_curation'))
 
 
+@app.route('/admin/curation/delete-bulk', methods=['POST'])
+@login_required
+@admin_required
+def admin_curation_delete_bulk():
+    """Delete multiple curation images at once — e.g. clearing an entire
+    mis-genred batch in one action instead of one-by-one."""
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        flash('Invalid selection.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    if not ids:
+        flash('No images selected.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    imgs = Image.query.filter(
+        Image.id.in_(ids),
+        Image.user_id == current_user.id,
+        Image.is_admin_curation == True
+    ).all()
+
+    deleted = 0
+    for img in imgs:
+        try:
+            if img.thumb_path and os.path.exists(img.thumb_path):
+                os.remove(img.thumb_path)
+        except Exception as _del_file_err:
+            app.logger.warning(f'[admin_curation] thumb file delete warning (id={img.id}): {_del_file_err}')
+        db.session.delete(img)
+        deleted += 1
+    db.session.commit()
+    flash(f'{deleted} image{"s" if deleted != 1 else ""} deleted.', 'success')
+    return redirect(url_for('admin_curation'))
+
+
+@app.route('/admin/curation/download-bulk', methods=['POST'])
+@login_required
+@admin_required
+def admin_curation_download_bulk():
+    """Zip and download selected curation images. Fetches from thumb_url
+    (R2, permanent) rather than local thumb_path — the container disk is
+    not guaranteed to persist across restarts, R2 is."""
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        flash('Invalid selection.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    if not ids:
+        flash('No images selected.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    imgs = Image.query.filter(
+        Image.id.in_(ids),
+        Image.user_id == current_user.id,
+        Image.is_admin_curation == True
+    ).order_by(Image.score.desc().nullslast()).all()
+
+    if not imgs:
+        flash('No matching images found.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    import zipfile, io, urllib.request as _dl_ur
+
+    buf = io.BytesIO()
+    added = 0
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for img in imgs:
+            if not img.thumb_url:
+                continue
+            try:
+                with _dl_ur.urlopen(img.thumb_url, timeout=15) as resp:
+                    data = resp.read()
+                score_str = f"{img.score:.2f}" if img.score is not None else "unscored"
+                safe_name = secure_filename(img.original_filename or img.asset_name or f"image_{img.id}")
+                # Grouped by genre, prefixed by score — sorted-by-name in
+                # any file browser lines up with the dashboard's ranking.
+                zip_entry_name = f"{img.genre or 'Unspecified'}/{score_str}_{safe_name}"
+                zf.writestr(zip_entry_name, data)
+                added += 1
+            except Exception as _dl_err:
+                app.logger.warning(f'[admin_curation] download fetch failed for image={img.id}: {_dl_err}')
+
+    if added == 0:
+        flash('Could not fetch any of the selected images — they may not have finished uploading to storage.', 'error')
+        return redirect(url_for('admin_curation'))
+
+    buf.seek(0)
+    zip_name = f'curation_batch_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.zip'
+    return send_file(buf, mimetype='application/zip', as_attachment=True, download_name=zip_name)
+
+
 @app.route('/admin/user/<int:user_id>')
 @login_required
 @admin_required
