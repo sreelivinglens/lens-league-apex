@@ -1877,7 +1877,14 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
                 border-radius:0 10px 10px 0;">
       <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
                   color:var(--sl-yellow-dark); margin-bottom:5px;">Today's Master</div>
-      <div style="font-size:16px; font-weight:800; color:var(--sl-text); margin-bottom:3px;">{{ lesson.master }}</div>
+      <div style="font-size:16px; font-weight:800; color:var(--sl-text); margin-bottom:3px;">
+        {% if all_masters and all_masters.get(lesson.master) %}
+        <a href="https://www.google.com/search?q={{ all_masters.get(lesson.master) }}&tbm=isch" target="_blank" rel="noopener"
+           style="color:inherit; text-decoration:underline; text-decoration-color:rgba(0,0,0,0.55); text-underline-offset:2px;">{{ lesson.master }}</a>
+        {% else %}
+        {{ lesson.master }}
+        {% endif %}
+      </div>
       <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">
         {{ _master_context_map.get(lesson.master, 'One of the defining photographers in this discipline.') }}
       </div>
