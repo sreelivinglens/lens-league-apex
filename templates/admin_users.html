@@ -15,7 +15,7 @@
   .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
   .stat-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
   .users-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-  .users-table th { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); }
+  .users-table th { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); }
   .users-table td { padding: 10px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; color: var(--text-secondary); overflow: hidden; }
   .users-table tr:last-child td { border-bottom: none; }
   .users-table tr:hover td { background: #F5F0E8; }
@@ -29,16 +29,16 @@
   .user-name { font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-name a { color: var(--text-primary); text-decoration: none; }
   .user-name a:hover { color: var(--gold); text-decoration: underline; }
-  .user-handle { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-handle { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-email  { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-  .badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+  .badge { display: inline-block; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
   .badge-uat  { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
   .badge-sub  { background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border); }
   .badge-free { background: #F5F0E8; color: var(--text-muted); border: 1px solid var(--border); }
   .badge-incomplete { background: #fde8e8; color: #c0392b; border: 1px solid rgba(192,57,43,.25); display: block; margin-top: 4px; width: fit-content; }
   .row-incomplete td { background: rgba(192,57,43,.03); }
-  .track-select { font-family: var(--font-mono); font-size: 12px; background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 6px; color: var(--text-secondary); }
-  .btn-action { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 5px 10px; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
+  .track-select { font-family: var(--font-mono); font-size: 13px; background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 6px; color: var(--text-secondary); min-height: 44px; }
+  .btn-action { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 5px 10px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
   .btn-action.activate { background: var(--gold); color: #0D0D0B; }
   .btn-action.revoke   { background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border); }
   .uat-explainer {
@@ -54,6 +54,11 @@
   @media(max-width: 768px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
     .users-table { font-size: 15px; }
+  }
+  @media(max-width: 600px) {
+    .users-table th { font-size: 13px; }
+    .btn-action { min-height: 44px; padding: 8px 12px; }
+    .track-select { min-height: 44px; }
   }
 </style>
 {% endblock %}
