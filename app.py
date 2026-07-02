@@ -11042,7 +11042,15 @@ def admin_curation_download_bulk():
             if not img.thumb_url:
                 continue
             try:
-                with _dl_ur.urlopen(img.thumb_url, timeout=15) as resp:
+                # R2/Cloudflare returns 403 to plain urllib requests with the
+                # default 'Python-urllib/3.x' User-Agent — it reads as a bot.
+                # Browsers work fine (full headers), but a bare server-side
+                # fetch needs an explicit User-Agent to get through. Confirmed
+                # in production: every fetch 403'd until this header was added.
+                _dl_req = _dl_ur.Request(img.thumb_url, headers={
+                    'User-Agent': 'Mozilla/5.0 (compatible; ShutterLeagueAdmin/1.0)'
+                })
+                with _dl_ur.urlopen(_dl_req, timeout=15) as resp:
                     data = resp.read()
                 score_str = f"{img.score:.2f}" if img.score is not None else "unscored"
                 safe_name = secure_filename(img.original_filename or img.asset_name or f"image_{img.id}")
