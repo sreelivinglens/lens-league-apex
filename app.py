@@ -1740,6 +1740,20 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'Onboarding phone/address migration warning: {_pa_mig}')
 
+            # ── Session 122 — Admin curation ("Bulk Special Run") ──────────────
+            # Isolates admin scratch-space uploads (scoring a photographer's
+            # existing work for exhibition selection) from real Image rows.
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_admin_curation "
+                    "BOOLEAN NOT NULL DEFAULT FALSE"
+                ))
+                db.session.commit()
+                print('Admin curation columns OK.')
+            except Exception as _ac_mig:
+                db.session.rollback()
+                print(f'Admin curation columns migration warning: {_ac_mig}')
+
             # ── CSI (Cultural Saturation Intelligence) tables ─────────────────
             try:
                 db.session.execute(db.text("""
@@ -3500,9 +3514,9 @@ def dashboard():
     page  = request.args.get('page', 1, type=int)
     query = request.args.get('q', '').strip()
     if current_user.role == 'admin':
-        images_q = Image.query
+        images_q = Image.query.filter_by(is_admin_curation=False)
     else:
-        images_q = Image.query.filter_by(user_id=current_user.id)
+        images_q = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False)
     total_images = images_q.count()
     if query and total_images >= 20:
         images_q = images_q.filter(
@@ -4246,7 +4260,7 @@ def my_gallery():
     genre   = request.args.get('genre', '').strip()
     sort    = request.args.get('sort', 'newest').strip()
 
-    images_q = Image.query.filter_by(user_id=current_user.id)
+    images_q = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False)
 
     if query:
         images_q = images_q.filter(
@@ -4271,19 +4285,20 @@ def my_gallery():
 
     images = images_q.paginate(page=page, per_page=24, error_out=False)
 
-    total = Image.query.filter_by(user_id=current_user.id).count()
-    scored = Image.query.filter_by(user_id=current_user.id, status='scored').count()
+    total = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False).count()
+    scored = Image.query.filter_by(user_id=current_user.id, status='scored', is_admin_curation=False).count()
     best = db.session.query(db.func.max(Image.score)).filter(
-        Image.user_id == current_user.id, Image.score != None
+        Image.user_id == current_user.id, Image.score != None, Image.is_admin_curation == False
     ).scalar() or 0
     avg = db.session.query(db.func.avg(Image.score)).filter(
-        Image.user_id == current_user.id, Image.score != None
+        Image.user_id == current_user.id, Image.score != None, Image.is_admin_curation == False
     ).scalar() or 0
 
     # Distinct genres for filter dropdown
     genre_rows = db.session.query(Image.genre).filter(
         Image.user_id == current_user.id,
-        Image.genre != None
+        Image.genre != None,
+        Image.is_admin_curation == False
     ).distinct().all()
     genres = sorted([r[0] for r in genre_rows if r[0]])
 
@@ -10737,6 +10752,170 @@ def admin_users():
         new_today = new_7days = 0
     return render_template('admin_users.html', users=users,
                            new_today=new_today, new_7days=new_7days)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ADMIN CURATION — "Bulk Special Run" (Session 122)
+# ═══════════════════════════════════════════════════════════════════════════
+# Scratch space for scoring a photographer's existing work (e.g. curating
+# 30 of Carmen's photos for exhibition selection) without touching her real
+# account or the admin's own gallery. Reuses the Image table with
+# is_admin_curation=True + is_public=False for isolation (see models.py).
+# Deliberately skips: duplicate/phash rejection, watermark check, Hive
+# AI-detection, and all narrative generation — pure fast DDI numbers only,
+# per founder decision. Hard delete only, no soft-delete/archive state.
+# ═══════════════════════════════════════════════════════════════════════════
+
+ADMIN_CURATION_MIN_DIMENSION = 800  # short side, px — hard reject below this
+
+@app.before_request
+def _admin_curation_content_length_override():
+    # Curation uploads may be higher-res than the site-wide 20MB cap allows
+    # for regular users. Scoped to this one endpoint only — MAX_CONTENT_LENGTH
+    # stays untouched everywhere else.
+    if request.endpoint == 'admin_curation_upload':
+        request.max_content_length = 50 * 1024 * 1024  # 50MB, admin curation only
+
+
+@app.route('/admin/curation')
+@login_required
+@admin_required
+def admin_curation():
+    images = (Image.query
+              .filter_by(user_id=current_user.id, is_admin_curation=True)
+              .order_by(Image.score.desc().nullslast(), Image.created_at.desc())
+              .all())
+    # Segregate by genre — a curator reviewing a mixed batch (accidentally
+    # or intentionally spanning genres) sees each genre's own best-to-worst
+    # ranking, since DDI weights differ by genre and scores aren't directly
+    # comparable across them.
+    genre_groups = {}
+    for img in images:
+        genre_groups.setdefault(img.genre or 'Unspecified', []).append(img)
+    # Groups themselves ordered by each genre's top score, so the strongest
+    # genre in the batch surfaces first.
+    genre_groups = dict(sorted(
+        genre_groups.items(),
+        key=lambda kv: (kv[1][0].score or 0),
+        reverse=True
+    ))
+    return render_template('admin_curation.html', genre_groups=genre_groups, images=images)
+
+
+@app.route('/admin/curation/upload', methods=['POST'])
+@login_required
+@admin_required
+def admin_curation_upload():
+    """Process one image at a time — called in a loop by the curation
+    dashboard frontend, same pattern as bulk_upload_one()."""
+    file = request.files.get('image')
+    if not file or not file.filename:
+        return jsonify({'status': 'error', 'message': 'No file received'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'filename': file.filename, 'status': 'skipped — unsupported file type',
+                        'score': None, 'tier': None}), 200
+
+    genre = normalise_genre(request.form.get('genre', '').strip())
+    if not genre:
+        return jsonify({'status': 'error', 'message': 'No genre provided'}), 400
+
+    photographer = (request.form.get('photographer_name') or '').strip() or 'Unattributed'
+    sub_genre    = (request.form.get('sub_genre') or '').strip() or None
+    api_key      = os.getenv('ANTHROPIC_API_KEY', '')
+
+    result = {'filename': file.filename, 'score': None, 'tier': None, 'status': 'failed'}
+    try:
+        uid      = str(uuid.uuid4())
+        filename = secure_filename(file.filename)
+        raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', uid + '_' + filename)
+        file.save(raw_path)
+        thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
+
+        # Min-dimension gate — short side must be >= 800px (#2)
+        short_side = min(w, h)
+        if short_side < ADMIN_CURATION_MIN_DIMENSION:
+            if os.path.exists(thumb_path):
+                os.remove(thumb_path)
+            return jsonify({
+                'filename': file.filename,
+                'status': f'rejected — short side {short_side}px is below the {ADMIN_CURATION_MIN_DIMENSION}px minimum',
+                'score': None, 'tier': None
+            }), 200
+
+        # No duplicate check, no watermark check, no NSFW/Hive check — deliberate
+        # (#3, #4, #5) — curator is intentionally re-uploading known work.
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+        from models import Image as ImageModel
+        img = ImageModel(
+            user_id           = current_user.id,
+            original_filename = filename,
+            stored_filename   = os.path.basename(thumb_path),
+            thumb_path        = thumb_path,
+            thumb_url         = thumb_url,
+            file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
+            width=w, height=h, format=fmt,
+            asset_name        = auto_title(filename, genre),
+            phash             = phash,   # preserved deliberately — feeds dedup/anchoring platform-wide (#11)
+            genre             = genre,
+            sub_genre         = sub_genre,
+            photographer_name = photographer,
+            status            = 'pending',
+            is_public         = False,
+            is_admin_curation = True,
+        )
+        db.session.add(img)
+        db.session.flush()
+
+        if api_key:
+            from engine.auto_score import auto_score_ddi_fast
+            scored = auto_score_ddi_fast(image_path=img.thumb_path, genre=genre, sub_genre=sub_genre)
+            img.dod_score        = scored.get('dod', 0)
+            img.disruption_score = scored.get('disruption', 0)
+            img.dm_score         = scored.get('dm', 0)
+            img.wonder_score     = scored.get('wonder', 0)
+            img.aq_score         = scored.get('aq', 0)
+            img.score            = scored.get('score', 0)
+            img.tier             = scored.get('tier', '')
+            img.archetype        = scored.get('archetype', '')
+            img.status           = 'scored'
+            img.scored_at        = datetime.utcnow()
+            db.session.commit()
+            result = {'filename': file.filename, 'score': img.score,
+                      'tier': img.tier, 'status': 'scored', 'image_id': img.id}
+            app.logger.info(f'[admin_curation] scored: image={img.id} score={img.score} admin={current_user.id}')
+        else:
+            db.session.commit()
+            result = {'filename': file.filename, 'score': None, 'tier': None,
+                      'status': 'uploaded (no API key — not scored)', 'image_id': img.id}
+
+    except Exception as _cur_err:
+        db.session.rollback()
+        app.logger.error(f'[admin_curation] upload failed: {_cur_err}')
+        result = {'filename': file.filename, 'score': None, 'tier': None,
+                  'status': f'failed — {_cur_err}'}
+
+    return jsonify(result), 200
+
+
+@app.route('/admin/curation/delete/<int:image_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_curation_delete(image_id):
+    img = Image.query.filter_by(id=image_id, user_id=current_user.id, is_admin_curation=True).first_or_404()
+    try:
+        if img.thumb_path and os.path.exists(img.thumb_path):
+            os.remove(img.thumb_path)
+    except Exception as _del_file_err:
+        app.logger.warning(f'[admin_curation] thumb file delete warning: {_del_file_err}')
+    db.session.delete(img)
+    db.session.commit()
+    flash(f'"{img.asset_name or img.original_filename}" deleted.', 'success')
+    return redirect(url_for('admin_curation'))
 
 
 @app.route('/admin/user/<int:user_id>')
