@@ -12,7 +12,8 @@
   .admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
   .admin-nav-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 14px; border: 1px solid var(--border);
+    padding: 8px 14px; min-height: 44px; box-sizing: border-box;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm); font-family: var(--font-mono);
     font-size: 13px; font-weight: 600; letter-spacing: 1px;
     text-decoration: none; color: var(--text-secondary);
@@ -26,7 +27,7 @@
   .admin-nav-btn .badge-count {
     background: var(--red); color: #fff;
     border-radius: 99px; padding: 1px 6px;
-    font-size: 11px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
   }
 
   /* ── Collapsible sections ── */
@@ -60,7 +61,7 @@
 
   .admin-section-meta { font-size: 13px; color: var(--text-muted); }
   .admin-chevron {
-    font-size: 11px; color: var(--text-muted);
+    font-size: 13px; color: var(--text-muted);
     transition: transform 0.2s; flex-shrink: 0;
   }
   .admin-chevron.open { transform: rotate(180deg); }
@@ -106,28 +107,28 @@
   .admin-tile-checkbox { position: absolute; top: 8px; left: 8px; accent-color: var(--gold); width: 18px; height: 18px; cursor: pointer; }
   .admin-tile-status {
     position: absolute; top: 8px; right: 8px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 1px; padding: 3px 7px; border-radius: 3px;
   }
   .admin-tile-status.scored  { background: #000; border: 1px solid rgba(255,255,255,0.5); color: #fff; }
   .admin-tile-status.pending { background: #000; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
-  .admin-tile-flag   { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red); }
-  .admin-tile-review { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold); }
+  .admin-tile-flag   { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red); }
+  .admin-tile-review { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold); }
   .admin-tile-ai     { position: absolute; bottom: 8px; right: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 3px; background: rgba(0,0,0,0.90); color: var(--gold); letter-spacing: 0.5px; }
-  .admin-tile-hidden { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; }
+  .admin-tile-hidden { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; }
 
   .admin-tile-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
   .admin-tile-title { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
   .admin-tile-title:hover { color: var(--gold); }
-  .admin-tile-meta  { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
+  .admin-tile-meta  { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; }
   .admin-tile-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #1a1a18; }
-  .admin-tile-tier  { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .admin-tile-tier  { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
 
   .admin-tile-actions { padding: 8px 10px; border-top: 1px solid var(--border); display: flex; gap: 5px; flex-wrap: wrap; background: var(--surface-1); }
 
   /* ── Action buttons ── */
   .act-btn {
-    padding: 5px 10px; font-family: var(--font-mono); font-size: 12px;
+    padding: 5px 10px; font-family: var(--font-mono); font-size: 13px;
     font-weight: 600; border-radius: var(--radius-sm); cursor: pointer;
     border: 1px solid; background: none; white-space: nowrap; transition: all 0.2s;
   }
@@ -161,7 +162,7 @@
   .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
   .stat-box { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; }
   .stat-val { font-size: 36px; font-weight: 700; color: #1a1a18; line-height: 1; margin-bottom: 4px; }
-  .stat-lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+  .stat-lbl { font-family: var(--font-mono); font-size: 13px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
 
   /* ── Tools grid ── */
   .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -197,7 +198,7 @@
     border-radius: var(--radius-md);
   }
   .sub-val { font-size: 28px; font-weight: 700; color: #1a1a18; }
-  .sub-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+  .sub-lbl { font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
 
   /* ── Danger zone ── */
   .danger-row {
@@ -211,7 +212,7 @@
   .danger-desc  { font-size: 13px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
 
   /* ── Cal table ── */
-  .cal-table th { padding: 12px 16px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-secondary); text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface-3); text-transform: uppercase; }
+  .cal-table th { padding: 12px 16px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-secondary); text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface-3); text-transform: uppercase; }
   .cal-table td { padding: 12px 16px; font-size: 15px; color: var(--text-primary); border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
   .cal-table td.mono { font-family: var(--font-mono); font-size: 14px; }
   .cal-table td.gold { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--gold); }
@@ -294,7 +295,7 @@
     <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
       <span style="font-size:22px;">⚠️</span>
       <div>
-        <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Action Required</div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Action Required</div>
         <div class="action-banner-text">
           {% if needs_action %}
             <span style="color:var(--gold); font-weight:700;">{{ needs_action|length }}</span>
@@ -317,7 +318,7 @@
         </div>
       </div>
     </div>
-    <a href="#section-review" style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
+    <a href="#section-review" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
       Review Now ↓
     </a>
   </div>
@@ -328,11 +329,11 @@
   <div style="margin-bottom:16px;">
     {% for ann in active_contest_banners %}
     <div style="display:flex; align-items:center; gap:12px; background:rgba(245,197,24,0.07); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:10px 16px; margin-bottom:8px; flex-wrap:wrap;">
-      <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; white-space:nowrap;">● Live Banner</span>
-      <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">{{ ann.contest_type }}</span>
+      <span style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; white-space:nowrap;">● Live Banner</span>
+      <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">{{ ann.contest_type }}</span>
       <span style="font-size:14px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ann.title }}</span>
-      <span style="font-size:12px; color:var(--text-muted); white-space:nowrap;">{{ ann.audience }}</span>
-      <a href="{{ url_for("admin_contests") }}" style="font-family:var(--font-mono); font-size:11px; color:var(--gold); text-decoration:none; white-space:nowrap; border:1px solid var(--gold); padding:4px 10px; border-radius:4px;">Manage →</a>
+      <span style="font-size:13px; color:var(--text-muted); white-space:nowrap;">{{ ann.audience }}</span>
+      <a href="{{ url_for("admin_contests") }}" style="font-family:var(--font-mono); font-size:13px; color:var(--gold); text-decoration:none; white-space:nowrap; border:1px solid var(--gold); padding:4px 10px; border-radius:4px;">Manage →</a>
     </div>
     {% endfor %}
   </div>
@@ -346,15 +347,15 @@
       <div class="admin-section-title">
         ⚠ Needs Attention
         {% if needs_action or flagged_items %}
-        <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
           {{ (needs_action|length) + (flagged_items|length) }}
         </span>
         {% endif %}
       </div>
       <div style="display:flex; align-items:center; gap:16px;">
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="act-btn act-ref" style="font-size:11px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("backfill_hashes") | tojson }}, 'Backfill hashes now?')">🔍 Backfill Hashes</button>
-          <button type="button" class="act-btn act-del" style="font-size:11px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("admin_cleanup") | tojson }}, 'Delete all images with no thumbnail? Cannot be undone.')">🗑 Delete Broken</button>
+          <button type="button" class="act-btn act-ref" style="font-size:13px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("backfill_hashes") | tojson }}, 'Backfill hashes now?')">🔍 Backfill Hashes</button>
+          <button type="button" class="act-btn act-del" style="font-size:13px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("admin_cleanup") | tojson }}, 'Delete all images with no thumbnail? Cannot be undone.')">🗑 Delete Broken</button>
         </div>
         <span class="admin-chevron open" id="chev-review">▼</span>
       </div>
@@ -382,7 +383,7 @@
           <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);" id="selectedCount">0 selected</span>
           <button type="button" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;" onclick="adminBulkDelete()">🗑 Delete Selected</button>
           <button type="button" id="bulkRawBtn" disabled
-                  style="opacity:0.4; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
+                  style="opacity:0.4; font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
                   onclick="bulkRequestRaw()">📂 Request RAW</button>
         </div>
       </form>{# end bulkForm — tiles are outside so nested forms work correctly #}
@@ -393,9 +394,9 @@
         {%- set normal_imgs    = recent | rejectattr('is_flagged') | rejectattr('needs_review') | list -%}
 
         {% if attention_imgs %}
-        <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:#f08080; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+        <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:#f08080; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
           <span>▼ Needs action</span>
-          <span style="background:rgba(240,128,128,0.15); border:1px solid #f08080; border-radius:99px; padding:1px 8px; font-size:11px;">{{ attention_imgs|length }}</span>
+          <span style="background:rgba(240,128,128,0.15); border:1px solid #f08080; border-radius:99px; padding:1px 8px; font-size:13px;">{{ attention_imgs|length }}</span>
         </div>
         {% endif %}
 
@@ -403,7 +404,7 @@
           {% for img in attention_imgs + normal_imgs %}
           {%- if loop.index0 == attention_imgs|length and attention_imgs and normal_imgs -%}
             </div>{# close first grid #}
-            <div style="border-top:1px solid var(--border); margin:24px 0 16px; font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; padding-top:12px;">All images</div>
+            <div style="border-top:1px solid var(--border); margin:24px 0 16px; font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; padding-top:12px;">All images</div>
             <div class="admin-tile-grid">
           {%- endif -%}
           {%- set tile_class = 'is-flagged' if img.is_flagged else ('needs-review' if img.needs_review else ('is-ref' if img.is_calibration_example else '')) -%}
@@ -473,7 +474,7 @@
                 <span>{{ img.genre or '—' }}</span>
                 <span>{{ img.created_at.strftime('%d %b') }}</span>
               </div>
-              <div style="font-family:var(--font-mono); font-size:11px; color:#1a1a18; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              <div style="font-family:var(--font-mono); font-size:13px; color:#1a1a18; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                 @{{ recent_users.get(img.user_id, img.user_id) }}
               </div>
               <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
@@ -481,17 +482,17 @@
                 <div class="admin-tile-tier">{{ img.tier or '' }}</div>
               </div>
               {% if img.flagged_reason %}
-              <div style="font-size:11px; color:#f08080; margin-top:4px; line-height:1.3; word-break:break-word;"
+              <div style="font-size:13px; color:#f08080; margin-top:4px; line-height:1.5; word-break:break-word;"
                    title="{{ img.flagged_reason }}">⚠ {{ img.flagged_reason[:60] }}{% if img.flagged_reason|length > 60 %}…{% endif %}</div>
               {% elif img.needs_review and not img.is_flagged %}
-              <div style="font-size:11px; color:var(--gold); margin-top:4px;">🔍 Pending human review</div>
+              <div style="font-size:13px; color:var(--gold); margin-top:4px;">🔍 Pending human review</div>
               {% endif %}
               {% if img.ai_suspicion and img.ai_suspicion >= 0.4 and not img.is_flagged %}
               <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; margin-top:4px; padding:3px 8px; border-radius:3px; display:inline-block; background:#1a1a18; color:var(--gold); border-left: 3px solid {% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold-dark){% endif %};">
                 ⚠ AI SUSPICION: {{ '%.2f'|format(img.ai_suspicion) }}{% if img.ai_suspicion >= 0.7 %} — FLAG{% else %} — AMBER{% endif %}
               </div>
               {% if img.ai_suspicion_reason %}
-              <div style="font-size:11px; color:#a09080; margin-top:3px; line-height:1.4; word-break:break-word;">
+              <div style="font-size:13px; color:#a09080; margin-top:3px; line-height:1.5; word-break:break-word;">
                 {{ img.ai_suspicion_reason[:80] }}{% if img.ai_suspicion_reason|length > 80 %}…{% endif %}
               </div>
               {% endif %}
@@ -516,13 +517,13 @@
               {% if img.status == 'scored' %}
                 {% if img.raw_verified %}
                   <button type="button" class="act-btn" disabled
-                          style="cursor:default; border-color:#2e7d32; background:#2e7d32; color:#fff; font-weight:700; font-size:11px;">✓ VERIFIED</button>
+                          style="cursor:default; border-color:#2e7d32; background:#2e7d32; color:#fff; font-weight:700; font-size:13px;">✓ VERIFIED</button>
                 {% elif img.raw_disqualified %}
                   <button type="button" class="act-btn" disabled
-                          style="cursor:default; border-color:var(--red); background:var(--red); color:#fff; font-weight:700; font-size:11px;">✗ DISQUALIFIED</button>
+                          style="cursor:default; border-color:var(--red); background:var(--red); color:#fff; font-weight:700; font-size:13px;">✗ DISQUALIFIED</button>
                 {% elif img.raw_verification_required %}
                   <button type="button" class="act-btn" disabled
-                          style="cursor:default; border-color:#b8860b; background:#b8860b; color:#000; font-weight:700; font-size:11px;">⏳ PENDING</button>
+                          style="cursor:default; border-color:#b8860b; background:#b8860b; color:#000; font-weight:700; font-size:13px;">⏳ PENDING</button>
                 {% else %}
                   <button type="button" onclick="adminPost('raw-form-' + {{ img.id }}, 'Request RAW file from photographer?')" class="act-btn"
                           style="border-color:var(--gold); background:var(--gold); color:#000; font-weight:700;">📂 RAW</button>
@@ -635,11 +636,11 @@
       <table style="width:100%;border-collapse:collapse;font-size:14px;">
         <thead>
           <tr style="background:var(--surface-2);">
-            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Name</th>
-            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Email</th>
-            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Joined (IST)</th>
-            <th style="padding:8px 12px;text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Onboarded</th>
-            <th style="padding:8px 12px;text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Subscribed</th>
+            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Name</th>
+            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Email</th>
+            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Joined (IST)</th>
+            <th style="padding:8px 12px;text-align:center;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Onboarded</th>
+            <th style="padding:8px 12px;text-align:center;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Subscribed</th>
             <th style="padding:8px 12px;border-bottom:1px solid var(--border);"></th>
           </tr>
         </thead>
@@ -648,7 +649,7 @@
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:8px 12px;font-weight:700;color:var(--text-primary);">{{ u.full_name or u.username }}</td>
             <td style="padding:8px 12px;color:var(--text-muted);font-size:13px;">{{ u.email }}</td>
-            <td style="padding:8px 12px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">
+            <td style="padding:8px 12px;font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">
               {{ u.created_at.strftime('%d %b %Y %H:%M') ~ ' UTC' if u.created_at else '—' }}
             </td>
             <td style="padding:8px 12px;text-align:center;">
@@ -660,20 +661,20 @@
             </td>
             <td style="padding:8px 12px;text-align:center;">
               {% if u.is_subscribed %}
-                <span style="background:var(--gold);color:#1a1a18;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;">PRO</span>
+                <span style="background:var(--gold);color:#1a1a18;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;">PRO</span>
               {% else %}
-                <span style="color:var(--text-muted);font-size:12px;">Free</span>
+                <span style="color:var(--text-muted);font-size:13px;">Free</span>
               {% endif %}
             </td>
             <td style="padding:8px 12px;">
-              <a href="{{ url_for('admin_user_detail', user_id=u.id) }}" style="color:#1a3a6e;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;">VIEW →</a>
+              <a href="{{ url_for('admin_user_detail', user_id=u.id) }}" style="color:#1a3a6e;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-decoration:none;">VIEW →</a>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
       <div style="padding:12px 0 4px;display:flex;justify-content:flex-end;">
-        <a href="{{ url_for("admin_users") }}" style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#1a3a6e;text-decoration:none;">VIEW ALL MEMBERS →</a>
+        <a href="{{ url_for("admin_users") }}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;color:#1a3a6e;text-decoration:none;">VIEW ALL MEMBERS →</a>
       </div>
       {% else %}
       <p style="color:var(--text-muted);font-size:14px;padding:12px 0;">No new signups in the last 30 days.</p>
@@ -721,11 +722,11 @@
                   background:{{ '#fff5f5' if not all_ok else ('rgba(245,197,24,0.04)' if early else 'rgba(45,122,58,0.05)') }};">
 
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+          <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
                       color:{{ '#5a0e0e' if not all_ok else ('var(--gold)' if early else '#2d7a3a') }};">
             📊 Calibration Monitor
           </div>
-          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
                        padding:3px 10px; border-radius:3px;
                        background:{{ '#fde8e8' if not all_ok else ('rgba(245,197,24,0.15)' if early else 'rgba(45,122,58,0.18)') }};
                        border:1px solid {{ '#c0392b' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
@@ -736,24 +737,24 @@
 
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;">
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
-            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Platform avg</div>
+            <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Platform avg</div>
             <div style="font-size:24px; font-weight:700; color:{{ '#5a0e0e' if not avg_ok else 'var(--gold)' }};">{{ '%.2f'|format(avg) }}</div>
-            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 7.5</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-top:2px;">threshold ≤ 7.5</div>
           </div>
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
-            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Images scored</div>
+            <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Images scored</div>
             <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ n }}</div>
-            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">{{ 'early sample' if early else 'stable sample' }}</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-top:2px;">{{ 'early sample' if early else 'stable sample' }}</div>
           </div>
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
-            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Grandmaster %</div>
+            <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Grandmaster %</div>
             <div style="font-size:24px; font-weight:700; color:{{ '#5a0e0e' if not gm_ok else 'var(--gold)' }};">{{ '%.1f'|format(gm_pct) }}%</div>
-            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 5%</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-top:2px;">threshold ≤ 5%</div>
           </div>
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
-            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Master+ %</div>
+            <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Master+ %</div>
             <div style="font-size:24px; font-weight:700; color:{{ '#5a0e0e' if not master_ok else 'var(--gold)' }};">{{ '%.1f'|format(master_pct) }}%</div>
-            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 35%</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-top:2px;">threshold ≤ 35%</div>
           </div>
         </div>
 
@@ -785,7 +786,7 @@
 
         {# Tier distribution bars #}
         <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
-          <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:10px;">Tier distribution</div>
+          <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:10px;">Tier distribution</div>
           {% set tier_data = platform_cal.tier_counts %}
           {% set max_count = platform_cal.tier_max %}
           {% for tier in tier_data %}
@@ -820,7 +821,7 @@
       {% endif %}
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-        <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Calibration by Genre</div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Calibration by Genre</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button type="button" class="btn btn-solid" style="padding:8px 18px; font-size:13px;" onclick="adminPostUrl({{ url_for("run_calibration") | tojson }})">📸 Run Calibration Log</button>
           <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:#7a2222; color:#f88;" onclick="adminPostUrl({{ url_for("fix_calibration_table") | tojson }}, 'Rebuild calibration_logs table? Clears all previous snapshots.')">🔧 Fix Table</button>
@@ -842,9 +843,9 @@
               <td style="font-weight:600;">
                 {{ genre }}
                 {% if s.avg_score < 5.0 %}
-                  <span style="font-size:12px; color:var(--red); font-family:var(--font-mono); margin-left:6px;">⚠ LOW</span>
+                  <span style="font-size:13px; color:var(--red); font-family:var(--font-mono); margin-left:6px;">⚠ LOW</span>
                 {% elif s.avg_score > 8.5 %}
-                  <span style="font-size:12px; color:var(--amber); font-family:var(--font-mono); margin-left:6px;">📈 HIGH</span>
+                  <span style="font-size:13px; color:var(--amber); font-family:var(--font-mono); margin-left:6px;">📈 HIGH</span>
                 {% endif %}
               </td>
               <td class="mono">{{ s.count }}</td>
@@ -852,17 +853,17 @@
                 <span class="gold" style="font-size:16px;">{{ s.avg_score }}</span>
                 {% if trend.get('score_delta') is not none %}
                   {% set d = trend.score_delta %}
-                  <span style="font-family:var(--font-mono); font-size:12px; margin-left:4px;
+                  <span style="font-family:var(--font-mono); font-size:13px; margin-left:4px;
                                color:{{ 'var(--green)' if d > 0 else ('var(--red)' if d < 0 else 'var(--text-muted)') }};">
                     {{ '↑' if d > 0 else ('↓' if d < 0 else '→') }}{{ '%+.2f'|format(d) if d != 0 else '' }}
                   </span>
                 {% endif %}
               </td>
-              <td class="mono">{{ s.avg_dod }}{% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dod_delta > 0 else '↓' }}</span>{% endif %}</td>
-              <td class="mono">{{ s.avg_dis }}{% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dis_delta > 0 else '↓' }}</span>{% endif %}</td>
-              <td class="mono">{{ s.avg_dm }}{% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dm_delta > 0 else '↓' }}</span>{% endif %}</td>
-              <td class="mono">{{ s.avg_wonder }}{% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.wonder_delta > 0 else '↓' }}</span>{% endif %}</td>
-              <td class="mono">{{ s.avg_aq }}{% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.aq_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_dod }}{% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}<span style="font-size:13px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dod_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_dis }}{% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}<span style="font-size:13px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dis_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_dm }}{% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}<span style="font-size:13px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dm_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_wonder }}{% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}<span style="font-size:13px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.wonder_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_aq }}{% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}<span style="font-size:13px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.aq_delta > 0 else '↓' }}</span>{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -883,7 +884,7 @@
     </div>
     <div class="admin-section-body collapsed" id="body-tools">
 
-      <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Database &amp; Engine</div>
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Database &amp; Engine</div>
       <div class="tools-grid" style="margin-bottom:20px;">
         <div class="tool-row">
           <div>
@@ -908,17 +909,17 @@
         </div>
       </div>
 
-      <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Photographer &amp; Image Management</div>
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Photographer &amp; Image Management</div>
 
       <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;">
         <div class="tool-label" style="margin-bottom:10px;">Fix Photographer Names</div>
         <div id="rename-form" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
           <div style="flex:1; min-width:140px;">
-            <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Current name</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Current name</div>
             <input type="text" id="rename-old" value="Admin" class="tool-input">
           </div>
           <div style="flex:1; min-width:140px;">
-            <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Replace with</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Replace with</div>
             <input type="text" id="rename-new" placeholder="New name" class="tool-input">
           </div>
           <button type="button" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
@@ -930,7 +931,7 @@
         <div class="tool-label" style="margin-bottom:10px;">Transfer Images to Photographer</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
           <div style="flex:1; min-width:200px;">
-            <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Photographer name</div>
+            <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Photographer name</div>
             <input type="text" id="transfer-name" placeholder="e.g. Ashok Kochhar" class="tool-input">
           </div>
           <button type="button" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
@@ -951,7 +952,7 @@
       <div id="recal-form-wrap" style="background:var(--bg-card,#f7f5f1); border:1px solid var(--border); border-radius:8px; padding:18px 20px;">
         <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;">
           <div style="flex:1; min-width:160px;">
-            <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Image ID</label>
+            <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Image ID</label>
             <input id="recal-image-id" type="number" min="1" placeholder="e.g. 142"
                    style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text);"
                    oninput="recalLoadPreview(this.value)">
@@ -971,7 +972,7 @@
           ] %}
           {% for field, label in dims %}
           <div>
-            <label for="recal-{{ field }}" style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">{{ label }}</label>
+            <label for="recal-{{ field }}" style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">{{ label }}</label>
             <input id="recal-{{ field }}" type="number" min="0" max="10" step="0.1" placeholder="0.0–10.0"
                    style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text);"
                    oninput="recalComputeLive()">
@@ -980,7 +981,7 @@
         </div>
 
         <div style="margin-bottom:14px;">
-          <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for recalibration (required)</label>
+          <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for recalibration (required)</label>
           <input id="recal-reason" type="text" maxlength="200" placeholder="e.g. Wrong genre applied — should be street_juxtaposition not wildlife"
                  style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text); box-sizing:border-box;">
         </div>
@@ -1006,7 +1007,7 @@
       <div style="background:var(--bg-card,#f7f5f1); border:1px solid var(--border); border-radius:8px; padding:18px 20px;">
         <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;">
           <div style="flex:1; min-width:160px;">
-            <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Image ID</label>
+            <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Image ID</label>
             <input id="erscore-image-id" type="number" min="1" placeholder="e.g. 142"
                    style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text);"
                    oninput="erscoreLoadPreview(this.value)">
@@ -1016,7 +1017,7 @@
           </div>
         </div>
         <div style="margin-bottom:14px;">
-          <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason (required)</label>
+          <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason (required)</label>
           <input id="erscore-reason" type="text" maxlength="200"
                  placeholder="e.g. Rubric recalibration — landscape scoring update Session 46"
                  style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text); box-sizing:border-box;">
@@ -1024,7 +1025,7 @@
         <div style="margin-bottom:14px; display:flex; align-items:center; gap:10px;">
           <input type="checkbox" id="erscore-notify" style="width:16px; height:16px; cursor:pointer; accent-color:#F5C518;">
           <label for="erscore-notify" style="font-size:13px; color:var(--text-muted); cursor:pointer; user-select:none;">
-            Notify user by email &nbsp;<span style="color:var(--text-muted); font-size:11px; font-family:var(--font-mono,'Courier New'),monospace; letter-spacing:.04em;">(off by default — tick for individual rescores only)</span>
+            Notify user by email &nbsp;<span style="color:var(--text-muted); font-size:13px; font-family:var(--font-mono,'Courier New'),monospace; letter-spacing:.04em;">(off by default — tick for individual rescores only)</span>
           </label>
         </div>
         <button type="button" class="btn btn-solid" id="erscore-submit-btn"
@@ -1052,7 +1053,7 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
       {% for field, label in [('dod','Depth of Difficulty'),('disruption','Visual Disruption'),('dm','Decisive Moment'),('wonder','Wonder Factor'),('aq','Aesthetic Quality')] %}
       <div>
-        <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:3px;">{{ label }}</label>
+        <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:3px;">{{ label }}</label>
         <input id="recal-slider-{{ field }}" type="number" min="0" max="10" step="0.1"
                style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text); box-sizing:border-box;"
                oninput="recalLiveCompute()">
@@ -1063,7 +1064,7 @@
     <div id="recal-modal-projected" style="font-size:13px; font-weight:600; color:var(--gold,#F5C518); margin-bottom:12px; min-height:18px;"></div>
 
     <div style="margin-bottom:16px;">
-      <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason (required — logged in audit)</label>
+      <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason (required — logged in audit)</label>
       <input id="recal-modal-reason" type="text" maxlength="200" placeholder="e.g. Visual Disruption undervalued — strong geometric composition missed"
              style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:13px; background:var(--bg); color:var(--text); box-sizing:border-box;">
     </div>
@@ -1072,7 +1073,7 @@
       <label style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Caveat (optional) — the limit on this exception</label>
       <input id="recal-modal-caveat" type="text" maxlength="200" placeholder="e.g. would have scored higher still with full sharpness on the subject"
              style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:13px; background:var(--bg); color:var(--text); box-sizing:border-box;">
-      <div style="font-size:11px; color:var(--text-muted); margin-top:4px; line-height:1.5;">Stops this reason being read as a blanket rule for the genre when used as a calibration reference for future scoring.</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-top:4px; line-height:1.5;">Stops this reason being read as a blanket rule for the genre when used as a calibration reference for future scoring.</div>
     </div>
 
     <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -1329,7 +1330,7 @@
     <div class="admin-section-header" onclick="toggleSection('danger')">
       <div class="admin-section-title">⚠ Danger Zone</div>
       <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">Destructive actions — use with caution</span>
+        <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">Destructive actions — use with caution</span>
         <span class="admin-chevron" id="chev-danger">▼</span>
       </div>
     </div>
@@ -1546,12 +1547,12 @@ function rejectWithReason(imgId) {
   box.style.cssText = 'background:#1a1a18;border:1px solid #C8A84B;border-radius:6px;padding:28px 32px;width:480px;max-width:90vw;font-family:Arial,sans-serif;';
 
   box.innerHTML =
-    '<p style="margin:0 0 6px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;font-weight:700;">RAW VERIFICATION</p>' +
+    '<p style="margin:0 0 6px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;font-weight:700;">RAW VERIFICATION</p>' +
     '<h3 style="margin:0 0 18px;font-size:18px;color:#fff;">Reject Image</h3>' +
-    '<label style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:6px;">Reason <span style="color:#f08080;">*</span> — sent to photographer & logged</label>' +
+    '<label style="display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:6px;">Reason <span style="color:#f08080;">*</span> — sent to photographer & logged</label>' +
     '<textarea id="reject-modal-reason" rows="4" placeholder="e.g. RAW file submitted does not match the evaluated JPEG — different framing and exposure." ' +
     'style="width:100%;box-sizing:border-box;background:#2a2a28;border:1px solid #444;border-radius:4px;color:#fff;font-size:14px;padding:10px 12px;resize:vertical;font-family:Arial,sans-serif;"></textarea>' +
-    '<p id="reject-modal-err" style="color:#f08080;font-size:12px;margin:6px 0 0;display:none;">A reason is required before rejecting.</p>' +
+    '<p id="reject-modal-err" style="color:#f08080;font-size:13px;margin:6px 0 0;display:none;">A reason is required before rejecting.</p>' +
     '<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">' +
       '<button id="reject-modal-cancel" style="padding:9px 20px;background:transparent;border:1px solid #555;border-radius:4px;color:#aaa;cursor:pointer;font-size:13px;">Cancel</button>' +
       '<button id="reject-modal-confirm" style="padding:9px 20px;background:#7a1a1a;border:1px solid #f08080;border-radius:4px;color:#fff;cursor:pointer;font-size:13px;font-weight:700;">✗ Confirm Reject</button>' +
