@@ -4616,3 +4616,148 @@ def build_audit_data(result, image_obj):
         "wonder_reasoning":   result.get("wonder_reasoning", ""),
         "aq_reasoning":       result.get("aq_reasoning", ""),
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ADMIN CURATION — FAST DDI-ONLY SCORING (Session 122)
+# ═══════════════════════════════════════════════════════════════════════════
+# Built for the "Bulk Special Run" admin curation tool. A curator reviewing
+# a photographer's existing body of work already knows the analysis — they
+# just want to know where each image stands numerically. This intentionally
+# skips everything auto_score() does beyond the 5 DDI dimensions:
+#   - No vision_analyse() Call 1 (scene-fact grounding)
+#   - No Call 1.5 species research (Wildlife/Nature)
+#   - No mentor scorecard / narrative writing rules
+#   - No location advisory, transferable advice, calibration line, etc.
+# This is a SINGLE API call per image (vs. 2-3 for full auto_score()),
+# which is what actually makes a 30-image curator run fast rather than
+# just smaller. Uses the same rubric (SYSTEM_BRIEF + GENRE_CONTEXT) as
+# full scoring, so numbers stay consistent with the main engine — only
+# the narrative generation is removed, not the scoring logic itself.
+# ═══════════════════════════════════════════════════════════════════════════
+
+DDI_FAST_PROMPT = """Analyse this photograph using the Apex DDI Engine.
+
+Genre: {genre}
+
+GENRE CONTEXT: {genre_context}
+
+MANDATORY: If genre is 'Creative' — apply STEP 0 override immediately.
+Sharpness is never penalised. Score DoD on technique difficulty.
+
+Score all five modules (DoD, Disruption, DM, Wonder, AQ). Apply all Apex
+layer rules (Soul Bonus, Humanity Check, Iconic Wall, Excellence Bonus,
+Plateau Penalty, Identity Cap). Calculate the final weighted score using
+the genre weights above. Assign the correct tier and the closest-matching
+archetype.
+
+Respond ONLY with this exact JSON shape, no other fields, no preamble,
+no markdown:
+{{"dod": <float>, "disruption": <float>, "dm": <float>, "wonder": <float>,
+"aq": <float>, "score": <float>, "tier": "<tier name>",
+"archetype": "<archetype name>"}}
+"""
+
+
+def auto_score_ddi_fast(image_path, genre, sub_genre=None):
+    """
+    Fast, DDI-only scoring for the admin curation tool. Single API call,
+    no narrative, no vision grounding call, no species research.
+
+    Returns a dict: {dod, disruption, dm, wonder, aq, score, tier, archetype}
+    Raises ValueError on API failure (same contract as auto_score()).
+    """
+    if not ANTHROPIC_API_KEY:
+        raise ValueError("ANTHROPIC_API_KEY not set")
+
+    _t_start = _time.time()
+    img_data, media_type = encode_image(image_path)
+
+    effective_genre = get_effective_genre(genre, sub_genre) if sub_genre else genre
+    genre_context = GENRE_CONTEXT.get(effective_genre, GENRE_CONTEXT.get(genre, ''))
+
+    prompt = DDI_FAST_PROMPT.format(genre=genre, genre_context=genre_context)
+
+    payload = {
+        "model":       MODEL,
+        "max_tokens":  300,
+        "temperature": 0.2,
+        "system":      SYSTEM_BRIEF,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type":       "base64",
+                            "media_type": media_type,
+                            "data":       img_data,
+                        },
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+    }
+
+    response   = None
+    last_error = None
+    for attempt in range(5):
+        try:
+            response = httpx.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key":         ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type":      "application/json",
+                },
+                json=payload,
+                timeout=60,
+            )
+            if response.status_code == 529:
+                wait = (attempt + 1) * 20
+                print(f"[auto_score_ddi_fast] API overloaded (529), retrying in {wait}s... (attempt {attempt+1}/5)")
+                _time.sleep(wait)
+                continue
+            break
+        except httpx.TimeoutException as e:
+            last_error = e
+            wait = (attempt + 1) * 15
+            print(f"[auto_score_ddi_fast] Timeout on attempt {attempt+1}/5, retrying in {wait}s...")
+            _time.sleep(wait)
+            continue
+        except Exception as e:
+            last_error = e
+            print(f"[auto_score_ddi_fast] Request error on attempt {attempt+1}/5: {e}")
+            break
+
+    if response is None:
+        raise ValueError(f"All retry attempts failed. Last error: {last_error}")
+
+    print(f"[auto_score_ddi_fast][timing] TOTAL: {_time.time() - _t_start:.2f}s")
+
+    if response.status_code != 200:
+        raise ValueError(f"API error {response.status_code}: {response.text}")
+
+    content = response.json()
+    text = ""
+    for block in content.get("content", []):
+        if block.get("type") == "text":
+            text += block.get("text", "")
+    text = re.sub(r"```json|```", "", text).strip()
+
+    try:
+        result = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse DDI-fast JSON response: {e}. Raw text: {text[:300]}")
+
+    required = ('dod', 'disruption', 'dm', 'wonder', 'aq', 'score', 'tier', 'archetype')
+    missing = [k for k in required if k not in result]
+    if missing:
+        raise ValueError(f"DDI-fast response missing fields: {missing}. Raw: {text[:300]}")
+
+    for k in ('dod', 'disruption', 'dm', 'wonder', 'aq', 'score'):
+        result[k] = float(result[k])
+
+    return result
