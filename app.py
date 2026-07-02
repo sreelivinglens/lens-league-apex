@@ -1740,7 +1740,7 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'Onboarding phone/address migration warning: {_pa_mig}')
 
-            # ── Session 122 — Admin curation ("Bulk Special Run") ──────────────
+            # ── Session 122 — Admin curation ("Curator's Bench") ──────────────
             # Isolates admin scratch-space uploads (scoring a photographer's
             # existing work for exhibition selection) from real Image rows.
             try:
@@ -10755,7 +10755,7 @@ def admin_users():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ADMIN CURATION — "Bulk Special Run" (Session 122)
+# ADMIN CURATION — "Curator's Bench" (Session 122)
 # ═══════════════════════════════════════════════════════════════════════════
 # Scratch space for scoring a photographer's existing work (e.g. curating
 # 30 of Carmen's photos for exhibition selection) without touching her real
@@ -10880,20 +10880,18 @@ def admin_curation_upload():
         filename = secure_filename(file.filename)
         raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', uid + '_' + filename)
         file.save(raw_path)
-        thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        # Root cause of a real production bug: ingest_image() enforces its
+        # own hardcoded 1500px minimum internally and raises before this
+        # function ever got a chance to check dimensions itself — the
+        # earlier manual check below this line was dead code. Fixed at the
+        # source: min_short_side is now a parameter on ingest_image() (see
+        # engine/processor.py), so Curator's Bench can use its own 800px
+        # bar while every other caller keeps the default 1500px unchanged.
+        thumb_path, w, h, fmt, phash = ingest_image(
+            raw_path, app.config['UPLOAD_FOLDER'], min_short_side=ADMIN_CURATION_MIN_DIMENSION
+        )
         if os.path.exists(raw_path):
             os.remove(raw_path)
-
-        # Min-dimension gate — short side must be >= 800px (#2)
-        short_side = min(w, h)
-        if short_side < ADMIN_CURATION_MIN_DIMENSION:
-            if os.path.exists(thumb_path):
-                os.remove(thumb_path)
-            return jsonify({
-                'filename': file.filename,
-                'status': f'rejected — short side {short_side}px is below the {ADMIN_CURATION_MIN_DIMENSION}px minimum',
-                'score': None, 'tier': None
-            }), 200
 
         # No duplicate check, no watermark check, no NSFW/Hive check — deliberate
         # (#3, #4, #5) — curator is intentionally re-uploading known work.
