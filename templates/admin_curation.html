@@ -63,7 +63,7 @@
     display: flex; align-items: baseline; gap: 10px;
   }
   .cur-genre-header .cur-genre-count { font-size: 13px; font-weight: 400; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
-  .cur-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .cur-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .cur-card {
     background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-md);
     overflow: hidden; position: relative;
@@ -72,17 +72,40 @@
     position: absolute; top: 8px; left: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     background: rgba(13,13,11,0.7); color: #FFF; padding: 3px 8px; border-radius: 4px; z-index: 2;
   }
-  .cur-card-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #F5F0E8; }
+  .cur-card-check {
+    position: absolute; top: 8px; right: 8px; z-index: 2; width: 22px; height: 22px;
+    accent-color: var(--gold); cursor: pointer;
+  }
+  .cur-card-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #F5F0E8; cursor: zoom-in; }
   .cur-card-body { padding: 12px 14px; }
   .cur-card-name { font-weight: 600; color: var(--text-primary); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
   .cur-card-photog { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
   .cur-card-score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .cur-card-dims { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px; }
-  .cur-card-delete {
-    width: 100%; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; padding: 8px 12px; min-height: 44px;
-    background: rgba(220,50,50,.08); color: #e05555; border: 1px solid rgba(220,50,50,.2);
+  .cur-card-dims { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .cur-card.selected { outline: 3px solid var(--gold); outline-offset: -3px; }
+
+  .cur-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  .cur-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cur-selected-count { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin-right: 4px; }
+  .cur-toolbar-btn {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 8px 14px; min-height: 40px;
+    background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border);
     border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .cur-toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .cur-toolbar-btn.download:not(:disabled) { background: var(--gold); color: #0D0D0B; border-color: var(--gold-dark); }
+  .cur-toolbar-btn.delete:not(:disabled) { background: rgba(220,50,50,.1); color: #e05555; border-color: rgba(220,50,50,.25); }
+
+  .cur-lightbox-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(13,13,11,0.92); z-index: 2000;
+    align-items: center; justify-content: center; flex-direction: column; padding: 32px;
+  }
+  .cur-lightbox-img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 4px; }
+  .cur-lightbox-caption { color: #F5F0E8; font-family: var(--font-mono); font-size: 14px; margin-top: 16px; text-align: center; }
+  .cur-lightbox-close {
+    position: absolute; top: 20px; right: 28px; font-size: 36px; line-height: 1; color: #FFF;
+    background: none; border: none; cursor: pointer; font-weight: 300;
   }
 
   .cur-progress-wrap { display: none; margin: 16px 0; }
@@ -111,11 +134,11 @@
     border: none; border-radius: var(--radius-sm); cursor: pointer; }
 
   @media(max-width: 900px) {
-    .cur-grid { grid-template-columns: repeat(2, 1fr); }
+    .cur-grid { grid-template-columns: repeat(3, 1fr); }
   }
   @media(max-width: 600px) {
     .cur-form-row { flex-direction: column; }
-    .cur-grid { grid-template-columns: 1fr; }
+    .cur-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   }
 </style>
 {% endblock %}
@@ -173,7 +196,16 @@
   </div>
 
   <div class="cur-panel">
-    <h3>Scored — Ranked Highest to Lowest, by Genre</h3>
+    <div class="cur-toolbar">
+      <h3 style="margin-bottom:0;">Scored — Ranked Highest to Lowest, by Genre</h3>
+      <div class="cur-toolbar-actions">
+        <span class="cur-selected-count" id="cur-selected-count">0 selected</span>
+        <button class="cur-toolbar-btn" id="cur-select-all-btn" type="button">Select All</button>
+        <button class="cur-toolbar-btn" id="cur-select-none-btn" type="button">Clear</button>
+        <button class="cur-toolbar-btn download" id="cur-download-btn" type="button" disabled>Download Selected</button>
+        <button class="cur-toolbar-btn delete" id="cur-delete-selected-btn" type="button" disabled>Delete Selected</button>
+      </div>
+    </div>
     {% if genre_groups %}
       {% for genre, imgs in genre_groups.items() %}
       <div class="cur-genre-section">
@@ -184,8 +216,10 @@
         <div class="cur-grid">
           {% for img in imgs %}
           <div class="cur-card" data-image-id="{{ img.id }}">
+            <input type="checkbox" class="cur-card-check" data-image-id="{{ img.id }}">
             {% if img.score %}<div class="cur-card-rank">#{{ loop.index }}</div>{% endif %}
-            <img class="cur-card-thumb" src="{{ img.thumb_url or '' }}" alt="">
+            <img class="cur-card-thumb" src="{{ img.thumb_url or '' }}" alt="" data-full="{{ img.thumb_url or '' }}"
+                 data-caption="{{ img.original_filename or img.asset_name }} · {{ img.photographer_name }}{% if img.score %} · {{ '%.2f'|format(img.score) }} ({{ img.tier }}){% endif %}">
             <div class="cur-card-body">
               <div class="cur-card-name">{{ img.original_filename or img.asset_name }}</div>
               <div class="cur-card-photog">{{ img.photographer_name }}</div>
@@ -203,10 +237,6 @@
                 Won {{ '%.1f'|format(img.wonder_score) }} · AQ {{ '%.1f'|format(img.aq_score) }}
               </div>
               {% endif %}
-              <form method="POST" action="{{ url_for('admin_curation_delete', image_id=img.id) }}"
-                    onsubmit="return confirm('Delete this image permanently?');">
-                <button type="submit" class="cur-card-delete">Delete</button>
-              </form>
             </div>
           </div>
           {% endfor %}
@@ -218,6 +248,20 @@
     {% endif %}
   </div>
 
+</div>
+
+<!-- Hidden forms submitted by the toolbar's bulk actions -->
+<form method="POST" action="{{ url_for('admin_curation_delete_bulk') }}" id="cur-bulk-delete-form" style="display:none;">
+  <input type="hidden" name="image_ids" id="cur-bulk-delete-ids">
+</form>
+<form method="POST" action="{{ url_for('admin_curation_download_bulk') }}" id="cur-bulk-download-form" style="display:none;">
+  <input type="hidden" name="image_ids" id="cur-bulk-download-ids">
+</form>
+
+<div class="cur-lightbox-overlay" id="cur-lightbox-overlay">
+  <button class="cur-lightbox-close" id="cur-lightbox-close" type="button">&times;</button>
+  <img class="cur-lightbox-img" id="cur-lightbox-img" src="" alt="">
+  <div class="cur-lightbox-caption" id="cur-lightbox-caption"></div>
 </div>
 
 <div class="cur-modal-overlay" id="cur-modal-overlay">
@@ -344,6 +388,81 @@
     modalOverlay.style.display = 'flex';
     runBtn.disabled = false;
   });
+
+  // ── Selection (checkboxes) — shared by bulk delete and bulk download ──────
+  const checkboxes      = Array.from(document.querySelectorAll('.cur-card-check'));
+  const selectedCountEl = document.getElementById('cur-selected-count');
+  const selectAllBtn    = document.getElementById('cur-select-all-btn');
+  const selectNoneBtn   = document.getElementById('cur-select-none-btn');
+  const downloadBtn     = document.getElementById('cur-download-btn');
+  const deleteBtn       = document.getElementById('cur-delete-selected-btn');
+  const bulkDeleteForm  = document.getElementById('cur-bulk-delete-form');
+  const bulkDeleteIds   = document.getElementById('cur-bulk-delete-ids');
+  const bulkDownloadForm = document.getElementById('cur-bulk-download-form');
+  const bulkDownloadIds  = document.getElementById('cur-bulk-download-ids');
+
+  function getSelectedIds() {
+    return checkboxes.filter(cb => cb.checked).map(cb => cb.dataset.imageId);
+  }
+
+  function refreshToolbar() {
+    const ids = getSelectedIds();
+    selectedCountEl.textContent = `${ids.length} selected`;
+    downloadBtn.disabled = ids.length === 0;
+    deleteBtn.disabled = ids.length === 0;
+  }
+
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const card = cb.closest('.cur-card');
+      if (card) card.classList.toggle('selected', cb.checked);
+      refreshToolbar();
+    });
+  });
+
+  if (selectAllBtn) selectAllBtn.addEventListener('click', () => {
+    checkboxes.forEach(cb => { cb.checked = true; cb.closest('.cur-card').classList.add('selected'); });
+    refreshToolbar();
+  });
+  if (selectNoneBtn) selectNoneBtn.addEventListener('click', () => {
+    checkboxes.forEach(cb => { cb.checked = false; cb.closest('.cur-card').classList.remove('selected'); });
+    refreshToolbar();
+  });
+
+  if (deleteBtn) deleteBtn.addEventListener('click', () => {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    if (!confirm(`Delete ${ids.length} image${ids.length !== 1 ? 's' : ''} permanently? This cannot be undone.`)) return;
+    bulkDeleteIds.value = ids.join(',');
+    bulkDeleteForm.submit();
+  });
+
+  if (downloadBtn) downloadBtn.addEventListener('click', () => {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    bulkDownloadIds.value = ids.join(',');
+    bulkDownloadForm.submit();
+  });
+
+  refreshToolbar();
+
+  // ── Lightbox — click a thumbnail to view full size ─────────────────────────
+  const lightboxOverlay = document.getElementById('cur-lightbox-overlay');
+  const lightboxImg     = document.getElementById('cur-lightbox-img');
+  const lightboxCaption = document.getElementById('cur-lightbox-caption');
+  const lightboxClose   = document.getElementById('cur-lightbox-close');
+
+  document.querySelectorAll('.cur-card-thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      lightboxImg.src = thumb.dataset.full || thumb.src;
+      lightboxCaption.textContent = thumb.dataset.caption || '';
+      lightboxOverlay.style.display = 'flex';
+    });
+  });
+  function closeLightbox() { lightboxOverlay.style.display = 'none'; lightboxImg.src = ''; }
+  if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+  lightboxOverlay.addEventListener('click', (e) => { if (e.target === lightboxOverlay) closeLightbox(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 })();
 </script>
 {% endblock %}
