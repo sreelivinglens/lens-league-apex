@@ -84,6 +84,14 @@
   .cur-card-dims { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); line-height: 1.6; }
   .cur-card.selected { outline: 3px solid var(--gold); outline-offset: -3px; }
 
+  .cur-search-input {
+    font-size: 14px; padding: 8px 12px; min-height: 40px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: #FFFFFF; color: var(--text-primary);
+    width: 220px; max-width: 100%;
+  }
+  .cur-search-empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 15px; display: none; }
+  .cur-genre-section.cur-hidden, .cur-card.cur-hidden { display: none !important; }
+
   .cur-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
   .cur-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .cur-selected-count { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin-right: 4px; }
@@ -199,6 +207,7 @@
     <div class="cur-toolbar">
       <h3 style="margin-bottom:0;">Scored — Ranked Highest to Lowest, by Genre</h3>
       <div class="cur-toolbar-actions">
+        <input type="text" class="cur-search-input" id="cur-search-input" placeholder="Find a file or photographer...">
         <span class="cur-selected-count" id="cur-selected-count">0 selected</span>
         <button class="cur-toolbar-btn" id="cur-select-all-btn" type="button">Select All</button>
         <button class="cur-toolbar-btn" id="cur-select-none-btn" type="button">Clear</button>
@@ -206,6 +215,7 @@
         <button class="cur-toolbar-btn delete" id="cur-delete-selected-btn" type="button" disabled>Delete Selected</button>
       </div>
     </div>
+    <div class="cur-search-empty" id="cur-search-empty" style="display:none;">No matches for this search.</div>
     {% if genre_groups %}
       {% for genre, imgs in genre_groups.items() %}
       <div class="cur-genre-section">
@@ -215,7 +225,8 @@
         </div>
         <div class="cur-grid">
           {% for img in imgs %}
-          <div class="cur-card" data-image-id="{{ img.id }}">
+          <div class="cur-card" data-image-id="{{ img.id }}"
+               data-search="{{ (img.original_filename or img.asset_name or '')|lower }} {{ (img.photographer_name or '')|lower }}">
             <input type="checkbox" class="cur-card-check" data-image-id="{{ img.id }}">
             {% if img.score %}<div class="cur-card-rank">#{{ loop.index }}</div>{% endif %}
             <img class="cur-card-thumb" src="{{ img.thumb_url or '' }}" alt="" data-full="{{ img.thumb_url or '' }}"
@@ -339,7 +350,8 @@
 
     let scored = 0;
     let failed = 0;
-    const failedNames = [];
+    const failedNames = [];       // display strings, all apparent failures
+    const networkErrorFiles = []; // filenames only — the ambiguous ones worth verifying
     const total = selectedFiles.length;
 
     // Sequential, one request at a time — no manual step-through needed.
@@ -368,11 +380,48 @@
           failedNames.push(`${file.name} — ${result.status || 'unknown error'}`);
         }
       } catch (err) {
+        // A fetch() throw here is ambiguous — it can mean the connection
+        // dropped client-side (proxy/browser timeout) AFTER the server
+        // already finished and committed the row. Don't trust this as a
+        // true failure yet; flag it for server-side verification below.
         failed++;
-        failedNames.push(`${file.name} — network error`);
+        failedNames.push(`${file.name} — network error (verifying...)`);
+        networkErrorFiles.push(file.name);
       }
 
       progressFill.style.width = `${Math.round(((i + 1) / total) * 100)}%`;
+    }
+
+    // ── Verify apparent network-error failures against real DB state ──────
+    // Fixes the exact bug reported in production: a batch showed 5 files as
+    // "network error" in the popup while all 5 had actually scored
+    // successfully server-side — the browser gave up waiting, the sync
+    // worker didn't. Reclassify anything the server confirms as scored.
+    if (networkErrorFiles.length > 0) {
+      progressLbl.textContent = `Verifying ${networkErrorFiles.length} uncertain result${networkErrorFiles.length !== 1 ? 's' : ''} against the server...`;
+      try {
+        const verifyResp = await fetch('{{ url_for("admin_curation_verify_recent") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'filenames=' + encodeURIComponent(networkErrorFiles.join('\x1f'))
+        });
+        const verifyResult = await verifyResp.json();
+        const verifiedNames = new Set((verifyResult.verified || []).map(v => v.filename));
+
+        verifiedNames.forEach(fname => {
+          const idx = failedNames.findIndex(s => s.startsWith(`${fname} — network error`));
+          if (idx !== -1) {
+            failedNames.splice(idx, 1);
+            failed--;
+            scored++;
+          }
+        });
+      } catch (verifyErr) {
+        // Verification itself failing just means we fall back to showing
+        // the original (possibly-wrong) network-error count — not worse
+        // than before this fix existed.
+        console.warn('Verification check failed:', verifyErr);
+      }
     }
 
     progressLbl.textContent = `Done — ${scored + failed} of ${total} processed.`;
@@ -421,7 +470,12 @@
   });
 
   if (selectAllBtn) selectAllBtn.addEventListener('click', () => {
-    checkboxes.forEach(cb => { cb.checked = true; cb.closest('.cur-card').classList.add('selected'); });
+    checkboxes.forEach(cb => {
+      const card = cb.closest('.cur-card');
+      if (card.classList.contains('cur-hidden')) return; // respect active search filter
+      cb.checked = true;
+      card.classList.add('selected');
+    });
     refreshToolbar();
   });
   if (selectNoneBtn) selectNoneBtn.addEventListener('click', () => {
@@ -445,6 +499,31 @@
   });
 
   refreshToolbar();
+
+  // ── Search — find a specific file/photographer without scrolling ─────────
+  const searchInput = document.getElementById('cur-search-input');
+  const searchEmpty = document.getElementById('cur-search-empty');
+  const allGenreSections = Array.from(document.querySelectorAll('.cur-genre-section'));
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      let anyVisible = false;
+
+      allGenreSections.forEach(section => {
+        const cardsInSection = Array.from(section.querySelectorAll('.cur-card'));
+        let sectionHasMatch = false;
+        cardsInSection.forEach(card => {
+          const matches = !q || (card.dataset.search || '').includes(q);
+          card.classList.toggle('cur-hidden', !matches);
+          if (matches) { sectionHasMatch = true; anyVisible = true; }
+        });
+        section.classList.toggle('cur-hidden', !sectionHasMatch);
+      });
+
+      searchEmpty.style.display = (q && !anyVisible) ? 'block' : 'none';
+    });
+  }
 
   // ── Lightbox — click a thumbnail to view full size ─────────────────────────
   const lightboxOverlay = document.getElementById('cur-lightbox-overlay');
