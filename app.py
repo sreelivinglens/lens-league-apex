@@ -10812,6 +10812,46 @@ def admin_curation():
     return render_template('admin_curation.html', genre_groups=genre_groups, images=images)
 
 
+@app.route('/admin/curation/verify-recent', methods=['POST'])
+@login_required
+@admin_required
+def admin_curation_verify_recent():
+    """Cross-check apparent upload failures against the database. A failure
+    reported by the browser (e.g. 'network error') can mean the connection
+    dropped client-side after the server already finished the upload and
+    committed the row — the sync worker doesn't know the browser gave up.
+    Called automatically after a batch run for every filename the frontend
+    thinks failed, so the completion popup reflects real server state
+    instead of what the browser's fetch() call happened to see.
+    """
+    filenames_raw = request.form.get('filenames', '')
+    filenames = [f.strip() for f in filenames_raw.split('\x1f') if f.strip()]
+    if not filenames:
+        return jsonify({'verified': []}), 200
+
+    # Only look at recent uploads (last 15 min) from this admin's own
+    # curation batch — narrows the match and avoids any cross-batch mixup
+    # if filenames happen to repeat across different runs.
+    cutoff = datetime.utcnow() - timedelta(minutes=15)
+    rows = (Image.query
+            .filter(
+                Image.user_id == current_user.id,
+                Image.is_admin_curation == True,
+                Image.original_filename.in_(filenames),
+                Image.created_at >= cutoff,
+            )
+            .all())
+
+    verified = [{
+        'filename': img.original_filename,
+        'score':    img.score,
+        'tier':     img.tier,
+        'image_id': img.id,
+    } for img in rows]
+
+    return jsonify({'verified': verified}), 200
+
+
 @app.route('/admin/curation/upload', methods=['POST'])
 @login_required
 @admin_required
