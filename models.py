@@ -204,6 +204,15 @@ class Image(db.Model):
     camera_track        = db.Column(db.String(20), nullable=True)
     is_public           = db.Column(db.Boolean, default=True, nullable=False)
 
+    # Admin curation ("Bulk Special Run", Session 122) — scratch-space uploads
+    # for scoring a photographer's existing work without touching their real
+    # account or the admin's own gallery. is_public is always forced False
+    # for these; this flag is what actually excludes them from leaderboards,
+    # stats, contests, and any other public-facing Image query. phash is
+    # still written normally so dedup/score-anchoring benefit from these
+    # uploads platform-wide — only the row's visibility is restricted.
+    is_admin_curation   = db.Column(db.Boolean, default=False, nullable=False)
+
     legal_declaration   = db.Column(db.Boolean, default=False)
 
     exif_status         = db.Column(db.String(20),  default='unverified')
