@@ -78,7 +78,7 @@ def hash_similarity_pct(hash1: str, hash2: str) -> float:
     return round((1 - dist / total_bits) * 100, 1)
 
 
-def ingest_image(file_path, upload_folder):
+def ingest_image(file_path, upload_folder, min_short_side=1500):
     ext = os.path.splitext(file_path)[1].lower()
     uid = str(uuid.uuid4())
 
@@ -115,12 +115,15 @@ def ingest_image(file_path, upload_folder):
             "Please upload your original photograph."
         )
 
-    # Minimum resolution enforcement
+    # Minimum resolution enforcement — configurable per caller. Default
+    # 1500px is the site-wide standard for real submissions; Curator's
+    # Bench (admin quick-scoring tool) passes a lower threshold since it's
+    # for fast curation review, not contest-ready output (Session 123).
     short_side = min(w, h)
-    if short_side < 1500:
+    if short_side < min_short_side:
         raise ValueError(
             f'Image resolution too low ({w}\u00d7{h}px). '
-            'The shorter side must be at least 1500px. '
+            f'The shorter side must be at least {min_short_side}px. '
             'Please upload a higher resolution file.'
         )
 
