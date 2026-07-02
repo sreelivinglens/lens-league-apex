@@ -533,7 +533,7 @@ def audit_html(filepath):
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
         'my_gallery.html', 'base.html',
         'raw_appeal.html', 'raw_status.html', 'raw_submit.html',
-        'register.html', 'login.html', 'forgot_password.html',
+        'register.html', 'login.html', 'forgot_password.html', 'contact.html',
         'admin_raw_detail.html', 'admin_raw_verification.html', 'admin_raw_poty.html',
         'admin.html', 'admin_user_detail.html', 'admin_ratings.html',
         'admin_users.html',
