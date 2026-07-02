@@ -201,7 +201,32 @@ ALL_MASTERS = {
     'Sugimoto':               'Hiroshi+Sugimoto+photography',
     'Nan Goldin':             'Nan+Goldin+photography',
     'Goldin':                 'Nan+Goldin+photography',
+    'Harold Edgerton':        'Harold+Edgerton+photography',
+    'Edgerton':               'Harold+Edgerton+photography',
 }
+
+# ---------------------------------------------------------------------------
+# linkify_search  -  Jinja filter used by image_detail.html's master_render
+# macro. Converts "Search: <term>." patterns in AI-generated scorecard
+# commentary into a clickable Google Images search link. This behavior was
+# documented in master_render's own comment as intended but was never
+# actually implemented -- found auditing image_detail.html (Session 122).
+# Escapes the input first (autoescape-safe), inserts real <a> tags via
+# regex, then returns Markup so Jinja doesn't re-escape the injected HTML.
+# ---------------------------------------------------------------------------
+@app.template_filter('linkify_search')
+def linkify_search(text):
+    import re as _re_ls
+    from markupsafe import Markup as _Markup, escape as _escape
+    escaped = str(_escape(text))
+    def _repl(m):
+        term = m.group(1).strip()
+        query = term.replace(' ', '+')
+        return (f'<a href="https://www.google.com/search?q={query}&tbm=isch" '
+                f'target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; '
+                f'text-decoration-color:rgba(0,0,0,0.4); text-underline-offset:2px;">{_escape(term)}</a>')
+    result = _re_ls.sub(r'Search:\s*([^.]+)\.', _repl, escaped)
+    return _Markup(result)
 
 # ---------------------------------------------------------------------------
 # Email utility  -  Gmail SMTP
