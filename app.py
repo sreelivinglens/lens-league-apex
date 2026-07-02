@@ -4823,8 +4823,16 @@ def _get_curriculum_lesson(user, progress_data):
     if lesson is None:
         return None
 
-    # Alternate master days
-    show_master = (not state['last_had_master']) and bool(lesson.get('master'))
+    # Master days: always show master text when this lesson has master data,
+    # rather than alternating with the commons_file image. Founder decision
+    # (Session 121) — the commons image led to visual inconsistency between
+    # users (a cropped historical photo vs. the clean master-quote card) and
+    # was removed in favour of one consistent format everywhere. The
+    # commons_file image path in dashboard.html/mission_detail.html is kept
+    # in place but is now unreachable under current curriculum data, since
+    # every lesson with commons_file also has master data — it would only
+    # ever trigger for a future lesson with an image but no master.
+    show_master = bool(lesson.get('master'))
 
     # Get genre-specific assignment
     assignment = lesson['assignments'].get(mission_genre,
