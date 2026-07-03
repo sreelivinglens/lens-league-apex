@@ -10828,6 +10828,18 @@ def admin_users():
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+# Founder-owned accounts that are NOT role='admin' — e.g. test/mentor-setup
+# accounts used to see the platform as a real member would, rather than
+# through the admin panel. role=='admin' alone does not catch these.
+# Identified directly by the founder (Session 123): @sreeks and
+# @living_lens are both the founder, not real members — same email domain
+# pattern (sreelivinglens@gmail.com / sreeslivinglens@gmail.com) confirms it.
+# Update this set if more founder test accounts are created later. Used by
+# both _compute_engagement_data() below and the _log_page_view() hook
+# further down — single definition so the two can never drift apart.
+_FOUNDER_TEST_USERNAMES = {'sreeks', 'living_lens'}
+
+
 def _compute_engagement_data(weeks=16):
     """
     Shared engine behind both /admin (dashboard snapshot widget) and
@@ -10841,7 +10853,10 @@ def _compute_engagement_data(weeks=16):
 
     now = datetime.utcnow()
 
-    users = User.query.filter(User.role != 'admin').order_by(User.created_at.asc()).all()
+    users = (User.query
+             .filter(User.role != 'admin')
+             .filter(User.username.notin_(_FOUNDER_TEST_USERNAMES))
+             .order_by(User.created_at.asc()).all())
 
     # ── Existing images, grouped by user ──────────────────────────────────
     img_rows = db.session.execute(db.text(
@@ -11031,7 +11046,11 @@ def _admin_curation_content_length_override():
 #
 # Deliberately narrow scope:
 #   - GET requests only (skips form POSTs/XHR polling entirely)
-#   - Logged-in users only (current_user.is_authenticated)
+#   - Logged-in members only — admins (role == 'admin') are explicitly
+#     excluded even when GET-ing these same routes, so the founder's own
+#     testing/browsing never pollutes member engagement data (caught before
+#     first deploy — worth remembering if a second admin account is ever
+#     added, since 'admin' is checked by role, not by user_id).
 #   - A fixed whitelist of endpoints that actually answer "where did they
 #     go" — NOT a catch-all. /score-status polls every 2s during upload and
 #     would drown this table; /admin/* is the founder, not a member; static
@@ -11044,6 +11063,9 @@ _PAGE_VIEW_ENDPOINTS = {
     'mentors', 'portfolio_manager', 'image_detail',
     'about', 'science', 'how_it_works', 'pricing',
 }
+# _FOUNDER_TEST_USERNAMES is defined once, above _compute_engagement_data() —
+# reused here so the engagement page and this logging hook can never
+# disagree about which accounts are founder-owned test accounts.
 
 @app.before_request
 def _log_page_view():
@@ -11054,6 +11076,10 @@ def _log_page_view():
     try:
         if not current_user.is_authenticated:
             return
+        if current_user.role == 'admin':
+            return  # founder's own admin-role visits must never pollute member engagement data
+        if current_user.username in _FOUNDER_TEST_USERNAMES:
+            return  # founder's non-admin test/mentor-setup accounts — see comment above _compute_engagement_data()
         db.session.execute(db.text(
             "INSERT INTO page_views (user_id, endpoint, viewed_at) VALUES (:uid, :ep, NOW())"
         ), {'uid': current_user.id, 'ep': request.endpoint})
