@@ -951,6 +951,23 @@ def _run_startup_tasks():
                         UNIQUE(user_id, image_id)
                     )""",
                     "CREATE INDEX IF NOT EXISTS ix_portfolio_images_user_id ON portfolio_images(user_id)",
+                    # Session 123 — lightweight page-view log. Answers "did they
+                    # come back and what did they look at" separately from
+                    # uploads/deletes, which are the only behavioural signal
+                    # that existed before this. Deliberately minimal columns
+                    # (no IP, no device fingerprint, no session replay) —
+                    # same DPDP-conscious pattern as upload_history_log.
+                    # Logged only for a whitelisted set of endpoints (see
+                    # _log_page_view() before_request hook) to avoid drowning
+                    # this table in polling-endpoint noise.
+                    """CREATE TABLE IF NOT EXISTS page_views (
+                        id         SERIAL PRIMARY KEY,
+                        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        endpoint   VARCHAR(80) NOT NULL,
+                        viewed_at  TIMESTAMP DEFAULT NOW()
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_page_views_user_id ON page_views(user_id)",
+                    "CREATE INDEX IF NOT EXISTS ix_page_views_viewed_at ON page_views(viewed_at)",
                     """CREATE TABLE IF NOT EXISTS mentor_profiles (
                         id               SERIAL PRIMARY KEY,
                         slug             VARCHAR(60) UNIQUE NOT NULL,
@@ -2412,6 +2429,28 @@ def run_seasonal_log_prune():
                 app.logger.warning('[seasonal_log_prune] Prune failed — see prior log line.')
         except Exception as e:
             app.logger.error(f'[seasonal_log_prune] Error: {e}')
+
+
+def run_page_view_prune():
+    """
+    Runs daily via APScheduler. Deletes page_views entries older than 90
+    days — same rationale as run_seasonal_log_prune above: this table gets
+    a row per whitelisted page load per logged-in user, so it needs a
+    retention cap or it grows unbounded. 90 days (vs. 60 for seasonal
+    rotation history) because engagement pattern analysis benefits from a
+    longer window than a rotation-dedup table does.
+    """
+    with app.app_context():
+        try:
+            cutoff = datetime.utcnow() - timedelta(days=90)
+            result = db.session.execute(db.text(
+                "DELETE FROM page_views WHERE viewed_at < :cutoff"
+            ), {'cutoff': cutoff})
+            db.session.commit()
+            app.logger.info(f'[page_view_prune] Deleted {result.rowcount} entries older than 90 days.')
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[page_view_prune] Error: {e}')
 
 
 # ── Item D — seasonal auto-discovery ──────────────────────────────────────────
@@ -10979,6 +11018,49 @@ def _admin_curation_content_length_override():
         app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB, admin curation only
     else:
         app.config['MAX_CONTENT_LENGTH'] = _DEFAULT_MAX_CONTENT_LENGTH
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PAGE-VIEW LOGGING — Session 123
+# ═══════════════════════════════════════════════════════════════════════════
+# Answers "did they come back, and what did they actually look at" — a gap
+# that existed because uploads/deletes (images table) were the ONLY
+# behavioural signal in the entire database before this. A user who logs in,
+# reads their brief, checks the weekly challenge, and leaves without
+# uploading was previously invisible.
+#
+# Deliberately narrow scope:
+#   - GET requests only (skips form POSTs/XHR polling entirely)
+#   - Logged-in users only (current_user.is_authenticated)
+#   - A fixed whitelist of endpoints that actually answer "where did they
+#     go" — NOT a catch-all. /score-status polls every 2s during upload and
+#     would drown this table; /admin/* is the founder, not a member; static
+#     assets and auth routes are arrival, not engagement.
+#   - Never blocks or slows the request — failures are swallowed, same
+#     pattern as _log_location_suggestion() (purely informational).
+# ═══════════════════════════════════════════════════════════════════════════
+_PAGE_VIEW_ENDPOINTS = {
+    'dashboard', 'upload', 'my_gallery', 'weekly_challenge', 'redeem',
+    'mentors', 'portfolio_manager', 'image_detail',
+    'about', 'science', 'how_it_works', 'pricing',
+}
+
+@app.before_request
+def _log_page_view():
+    if request.method != 'GET':
+        return
+    if request.endpoint not in _PAGE_VIEW_ENDPOINTS:
+        return
+    try:
+        if not current_user.is_authenticated:
+            return
+        db.session.execute(db.text(
+            "INSERT INTO page_views (user_id, endpoint, viewed_at) VALUES (:uid, :ep, NOW())"
+        ), {'uid': current_user.id, 'ep': request.endpoint})
+        db.session.commit()
+    except Exception as _pv_err:
+        db.session.rollback()
+        app.logger.warning(f'[page_view] {_pv_err}')
 
 
 @app.route('/admin/curation')
@@ -23470,6 +23552,14 @@ if _sched_lock_held:
         trigger          = CronTrigger(hour=3, minute=45, timezone='UTC'),
         id               = 'seasonal_log_prune',
         name             = 'Prune seasonal_shown_log entries older than 60 days',
+        replace_existing = True,
+    )
+    # Session 123 — page_views prune (>90 days) — daily 03:50 UTC
+    _scheduler.add_job(
+        func             = run_page_view_prune,
+        trigger          = CronTrigger(hour=3, minute=50, timezone='UTC'),
+        id               = 'page_view_prune',
+        name             = 'Prune page_views entries older than 90 days',
         replace_existing = True,
     )
     # Item D — seasonal auto-discovery — weekly, Sunday 04:00 UTC
