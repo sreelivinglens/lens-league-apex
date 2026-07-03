@@ -17534,6 +17534,44 @@ def admin_export_users():
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
 
+@app.route('/admin/export/engagement')
+@login_required
+@admin_required
+def admin_export_engagement():
+    """Export the /admin/engagement table as CSV — same data, same shared
+    _compute_engagement_data() function, so the export always matches what's
+    on screen. One row per member; deletion counts and the 16-week bucket
+    totals are flattened into plain columns for spreadsheet use."""
+    import io, csv
+    from flask import Response
+
+    rows, _summary = _compute_engagement_data(weeks=16)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'user_id', 'username', 'full_name', 'email', 'joined_date',
+        'status', 'shape', 'last_activity_date', 'days_since_last_activity',
+        'images_existing', 'images_deleted', 'deleted_last_14_days',
+        'insight',
+    ])
+    for r in rows:
+        u = r['user']
+        recent_del = sum(w['del'] for w in r['weeks'][-2:])  # last 2 weekly buckets ≈ last 14 days
+        writer.writerow([
+            u.id, u.username, u.full_name or '', u.email,
+            u.created_at.strftime('%Y-%m-%d') if u.created_at else '',
+            r['status'], r['shape'],
+            r['last_activity'].strftime('%Y-%m-%d') if r['last_activity'] else '',
+            r['days_since'] if r['days_since'] is not None else '',
+            r['total_existing'], r['total_deleted'], recent_del,
+            r['insight'],
+        ])
+    filename = f'shutter_league_engagement_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+
 @app.route('/admin/export/subscriptions')
 @login_required
 @admin_required
