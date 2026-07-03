@@ -20,13 +20,33 @@
   }
   .back-link:hover { border-color: var(--gold); color: #1a1a18; background: var(--gold-subtle); }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
-  .stat-box { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-box {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 18px 20px; cursor: pointer; user-select: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .stat-box:hover { border-color: var(--gold-dark); }
+  .stat-box:focus-visible { outline: 2px solid var(--gold-dark); outline-offset: 2px; }
+  .stat-box.stat-active { box-shadow: 0 0 0 2px var(--gold-dark) inset; }
   .stat-val { font-size: 32px; font-weight: 700; color: #1a1a18; line-height: 1.5; margin-bottom: 4px; }
   .stat-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1.2px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; }
   .stat-box.cooling { border-color: var(--amber); }
   .stat-box.dormant { border-color: var(--red); }
   .stat-box.flattened { border-color: var(--gold-dark); }
+
+  .filter-bar {
+    display: none; align-items: center; gap: 10px; margin: 0 0 14px;
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);
+  }
+  .filter-bar.on { display: flex; }
+  .filter-clear {
+    display: inline-flex; align-items: center; padding: 8px 14px; min-height: 36px; box-sizing: border-box;
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-sm); color: var(--gold-dark);
+    background: var(--gold-subtle); cursor: pointer; font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+  }
+  .filter-clear:hover { background: var(--gold-glow); }
+  .eng-row-hidden { display: none !important; }
 
   .legend { font-size: 16px; color: var(--text-muted); line-height: 1.6; margin: 0 0 18px; }
 
@@ -56,6 +76,8 @@
   .shape-badge.flattened { border-color: var(--gold-dark); color: var(--gold-dark); background: var(--gold-subtle); }
   .shape-badge.steady    { border-color: var(--green); color: var(--green); background: var(--green-dim); }
   .shape-badge.new       { border-color: #4A6FA5; color: #4A6FA5; background: rgba(74,111,165,0.08); }
+  .shape-badge.irregular { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+  .stat-box.irregular { border-color: var(--amber); }
 
   /* ── Sparkline (desktop/iPad only — dropped on mobile, see below) ── */
   .spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; cursor: default; }
@@ -103,27 +125,36 @@
     <a href="{{ url_for('admin_users') }}" class="back-link">&larr; Users</a>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-box">
+  <div class="stats-grid" id="engStatsGrid">
+    <div class="stat-box" data-filter-type="status" data-filter-value="active" role="button" tabindex="0" aria-pressed="false" onclick="engFilter('status','active',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <div class="stat-val">{{ summary.active }}</div>
       <div class="stat-lbl">Active (7d)</div>
     </div>
-    <div class="stat-box cooling">
+    <div class="stat-box cooling" data-filter-type="status" data-filter-value="cooling" role="button" tabindex="0" aria-pressed="false" onclick="engFilter('status','cooling',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <div class="stat-val">{{ summary.cooling }}</div>
       <div class="stat-lbl">Cooling (8–21d)</div>
     </div>
-    <div class="stat-box dormant">
+    <div class="stat-box dormant" data-filter-type="status" data-filter-value="dormant" role="button" tabindex="0" aria-pressed="false" onclick="engFilter('status','dormant',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <div class="stat-val">{{ summary.dormant }}</div>
       <div class="stat-lbl">Dormant (21d+)</div>
     </div>
-    <div class="stat-box">
+    <div class="stat-box" data-filter-type="status" data-filter-value="never" role="button" tabindex="0" aria-pressed="false" onclick="engFilter('status','never',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <div class="stat-val">{{ summary.never }}</div>
       <div class="stat-lbl">Never started</div>
     </div>
-    <div class="stat-box flattened">
+    <div class="stat-box flattened" data-filter-type="shape" data-filter-value="flattened" role="button" tabindex="0" aria-pressed="false" onclick="engFilter('shape','flattened',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <div class="stat-val">{{ summary.flattened }}</div>
       <div class="stat-lbl">Bang then flatten</div>
     </div>
+    <div class="stat-box irregular" data-filter-type="shape" data-filter-value="irregular" role="button" tabindex="0" aria-pressed="false" onclick="engFilter('shape','irregular',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+      <div class="stat-val">{{ summary.irregular }}</div>
+      <div class="stat-lbl">Irregular</div>
+    </div>
+  </div>
+
+  <div class="filter-bar" id="engFilterBar">
+    <span id="engFilterText"></span>
+    <span class="filter-clear" role="button" tabindex="0" onclick="engClearFilter()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">&times; Clear filter — show all</span>
   </div>
 
   <div style="overflow-x:auto;">
@@ -139,9 +170,9 @@
           <th>Read</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="engTableBody">
         {% for r in rows %}
-        <tr>
+        <tr data-status="{{ r.status }}" data-shape="{{ r.shape }}">
           <td data-label="Member">
             <div class="eng-name">{{ r.user.full_name or r.user.username }}</div>
             <div class="eng-handle">@{{ r.user.username }}</div>
@@ -151,7 +182,7 @@
             {% if r.shape in ('flattened','steady','new') %}
             <span class="shape-badge {{ r.shape }}">{{ r.shape }}</span>
             {% elif r.shape == 'irregular' %}
-            <span class="shape-badge">irregular</span>
+            <span class="shape-badge irregular">irregular</span>
             {% else %}
             <span class="shape-badge">not started</span>
             {% endif %}
@@ -180,8 +211,67 @@
   </div>
 
   <p class="legend">
-    <strong>Status</strong> is days since last upload or deletion. <strong>Shape</strong> compares each member's first two weeks after joining against their most recent two weeks: "flattened" means they uploaded early and nothing since, "steady" means recent activity holds up, "new" means it's too early to tell. Deletions count as activity for status, so someone removing work still shows as recently active — check the Images column (shown in red) to see they're taking work down rather than adding it. The weekly chart on tablet and desktop shows uploads in gold and deletions in red, oldest week on the left; it's hidden on phones to keep each row readable.
+    <strong>Status</strong> is days since last upload or deletion. <strong>Shape</strong> compares each member's first two weeks after joining against their most recent two weeks: "flattened" means they uploaded early and nothing since, "steady" means recent activity holds up, "new" means it's too early to tell, "irregular" means neither pattern clearly fits. Deletions count as activity for status, so someone removing work still shows as recently active — check the Images column (shown in red) to see they're taking work down rather than adding it. The weekly chart on tablet and desktop shows uploads in gold and deletions in red, oldest week on the left; it's hidden on phones to keep each row readable. Click any card above to filter the table to that group; click it again or use "Clear filter" to see everyone.
   </p>
 
 </div>
+
+<script>
+(function () {
+  function engFilter(type, value, boxEl) {
+    var grid = document.getElementById('engStatsGrid');
+    var alreadyActive = boxEl.classList.contains('stat-active');
+
+    // Reset all cards
+    var boxes = grid.querySelectorAll('.stat-box');
+    for (var i = 0; i < boxes.length; i++) {
+      boxes[i].classList.remove('stat-active');
+      boxes[i].setAttribute('aria-pressed', 'false');
+    }
+
+    if (alreadyActive) {
+      engClearFilter();
+      return;
+    }
+
+    boxEl.classList.add('stat-active');
+    boxEl.setAttribute('aria-pressed', 'true');
+
+    var rows = document.querySelectorAll('#engTableBody tr');
+    var shown = 0;
+    for (var j = 0; j < rows.length; j++) {
+      var match = rows[j].getAttribute('data-' + type) === value;
+      if (match) {
+        rows[j].classList.remove('eng-row-hidden');
+        shown++;
+      } else {
+        rows[j].classList.add('eng-row-hidden');
+      }
+    }
+
+    var label = boxEl.querySelector('.stat-lbl').textContent;
+    var bar = document.getElementById('engFilterBar');
+    var text = document.getElementById('engFilterText');
+    text.textContent = 'Showing ' + shown + ' of ' + rows.length + ' — filtered to "' + label + '"';
+    bar.classList.add('on');
+  }
+
+  function engClearFilter() {
+    var grid = document.getElementById('engStatsGrid');
+    var boxes = grid.querySelectorAll('.stat-box');
+    for (var i = 0; i < boxes.length; i++) {
+      boxes[i].classList.remove('stat-active');
+      boxes[i].setAttribute('aria-pressed', 'false');
+    }
+    var rows = document.querySelectorAll('#engTableBody tr');
+    for (var j = 0; j < rows.length; j++) {
+      rows[j].classList.remove('eng-row-hidden');
+    }
+    document.getElementById('engFilterBar').classList.remove('on');
+  }
+
+  window.engFilter = engFilter;
+  window.engClearFilter = engClearFilter;
+})();
+</script>
 {% endblock %}
