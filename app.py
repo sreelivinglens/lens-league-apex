@@ -10389,6 +10389,14 @@ def admin_dashboard():
     except Exception as _ce:
         app.logger.error(f'[platform_cal] {_ce}')
 
+    # ── Engagement snapshot — same engine as /admin/engagement, summary
+    #    counts only (rows not needed on the dashboard card itself) ────────
+    engagement_summary = None
+    try:
+        _eng_rows, engagement_summary = _compute_engagement_data(weeks=1)
+    except Exception as _ee:
+        app.logger.warning(f'[admin_dashboard] engagement snapshot failed: {_ee}')
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            recent_pages=recent_pages, admin_q=admin_q, recent_users=recent_users,
@@ -10398,6 +10406,7 @@ def admin_dashboard():
                            stats=stats_sub,
                            active_contest_banners=active_contest_banners,
                            new_signups_today=new_signups_today,
+                           engagement_summary=engagement_summary,
                            new_signups_7days=new_signups_7days,
                            new_signups_30days=new_signups_30days,
                            new_signups_onboarded=new_signups_onboarded,
@@ -10779,13 +10788,17 @@ def admin_users():
 # a perfect historical reconstruction.
 # ═══════════════════════════════════════════════════════════════════════════
 
-@app.route('/admin/engagement')
-@login_required
-@admin_required
-def admin_engagement():
-    from collections import defaultdict
 
-    WEEKS = 16  # ~4 months of weekly buckets — enough to see a flatten pattern, not so much the bars are unreadable
+def _compute_engagement_data(weeks=16):
+    """
+    Shared engine behind both /admin (dashboard snapshot widget) and
+    /admin/engagement (full clickable page). Deliberately a single function
+    so the two views can never drift apart — the dashboard's "as of today"
+    numbers are always exactly what you'd see if you clicked through.
+    Returns (rows, summary, weeks) — dashboard uses summary only, the full
+    page uses all three.
+    """
+    from collections import defaultdict
 
     now = datetime.utcnow()
 
@@ -10830,19 +10843,19 @@ def admin_engagement():
         recent_cnt = sum(1 for dt in ups if (now - dt).days <= 14)
         recent_del = sum(1 for dt in dels if (now - dt).days <= 14)
 
-        # ── weekly buckets — index WEEKS-1 is the current week ───────────
-        up_buckets  = [0] * WEEKS
-        del_buckets = [0] * WEEKS
+        # ── weekly buckets — index weeks-1 is the current week ───────────
+        up_buckets  = [0] * weeks
+        del_buckets = [0] * weeks
         for dt in ups:
-            idx = WEEKS - 1 - ((now - dt).days // 7)
-            if 0 <= idx < WEEKS:
+            idx = weeks - 1 - ((now - dt).days // 7)
+            if 0 <= idx < weeks:
                 up_buckets[idx] += 1
         for dt in dels:
-            idx = WEEKS - 1 - ((now - dt).days // 7)
-            if 0 <= idx < WEEKS:
+            idx = weeks - 1 - ((now - dt).days // 7)
+            if 0 <= idx < weeks:
                 del_buckets[idx] += 1
-        weeks = [{'up': up_buckets[i], 'del': del_buckets[i]} for i in range(WEEKS)]
-        max_week = max([w['up'] + w['del'] for w in weeks] + [1])
+        week_data = [{'up': up_buckets[i], 'del': del_buckets[i]} for i in range(weeks)]
+        max_week = max([w['up'] + w['del'] for w in week_data] + [1])
 
         # ── status: recency of any activity (upload OR delete) ───────────
         if last_activity is None:
@@ -10869,12 +10882,22 @@ def admin_engagement():
             shape = 'irregular'
 
         # ── one-line human-readable insight ───────────────────────────────
+        # Deletion activity (recent_del) must always surface, even for users
+        # tagged 'new' or 'flattened' — those shape labels used to short-
+        # circuit before the deletion check ever ran, which is exactly how
+        # Anurag deleting 7 images in his first 9 days and Ketaki deleting 2
+        # both went unmentioned on first deploy (founder caught this by
+        # reading the live table, not from a bug report — see conversation).
         if shape == 'none':
             insight = 'Never uploaded.'
         elif shape == 'new':
             insight = f'Joined {member_age_days}d ago — {total_existing} upload{"s" if total_existing != 1 else ""} so far.'
+            if recent_del > 0:
+                insight += f' {recent_del} deleted in last 14 days.'
         elif shape == 'flattened':
             insight = f'{early_cnt} in first 2 weeks, 0 since — {days_since}d quiet.'
+            if recent_del > 0:
+                insight += f' {recent_del} deleted in last 14 days.'
         elif recent_del > 0:
             insight = f'{recent_del} deleted in last 14 days.'
         elif shape == 'steady':
@@ -10891,7 +10914,7 @@ def admin_engagement():
             'status': status,
             'shape': shape,
             'insight': insight,
-            'weeks': weeks,
+            'weeks': week_data,
             'max_week': max_week,
         })
 
@@ -10906,9 +10929,23 @@ def admin_engagement():
         'dormant':    sum(1 for r in rows if r['status'] == 'dormant'),
         'never':      sum(1 for r in rows if r['status'] == 'never'),
         'flattened':  sum(1 for r in rows if r['shape'] == 'flattened'),
+        'irregular':  sum(1 for r in rows if r['shape'] == 'irregular'),
+        'steady':     sum(1 for r in rows if r['shape'] == 'steady'),
+        'new':        sum(1 for r in rows if r['shape'] == 'new'),
     }
 
+    return rows, summary
+
+
+@app.route('/admin/engagement')
+@login_required
+@admin_required
+def admin_engagement():
+    WEEKS = 16  # ~4 months of weekly buckets — enough to see a flatten pattern, not so much the bars are unreadable
+    rows, summary = _compute_engagement_data(weeks=WEEKS)
     return render_template('admin_engagement.html', rows=rows, summary=summary, weeks_count=WEEKS)
+
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════
