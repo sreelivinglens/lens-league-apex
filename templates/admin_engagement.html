@@ -122,7 +122,10 @@
       <h1>Engagement</h1>
       <p>Who's active, who's cooling off, and who started strong then stopped</p>
     </div>
-    <a href="{{ url_for('admin_users') }}" class="back-link">&larr; Users</a>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{{ url_for('admin_export_engagement') }}" class="back-link">&darr; Export CSV</a>
+      <a href="{{ url_for('admin_users') }}" class="back-link">&larr; Users</a>
+    </div>
   </div>
 
   <div class="stats-grid" id="engStatsGrid">
