@@ -10755,6 +10755,163 @@ def admin_users():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# ADMIN ENGAGEMENT — per-user upload/delete timeline
+# ═══════════════════════════════════════════════════════════════════════════
+# Answers a question the summary counts on /admin/users can't: not "how many
+# images does this user have" but "what shape does their activity take over
+# time" — steady, front-loaded-then-flat, or never really started. Built
+# directly off Session 122/123's engagement conversation (Mahesh regressing
+# from 37 -> 29 images, three "started with a bang" new users flattening).
+#
+# Two data sources, combined per user:
+#   - images.created_at        — every image that still exists
+#   - upload_history_log.deleted_at — every deletion event (v80 log; no
+#     photo/thumbnail recoverable, but the timestamp survives even though
+#     the image itself is gone — see delete_image()/admin_delete_image())
+# Combining both is what lets Mahesh's story show up correctly: his existing
+# 29 images alone would look like slow-but-steady growth. Folding in the 8
+# deletions is what actually reveals the drop-off.
+#
+# Deliberately NOT trying to reconstruct deleted images' original upload
+# dates — upload_history_log only records when something was deleted, not
+# when it was first uploaded (see the v80 migration comment in app.py).
+# That's fine for this view: what matters here is recency of activity, not
+# a perfect historical reconstruction.
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route('/admin/engagement')
+@login_required
+@admin_required
+def admin_engagement():
+    from collections import defaultdict
+
+    WEEKS = 16  # ~4 months of weekly buckets — enough to see a flatten pattern, not so much the bars are unreadable
+
+    now = datetime.utcnow()
+
+    users = User.query.filter(User.role != 'admin').order_by(User.created_at.asc()).all()
+
+    # ── Existing images, grouped by user ──────────────────────────────────
+    img_rows = db.session.execute(db.text(
+        "SELECT user_id, created_at FROM images WHERE user_id IS NOT NULL AND created_at IS NOT NULL"
+    )).fetchall()
+    uploads_by_user = defaultdict(list)
+    for uid, cat in img_rows:
+        uploads_by_user[uid].append(cat)
+
+    # ── Deletion events, grouped by user (table may not exist on very old
+    #    DBs pre-v80 — fail soft rather than 500 the whole page) ──────────
+    deletes_by_user = defaultdict(list)
+    try:
+        del_rows = db.session.execute(db.text(
+            "SELECT user_id, deleted_at FROM upload_history_log WHERE deleted_at IS NOT NULL"
+        )).fetchall()
+        for uid, dat in del_rows:
+            deletes_by_user[uid].append(dat)
+    except Exception as _de:
+        app.logger.warning(f'[admin_engagement] upload_history_log read failed: {_de}')
+
+    rows = []
+    for u in users:
+        ups  = sorted(uploads_by_user.get(u.id, []))
+        dels = sorted(deletes_by_user.get(u.id, []))
+
+        last_upload   = ups[-1]  if ups  else None
+        last_delete   = dels[-1] if dels else None
+        activity_dates = [d for d in [last_upload, last_delete] if d]
+        last_activity = max(activity_dates) if activity_dates else None
+        days_since    = (now - last_activity).days if last_activity else None
+
+        member_since  = u.created_at or now
+        member_age_days = (now - member_since).days
+
+        # 14-day early window (from join) vs 14-day recent window (from now)
+        early_cnt  = sum(1 for dt in ups if (dt - member_since).days <= 14)
+        recent_cnt = sum(1 for dt in ups if (now - dt).days <= 14)
+        recent_del = sum(1 for dt in dels if (now - dt).days <= 14)
+
+        # ── weekly buckets — index WEEKS-1 is the current week ───────────
+        up_buckets  = [0] * WEEKS
+        del_buckets = [0] * WEEKS
+        for dt in ups:
+            idx = WEEKS - 1 - ((now - dt).days // 7)
+            if 0 <= idx < WEEKS:
+                up_buckets[idx] += 1
+        for dt in dels:
+            idx = WEEKS - 1 - ((now - dt).days // 7)
+            if 0 <= idx < WEEKS:
+                del_buckets[idx] += 1
+        weeks = [{'up': up_buckets[i], 'del': del_buckets[i]} for i in range(WEEKS)]
+        max_week = max([w['up'] + w['del'] for w in weeks] + [1])
+
+        # ── status: recency of any activity (upload OR delete) ───────────
+        if last_activity is None:
+            status = 'never'
+        elif days_since <= 7:
+            status = 'active'
+        elif days_since <= 21:
+            status = 'cooling'
+        else:
+            status = 'dormant'
+
+        # ── shape: does the pattern look front-loaded-then-flat? ─────────
+        total_existing = len(ups)
+        total_deleted  = len(dels)
+        if total_existing + total_deleted == 0:
+            shape = 'none'
+        elif member_age_days <= 14:
+            shape = 'new'
+        elif early_cnt > 0 and recent_cnt == 0 and (days_since or 0) > 14:
+            shape = 'flattened'
+        elif recent_cnt >= max(1, early_cnt):
+            shape = 'steady'
+        else:
+            shape = 'irregular'
+
+        # ── one-line human-readable insight ───────────────────────────────
+        if shape == 'none':
+            insight = 'Never uploaded.'
+        elif shape == 'new':
+            insight = f'Joined {member_age_days}d ago — {total_existing} upload{"s" if total_existing != 1 else ""} so far.'
+        elif shape == 'flattened':
+            insight = f'{early_cnt} in first 2 weeks, 0 since — {days_since}d quiet.'
+        elif recent_del > 0:
+            insight = f'{recent_del} deleted in last 14 days.'
+        elif shape == 'steady':
+            insight = f'{recent_cnt} in last 14 days — still active.'
+        else:
+            insight = f'Last activity {days_since}d ago.'
+
+        rows.append({
+            'user': u,
+            'total_existing': total_existing,
+            'total_deleted': total_deleted,
+            'last_activity': last_activity,
+            'days_since': days_since,
+            'status': status,
+            'shape': shape,
+            'insight': insight,
+            'weeks': weeks,
+            'max_week': max_week,
+        })
+
+    # Most concerning first: cooling/dormant (people who WERE active and
+    # stopped) ahead of never-started (who were never active to begin with).
+    _status_order = {'cooling': 0, 'dormant': 1, 'active': 2, 'never': 3}
+    rows.sort(key=lambda r: (_status_order.get(r['status'], 9), -(r['days_since'] or -1)))
+
+    summary = {
+        'active':     sum(1 for r in rows if r['status'] == 'active'),
+        'cooling':    sum(1 for r in rows if r['status'] == 'cooling'),
+        'dormant':    sum(1 for r in rows if r['status'] == 'dormant'),
+        'never':      sum(1 for r in rows if r['status'] == 'never'),
+        'flattened':  sum(1 for r in rows if r['shape'] == 'flattened'),
+    }
+
+    return render_template('admin_engagement.html', rows=rows, summary=summary, weeks_count=WEEKS)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # ADMIN CURATION — "Curator's Bench" (Session 122)
 # ═══════════════════════════════════════════════════════════════════════════
 # Scratch space for scoring a photographer's existing work (e.g. curating
