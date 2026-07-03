@@ -690,6 +690,60 @@
   </div>
 
   {# ══════════════════════════════════════════════════════════════════
+     SECTION — ENGAGEMENT SNAPSHOT (as of today)
+     Same numbers as /admin/engagement's stat cards — computed by the same
+     shared function (_compute_engagement_data), so this can never drift
+     out of sync with the full page. Not clickable/filterable here; click
+     through to the full page for that. Session 123 — founder wanted the
+     summary visible without navigating away every time.
+  ══════════════════════════════════════════════════════════════════ #}
+  {% if engagement_summary %}
+  <div class="admin-section{% if engagement_summary.cooling or engagement_summary.dormant %} urgent{% endif %}" id="section-engagement">
+    <div class="admin-section-header" onclick="toggleSection('engagement')">
+      <div class="admin-section-title">
+        📈 Engagement
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="admin-section-meta">
+          As of {{ now().strftime('%d %b %Y') }} &middot; {{ engagement_summary.cooling + engagement_summary.dormant }} need attention
+        </span>
+        <span class="admin-chevron" id="chev-engagement">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body" id="body-engagement">
+
+      <div class="stats-grid" style="margin-bottom:16px;">
+        <div class="stat-box">
+          <div class="stat-val">{{ engagement_summary.active }}</div>
+          <div class="stat-lbl">Active (7d)</div>
+        </div>
+        <div class="stat-box" style="border-color:var(--amber);">
+          <div class="stat-val">{{ engagement_summary.cooling }}</div>
+          <div class="stat-lbl">Cooling (8–21d)</div>
+        </div>
+        <div class="stat-box" style="border-color:var(--red);">
+          <div class="stat-val">{{ engagement_summary.dormant }}</div>
+          <div class="stat-lbl">Dormant (21d+)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ engagement_summary.never }}</div>
+          <div class="stat-lbl">Never started</div>
+        </div>
+        <div class="stat-box" style="border-color:var(--gold-dark);">
+          <div class="stat-val">{{ engagement_summary.flattened }}</div>
+          <div class="stat-lbl">Bang then flatten</div>
+        </div>
+      </div>
+
+      <div style="padding:4px 0 4px;display:flex;justify-content:flex-end;">
+        <a href="{{ url_for("admin_engagement") }}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;color:#1a3a6e;text-decoration:none;">VIEW FULL BREAKDOWN →</a>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════
      SECTION 2 — PLATFORM STATS & CALIBRATION (collapsed)
   ══════════════════════════════════════════════════════════════════ #}
   <div class="admin-section" id="section-stats">
