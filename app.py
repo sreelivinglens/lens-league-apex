@@ -10831,13 +10831,17 @@ def admin_users():
 # Founder-owned accounts that are NOT role='admin' — e.g. test/mentor-setup
 # accounts used to see the platform as a real member would, rather than
 # through the admin panel. role=='admin' alone does not catch these.
-# Identified directly by the founder (Session 123): @sreeks and
-# @living_lens are both the founder, not real members — same email domain
-# pattern (sreelivinglens@gmail.com / sreeslivinglens@gmail.com) confirms it.
+# Identified directly by the founder (Session 123), across two rounds:
+#   - @sreeks / @living_lens — same email domain pattern
+#     (sreelivinglens@gmail.com / sreeslivinglens@gmail.com) confirms it
+#   - @natures_raaga, @sree_k, @Sri — flagged separately by the founder
+# Stored lowercase and matched case-insensitively — @Sri (capital S) is
+# stored differently from the site's usual lowercase-username convention,
+# so an exact-case match would have silently missed it.
 # Update this set if more founder test accounts are created later. Used by
 # both _compute_engagement_data() below and the _log_page_view() hook
 # further down — single definition so the two can never drift apart.
-_FOUNDER_TEST_USERNAMES = {'sreeks', 'living_lens'}
+_FOUNDER_TEST_USERNAMES = {'sreeks', 'living_lens', 'natures_raaga', 'sree_k', 'sri'}
 
 
 def _compute_engagement_data(weeks=16):
@@ -10855,7 +10859,7 @@ def _compute_engagement_data(weeks=16):
 
     users = (User.query
              .filter(User.role != 'admin')
-             .filter(User.username.notin_(_FOUNDER_TEST_USERNAMES))
+             .filter(db.func.lower(User.username).notin_(_FOUNDER_TEST_USERNAMES))
              .order_by(User.created_at.asc()).all())
 
     # ── Existing images, grouped by user ──────────────────────────────────
@@ -11078,7 +11082,7 @@ def _log_page_view():
             return
         if current_user.role == 'admin':
             return  # founder's own admin-role visits must never pollute member engagement data
-        if current_user.username in _FOUNDER_TEST_USERNAMES:
+        if (current_user.username or '').lower() in _FOUNDER_TEST_USERNAMES:
             return  # founder's non-admin test/mentor-setup accounts — see comment above _compute_engagement_data()
         db.session.execute(db.text(
             "INSERT INTO page_views (user_id, endpoint, viewed_at) VALUES (:uid, :ep, NOW())"
