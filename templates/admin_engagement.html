@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Engagement — Shutter League Admin{% endblock %}
+{% block canonical %}https://shutterleague.com/admin/engagement{% endblock %}
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+{% block extra_css %}
+<style>
+  .admin-wrap { max-width: 1200px; margin: 0 auto; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .admin-wrap a, .admin-wrap button { -webkit-tap-highlight-color: transparent; }
+  .admin-wrap a:focus-visible, .admin-wrap button:focus-visible { outline: 2px solid var(--gold-dark); outline-offset: 2px; }
+
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 12px 18px; min-height: 44px; box-sizing: border-box;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 1px;
+    text-decoration: none; color: var(--text-secondary); background: var(--surface-1);
+    cursor: pointer;
+  }
+  .back-link:hover { border-color: var(--gold); color: #1a1a18; background: var(--gold-subtle); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-box { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; }
+  .stat-val { font-size: 32px; font-weight: 700; color: #1a1a18; line-height: 1.5; margin-bottom: 4px; }
+  .stat-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1.2px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; }
+  .stat-box.cooling { border-color: var(--amber); }
+  .stat-box.dormant { border-color: var(--red); }
+  .stat-box.flattened { border-color: var(--gold-dark); }
+
+  .legend { font-size: 16px; color: var(--text-muted); line-height: 1.6; margin: 0 0 18px; }
+
+  /* ── Desktop table ── */
+  .eng-table { width: 100%; border-collapse: collapse; }
+  .eng-table th {
+    padding: 14px; font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    letter-spacing: 1px; color: var(--text-secondary); text-align: left;
+    border-bottom: 1px solid var(--border); background: var(--surface-3); text-transform: uppercase;
+    white-space: nowrap; line-height: 1.5;
+  }
+  .eng-table td { padding: 14px; font-size: 16px; line-height: 1.6; color: var(--text-primary); border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  .eng-table tbody tr:hover { background: rgba(200,168,75,0.03); }
+
+  .eng-name { font-weight: 700; font-size: 16px; }
+  .eng-handle { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  .eng-insight { font-size: 15px; line-height: 1.6; color: var(--text-muted); max-width: 240px; }
+  .eng-imgs { white-space: nowrap; font-size: 16px; }
+
+  .badge { display: inline-block; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 5px 10px; min-height: 24px; box-sizing: border-box; border-radius: 3px; text-transform: uppercase; white-space: nowrap; line-height: 1.5; }
+  .badge.active    { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .badge.cooling   { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+  .badge.dormant   { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red); }
+  .badge.never     { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .shape-badge { display: inline-block; font-size: 13px; padding: 5px 9px; border-radius: 3px; border: 1px solid var(--border); color: var(--text-muted); white-space: nowrap; line-height: 1.5; }
+  .shape-badge.flattened { border-color: var(--gold-dark); color: var(--gold-dark); background: var(--gold-subtle); }
+  .shape-badge.steady    { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .shape-badge.new       { border-color: #4A6FA5; color: #4A6FA5; background: rgba(74,111,165,0.08); }
+
+  /* ── Sparkline (desktop/iPad only — dropped on mobile, see below) ── */
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; cursor: default; }
+  .spark-bar { width: 6px; border-radius: 1px 1px 0 0; background: var(--border-strong); position: relative; }
+  .spark-bar.has-up { background: var(--gold-dark); }
+  .spark-bar.has-del { background: var(--red); }
+  .spark-bar.has-both::after {
+    content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: var(--red);
+  }
+
+  /* ── Mobile card list — table rows become stacked cards below 600px ── */
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr !important; }
+    .eng-table thead { display: none; }
+    .eng-table, .eng-table tbody, .eng-table tr, .eng-table td { display: block; width: 100%; }
+    .eng-table tr {
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      margin-bottom: 12px; padding: 14px; background: var(--surface-1);
+    }
+    .eng-table td { border-bottom: none; padding: 6px 0; font-size: 16px; }
+    .eng-table td:before {
+      content: attr(data-label); display: block;
+      font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px;
+      color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px;
+    }
+    .spark { display: none; }
+    .back-link { width: 100%; justify-content: center; }
+  }
+
+  /* ── iPad — 2-col stat grid, sparkline stays but table scrolls if needed ── */
+  @media (max-width: 768px) and (min-width: 601px) {
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+    <div class="page-header" style="margin-bottom:0;">
+      <h1>Engagement</h1>
+      <p>Who's active, who's cooling off, and who started strong then stopped</p>
+    </div>
+    <a href="{{ url_for('admin_users') }}" class="back-link">&larr; Users</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-val">{{ summary.active }}</div>
+      <div class="stat-lbl">Active (7d)</div>
+    </div>
+    <div class="stat-box cooling">
+      <div class="stat-val">{{ summary.cooling }}</div>
+      <div class="stat-lbl">Cooling (8–21d)</div>
+    </div>
+    <div class="stat-box dormant">
+      <div class="stat-val">{{ summary.dormant }}</div>
+      <div class="stat-lbl">Dormant (21d+)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">{{ summary.never }}</div>
+      <div class="stat-lbl">Never started</div>
+    </div>
+    <div class="stat-box flattened">
+      <div class="stat-val">{{ summary.flattened }}</div>
+      <div class="stat-lbl">Bang then flatten</div>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="eng-table">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Status</th>
+          <th>Shape</th>
+          <th>Last activity</th>
+          <th>Images</th>
+          <th>{{ weeks_count }}-week activity</th>
+          <th>Read</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td data-label="Member">
+            <div class="eng-name">{{ r.user.full_name or r.user.username }}</div>
+            <div class="eng-handle">@{{ r.user.username }}</div>
+          </td>
+          <td data-label="Status"><span class="badge {{ r.status }}">{{ r.status }}</span></td>
+          <td data-label="Shape">
+            {% if r.shape in ('flattened','steady','new') %}
+            <span class="shape-badge {{ r.shape }}">{{ r.shape }}</span>
+            {% elif r.shape == 'irregular' %}
+            <span class="shape-badge">irregular</span>
+            {% else %}
+            <span class="shape-badge">not started</span>
+            {% endif %}
+          </td>
+          <td data-label="Last activity" style="white-space:nowrap;">
+            {% if r.days_since is not none %}{{ r.days_since }} days ago{% else %}Never{% endif %}
+          </td>
+          <td data-label="Images" class="eng-imgs">
+            {{ r.total_existing }}{% if r.total_deleted %} <span style="color:var(--red);">(&minus;{{ r.total_deleted }} deleted)</span>{% endif %}
+          </td>
+          <td data-label="Activity">
+            <div class="spark" title="Gold = uploads, red = deletions, most recent week on the right">
+              {% for w in r.weeks %}
+              {% set h = ((w.up + w.del) / r.max_week * 24) | round(0, 'ceil') if r.max_week else 0 %}
+              <div class="spark-bar {% if w.up and w.del %}has-both{% elif w.up %}has-up{% elif w.del %}has-del{% endif %}"
+                   style="height:{{ h if h > 0 else 2 }}px;"
+                   title="{{ w.up }} upload{{ 's' if w.up != 1 else '' }}{% if w.del %}, {{ w.del }} deleted{% endif %}"></div>
+              {% endfor %}
+            </div>
+          </td>
+          <td data-label="Read" class="eng-insight">{{ r.insight }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="legend">
+    <strong>Status</strong> is days since last upload or deletion. <strong>Shape</strong> compares each member's first two weeks after joining against their most recent two weeks: "flattened" means they uploaded early and nothing since, "steady" means recent activity holds up, "new" means it's too early to tell. Deletions count as activity for status, so someone removing work still shows as recently active — check the Images column (shown in red) to see they're taking work down rather than adding it. The weekly chart on tablet and desktop shows uploads in gold and deletions in red, oldest week on the left; it's hidden on phones to keep each row readable.
+  </p>
+
+</div>
+{% endblock %}
