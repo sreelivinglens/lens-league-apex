@@ -6623,6 +6623,8 @@ def upload():
                                         _img.set_audit(audit)
                                     except Exception as _bf_audit_err:
                                         app.logger.warning(f'[scoring] breastfeeding audit save failed: {_bf_audit_err}')
+                                if _img.is_public:
+                                    _ensure_share_token(_img)
                                 db.session.commit()
                                 app.logger.info(
                                     f'[scoring] breastfeeding whitelist cleared: '
@@ -6759,6 +6761,8 @@ def upload():
                                 _img.set_audit(audit)
                                 if _sc_calendar_ids:
                                     _img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
+                                if _img.is_public and not _img.is_flagged:
+                                    _ensure_share_token(_img)
                                 db.session.commit()
 
                                 # Item C — log rotation entries only on successful scoring,
@@ -7545,6 +7549,8 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 except Exception as _gme:
                     app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
+            if img.is_public and not img.is_flagged:
+                _ensure_share_token(img)
             db.session.commit()
 
             # Item C — log rotation entries only on successful (re)scoring.
@@ -11472,7 +11478,7 @@ def admin_send_user_email(user_id):
     html_body = (
         '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
         '<div style="background:#1A2744;padding:20px 32px;">'
-        '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">'
+        '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:15px;letter-spacing:2px;margin:0;">'
         + PLATFORM_NAME.upper() +
         '</p>'
         '</div>'
@@ -11481,7 +11487,7 @@ def admin_send_user_email(user_id):
         '<p style="font-size:16px;color:#1A1A18;margin:0;line-height:1.7;">' + body.replace('\n', '<br>') + '</p>'
         '</div>'
         '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-        f'<p style="color:#888888;font-size:12px;margin:0;">{PLATFORM_NAME} &nbsp;&middot;&nbsp; '
+        f'<p style="color:#888888;font-size:15px;margin:0;">{PLATFORM_NAME} &nbsp;&middot;&nbsp; '
         f'{ADMIN_NOTIFY_EMAIL}</p>'
         '</div>'
         '</div>'
