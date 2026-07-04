@@ -2999,8 +2999,15 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
         species_hint_text = (
             f"\nPHOTOGRAPHER SPECIES HINT: The photographer believes the species is '{species_hint.strip()}'. "
             f"Treat this as supporting evidence, not ground truth. "
-            f"If your visual analysis confirms or is consistent with this identification, use it as species_id. "
-            f"If what you see clearly does not match this hint, trust your visual analysis and note the discrepancy in scene_summary."
+            f"Do NOT confirm this hint on general plausibility alone (right size, right habitat, right colour "
+            f"family, right silhouette) — commonly confused species (e.g. Osprey vs. Black Kite/Brahminy Kite; "
+            f"similar herons, egrets, raptors, gulls) will pass a plausibility check while still being wrong. "
+            f"Before returning this hint as species_id, you must identify the SPECIFIC diagnostic feature you can "
+            f"actually see that confirms it — e.g. 'white head and breast visible' for Osprey, 'forked tail visible' "
+            f"for Black Kite, 'chestnut body with white head' for Brahminy Kite. Name that feature to yourself before "
+            f"committing. If you cannot point to a specific confirming feature — only overall plausibility — do NOT "
+            f"use the hint as species_id. Return the broader group name (e.g. 'Raptor', 'Kite') or null instead, and "
+            f"note the photographer's guess and the discrepancy in scene_summary rather than presenting it as confirmed."
         )
         prompt = prompt + species_hint_text
 
