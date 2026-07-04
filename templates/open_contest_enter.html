@@ -135,8 +135,8 @@
   {% if not user_images %}
   <div class="empty-state">
     <div style="font-size:40px;margin-bottom:16px;">📷</div>
-    <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No scored images yet</div>
-    <p>Upload and score at least one image before submitting to the Open Programme.</p>
+    <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No evaluated images yet</div>
+    <p>Upload and get at least one image evaluated before submitting to the Open Programme.</p>
     <a href="{{ url_for('upload') }}" class="oc-btn-primary" style="margin-top:20px;display:inline-block;">Upload an Image →</a>
   </div>
 
@@ -201,7 +201,7 @@
         <span class="summary-val">{{ selected_image.asset_name or 'Untitled' }}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-key">DDI Score</span>
+        <span class="summary-key">DDI Evaluation</span>
         <span class="summary-val">{{ selected_image.score }} · {{ selected_image.tier }}</span>
       </div>
       <div class="summary-row">
@@ -217,13 +217,16 @@
         <span class="summary-val summary-fee"><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></span>
       </div>
     </div>
+    <div style="padding:0 32px 24px; font-size:12px; color:var(--text-muted); line-height:1.6; font-family:var(--font-mono);">
+      This fee covers jury review and administration — it is not an entry stake, and no cash prize is paid on results.
+    </div>
   </div>
 
   <div class="payment-stub">
     <div class="payment-stub-icon">💳</div>
     <div class="payment-stub-text">
       <div class="payment-stub-title">Payment Gateway</div>
-      <div class="payment-stub-note">Razorpay integration coming soon — participation confirmed at no charge during beta.</div>
+      <div class="payment-stub-note">Payment integration coming soon — participation confirmed at no charge during beta.</div>
     </div>
   </div>
 
