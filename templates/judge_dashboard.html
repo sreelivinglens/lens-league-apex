@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Jury Dashboard — Lens League Apex{% endblock %}
+{% block title %}Jury Dashboard — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -72,12 +72,12 @@
 <div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md);
             padding:20px 24px; margin-bottom:32px;">
   <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
-              text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Scoring Guidelines</div>
+              text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Evaluation Guidelines</div>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
     {% for icon, label, desc in [
-      ('🔒', 'Blind Rating', 'No photographer name, no DDI score visible. Score on merit alone.'),
+      ('🔒', 'Blind Rating', 'No photographer name, no DDI evaluation visible. Evaluate on merit alone.'),
       ('📐', '5 Dimensions', 'DoD · Disruption · DM · Wonder · AQ — same framework as the platform.'),
-      ('🚩', 'Flag Option', 'AI-generated, stolen, or technically impossible? Flag — do not score.'),
+      ('🚩', 'Flag Option', 'AI-generated, stolen, or technically impossible? Flag — do not evaluate.'),
       ('⏰', 'Deadline', 'Check deadlines below. Email reminders are sent 48hrs and 24hrs before.'),
     ] %}
     <div style="display:flex; gap:10px; align-items:flex-start;">
@@ -132,7 +132,7 @@
     <div class="queue-action">
       <a href="{{ url_for('judge_score_image', assignment_id=a.id) }}"
          class="btn btn-solid" style="padding:12px 24px; font-size:17px; white-space:nowrap;">
-        Score →
+        Evaluate →
       </a>
     </div>
   </div>
