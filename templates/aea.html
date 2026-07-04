@@ -3,9 +3,9 @@
 {% block title %}Annual Excellence Award — Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="The Annual Excellence Award — Shutter League's year-round photography excellence programme. Your best 6 scores in your strongest genre, ranked against every photographer on the platform.">
+<meta name="description" content="The Annual Excellence Award — Shutter League's year-round photography excellence programme. Your best 6 evaluations in your strongest genre, ranked against every photographer on the platform.">
 <meta property="og:title" content="Annual Excellence Award — Shutter League">
-<meta property="og:description" content="Year-round photography excellence. Your top 6 scores, ranked against every photographer on the platform.">
+<meta property="og:description" content="Year-round photography excellence. Your top 6 evaluations, ranked against every photographer on the platform.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -376,7 +376,7 @@
     <!-- Window closed notice -->
     {% if not window_open %}
     <div class="aea-window-notice">
-        Participation for {{ year }} opens on <strong>1 Dec {{ year }}</strong> and closes on <strong>31 Dec {{ year }} at 23:59 IST</strong>. You can submit the scored images for evaluation upto 15 Jan 23:59 hrs IST. Only scored images till 31 Dec count as qualifier.
+        Participation for {{ year }} opens on <strong>1 Dec {{ year }}</strong> and closes on <strong>31 Dec {{ year }} at 23:59 IST</strong>. You can submit the evaluated images for review upto 15 Jan 23:59 hrs IST. Only images evaluated by 31 Dec count as qualifier.
     </div>
     {% endif %}
 
@@ -466,7 +466,7 @@
             <div class="aea-image-grid-head">
                 <label class="aea-field-lbl" style="margin:0">
                     Select 6 images
-                    <span style="color:var(--text-muted); font-weight:400; margin-left:6px; font-size:13px;">sorted by DDI score</span>
+                    <span style="color:var(--text-muted); font-weight:400; margin-left:6px; font-size:13px;">sorted by DDI result</span>
                 </label>
                 <span class="aea-select-counter">
                     <span class="counter-val" id="sel-count">0</span> / 6
@@ -484,7 +484,7 @@
 
                     <img class="aea-img-thumb"
                          src="{{ url_for('static', filename='uploads/' + img.asset_name) }}"
-                         alt="Scored image"
+                         alt="Evaluated image"
                          loading="lazy"
                          onerror="this.style.display='none'">
 
@@ -500,7 +500,7 @@
 
             {% else %}
             <div class="aea-empty-pool">
-                No eligible scored public images found in your portfolio.
+                No eligible evaluated public images found in your portfolio.
             </div>
             {% endif %}
 
