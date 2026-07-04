@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <meta property="og:title" content="Annual Excellence Award — Shutter League">
-<meta property="og:description" content="Year-round photography excellence. Your best 6 scores in your strongest genre, ranked against every photographer on the platform.">
+<meta property="og:description" content="Year-round photography excellence. Your best 6 evaluations in your strongest genre, ranked against every photographer on the platform.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -983,7 +983,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
             <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </div>
           <div class="sl-poty-point-title">Photo Performance</div>
-          <div class="sl-poty-point-desc">Your photo's DDI® score is the foundation of the points you earn.</div>
+          <div class="sl-poty-point-desc">Your photo's DDI® evaluation is the foundation of the points you earn.</div>
         </div>
         <div class="sl-poty-point-col">
           <div class="sl-poty-point-icon">
@@ -1018,7 +1018,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
         All points are calculated fairly and transparently based on our <strong>proprietary evaluation system.</strong>
       </div>
       <div class="sl-poty-btn-center">
-        <a href="{{ url_for('science') }}" class="sl-poty-btn-outline">Learn About Our Scoring System →</a>
+        <a href="{{ url_for('science') }}" class="sl-poty-btn-outline">Learn About Our Evaluation System →</a>
       </div>
     </div>
   </section>
@@ -1043,7 +1043,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
               <tr>
                 <th style="width:48px;">Rank</th>
                 <th>Photographer</th>
-                <th style="text-align:right;">Avg. Score</th>
+                <th style="text-align:right;">Avg. Evaluation</th>
               </tr>
             </thead>
             <tbody>
@@ -1068,7 +1068,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
               {% endif %}
             </tbody>
           </table>
-          <p class="sl-poty-lb-note">Provisional — weighted average score across all evaluated images. Updated live throughout the year.</p>
+          <p class="sl-poty-lb-note">Provisional — weighted average across all evaluated images. Updated live throughout the year.</p>
           <a href="{{ url_for('leaderboard') }}" class="sl-poty-lb-link">View Full Standings →</a>
         </div>
         <div class="sl-poty-lb-photo-wrap">
