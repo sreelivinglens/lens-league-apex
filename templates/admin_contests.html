@@ -321,8 +321,8 @@
             <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
             {% if bc.prize_value %}
             <div class="c-checkbox" style="margin-bottom:12px; padding:12px 14px; background:rgba(245,197,24,0.06); border:1px solid var(--gold); border-radius:8px;">
-              <input type="checkbox" id="payu_ack_{{ bc.id }}" name="payu_prize_compliance_ack" value="1" required>
-              <label for="payu_ack_{{ bc.id }}" style="font-size:14px; line-height:1.5;">
+              <input type="checkbox" id="prize_ack_{{ bc.id }}" name="prize_compliance_ack" value="1" required>
+              <label for="prize_ack_{{ bc.id }}" style="font-size:14px; line-height:1.5;">
                 <strong>This programme has a cash award value set ({{ bc.prize_value }}).</strong>
                 I confirm that payment gateway Promotional Programmes category approval has been obtained before going live.
               </label>
