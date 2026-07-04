@@ -5158,6 +5158,43 @@ def account_delete():
         if not user:
             return redirect(url_for('index'))
 
+        # ── Cancel any active Razorpay subscription BEFORE deleting the user row ──
+        # Without this, a subscribed user who deletes their account here (instead
+        # of going through /subscription/cancel first) keeps being billed: the
+        # mandate on Razorpay's side is never told to stop, and once razorpay_sub_id
+        # is gone with the deleted row, there's no local record left to cancel it
+        # by, and the webhook can no longer match razorpay_sub_id to any user.
+        # Cancelled immediately (not cancel_at_cycle_end) since the account itself
+        # is being permanently removed right now — there's no "access until period
+        # end" to honour the way there is for a normal, non-deletion cancellation.
+        _del_sub_id = getattr(user, 'razorpay_sub_id', None)
+        if _del_sub_id:
+            _del_rp_key    = os.getenv('RAZORPAY_KEY_ID', '')
+            _del_rp_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
+            if _del_rp_key:
+                try:
+                    import razorpay as _del_rz
+                    _del_client = _del_rz.Client(auth=(_del_rp_key, _del_rp_secret))
+                    _del_client.subscription.cancel(_del_sub_id, {'cancel_at_cycle_end': 0})
+                    app.logger.info(
+                        f'[account_delete] Razorpay subscription {_del_sub_id} '
+                        f'cancelled for deleted user {user_id}'
+                    )
+                except Exception as _del_sub_err:
+                    # Non-fatal — account deletion must still proceed (DPDP right to
+                    # erasure). Logged clearly so a stuck live mandate can be caught
+                    # and cancelled manually from the Razorpay dashboard if this fails.
+                    app.logger.error(
+                        f'[account_delete] Razorpay subscription cancel FAILED for '
+                        f'user={user_id} sub={_del_sub_id}: {_del_sub_err} — '
+                        f'MANUAL CANCELLATION MAY BE REQUIRED on Razorpay dashboard'
+                    )
+            else:
+                app.logger.warning(
+                    f'[account_delete] user={user_id} had razorpay_sub_id={_del_sub_id} '
+                    f'but RAZORPAY_KEY_ID is not set — could not attempt cancellation'
+                )
+
         image_ids = [img.id for img in user.images]
 
         # 1. CalibrationNotes
