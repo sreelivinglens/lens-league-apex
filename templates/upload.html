@@ -5,7 +5,7 @@
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="Upload a Photograph — Shutter League">
-<meta property="og:description" content="Upload your photograph for evaluation by the Shutter League scoring engine.">
+<meta property="og:description" content="Upload your photograph for evaluation by the Shutter League evaluation engine.">
 {# TODO: verify this path resolves to an actual static asset — base.html may define a logo/og-image path to reuse instead #}
 <meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
 <meta name="twitter:card" content="summary_large_image">
@@ -425,7 +425,7 @@
       <!-- Soft size warning — amber, not a block -->
       <div style="margin-top:10px; padding:10px 14px; background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark); border-radius:var(--radius-sm); font-size:16px; color:var(--text-muted); line-height:1.6;">
         📂 <strong style="color:var(--text-primary);">Keep your original RAW file.</strong>
-        High-scoring images may be selected for RAW verification — you may need to submit the original file from your camera.
+        Highly evaluated images may be selected for RAW verification — you may need to submit the original file from your camera.
       </div>
       <div class="file-size-warning" id="fileSizeWarning">
         ⚠️ This file is larger than 5 MB. It will still upload fine — the engine resizes automatically. Larger files just take a little longer to transfer.
@@ -578,7 +578,7 @@
       </div>
 
       <button type="submit" class="btn btn-solid" id="submitBtn" style="width:100%; padding:15px; font-size:16px; letter-spacing:2px; margin-top:4px;">
-        ⬆ Submit for Scoring
+        ⬆ Submit for Evaluation
       </button>
     </form>
   </div>
@@ -722,7 +722,7 @@
     fileError.textContent    = msg;
     fileError.style.display  = 'block';
     submitBtn.disabled       = false;
-    submitBtn.textContent    = '⬆ Submit for Scoring';
+    submitBtn.textContent    = '⬆ Submit for Evaluation';
     document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -815,7 +815,7 @@
     fileSizeWarn.style.padding       = '16px 18px';
     document.getElementById('scoringOverlay').classList.remove('active');
     submitBtn.disabled    = false;
-    submitBtn.textContent = '⬆ Submit for Scoring';
+    submitBtn.textContent = '⬆ Submit for Evaluation';
     fileSizeWarn.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -950,7 +950,7 @@
     if (!document.querySelector('input[name="camera_track"]:checked')) {
       trackHint.style.display = 'block';
       trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Scoring';
+      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Evaluation';
       return;
     }
 
@@ -959,7 +959,7 @@
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       legalCheck.addEventListener('change', () =>
         legalBox.classList.remove('error-highlight'), { once: true });
-      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Scoring';
+      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Evaluation';
       return;
     }
 
@@ -971,7 +971,7 @@
         const _sw = Math.min(_tmpImg.naturalWidth, _tmpImg.naturalHeight);
         if (_sw < 1500) {
           submitBtn.disabled = false;
-          submitBtn.textContent = '⬆ Submit for Scoring';
+          submitBtn.textContent = '⬆ Submit for Evaluation';
           showError(
             'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
             'The shorter side must be at least 1500px. ' +
@@ -1104,7 +1104,7 @@
 
         if (r.status === 'error') {
           document.getElementById('scoringOverlay').classList.remove('active');
-          showError(r.message || 'Scoring failed. Please retry from your dashboard.');
+          showError(r.message || 'Evaluation failed. Please retry from your dashboard.');
           return;
         }
       };
