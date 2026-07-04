@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Scoring History — Lens League Apex{% endblock %}
+{% block title %}Evaluation History — Shutter League{% endblock %}
 
 {% block content %}
 
 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
   <div class="page-header" style="margin-bottom:0;">
-    <h1>Scoring History</h1>
+    <h1>Evaluation History</h1>
     <p>Images you have reviewed as a Lens League Apex jury member.</p>
   </div>
   <a href="{{ url_for('judge_dashboard') }}" class="btn" style="padding:10px 22px;">
@@ -29,7 +29,7 @@
         <th style="padding:14px 18px; font-family:var(--font-mono); font-size:14px; font-weight:600;
                    letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
                    border-bottom:1px solid var(--border); background:var(--surface-3);
-                   text-transform:uppercase; white-space:nowrap;">Your Score</th>
+                   text-transform:uppercase; white-space:nowrap;">Your Evaluation</th>
         <th style="padding:14px 18px; font-family:var(--font-mono); font-size:14px; font-weight:600;
                    letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
                    border-bottom:1px solid var(--border); background:var(--surface-3);
@@ -82,7 +82,7 @@
           {% if row.status == 'scored' %}
           <span style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px;
                        padding:4px 12px; border-radius:var(--radius-sm); background:var(--green-dim);
-                       border:1px solid var(--green); color:var(--green);">Scored</span>
+                       border:1px solid var(--green); color:var(--green);">Evaluated</span>
           {% elif row.status == 'flagged' %}
           <span style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px;
                        padding:4px 12px; border-radius:var(--radius-sm); background:var(--red-dim);
@@ -102,7 +102,7 @@
   <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:3px;
               text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">No History Yet</div>
   <p style="font-size:20px; color:var(--text-secondary); line-height:1.6; margin-bottom:24px;">
-    Your completed scoring history will appear here once you begin reviewing images.
+    Your completed evaluation history will appear here once you begin reviewing images.
   </p>
   <a href="{{ url_for('judge_dashboard') }}" class="btn btn-solid" style="padding:14px 28px; font-size:18px;">
     Go to Dashboard →
