@@ -2835,6 +2835,7 @@ Return this exact JSON:
   "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
   "is_captive": <true if any captive indicators present, else false>,
   "species_id": "<precise common name of the primary subject species — e.g. 'Rock Pigeon', 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. CRITICAL RULES: (1) Return ONLY the species common name — never a behavioural description, never 'Mother with chicks', never 'Bird feeding young', never a scene description. If you see a pigeon with chicks, return 'Rock Pigeon'. If you see a heron hunting, return 'Grey Heron'. The behaviour is NOT the species name. (2) Only name a species if you can identify it with HIGH VISUAL CONFIDENCE. Return 'Unknown' if: (a) the image is high-key, monochrome, heavily processed, out of focus, or the birds/animals are small, distant, or soft-focus and features are not clearly readable; (b) multiple species could plausibly match the visual evidence; (c) the image is abstract or minimalist. A wrong species identification is worse than returning Unknown. When in doubt, return Unknown. (3) SIMILAR-SPECIES PAIRS — extra care required: certain species pairs are frequently confused and require checking specific distinguishing features before committing to either name. Greater Flamingo vs Lesser Flamingo: check bill colour (Greater = pale pink with black tip; Lesser = deep red/maroon, almost entirely dark) and overall size/proportion relative to other birds in frame (Lesser is notably smaller and stockier). Indian Pond Heron vs Striated Heron: check overall coloration and habitat. Great Egret vs Intermediate Egret vs Little Egret: check bill colour, leg/foot colour, and neck-to-body ratio. If the distinguishing feature (bill colour, leg colour, size) is not clearly visible due to distance, angle, lighting, OR the subject being out of focus/soft, return 'Unknown' or the broader group name (e.g. 'Flamingo' rather than guessing Greater vs Lesser) rather than committing to a specific species that may be wrong. PRIMARY-SUBJECT SHARPNESS CHECK: before naming a species in a similar-species pair, check primary_subject_sharp — if the primary subject is NOT sharp (soft focus, motion blur, out of focus), the fine distinguishing features (bill colour, exact size/proportion) cannot be reliably assessed, and you MUST return 'Unknown' or the broader group name for that pair, even if the general silhouette/colour suggests one species over another. (4) CROSS-TAXON CONFUSION GATE — MANDATORY FIRST STEP: Before attempting any species identification, determine the TAXON CLASS of the subject (mammal / bird / reptile / insect / plant). Confirm the class from structural evidence — body fur vs feathers, limb anatomy, facial structure — before naming a species. A dark-furred, white-ruffed mammal peering over a mound is a PRIMATE, not a raptor. White facial fur radiating outward is a mammal mane characteristic, not plumage. NEVER assign a bird species to a mammal or vice versa. If the taxon class is ambiguous from the visible portion of the body, return 'Unknown' rather than crossing a class boundary. (5) PARTIAL VISIBILITY RULE — applies to ALL species including humans: When only a portion of the subject is visible (peering over a ridge, mound, or rock; partially occluded by vegetation; only face visible with no body or tail; subject in deep shadow with limited detail), identifying to species level requires sufficient distinguishing features to be clearly visible. The rule: the less of the subject you can see, the broader and safer the group name returned. A lion with only ears visible = 'Lion' not 'African Lion'. A leopard with only eyes in shadow = 'Leopard' not 'Indian Leopard'. A human with face partially occluded = 'Person' not a named individual. For Indian primates specifically — where the LTM misidentification as Bearded Vulture occurred — distinguishing features: Lion-tailed Macaque = jet-black body, full silver-white ruff radiating outward from the face like a halo, lion-like tufted tail tip, endemic to the Western Ghats. If this silver ruff is clearly visible, return 'Lion-tailed Macaque'. If only the top of the head is visible without a clear ruff perimeter, return 'Macaque'. Nilgiri Langur = golden-brown head fur (not a ruff) on black body. Hanuman Langur = grey body, black face. General rule: when in doubt about species within a genus from partial visibility, return the genus or common family name, never a specific species guess. (6) NO QUALIFIERS IN THE VALUE: the value must be ONLY the bare name itself — 'Flamingo', 'Unknown', 'Greater Flamingo', 'Lion-tailed Macaque' — with NO parenthetical notes, NO explanations, NO trailing clauses like '(out of focus)' or '- uncertain' or ', soft focus'. Any reasoning about why a broader name or Unknown was chosen belongs in scene_summary, never in this field.>",
+  "species_evidence": "<MANDATORY whenever species_id is not null/Unknown. State the SPECIFIC visible feature(s) that justify this species_id and no other — e.g. 'white head and breast, dark eye-stripe visible' or 'forked tail clearly visible in flight'. General/vague statements ('looks like a raptor', 'matches the photographer's description', 'consistent with the hint', 'similar size and habitat') are NOT acceptable evidence and mean you should not have returned that species_id — return 'Unknown' or a broader group name for species_id instead if this is all you have. If species_id is null/Unknown, set this to null.>",
   "suggested_subgenre": "<most accurate sub-genre id from the lists above — e.g. 'creative_minimalist', 'wildlife_bird_behaviour', 'street_candid'. null if genre is Landscape/Nature/Wedding/Macro/Drone/Fashion and no clear sub-genre match.>",
   "suggested_subgenre_reason": "<one sentence: what specific visual evidence leads to this sub-genre. e.g. 'Single swan in 60% negative space with tonal relationship as primary compositional statement.'>"
 }
@@ -3002,12 +3003,14 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
             f"Do NOT confirm this hint on general plausibility alone (right size, right habitat, right colour "
             f"family, right silhouette) — commonly confused species (e.g. Osprey vs. Black Kite/Brahminy Kite; "
             f"similar herons, egrets, raptors, gulls) will pass a plausibility check while still being wrong. "
-            f"Before returning this hint as species_id, you must identify the SPECIFIC diagnostic feature you can "
-            f"actually see that confirms it — e.g. 'white head and breast visible' for Osprey, 'forked tail visible' "
-            f"for Black Kite, 'chestnut body with white head' for Brahminy Kite. Name that feature to yourself before "
-            f"committing. If you cannot point to a specific confirming feature — only overall plausibility — do NOT "
-            f"use the hint as species_id. Return the broader group name (e.g. 'Raptor', 'Kite') or null instead, and "
-            f"note the photographer's guess and the discrepancy in scene_summary rather than presenting it as confirmed."
+            f"You must report the SPECIFIC diagnostic feature you can actually see in the species_evidence field "
+            f"— e.g. 'white head and breast visible' for Osprey, 'forked tail visible' for Black Kite, 'chestnut "
+            f"body with white head' for Brahminy Kite. If you cannot name a specific confirming feature — only "
+            f"overall plausibility — do NOT use the hint as species_id; return the broader group name (e.g. "
+            f"'Raptor', 'Kite') or Unknown instead, and note the photographer's guess and the discrepancy in "
+            f"scene_summary rather than presenting it as confirmed. species_evidence will be checked against "
+            f"what you write here — a vague or generic evidence string will cause the identification to be "
+            f"discarded regardless of what species_id you return."
         )
         prompt = prompt + species_hint_text
 
@@ -3040,7 +3043,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
     payload = {
         "model":       VISION_MODEL,
         "max_tokens":  1200,
-        "temperature": 0.1,
+        "temperature": 0.0,  # was 0.1 — lowered Session 124 alongside the main scoring call
         "system":      VISION_SYSTEM,
         "messages": [
             {
@@ -3081,7 +3084,36 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
                 text += block.get("text", "")
         text = re.sub(r"```json|```", "", text).strip()
         result = json.loads(text)
+
+        # ── Code-enforced species evidence gate (not just a prompt ask) ──────────
+        # A model can satisfy a text instruction to "name a specific feature" by
+        # writing something that only sounds specific. This is a real check on
+        # the returned species_evidence string, applied in code, that downgrades
+        # species_id when the evidence is missing, too short, or generic — so a
+        # weak confirmation can never silently pass through as a confident ID.
+        _sp_id  = (result.get('species_id') or '').strip()
+        _sp_ev  = (result.get('species_evidence') or '').strip()
+        _GENERIC_EVIDENCE_PHRASES = [
+            'consistent with', 'matches the hint', 'matches the photographer',
+            'looks like', 'appears to be a', 'similar size', 'similar habitat',
+            'general shape', 'overall shape', 'typical of', 'likely a',
+            'plausible', 'fits the description', 'matches the description',
+        ]
+        if _sp_id and _sp_id.lower() not in ('unknown', 'null', 'none', ''):
+            _ev_lower = _sp_ev.lower()
+            _ev_too_weak = (
+                not _sp_ev
+                or len(_sp_ev) < 12
+                or any(p in _ev_lower for p in _GENERIC_EVIDENCE_PHRASES)
+            )
+            if _ev_too_weak:
+                print(f"[vision_analyse] SPECIES GATE: downgrading '{_sp_id}' -> Unknown "
+                      f"(evidence too weak/generic: {_sp_ev!r})")
+                result['species_id'] = 'Unknown'
+                result['species_evidence'] = None
+
         print(f"[vision_analyse] Scene: {result.get('behavioural_act','?')} | Subjects: {result.get('subject_count','?')} | Contact: {result.get('physical_contact_between_subjects','?')} | Bill/talons: {result.get('object_in_bill_or_talons','?')} | SubGenre: {result.get('suggested_subgenre','?')}")
+        print(f"[vision_analyse] Species: {result.get('species_id','?')} | Evidence: {result.get('species_evidence','?')}")
         return result
     except Exception as e:
         print(f"[vision_analyse] Failed ({e}) — scoring will proceed without scene description")
@@ -3785,7 +3817,7 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     return "\n" + "\n".join(lines) + "\n"
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1, previous_score=None, previous_audit=None):
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1, previous_score=None, previous_audit=None, same_image_rescore=False):
     """
     Score an image using the Apex DDI Engine.
 
@@ -3810,6 +3842,13 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                   Format: {"feeling": [6.1,6.2,...], "timing": [...], "difficulty": [...]}
     user_city:    user.city — used for location attribution in scorecard fields.
     primary_genre: user's primary genre from genre_interests[0].
+    same_image_rescore: True when this is admin_force_rescore on the SAME image
+                  row (no pixels changed) — as opposed to a resubmission/edit of a
+                  near-duplicate image. When True with previous_score/previous_audit
+                  set, injects a stability anchor requiring the model to justify any
+                  score deviation from the prior run, since nothing about the image
+                  itself changed. Distinct from the resubmission delta block below,
+                  which assumes a genuinely edited image and expects the score to move.
     """
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
@@ -3996,7 +4035,38 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # (85–98% phash similarity), inject the previous score and key card text so
     # the engine compares against the original rather than scoring from scratch.
     # This implements the resubmit scoring contract (Item P9).
-    if previous_score is not None and previous_audit:
+    #
+    # ── Stability anchor — same-image rescore (Session 124) ──────────────────
+    # admin_force_rescore re-runs scoring on the SAME image row with no pixel
+    # change at all. The resubmission framing below is wrong here — it assumes
+    # an edit happened and expects the score to move. This branch instead tells
+    # the model nothing changed and any deviation from the prior score must be
+    # justified by a specific point the model believes it got wrong before —
+    # added after 7.12 -> 8.12 -> 7.92 was observed on three rescores of one
+    # unedited image with no explanation for the swings.
+    if previous_score is not None and previous_audit and same_image_rescore:
+        _prev_hard_truth = previous_audit.get('hard_truth', '')
+        _prev_cal_line   = previous_audit.get('calibration_line', '')
+        _stability_block = (
+            f"\n\nSTABILITY CHECK — THIS IS A RESCORE OF THE EXACT SAME IMAGE, NOT A NEW SUBMISSION:\n"
+            f"No pixels have changed. This same file was previously scored at {previous_score:.2f}.\n"
+            f"Previous opening verdict: {_prev_hard_truth[:200] if _prev_hard_truth else 'Not available'}\n"
+            f"Previous calibration line: {_prev_cal_line[:200] if _prev_cal_line else 'Not available'}\n\n"
+            f"STABILITY RULES:\n"
+            f"1. Score what you actually see. Do not anchor to the previous score out of deference.\n"
+            f"2. However: since nothing about the image changed, your score should land close to the previous "
+            f"one. A meaningful difference (more than roughly 0.3-0.5) is only justified if you can point to a "
+            f"SPECIFIC dimension or visible detail the previous evaluation appears to have gotten wrong or missed.\n"
+            f"3. If you cannot identify a specific reason the previous score was mistaken, treat that as evidence "
+            f"you should land close to it — small run-to-run disagreement on ambiguous calls is expected, but it "
+            f"should not compound into a full tier change with no visible cause.\n"
+            f"4. Do not describe the image in terms that contradict the previous evaluation's factual claims "
+            f"(e.g. sharp vs soft, single subject vs multiple) unless you are confident the previous read was "
+            f"wrong — if so, say so explicitly rather than silently describing it differently.\n"
+        )
+        prompt = prompt + _stability_block
+        print(f"[auto_score] stability anchor injected (same_image_rescore): previous_score={previous_score:.2f}")
+    elif previous_score is not None and previous_audit:
         _prev_hard_truth  = previous_audit.get('hard_truth', '')
         _prev_edit_base   = previous_audit.get('edit_base', '')
         _prev_cal_line    = previous_audit.get('calibration_line', '')
@@ -4027,7 +4097,10 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         "max_tokens":  4000,  # Increased 110.3→110.4: new mentor fields (transferable_advice,
                                # byline_1, byline_2, mentor_location, calibration_line) generate
                                # ~3500+ tokens. 2500 caused truncation mid-string on long responses.
-        "temperature": 0.2,
+        "temperature": 0.0,  # was 0.2 — lowered Session 124 after 7.12/8.12/7.92 same-image
+                              # rescore variance observed. Anthropic's API is not fully
+                              # deterministic even at temp=0, but this meaningfully tightens
+                              # the range. No seed parameter exists on this API to combine with it.
         "system":      effective_system,
         "messages": [
             {
