@@ -17482,6 +17482,22 @@ def admin_contests():
             cta_label    = request.form.get('cta_label', '').strip() or None
             cta_url      = request.form.get('cta_url', '').strip() or None
             banner_active= request.form.get('banner_active') == '1'
+            # Session 124 — optional scheduled send. Datetime input is IST
+            # (matches every other datetime field in this file); stored as
+            # UTC. If provided, status becomes 'scheduled' and
+            # run_scheduled_contest_announcements() picks it up and sends it
+            # automatically once send_at has passed. Leave blank for the
+            # existing draft -> manual "Send Now" behaviour, unchanged.
+            send_at_str = request.form.get('send_at', '').strip()
+            send_at     = None
+            ann_status  = 'draft'
+            if send_at_str:
+                try:
+                    send_at    = datetime.strptime(send_at_str, '%Y-%m-%dT%H:%M') - _IST_OFFSET
+                    ann_status = 'scheduled'
+                except ValueError:
+                    flash('Invalid scheduled send time format.', 'error')
+                    return redirect(url_for('admin_contests'))
 
             if not title or not body:
                 flash('Title and body are required.', 'error')
@@ -17496,12 +17512,16 @@ def admin_contests():
                 cta_label=cta_label,
                 cta_url=cta_url,
                 banner_active=banner_active,
-                status='draft',
+                status=ann_status,
+                send_at=send_at,
                 created_by=current_user.id,
             )
             db.session.add(ann)
             db.session.commit()
-            flash(f'Announcement "{title}" created.', 'success')
+            if ann_status == 'scheduled':
+                flash(f'Announcement "{title}" scheduled for {send_at_str} IST.', 'success')
+            else:
+                flash(f'Announcement "{title}" created.', 'success')
             return redirect(url_for('admin_contests'))
 
         elif action in ('banner_activate', 'banner_deactivate'):
@@ -17521,29 +17541,7 @@ def admin_contests():
 
             # Fire emails in background thread — same pattern as challenge notifications
             import threading
-            def _send_ann(ann_id_inner):
-                with app.app_context():
-                    try:
-                        ann_inner = ContestAnnouncement.query.get(ann_id_inner)
-                        if not ann_inner:
-                            return
-                        if ann_inner.audience == 'subscribers':
-                            recips = User.query.filter_by(is_active=True, is_subscribed=True).all()
-                        elif ann_inner.audience == 'non_subscribers':
-                            recips = User.query.filter_by(is_active=True, is_subscribed=False).filter(User.role != 'admin').all()
-                        else:
-                            recips = User.query.filter_by(is_active=True).filter(User.role != 'admin').all()
-                        sent = 0
-                        for u in recips:
-                            try:
-                                _send_contest_announcement_email(u, ann_inner)
-                                sent += 1
-                            except Exception as _e:
-                                app.logger.warning('[contest_ann] email failed user ' + str(u.id) + ': ' + str(_e))
-                        app.logger.info('[contest_ann] sent to ' + str(sent) + ' users')
-                    except Exception as _e:
-                        app.logger.error('[contest_ann] thread error: ' + str(_e))
-            t = threading.Thread(target=_send_ann, args=(ann_id,), daemon=True)
+            t = threading.Thread(target=_dispatch_contest_announcement_emails, args=(ann_id,), daemon=True)
             t.start()
             flash('Announcement queued — emails sending in background.', 'success')
             return redirect(url_for('admin_contests'))
@@ -17593,6 +17591,64 @@ def admin_contests():
         announcements=announcements,
         ist=_IST_OFFSET,
     )
+
+
+def _dispatch_contest_announcement_emails(ann_id):
+    """
+    Sends a ContestAnnouncement's emails to its target audience. Runs in a
+    background thread — needs its own app context, no request context.
+    Shared by two callers: the admin's manual "Send Now" action, and
+    run_scheduled_contest_announcements() below (Session 124 — wires up the
+    send_at field that previously existed on the model but was never acted
+    on; scheduled announcements were admin-triggered only despite the field).
+    """
+    with app.app_context():
+        try:
+            ann = ContestAnnouncement.query.get(ann_id)
+            if not ann:
+                return
+            if ann.audience == 'subscribers':
+                recips = User.query.filter_by(is_active=True, is_subscribed=True).all()
+            elif ann.audience == 'non_subscribers':
+                recips = User.query.filter_by(is_active=True, is_subscribed=False).filter(User.role != 'admin').all()
+            else:
+                recips = User.query.filter_by(is_active=True).filter(User.role != 'admin').all()
+            sent = 0
+            for u in recips:
+                try:
+                    _send_contest_announcement_email(u, ann)
+                    sent += 1
+                except Exception as _e:
+                    app.logger.warning('[contest_ann] email failed user ' + str(u.id) + ': ' + str(_e))
+            app.logger.info('[contest_ann] sent to ' + str(sent) + ' users')
+        except Exception as _e:
+            app.logger.error('[contest_ann] thread error: ' + str(_e))
+
+
+def run_scheduled_contest_announcements():
+    """
+    Runs every 15 minutes via APScheduler (Session 124). Finds
+    ContestAnnouncement rows with status='scheduled' whose send_at has
+    passed, marks them sent, and dispatches the emails — the same dispatch
+    path as the admin's manual "Send Now" button. Previously send_at existed
+    on the model and could be set, but nothing ever read it; announcements
+    were admin-triggered only regardless of what send_at said.
+    """
+    with app.app_context():
+        try:
+            due = ContestAnnouncement.query.filter(
+                ContestAnnouncement.status == 'scheduled',
+                ContestAnnouncement.send_at.isnot(None),
+                ContestAnnouncement.send_at <= datetime.utcnow(),
+            ).all()
+            for ann in due:
+                ann.status  = 'sent'
+                ann.sent_at = datetime.utcnow()
+                db.session.commit()
+                app.logger.info(f'[scheduled_contest_ann] dispatching announcement id={ann.id}')
+                _dispatch_contest_announcement_emails(ann.id)
+        except Exception as e:
+            app.logger.error(f'[scheduled_contest_ann] Error: {e}')
 
 
 def _send_contest_announcement_email(user, ann):
@@ -23660,6 +23716,16 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute=0, timezone='UTC'),
         id               = 'peer_eval_digest',
         name             = 'Peer eval digest emailer — batched per-image summaries',
+        replace_existing = True,
+    )
+    # Session 124 — scheduled contest announcements — every 15 minutes
+    # Wires up the send_at field on ContestAnnouncement, which existed but
+    # was never acted on (sends were admin-triggered only).
+    _scheduler.add_job(
+        func             = run_scheduled_contest_announcements,
+        trigger          = CronTrigger(minute='0,15,30,45', timezone='UTC'),
+        id               = 'scheduled_contest_announcements',
+        name             = 'Dispatch ContestAnnouncements whose send_at has passed',
         replace_existing = True,
     )
     _scheduler.start()
