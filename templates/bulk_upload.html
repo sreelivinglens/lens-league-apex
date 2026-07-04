@@ -153,7 +153,7 @@
 
   <div class="page-header">
     <h1>Bulk Upload</h1>
-    <p>Upload multiple images at once — AI scores each one automatically</p>
+    <p>Upload multiple images at once — AI evaluates each one automatically</p>
   </div>
 
   <!-- ── UPLOAD CAROUSEL ── -->
@@ -293,7 +293,7 @@
       <div style="margin-bottom:16px; padding:16px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div>
           <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Community Gallery</div>
-          <div style="font-family:var(--font-mono); font-size: 13px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are scored privately.</div>
+          <div style="font-family:var(--font-mono); font-size: 13px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are evaluated privately.</div>
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
@@ -306,7 +306,7 @@
       </div>
 
       <button type="button" id="submitBtn" class="btn btn-solid" style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;" onclick="document.getElementById('bulkForm').dispatchEvent(new Event('submit', {cancelable:true,bubbles:true}))">
-        ⬆ Upload &amp; Auto-Score All
+        ⬆ Upload &amp; Auto-Evaluate All
       </button>
     </form>
   </div>
@@ -317,7 +317,7 @@
     {% set scored_count = results | selectattr('status', 'equalto', 'scored') | list | length %}
     {% set busy_count   = results | selectattr('status', 'containing', 'busy') | list | length %}
     {% if scored_count > 0 %}
-    <div style="background:var(--green-dim); border:1px solid var(--green); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:var(--green);">✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully.</div>
+    <div style="background:var(--green-dim); border:1px solid var(--green); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:var(--green);">✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} evaluated successfully.</div>
     {% endif %}
     {% if busy_count > 0 %}
     <div style="background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:#F0C888;">⏳ {{ busy_count }} image{{ 's' if busy_count != 1 }} saved — AI servers busy. Retry from dashboard during off-peak hours.</div>
@@ -326,7 +326,7 @@
     <div class="result-border">
       <div style="display:flex; gap:16px; padding:12px 20px; background:var(--surface-3); border-bottom:1px solid var(--border);">
         <div style="flex:1; font-family:var(--font-mono); font-size: 13px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">File</div>
-        <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size: 13px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Score</div>
+        <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size: 13px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Evaluation</div>
         <div style="min-width:90px; font-family:var(--font-mono); font-size: 13px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Tier</div>
         <div style="min-width:120px; font-family:var(--font-mono); font-size: 13px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Status</div>
       </div>
@@ -483,7 +483,7 @@ function dismissOverlayError() {
   document.getElementById('scoringOverlay').classList.remove('active');
   document.getElementById('overlayError').style.display = 'none';
   document.getElementById('submitBtn').disabled = false;
-  document.getElementById('submitBtn').textContent = '⬆ Upload & Auto-Score All';
+  document.getElementById('submitBtn').textContent = '⬆ Upload & Auto-Evaluate All';
 }
 
 function updateBulkSubGenre(genreValue) {
@@ -673,9 +673,9 @@ document.addEventListener('DOMContentLoaded', function() {
       clockSecs.textContent = imgSecs;
       clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
       if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`;  overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;        overlaySub.textContent = 'Transferring to server.'; }
-      else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`;          overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
-      else if (imgSecs < 28) { overlayPhase.textContent = `SCORING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;   overlaySub.textContent = 'Applying genre weights and safeguards.'; }
-      else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating score card for image ${imgNum}…`;   overlaySub.textContent = 'Building archetype and improvement tip.'; }
+      else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine evaluating image ${imgNum}…`;          overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
+      else if (imgSecs < 28) { overlayPhase.textContent = `EVALUATING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI evaluation for image ${imgNum}…`;   overlaySub.textContent = 'Applying genre weights and safeguards.'; }
+      else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating evaluation card for image ${imgNum}…`;   overlaySub.textContent = 'Building archetype and improvement tip.'; }
     }, 1000);
 
     function showOverlayError(msg) {
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('overlayErrorMsg').textContent = msg;
       document.getElementById('overlayError').style.display = 'block';
       submitBtn.disabled = false;
-      submitBtn.textContent = '⬆ Upload & Auto-Score All';
+      submitBtn.textContent = '⬆ Upload & Auto-Evaluate All';
     }
 
     const genre        = form.querySelector('[name="genre"]').value;
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errors  = allResults.filter(r => !r.score && r.status && (r.status.includes('error') || r.status.includes('duplicate')));
 
         let summaryLines = [];
-        if (scored.length)  summaryLines.push(`${scored.length} scored`);
+        if (scored.length)  summaryLines.push(`${scored.length} evaluated`);
         if (skipped.length) summaryLines.push(`${skipped.length} skipped (too small)`);
         if (errors.length)  summaryLines.push(`${errors.length} failed`);
         overlayStatus.textContent = summaryLines.join(' · ') || 'Done';
