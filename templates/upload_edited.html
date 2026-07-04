@@ -189,7 +189,7 @@
 
   <div class="ue-header">
     <h1>Upload Edited Version</h1>
-    <p>Score a new edit of <strong>{{ root.asset_name or 'Untitled' }}</strong>. Your edited version starts private — you decide if and when to make it public.</p>
+    <p>Evaluate a new edit of <strong>{{ root.asset_name or 'Untitled' }}</strong>. Your edited version starts private — you decide if and when to make it public.</p>
   </div>
 
   {# ── Wallet balance summary ──────────────────────────────────── #}
@@ -307,7 +307,7 @@
         <ul style="margin:8px 0 0;padding-left:20px;line-height:2;">
           <li>Your edited version is evaluated independently — it does not replace the original.</li>
           <li>It starts <strong>private</strong>. You decide if and when to make it public.</li>
-          <li>The <strong>highest-scoring version</strong> automatically counts toward your programme standing.</li>
+          <li>The <strong>highest-evaluated version</strong> automatically counts toward your programme standing.</li>
           <li>
             {% if version_num == 2 %}
               🎁 <strong>This first edit is free</strong> — no charge. From V3 onwards each edit costs <strong>{{ edit_pts_cost }} pts</strong> or 1 upload slot.
