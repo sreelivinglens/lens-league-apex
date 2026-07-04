@@ -7337,6 +7337,13 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
         if not img:
             return
 
+        # Capture the prior audit BEFORE any of it gets overwritten below —
+        # this is what feeds the same-image stability anchor (Session 124).
+        try:
+            _prior_audit_for_stability = img.get_audit() or None
+        except Exception:
+            _prior_audit_for_stability = None
+
         try:
             import tempfile, traceback as _tb
             from engine.auto_score import auto_score, build_audit_data, build_exif_context
@@ -7471,6 +7478,9 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 portfolio_summary = _portfolio_summary,
                 user_city         = _user_city,
                 primary_genre     = _primary_genre or img.genre or '',
+                previous_score    = old_score,
+                previous_audit    = _prior_audit_for_stability,
+                same_image_rescore = bool(old_score is not None and _prior_audit_for_stability),
                 image_number      = _image_number,
             )
 
