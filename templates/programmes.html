@@ -130,7 +130,7 @@
     <ul>
       <li>All registered Shutter League members — Camera Users and Mobile Users.</li>
       <li>All programmes are open to registered Shutter League subscribers in good standing. Subscription requires a valid Indian bank account and PAN card — programmes are currently available to Indian residents and NRIs with active Indian bank accounts. Programmes are governed by Indian law and applicable regulations.</li>
-      <li>All programmes run on the calendar year: <strong>1 January – 31 December</strong>. Scores, standings, and qualifying history reset on 1 January each year.</li>
+      <li>All programmes run on the calendar year: <strong>1 January – 31 December</strong>. Evaluations, standings, and qualifying history reset on 1 January each year.</li>
       <li>Images must be the photographer's original work. AI-generated images, composites, and stolen images are disqualified. RAW file verification applies to all programme recipients.</li>
       <li>Full programme rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a>.</li>
     </ul>
@@ -141,16 +141,16 @@
     <div class="comp-header">
       <div>
         <div class="comp-freq">Annual · Jan 1 – Dec 31 &nbsp;·&nbsp; <strong style="color:var(--gold);">2026: Sep 1 – Dec 31</strong></div>
-        <div class="comp-title">Annual Excellence Award — Photographer of the Year</div>
+        <div class="comp-title">Annual Excellence Award (AEA)</div>
       </div>
       <div class="comp-dates">Year-round<small>Assessed Continuously</small></div>
     </div>
     <div class="comp-desc">
-      Your scores are your Annual Excellence Award currency. At the end of the platform year, your best 6 images per genre determine your standing — quality over volume. Camera Users and Mobile Users are assessed in separate leagues, with their own Gold, Silver, and Bronze recognition across all 8 genres.
+      Your evaluations are your Annual Excellence Award currency. At the end of the platform year, your best 6 images per genre determine your standing — quality over volume. Camera Users and Mobile Users are assessed in separate leagues, with their own Gold, Silver, and Bronze recognition across all 8 genres.
       <br><br>
       The Grand Recipient — one Camera User, one Mobile User — is selected by jury from the 8 category Gold recipients in each league. These are the platform's highest annual honours.
       <br><br>
-      <strong>2026 season note:</strong> The 2026 season opens 1 September and closes 31 December 2026. Images scored in any calendar month of 2026 — including before September — count toward your standing and eligibility. Eligibility requires at least 3 active months with 1 or more photographs evaluated in 2026.
+      <strong>2026 season note:</strong> The 2026 season opens 1 September and closes 31 December 2026. Images evaluated in any calendar month of 2026 — including before September — count toward your standing and eligibility. Eligibility requires at least 3 active months with 1 or more photographs evaluated in 2026.
     </div>
     <div class="comp-honours">
       <div class="comp-honour-item"><strong>Minimum 6 photographs evaluated</strong> per genre to appear on standings</div>
@@ -164,13 +164,13 @@
       {% if current_user.is_authenticated %}
         {% if current_user.is_subscribed %}
           <a href="{{ url_for('dashboard') }}" class="btn btn-solid">View My Dashboard →</a>
-          <span class="comp-action-note">Your scores build automatically each month</span>
+          <span class="comp-action-note">Your evaluations build automatically each month</span>
         {% else %}
           <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Qualify →</a>
           <span class="comp-action-note">You need 3 active months with at least 1 photograph evaluated in 2026 to qualify for the Annual Excellence Award.</span>
         {% endif %}
       {% else %}
-        <a href="{{ url_for('register') }}" class="btn btn-solid">Start Building Your Score →</a>
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Start Building Your Standing →</a>
         <span class="comp-action-note">Subscription required · 3 active months in 2026 to qualify for awards</span>
       {% endif %}
       <a href="{{ url_for('poty') }}" class="btn" style="padding:11px 28px; font-size:1rem;">Annual Excellence Award →</a>
