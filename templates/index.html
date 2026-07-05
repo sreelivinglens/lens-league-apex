@@ -2125,7 +2125,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
        alt="{{ hero.genre or 'Photography' }}"
        loading="eager"
        fetchpriority="high"
-       onerror="this.parentElement.style.background='#0A1A0E';this.style.display='none'">
+       onerror="this.style.display='none'">
+  {% else %}
+  {# Fallback — show first available public scored image #}
+  {% set _fallback = recent_images[0] if recent_images else none %}
+  {% if _fallback and _fallback.thumb_url %}
+  <img src="{{ _fallback.thumb_url }}"
+       alt="{{ _fallback.genre or 'Photography' }}"
+       loading="eager"
+       fetchpriority="high"
+       onerror="this.style.display='none'">
+  {% endif %}
   {% endif %}
   <div class="sl-dash-hero-banner__grad"></div>
 
@@ -2204,16 +2214,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <h1 class="sl-mob-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
   <p class="sl-mob-hero-tagline">Photography Assessment<br>&amp; Evolution Platform.</p>
   <p class="sl-mob-hero-philosophy">Making Images Matter.</p>
-  {% if hero and hero.thumb_url %}
+  {% set _hero_img = hero if (hero and hero.thumb_url) else (recent_images[0] if recent_images else none) %}
+  {% if _hero_img and _hero_img.thumb_url %}
   <div class="sl-mob-hero-imgcard">
-    <img src="{{ hero.thumb_url }}"
-         alt="{{ hero.genre or 'Photography' }}"
+    <img src="{{ _hero_img.thumb_url }}"
+         alt="{{ _hero_img.genre or 'Photography' }}"
          loading="eager" fetchpriority="high"
          onerror="this.style.display='none'">
   </div>
   <div class="sl-mob-hero-imgcredit">
-    {% if hero.score %}<span class="sl-mob-hero-credit-score">Score {{ '%.1f'|format(hero.score) }} &middot; {{ hero.tier or '' }}</span>{% endif %}
-    <span>&copy; {{ hero.photographer_name or '' }}</span>
+    {% if _hero_img.score %}<span class="sl-mob-hero-credit-score">Score {{ '%.1f'|format(_hero_img.score) }} &middot; {{ _hero_img.tier or '' }}</span>{% endif %}
+    <span>&copy; {{ _hero_img.photographer_name or '' }}</span>
   </div>
   {% endif %}
 </div>
@@ -2919,4 +2930,4 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </script>
 {% endblock %}
 
-<!-- SL UI v2.0 | Session 126 | 2026-07-05 -->
+<!-- SL UI v2.1 | Session 126 | 2026-07-05 | nav+hero+footer fixes -->
