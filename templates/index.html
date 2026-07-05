@@ -2065,13 +2065,8 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
         How it works
       </a>
     </div>
-    <div class="sl-hero-mentors">
-      <div class="sl-hero-mentor-avatars">
-        <div class="sl-hero-mentor-avatar"><img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'"></div>
-        <div class="sl-hero-mentor-avatar"><img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'"></div>
-      </div>
-      <span class="sl-hero-mentor-text">Guided by accomplished photographers.</span>
-    </div>
+    {# Mentor row hidden for now — re-enable when ready #}
+  {# <div class="sl-hero-mentors">...</div> #}
   </div>
   {% if hero and hero.score %}
   <div class="sl-dash-hero-banner__badge">
@@ -2108,7 +2103,7 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
     <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
   </div>
 </div>
-<div class="sl-mob-mentor-row">
+<div class="sl-mob-mentor-row" style="display:none!important;">
   <div class="sl-mob-mentor-lbl">Guided by accomplished photographers</div>
   <div class="sl-mob-mentor-photos">
     <div class="sl-mob-mentor-item">
@@ -2330,4 +2325,4 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
 
 {% endblock %}
 
-<!-- SL UI v3.6 | 2026-07-05 | landscape filter + z-index -->
+<!-- SL UI v3.7 | 2026-07-05 | mentor hidden + landscape fix -->
