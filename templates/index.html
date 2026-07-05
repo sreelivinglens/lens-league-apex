@@ -66,7 +66,7 @@ body:has(.sl-home) { padding-top: 0 !important; }
     linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.38) 30%, rgba(0,0,0,0.08) 55%, transparent 75%);
 }
 .sl-hero-content { position: absolute; bottom: 48px; left: 0; z-index: 10; padding: 0 48px; max-width: 500px; }
-.sl-hero-h1 { font-size: 36px; font-weight: 600; color: #F6F2E9; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 10px; text-shadow: 0 1px 12px rgba(0,0,0,0.5); }
+.sl-hero-h1 { font-size: 36px !important; font-weight: 600 !important; color: #F6F2E9 !important; line-height: 1.1 !important; letter-spacing: -0.5px !important; margin-bottom: 10px !important; text-shadow: 0 1px 12px rgba(0,0,0,0.5) !important; display: block !important; }
 .sl-hero-tagline { font-size: 15px; color: #D6A428; margin-bottom: 10px; text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
 .sl-hero-divider { width: 30px; height: 1px; background: rgba(214,164,40,0.5); margin-bottom: 10px; }
 .sl-hero-philosophy { font-size: 17px; color: #F6F2E9; margin-bottom: 22px; text-shadow: 0 1px 8px rgba(0,0,0,0.5); }
@@ -1995,6 +1995,11 @@ body:has(.sl-home) { padding-top: 0 !important; }
 main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
 body.page-home main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
 .sl-home { margin-top: 0 !important; padding-top: 0 !important; }
+/* Mobile: kill body padding-top that old nav adds */
+@media (max-width: 768px) {
+  body { padding-top: 0 !important; }
+  .sl-mob-hero-copy { margin-top: 0 !important; padding-top: 0 !important; }
+}
 /* Hero anchor — full viewport */
 .sl-home > a:first-of-type {
   display: block !important; height: 100vh !important;
@@ -2020,6 +2025,17 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
   pointer-events: none;
 }
 .sl-hero-content a { pointer-events: auto; }
+.sl-hero-content h1, .sl-hero-h1 {
+  color: #F6F2E9 !important; display: block !important;
+  font-size: 36px !important; font-weight: 600 !important;
+  line-height: 1.1 !important; margin-bottom: 10px !important;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.7) !important;
+}
+.sl-hero-content p, .sl-hero-tagline, .sl-hero-philosophy {
+  display: block !important;
+}
+.sl-hero-tagline { color: #D6A428 !important; }
+.sl-hero-philosophy { color: #F6F2E9 !important; }
 /* Gradient overlay above image, below copy */
 .sl-dash-hero-banner__grad {
   position: absolute !important; inset: 0 !important; z-index: 10 !important;
@@ -2325,4 +2341,4 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
 
 {% endblock %}
 
-<!-- SL UI v3.7 | 2026-07-05 | mentor hidden + landscape fix -->
+<!-- SL UI v3.8 | 2026-07-05 | copy visibility + mobile gap -->
