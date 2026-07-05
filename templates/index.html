@@ -1993,6 +1993,7 @@ body:has(.sl-home) { padding-top: 0 !important; }
 <style>
 /* Force override — kills any main padding on homepage */
 main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+body.page-home main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
 .sl-home { margin-top: 0 !important; padding-top: 0 !important; }
 /* Hero anchor — full viewport */
 .sl-home > a:first-of-type {
@@ -2311,6 +2312,34 @@ main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-wid
 
 })();
 </script>
+
+
+{% block extra_js %}{{ super() }}
+<script>
+(function(){
+  /* Safari fix — body:has() not reliable, use JS to zero main padding */
+  var main = document.querySelector('main');
+  if(main && document.querySelector('.sl-home')){
+    main.style.cssText += ';padding:0!important;margin:0!important;max-width:none!important;';
+  }
+  /* Also force hero anchor height */
+  var heroA = document.querySelector('.sl-home > a');
+  if(heroA){
+    heroA.style.cssText += ';display:block!important;height:100vh!important;min-height:600px!important;position:relative!important;overflow:hidden!important;';
+  }
+  /* Force hero banner to fill */
+  var banner = document.querySelector('.sl-dash-hero-banner');
+  if(banner){
+    banner.style.cssText += ';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;';
+  }
+  /* Force hero image to cover */
+  var heroImg = document.querySelector('.sl-dash-hero-banner img');
+  if(heroImg){
+    heroImg.style.cssText += ';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;';
+  }
+})();
+</script>
+{% endblock %}
 {% endblock %}
 
-<!-- SL UI v3.3 | 2026-07-05 | z-index + mentor exclusion -->
+<!-- SL UI v3.4 | 2026-07-05 | JS Safari fix -->
