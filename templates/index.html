@@ -1994,9 +1994,43 @@ body:has(.sl-home) { padding-top: 0 !important; }
 /* Force override — kills any main padding on homepage */
 main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
 .sl-home { margin-top: 0 !important; padding-top: 0 !important; }
-.sl-home > a { display: block !important; height: 100vh !important; min-height: 600px !important; position: relative !important; overflow: hidden !important; }
-.sl-dash-hero-banner { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; }
-.sl-dash-hero-banner img { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; }
+/* Hero anchor — full viewport */
+.sl-home > a:first-of-type {
+  display: block !important; height: 100vh !important;
+  min-height: 600px !important; position: relative !important;
+  overflow: hidden !important;
+}
+/* Hero banner fills anchor */
+.sl-home > a:first-of-type .sl-dash-hero-banner {
+  position: absolute !important; inset: 0 !important;
+  width: 100% !important; height: 100% !important;
+}
+/* Hero image fills banner */
+.sl-home > a:first-of-type .sl-dash-hero-banner img {
+  position: absolute !important; inset: 0 !important;
+  width: 100% !important; height: 100% !important;
+  object-fit: cover !important; object-position: center center !important;
+}
+/* Hero copy ABOVE image */
+.sl-hero-content {
+  position: absolute !important; bottom: 48px !important;
+  left: 0 !important; z-index: 20 !important;
+  padding: 0 48px !important; max-width: 500px !important;
+}
+/* Gradient overlay above image, below copy */
+.sl-dash-hero-banner__grad {
+  position: absolute !important; inset: 0 !important; z-index: 5 !important;
+}
+/* Photo credit */
+.sl-dash-hero-banner__badge {
+  position: absolute !important; bottom: 20px !important;
+  right: 24px !important; z-index: 20 !important;
+}
+/* Scroll cue */
+.sl-hero-scroll-cue {
+  position: absolute !important; bottom: 22px !important;
+  left: 50% !important; z-index: 20 !important;
+}
 </style>
 <div class="sl-home">
 
@@ -2279,4 +2313,4 @@ main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-wid
 </script>
 {% endblock %}
 
-<!-- SL UI v3.2 | 2026-07-05 | iPad breakpoint added -->
+<!-- SL UI v3.3 | 2026-07-05 | z-index + mentor exclusion -->
