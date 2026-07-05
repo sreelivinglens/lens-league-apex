@@ -2190,6 +2190,18 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
 {% block extra_js %}
 <script>
 (function(){
+  var main=document.querySelector('main');
+  if(main&&document.querySelector('.sl-home')){main.style.cssText+=';padding:0!important;margin:0!important;max-width:none!important;';}
+  var a=document.querySelector('.sl-home>a');
+  if(a){a.style.cssText+=';display:block!important;height:100vh!important;min-height:600px!important;position:relative!important;overflow:hidden!important;';}
+  var b=document.querySelector('.sl-dash-hero-banner');
+  if(b){b.style.cssText+=';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;';}
+  var img=document.querySelector('.sl-dash-hero-banner img');
+  if(img){img.style.cssText+=';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;';}
+})();
+</script>
+<script>
+(function(){
   /* Fade in score badge on desktop */
   var badge = document.querySelector('.sl-hero-score-badge');
   if (badge) {
@@ -2314,32 +2326,6 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
 </script>
 
 
-{% block extra_js %}{{ super() }}
-<script>
-(function(){
-  /* Safari fix — body:has() not reliable, use JS to zero main padding */
-  var main = document.querySelector('main');
-  if(main && document.querySelector('.sl-home')){
-    main.style.cssText += ';padding:0!important;margin:0!important;max-width:none!important;';
-  }
-  /* Also force hero anchor height */
-  var heroA = document.querySelector('.sl-home > a');
-  if(heroA){
-    heroA.style.cssText += ';display:block!important;height:100vh!important;min-height:600px!important;position:relative!important;overflow:hidden!important;';
-  }
-  /* Force hero banner to fill */
-  var banner = document.querySelector('.sl-dash-hero-banner');
-  if(banner){
-    banner.style.cssText += ';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;';
-  }
-  /* Force hero image to cover */
-  var heroImg = document.querySelector('.sl-dash-hero-banner img');
-  if(heroImg){
-    heroImg.style.cssText += ';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;';
-  }
-})();
-</script>
-{% endblock %}
 {% endblock %}
 
-<!-- SL UI v3.4 | 2026-07-05 | JS Safari fix -->
+<!-- SL UI v3.5 | 2026-07-05 | fixed duplicate block -->
