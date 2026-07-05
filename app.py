@@ -2580,23 +2580,39 @@ def run_reengagement_emailer():
 def index():
     try:
         # Recent public scored images for bottom strips
-        recent_images = (Image.query
+        _recent_raw = (Image.query
                          .filter(Image.status=='scored', Image.score!=None,
                                  Image.is_public==True, Image.is_flagged==False,
                                  Image.thumb_url!=None)
                          .order_by(Image.scored_at.desc())
-                         .limit(12).all())
+                         .limit(36).all())
+        # Deduplicate — max 1 image per photographer, max 6 total
+        _seen_users = set()
+        recent_images = []
+        for _ri in _recent_raw:
+            if _ri.user_id not in _seen_users:
+                _seen_users.add(_ri.user_id)
+                recent_images.append(_ri)
+                if len(recent_images) == 6:
+                    break
         # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
         # Exclude portrait-heavy genres so hero image renders as landscape in 4/3 container
-        _portrait_genres = ['People', 'Fashion', 'Wedding', 'Portrait', 'Creative']
-        carousel_images = (Image.query
-                           .filter(Image.status=='scored', Image.score!=None,
-                                   Image.is_public==True, Image.is_flagged==False,
-                                   Image.tier.in_(['Legend','Grandmaster','Master']),
-                                   Image.score>=8.5,
-                                   ~Image.genre.in_(_portrait_genres))
-                           .order_by(db.func.random())
-                           .limit(12).all())
+        # Hero carousel — Master/Grandmaster/Legend, score >= 8.5
+        # Exclude portrait genres AND mentor profiles from appearing as hero
+        _portrait_genres = ['People', 'Fashion', 'Wedding', 'Portrait', 'Creative', 'Street']
+        _mentor_user_ids = db.session.execute(
+            db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
+        ).scalars().all()
+        _carousel_q = Image.query.filter(
+            Image.status=='scored', Image.score!=None,
+            Image.is_public==True, Image.is_flagged==False,
+            Image.tier.in_(['Legend','Grandmaster','Master']),
+            Image.score>=8.5,
+            ~Image.genre.in_(_portrait_genres)
+        )
+        if _mentor_user_ids:
+            _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
+        carousel_images = _carousel_q.order_by(db.func.random()).limit(12).all()
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
@@ -4508,6 +4524,33 @@ def _build_progress_data(user):
             if getattr(img, 'mission_dimension', None) == d
         ]
 
+    # ── Post-practise feedback ──────────────────────────────────────────────
+    # For each dimension, find the most recent mission upload and compare its
+    # dimension score to the average of the 3 images scored before it.
+    # Surfaces as: "Last practise: Decisive Moment. Score: 7.9 (+1.1 — the practise worked.)"
+    practise_feedback = {}
+    for d, field in dim_fields.items():
+        mission_imgs = [img for img in scored if getattr(img, 'mission_dimension', None) == d]
+        if not mission_imgs:
+            continue
+        last_mission = mission_imgs[-1]
+        last_score = getattr(last_mission, field)
+        if not last_score:
+            continue
+        idx = scored.index(last_mission)
+        before_imgs = [img for img in scored[:idx] if getattr(img, field) is not None][-3:]
+        if not before_imgs:
+            continue
+        before_avg = round(sum(getattr(i, field) for i in before_imgs) / len(before_imgs), 1)
+        delta = round(last_score - before_avg, 1)
+        practise_feedback[d] = {
+            'dim_label':  dim_labels[d],
+            'before':     before_avg,
+            'after':      round(last_score, 1),
+            'delta':      delta,
+            'direction':  'up' if delta > 0.1 else ('down' if delta < -0.1 else 'steady'),
+        }
+
     strongest = max(avgs, key=avgs.get)
     weakest   = min(avgs, key=avgs.get)
 
@@ -4598,7 +4641,8 @@ def _build_progress_data(user):
         'dim_trends':     dim_trends,
         'dim_pills':      dim_pills,
         'dim_sparklines':      dim_sparklines,
-        'dim_mission_indices': dim_mission_indices,
+        'dim_mission_indices':  dim_mission_indices,
+        'practise_feedback':    practise_feedback,
         'strongest':      strongest,
         'weakest':        weakest,
         'top_genre':      top_genre,
