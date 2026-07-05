@@ -33,6 +33,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 
 /* ━━ INTER OVERRIDE — all homepage elements ━━ */
+.sl-home > a:first-child {
+  display: block !important;
+  height: 100vh !important;
+  min-height: 600px !important;
+}
 .sl-home, .sl-home * {
   font-family: 'Inter', sans-serif !important;
 }
@@ -134,18 +139,18 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   50% { transform: translateX(-50%) translateY(5px); }
 }
 /* Mobile hero — content above, image below */
-.sl-mob-hero-copy { display: none; }
-.sl-mob-mentor-row { display: none; }
+.sl-mob-hero-copy { display: none !important; }
+.sl-mob-mentor-row { display: none !important; }
 @media (max-width: 768px) {
   .sl-dash-hero-banner { display: none !important; }
-  .sl-mob-hero-copy { display: block; padding: 28px 20px 0; background: #F6F2E9; }
+  .sl-mob-hero-copy { display: block !important; padding: 28px 20px 0; background: #F6F2E9; }
   .sl-mob-hero-h1 { font-size: 34px; font-weight: 700; color: #1A1A18; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
   .sl-mob-hero-tagline { font-size: 15px; color: #6B6B6B; line-height: 1.5; margin-bottom: 10px; }
   .sl-mob-hero-philosophy { font-size: 18px; font-weight: 600; color: #A37B2C; margin-bottom: 20px; }
   .sl-mob-hero-imgcard { width: 100%; border-radius: 16px; overflow: hidden; aspect-ratio: 4/3; background: #1A2A1A; margin-bottom: 6px; }
   .sl-mob-hero-imgcard img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .sl-mob-hero-imgcredit { font-size: 12px; color: #8A7A5A; display: flex; justify-content: space-between; padding: 4px 0 16px; }
-  .sl-mob-mentor-row { display: block; padding: 16px 20px 20px; background: #F6F2E9; border-bottom: 1px solid #E8E0CC; }
+  .sl-mob-mentor-row { display: block !important; padding: 16px 20px 20px; background: #F6F2E9; border-bottom: 1px solid #E8E0CC; }
   .sl-mob-mentor-lbl { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #8A7A5A; text-align: center; margin-bottom: 14px; }
   .sl-mob-mentor-photos { display: flex; justify-content: center; gap: 28px; }
   .sl-mob-mentor-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -2038,7 +2043,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {# ━━━━━━━━━━━━━━━━━━ HERO — dashboard structure ━━━━━━━━━━━━━━━━━━ #}
 {% if hero and hero.id %}
 <a href="{{ url_for('image_detail', image_id=hero.id) }}"
-   style="display:block; text-decoration:none; position:relative;" aria-label="Explore this photograph">
+   style="display:block; text-decoration:none; position:relative; height:100vh; min-height:600px;" aria-label="Explore this photograph">
 {% endif %}
 <div class="sl-dash-hero-banner">
   {% if hero and hero.thumb_url %}
@@ -2837,4 +2842,4 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </script>
 {% endblock %}
 
-<!-- SL UI v2.4 | Session 126 | 2026-07-05 | fresh from original -->
+<!-- SL UI v2.6 | 2026-07-05 | final -->
