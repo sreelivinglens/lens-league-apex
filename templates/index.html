@@ -26,10 +26,16 @@
    #1A1A18 text · #F5C518 gold (dark bg only)
    #0D0D0B hero/footer bg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
-@media (max-width: 768px) {
-  body:has(.sl-home) { padding-top: 0 !important; }
-  .sl-home { padding-top: 0; }
+body:has(.sl-home) main { padding:0 !important; max-width:none !important; margin:0 !important; }
+body:has(.sl-home) { padding-top: 0 !important; }
+.sl-home { margin-top: 0 !important; padding-top: 0 !important; }
+body:has(.sl-home) { padding-top: 0 !important; }
+.sl-home { padding-top: 0 !important; }
+.sl-home > a:first-child {
+  display: block !important;
+  height: 100vh !important;
+  min-height: 600px !important;
+  position: relative !important;
 }
 
 /* ━━ INTER OVERRIDE — all homepage elements ━━ */
@@ -51,7 +57,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-dash-hero-banner img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover; object-position: center; display: block;
+  object-fit: cover; object-position: center center; display: block; width: 100% !important; height: 100% !important;
 }
 .sl-dash-hero-banner__grad {
   position: absolute; inset: 0;
@@ -2260,4 +2266,4 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </script>
 {% endblock %}
 
-<!-- SL UI v2.7 | 2026-07-05 | clean rebuild from original -->
+<!-- SL UI v2.9 | 2026-07-05 -->
