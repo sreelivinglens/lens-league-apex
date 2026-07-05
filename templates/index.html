@@ -99,7 +99,7 @@ body:has(.sl-home) { padding-top: 0 !important; }
   .sl-mob-hero-imgcard { width: 100%; border-radius: 16px; overflow: hidden; aspect-ratio: 4/3; background: #1A2A1A; margin-bottom: 6px; }
   .sl-mob-hero-imgcard img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .sl-mob-hero-imgcredit { font-size: 12px; color: #8A7A5A; display: flex; justify-content: space-between; padding: 4px 0 16px; }
-  .sl-mob-mentor-row { display: block !important; padding: 16px 20px 20px; background: #F6F2E9; border-bottom: 1px solid #E8E0CC; }
+  /* .sl-mob-mentor-row hidden — re-enable when mentors ready */
   .sl-mob-mentor-lbl { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #8A7A5A; text-align: center; margin-bottom: 14px; }
   .sl-mob-mentor-photos { display: flex; justify-content: center; gap: 28px; }
   .sl-mob-mentor-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -1987,13 +1987,13 @@ body:has(.sl-home) { padding-top: 0 !important; }
 } /* end @media (max-width: 768px) mobile redesign */
 </style>
 {% endblock %}
+{% block body_class %}page-home{% endblock %}
 {% block content %}
 {% set hero = carousel_images[0] if carousel_images else none %}
 {% set gallery_imgs = recent_images if recent_images else (carousel_images[1:] if carousel_images|length > 1 else []) %}
 <style>
 /* Force override — kills any main padding on homepage */
 main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-body { padding-top: 0 !important; }
 .sl-home { margin-top: 0 !important; padding-top: 0 !important; }
 .sl-mob-hero-copy { margin-top: 0 !important; padding-top: 28px; }
 /* Hero anchor — full viewport */
@@ -2052,7 +2052,7 @@ body { padding-top: 0 !important; }
 {# ━━ HERO — full viewport ━━ #}
 {% if hero and hero.id %}
 <a href="{{ url_for('image_detail', image_id=hero.id) }}"
-   style="display:block !important;text-decoration:none;height:100vh !important;min-height:600px;position:relative;overflow:hidden;" aria-label="Explore this photograph">
+   style="display:block!important;text-decoration:none;height:100vh!important;min-height:600px;position:relative;overflow:hidden;color:#F6F2E9;" aria-label="Explore this photograph">
 {% endif %}
 <div class="sl-dash-hero-banner">
   {% if hero and hero.thumb_url %}
@@ -2337,4 +2337,4 @@ body { padding-top: 0 !important; }
 
 {% endblock %}
 
-<!-- SL UI v3.9 | 2026-07-05 20:27 | body padding fix -->
+<!-- SL UI v4.1 | 2026-07-05 | anchor color fix -->
