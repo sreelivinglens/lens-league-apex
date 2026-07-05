@@ -33,11 +33,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 
 /* ━━ INTER OVERRIDE — all homepage elements ━━ */
-.sl-home > a:first-child {
-  display: block !important;
-  height: 100vh !important;
-  min-height: 600px !important;
-}
 .sl-home, .sl-home * {
   font-family: 'Inter', sans-serif !important;
 }
@@ -54,91 +49,39 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   background: #0A1A0E;
 }
 .sl-dash-hero-banner img {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
+  object-fit: cover; object-position: center; display: block;
 }
-/* Two-layer overlay — protects copy on any image tone, light or dark */
 .sl-dash-hero-banner__grad {
   position: absolute; inset: 0;
   background:
     linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.45) 28%, rgba(0,0,0,0.08) 55%, transparent 75%),
     linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.38) 30%, rgba(0,0,0,0.08) 55%, transparent 75%);
 }
-/* Hero copy — bottom-left over image */
-.sl-hero-content {
-  position: absolute;
-  bottom: 48px; left: 0; z-index: 10;
-  padding: 0 48px; max-width: 500px;
-}
-.sl-hero-h1 {
-  font-size: 36px; font-weight: 600; color: #F6F2E9;
-  line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 10px;
-  text-shadow: 0 1px 12px rgba(0,0,0,0.5), 0 2px 32px rgba(0,0,0,0.35);
-}
-.sl-hero-tagline {
-  font-size: 15px; font-weight: 400; color: #D6A428;
-  margin-bottom: 10px;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
-}
+.sl-hero-content { position: absolute; bottom: 48px; left: 0; z-index: 10; padding: 0 48px; max-width: 500px; }
+.sl-hero-h1 { font-size: 36px; font-weight: 600; color: #F6F2E9; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 10px; text-shadow: 0 1px 12px rgba(0,0,0,0.5); }
+.sl-hero-tagline { font-size: 15px; color: #D6A428; margin-bottom: 10px; text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
 .sl-hero-divider { width: 30px; height: 1px; background: rgba(214,164,40,0.5); margin-bottom: 10px; }
-.sl-hero-philosophy {
-  font-size: 17px; font-weight: 400; color: #F6F2E9;
-  margin-bottom: 22px;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-}
+.sl-hero-philosophy { font-size: 17px; color: #F6F2E9; margin-bottom: 22px; text-shadow: 0 1px 8px rgba(0,0,0,0.5); }
 .sl-hero-ctas { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-.sl-hero-cta-primary {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: #D6A428; color: #111111;
-  font-size: 15px; font-weight: 600;
-  padding: 0 24px; height: 48px; border-radius: 9px;
-  text-decoration: none; transition: background 0.2s; white-space: nowrap;
-}
+.sl-hero-cta-primary { display: inline-flex; align-items: center; gap: 8px; background: #D6A428; color: #111; font-size: 15px; font-weight: 600; padding: 0 24px; height: 48px; border-radius: 9px; text-decoration: none; }
 .sl-hero-cta-primary:hover { background: #C89418; }
-.sl-hero-cta-secondary {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: transparent; color: #F6F2E9;
-  font-size: 15px; font-weight: 400;
-  padding: 0 22px; height: 48px; border-radius: 9px;
-  border: 1.5px solid rgba(246,242,233,0.4);
-  text-decoration: none; transition: border-color 0.2s; white-space: nowrap;
-}
-.sl-hero-cta-secondary:hover { border-color: rgba(246,242,233,0.8); }
-.sl-hero-mentors { display: flex; align-items: center; gap: 10px; }
+.sl-hero-cta-secondary { display: inline-flex; align-items: center; gap: 7px; background: transparent; color: #F6F2E9; font-size: 15px; padding: 0 22px; height: 48px; border-radius: 9px; border: 1.5px solid rgba(246,242,233,0.4); text-decoration: none; }
 .sl-hero-mentor-avatars { display: flex; }
-.sl-hero-mentor-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  border: 1.5px solid #F6F2E9; background: #2C4A3A;
-  margin-left: -9px; overflow: hidden;
-}
+.sl-hero-mentors { display: flex; align-items: center; gap: 10px; }
+.sl-hero-mentor-avatar { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #F6F2E9; background: #2C4A3A; margin-left: -9px; overflow: hidden; }
 .sl-hero-mentor-avatar:first-child { margin-left: 0; }
 .sl-hero-mentor-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sl-hero-mentor-text { font-size: 13px; color: rgba(246,242,233,0.65); }
-/* Photo credit — bottom right, quiet */
-.sl-dash-hero-banner__badge {
-  position: absolute; bottom: 20px; right: 24px; z-index: 10;
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: rgba(255,255,255,0.4);
-}
+.sl-dash-hero-banner__badge { position: absolute; bottom: 20px; right: 24px; z-index: 10; display: flex; align-items: center; gap: 6px; }
 .sl-dash-hero-banner__score { font-size: 12px; font-weight: 600; color: #D6A428; }
 .sl-dash-hero-banner__tier { font-size: 12px; color: rgba(255,255,255,0.5); }
 .sl-dash-hero-banner__by { font-size: 12px; color: rgba(255,255,255,0.35); }
 .sl-dash-hero-banner__genre { display: none; }
-/* Scroll cue */
-.sl-hero-scroll-cue {
-  position: absolute; bottom: 22px; left: 50%;
-  transform: translateX(-50%); z-index: 10;
-  opacity: 0.4; animation: sl-nudge 2s ease-in-out infinite;
-}
-@keyframes sl-nudge {
-  0%,100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(5px); }
-}
-/* Mobile hero — content above, image below */
+.sl-hero-scroll-cue { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10; opacity: 0.4; animation: sl-nudge 2s ease-in-out infinite; }
+@keyframes sl-nudge { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(5px); } }
+/* Mobile hero */
 .sl-mob-hero-copy { display: none !important; }
 .sl-mob-mentor-row { display: none !important; }
 @media (max-width: 768px) {
@@ -159,19 +102,19 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-mob-mentor-score { font-size: 12px; font-weight: 700; color: #1A1A18; }
   .sl-mob-mentor-tier { font-size: 11px; color: #A37B2C; }
   .sl-mob-mentor-name { font-size: 11px; color: #6B6B6B; }
-  .sl-mob-cta-secondary { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; border-radius: 12px; border: 1.5px solid #C8C0A8; background: transparent; color: #1A1A18; font-size: 16px; font-weight: 500; text-decoration: none; margin-top: -2px; }
+  .sl-mob-cta-secondary { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; border-radius: 12px; border: 1.5px solid #C8C0A8; background: transparent; color: #1A1A18; font-size: 16px; font-weight: 500; text-decoration: none; margin: 0 0 10px; }
   .sl-mob-gallery-grid { display: flex !important; flex-direction: row !important; gap: 10px !important; overflow-x: auto !important; padding-bottom: 16px !important; grid-template-columns: unset !important; }
   .sl-mob-gallery-grid::-webkit-scrollbar { display: none; }
   .sl-mob-gitem { width: 100px !important; height: 100px !important; flex-shrink: 0 !important; aspect-ratio: 1 !important; }
 }
-/* New desktop sections below hero */
+/* Desktop new sections */
 .sl-quote-strip { background: #F6F2E9; padding: 64px 72px 48px; display: flex; align-items: flex-start; gap: 20px; max-width: 720px; margin: 0 auto; }
 .sl-quote-mark { font-size: 48px; color: #D6A428; line-height: 1; font-family: Georgia, serif; flex-shrink: 0; margin-top: -6px; opacity: 0.7; }
 .sl-quote-text { font-size: 22px; font-style: italic; font-weight: 300; color: #2A2A2A; line-height: 1.55; margin-bottom: 10px; }
-.sl-quote-author { font-size: 14px; color: #B68C2C; font-weight: 400; }
+.sl-quote-author { font-size: 14px; color: #B68C2C; }
 .sl-belief { text-align: center; padding: 16px 72px 52px; background: #F6F2E9; }
 .sl-belief-headline { font-size: 38px; font-weight: 500; color: #1A1A1A; line-height: 1.2; margin-bottom: 16px; }
-.sl-belief-sub { font-size: 22px; color: #B68C2C; font-weight: 400; letter-spacing: 3px; }
+.sl-belief-sub { font-size: 22px; color: #B68C2C; letter-spacing: 3px; }
 .sl-new-gallery { padding: 0 72px 56px; background: #F6F2E9; }
 .sl-new-gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .sl-new-gallery-label { font-size: 12px; color: #9A8A6A; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
@@ -2032,60 +1975,48 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 } /* end @media (max-width: 768px) mobile redesign */
 </style>
 {% endblock %}
-
 {% block content %}
 {% set hero = carousel_images[0] if carousel_images else none %}
 {% set gallery_imgs = recent_images if recent_images else (carousel_images[1:] if carousel_images|length > 1 else []) %}
-{% set soul_active = hero.get_audit().get('soul_bonus', false) if hero and hero.get_audit else false %}
 
 <div class="sl-home">
 
-{# ━━━━━━━━━━━━━━━━━━ HERO — dashboard structure ━━━━━━━━━━━━━━━━━━ #}
+{# ━━ HERO — full viewport ━━ #}
 {% if hero and hero.id %}
 <a href="{{ url_for('image_detail', image_id=hero.id) }}"
-   style="display:block; text-decoration:none; position:relative; height:100vh; min-height:600px;" aria-label="Explore this photograph">
+   style="display:block;text-decoration:none;height:100vh;min-height:600px;position:relative;" aria-label="Explore this photograph">
 {% endif %}
 <div class="sl-dash-hero-banner">
   {% if hero and hero.thumb_url %}
   <img src="{{ hero.thumb_url }}"
        alt="{{ hero.genre or 'Photography' }}"
-       loading="eager"
-       fetchpriority="high"
+       loading="eager" fetchpriority="high"
        onerror="this.style.display='none'">
   {% endif %}
   <div class="sl-dash-hero-banner__grad"></div>
-
-  {# Hero copy — bottom-left over image #}
   <div class="sl-hero-content">
     <h1 class="sl-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
     <p class="sl-hero-tagline">Photography Assessment &amp; Evolution Platform</p>
     <div class="sl-hero-divider"></div>
     <p class="sl-hero-philosophy">Making Images Matter.</p>
     <div class="sl-hero-ctas">
-      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-         class="sl-hero-cta-primary">
+      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-hero-cta-primary">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
         Upload Your Photograph
       </a>
       <a href="{{ url_for('how_it_works') }}" class="sl-hero-cta-secondary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
         How it works
       </a>
     </div>
     <div class="sl-hero-mentors">
       <div class="sl-hero-mentor-avatars">
-        <div class="sl-hero-mentor-avatar">
-          <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'">
-        </div>
-        <div class="sl-hero-mentor-avatar">
-          <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'">
-        </div>
+        <div class="sl-hero-mentor-avatar"><img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'"></div>
+        <div class="sl-hero-mentor-avatar"><img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'"></div>
       </div>
       <span class="sl-hero-mentor-text">Guided by accomplished photographers.</span>
     </div>
   </div>
-
-  {# Photo credit — bottom right, quiet #}
   {% if hero and hero.score %}
   <div class="sl-dash-hero-banner__badge">
     <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(hero.score) }}</span>
@@ -2095,37 +2026,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <span class="sl-dash-hero-banner__by">&copy; {{ hero.photographer_name or '' }}</span>
   </div>
   {% endif %}
-
-  {# Scroll cue #}
   <div class="sl-hero-scroll-cue" aria-hidden="true">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F6F2E9" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
   </div>
-
 </div>
-{% if hero and hero.id %}
-</a>
-{% endif %}
+{% if hero and hero.id %}</a>{% endif %}
 
-{# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MOBILE REDESIGN — Session 90
-   9 sections. Mobile-only (display:none on desktop via .sl-mob-only).
-   All inside one wrapper div for clean desktop hiding.
-   Desktop: untouched — sl-hero-below hidden by existing CSS.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #}
-
-{# ── Audit data for scorecard section ── #}
-{% if hero %}
-{% set _mob_audit = hero.get_audit() %}
-{% set _mob_coaching = _mob_audit.get('byline_2_body') or _mob_audit.get('byline_1') or '' %}
-{% set _mob_next = _mob_audit.get('mentor_location_1') or _mob_audit.get('transferable_advice') or '' %}
-{# Scorecard uses carousel_images[1] — different image from hero to avoid duplication #}
-{% set _mob_sc = carousel_images[1] if carousel_images|length > 1 else hero %}
-{% set _mob_sc_audit = _mob_sc.get_audit() if _mob_sc else {} %}
-{% set _mob_sc_coaching = _mob_sc_audit.get('byline_2_body') or _mob_sc_audit.get('byline_1') or _mob_coaching %}
-{% set _mob_sc_next = _mob_sc_audit.get('mentor_location_1') or _mob_sc_audit.get('transferable_advice') or _mob_next %}
-{% endif %}
-
-{# Mobile hero copy — shown instead of banner on mobile #}
+{# ━━ MOBILE ONLY — hero copy above image ━━ #}
 <div class="sl-mob-hero-copy">
   <h1 class="sl-mob-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
   <p class="sl-mob-hero-tagline">Photography Assessment<br>&amp; Evolution Platform.</p>
@@ -2145,72 +2052,31 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
   </div>
 </div>
-{# Mentor row #}
 <div class="sl-mob-mentor-row">
   <div class="sl-mob-mentor-lbl">Guided by accomplished photographers</div>
   <div class="sl-mob-mentor-photos">
     <div class="sl-mob-mentor-item">
       <div class="sl-mob-mentor-avatar"><img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'"></div>
-      <span class="sl-mob-mentor-score">Score 8.7</span><span class="sl-mob-mentor-tier">Legend</span><span class="sl-mob-mentor-name">Ashok Kochhar</span>
+      <span class="sl-mob-mentor-score">Score 8.7</span>
+      <span class="sl-mob-mentor-tier">Legend</span>
+      <span class="sl-mob-mentor-name">Ashok Kochhar</span>
     </div>
     <div class="sl-mob-mentor-item">
       <div class="sl-mob-mentor-avatar"><img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'"></div>
-      <span class="sl-mob-mentor-score">Score 8.2</span><span class="sl-mob-mentor-tier">Master</span><span class="sl-mob-mentor-name">Sreekumar</span>
+      <span class="sl-mob-mentor-score">Score 8.2</span>
+      <span class="sl-mob-mentor-tier">Master</span>
+      <span class="sl-mob-mentor-name">Sreekumar</span>
     </div>
+  </div>
+  <div class="sl-mob-mob-ctas">
+    <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+       style="display:flex;align-items:center;justify-content:center;gap:8px;background:#D6A428;color:#111;font-size:16px;font-weight:700;height:56px;border-radius:12px;text-decoration:none;margin:0 20px 10px;">&#8593; Upload Your Photograph</a>
+    <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
   </div>
 </div>
 
+{# ━━ MOBILE SECTIONS — how it works 4-step, gallery ━━ #}
 <div class="sl-mob-only">
-
-{# ━━ Section 1: ELEVATION ━━ #}
-<div class="sl-mob-sec sl-mob-elevation">
-  <div class="sl-mob-elev-rule"></div>
-  <p class="sl-mob-elev-line">Chess has a rating. Cricket has a standing. Restaurants have Michelin stars. Motor sport has F1 points.</p>
-  <div class="sl-mob-elev-gap"></div>
-  <p class="sl-mob-elev-border">In 200 years of photography &mdash; nobody built one.</p>
-  <div class="sl-mob-elev-gap"></div>
-  <p class="sl-mob-elev-line">Shutter League changes that.</p>
-  <div class="sl-mob-elev-gap"></div>
-  <p class="sl-mob-elev-gold">Photography turns 200 in 2026. For the first time &mdash; every photograph gets an honest answer.</p>
-  <div class="sl-mob-elev-rule-b"></div>
-</div>
-
-{# ━━ Section 2: RECOGNITION + CTA ━━ #}
-<div class="sl-mob-sec sl-mob-recognition">
-  <p class="sl-mob-recog-text">We see you. Your photograph captured something your eye saw. We help you evaluate and improve your photography.</p>
-  <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-cta-btn">Upload your first photograph &rarr;</a>
-  <p class="sl-mob-cta-sub">Evaluated in 60 seconds &middot; Free to start</p>
-</div>
-
-{# ━━ Section 2b: HOW IT WORKS — pro dark 4-step ━━ #}
-<div class="sl-mob-sec sl-mob-loop">
-  <p class="sl-mob-loop-eyebrow">How it works</p>
-  <div class="sl-mob-loop-grid">
-    <div class="sl-mob-loop-step">
-      <span class="sl-mob-loop-num">01</span>
-      <div class="sl-mob-loop-title">Upload</div>
-      <div class="sl-mob-loop-desc">One photograph. Any camera. Any genre.</div>
-    </div>
-    <div class="sl-mob-loop-step">
-      <span class="sl-mob-loop-num">02</span>
-      <div class="sl-mob-loop-title">Evaluated</div>
-      <div class="sl-mob-loop-desc">Five dimensions. In 60 seconds. Honest.</div>
-    </div>
-    <div class="sl-mob-loop-step">
-      <span class="sl-mob-loop-num">03</span>
-      <div class="sl-mob-loop-title">Direction</div>
-      <div class="sl-mob-loop-desc">One specific thing to do next. Not a list.</div>
-    </div>
-    <div class="sl-mob-loop-step">
-      <span class="sl-mob-loop-num">04</span>
-      <div class="sl-mob-loop-title">Standing</div>
-      <div class="sl-mob-loop-desc">Your eye, measured. Rookie to Legend.</div>
-    </div>
-  </div>
-</div>
-
-{# ━━ Section 3: GALLERY — live 2×2 ━━ #}
 {% if gallery_imgs %}
 <div class="sl-mob-sec sl-mob-gallery">
   <div class="sl-mob-gallery-hdr">
@@ -2218,474 +2084,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <a href="{{ url_for('leaderboard') }}" class="sl-mob-gallery-link">View All &rarr;</a>
   </div>
   <div class="sl-mob-gallery-grid">
-    {% for img in gallery_imgs[:4] %}{% if img.thumb_url %}
+    {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
     <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-mob-gitem">
-      <img src="{{ img.thumb_url }}"
-           alt="{{ img.genre or 'Photography' }}"
-           loading="lazy"
-           onerror="this.style.display='none'">
+      <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photography' }}" loading="lazy" onerror="this.style.display='none'">
       <div class="sl-mob-gitem-grad"></div>
-      {% if img.score %}<span class="sl-mob-gitem-score">{{ '%.2f'|format(img.score) }}</span>{% endif %}
-    </a>
-    {% endif %}{% endfor %}
-  </div>
-</div>
-{% endif %}
-
-{# ━━ Section 4: SCORECARD — carousel_images[1], different from hero ━━ #}
-{% if _mob_sc and _mob_sc.score %}
-<div class="sl-mob-sec sl-mob-scorecard">
-  <div class="sl-mob-sc-img-wrap">
-    {% if _mob_sc.thumb_url %}
-    <img src="{{ _mob_sc.thumb_url }}"
-         alt="{{ _mob_sc.genre or 'Photography' }}"
-         loading="lazy"
-         onerror="this.style.display='none'">
-    {% endif %}
-    <div class="sl-mob-sc-img-grad"></div>
-    <span class="sl-mob-sc-img-label">{{ _mob_sc.genre or '' }}{% if _mob_sc.photographer_name %} &middot; {{ _mob_sc.photographer_name }}{% endif %}</span>
-  </div>
-  <div class="sl-mob-sc-content">
-  <p class="sl-mob-sc-eyebrow">What the engine saw</p>
-  <div class="sl-mob-sc-score-row">
-    <span class="sl-mob-sc-score">{{ '%.2f'|format(_mob_sc.score) }}</span>
-    <span class="sl-mob-sc-tier">{{ _mob_sc.tier or '' }}</span>
-  </div>
-  <p class="sl-mob-sc-genre">{{ _mob_sc.genre or '' }}</p>
-  {% if _mob_sc_coaching %}
-  <p class="sl-mob-sc-quote">&ldquo;{{ _mob_sc_coaching }}&rdquo;</p>
-  {% endif %}
-  {% if _mob_sc.dod_score %}
-  <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>How difficult it was</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.dod_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.dod_score / 10 * 100)|int }}%;"></div></div>
-  </div>
-  {% endif %}
-  {% if _mob_sc.disruption_score %}
-  <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>Visual surprise</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.disruption_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.disruption_score / 10 * 100)|int }}%;"></div></div>
-  </div>
-  {% endif %}
-  {% if _mob_sc.dm_score %}
-  <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>Whether the timing was right</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.dm_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.dm_score / 10 * 100)|int }}%;"></div></div>
-  </div>
-  {% endif %}
-  {% if _mob_sc.wonder_score %}
-  <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>Whether it made you feel something</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.wonder_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.wonder_score / 10 * 100)|int }}%;"></div></div>
-  </div>
-  {% endif %}
-  {% if _mob_sc.aq_score %}
-  <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>The emotion it creates</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.aq_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.aq_score / 10 * 100)|int }}%;"></div></div>
-  </div>
-  {% endif %}
-  {% if _mob_sc_next %}
-  <div class="sl-mob-sc-next">
-    <p class="sl-mob-sc-next-lbl">One thing to do next</p>
-    <p class="sl-mob-sc-next-txt">{{ _mob_sc_next }}</p>
-    <a href="{{ url_for('image_detail', image_id=_mob_sc.id) }}" class="sl-mob-sc-next-more">Read more &rarr;</a>
-  </div>
-  {% endif %}
-  </div>{# end sl-mob-sc-content #}
-</div>
-{% endif %}
-
-{# ━━ Section 5: A.R TESTIMONIAL — static ━━ #}
-<div class="sl-mob-sec sl-mob-ar">
-  <div class="sl-mob-ar-card">
-    <p class="sl-mob-ar-eye">Photographer &middot; Berlin</p>
-    <div class="sl-mob-ar-score-row">
-      <span class="sl-mob-ar-score">9.28</span>
-      <span class="sl-mob-ar-tier">Grandmaster</span>
-    </div>
-    <p class="sl-mob-ar-meta">Street &middot; Fujifilm X100VI &middot; 3rd upload</p>
-    <p class="sl-mob-ar-quote">&ldquo;I think the idea and the site is really really nice. It has a lot of potential.&rdquo;</p>
-    <p class="sl-mob-ar-attrib">&mdash; <strong>A.R</strong>, Berlin &middot; 2 June 2026</p>
-    <p class="sl-mob-ar-disc">Found Shutter League via ChatGPT. Zero paid acquisition.</p>
-  </div>
-</div>
-
-{# ━━ Section 6: TIER LADDER — collapsible ━━ #}
-<div class="sl-mob-sec sl-mob-tiers">
-  <p class="sl-mob-tiers-heading">Where does your eye sit?</p>
-  <div class="sl-mob-tier-row"><div class="sl-mob-tier-dot" style="background:#9A9790;"></div><span class="sl-mob-tier-name">Rookie</span><span class="sl-mob-tier-range">0.0 &ndash; 3.99</span></div>
-  <div class="sl-mob-tier-row"><div class="sl-mob-tier-dot" style="background:#8A9FAA;"></div><span class="sl-mob-tier-name">Shooter</span><span class="sl-mob-tier-range">4.0 &ndash; 4.99</span></div>
-  <div class="sl-mob-tier-row"><div class="sl-mob-tier-dot" style="background:#7A9BB5;"></div><span class="sl-mob-tier-name">Contender</span><span class="sl-mob-tier-range">5.0 &ndash; 5.99</span></div>
-  <div class="sl-mob-tier-row"><div class="sl-mob-tier-dot" style="background:#6A8FA0;"></div><span class="sl-mob-tier-name">Craftsman</span><span class="sl-mob-tier-range">6.0 &ndash; 6.99</span></div>
-  <div class="sl-mob-tier-row sl-mob-tier-hidden" id="sl-mob-t5"><div class="sl-mob-tier-dot" style="background:#7A8A6A;"></div><span class="sl-mob-tier-name">Maverick</span><span class="sl-mob-tier-range">7.0 &ndash; 7.99</span></div>
-  <div class="sl-mob-tier-row sl-mob-tier-hidden" id="sl-mob-t6"><div class="sl-mob-tier-dot" style="background:#C8A84B;"></div><span class="sl-mob-tier-name">Master</span><span class="sl-mob-tier-range">8.0 &ndash; 8.99</span></div>
-  <div class="sl-mob-tier-row sl-mob-tier-hidden" id="sl-mob-t7"><div class="sl-mob-tier-dot" style="background:#E8943A;"></div><span class="sl-mob-tier-name">Grandmaster</span><span class="sl-mob-tier-range">9.0 &ndash; 9.69</span></div>
-  <div class="sl-mob-tier-row sl-mob-tier-hidden" id="sl-mob-t8"><div class="sl-mob-tier-dot" style="background:#F5C518;"></div><span class="sl-mob-tier-name">Legend</span><span class="sl-mob-tier-range">9.70 &ndash; 10.0</span></div>
-  <div class="sl-mob-tiers-toggle" id="sl-mob-tiers-btn" role="button" aria-expanded="false">Show all tiers &#8964;</div>
-  <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-tiers-cta">Upload your first photograph &rarr;</a>
-</div>
-
-{# ━━ Section 7: MENTORS ━━ #}
-<div class="sl-mob-sec sl-mob-mentors">
-  <p class="sl-mob-mentors-eyebrow">Human eyes on your work</p>
-  <h2 class="sl-mob-mentors-heading">A real photographer&rsquo;s read. When you need it.</h2>
-  <p class="sl-mob-mentors-body">The engine tells you what it saw. A mentor tells you what it means &mdash; and where to go next. Available on demand, not when the next workshop is scheduled.</p>
-  <div class="sl-mob-mentor-grid">
-    <div class="sl-mob-mentor-photo">
-      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-           alt="Ashok — Legend Mentor"
-           loading="lazy"
-           onerror="this.style.display='none'">
-      <div class="sl-mob-mentor-photo-grad"></div>
-      <div class="sl-mob-mentor-photo-info">
-        <span class="sl-mob-mentor-photo-name">Ashok</span>
-        <span class="sl-mob-mentor-photo-label">Legend</span>
-      </div>
-    </div>
-    <div class="sl-mob-mentor-photo">
-      <img src="{{ url_for('static', filename='img/Sreekumar.png') }}"
-           alt="Sreekumar — Master Mentor"
-           loading="lazy"
-           onerror="this.style.display='none'">
-      <div class="sl-mob-mentor-photo-grad"></div>
-      <div class="sl-mob-mentor-photo-info">
-        <span class="sl-mob-mentor-photo-name">Sreekumar</span>
-        <span class="sl-mob-mentor-photo-label">Master</span>
-      </div>
-    </div>
-  </div>
-  <a href="{{ url_for('mentors') }}" class="sl-mob-mentors-cta">Meet the Mentors &rarr;</a>
-</div>
-
-{# ━━ Section 8: SADHANA ━━ #}
-<div class="sl-mob-sec sl-mob-sadhana">
-  <div class="sl-mob-sadh-rule"></div>
-  <p class="sl-mob-sadh-text">The journey of discovery and learning is a sadhana &mdash; a practice &mdash; like a violinist who hones their skill to make beautiful music. Shutter League hones the eye of the photographer to make</p>
-  <p class="sl-mob-sadh-imt">Images That Matter.</p>
-</div>
-
-{# ━━ Section 9: CLOSE ━━ #}
-<div class="sl-mob-sec sl-mob-close">
-  <div class="sl-mob-close-rule"></div>
-  <p class="sl-mob-close-line">Every photograph you upload moves you forward.</p>
-  <div class="sl-mob-close-gap"></div>
-  <p class="sl-mob-close-body">The engine tracks your eye across every upload &mdash; your strengths, your blind spots, your growth. Daily missions point you somewhere specific. Weekly assignments push the dimension that needs it most.</p>
-  <div class="sl-mob-close-gap"></div>
-  <p class="sl-mob-close-bold">Your eye doesn&rsquo;t plateau here.</p>
-  <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-close-cta">Upload your first photograph &rarr;</a>
-</div>
-
-</div>{# end .sl-mob-only #}
-<div class="sl-trust">
-  <div class="sl-trust-item">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    <span class="sl-trust-label">Real Photographs</span>
-    <span class="sl-trust-desc">No AI images.<br>Ever.</span>
-  </div>
-  <div class="sl-trust-item">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    <span class="sl-trust-label">Real Feedback</span>
-    <span class="sl-trust-desc">AI consistency.<br>Human judgment.</span>
-  </div>
-  <div class="sl-trust-item">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
-    <span class="sl-trust-label">Real Improvement</span>
-    <span class="sl-trust-desc">Actionable insight<br>you can use.</span>
-  </div>
-  <div class="sl-trust-item">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    <span class="sl-trust-label">No Other Platform<br>Does This</span>
-    <span class="sl-trust-desc">We are the original.</span>
-  </div>
-</div>
-
-{# ━━━━━━━━━━━━━━━━━━ TRUST BAR ━━━━━━━━━━━━━━━━━━ #}
-<section class="sl-200">
-  <div>
-    <div class="sl-200-num-row">
-      <span class="sl-200-num">200</span>
-      <div>
-        <span class="sl-200-label-line">Years of Photography</span>
-        <span class="sl-200-label-line">Since 1826</span>
-      </div>
-    </div>
-    <p class="sl-200-body">Photographers have received two kinds of feedback: flattery and silence.</p>
-    <p class="sl-200-body">Likes are not feedback. Evaluations without reasons are not feedback. Feedback is what works, what doesn&rsquo;t, and what to improve next.</p>
-    <p class="sl-200-body-bold">Photography has never had an honest improvement loop. Until now.</p>
-  </div>
-  <div class="sl-200-right">
-    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px" aria-hidden="true">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-      <circle cx="12" cy="13" r="4"/>
-    </svg>
-    <p class="sl-200-tagline-1">The brands rated your gear.</p>
-    <p class="sl-200-tagline-2">We rate your eye.</p>
-  </div>
-</section>
-
-{# ━━━━━━━━━━━━━━━━━━ LEARNING LOOP ━━━━━━━━━━━━━━━━━━ #}
-<section class="sl-loop">
-  <div class="sl-loop-heading">A Simple Learning Loop</div>
-  <div class="sl-loop-steps">
-
-    <div class="sl-loop-step">
-      <div class="sl-loop-step-left">
-        <div class="sl-loop-num">1</div>
-        <div class="sl-loop-icon">
-          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="16 16 12 12 8 16"/>
-            <line x1="12" y1="12" x2="12" y2="21"/>
-            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-          </svg>
-        </div>
-      </div>
-      <div class="sl-loop-step-right">
-        <div class="sl-loop-title">Upload</div>
-        <div class="sl-loop-desc">Submit a photograph. Get your evaluation and feedback.</div>
-      </div>
-    </div>
-
-    <div class="sl-loop-arrow">&rarr;</div>
-
-    <div class="sl-loop-step">
-      <div class="sl-loop-step-left">
-        <div class="sl-loop-num">2</div>
-        <div class="sl-loop-icon">
-          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21h6"/>
-            <path d="M10 17h4"/>
-            <path d="M12 3a6 6 0 0 1 6 6c0 2.5-1.5 4.5-3 6H9c-1.5-1.5-3-3.5-3-6a6 6 0 0 1 6-6z"/>
-            <line x1="12" y1="1" x2="12" y2="2"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="19.78" y1="4.22" x2="18.36" y2="5.64"/>
-            <line x1="1" y1="12" x2="2" y2="12"/>
-            <line x1="23" y1="12" x2="22" y2="12"/>
-          </svg>
-        </div>
-      </div>
-      <div class="sl-loop-step-right">
-        <div class="sl-loop-title">Insight</div>
-        <div class="sl-loop-desc">Understand what’s working and what’s not.</div>
-      </div>
-    </div>
-
-    <div class="sl-loop-arrow">&rarr;</div>
-
-    <div class="sl-loop-step">
-      <div class="sl-loop-step-left">
-        <div class="sl-loop-num">3</div>
-        <div class="sl-loop-icon">
-          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="8"/>
-            <circle cx="12" cy="12" r="3"/>
-            <line x1="12" y1="2" x2="12" y2="4"/>
-            <line x1="12" y1="20" x2="12" y2="22"/>
-            <line x1="2" y1="12" x2="4" y2="12"/>
-            <line x1="20" y1="12" x2="22" y2="12"/>
-          </svg>
-        </div>
-      </div>
-      <div class="sl-loop-step-right">
-        <div class="sl-loop-title">One Improvement</div>
-        <div class="sl-loop-desc">Apply one clear suggestion to get better.</div>
-      </div>
-    </div>
-
-    <div class="sl-loop-arrow">&rarr;</div>
-
-    <div class="sl-loop-step">
-      <div class="sl-loop-step-left">
-        <div class="sl-loop-num">4</div>
-        <div class="sl-loop-icon">
-          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-        </div>
-      </div>
-      <div class="sl-loop-step-right">
-        <div class="sl-loop-title">Shoot Again</div>
-        <div class="sl-loop-desc">Practice, refine, and see your progress.</div>
-      </div>
-    </div>
-
-  </div>
-  <div class="sl-loop-cta">
-    <a href="{{ url_for('how_it_works') }}" class="sl-loop-btn">HOW IT WORKS &rarr;</a>
-  </div>
-</section>
-
-{# ━━━━━━━━━━━━━━━━━━ HONEST PART + EMOTIONAL IMPACT ━━━━━━━━━━━━━━━━━━ #}
-<div id="sl-honest-accordion">
-  <div class="sl-honest-accordion-hdr" id="sl-honest-hdr" role="button" aria-expanded="false" aria-controls="sl-honest-body">
-    <span class="sl-honest-accordion-title">The Honest Part</span>
-    <span class="sl-honest-accordion-arrow" id="sl-honest-arrow">&#8964;</span>
-  </div>
-  <div class="sl-honest-body-wrap" id="sl-honest-body">
-    <section class="sl-honest">
-
-      <div class="sl-honest-col">
-        <span class="sl-honest-label">The Honest Part</span>
-        <span class="sl-gold-rule"></span>
-        <h2 class="sl-honest-heading">The evaluation keeps the feedback honest.</h2>
-        <p class="sl-honest-body">Every photograph gets an evaluation. Not to rank you against other photographers &mdash; but to give the feedback a spine.</p>
-        <p class="sl-honest-body">Without an evaluation, feedback is just opinion. With one, you can see whether you are actually improving across ten uploads, a hundred, a year of work.</p>
-        <a href="{{ url_for('science') }}" class="sl-honest-btn">HOW THE EVALUATION WORKS &rarr;</a>
-      </div>
-
-      <div class="sl-honest-col">
-        <span class="sl-honest-label">Emotional Impact</span>
-        <span class="sl-gold-rule"></span>
-        <p class="sl-honest-body">Most systems evaluate sharpness, composition, and light. <span class="sl-yellow-underline">Ours also evaluates whether a photograph moves people.</span></p>
-        <p class="sl-honest-body">A technically imperfect photograph that stops you breathing evaluates higher than a technically clean one that says nothing.</p>
-        <p class="sl-honest-body-bold">That is by design.</p>
-      </div>
-
-      <div class="sl-honest-col">
-        <div class="sl-heart-circle">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-        </div>
-        {% if soul_active %}
-        <p class="sl-soul-title">Soul Bonus active.</p>
-        <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
-        {% else %}
-        <p class="sl-soul-title">Soul Bonus active.</p>
-        <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
-        {% endif %}
-        <div class="sl-soul-divider"></div>
-        <p class="sl-soul-tag1">The brands rated your gear.</p>
-        <p class="sl-soul-tag2">We rate your heart.</p>
-      </div>
-
-    </section>
-  </div>
-</div>
-
-{# ━━━━━━━━━━━━━━━━━━ FEATURE CARDS ━━━━━━━━━━━━━━━━━━ #}
-<div id="sl-cards-accordion">
-  <div class="sl-cards-accordion-hdr" id="sl-cards-hdr" role="button" aria-expanded="false" aria-controls="sl-cards-body">
-    <span class="sl-cards-accordion-title">Programmes &amp; Mentors</span>
-    <span class="sl-cards-accordion-arrow" id="sl-cards-arrow">&#8964;</span>
-  </div>
-  <div class="sl-cards-body-wrap" id="sl-cards-body">
-    <div class="sl-cards" id="sl-mentors">
-
-  <div class="sl-card">
-    <img class="sl-card-img"
-         src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-         alt="Mentor Guidance"
-         loading="lazy"
-         onerror="this.style.display='none'">
-    <div class="sl-card-overlay"></div>
-    <span class="sl-card-eyebrow">Mentor Guidance</span>
-    <div class="sl-card-content">
-      <div class="sl-card-heading">Grow with a mentor<br>who knows your work.</div>
-      <p class="sl-card-body">Personalized guidance based on your evaluations, strengths, and blind spots.</p>
-      <a href="/mentors" class="sl-card-btn">MEET THE MENTORS &rarr;</a>
-      <span class="sl-mentor-soon" id="sl-mentor-soon-msg" style="display:none; margin-top:10px; font-size:14px; font-weight:500; color:rgba(255,255,255,0.75); display:none;">Mentor booking coming soon.</span>
-    </div>
-  </div>
-
-  <div class="sl-card">
-    <div class="sl-bow-strip-wrap">
-      <div class="sl-bow-strip">
-        <img src="{{ url_for('static', filename='Toothbrush-in-the-mangroves_SRA2920.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-        <img src="{{ url_for('static', filename='Treasures-of-the-mangroves_Threat_Conservation_SRA2987.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-        <img src="{{ url_for('static', filename='Week-248-Mangrove-clean-up_SRA2850.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-        <img src="{{ url_for('static', filename='When-children-have-to-pick-your-Trash_People_SRA4720.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-        <img src="{{ url_for('static', filename='When-the-sea-throws-back-1000-school-bags_Conservation_IMG_9317-(1).jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-      </div>
-    </div>
-    <div class="sl-card-overlay"></div>
-    <span class="sl-card-eyebrow">Body of Work</span>
-    <div class="sl-card-content">
-      <div class="sl-card-heading">Some stories deserve<br>to be seen together.</div>
-      <p class="sl-card-body">Curate, organize, and get feedback on your complete work.</p>
-      <a href="{{ url_for('bow_info') }}" class="sl-card-btn">EXPLORE BODY OF WORK &rarr;</a>
-    </div>
-  </div>
-
-  <div class="sl-card">
-    <img class="sl-card-img" src="{{ url_for('static', filename='img/POTY revised.png') }}" alt="Annual Excellence Award" loading="lazy" onerror="this.style.display='none'">
-    <div class="sl-card-overlay"></div>
-    <span class="sl-card-eyebrow">Annual Excellence Award</span>
-    <div class="sl-card-content">
-      <div class="sl-card-heading">A year-long recognition<br>for real growth.</div>
-      <p class="sl-card-body">Track your growth over the year and be recognised through the Annual Excellence Award.</p>
-      <a href="{{ url_for('poty') }}" class="sl-card-btn">VIEW STANDINGS &amp; POINTS &rarr;</a>
-    </div>
-  </div>
-
-  </div>{# end sl-cards #}
-  </div>{# end sl-cards-body-wrap #}
-</div>{# end sl-cards-accordion #}
-{% if gallery_imgs %}
-<div class="sl-gallery-wrap">
-  <div class="sl-gallery-header">
-    <span class="sl-gallery-title">Recent Work</span>
-    <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All &rarr;</a>
-  </div>
-  <div class="sl-gallery-grid" id="sl-gallery-grid">
-    {% for img in gallery_imgs[:12] %}{% if img.thumb_url %}
-    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gitem">
-      <img class="sl-gitem-img"
-           src="{{ img.thumb_url }}"
-           alt="{{ img.genre or 'Photography' }}"
-           loading="lazy"
-           onerror="this.style.display='none'">
-      <div class="sl-gitem-overlay"></div>
-      <div class="sl-gitem-info">
-        <span class="sl-gitem-score">{{ "%.2f"|format(img.score) }}</span>
-        <span class="sl-gitem-title">{{ img.title or img.genre or 'Untitled' }}</span>
-        <span class="sl-gitem-by">by {{ img.photographer_name or "" }}</span>
+      <div class="sl-mob-gitem-info">
+        <span class="sl-mob-gitem-score">{{ "%.1f"|format(img.score) }}</span>
       </div>
     </a>
     {% endif %}{% endfor %}
   </div>
-  <button class="sl-gallery-seemore" id="sl-gallery-seemore" aria-label="Show more photographs">See more &#8964;</button>
 </div>
 {% endif %}
+</div>{# end sl-mob-only #}
 
-{# ━━━━━━━━━━━━━━━━━━ MANIFESTO FOOTER STRIP ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-manifesto">
-  <div class="sl-mf-col1">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-    </svg>
-    <p class="sl-mf-tagline">Built for photographers<br>who want to improve honestly.</p>
-  </div>
-  <div class="sl-mf-col3" style="font-size:16px;font-weight:500;color:#1A1A18;line-height:1.75;">
-    We are independent.<br>
-    We answer to photographers,<br>
-    not investors.
-  </div>
-  <div class="sl-mf-col3">
-    Honesty. Respect. Privacy.<br>
-    No likes. No vanity metrics.<br>
-    Just truthful feedback that helps<br>
-    you become a better photographer.
-  </div>
-</div>
-<div style="background:#F7F5F2;padding:0 64px 56px;display:flex;align-items:center;justify-content:flex-start;gap:20px;">
-  <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-hero-btn">Get my first feedback →</a>
-  <div style="display:flex;align-items:center;gap:8px;color:#1A1A18;font-size: 14px;font-weight:500;font-family:'Inter',sans-serif;">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    Rated by science, not opinion.
-  </div>
-</div>
-
-{# ━━━━━━━━━━━━━━━━━━ FOOTER BAR ━━━━━━━━━━━━━━━━━━ #}
-{# Handled by base.html footer — dark bg + Inter fonts applied there #}
-
-</div>{# end sl-home #}
-
-{# ━━ NEW DESKTOP SECTIONS — quote, belief, community gallery ━━ #}
+{# ━━ DESKTOP: Quote, Belief, Community Gallery ━━ #}
 <div class="sl-quote-strip">
   <div class="sl-quote-mark">&ldquo;</div>
   <div>
@@ -2693,10 +2106,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <p class="sl-quote-author">&mdash; Ansel Adams</p>
   </div>
 </div>
+
 <section class="sl-belief">
   <h2 class="sl-belief-headline">Great photographers aren&rsquo;t born.<br>They evolve.</h2>
   <p class="sl-belief-sub">See. &nbsp; Shoot. &nbsp; Reflect. &nbsp; Evolve.</p>
 </section>
+
 {% if gallery_imgs %}
 <div class="sl-new-gallery">
   <div class="sl-new-gallery-header">
@@ -2713,7 +2128,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 </div>
 {% endif %}
+
+</div>{# end sl-home #}
 {% endblock %}
+
 
 {% block extra_js %}
 <script>
@@ -2842,4 +2260,4 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </script>
 {% endblock %}
 
-<!-- SL UI v2.6 | 2026-07-05 | final -->
+<!-- SL UI v2.7 | 2026-07-05 | clean rebuild from original -->
