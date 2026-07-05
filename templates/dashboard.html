@@ -27,22 +27,22 @@
 
 /* ── Design tokens (extend base.html vars) ── */
 :root {
-  --sl-yellow:       #F4C20D;
-  --sl-yellow-dark:  #D9A900;
-  --sl-bg:           #F8F7F3;
+  --sl-yellow:       #D6A428;
+  --sl-yellow-dark:  #A37B2C;
+  --sl-bg:           #F6F2E9;
   --sl-card:         #FFFFFF;
-  --sl-footer-bg:    #13254B;
-  --sl-text:         #151515;
+  --sl-footer-bg:    #0F2A22;
+  --sl-text:         #1A1A18;
   --sl-text-light:   #6B6B6B;
-  --sl-border:       #E8E5DD;
-  --sl-success:      #28A745;
+  --sl-border:       #E8E4DA;
+  --sl-success:      #2A7A3A;
   --sl-purple:       #6A3EF0;
-  --sl-shadow:       0 4px 20px rgba(0,0,0,.06);
-  --sl-shadow-lg:    0 10px 40px rgba(0,0,0,.08);
-  --r-card:          28px;
-  --r-hero:          32px;
-  --r-btn:           18px;
-  --r-img:           24px;
+  --sl-shadow:       0 2px 12px rgba(0,0,0,.06);
+  --sl-shadow-lg:    0 8px 32px rgba(0,0,0,.08);
+  --r-card:          16px;
+  --r-hero:          16px;
+  --r-btn:           10px;
+  --r-img:           10px;
   --r-fab:           50%;
 }
 
@@ -99,7 +99,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 }
 
 .sl-greeting__sub {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--sl-text);
   margin-top: 3px;
   margin-bottom: 16px;
@@ -277,7 +277,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   color: var(--sl-text-light);
 }
 
-/* Start Mission CTA */
+/* Start Practise CTA */
 .sl-btn-mission {
   display: flex;
   align-items: center;
@@ -1398,6 +1398,42 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   color: #fff;
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
+/* ── Mobile dashboard enhancements ── */
+@media (max-width: 768px) {
+  /* Score as /100 display */
+  .sl-score-display-100 { display: flex; align-items: baseline; gap: 2px; }
+  .sl-score-100-val { font-size: 52px; font-weight: 800; color: #1A1A18; line-height: 1; }
+  .sl-score-100-denom { font-size: 18px; color: #8A7A5A; font-weight: 400; }
+  /* Practise card split layout */
+  .sl-practise-split { display: flex !important; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid #E8E4DA; }
+  .sl-practise-split-text { flex: 1; padding: 14px; }
+  .sl-practise-split-img { width: 120px; flex-shrink: 0; }
+  .sl-practise-split-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Evolution dimension sparklines */
+  .sl-evo-dim-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F0EAE0; }
+  .sl-evo-dim-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+  .sl-evo-dim-name { font-size: 14px; font-weight: 500; color: #1A1A18; flex: 1; }
+  .sl-evo-dim-spark { flex: 1; }
+  .sl-evo-dim-score { font-size: 15px; font-weight: 700; color: #1A1A18; width: 32px; text-align: right; flex-shrink: 0; }
+  .sl-evo-tagline { font-size: 14px; color: #A37B2C; font-weight: 600; text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #F0EAE0; }
+  /* Today's Thought */
+  .sl-thought-card { background: #fff; border-radius: 16px; border: 1px solid #E8E4DA; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .sl-thought-img { width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #2A3A3A; flex-shrink: 0; }
+  .sl-thought-img img { width: 100%; height: 100%; object-fit: cover; }
+  .sl-thought-quote { font-size: 15px; font-style: italic; color: #1A1A18; line-height: 1.5; margin-bottom: 5px; }
+  .sl-thought-author { font-size: 12px; color: #A37B2C; font-weight: 600; }
+  /* Nearby Opportunity */
+  .sl-nearby-card { background: #fff; border-radius: 16px; border: 1px solid #E8E4DA; overflow: hidden; margin-bottom: 12px; }
+  .sl-nearby-inner { display: flex; gap: 12px; padding: 14px; align-items: flex-start; }
+  .sl-nearby-map { width: 80px; height: 80px; border-radius: 10px; background: linear-gradient(135deg, #B8D4C0, #7AA88A); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .sl-nearby-name { font-size: 16px; font-weight: 700; color: #1A1A18; margin-bottom: 3px; }
+  .sl-nearby-desc { font-size: 13px; color: #6B6B6B; margin-bottom: 5px; }
+  .sl-nearby-meta { font-size: 12px; color: #8A7A5A; }
+  .sl-nearby-cta { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid #E8E4DA; font-size: 14px; font-weight: 600; color: #1A1A18; text-decoration: none; }
+  /* Continue Reading button */
+  .sl-continue-btn { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1.5px solid #E8E4DA; border-radius: 10px; padding: 12px 16px; margin-top: 10px; font-size: 14px; font-weight: 600; color: #1A1A18; text-decoration: none; }
+}
+
 @media (max-width: 480px) {
   .sl-peer-eval__grid { grid-template-columns: 1fr; gap: 8px; }
   .sl-peer-eval__card { display: grid; grid-template-columns: 100px 1fr; }
@@ -1653,7 +1689,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <div class="sl-greeting__name">
       {{ ns.greeting }}, {{ current_user.full_name if current_user.full_name else current_user.username }} {{ ns.emoji }}
     </div>
-    <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
+    <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% elif dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.get('light_note','Today\'s light is waiting.') }}{% else %}Today&rsquo;s light is waiting.{% endif %}</div>
   </div>
 
   {# ══════════════════════════════════════════
@@ -1778,7 +1814,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {# ── Mission done today — replace entire card with done state ── #}
   {% if mission_done %}
-  <div class="sl-assignment" id="sl-mission-card"
+  <div class="sl-assignment" id="sl-practise-card"
        style="background:#E8F4F8; border:1px solid #B8D8E4; border-radius:var(--r-hero);
               display:flex; flex-direction:column; align-items:center; justify-content:center;
               padding:32px 24px; text-align:center; gap:10px;">
@@ -1793,17 +1829,17 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {% else %}
 
   {# ── Snoozed state — show collapsed pill, full card hidden ── #}
-  {% set _snoozed_today = session.get('mission_snoozed') == now().date().isoformat() %}
+  {% set _snoozed_today = session.get('practise_snoozed') == now().date().isoformat() %}
   {% if _snoozed_today %}
-  <div id="sl-mission-pill"
+  <div id="sl-practise-pill"
        style="display:flex; align-items:center; justify-content:space-between; gap:10px;
               background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
               border-radius:16px; padding:12px 16px; margin-bottom:12px; cursor:pointer;"
-       onclick="this.style.display='none'; document.getElementById('sl-mission-card').style.display='flex';">
+       onclick="this.style.display='none'; document.getElementById('sl-practise-card').style.display='flex';">
     <div style="display:flex; align-items:center; gap:10px;">
       <span style="font-size:18px;">📷</span>
       <div>
-        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's lesson is waiting</div>
+        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's practise is waiting</div>
         <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
           {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
         </div>
@@ -1811,9 +1847,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     <span style="font-size:20px; color:var(--sl-yellow-dark); font-weight:700; flex-shrink:0;">›</span>
   </div>
-  <div id="sl-mission-card" style="display:none;" class="sl-assignment">
+  <div id="sl-practise-card" style="display:none;" class="sl-assignment">
   {% else %}
-  <div class="sl-assignment" id="sl-mission-card">
+  <div class="sl-assignment" id="sl-practise-card">
   {% endif %}
 
     {# ── Band header — dark navy bg, gold fonts ── #}
@@ -1826,7 +1862,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div style="flex:1; min-width:0;">
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
                     color:rgba(245,197,24,.65); margin-bottom:5px;">
-          Today's lesson · {{ lesson.dim_short if lesson else 'Timing' }}
+          Today's Practise · {{ lesson.dim_short if lesson else 'Timing' }}
         </div>
         <div style="font-size:19px; font-weight:800; color:#F5C518; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
@@ -1834,8 +1870,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <button onclick="slSkipMission()"
               aria-label="Collapse mission"
               style="background:rgba(255,255,255,.10); border:none; border-radius:8px;
-                     width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                     cursor:pointer; flex-shrink:0; margin-left:10px; margin-top:2px;
+                     width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+                     cursor:pointer; flex-shrink:0; margin-left:6px; margin-top:-4px;
                      font-size:14px; color:rgba(245,197,24,.70); font-family:inherit;
                      -webkit-tap-highlight-color:transparent;">▾</button>
     </div>
@@ -2065,7 +2101,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {% else %}
     <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
       <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px;">
-        Start Mission →
+        Start Practise →
       </a>
       <button onclick="slSkipMission()"
               style="background:rgba(0,0,0,.06); color:var(--sl-text-light); font-size:13px;
@@ -2098,7 +2134,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {% endif %}{# end mission_done #}
 
   {# ── Skip pill — shown when user taps Skip on dashboard (JS-driven, no reload) ── #}
-  <div id="sl-mission-pill"
+  <div id="sl-practise-pill"
        style="display:none; align-items:center; justify-content:space-between; gap:10px;
               background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
               border-radius:16px; padding:12px 16px; margin-bottom:12px; cursor:pointer;"
@@ -2106,7 +2142,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <div style="display:flex; align-items:center; gap:10px;">
       <span style="font-size:18px;">📷</span>
       <div>
-        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's lesson is waiting</div>
+        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's practise is waiting</div>
         <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
           {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
         </div>
@@ -2381,7 +2417,10 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <div class="sl-rc-sec__body">
       <div style="display:flex; align-items:flex-end; justify-content:space-between; margin:14px 0 12px;">
         <div>
-          <div style="font-size:32px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.2f'|format(progress_data.avg_score) }}</div>
+          <div class="sl-score-display-100">
+            <span class="sl-score-100-val" style="font-size:32px; font-weight:800; color:var(--sl-text); line-height:1;">{{ (progress_data.avg_score * 10)|int }}</span>
+            <span class="sl-score-100-denom" style="font-size:14px; color:var(--sl-text-light);">/100</span>
+          </div>
           <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px;">{{ progress_data.count }} photographs evaluated</div>
         </div>
         <div style="text-align:right;">
@@ -2448,6 +2487,64 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         </div>
       {% endfor %}
       </div>
+      {# ━━ TODAY'S THOUGHT — mobile (in right column on desktop too) ━━ #}
+      {% if progress_data %}
+      <div class="sl-thought-card" style="margin-top:12px;">
+        <div class="sl-thought-img">
+          <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+               onerror="this.style.display='none'" alt="Mentor">
+        </div>
+        <div style="flex:1;">
+          <div class="sl-thought-quote">
+            {% if lesson and lesson.master_quote %}"{{ lesson.master_quote }}"
+            {% else %}"The camera is an instrument that teaches people how to see without a camera."{% endif %}
+          </div>
+          <div class="sl-thought-author">
+            &mdash; {% if lesson and lesson.master %}{{ lesson.master }}{% else %}Dorothea Lange{% endif %}
+          </div>
+        </div>
+        <span style="font-size:18px;color:#C8C0A8;flex-shrink:0;">🔖</span>
+      </div>
+      {% endif %}
+
+      {# ━━ NEARBY OPPORTUNITY — location-aware, from dash_advisory ━━ #}
+      {% if dash_advisory and dash_advisory.get('location_name') %}
+      <div class="sl-nearby-card" style="margin-top:0;">
+        <div class="sl-nearby-inner">
+          <div class="sl-nearby-map">📍</div>
+          <div>
+            <div class="sl-nearby-name">{{ dash_advisory.location_name }}</div>
+            <div class="sl-nearby-desc">{{ dash_advisory.location_desc or 'Interesting light conditions nearby.' }}</div>
+            <div class="sl-nearby-meta">🕐 {{ dash_advisory.best_time or 'Check conditions' }}</div>
+          </div>
+        </div>
+        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" class="sl-nearby-cta">
+          <span>Get Directions</span><span>&rarr;</span>
+        </a>
+      </div>
+      {% endif %}
+
+      {# ── Post-practise feedback ── #}
+      {% if progress_data and progress_data.practise_feedback is defined %}
+        {% set _weakest = progress_data.get('weakest', 'dm') %}
+        {% set _fb = progress_data.practise_feedback.get(_weakest) %}
+        {% if _fb %}
+        <div style="margin:12px 0 0; padding:10px 14px; border-radius:10px;
+                    border-left:3px solid {% if _fb.direction == 'up' %}#27500A{% elif _fb.direction == 'down' %}#D97A2A{% else %}var(--sl-border){% endif %};
+                    background:{% if _fb.direction == 'up' %}#EAF3DE{% elif _fb.direction == 'down' %}#FEF0E0{% else %}var(--sl-bg){% endif %};">
+          <div style="font-size:12px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+                      color:{% if _fb.direction == 'up' %}#27500A{% elif _fb.direction == 'down' %}#D97A2A{% else %}var(--sl-text-light){% endif %};
+                      margin-bottom:4px;">Last practise</div>
+          <div style="font-size:13px; color:var(--sl-text); line-height:1.5;">
+            <strong>{{ _fb.dim_label }}</strong> &middot; {{ _fb.after }}/10
+            {% if _fb.direction == 'up' %}<span style="color:#27500A; font-weight:700;">+{{ _fb.delta }} &mdash; the practise worked.</span>
+            {% elif _fb.direction == 'down' %}<span style="color:#D97A2A; font-weight:700;">{{ _fb.delta }} &mdash; keep working on it.</span>
+            {% else %}<span style="color:var(--sl-text-light);">Holding steady. One more session.</span>{% endif %}
+          </div>
+        </div>
+        {% endif %}
+      {% endif %}
+
       {# Yesterday — folded into standing body #}
       <div style="margin-top:14px; border-top:1px solid var(--sl-border); padding-top:12px;">
         <div style="font-size:12px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:8px;">Season</div>
@@ -3050,8 +3147,8 @@ function slToggleMaster() {
 
 // ── Skip Mission — collapses assignment card to pill, session-persistent ──
 function slSkipMission() {
-  var card = document.getElementById('sl-mission-card');
-  var pill = document.getElementById('sl-mission-pill');
+  var card = document.getElementById('sl-practise-card');
+  var pill = document.getElementById('sl-practise-pill');
   if (card) {
     card.style.transition = 'max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease';
     card.style.maxHeight = card.scrollHeight + 'px';
@@ -3076,8 +3173,8 @@ function slSkipMission() {
 }
 
 function slExpandMission() {
-  var card = document.getElementById('sl-mission-card');
-  var pill = document.getElementById('sl-mission-pill');
+  var card = document.getElementById('sl-practise-card');
+  var pill = document.getElementById('sl-practise-pill');
   if (pill) { pill.style.display = 'none'; }
   if (card) {
     card.style.transition = 'max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease';
@@ -3154,8 +3251,8 @@ function slRestoreSections() {
   // Mission collapse — restore from sessionStorage
   try {
     if (sessionStorage.getItem('sl_mission_collapsed') === '1') {
-      var card = document.getElementById('sl-mission-card');
-      var pill = document.getElementById('sl-mission-pill');
+      var card = document.getElementById('sl-practise-card');
+      var pill = document.getElementById('sl-practise-pill');
       if (card) {
         card.style.maxHeight = '0';
         card.style.opacity = '0';
