@@ -2608,11 +2608,28 @@ def index():
             Image.is_public==True, Image.is_flagged==False,
             Image.tier.in_(['Legend','Grandmaster','Master']),
             Image.score>=8.5,
-            ~Image.genre.in_(_portrait_genres)
+            ~Image.genre.in_(_portrait_genres),
+            # Only landscape images — width > height, minimum 1200px wide
+            Image.width != None,
+            Image.height != None,
+            Image.width > Image.height,
+            Image.width >= 1200
         )
         if _mentor_user_ids:
             _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
         carousel_images = _carousel_q.order_by(db.func.random()).limit(12).all()
+        # Fallback — relax width requirement if no results
+        if not carousel_images:
+            _carousel_q2 = Image.query.filter(
+                Image.status=='scored', Image.score!=None,
+                Image.is_public==True, Image.is_flagged==False,
+                Image.tier.in_(['Legend','Grandmaster','Master']),
+                Image.score>=8.0,
+                ~Image.genre.in_(_portrait_genres)
+            )
+            if _mentor_user_ids:
+                _carousel_q2 = _carousel_q2.filter(~Image.user_id.in_(_mentor_user_ids))
+            carousel_images = _carousel_q2.order_by(db.func.random()).limit(12).all()
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
