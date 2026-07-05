@@ -988,53 +988,53 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 /* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
 footer {
   background: #0F2A22;
-  border-top: none;
-  padding: 0;
-  font-family: 'Inter', sans-serif;
-  margin-top: 0;
+  padding: 3rem var(--page-pad) 1.75rem;
+  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 .footer-top {
-  padding: 0 var(--page-pad);
-  height: 64px;
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+.footer-brand-col {}
+.footer-brand-name {
+  font-size: 13px; font-weight: 700;
+  color: #F6F2E9; letter-spacing: 1.5px;
+  margin-bottom: 6px; text-transform: uppercase;
+}
+.footer-brand-tag {
+  font-size: 12px; color: #6A9A7A;
+  line-height: 1.6; max-width: 180px;
+}
+.footer-col {}
+.footer-col-title {
+  font-size: 10px; font-weight: 700;
+  color: #D6A428; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 14px;
+}
+.footer-col-link {
+  display: block; font-size: 13px;
+  color: #6A9A7A; text-decoration: none;
+  margin-bottom: 8px; transition: color 0.2s;
+}
+.footer-col-link:hover { color: #F6F2E9; }
+.footer-col-link.kyc { color: #9ABAA0; }
+/* Keep .footer-links for any legacy references */
+.footer-links a { color: #6A9A7A; text-decoration: none; font-size: 13px; }
+.footer-bottom {
+  border-top: 1px solid #1E3A2A;
+  padding-top: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.footer-brand {
-  font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: #D6A428;
-  text-decoration: none;
-  white-space: nowrap;
-  text-transform: uppercase;
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-  line-height: 1;
-}
-.footer-links {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 2px 4px;
-  font-family: 'Inter', sans-serif;
-}
-.footer-links a {
-  color: rgba(255,255,255,0.75);
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  padding: 6px 10px;
-  border-radius: 4px;
-  transition: color 0.2s, background 0.2s;
-  white-space: nowrap;
-}
-.footer-links a:hover { color: #FFFFFF; background: rgba(255,255,255,0.10); }
-.footer-bottom {
+.footer-copy { font-size: 12px; color: #3A6A4A; }
+.footer-social { display: flex; gap: 20px; }
+.footer-social a { font-size: 12px; color: #3A6A4A; text-decoration: none; }
+.footer-social a:hover { color: #D6A428; }
+/* legacy — keep for mobile override */
+.footer-bottom-legacy {
   padding: 14px var(--page-pad);
   display: flex;
   align-items: center;
@@ -1046,10 +1046,9 @@ footer {
   color: rgba(255,255,255,0.75);
 }
 @media (max-width: 768px) {
-  .footer-top { height: auto; padding: 16px var(--page-pad) 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
-  .footer-links { justify-content: flex-start; gap: 2px; }
-  .footer-links a { font-size: 14px; padding: 5px 8px; }
-  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 14px; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 16px var(--page-pad) 20px; }
+  .footer-brand-col { grid-column: 1 / -1; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
@@ -1492,29 +1491,47 @@ img {
 </nav>
 
 <footer>
-  <!-- Row 1: Brand left · Links right — mirrors nav -->
   <div class="footer-top">
-    <span class="footer-brand">SHUTTER LEAGUE</span>
-    <div class="footer-links">
-      <a href="/about">About Us</a>
-      <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
-      <a href="/terms">Terms &amp; Conditions</a>
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/refund-policy">Refund Policy</a>
-      <a href="{{ url_for('how_it_works') }}">How It Works</a>
-      <a href="{{ url_for('science') }}">Science</a>
-      <a href="{{ url_for('learning') }}">Learning</a>
-      <a href="{{ url_for('mentors') }}">Mentors</a>
-      <a href="{{ url_for('bow_info') }}">Body of Work</a>
-      <a href="/contact">Contact Us</a>
-      <a href="/faq">FAQ</a>
-      <a href="/programme-rules">Programme Rules</a>
+    <div class="footer-brand-col">
+      <div class="footer-brand-name">SHUTTER LEAGUE</div>
+      <div class="footer-brand-tag">Photography Assessment<br>&amp; Evolution Platform</div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Company</div>
+      <a href="/about" class="footer-col-link kyc">About Us</a>
+      <a href="/contact" class="footer-col-link kyc">Contact Us</a>
+      <a href="{{ url_for('pricing') }}" class="footer-col-link">Pricing</a>
+      <a href="/faq" class="footer-col-link">FAQ</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Legal</div>
+      <a href="/terms" class="footer-col-link kyc">Terms &amp; Conditions</a>
+      <a href="/privacy" class="footer-col-link kyc">Privacy Policy</a>
+      <a href="/refund-policy" class="footer-col-link kyc">Refund Policy</a>
+      <a href="/shipping" class="footer-col-link kyc">Shipping &amp; Returns</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Programmes</div>
+      <a href="{{ url_for('poty') }}" class="footer-col-link">Annual Excellence Award</a>
+      <a href="/programme-rules" class="footer-col-link">Programme Rules</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Weekly Challenge</a>
+      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Guidelines</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Learn</div>
+      <a href="{{ url_for('science') }}" class="footer-col-link">Science</a>
+      <a href="{{ url_for('learning') }}" class="footer-col-link">Lessons</a>
+      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Review</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Assignments</a>
     </div>
   </div>
-  <!-- Row 2: Legal identity (KYC compliance) -->
   <div class="footer-bottom">
-    <span>&copy; 2026 Shutter League. All rights reserved. &nbsp;&middot;&nbsp; Rated by Science. Not Opinion.</span>
-    <span style="font-size:13px; opacity:0.6;">Udyam Reg. No: UDYAM-KR-03-0697280 &nbsp;&middot;&nbsp; <a href="mailto:support@shutterleague.com" style="color:inherit;">support@shutterleague.com</a></span>
+    <span class="footer-copy">&copy; 2026 Shutter League &middot; Bengaluru, India &middot; UDYAM-KR-03-0697280</span>
+    <div class="footer-social">
+      <a href="#">Instagram</a>
+      <a href="#">Facebook</a>
+      <a href="#">YouTube</a>
+    </div>
   </div>
 </footer>
 
@@ -1690,4 +1707,4 @@ function cbAccept() {
 </body>
 </html>
 
-<!-- SL UI v2.1 | Session 126 | 2026-07-05 | nav+hero+footer fixes -->
+<!-- SL UI v2.2 | Session 126 | 2026-07-05 | footer grid + hero fixes -->
