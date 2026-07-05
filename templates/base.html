@@ -745,6 +745,12 @@ main {
   margin: 0 auto;
   padding: 40px var(--page-pad);
 }
+/* Homepage — no padding, hero is full viewport */
+body:has(.sl-home) main {
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
 
 /* ── Cards ───────────────────────────────────────────────────────────────── */
 .card {
@@ -1274,8 +1280,10 @@ img {
 
 <nav class="sl-top-nav">
   <a href="{{ url_for('index') }}" class="nav-brand">
-    SHUTTER LEAGUE
-    <span class="nav-brand-tag">Honest Feedback. Real Improvement.</span>
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League"
+         style="height:38px; width:auto; display:block;"
+         onerror="this.style.display='none'">
   </a>
 
   <!-- Desktop nav -->
@@ -1707,4 +1715,4 @@ function cbAccept() {
 </body>
 </html>
 
-<!-- SL UI v2.2 | Session 126 | 2026-07-05 | footer grid + hero fixes -->
+<!-- SL UI v2.0 | Session 126 | 2026-07-05 -->
