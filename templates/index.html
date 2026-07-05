@@ -1993,13 +1993,9 @@ body:has(.sl-home) { padding-top: 0 !important; }
 <style>
 /* Force override — kills any main padding on homepage */
 main, main.sl-main, #main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-body.page-home main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+body { padding-top: 0 !important; }
 .sl-home { margin-top: 0 !important; padding-top: 0 !important; }
-/* Mobile: kill body padding-top that old nav adds */
-@media (max-width: 768px) {
-  body { padding-top: 0 !important; }
-  .sl-mob-hero-copy { margin-top: 0 !important; padding-top: 0 !important; }
-}
+.sl-mob-hero-copy { margin-top: 0 !important; padding-top: 28px; }
 /* Hero anchor — full viewport */
 .sl-home > a:first-of-type {
   display: block !important; height: 100vh !important;
@@ -2341,4 +2337,4 @@ body.page-home main { padding: 0 !important; margin: 0 !important; max-width: no
 
 {% endblock %}
 
-<!-- SL UI v3.8 | 2026-07-05 | copy visibility + mobile gap -->
+<!-- SL UI v3.9 | 2026-07-05 20:27 | body padding fix -->
