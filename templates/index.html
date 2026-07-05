@@ -40,7 +40,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    HERO — lifted directly from dashboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-/* ── NEW HERO — full viewport, copy bottom-left ── */
 .sl-dash-hero-banner {
   position: relative;
   width: 100%;
@@ -57,44 +56,33 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   object-position: center;
   display: block;
 }
-/* Two-layer overlay: bottom-to-top + left-to-right — protects text on any image tone */
+/* Two-layer overlay — protects copy on any image tone, light or dark */
 .sl-dash-hero-banner__grad {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background:
-    linear-gradient(to top,  rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.45) 28%, rgba(0,0,0,0.08) 55%, transparent 75%),
+    linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.45) 28%, rgba(0,0,0,0.08) 55%, transparent 75%),
     linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.38) 30%, rgba(0,0,0,0.08) 55%, transparent 75%);
 }
-/* Hero content — bottom-left */
+/* Hero copy — bottom-left over image */
 .sl-hero-content {
   position: absolute;
-  bottom: 48px; left: 0;
-  z-index: 10;
-  padding: 0 48px;
-  max-width: 500px;
+  bottom: 48px; left: 0; z-index: 10;
+  padding: 0 48px; max-width: 500px;
 }
 .sl-hero-h1 {
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 36px; font-weight: 600;
-  color: #F6F2E9;
-  line-height: 1.1; letter-spacing: -0.5px;
-  margin-bottom: 10px;
+  font-size: 36px; font-weight: 600; color: #F6F2E9;
+  line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 10px;
   text-shadow: 0 1px 12px rgba(0,0,0,0.5), 0 2px 32px rgba(0,0,0,0.35);
 }
 .sl-hero-tagline {
-  font-size: 15px; font-weight: 400;
-  color: #D6A428; margin-bottom: 10px;
+  font-size: 15px; font-weight: 400; color: #D6A428;
+  margin-bottom: 10px;
   text-shadow: 0 1px 8px rgba(0,0,0,0.6);
 }
-.sl-hero-divider {
-  width: 30px; height: 1px;
-  background: rgba(214,164,40,0.5);
-  margin-bottom: 10px;
-}
+.sl-hero-divider { width: 30px; height: 1px; background: rgba(214,164,40,0.5); margin-bottom: 10px; }
 .sl-hero-philosophy {
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 17px; font-weight: 400;
-  color: #F6F2E9; margin-bottom: 22px;
+  font-size: 17px; font-weight: 400; color: #F6F2E9;
+  margin-bottom: 22px;
   text-shadow: 0 1px 8px rgba(0,0,0,0.5);
 }
 .sl-hero-ctas { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
@@ -102,41 +90,34 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   display: inline-flex; align-items: center; gap: 8px;
   background: #D6A428; color: #111111;
   font-size: 15px; font-weight: 600;
-  padding: 0 24px; height: 48px;
-  border-radius: 9px; text-decoration: none;
-  transition: background 0.2s; white-space: nowrap;
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  padding: 0 24px; height: 48px; border-radius: 9px;
+  text-decoration: none; transition: background 0.2s; white-space: nowrap;
 }
 .sl-hero-cta-primary:hover { background: #C89418; }
 .sl-hero-cta-secondary {
   display: inline-flex; align-items: center; gap: 7px;
   background: transparent; color: #F6F2E9;
   font-size: 15px; font-weight: 400;
-  padding: 0 22px; height: 48px;
-  border-radius: 9px;
+  padding: 0 22px; height: 48px; border-radius: 9px;
   border: 1.5px solid rgba(246,242,233,0.4);
   text-decoration: none; transition: border-color 0.2s; white-space: nowrap;
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 .sl-hero-cta-secondary:hover { border-color: rgba(246,242,233,0.8); }
 .sl-hero-mentors { display: flex; align-items: center; gap: 10px; }
 .sl-hero-mentor-avatars { display: flex; }
 .sl-hero-mentor-avatar {
   width: 36px; height: 36px; border-radius: 50%;
-  border: 1.5px solid #F6F2E9;
+  border: 1.5px solid #F6F2E9; background: #2C4A3A;
   margin-left: -9px; overflow: hidden;
-  background: #2C4A3A;
 }
 .sl-hero-mentor-avatar:first-child { margin-left: 0; }
 .sl-hero-mentor-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sl-hero-mentor-text { font-size: 13px; color: rgba(246,242,233,0.65); }
-/* Photo credit bottom-right */
+/* Photo credit — bottom right, quiet */
 .sl-dash-hero-banner__badge {
-  position: absolute;
-  bottom: 20px; right: 24px;
-  font-size: 12px; color: rgba(255,255,255,0.4);
-  letter-spacing: 0.3px;
+  position: absolute; bottom: 20px; right: 24px; z-index: 10;
   display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: rgba(255,255,255,0.4);
 }
 .sl-dash-hero-banner__score { font-size: 12px; font-weight: 600; color: #D6A428; }
 .sl-dash-hero-banner__tier { font-size: 12px; color: rgba(255,255,255,0.5); }
@@ -146,24 +127,26 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-scroll-cue {
   position: absolute; bottom: 22px; left: 50%;
   transform: translateX(-50%); z-index: 10;
-  opacity: 0.4; animation: sl-hero-nudge 2s ease-in-out infinite;
+  opacity: 0.4; animation: sl-nudge 2s ease-in-out infinite;
 }
-@keyframes sl-hero-nudge {
+@keyframes sl-nudge {
   0%,100% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(5px); }
 }
-/* ── Mobile hero redesign — copy above, image card below ── */
+/* Mobile hero — content above, image below */
+.sl-mob-hero-copy { display: none; }
+.sl-mob-mentor-row { display: none; }
 @media (max-width: 768px) {
   .sl-dash-hero-banner { display: none !important; }
-  .sl-mob-hero-copy { padding: 28px 20px 0; background: #F6F2E9; }
-  .sl-mob-hero-h1 { font-size: 34px; font-weight: 700; color: #1A1A18; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  .sl-mob-hero-copy { display: block; padding: 28px 20px 0; background: #F6F2E9; }
+  .sl-mob-hero-h1 { font-size: 34px; font-weight: 700; color: #1A1A18; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
   .sl-mob-hero-tagline { font-size: 15px; color: #6B6B6B; line-height: 1.5; margin-bottom: 10px; }
   .sl-mob-hero-philosophy { font-size: 18px; font-weight: 600; color: #A37B2C; margin-bottom: 20px; }
   .sl-mob-hero-imgcard { width: 100%; border-radius: 16px; overflow: hidden; aspect-ratio: 4/3; background: #1A2A1A; margin-bottom: 6px; }
   .sl-mob-hero-imgcard img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .sl-mob-hero-imgcredit { font-size: 12px; color: #8A7A5A; display: flex; justify-content: space-between; padding: 4px 0 16px; }
-  .sl-mob-hero-credit-score { font-weight: 700; color: #1A1A18; }
-  .sl-mob-mentor-row { padding: 16px 20px 20px; background: #F6F2E9; border-bottom: 1px solid #E8E0CC; }  .sl-mob-mentor-lbl { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #8A7A5A; text-align: center; margin-bottom: 14px; }
+  .sl-mob-mentor-row { display: block; padding: 16px 20px 20px; background: #F6F2E9; border-bottom: 1px solid #E8E0CC; }
+  .sl-mob-mentor-lbl { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #8A7A5A; text-align: center; margin-bottom: 14px; }
   .sl-mob-mentor-photos { display: flex; justify-content: center; gap: 28px; }
   .sl-mob-mentor-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
   .sl-mob-mentor-avatar { width: 64px; height: 64px; border-radius: 50%; border: 2px solid #D6A428; overflow: hidden; background: #2C4A3A; }
@@ -171,90 +154,31 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-mob-mentor-score { font-size: 12px; font-weight: 700; color: #1A1A18; }
   .sl-mob-mentor-tier { font-size: 11px; color: #A37B2C; }
   .sl-mob-mentor-name { font-size: 11px; color: #6B6B6B; }
-  /* Secondary CTA */
   .sl-mob-cta-secondary { display: flex; align-items: center; justify-content: center; width: 100%; height: 52px; border-radius: 12px; border: 1.5px solid #C8C0A8; background: transparent; color: #1A1A18; font-size: 16px; font-weight: 500; text-decoration: none; margin-top: -2px; }
-  /* Gallery horizontal scroll */
   .sl-mob-gallery-grid { display: flex !important; flex-direction: row !important; gap: 10px !important; overflow-x: auto !important; padding-bottom: 16px !important; grid-template-columns: unset !important; }
   .sl-mob-gallery-grid::-webkit-scrollbar { display: none; }
   .sl-mob-gitem { width: 100px !important; height: 100px !important; flex-shrink: 0 !important; aspect-ratio: 1 !important; }
-  /* Hide desktop-only sections on mobile */
-  .sl-quote-strip, .sl-belief, .sl-new-gallery, .sl-press-bar { display: none !important; }
 }
-
-/* Quote strip */
-.sl-quote-strip {
-  background: #F6F2E9;
-  padding: 64px 72px 48px;
-  display: flex; align-items: flex-start; gap: 20px;
-  max-width: 760px; margin: 0 auto;
-}
-.sl-quote-mark {
-  font-size: 48px; color: #D6A428; line-height: 1;
-  font-family: Georgia, serif; flex-shrink: 0;
-  margin-top: -6px; opacity: 0.7;
-}
-.sl-quote-text {
-  font-size: 22px; font-style: italic; font-weight: 300;
-  color: #2A2A2A; line-height: 1.55; margin-bottom: 10px;
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
+/* New desktop sections below hero */
+.sl-quote-strip { background: #F6F2E9; padding: 64px 72px 48px; display: flex; align-items: flex-start; gap: 20px; max-width: 720px; margin: 0 auto; }
+.sl-quote-mark { font-size: 48px; color: #D6A428; line-height: 1; font-family: Georgia, serif; flex-shrink: 0; margin-top: -6px; opacity: 0.7; }
+.sl-quote-text { font-size: 22px; font-style: italic; font-weight: 300; color: #2A2A2A; line-height: 1.55; margin-bottom: 10px; }
 .sl-quote-author { font-size: 14px; color: #B68C2C; font-weight: 400; }
-/* Belief section */
-.sl-belief {
-  text-align: center;
-  padding: 16px 72px 52px;
-  background: #F6F2E9;
-}
-.sl-belief-headline {
-  font-size: 38px; font-weight: 500; color: #1A1A1A;
-  line-height: 1.2; margin-bottom: 16px;
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-.sl-belief-sub {
-  font-size: 22px; color: #B68C2C; font-weight: 400;
-  letter-spacing: 3px;
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-/* New gallery */
+.sl-belief { text-align: center; padding: 16px 72px 52px; background: #F6F2E9; }
+.sl-belief-headline { font-size: 38px; font-weight: 500; color: #1A1A1A; line-height: 1.2; margin-bottom: 16px; }
+.sl-belief-sub { font-size: 22px; color: #B68C2C; font-weight: 400; letter-spacing: 3px; }
 .sl-new-gallery { padding: 0 72px 56px; background: #F6F2E9; }
 .sl-new-gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.sl-new-gallery-label { font-size: 12px; color: #9A8A6A; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
+.sl-new-gallery-label { font-size: 12px; color: #9A8A6A; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
 .sl-new-gallery-link { font-size: 14px; color: #1D2D22; text-decoration: none; font-weight: 500; }
 .sl-new-gallery-link:hover { color: #D6A428; }
-.sl-new-gallery-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.sl-new-gallery-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 16px; }
 .sl-new-gitem { height: 200px; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; text-decoration: none; display: block; background: #E8E0CC; transition: transform 0.25s ease, box-shadow 0.25s ease; }
 .sl-new-gitem:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
-.sl-new-gitem img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
-.sl-new-gitem:hover img { transform: scale(1.04); }
+.sl-new-gitem img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sl-new-gitem-score { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
-/* Press bar */
-.sl-press-bar { background: #F6F2E9; padding: 32px 72px 40px; border-top: 1px solid #E8E0CC; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
-.sl-press-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #A8A090; white-space: nowrap; font-weight: 500; }
-.sl-press-logos { display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
-.sl-press-logo { font-size: 13px; font-weight: 700; color: #8A7A5A; opacity: 0.65; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-.sl-press-logo.serif { font-family: Georgia, serif; font-style: italic; }
-@media (max-width: 1025px) {
-  .sl-dash-hero-banner { height: 70vh; min-height: 500px; }
-  .sl-hero-h1 { font-size: 28px; }
-  .sl-hero-content { padding: 0 24px; bottom: 36px; }
-  .sl-new-gallery-grid { grid-template-columns: repeat(3, 1fr); }
-  .sl-new-gallery, .sl-belief, .sl-quote-strip, .sl-press-bar { padding-left: 24px; padding-right: 24px; }
-}
-/* ── iPad portrait (768px) ── */
 @media (max-width: 768px) {
-  .sl-dash-hero-banner { height: 60vh; min-height: 420px; }
-  .sl-hero-h1 { font-size: 26px; line-height: 1.12; }
-  .sl-hero-content { padding: 0 20px; bottom: 28px; max-width: 340px; }
-  .sl-hero-tagline { font-size: 14px; }
-  .sl-hero-philosophy { font-size: 15px; }
-  .sl-hero-ctas { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .sl-hero-cta-primary, .sl-hero-cta-secondary { height: 52px; font-size: 15px; width: 100%; justify-content: center; }
-  .sl-new-gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .sl-new-gallery, .sl-belief, .sl-quote-strip, .sl-press-bar { padding-left: 16px; padding-right: 16px; }
-  .sl-belief-headline { font-size: 26px; }
-  .sl-belief-sub { font-size: 18px; letter-spacing: 1.5px; }
-  .sl-quote-text { font-size: 18px; }
-  .sl-press-logos { gap: 24px; }
+  .sl-quote-strip, .sl-belief, .sl-new-gallery { display: none !important; }
 }
 
 
@@ -855,8 +779,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* Below-hero mobile block — hidden on desktop */
 .sl-hero-below { display: none; }
-.sl-mob-hero-copy { display: none; }   /* hidden on desktop, shown on mobile */
-.sl-mob-mentor-row { display: none; }  /* hidden on desktop, shown on mobile */
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    IPAD — 900px
@@ -2114,7 +2036,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <div class="sl-home">
 
 {# ━━━━━━━━━━━━━━━━━━ HERO — dashboard structure ━━━━━━━━━━━━━━━━━━ #}
-{# ━━ NEW HERO — full viewport, copy bottom-left, photo credit bottom-right ━━ #}
 {% if hero and hero.id %}
 <a href="{{ url_for('image_detail', image_id=hero.id) }}"
    style="display:block; text-decoration:none; position:relative;" aria-label="Explore this photograph">
@@ -2126,22 +2047,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
        loading="eager"
        fetchpriority="high"
        onerror="this.style.display='none'">
-  {% else %}
-  {# Fallback — show first available public scored image #}
-  {% set _fallback = recent_images[0] if recent_images else none %}
-  {% if _fallback and _fallback.thumb_url %}
-  <img src="{{ _fallback.thumb_url }}"
-       alt="{{ _fallback.genre or 'Photography' }}"
-       loading="eager"
-       fetchpriority="high"
-       onerror="this.style.display='none'">
-  {% endif %}
   {% endif %}
   <div class="sl-dash-hero-banner__grad"></div>
 
-  {# Hero copy — bottom-left #}
+  {# Hero copy — bottom-left over image #}
   <div class="sl-hero-content">
-    <h1 class="sl-hero-h1">Know if you're<br>getting better.</h1>
+    <h1 class="sl-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
     <p class="sl-hero-tagline">Photography Assessment &amp; Evolution Platform</p>
     <div class="sl-hero-divider"></div>
     <p class="sl-hero-philosophy">Making Images Matter.</p>
@@ -2169,13 +2080,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     </div>
   </div>
 
-  {# Photo credit + score — bottom-right, quiet #}
+  {# Photo credit — bottom right, quiet #}
   {% if hero and hero.score %}
   <div class="sl-dash-hero-banner__badge">
     <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(hero.score) }}</span>
-    <span style="color:rgba(255,255,255,0.25);">·</span>
+    <span style="color:rgba(255,255,255,0.2);">&middot;</span>
     <span class="sl-dash-hero-banner__tier">{{ hero.tier or '' }}</span>
-    <span style="color:rgba(255,255,255,0.25);">·</span>
+    <span style="color:rgba(255,255,255,0.2);">&middot;</span>
     <span class="sl-dash-hero-banner__by">&copy; {{ hero.photographer_name or '' }}</span>
   </div>
   {% endif %}
@@ -2209,45 +2120,37 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {% set _mob_sc_next = _mob_sc_audit.get('mentor_location_1') or _mob_sc_audit.get('transferable_advice') or _mob_next %}
 {% endif %}
 
-{# ━━ NEW MOBILE HERO — copy above, image card below (matches finalised design) ━━ #}
+{# Mobile hero copy — shown instead of banner on mobile #}
 <div class="sl-mob-hero-copy">
   <h1 class="sl-mob-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
   <p class="sl-mob-hero-tagline">Photography Assessment<br>&amp; Evolution Platform.</p>
   <p class="sl-mob-hero-philosophy">Making Images Matter.</p>
-  {% set _hero_img = hero if (hero and hero.thumb_url) else (recent_images[0] if recent_images else none) %}
-  {% if _hero_img and _hero_img.thumb_url %}
+  {% if hero and hero.thumb_url %}
   <div class="sl-mob-hero-imgcard">
-    <img src="{{ _hero_img.thumb_url }}"
-         alt="{{ _hero_img.genre or 'Photography' }}"
-         loading="eager" fetchpriority="high"
-         onerror="this.style.display='none'">
+    <img src="{{ hero.thumb_url }}" alt="{{ hero.genre or 'Photography' }}" loading="eager" onerror="this.style.display='none'">
   </div>
   <div class="sl-mob-hero-imgcredit">
-    {% if _hero_img.score %}<span class="sl-mob-hero-credit-score">Score {{ '%.1f'|format(_hero_img.score) }} &middot; {{ _hero_img.tier or '' }}</span>{% endif %}
-    <span>&copy; {{ _hero_img.photographer_name or '' }}</span>
+    {% if hero.score %}<span style="font-weight:700;color:#1A1A18;">Score {{ '%.1f'|format(hero.score) }} &middot; {{ hero.tier or '' }}</span>{% endif %}
+    <span>&copy; {{ hero.photographer_name or '' }}</span>
   </div>
   {% endif %}
+  <div style="padding:0 20px 16px;display:flex;flex-direction:column;gap:10px;">
+    <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+       style="display:flex;align-items:center;justify-content:center;gap:8px;background:#D6A428;color:#111;font-size:16px;font-weight:700;height:56px;border-radius:12px;text-decoration:none;">&#8593; Upload Your Photograph</a>
+    <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
+  </div>
 </div>
-
-{# Mentor row — real photos #}
+{# Mentor row #}
 <div class="sl-mob-mentor-row">
   <div class="sl-mob-mentor-lbl">Guided by accomplished photographers</div>
   <div class="sl-mob-mentor-photos">
     <div class="sl-mob-mentor-item">
-      <div class="sl-mob-mentor-avatar">
-        <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'">
-      </div>
-      <span class="sl-mob-mentor-score">Score 8.7</span>
-      <span class="sl-mob-mentor-tier">Legend</span>
-      <span class="sl-mob-mentor-name">Ashok Kochhar</span>
+      <div class="sl-mob-mentor-avatar"><img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'"></div>
+      <span class="sl-mob-mentor-score">Score 8.7</span><span class="sl-mob-mentor-tier">Legend</span><span class="sl-mob-mentor-name">Ashok Kochhar</span>
     </div>
     <div class="sl-mob-mentor-item">
-      <div class="sl-mob-mentor-avatar">
-        <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'">
-      </div>
-      <span class="sl-mob-mentor-score">Score 8.2</span>
-      <span class="sl-mob-mentor-tier">Master</span>
-      <span class="sl-mob-mentor-name">Sreekumar</span>
+      <div class="sl-mob-mentor-avatar"><img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'"></div>
+      <span class="sl-mob-mentor-score">Score 8.2</span><span class="sl-mob-mentor-tier">Master</span><span class="sl-mob-mentor-name">Sreekumar</span>
     </div>
   </div>
 </div>
@@ -2271,8 +2174,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <div class="sl-mob-sec sl-mob-recognition">
   <p class="sl-mob-recog-text">We see you. Your photograph captured something your eye saw. We help you evaluate and improve your photography.</p>
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-cta-btn">&#8593; Upload Your Photograph</a>
-  <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
+     class="sl-mob-cta-btn">Upload your first photograph &rarr;</a>
   <p class="sl-mob-cta-sub">Evaluated in 60 seconds &middot; Free to start</p>
 </div>
 
@@ -2717,56 +2619,32 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>{# end sl-cards #}
   </div>{# end sl-cards-body-wrap #}
 </div>{# end sl-cards-accordion #}
-{# ━━ QUOTE STRIP ━━ #}
-<div class="sl-quote-strip">
-  <div class="sl-quote-mark">&ldquo;</div>
-  <div>
-    <p class="sl-quote-text">You don't take a photograph, you make it.</p>
-    <p class="sl-quote-author">&mdash; Ansel Adams</p>
-  </div>
-</div>
-
-{# ━━ BELIEF SECTION ━━ #}
-<section class="sl-belief">
-  <h2 class="sl-belief-headline">Great photographers aren&rsquo;t born.<br>They evolve.</h2>
-  <p class="sl-belief-sub">See. &nbsp; Shoot. &nbsp; Reflect. &nbsp; Evolve.</p>
-</section>
-
-{# ━━ COMMUNITY GALLERY ━━ #}
 {% if gallery_imgs %}
-<div class="sl-new-gallery">
-  <div class="sl-new-gallery-header">
-    <span class="sl-new-gallery-label">From our community</span>
-    <a href="{{ url_for('leaderboard') }}" class="sl-new-gallery-link">View gallery &rarr;</a>
+<div class="sl-gallery-wrap">
+  <div class="sl-gallery-header">
+    <span class="sl-gallery-title">Recent Work</span>
+    <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All &rarr;</a>
   </div>
-  <div class="sl-new-gallery-grid">
-    {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
-    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-new-gitem">
-      <img src="{{ img.thumb_url }}"
+  <div class="sl-gallery-grid" id="sl-gallery-grid">
+    {% for img in gallery_imgs[:12] %}{% if img.thumb_url %}
+    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gitem">
+      <img class="sl-gitem-img"
+           src="{{ img.thumb_url }}"
            alt="{{ img.genre or 'Photography' }}"
            loading="lazy"
            onerror="this.style.display='none'">
-      {% if img.score %}
-      <span class="sl-new-gitem-score">{{ '%.1f'|format(img.score) }}</span>
-      {% endif %}
+      <div class="sl-gitem-overlay"></div>
+      <div class="sl-gitem-info">
+        <span class="sl-gitem-score">{{ "%.2f"|format(img.score) }}</span>
+        <span class="sl-gitem-title">{{ img.title or img.genre or 'Untitled' }}</span>
+        <span class="sl-gitem-by">by {{ img.photographer_name or "" }}</span>
+      </div>
     </a>
     {% endif %}{% endfor %}
   </div>
+  <button class="sl-gallery-seemore" id="sl-gallery-seemore" aria-label="Show more photographs">See more &#8964;</button>
 </div>
 {% endif %}
-
-{# ━━ PRESS BAR ━━ #}
-<div class="sl-press-bar">
-  <span class="sl-press-label">Featured in</span>
-  <div class="sl-press-logos">
-    <span class="sl-press-logo serif">Sanctuary Asia</span>
-    <span class="sl-press-logo">Better Photography</span>
-    <span class="sl-press-logo" style="font-size:12px;">Smart Photography</span>
-    <span class="sl-press-logo">Outlook Traveller</span>
-    <span class="sl-press-logo">Better India</span>
-    <span class="sl-press-logo">India Today</span>
-  </div>
-</div>
 
 {# ━━━━━━━━━━━━━━━━━━ MANIFESTO FOOTER STRIP ━━━━━━━━━━━━━━━━━━ #}
 <div class="sl-manifesto">
@@ -2801,6 +2679,35 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {# Handled by base.html footer — dark bg + Inter fonts applied there #}
 
 </div>{# end sl-home #}
+
+{# ━━ NEW DESKTOP SECTIONS — quote, belief, community gallery ━━ #}
+<div class="sl-quote-strip">
+  <div class="sl-quote-mark">&ldquo;</div>
+  <div>
+    <p class="sl-quote-text">You don&rsquo;t take a photograph, you make it.</p>
+    <p class="sl-quote-author">&mdash; Ansel Adams</p>
+  </div>
+</div>
+<section class="sl-belief">
+  <h2 class="sl-belief-headline">Great photographers aren&rsquo;t born.<br>They evolve.</h2>
+  <p class="sl-belief-sub">See. &nbsp; Shoot. &nbsp; Reflect. &nbsp; Evolve.</p>
+</section>
+{% if gallery_imgs %}
+<div class="sl-new-gallery">
+  <div class="sl-new-gallery-header">
+    <span class="sl-new-gallery-label">From our community</span>
+    <a href="{{ url_for('leaderboard') }}" class="sl-new-gallery-link">View gallery &rarr;</a>
+  </div>
+  <div class="sl-new-gallery-grid">
+    {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
+    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-new-gitem">
+      <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photography' }}" loading="lazy" onerror="this.style.display='none'">
+      {% if img.score %}<span class="sl-new-gitem-score">{{ '%.1f'|format(img.score) }}</span>{% endif %}
+    </a>
+    {% endif %}{% endfor %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -2930,4 +2837,4 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </script>
 {% endblock %}
 
-<!-- SL UI v2.2 | Session 126 | 2026-07-05 | footer grid + hero fixes -->
+<!-- SL UI v2.4 | Session 126 | 2026-07-05 | fresh from original -->
