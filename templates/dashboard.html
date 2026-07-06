@@ -559,7 +559,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       </div>
       <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
         {% for _pq in peer_queue %}
-        <a href="{{ url_for('score_image', assignment_id=_pq.id) }}"
+        <a href="{{ url_for('score_image', image_id=_pq.image_id) }}"
            style="display:block; border-radius:10px; overflow:hidden; text-decoration:none; position:relative; aspect-ratio:1; background:var(--d-border);">
           {% set _pimg = _pq.image %}
           {% if _pimg and _pimg.thumb_url %}
