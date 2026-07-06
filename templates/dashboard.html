@@ -54,7 +54,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
 /* ── RIGHT PANEL — mobile: below centre ── */
 .rpanel {
-  padding: 0 16px 24px;
+  padding: 0 16px 16px;
   display: flex; flex-direction: column; gap: 12px;
 }
 
@@ -63,8 +63,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 ───────────────────────────────────────── */
 .greeting {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px; padding: 20px 0 4px 3px;
-  border-left: 3px solid var(--d-gold); padding-left: 14px;
+  gap: 12px; padding: 10px 0 4px 3px;
+  border-left: 3px solid var(--d-gold); padding-left: 12px;
 }
 .greeting-name { font-size: 22px; font-weight: 800; color: var(--d-dark); line-height: 1.2; }
 .greeting-sub { font-size: 13px; color: var(--d-muted); margin-top: 4px; line-height: 1.5; }
@@ -72,7 +72,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 .streak {
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   background: var(--d-card); border: 1px solid var(--d-border);
-  border-radius: 20px; padding: 6px 14px; cursor: pointer;
+  border-radius: 20px; padding: 4px 10px; cursor: pointer;
 }
 .streak-count { font-size: 18px; font-weight: 800; color: var(--d-dark); }
 .streak-txt { font-size: 11px; color: var(--d-muted); line-height: 1.3; }
@@ -86,7 +86,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 130px;
-  min-height: 190px;
+  min-height: 155px;
 }
 .practice-content {
   padding: 18px 20px;
@@ -154,7 +154,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 ───────────────────────────────────────── */
 .recent-card {
   background: var(--d-card); border-radius: var(--d-r);
-  border: 1px solid var(--d-border); padding: 16px 18px;
+  border: 1px solid var(--d-border); padding: 12px 14px;
 }
 .recent-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .recent-link { font-size: 12px; color: var(--d-dark); font-weight: 600; text-decoration: none; }
@@ -171,9 +171,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
    RIGHT PANEL CARDS
 ───────────────────────────────────────── */
 .rp-card {
-  background: var(--d-card); border-radius: 12px;
+  background: var(--d-card); border-radius: 10px;
   border: 1px solid var(--d-border); border-left: 3px solid var(--d-gold);
-  padding: 12px 14px;
+  padding: 9px 11px;
 }
 .rp-label {
   font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
@@ -202,7 +202,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 }
 .mentor-name { font-size: 12px; font-weight: 700; color: var(--d-dark); }
 .mentor-tier-badge { font-size: 10px; color: var(--d-muted); }
-.aea-card { background: var(--d-navy); border-radius: 12px; padding: 12px 14px; }
+.aea-card { background: var(--d-navy); border-radius: 10px; padding: 9px 11px; }
 .aea-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
 .aea-title { font-size: 14px; font-weight: 700; color: #F6F2E9; margin-bottom: 3px; }
 .aea-sub { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 8px; }
@@ -212,7 +212,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
    MOBILE — bottom quote strip
 ───────────────────────────────────────── */
 .dash-quote-strip {
-  background: var(--d-dark); padding: 20px 20px 32px;
+  background: var(--d-dark); padding: 16px 20px 24px;
   text-align: center;
 }
 .dash-quote-txt { font-size: 14px; color: rgba(255,255,255,0.7); font-style: italic; line-height: 1.6; margin-bottom: 6px; }
@@ -239,7 +239,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   }
   .sidenav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 9px 20px; font-size: 13px; font-weight: 500;
+    padding: 7px 16px; font-size: 12px; font-weight: 500;
     color: var(--d-muted); text-decoration: none;
     border-left: 3px solid transparent; transition: all 0.15s;
   }
@@ -264,13 +264,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
   /* ── Centre column ── */
   .centre {
-    padding: 16px 28px 28px; gap: 18px;
+    padding: 12px 20px 20px; gap: 10px;
   }
 
   /* Practise card wider image column on desktop */
   .practice-card { grid-template-columns: 1fr 260px; }
-  .practice-content { padding: 22px 26px; }
-  .practice-title { font-size: 24px; }
+  .practice-content { padding: 16px 20px; }
+  .practice-title { font-size: 20px; }
 
   /* Evolution grid: score | trend | dimensions side by side */
   .today-grid {
@@ -286,7 +286,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   /* ── Right panel ── */
   .rpanel {
     border-left: 1px solid var(--d-border);
-    padding: 24px 18px; gap: 12px;
+    padding: 16px 14px; gap: 8px;
     position: sticky; top: 64px;
     height: calc(100vh - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
@@ -665,67 +665,19 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       {% endif %}
     </div>
 
-    {# Your Standing + Evolution Overview — click for full sparkline modal #}
+    {# My Standing — compact card, full detail in modal #}
     {% if progress_data %}
-    <div class="rp-card" style="cursor:pointer;padding:14px;" onclick="document.getElementById('standing-modal').style.display='flex'">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <div class="rp-card" style="cursor:pointer;" onclick="document.getElementById('standing-modal').style.display='flex'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
         <div class="rp-label" style="margin-bottom:0;">My Standing</div>
         <span style="font-size:10px;color:var(--d-muted);">▲ full view</span>
       </div>
-
-      {# Score + tier #}
-      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px;">
-        <span style="font-size:24px;font-weight:800;color:var(--d-dark);">{{ '%.1f'|format(progress_data.avg_score) }}</span>
-        <span style="font-size:13px;color:var(--d-muted);">/10</span>
-        <span style="font-size:13px;font-weight:700;color:var(--d-green);margin-left:4px;">{{ progress_data.avg_tier }}</span>
+      <div class="standing-row">
+        <span class="standing-val">{{ progress_data.avg_tier }}</span>
+        <span class="standing-avg">avg {{ '%.2f'|format(progress_data.avg_score) }}</span>
       </div>
-      {% if progress_data.overall_pct %}
-      <div style="font-size:11px;color:var(--d-green);margin-bottom:6px;">Top {{ progress_data.overall_pct }}% this month</div>
-      {% endif %}
-      <div class="standing-bar" style="margin-bottom:10px;">
-        <div class="standing-fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div>
-      </div>
-
-      {# Evolution trend line #}
-      {% if progress_data.dim_sparklines %}
-        {% set _sp = progress_data.dim_sparklines.values()|list %}
-        {% if _sp and _sp[0] and _sp[0].polyline %}
-        <div style="font-size:10px;color:var(--d-muted);margin-bottom:3px;">Trend — last {{ progress_data.count }} uploads</div>
-        <svg viewBox="0 0 280 56" width="100%" height="48" preserveAspectRatio="none" style="display:block;margin-bottom:8px;">
-          <line x1="0" y1="14" x2="280" y2="14" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="28" x2="280" y2="28" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="42" x2="280" y2="42" stroke="#E8E4DA" stroke-width="0.5"/>
-          <polyline fill="rgba(214,164,40,0.08)" stroke="none" points="{{ _sp[0].polyline }} 280,56 0,56"/>
-          <polyline fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{ _sp[0].polyline }}"/>
-          {% if _sp[0].points %}{% for _pt in _sp[0].points %}
-          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.4' }}"/>
-          {% endfor %}{% endif %}
-        </svg>
-        {% endif %}
-      {% endif %}
-
-      {# Dimension bars #}
-      {% if progress_data.dim_avgs %}
-      {% set _dim_labels = {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
-      {% set _sorted = progress_data.dim_avgs.items()|list %}
-      {% set _max_dim = _sorted|sort(attribute=1,reverse=true)|first %}
-      {% set _min_dim = _sorted|sort(attribute=1)|first %}
-      {% for dim, avg in _sorted %}
-      {% set _is_strong = dim == _max_dim[0] %}
-      {% set _is_focus  = dim == _min_dim[0] %}
-      <div style="margin-bottom:5px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-          <span style="font-size:11px;color:var(--d-muted);">{{ _dim_labels.get(dim, dim|title) }}</span>
-          <span style="font-size:12px;font-weight:700;color:{{ '#2A7A3A' if _is_strong else ('#D97A2A' if _is_focus else 'var(--d-text)') }};">{{ '%.1f'|format(avg) }}{% if _is_focus %} ↑{% endif %}</span>
-        </div>
-        <div style="height:3px;background:var(--d-border);border-radius:2px;">
-          <div style="height:100%;width:{{ (avg*10)|int }}%;border-radius:2px;background:{{ '#2A7A3A' if _is_strong else ('#D97A2A' if _is_focus else '#8A7A5A') }};"></div>
-        </div>
-      </div>
-      {% endfor %}
-      {% if _min_dim %}<div style="font-size:10px;color:#D97A2A;margin-top:4px;">↑ Focus area this month</div>{% endif %}
-      {% endif %}
-
+      {% if progress_data.overall_pct %}<div class="standing-pct">Top {{ progress_data.overall_pct }}% this month</div>{% endif %}
+      <div class="standing-bar"><div class="standing-fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div></div>
     </div>
     {% endif %}
 
