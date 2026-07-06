@@ -263,8 +263,8 @@ table { max-width: none; }
   background: #D9A900;
   transform: scale(1.05);
 }
-/* Add padding so page content clears the tab bar */
-body { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+/* Add padding so page content clears the tab bar — exclude homepage which needs full-bleed hero */
+body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
@@ -1276,7 +1276,7 @@ img {
 }
 </script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
 <nav class="sl-top-nav">
   <a href="{{ url_for('index') }}" class="nav-brand">
