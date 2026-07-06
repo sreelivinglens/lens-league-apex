@@ -1277,7 +1277,7 @@ img {
 }
 </script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
 <nav class="sl-top-nav">
   <a href="{{ url_for('index') }}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
