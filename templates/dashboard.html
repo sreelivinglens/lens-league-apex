@@ -625,125 +625,71 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       {% endif %}
     </div>
 
-    {# Evolution Overview — merged with Standing, opens full modal ── #}
+    {# Your Standing + Evolution Overview — click for full sparkline modal #}
     {% if progress_data %}
-    <div class="rp-card" style="cursor:pointer;padding:14px 14px 10px;" onclick="document.getElementById('standing-modal').style.display='flex'" title="Click for full evolution view">
-
-      {# Header row #}
+    <div class="rp-card" style="cursor:pointer;padding:14px;" onclick="document.getElementById('standing-modal').style.display='flex'">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div class="rp-label" style="margin-bottom:0;">Evolution Overview</div>
+        <div class="rp-label" style="margin-bottom:0;">Your Standing</div>
         <span style="font-size:10px;color:var(--d-muted);">▲ full view</span>
       </div>
 
-      {# Score + tier + percentile #}
+      {# Score + tier #}
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px;">
         <span style="font-size:24px;font-weight:800;color:var(--d-dark);">{{ '%.1f'|format(progress_data.avg_score) }}</span>
         <span style="font-size:13px;color:var(--d-muted);">/10</span>
         <span style="font-size:13px;font-weight:700;color:var(--d-green);margin-left:4px;">{{ progress_data.avg_tier }}</span>
       </div>
       {% if progress_data.overall_pct %}
-      <div style="font-size:11px;color:var(--d-green);margin-bottom:8px;">Top {{ progress_data.overall_pct }}% this month</div>
+      <div style="font-size:11px;color:var(--d-green);margin-bottom:6px;">Top {{ progress_data.overall_pct }}% this month</div>
       {% endif %}
+      <div class="standing-bar" style="margin-bottom:10px;">
+        <div class="standing-fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div>
+      </div>
 
-      {# Trend line — last 10 uploads, with score labels #}
-      {% if progress_data.trend and progress_data.trend|length >= 2 %}
-      {% set _t = progress_data.trend[-10:] %}
-      {% set _min = _t|map(attribute='score')|min %}
-      {% set _max = _t|map(attribute='score')|max %}
-      {% set _range = [(_max - _min), 0.5]|max %}
-      {% set _n = _t|length %}
-      <div style="margin-bottom:6px;">
-        <div style="font-size:10px;color:var(--d-muted);margin-bottom:3px;">Trend — last {{ _n }} uploads</div>
-        <svg viewBox="0 0 260 52" width="100%" height="52" preserveAspectRatio="none" style="display:block;">
-          {# Grid lines #}
-          <line x1="0" y1="12" x2="260" y2="12" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="26" x2="260" y2="26" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="40" x2="260" y2="40" stroke="#E8E4DA" stroke-width="0.5"/>
-          {# Build polyline points #}
-          {% set _pts = namespace(val='') %}
-          {% for _item in _t %}
-            {% set _x = (loop.index0 / (_n - 1) * 240 + 10)|round(1) %}
-            {% set _y = (40 - ((_item.score - _min) / _range) * 28)|round(1) %}
-            {% set _pts.val = _pts.val ~ _x ~ ',' ~ _y ~ ' ' %}
-          {% endfor %}
-          {# Area fill #}
-          {% set _first_y = (40 - ((_t[0].score - _min) / _range) * 28)|round(1) %}
-          {% set _last_x = (240 + 10)|round(1) %}
-          {% set _last_y = (40 - ((_t[-1].score - _min) / _range) * 28)|round(1) %}
-          <polyline fill="rgba(214,164,40,0.08)" stroke="none"
-            points="{{ _pts.val }}{{ _last_x }},44 10,44"/>
-          <polyline fill="none" stroke="#D6A428" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round"
-            points="{{ _pts.val }}"/>
-          {# Dots + score labels #}
-          {% for _item in _t %}
-            {% set _x = (loop.index0 / (_n - 1) * 240 + 10)|round(1) %}
-            {% set _y = (40 - ((_item.score - _min) / _range) * 28)|round(1) %}
-            <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.6' }}"/>
-          {% endfor %}
-        </svg>
-        {# Score value labels below #}
-        <div style="display:flex;justify-content:space-between;margin-top:2px;">
-          {% for _item in _t %}
-          <span style="font-size:9px;color:var(--d-muted);">{{ '%.1f'|format(_item.score) }}</span>
-          {% endfor %}
-        </div>
-      </div>
-      {% elif progress_data.dim_sparklines %}
-      {# Fallback: use overall sparkline from dim_sparklines if trend not available #}
-      {% set _sp = progress_data.dim_sparklines.values()|list %}
-      {% if _sp and _sp[0] and _sp[0].polyline %}
-      <div style="margin-bottom:6px;">
+      {# Evolution trend line #}
+      {% if progress_data.dim_sparklines %}
+        {% set _sp = progress_data.dim_sparklines.values()|list %}
+        {% if _sp and _sp[0] and _sp[0].polyline %}
         <div style="font-size:10px;color:var(--d-muted);margin-bottom:3px;">Trend — last {{ progress_data.count }} uploads</div>
-        <svg viewBox="0 0 260 52" width="100%" height="52" preserveAspectRatio="none" style="display:block;">
-          <line x1="0" y1="12" x2="260" y2="12" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="26" x2="260" y2="26" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="40" x2="260" y2="40" stroke="#E8E4DA" stroke-width="0.5"/>
-          <polyline fill="rgba(214,164,40,0.08)" stroke="none"
-            points="{{ _sp[0].polyline }} 260,44 0,44"/>
-          <polyline fill="none" stroke="#D6A428" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round"
-            points="{{ _sp[0].polyline }}"/>
-          {% if _sp[0].points %}
-          {% for _pt in _sp[0].points %}
-          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.5' }}"/>
-          {% endfor %}
-          {% endif %}
+        <svg viewBox="0 0 280 56" width="100%" height="48" preserveAspectRatio="none" style="display:block;margin-bottom:8px;">
+          <line x1="0" y1="14" x2="280" y2="14" stroke="#E8E4DA" stroke-width="0.5"/>
+          <line x1="0" y1="28" x2="280" y2="28" stroke="#E8E4DA" stroke-width="0.5"/>
+          <line x1="0" y1="42" x2="280" y2="42" stroke="#E8E4DA" stroke-width="0.5"/>
+          <polyline fill="rgba(214,164,40,0.08)" stroke="none" points="{{ _sp[0].polyline }} 280,56 0,56"/>
+          <polyline fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{ _sp[0].polyline }}"/>
+          {% if _sp[0].points %}{% for _pt in _sp[0].points %}
+          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.4' }}"/>
+          {% endfor %}{% endif %}
         </svg>
-      </div>
-      {% endif %}
+        {% endif %}
       {% endif %}
 
       {# Dimension bars #}
       {% if progress_data.dim_avgs %}
       {% set _dim_labels = {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
-      {% set _sorted_dims = progress_data.dim_avgs.items()|list %}
-      {% set _max_dim = _sorted_dims|sort(attribute=1,reverse=true)|first %}
-      {% set _min_dim = _sorted_dims|sort(attribute=1)|first %}
-      {% for dim, avg in _sorted_dims %}
+      {% set _sorted = progress_data.dim_avgs.items()|list %}
+      {% set _max_dim = _sorted|sort(attribute=1,reverse=true)|first %}
+      {% set _min_dim = _sorted|sort(attribute=1)|first %}
+      {% for dim, avg in _sorted %}
       {% set _is_strong = dim == _max_dim[0] %}
       {% set _is_focus  = dim == _min_dim[0] %}
       <div style="margin-bottom:5px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
           <span style="font-size:11px;color:var(--d-muted);">{{ _dim_labels.get(dim, dim|title) }}</span>
-          <span style="font-size:12px;font-weight:700;color:{{ '#2A7A3A' if _is_strong else ('#D97A2A' if _is_focus else 'var(--d-text)') }};">
-            {{ '%.1f'|format(avg) }}{% if _is_focus %} ↑{% endif %}
-          </span>
+          <span style="font-size:12px;font-weight:700;color:{{ '#2A7A3A' if _is_strong else ('#D97A2A' if _is_focus else 'var(--d-text)') }};">{{ '%.1f'|format(avg) }}{% if _is_focus %} ↑{% endif %}</span>
         </div>
         <div style="height:3px;background:var(--d-border);border-radius:2px;">
           <div style="height:100%;width:{{ (avg*10)|int }}%;border-radius:2px;background:{{ '#2A7A3A' if _is_strong else ('#D97A2A' if _is_focus else '#8A7A5A') }};"></div>
         </div>
       </div>
       {% endfor %}
-      {% if _min_dim %}
-      <div style="font-size:10px;color:#D97A2A;margin-top:4px;">↑ Focus area this month</div>
-      {% endif %}
+      {% if _min_dim %}<div style="font-size:10px;color:#D97A2A;margin-top:4px;">↑ Focus area this month</div>{% endif %}
       {% endif %}
 
     </div>
     {% endif %}
 
-    {# Points & Redemptions #}
+        {# Points & Redemptions #}
     <div class="rp-card">
       <div class="rp-label">Points &amp; Redemptions</div>
       <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ (current_user.points_balance or 0)|int }}</div>
