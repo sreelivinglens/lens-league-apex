@@ -506,6 +506,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
 
     {# ── TODAY'S MISSION (practice card) ── #}
+    {% if show_mission %}
     <div class="practice-card">
       <div class="practice-content">
         <div>
@@ -516,23 +517,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
               <div class="practice-meta-label">Focus</div>
               <div class="practice-meta-val">{{ lesson.dim_short if lesson else 'Timing' }}</div>
             </div>
-            {% if weather %}
-            <div>
-              <div class="practice-meta-label">Weather</div>
-              <div class="practice-meta-val">{{ weather.condition or 'Any light works' }}</div>
-            </div>
-            {% endif %}
-            {% if dash_advisory and dash_advisory.get('location_name') %}
-            <div>
-              <div class="practice-meta-label">Location</div>
-              <div class="practice-meta-val">{{ dash_advisory.location_name }}</div>
-            </div>
-            {% endif %}
           </div>
         </div>
         <div class="practice-actions">
           <a href="{{ url_for('mission') }}" class="practice-cta">Begin Today's Practice →</a>
-          <a href="{{ url_for('dashboard') }}" class="practice-skip">or Skip for now</a>
+          <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline;">
+            <button type="submit" class="practice-skip" style="background:none;border:none;padding:0;cursor:pointer;">or Skip for now</button>
+          </form>
         </div>
       </div>
       <div class="practice-img">
@@ -544,6 +535,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div class="practice-img-grad"></div>
       </div>
     </div>
+    {% endif %}{# end show_mission #}
 
     {# ── LOCATION ADVISORY — desktop ── #}
     {% if dash_advisory and dash_advisory.get('location_name') %}
@@ -641,13 +633,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── RECENT UPLOADS ── #}
+    {# ── MY GALLERY ── #}
     {% if images and images.items %}
     {% set _scored = images.items|selectattr('score')|selectattr('thumb_url')|list %}
     {% if _scored %}
     <div class="recent-card">
       <div class="recent-hdr">
-        <div class="card-eyebrow" style="margin-bottom:0;">Recent Uploads</div>
+        <div class="card-eyebrow" style="margin-bottom:0;">My Gallery</div>
         <a href="{{ url_for('my_gallery') }}" class="recent-link">View all {{ stats.total }} →</a>
       </div>
       <div class="recent-grid">
@@ -793,6 +785,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   <div style="padding:0 16px; display:flex; flex-direction:column; gap:12px; padding-bottom:100px;">
 
     {# ── TODAY'S PRACTICE ── #}
+    {% if show_mission %}
     <div class="mob-practice">
       <div style="padding:12px 14px 8px; border-bottom:1px solid var(--d-border);">
         <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
@@ -802,16 +795,6 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <div style="font-size:17px;font-weight:700;color:var(--d-dark);line-height:1.3;margin-bottom:8px;">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
           {% if lesson and lesson.principle %}
           <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
-          {% endif %}
-          {% if dash_advisory and dash_advisory.get('location_name') %}
-          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--d-muted);margin-bottom:4px;">
-            <span>📍</span><span>{{ dash_advisory.location_name }}</span>
-          </div>
-          {% endif %}
-          {% if weather %}
-          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--d-muted);">
-            <span>⏱</span><span>{{ weather.best_time or '6:05 – 7:20 am' }}</span>
-          </div>
           {% endif %}
         </div>
         <div class="mob-practice-img">
@@ -823,9 +806,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         </div>
       </div>
       <div style="padding:10px 14px;">
-        <a href="{{ url_for('mission') }}" style="display:block;background:var(--d-gold);color:#111;font-size:14px;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;text-align:center;">Begin Today's Practice →</a>
+        <a href="{{ url_for('mission') }}" style="display:block;background:var(--d-gold);color:#111;font-size:14px;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;">Begin Today's Practice →</a>
+        <form method="POST" action="{{ url_for('skip_mission') }}" style="text-align:center;margin-top:8px;">
+          <button type="submit" style="background:none;border:none;font-size:13px;color:var(--d-muted);cursor:pointer;padding:4px 0;">or Skip for now</button>
+        </form>
       </div>
     </div>
+    {% endif %}{# end show_mission mobile #}
 
 
       {# ── LOCATION ADVISORY — mobile ── #}
