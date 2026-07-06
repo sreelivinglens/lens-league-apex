@@ -227,8 +227,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   .sidenav {
     display: flex; flex-direction: column;
     background: var(--d-cream); border-right: 1px solid var(--d-border);
-    padding: 20px 0; position: sticky; top: 64px;
-    max-height: calc(100vh - 64px); overflow-y: auto;
+    padding: 20px 0 0; position: sticky; top: 64px;
+    height: calc(100vh - 64px); overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
   }
   .sidenav-item {
     display: flex; align-items: center; gap: 10px;
@@ -281,7 +282,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     border-left: 1px solid var(--d-border);
     padding: 24px 18px; gap: 12px;
     position: sticky; top: 64px;
-    max-height: calc(100vh - 64px); overflow-y: auto;
+    height: calc(100vh - 64px); overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
   }
 
   /* Hide mobile-only quote strip */
@@ -372,14 +374,26 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <div class="greeting">
       <div>
         <div class="greeting-name">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}!</div>
-        <div class="greeting-sub">{% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}{% else %}Today's practice begins here.{% endif %}</div>
+        <div class="greeting-sub">
+          {% if progress_data and progress_data.count > 0 %}
+            {% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}. {% endif %}
+            From your {{ progress_data.count }} photographs, you've improved most in
+            <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong>
+            — keep building on
+            <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.weakest, progress_data.weakest|title) }}</strong>.
+          {% elif dash_advisory and dash_advisory.get('light_note') %}
+            {{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}
+          {% else %}
+            Today's practice begins here.
+          {% endif %}
+        </div>
       </div>
-      <div class="streak">
-        <span style="font-size:20px;">🔥</span>
+      <a href="{{ url_for('my_gallery') }}" class="streak" style="text-decoration:none;">
+        <span style="font-size:20px;">📷</span>
         <span class="streak-count">{{ stats.total or 0 }}</span>
-        <div class="streak-txt">Day Streak<br><span style="font-size:10px;">Keep it going!</span></div>
+        <div class="streak-txt">Photographs<br><span style="font-size:10px;">View all →</span></div>
         <span style="color:var(--d-muted); font-size:13px; margin-left:4px;">›</span>
-      </div>
+      </a>
     </div>
 
     {# ── TODAY'S MISSION (practice card) ── #}
@@ -408,7 +422,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           </div>
         </div>
         <div class="practice-actions">
-          <a href="{{ url_for('upload') }}" class="practice-cta">Begin Today's Practice →</a>
+          <a href="{{ url_for('mission') }}" class="practice-cta">Begin Today's Practice →</a>
           <a href="{{ url_for('dashboard') }}" class="practice-skip">or Skip for now</a>
         </div>
       </div>
