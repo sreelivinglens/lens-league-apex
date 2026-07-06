@@ -35,7 +35,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 }
 
 /* ── LAYOUT ── */
-.dash-wrap { background: var(--d-cream); min-height: 100vh; }
+.dash-wrap { background: var(--d-cream); min-height: 100vh; min-height: -webkit-fill-available; }
 
 /* Mobile default: single column */
 .dash-layout {
@@ -75,7 +75,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   border-radius: 20px; padding: 4px 10px; cursor: pointer;
 }
 .streak-count { font-size: 18px; font-weight: 800; color: var(--d-dark); }
-.streak-txt { font-size: 11px; color: var(--d-muted); line-height: 1.3; }
+.streak-txt { font-size: 13px; color: var(--d-muted); line-height: 1.3; }
 
 /* ─────────────────────────────────────────
    PRACTISE CARD
@@ -93,7 +93,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   display: flex; flex-direction: column; justify-content: space-between;
 }
 .practice-eyebrow {
-  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
   text-transform: uppercase; color: var(--d-gold); margin-bottom: 6px;
 }
 .practice-title {
@@ -102,8 +102,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 }
 .practice-meta { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
 .practice-meta-label {
-  font-size: 9px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  font-size: 13px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.65);
 }
 .practice-meta-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
 .practice-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -111,7 +111,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   background: var(--d-gold); color: #111; font-size: 13px; font-weight: 700;
   padding: 9px 18px; border-radius: 9px; text-decoration: none; white-space: nowrap;
 }
-.practice-skip { font-size: 12px; color: rgba(255,255,255,0.35); text-decoration: none; cursor: pointer; }
+.practice-skip { font-size: 13px; color: rgba(255,255,255,0.65); text-decoration: none; cursor: pointer; }
 .practice-img { position: relative; overflow: hidden; }
 .practice-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .practice-img-grad {
@@ -127,21 +127,21 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   border: 1px solid var(--d-border); padding: 16px 18px;
 }
 .card-eyebrow {
-  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
   text-transform: uppercase; color: var(--d-gold-dk); margin-bottom: 12px;
 }
 .today-grid { display: flex; flex-direction: column; gap: 14px; }
 .evo-score { font-size: 40px; font-weight: 800; color: var(--d-dark); line-height: 1; }
-.evo-grade { font-size: 12px; font-weight: 600; color: var(--d-green); margin: 3px 0; }
-.evo-pool { font-size: 11px; color: var(--d-muted); }
+.evo-grade { font-size: 13px; font-weight: 600; color: var(--d-green); margin: 3px 0; }
+.evo-pool { font-size: 13px; color: var(--d-muted); }
 .trend-wrap { display: flex; flex-direction: column; gap: 4px; }
-.trend-label { font-size: 10px; color: var(--d-muted); }
-.trend-dates { display: flex; justify-content: space-between; font-size: 10px; color: var(--d-muted); margin-top: 4px; }
+.trend-label { font-size: 13px; color: var(--d-muted); }
+.trend-dates { display: flex; justify-content: space-between; font-size: 13px; color: var(--d-muted); margin-top: 4px; }
 .dim-row { margin-bottom: 8px; }
 .dim-row:last-child { margin-bottom: 0; }
 .dim-top { display: flex; justify-content: space-between; align-items: center; }
-.dim-name { font-size: 11px; color: var(--d-muted); }
-.dim-val { font-size: 12px; font-weight: 700; color: var(--d-text); }
+.dim-name { font-size: 13px; color: var(--d-muted); }
+.dim-val { font-size: 13px; font-weight: 700; color: var(--d-text); }
 .dim-val.strong { color: var(--d-green); }
 .dim-val.focus { color: #D97A2A; }
 .dim-bar { height: 3px; background: var(--d-border); border-radius: 2px; margin-top: 3px; }
@@ -157,14 +157,14 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   border: 1px solid var(--d-border); padding: 12px 14px;
 }
 .recent-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.recent-link { font-size: 12px; color: var(--d-dark); font-weight: 600; text-decoration: none; }
+.recent-link { font-size: 13px; color: var(--d-dark); font-weight: 600; text-decoration: none; }
 .recent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .recent-item { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; }
 .recent-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 .recent-score {
   position: absolute; bottom: 4px; left: 4px;
   background: rgba(0,0,0,0.65); color: #fff;
-  font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
+  font-size: 13px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
 }
 
 /* ─────────────────────────────────────────
@@ -176,7 +176,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   padding: 9px 11px;
 }
 .rp-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
   text-transform: uppercase; color: var(--d-muted); margin-bottom: 8px; display: block;
 }
 .latest-eval { display: flex; gap: 10px; align-items: flex-start; }
@@ -184,29 +184,29 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 .latest-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .latest-title { font-size: 13px; font-weight: 700; color: var(--d-dark); margin-bottom: 2px; }
 .latest-score { font-size: 20px; font-weight: 800; color: var(--d-dark); line-height: 1; }
-.latest-tier { font-size: 11px; color: var(--d-green); font-weight: 600; }
-.latest-date { font-size: 10px; color: var(--d-muted); margin-top: 2px; }
+.latest-tier { font-size: 13px; color: var(--d-green); font-weight: 600; }
+.latest-date { font-size: 13px; color: var(--d-muted); margin-top: 2px; }
 .latest-link {
-  display: block; margin-top: 8px; font-size: 11px; font-weight: 600; color: var(--d-dark);
+  display: block; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--d-dark);
   text-decoration: none; border-top: 1px solid var(--d-border); padding-top: 8px;
 }
 .standing-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 .standing-val { font-size: 14px; font-weight: 700; color: var(--d-dark); }
-.standing-avg { font-size: 12px; color: var(--d-muted); }
-.standing-pct { font-size: 11px; color: var(--d-green); font-weight: 600; margin-bottom: 8px; }
+.standing-avg { font-size: 13px; color: var(--d-muted); }
+.standing-pct { font-size: 13px; color: var(--d-green); font-weight: 600; margin-bottom: 8px; }
 .standing-bar { height: 4px; background: var(--d-border); border-radius: 2px; }
 .standing-fill { height: 100%; background: var(--d-gold); border-radius: 2px; }
 .mentor-quote {
-  font-size: 12px; font-style: italic; color: var(--d-text); line-height: 1.5;
+  font-size: 13px; font-style: italic; color: var(--d-text); line-height: 1.5;
   margin-bottom: 8px; border-left: 2px solid var(--d-gold); padding-left: 10px;
 }
-.mentor-name { font-size: 12px; font-weight: 700; color: var(--d-dark); }
-.mentor-tier-badge { font-size: 10px; color: var(--d-muted); }
+.mentor-name { font-size: 13px; font-weight: 700; color: var(--d-dark); }
+.mentor-tier-badge { font-size: 13px; color: var(--d-muted); }
 .aea-card { background: var(--d-navy); border-radius: 10px; padding: 9px 11px; }
-.aea-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
+.aea-label { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
 .aea-title { font-size: 14px; font-weight: 700; color: #F6F2E9; margin-bottom: 3px; }
-.aea-sub { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 8px; }
-.aea-link { font-size: 11px; color: var(--d-gold); font-weight: 600; text-decoration: none; }
+.aea-sub { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 8px; }
+.aea-link { font-size: 13px; color: var(--d-gold); font-weight: 600; text-decoration: none; }
 
 /* ─────────────────────────────────────────
    MOBILE — bottom quote strip
@@ -216,7 +216,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   text-align: center;
 }
 .dash-quote-txt { font-size: 14px; color: rgba(255,255,255,0.7); font-style: italic; line-height: 1.6; margin-bottom: 6px; }
-.dash-quote-sig { font-size: 12px; color: var(--d-gold); font-weight: 600; }
+.dash-quote-sig { font-size: 13px; color: var(--d-gold); font-weight: 600; }
 
 /* ═══════════════════════════════════════
    DESKTOP ≥ 1025px — 3-column layout
@@ -234,12 +234,12 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     display: flex; flex-direction: column;
     background: var(--d-cream); border-right: 1px solid var(--d-border);
     padding: 20px 0 0; position: sticky; top: 64px;
-    height: calc(100vh - 64px); overflow-y: auto;
+    height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
   }
   .sidenav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 7px 16px; font-size: 12px; font-weight: 500;
+    padding: 7px 16px; font-size: 13px; font-weight: 500;
     color: var(--d-muted); text-decoration: none;
     border-left: 3px solid transparent; transition: all 0.15s;
   }
@@ -253,14 +253,14 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   .sidenav-divider { height: 1px; background: var(--d-border); margin: 10px 16px; }
   .sidenav-bottom { margin-top: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
   .sub-card { background: var(--d-dark); border-radius: 12px; padding: 12px 14px; }
-  .sub-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
+  .sub-label { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
   .sub-plan { font-size: 14px; font-weight: 700; color: #F6F2E9; }
-  .sub-price { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
-  .sub-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #F6F2E9; font-size: 11px; font-weight: 600; padding: 7px; border-radius: 8px; text-decoration: none; }
+  .sub-price { font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 8px; }
+  .sub-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #F6F2E9; font-size: 13px; font-weight: 600; padding: 7px; border-radius: 8px; text-decoration: none; }
   .pts-card { background: var(--d-card); border: 1px solid var(--d-border); border-radius: 12px; padding: 10px 14px; }
-  .pts-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-muted); margin-bottom: 4px; }
+  .pts-label { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-muted); margin-bottom: 4px; }
   .pts-val { font-size: 26px; font-weight: 800; color: var(--d-dark); line-height: 1; }
-  .pts-link { font-size: 11px; color: var(--d-gold-dk); font-weight: 600; text-decoration: none; }
+  .pts-link { font-size: 13px; color: var(--d-gold-dk); font-weight: 600; text-decoration: none; }
 
   /* ── Centre column ── */
   .centre {
@@ -288,7 +288,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     border-left: 1px solid var(--d-border);
     padding: 16px 14px; gap: 8px;
     position: sticky; top: 64px;
-    height: calc(100vh - 64px); overflow-y: auto;
+    height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
   }
 
@@ -323,7 +323,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 .dim-sparkline-name { font-size: 14px; font-weight: 600; color: var(--d-dark); min-width: 90px; }
 .dim-sparkline-val { font-size: 14px; font-weight: 800; color: var(--d-dark); min-width: 36px; text-align: right; }
 .dim-trend-pill {
-  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px;
+  font-size: 13px; font-weight: 700; padding: 2px 7px; border-radius: 8px;
   white-space: nowrap;
 }
 .dim-trend-pill.up { background: #EAF3DE; color: #2A7A3A; }
@@ -500,7 +500,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <a href="{{ url_for('my_gallery') }}" class="streak" style="text-decoration:none;">
         <span style="font-size:20px;">📷</span>
         <span class="streak-count">{{ stats.total or 0 }}</span>
-        <div class="streak-txt">Photographs<br><span style="font-size:10px;">View all →</span></div>
+        <div class="streak-txt">Photographs<br><span style="font-size:13px;">View all →</span></div>
         <span style="color:var(--d-muted); font-size:13px; margin-left:4px;">›</span>
       </a>
     </div>
@@ -550,10 +550,10 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:14px 18px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:2px;">Sharpen Your Eye</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:2px;">Sharpen Your Eye</div>
           <div style="font-size:13px;font-weight:600;color:var(--d-dark);">Evaluate these {{ peer_queue|length }} images · earn 2 pts each</div>
         </div>
-        <span style="font-size:12px;color:var(--d-muted);font-style:italic;">+2 bonus if your score matches the engine</span>
+        <span style="font-size:13px;color:var(--d-muted);font-style:italic;">+2 bonus if your evaluation matches the engine</span>
       </div>
       <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
         {% for _pq in peer_queue %}
@@ -566,8 +566,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
                onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
           {% endif %}
           <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
-            <span style="font-size:11px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
+            <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
           </div>
         </a>
         {% endfor %}
@@ -583,14 +583,14 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="background:#EAF3DE;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:6px;">
           <div style="width:5px;height:5px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-          <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
+          <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
         </div>
         <div style="display:flex;gap:5px;">
           {% if dash_advisory.get('light_note') %}
-          <span style="background:#FDF3DC;color:#8A5A00;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>
+          <span style="background:#FDF3DC;color:#8A5A00;font-size:13px;font-weight:600;padding:2px 8px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>
           {% endif %}
           {% if dash_advisory.get('genre') %}
-          <span style="background:#E6EFF8;color:#1A4A7A;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
+          <span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:600;padding:2px 8px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
           {% endif %}
         </div>
       </div>
@@ -600,36 +600,36 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
             <div style="font-size:13px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
 {% set _adv_genre = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
-            {% if _adv_genre %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">{{ _adv_genre|title }}</span>{% endif %}
+            {% if _adv_genre %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:700;padding:2px 8px;border-radius:20px;">{{ _adv_genre|title }}</span>{% endif %}
           </div>
-          <div style="font-size:11px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if dash_advisory.get('why_it_matters') %}
-          <div style="font-size:11px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:4px;">{{ dash_advisory.why_it_matters }}</div>
+          <div style="font-size:13px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:4px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
           {% if weather and weather.state == 'red' %}
-          <div style="font-size:11px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FDEAEA;border-radius:6px;color:#A32D2D;">
+          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FDEAEA;border-radius:6px;color:#A32D2D;">
             ⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }} Skip the outdoor session today.
           </div>
           {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:11px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FEF3DC;border-radius:6px;color:#7A4A00;">
+          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FEF3DC;border-radius:6px;color:#7A4A00;">
             ⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}
           </div>
           {% endif %}
           {% if progress_data and progress_data.weakest %}
           {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
           {% set _genre_map = {'Wildlife':'Wildlife photography','Street':'Street photography','Landscape':'Landscape photography','Portrait':'Portrait photography','Architecture':'Architecture photography','Creative':'Creative photography','Documentary':'Documentary photography'} %}
-          <div style="font-size:11px;color:var(--d-green);font-style:italic;line-height:1.5;margin-top:6px;padding:6px 10px;background:#EAF3DE;border-radius:6px;">
+          <div style="font-size:13px;color:var(--d-green);font-style:italic;line-height:1.5;margin-top:6px;padding:6px 10px;background:#EAF3DE;border-radius:6px;">
             {% if progress_data.top_genre and dash_advisory.get('genre') and progress_data.top_genre|lower == dash_advisory.genre|lower %}
-            Your best genre is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
+            Your best interest is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
             {% else %}
-            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your score.
+            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your evaluation.
             {% endif %}
           </div>
           {% endif %}
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:10px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:10px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:10px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+            {% if dash_advisory.get('best_light_time') %}<span style="font-size:13px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if dash_advisory.get('distance_hours') %}<span style="font-size:13px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+            {% if weather and weather.condition %}<span style="font-size:13px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0;">
@@ -637,9 +637,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
             <div style="width:12px;height:12px;background:#D6A428;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:1.5px solid #fff;"></div>
           </div>
           <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-             style="font-size:11px;font-weight:600;color:var(--d-dark);text-decoration:none;white-space:nowrap;">Get directions →</a>
+             style="font-size:13px;font-weight:600;color:var(--d-dark);text-decoration:none;white-space:nowrap;">Get directions →</a>
           <a href="{{ url_for('profile') }}#location"
-             style="font-size:10px;color:var(--d-muted);text-decoration:none;white-space:nowrap;">Change location</a>
+             style="font-size:13px;color:var(--d-muted);text-decoration:none;white-space:nowrap;">Change location</a>
         </div>
       </div>
     </div>
@@ -684,7 +684,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         </div>
         <div>
           <div class="latest-title">{{ _last.asset_name or (_last.genre or 'Photograph') }}</div>
-          <div class="latest-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<span style="font-size:12px;font-weight:400;color:var(--d-muted)">/10</span></div>
+          <div class="latest-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<span style="font-size:13px;font-weight:400;color:var(--d-muted)">/10</span></div>
           <div class="latest-tier">{{ _last.tier or '' }}</div>
           <div class="latest-date">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
         </div>
@@ -700,7 +700,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <div class="rp-card" style="cursor:pointer;" onclick="document.getElementById('standing-modal').style.display='flex'">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
         <div class="rp-label" style="margin-bottom:0;">My Standing</div>
-        <span style="font-size:10px;color:var(--d-muted);">▲ full view</span>
+        <span style="font-size:13px;color:var(--d-muted);">▲ full view</span>
       </div>
       <div class="standing-row">
         <span class="standing-val">{{ progress_data.avg_tier }}</span>
@@ -715,8 +715,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <div class="rp-card">
       <div class="rp-label">Points &amp; Redemptions</div>
       <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ (current_user.points_balance or 0)|int }}</div>
-      <div style="font-size:11px;color:var(--d-muted);margin-bottom:8px;">Earn on every upload</div>
-      <a href="{{ url_for('redeem') }}" style="font-size:11px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
+      <div style="font-size:13px;color:var(--d-muted);margin-bottom:8px;">Earn on every upload</div>
+      <a href="{{ url_for('redeem') }}" style="font-size:13px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
     </div>
 
     {# Weekly Assignment #}
@@ -727,8 +727,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div class="rp-label" style="margin-bottom:0;color:#27500A;">Weekly Assignment</div>
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ active_challenge.prompt_title }}</div>
-      <div style="font-size:11px;color:var(--d-muted);margin-bottom:8px;">closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
-      <a href="{{ url_for('weekly_challenge') }}" style="font-size:12px;font-weight:700;color:#fff;background:#27500A;padding:8px 14px;border-radius:8px;text-decoration:none;display:inline-block;">View assignment →</a>
+      <div style="font-size:13px;color:var(--d-muted);margin-bottom:8px;">closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
+      <a href="{{ url_for('weekly_challenge') }}" style="font-size:13px;font-weight:700;color:#fff;background:#27500A;padding:8px 14px;border-radius:8px;text-decoration:none;display:inline-block;">View assignment →</a>
     </div>
     {% endif %}
 
@@ -745,7 +745,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         </div>
       </a>
       <div class="mentor-quote">"Patience is not about waiting. It's about how you observe while you wait."</div>
-      <a href="{{ url_for('mentors') }}" style="display:block;margin-top:10px;background:var(--d-gold);color:#111;font-size:12px;font-weight:700;padding:9px 14px;border-radius:9px;text-decoration:none;text-align:center;">Review my Image →</a>
+      <a href="{{ url_for('mentors') }}" style="display:block;margin-top:10px;background:var(--d-gold);color:#111;font-size:13px;font-weight:700;padding:9px 14px;border-radius:9px;text-decoration:none;text-align:center;">Review my Image →</a>
     </div>
 
     {# Annual Excellence Award #}
@@ -799,21 +799,21 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# ── TODAY'S PRACTICE ── #}
     <div class="mob-practice">
       <div style="padding:12px 14px 8px; border-bottom:1px solid var(--d-border);">
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
       </div>
       <div class="mob-practice-inner">
         <div class="mob-practice-content">
           <div style="font-size:17px;font-weight:700;color:var(--d-dark);line-height:1.3;margin-bottom:8px;">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
           {% if lesson and lesson.principle %}
-          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
+          <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
           {% endif %}
           {% if dash_advisory and dash_advisory.get('location_name') %}
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--d-muted);margin-bottom:4px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--d-muted);margin-bottom:4px;">
             <span>📍</span><span>{{ dash_advisory.location_name }}</span>
           </div>
           {% endif %}
           {% if weather %}
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--d-muted);">
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--d-muted);">
             <span>⏱</span><span>{{ weather.best_time or '6:05 – 7:20 am' }}</span>
           </div>
           {% endif %}
@@ -837,46 +837,46 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="background:var(--d-card);border:1px solid var(--d-border);border-radius:12px;overflow:hidden;">
         <div style="background:#EAF3DE;padding:10px 14px;display:flex;align-items:center;gap:6px;">
           <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-          <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
+          <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
         </div>
         <div style="padding:12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
             <div style="font-size:16px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}</div>
 {% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
-            {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
+            {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
           </div>
-          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if dash_advisory.get('why_it_matters') %}
-          <div style="font-size:12px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_advisory.why_it_matters }}</div>
+          <div style="font-size:13px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
           {% if weather and weather.state == 'red' %}
-          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
+          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
             ⚠ {{ weather.message or 'Poor conditions today — skip the outdoor session.' }}
           </div>
           {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
+          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
             ⚡ {{ weather.message or 'Marginal conditions — go early or plan for indoors.' }}
           </div>
           {% endif %}
           {% if progress_data and progress_data.weakest %}
           {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
           {% set _genre_map = {'Wildlife':'Wildlife photography','Street':'Street photography','Landscape':'Landscape photography','Portrait':'Portrait photography','Architecture':'Architecture photography','Creative':'Creative photography','Documentary':'Documentary photography'} %}
-          <div style="font-size:12px;color:var(--d-green);font-style:italic;line-height:1.5;margin-bottom:10px;padding:8px 12px;background:#EAF3DE;border-radius:8px;">
+          <div style="font-size:13px;color:var(--d-green);font-style:italic;line-height:1.5;margin-bottom:10px;padding:8px 12px;background:#EAF3DE;border-radius:8px;">
             {% if progress_data.top_genre and dash_advisory.get('genre') and progress_data.top_genre|lower == dash_advisory.genre|lower %}
-            Your best genre is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
+            Your best interest is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
             {% else %}
-            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your score.
+            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your evaluation.
             {% endif %}
           </div>
           {% endif %}
           <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:11px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:11px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:11px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+            {% if dash_advisory.get('best_light_time') %}<span style="font-size:13px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if dash_advisory.get('distance_hours') %}<span style="font-size:13px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+            {% if weather and weather.condition %}<span style="font-size:13px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-            {% if dash_advisory.get('light_note') %}<span style="background:#FDF3DC;color:#8A5A00;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>{% endif %}
-            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
+            {% if dash_advisory.get('light_note') %}<span style="background:#FDF3DC;color:#8A5A00;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>{% endif %}
+            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--d-border);">
             <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
@@ -886,7 +886,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
             <span style="font-size:13px;color:var(--d-dark);">→</span>
           </div>
           <a href="{{ url_for('profile') }}#location"
-             style="display:block;font-size:11px;color:var(--d-muted);text-decoration:none;margin-top:6px;">Not your city? Update location →</a>
+             style="display:block;font-size:13px;color:var(--d-muted);text-decoration:none;margin-top:6px;">Not your city? Update location →</a>
         </div>
       </div>
       {% endif %}
@@ -894,8 +894,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# ── TODAY'S REFLECTION ── #}
     {% if _last and _last.score %}
     <div class="mob-reflection">
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">My Gallery</div>
-      <div style="font-size:12px;color:var(--d-muted);margin-bottom:2px;">Latest Score</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">My Gallery</div>
+      <div style="font-size:13px;color:var(--d-muted);margin-bottom:2px;">Latest Evaluation</div>
       <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
         <div style="font-size:48px;font-weight:800;color:var(--d-dark);line-height:1;">{{ '%.1f'|format(_last.score) }}<span style="font-size:20px;font-weight:400;color:var(--d-muted)">/10</span></div>
         {# Mini sparkline #}
@@ -931,7 +931,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% set _dim_icons  = {'dod':'⬛','dm':'⏱','aq':'👁','wonder':'✦','disruption':'◈'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     <div class="mob-evolution">
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:10px;">Your Evolution</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:10px;">Your Evolution</div>
       {% for dim, sp in progress_data.dim_sparklines.items() %}
       {% set _avg = progress_data.dim_avgs.get(dim, 0) %}
       <div class="mob-dim-row">
@@ -964,11 +964,11 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       </div>
       {% endif %}
       <div style="flex:1; min-width:0;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Thought</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Thought</div>
         {% if lesson.master_quote %}
         <div style="font-size:14px;font-style:italic;color:var(--d-dark);line-height:1.5;margin-bottom:4px;">"{{ lesson.master_quote[:100] }}{% if lesson.master_quote|length > 100 %}…{% endif %}"</div>
         {% endif %}
-        <div style="font-size:12px;color:var(--d-muted);">– {{ lesson.master }}</div>
+        <div style="font-size:13px;color:var(--d-muted);">– {{ lesson.master }}</div>
       </div>
     </div>
     {% endif %}
@@ -982,12 +982,12 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
              onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
              style="width:44px;height:44px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Mentor">
         <div style="min-width:0;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
           <div style="font-size:13px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
-          <div style="font-size:11px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
+          <div style="font-size:13px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
         </div>
       </a>
-      <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:11px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
+      <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:13px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
     </div>
 
   </div>
@@ -1006,17 +1006,17 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <button class="standing-modal-close" onclick="document.getElementById('standing-modal').style.display='none'">×</button>
     {% if progress_data %}
     <div style="margin-bottom:16px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">My Standing</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">My Standing</div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
         <span style="font-size:32px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
         <span style="font-size:14px;color:var(--d-muted);">Average evaluation</span>
       </div>
       <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
-      <div style="font-size:12px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
+      <div style="font-size:13px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
       <div style="height:5px;background:var(--d-border);border-radius:3px;margin-bottom:16px;">
         <div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--d-gold);border-radius:3px;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--d-muted);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--d-muted);margin-bottom:16px;">
         <span>{{ progress_data.prev_tier or '' }}</span>
         <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.avg_tier }}</span>
         <span>→ {{ progress_data.next_tier or '' }}</span>
@@ -1026,8 +1026,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# Lifetime score trend #}
     {% if progress_data.trend and progress_data.trend|length >= 2 %}
     <div style="margin-bottom:16px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:3px;">Lifetime score trend</div>
-      <div style="font-size:10px;color:var(--d-muted);margin-bottom:4px;">All {{ progress_data.count }} uploads</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:3px;">Lifetime evaluation trend</div>
+      <div style="font-size:13px;color:var(--d-muted);margin-bottom:4px;">All {{ progress_data.count }} uploads</div>
       {% set _t = progress_data.trend %}
       {% set _scores = _t|map(attribute='score')|list %}
       {% set _min = _scores|min %}
@@ -1057,7 +1057,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last 10 images</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last 10 images</div>
     {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     {% if progress_data.dim_sparklines %}
