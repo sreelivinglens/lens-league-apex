@@ -599,6 +599,26 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
           <div style="font-size:11px;color:var(--d-muted);line-height:1.5;margin-bottom:6px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          {% if weather and weather.state == 'red' %}
+          <div style="font-size:11px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FDEAEA;border-radius:6px;color:#A32D2D;">
+            ⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }} Skip the outdoor session today.
+          </div>
+          {% elif weather and weather.state == 'amber' %}
+          <div style="font-size:11px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FEF3DC;border-radius:6px;color:#7A4A00;">
+            ⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}
+          </div>
+          {% endif %}
+          {% if progress_data and progress_data.weakest %}
+          {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
+          {% set _genre_map = {'Wildlife':'Wildlife photography','Street':'Street photography','Landscape':'Landscape photography','Portrait':'Portrait photography','Architecture':'Architecture photography','Creative':'Creative photography','Documentary':'Documentary photography'} %}
+          <div style="font-size:11px;color:var(--d-green);font-style:italic;line-height:1.5;margin-top:6px;padding:6px 10px;background:#EAF3DE;border-radius:6px;">
+            {% if progress_data.top_genre and dash_advisory.get('genre') and progress_data.top_genre|lower == dash_advisory.genre|lower %}
+            Your best genre is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
+            {% else %}
+            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your score.
+            {% endif %}
+          </div>
+          {% endif %}
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             {% if dash_advisory.get('best_time') %}<span style="font-size:10px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_time }}</span>{% endif %}
             {% if weather and weather.condition %}<span style="font-size:10px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
@@ -811,7 +831,27 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         </div>
         <div style="padding:12px 14px;">
           <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:4px;">{{ dash_advisory.location_name }}</div>
-          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:6px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          {% if weather and weather.state == 'red' %}
+          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
+            ⚠ {{ weather.message or 'Poor conditions today — skip the outdoor session.' }}
+          </div>
+          {% elif weather and weather.state == 'amber' %}
+          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
+            ⚡ {{ weather.message or 'Marginal conditions — go early or plan for indoors.' }}
+          </div>
+          {% endif %}
+          {% if progress_data and progress_data.weakest %}
+          {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
+          {% set _genre_map = {'Wildlife':'Wildlife photography','Street':'Street photography','Landscape':'Landscape photography','Portrait':'Portrait photography','Architecture':'Architecture photography','Creative':'Creative photography','Documentary':'Documentary photography'} %}
+          <div style="font-size:12px;color:var(--d-green);font-style:italic;line-height:1.5;margin-bottom:10px;padding:8px 12px;background:#EAF3DE;border-radius:8px;">
+            {% if progress_data.top_genre and dash_advisory.get('genre') and progress_data.top_genre|lower == dash_advisory.genre|lower %}
+            Your best genre is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
+            {% else %}
+            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your score.
+            {% endif %}
+          </div>
+          {% endif %}
           <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
             {% if dash_advisory.get('best_time') %}<span style="font-size:11px;color:var(--d-muted);">⏱ {{ dash_advisory.best_time }}</span>{% endif %}
             {% if weather and weather.condition %}<span style="font-size:11px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
