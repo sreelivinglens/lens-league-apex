@@ -20,7 +20,8 @@
    #1A1A18 text · #F5C518 gold (dark bg only)
    #0D0D0B hero/footer bg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+body:has(.sl-hiw) main,
+body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
 .sl-hiw, .sl-hiw * {
   font-family: 'Inter', sans-serif !important;
@@ -650,21 +651,65 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     font-size: 15px;
   }
 }
+.sl-hero-credit-pill {
+  position: absolute; bottom: 8px; right: 10px; z-index: 3;
+  background: rgba(13,11,8,0.52); color: rgba(255,255,255,0.88);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+  padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+/* ── Hero image wrapper — anchors credit pill to image corner ── */
+.sl-hero-img-wrap {
+  position: relative;
+  line-height: 0;
+}
+@media (min-width: 769px) {
+  /* Desktop: wrap fills the hero section absolutely, img stays absolute within it */
+  .sl-hero-img-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+}
+@media (max-width: 768px) {
+  /* Mobile: wrap is a normal block, img is static at 16:9 */
+  .sl-hero-img-wrap {
+    display: block;
+    width: 100%;
+    position: relative;
+  }
+  .sl-hero-img-wrap img {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+  }
+}
+
 </style>
 {% endblock %}
 
+{% block body_class %}page-hiw{% endblock %}
 {% block content %}
 <div class="sl-hiw">
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
   <section class="sl-hiw-hero">
     {% if hiw_hero and hiw_hero.thumb_url %}
+    <div class="sl-hero-img-wrap">
     <img
       class="sl-hiw-hero-img"
       src="{{ hiw_hero.thumb_url }}"
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
     >
+    {% if hiw_hero and hiw_hero.photographer_name %}
+    <span class="sl-hero-credit-pill">&copy; {{ hiw_hero.photographer_name }}{% if hiw_hero.score %} &middot; {{ '%.2f'|format(hiw_hero.score) }}{% endif %}</span>
+    {% endif %}
+    </div>
     {% endif %}
     <div class="sl-hiw-hero-fade"></div>
     <div class="sl-hiw-hero-content">
