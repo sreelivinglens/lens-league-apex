@@ -731,7 +731,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# Mentor Guidance #}
     <div class="rp-card">
       <div class="rp-label">Mentor Guidance</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;text-decoration:none;">
         <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
              onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
              style="width:40px;height:40px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Ashok">
@@ -739,7 +739,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <div class="mentor-name">Ashok Kochhar</div>
           <div class="mentor-tier-badge">Grandmaster</div>
         </div>
-      </div>
+      </a>
       <div class="mentor-quote">"Patience is not about waiting. It's about how you observe while you wait."</div>
       <a href="{{ url_for('mentors') }}" style="display:block;margin-top:10px;background:var(--d-gold);color:#111;font-size:12px;font-weight:700;padding:9px 14px;border-radius:9px;text-decoration:none;text-align:center;">Review my Image →</a>
     </div>
@@ -889,7 +889,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">My Gallery</div>
       <div style="font-size:12px;color:var(--d-muted);margin-bottom:2px;">Latest Score</div>
       <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
-        <div style="font-size:48px;font-weight:800;color:var(--d-dark);line-height:1;">{{ (_last.score * 10)|int }}<span style="font-size:20px;font-weight:400;color:var(--d-muted)">/100</span></div>
+        <div style="font-size:48px;font-weight:800;color:var(--d-dark);line-height:1;">{{ '%.1f'|format(_last.score) }}<span style="font-size:20px;font-weight:400;color:var(--d-muted)">/10</span></div>
         {# Mini sparkline #}
         {% if progress_data and progress_data.dim_sparklines %}
         {% set _sp = progress_data.dim_sparklines.values()|list %}
@@ -969,14 +969,16 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# ── MENTOR GUIDANCE ── #}
     <div class="mob-mentor">
-      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-           onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
-           style="width:44px;height:44px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Mentor">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
-        <div style="font-size:13px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
-        <div style="font-size:11px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
-      </div>
+      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;flex:1;min-width:0;">
+        <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+             onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
+             style="width:44px;height:44px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Mentor">
+        <div style="min-width:0;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
+          <div style="font-size:13px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
+          <div style="font-size:11px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
+        </div>
+      </a>
       <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:11px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
     </div>
 
