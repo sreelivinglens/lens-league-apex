@@ -1732,6 +1732,12 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS mission_principle_id VARCHAR(10) DEFAULT NULL"
                 ))
+                # mission_skipped_date — stores the IST date the user last skipped
+                # the daily mission card. Dashboard suppresses the card for the rest
+                # of that IST day. Resets automatically the next day.
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS mission_skipped_date DATE DEFAULT NULL"
+                ))
                 db.session.commit()
                 print('Photo School columns OK.')
             except Exception as _ps_mig:
@@ -2072,8 +2078,8 @@ _TIER_JUMP_POINTS = {
 # ── Referral system helpers (Session 28) ──────────────────────────────────────
 
 REFERRAL_DISCOUNT_PRICES = {
-    'mobile': {'monthly': 180, 'half_yearly': 990, 'annual': 1800},
-    'camera': {'monthly': 180, 'half_yearly': 990, 'annual': 1800},
+    'mobile': {'monthly': 180, 'annual': 1800},
+    'camera': {'monthly': 180, 'annual': 1800},
 }
 
 def _generate_referral_code():
@@ -3955,6 +3961,22 @@ def dashboard():
             app.logger.warning(f'[mission_done] {_mdd}')
     # ── End Photo School ──────────────────────────────────────────────────
 
+    # ── Mission skip gate ─────────────────────────────────────────────────
+    # show_mission = False if user skipped the mission card today (IST).
+    # Reads mission_skipped_date directly via raw SQL — migration-only column.
+    _show_mission = True
+    try:
+        _ist_today = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
+        _skipped_row = db.session.execute(
+            db.text('SELECT mission_skipped_date FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _skipped_row and _skipped_row[0] and _skipped_row[0] == _ist_today:
+            _show_mission = False
+    except Exception as _sm_err:
+        app.logger.warning(f'[mission_skip_gate] {_sm_err}')
+    # ── End mission skip gate ─────────────────────────────────────────────
+
     # Mentor reviews — for notif strip
     mentor_reviews = []
     if current_user.role != 'admin':
@@ -4212,6 +4234,7 @@ def dashboard():
                            weather=_weather,
                            mission_due=_mission_due,
                            mission_done=_mission_done,
+                           show_mission=_show_mission,
                            dash_advisory=_dash_advisory,
                            peer_queue=_peer_queue,
                            tier_rank=TIER_RANK,
@@ -4224,7 +4247,26 @@ def dashboard():
 # My Gallery — user's full image history with search/filter
 # ---------------------------------------------------------------------------
 
-@app.route('/dashboard/peer-eval-strip')
+@app.route('/dashboard/skip-mission', methods=['POST'])
+@login_required
+def skip_mission():
+    """Suppress the daily mission card for the rest of today (IST).
+    Writes today's IST date to mission_skipped_date on the user row.
+    Dashboard reads this and hides the card until the date changes."""
+    try:
+        _ist_today = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
+        db.session.execute(
+            db.text('UPDATE users SET mission_skipped_date = :d WHERE id = :uid'),
+            {'d': _ist_today, 'uid': current_user.id}
+        )
+        db.session.commit()
+    except Exception as _skip_err:
+        db.session.rollback()
+        app.logger.warning(f'[skip_mission] {_skip_err}')
+    return redirect(url_for('dashboard'))
+
+
+# ---------------------------------------------------------------------------
 @login_required
 def dashboard_peer_eval_strip():
     """
@@ -15783,7 +15825,7 @@ def subscribe(track):
         return redirect(url_for('pricing'))
 
     plan = request.args.get('plan', 'monthly')
-    if plan not in ('monthly', 'half_yearly', 'annual'):
+    if plan not in ('monthly', 'annual'):
         plan = 'monthly'
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -15791,29 +15833,27 @@ def subscribe(track):
 
     plan_ids = {
         'mobile': {
-            'monthly':     os.getenv('GATEWAY_PLAN_MOBILE_MONTHLY', ''),
-            'half_yearly': os.getenv('GATEWAY_PLAN_MOBILE_HALF_YEARLY', ''),
-            'annual':      os.getenv('GATEWAY_PLAN_MOBILE_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
         },
         'camera': {
-            'monthly':     os.getenv('GATEWAY_PLAN_CAMERA_MONTHLY', ''),
-            'half_yearly': os.getenv('GATEWAY_PLAN_CAMERA_HALF_YEARLY', ''),
-            'annual':      os.getenv('GATEWAY_PLAN_CAMERA_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
         },
         'learning': {
-            'monthly':     os.getenv('GATEWAY_PLAN_LEARNING_MONTHLY', ''),
-            'annual':      os.getenv('GATEWAY_PLAN_LEARNING_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
         },
         'mentor': {
-            'monthly':     os.getenv('GATEWAY_PLAN_MENTOR_MONTHLY', ''),
-            'annual':      os.getenv('GATEWAY_PLAN_MENTOR_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 200, 'half_yearly': 1100, 'annual': 2000},
-        'camera':   {'monthly': 200, 'half_yearly': 1100, 'annual': 2000},
-        'learning': {'monthly': 100, 'annual': 1000},
-        'mentor':   {'monthly': 999, 'annual': 9999},
+        'mobile':   {'monthly': 99,   'annual': 999},
+        'camera':   {'monthly': 199,  'annual': 1999},
+        'learning': {'monthly': 100,  'annual': 999},
+        'mentor':   {'monthly': 999,  'annual': 9999},
     }
 
     plan_id = plan_ids[track][plan]
@@ -15895,10 +15935,10 @@ def subscribe(track):
             'mentor':   'Human + AI Mentor',
         }
         track_descriptions = {
-            'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award · Programmes',
-            'mobile':   '4 photographs evaluated/month · Mobile League standing · Annual Excellence Award · Programmes',
-            'learning': 'Evaluations + daily brief · No standings · Pure craft focus',
-            'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
+            'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award (AEA) · Programmes',
+            'mobile':   '4 photographs evaluated/month · Annual Excellence Award (AEA) · Programmes',
+            'learning': '12 photographs evaluated/month · AI mentor · Improvement paths',
+            'mentor':   '12 photographs evaluated/month · Weekly 1-on-1 · Human + AI',
         }
         try:
             _ref_disc = db.session.execute(
@@ -17751,16 +17791,12 @@ def admin_subscriptions():
         db.or_(User.is_subscribed == False, User.is_subscribed == None)
     ).order_by(User.created_at.desc()).all()
     total_mrr = sum(
-        (200 if u.subscription_track == 'mobile' else 200)
+        (99 if u.subscription_track == 'mobile' else 199)
         for u in subscribers if u.subscription_plan == 'monthly'
     )
     total_arr = sum(
-        2000
+        (999 if u.subscription_track == 'mobile' else 1999)
         for u in subscribers if u.subscription_plan == 'annual'
-    )
-    total_half_yearly_arr = sum(
-        1100 * 2  # annualised
-        for u in subscribers if u.subscription_plan == 'half_yearly'
     )
     return render_template('admin_subscriptions.html',
         subscribers=subscribers, free_users=free_users,
@@ -17870,8 +17906,8 @@ def admin_export_subscriptions():
         'monthly_value_inr', 'subscribed_at', 'razorpay_sub_id',
     ])
     price_map = {
-        ('mobile', 'monthly'): 200,  ('mobile', 'half_yearly'): 1100,  ('mobile', 'annual'): 2000,
-        ('camera', 'monthly'): 200,  ('camera', 'half_yearly'): 1100,  ('camera', 'annual'): 2000,
+        ('mobile', 'monthly'): 99,   ('mobile', 'annual'): 999,
+        ('camera', 'monthly'): 199,  ('camera', 'annual'): 1999,
     }
     for u in subs:
         price = price_map.get((u.subscription_track, u.subscription_plan), 0)
