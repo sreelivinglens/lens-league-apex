@@ -80,6 +80,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 }
 .sl-today__left  { display: contents; } /* passthrough on mobile */
 .sl-today__right { display: none; }     /* hidden on mobile */
+.sl-practise-desktop-content { display: contents; } /* passthrough on mobile */
+.sl-practise-desktop-img { display: none; }       /* hidden on mobile */
+.sl-practise-desktop-img-grad { display: none; }  /* hidden on mobile */
 .sl-desktop-right-section { display: none; } /* hidden on mobile */
 .sl-desktop-section-label { display: none; } /* hidden on mobile */
 
@@ -1473,6 +1476,20 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     overflow-y: auto;
   }
   .sl-today__left { padding: 24px 28px 40px; }
+  /* ── Desktop Practise card — mock layout: dark navy 2-col, image right ── */
+  #sl-practise-card {
+    background: #1A2D3A !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    display: grid !important;
+    grid-template-columns: 1fr 260px !important;
+    min-height: 190px !important;
+    border: none !important;
+    flex-direction: unset !important;
+    gap: 0 !important;
+  }
+  .sl-practise-desktop-img { display: block !important; }
+  .sl-practise-desktop-img-grad { display: block !important; }
   .sl-today__right {
     border-left: 1px solid var(--sl-border);
     padding: 24px 18px 40px;
@@ -1976,6 +1993,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   <div class="sl-assignment" id="sl-practise-card">
   {% endif %}
 
+  <div class="sl-practise-desktop-content">
     {# ── Band header — dark navy bg, gold fonts ── #}
     <div style="background:#13254B;
                 border-bottom:1px solid #1A3060;
@@ -2253,6 +2271,15 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         Switch interest →
       </button>
     </div>
+  </div>{# /sl-practise-desktop-content #}
+  {# ── Desktop image panel — right column ── #}
+  <div class="sl-practise-desktop-img">
+    {% if _hero_img and _hero_img.thumb_url %}
+    <img src="{{ _hero_img.thumb_url }}" alt="{{ _hero_img.genre or 'Photography' }}" onerror="this.parentNode.style.background='linear-gradient(135deg,#1A3A2A,#2A5A3A)';this.remove()">
+    <div class="sl-practise-desktop-img-grad"></div>
+    {% else %}
+    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#2A5A3A);"></div>
+    {% endif %}
   </div>
 
   {% endif %}{# end mission_done #}
@@ -2517,93 +2544,99 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 </div>{# /sl-today__left #}
 <div class="sl-today__right">
 
-  {# ── Latest Assessment ── #}
+  {# ── Latest Evaluation ── #}
   {% set _last = images.items[0] if images and images.items else none %}
-  {% if _last %}
   <div class="sl-rp-card">
-    <span class="sl-rp-label">Latest Assessment</span>
+    <div class="sl-rp-label">Latest Evaluation</div>
+    {% if _last %}
     <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-      <div style="width:72px; height:72px; border-radius:8px; overflow:hidden; flex-shrink:0; background:var(--sl-border);">
-        {% if _last.thumb_url %}
-        <img src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'Photo' }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
-        {% endif %}
+      <div style="width:64px; height:64px; border-radius:8px; overflow:hidden; flex-shrink:0; background:var(--sl-border);">
+        {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">{% endif %}
       </div>
       <div style="min-width:0;">
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ _last.asset_name or (_last.genre + ' photograph') }}</div>
-        {% if _last.score %}
-        <div style="display:flex; align-items:baseline; gap:2px; margin-bottom:3px;">
-          <span style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.1f'|format(_last.score) }}</span>
+        <div style="font-size:13px; font-weight:700; color:var(--sl-text); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ _last.asset_name or (_last.genre or 'Photograph') }}</div>
+        <div style="display:flex; align-items:baseline; gap:2px;">
+          <span style="font-size:20px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.1f'|format(_last.score) if _last.score else '—' }}</span>
           <span style="font-size:12px; color:var(--sl-text-light);">/10</span>
         </div>
-        <span style="display:inline-block; font-size:11px; font-weight:600; color:var(--sl-green); background:#EAF3DE; padding:2px 8px; border-radius:10px;">{{ _last.tier or 'Good' }}</span>
-        {% endif %}
-        <div style="font-size:10px; color:var(--sl-text-light); margin-top:4px;">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
+        <div style="font-size:11px; font-weight:600; color:var(--sl-green);">{{ _last.tier or '' }}</div>
+        <div style="font-size:10px; color:var(--sl-text-light);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
       </div>
     </div>
     <a href="{{ url_for('image_detail', image_id=_last.id) }}"
-       style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--sl-text); text-decoration:none; border-top:1px solid var(--sl-border); padding-top:10px; margin-top:4px;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+       style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--sl-text); text-decoration:none; border-top:1px solid var(--sl-border); padding-top:8px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       View Assessment Report →
     </a>
+    {% else %}
+    <div style="font-size:13px; color:var(--sl-text-light); padding:8px 0;">No evaluations yet. Upload your first photograph.</div>
+    <a href="{{ url_for('upload') }}" style="font-size:12px; font-weight:700; color:var(--sl-yellow-dark); text-decoration:none;">Upload now →</a>
+    {% endif %}
+  </div>
+
+  {# ── Your Standing ── #}
+  {% if progress_data %}
+  <div class="sl-rp-card">
+    <div class="sl-rp-label">Your Standing</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+      <span style="font-size:14px; font-weight:700; color:var(--sl-text);">{{ progress_data.avg_tier }}</span>
+      <span style="font-size:12px; color:var(--sl-text-light);">avg {{ '%.2f'|format(progress_data.avg_score) }}</span>
+    </div>
+    {% if progress_data.overall_pct %}
+    <div style="font-size:11px; font-weight:600; color:var(--sl-green); margin-bottom:8px;">Top {{ progress_data.overall_pct }}% this month</div>
+    {% endif %}
+    <div style="height:4px; background:var(--sl-border); border-radius:2px;">
+      <div style="height:100%; width:{{ progress_data.tier_pct or 0 }}%; background:var(--sl-yellow); border-radius:2px;"></div>
+    </div>
   </div>
   {% endif %}
 
-  {# ── Upcoming Practises ── #}
+  {# ── Points & Redemptions ── #}
+  <div class="sl-rp-card">
+    <div class="sl-rp-label">Points &amp; Redemptions</div>
+    <div style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1; margin-bottom:4px;">{{ current_user.points_balance|int if current_user.points_balance else 0 }}</div>
+    <div style="font-size:11px; color:var(--sl-text-light); margin-bottom:8px;">Earn on every upload</div>
+    <a href="{{ url_for('redeem') }}" style="font-size:11px; color:var(--sl-yellow-dark); font-weight:600; text-decoration:none;">View &amp; Redeem →</a>
+  </div>
+
+  {# ── Weekly Assignment ── #}
   {% if active_challenge %}
   <div class="sl-rp-card" style="border-left-color:#27500A;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <span class="sl-rp-label" style="color:#27500A; margin-bottom:0;">Upcoming Missions</span>
-      <a href="{{ url_for('weekly_challenge') }}" style="font-size:11px; color:var(--sl-text-light); text-decoration:none;">View calendar →</a>
+    <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#27500A;flex-shrink:0;"></span>
+      <div class="sl-rp-label" style="margin-bottom:0; color:#27500A;">Weekly Assignment</div>
     </div>
-    <div style="display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--sl-border); align-items:flex-start;">
-      <div style="min-width:36px; text-align:center;">
-        <div style="font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--sl-text-light);">{{ active_challenge.closes_at.strftime('%b') if active_challenge.closes_at else '' }}</div>
-        <div style="font-size:18px; font-weight:800; color:var(--sl-text);">{{ active_challenge.closes_at.strftime('%d') if active_challenge.closes_at else '' }}</div>
-      </div>
-      <div style="flex:1; min-width:0;">
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text); margin-bottom:2px;">{{ active_challenge.prompt_title }}</div>
-        <div style="font-size:11px; color:var(--sl-text-light); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ active_challenge.theme or 'Weekly photographic challenge' }}</div>
-      </div>
-      <span style="font-size:11px; font-weight:600; color:#fff; background:#27500A; padding:3px 8px; border-radius:6px; flex-shrink:0; white-space:nowrap;">Active</span>
-    </div>
-    <a href="{{ url_for('weekly_challenge') }}" style="display:flex; align-items:center; justify-content:space-between; padding-top:10px; font-size:13px; font-weight:700; color:#27500A; text-decoration:none;">
-      <span>View this week's assignment</span><span>→</span>
-    </a>
+    <div style="font-size:13px; font-weight:700; color:var(--sl-text); margin-bottom:2px;">{{ active_challenge.prompt_title }}</div>
+    <div style="font-size:11px; color:var(--sl-text-light); margin-bottom:8px;">closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
+    <a href="{{ url_for('weekly_challenge') }}" style="font-size:12px; font-weight:700; color:#fff; background:#27500A; padding:8px 14px; border-radius:8px; text-decoration:none; display:inline-block;">View assignment →</a>
   </div>
   {% endif %}
 
   {# ── Mentor Guidance ── #}
-  {% if mentor_reviews %}
-  {% set _mr = mentor_reviews[0] %}
   <div class="sl-rp-card">
-    <span class="sl-rp-label">Mentor Guidance</span>
+    <div class="sl-rp-label">Mentor Guidance</div>
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-      <img src="{{ _mr.get('mentor_photo', url_for('static', filename='img/mentor_ashok.jpg')) }}"
-           onerror="this.style.background='var(--sl-border)';this.removeAttribute('src')"
-           style="width:44px;height:44px;border-radius:50%;border:2px solid var(--sl-yellow);object-fit:cover;flex-shrink:0;" alt="Mentor">
+      {% if mentor_reviews and mentor_reviews[0] %}
+      <img src="{{ mentor_reviews[0].get('mentor_photo', url_for('static', filename='img/mentor_ashok.jpg')) }}"
+           onerror="this.src='{{ url_for('static', filename='img/mentor_ashok.jpg') }}'"
+           style="width:40px;height:40px;border-radius:50%;border:2px solid var(--sl-yellow);object-fit:cover;flex-shrink:0;" alt="Mentor">
       <div>
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text);">{{ _mr.get('mentor_name', 'Your Mentor') }}</div>
-        <div style="font-size:11px; color:var(--sl-text-light);">{{ _mr.get('mentor_tier', 'Grandmaster') }}</div>
+        <div style="font-size:12px; font-weight:700; color:var(--sl-text);">{{ mentor_reviews[0].get('mentor_name', 'Ashok Kochhar') }}</div>
+        <div style="font-size:10px; color:var(--sl-text-light);">{{ mentor_reviews[0].get('mentor_tier', 'Grandmaster') }}</div>
       </div>
-    </div>
-    <a href="{{ url_for('mentors') }}" style="display:block; background:var(--sl-yellow); color:#111; font-size:12px; font-weight:700; padding:9px 14px; border-radius:9px; text-decoration:none; text-align:center;">Ask a Question →</a>
-  </div>
-  {% else %}
-  <div class="sl-rp-card">
-    <span class="sl-rp-label">Mentor Guidance</span>
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+      {% else %}
       <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
            onerror="this.style.background='var(--sl-border)';this.removeAttribute('src')"
-           style="width:44px;height:44px;border-radius:50%;border:2px solid var(--sl-yellow);object-fit:cover;flex-shrink:0;" alt="Mentor">
+           style="width:40px;height:40px;border-radius:50%;border:2px solid var(--sl-yellow);object-fit:cover;flex-shrink:0;" alt="Ashok">
       <div>
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text);">Ashok Kochhar</div>
-        <div style="font-size:11px; color:var(--sl-text-light);">Grandmaster</div>
+        <div style="font-size:12px; font-weight:700; color:var(--sl-text);">Ashok Kochhar</div>
+        <div style="font-size:10px; color:var(--sl-text-light);">Grandmaster</div>
       </div>
+      {% endif %}
     </div>
-    <div style="font-size:12px; font-style:italic; color:var(--sl-text); line-height:1.5; margin-bottom:10px; border-left:2px solid var(--sl-yellow); padding-left:10px;">"Patience is not about waiting. It's about how you observe while you wait."</div>
-    <a href="{{ url_for('mentors') }}" style="display:block; background:var(--sl-yellow); color:#111; font-size:12px; font-weight:700; padding:9px 14px; border-radius:9px; text-decoration:none; text-align:center;">Book a Review →</a>
+    <div style="font-size:12px; font-style:italic; color:var(--sl-text); line-height:1.5; margin-bottom:8px; border-left:2px solid var(--sl-yellow); padding-left:10px;">"Patience is not about waiting. It's about how you observe while you wait."</div>
+    <a href="{{ url_for('mentors') }}" style="display:block; margin-top:10px; background:var(--sl-yellow); color:#111; font-size:12px; font-weight:700; padding:9px 14px; border-radius:9px; text-decoration:none; text-align:center;">Book a Review →</a>
   </div>
-  {% endif %}
 
   {# ── Annual Excellence Award ── #}
   <div style="background:#13254B; border-radius:12px; padding:12px 14px;">
