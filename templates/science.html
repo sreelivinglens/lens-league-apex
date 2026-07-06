@@ -311,6 +311,44 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
   /* Dimension example text — wrap cleanly */
   .sl-sci-dim-desc, .sl-sci-dim-example { word-break: break-word; overflow-wrap: break-word; }
 }
+.sl-hero-credit-pill {
+  position: absolute; bottom: 8px; right: 10px; z-index: 3;
+  background: rgba(13,11,8,0.52); color: rgba(255,255,255,0.88);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+  padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+/* ── Hero image wrapper — anchors credit pill to image corner ── */
+.sl-hero-img-wrap {
+  position: relative;
+  line-height: 0;
+}
+@media (min-width: 769px) {
+  /* Desktop: wrap fills the hero section absolutely, img stays absolute within it */
+  .sl-hero-img-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+}
+@media (max-width: 768px) {
+  /* Mobile: wrap is a normal block, img is static at 16:9 */
+  .sl-hero-img-wrap {
+    display: block;
+    width: 100%;
+    position: relative;
+  }
+  .sl-hero-img-wrap img {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+  }
+}
+
 </style>
 {% endblock %}
 
@@ -321,12 +359,14 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
   <!-- ── HERO ─────────────────────────────────────────────────────── -->
   <section class="sl-sci-hero">
     {% if sci_hero and sci_hero.thumb_url %}
+    <div class="sl-hero-img-wrap">
     <img class="sl-sci-hero-img" src="{{ sci_hero.thumb_url }}"
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'">
     {% if sci_hero.photographer_name %}
-    <span class="sl-sci-credit">© {{ sci_hero.photographer_name }}</span>
+    <span class="sl-hero-credit-pill">&copy; {{ sci_hero.photographer_name }}{% if sci_hero.score %} &middot; {{ '%.2f'|format(sci_hero.score) }}{% endif %}</span>
     {% endif %}
+    </div>
     {% endif %}
     <div class="sl-sci-hero-fade"></div>
     <div class="sl-sci-hero-content">
