@@ -263,7 +263,7 @@ table { max-width: none; }
   background: #D9A900;
   transform: scale(1.05);
 }
-/* Add padding so page content clears the tab bar — exclude homepage which needs full-bleed hero */
+/* Add padding so page content clears the tab bar — homepage excluded (full-bleed hero) */
 body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
@@ -1026,6 +1026,7 @@ footer {
 }
 .footer-col-link:hover { color: #F6F2E9; }
 .footer-col-link.kyc { color: #9ABAA0; }
+.footer-col-link.kyc:hover { color: #F6F2E9; }
 /* Keep .footer-links for any legacy references */
 .footer-links a { color: #6A9A7A; text-decoration: none; font-size: 13px; }
 .footer-bottom {
@@ -1276,14 +1277,15 @@ img {
 }
 </script>
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body>
 
 <nav class="sl-top-nav">
-  <a href="{{ url_for('index') }}" class="nav-brand">
+  <a href="{{ url_for('index') }}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
     <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
          alt="Shutter League"
-         style="height:38px; width:auto; display:block;"
+         style="height:34px; width:auto; display:block;"
          onerror="this.style.display='none'">
+    <span style="font-size:9px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
   </a>
 
   <!-- Desktop nav -->
