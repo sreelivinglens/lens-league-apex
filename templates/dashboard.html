@@ -602,7 +602,10 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 {% set _adv_genre = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
             {% if _adv_genre %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">{{ _adv_genre|title }}</span>{% endif %}
           </div>
-          <div style="font-size:11px;color:var(--d-muted);line-height:1.5;margin-bottom:6px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div style="font-size:11px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          {% if dash_advisory.get('why_it_matters') %}
+          <div style="font-size:11px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:4px;">{{ dash_advisory.why_it_matters }}</div>
+          {% endif %}
           {% if weather and weather.state == 'red' %}
           <div style="font-size:11px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FDEAEA;border-radius:6px;color:#A32D2D;">
             ⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }} Skip the outdoor session today.
@@ -624,7 +627,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           </div>
           {% endif %}
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_time') %}<span style="font-size:10px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_time }}</span>{% endif %}
+            {% if dash_advisory.get('best_light_time') %}<span style="font-size:10px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if dash_advisory.get('distance_hours') %}<span style="font-size:10px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
             {% if weather and weather.condition %}<span style="font-size:10px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
           </div>
         </div>
@@ -841,7 +845,10 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 {% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
             {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
           </div>
-          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:6px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          {% if dash_advisory.get('why_it_matters') %}
+          <div style="font-size:12px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_advisory.why_it_matters }}</div>
+          {% endif %}
           {% if weather and weather.state == 'red' %}
           <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
             ⚠ {{ weather.message or 'Poor conditions today — skip the outdoor session.' }}
@@ -863,7 +870,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           </div>
           {% endif %}
           <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_time') %}<span style="font-size:11px;color:var(--d-muted);">⏱ {{ dash_advisory.best_time }}</span>{% endif %}
+            {% if dash_advisory.get('best_light_time') %}<span style="font-size:11px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if dash_advisory.get('distance_hours') %}<span style="font-size:11px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
             {% if weather and weather.condition %}<span style="font-size:11px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
