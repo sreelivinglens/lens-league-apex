@@ -3533,9 +3533,20 @@ def _refresh_pixabay_reference_in_background(genre, dimension):
 @login_required
 def mission_snooze():
     """User tapped 'Remind me later' on mission page.
-    Sets a session flag with today's date — clears automatically next day.
+    Writes today's IST date to mission_skipped_date — same behaviour as
+    'Skip for now' on the dashboard. Suppresses the mission card for the
+    rest of the day. Resets automatically the next IST day.
     """
-    session['mission_snoozed'] = date.today().isoformat()
+    try:
+        _ist_today = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
+        db.session.execute(
+            db.text('UPDATE users SET mission_skipped_date = :d WHERE id = :uid'),
+            {'d': _ist_today, 'uid': current_user.id}
+        )
+        db.session.commit()
+    except Exception as _snooze_err:
+        db.session.rollback()
+        app.logger.warning(f'[mission_snooze] {_snooze_err}')
     return redirect(url_for('dashboard'))
 
 
