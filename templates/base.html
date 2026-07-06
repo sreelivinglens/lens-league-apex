@@ -1056,6 +1056,14 @@ footer {
   .footer-top { grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 16px var(--page-pad) 20px; }
   .footer-brand-col { grid-column: 1 / -1; }
   .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  /* Global mobile overflow guard — prevents any page from causing horizontal scroll */
+  body { overflow-x: hidden; }
+  main { overflow-x: hidden; }
+  p, li, td, th, blockquote, figcaption { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
+  img, video, iframe, table { max-width: 100% !important; }
+  /* Grid/flex containers — collapse to single column if not overridden by page */
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+  pre, code { overflow-x: auto; max-width: 100%; white-space: pre-wrap; word-break: break-all; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
@@ -1518,7 +1526,7 @@ img {
       <a href="/terms" class="footer-col-link kyc">Terms &amp; Conditions</a>
       <a href="/privacy" class="footer-col-link kyc">Privacy Policy</a>
       <a href="/refund-policy" class="footer-col-link kyc">Refund Policy</a>
-      <a href="/shipping" class="footer-col-link kyc">Shipping &amp; Returns</a>
+      <a href="/shipping-policy" class="footer-col-link kyc">Shipping &amp; Returns</a>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Programmes</div>
