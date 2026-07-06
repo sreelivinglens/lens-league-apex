@@ -913,25 +913,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── NEARBY OPPORTUNITY ── #}
-    {% if dash_advisory and dash_advisory.get('location_name') %}
-    <div class="mob-nearby">
-      <div class="mob-nearby-map">
-        <div style="position:absolute;inset:0;background:linear-gradient(135deg,#B8D4A8,#8ABD7A,#6BA05A);"></div>
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;">📍</div>
-      </div>
-      <div class="mob-nearby-body">
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Nearby Opportunity</div>
-        <div style="font-size:15px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ dash_advisory.location_name }}</div>
-        {% if dash_advisory.get('light_note') %}<div style="font-size:12px;color:var(--d-muted);margin-bottom:6px;">{{ dash_advisory.light_note }}</div>{% endif %}
-        {% if weather %}<div style="font-size:11px;color:var(--d-muted);margin-bottom:10px;">⏱ {{ weather.best_time or '6:05 – 7:20 am' }}</div>{% endif %}
-        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-           style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--d-border);border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;color:var(--d-dark);">
-          <span>Get Directions</span><span>→</span>
-        </a>
-      </div>
-    </div>
-    {% endif %}
+
 
     {# ── MENTOR GUIDANCE ── #}
     <div class="mob-mentor">
@@ -972,12 +954,48 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="height:5px;background:var(--d-border);border-radius:3px;margin-bottom:16px;">
         <div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--d-gold);border-radius:3px;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--d-muted);margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--d-muted);margin-bottom:16px;">
         <span>{{ progress_data.prev_tier or '' }}</span>
         <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.avg_tier }}</span>
         <span>→ {{ progress_data.next_tier or '' }}</span>
       </div>
     </div>
+
+    {# Lifetime score trend #}
+    {% if progress_data.trend and progress_data.trend|length >= 2 %}
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:3px;">Lifetime score trend</div>
+      <div style="font-size:10px;color:var(--d-muted);margin-bottom:4px;">All {{ progress_data.count }} uploads</div>
+      {% set _t = progress_data.trend %}
+      {% set _scores = _t|map(attribute='score')|list %}
+      {% set _min = _scores|min %}
+      {% set _max = _scores|max %}
+      {% set _range = [(_max - _min), 0.5]|max %}
+      {% set _n = _t|length %}
+      <svg viewBox="0 0 320 56" width="100%" height="56" preserveAspectRatio="none" style="display:block;margin-bottom:4px;">
+        <line x1="0" y1="14" x2="320" y2="14" stroke="var(--d-border)" stroke-width="0.5"/>
+        <line x1="0" y1="28" x2="320" y2="28" stroke="var(--d-border)" stroke-width="0.5"/>
+        <line x1="0" y1="42" x2="320" y2="42" stroke="var(--d-border)" stroke-width="0.5"/>
+        {% set _pts = namespace(val='') %}
+        {% for _item in _t %}
+          {% set _x = (loop.index0 / (_n - 1) * 300 + 10)|round(1) %}
+          {% set _y = (42 - ((_item.score - _min) / _range) * 28)|round(1) %}
+          {% set _pts.val = _pts.val ~ _x ~ ',' ~ _y ~ ' ' %}
+        {% endfor %}
+        {% set _last_x = (300 + 10) %}
+        {% set _last_y = (42 - ((_t[-1].score - _min) / _range) * 28)|round(1) %}
+        <polyline fill="rgba(214,164,40,0.08)" stroke="none" points="{{ _pts.val }}{{ _last_x }},50 10,50"/>
+        <polyline fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{ _pts.val }}"/>
+        {% for _item in _t %}
+          {% set _x = (loop.index0 / (_n - 1) * 300 + 10)|round(1) %}
+          {% set _y = (42 - ((_item.score - _min) / _range) * 28)|round(1) %}
+          <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '3.5' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.5' }}"/>
+        {% endfor %}
+      </svg>
+    </div>
+    {% endif %}
+
+    <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last 10 images</div>
     {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     {% if progress_data.dim_sparklines %}
