@@ -2072,8 +2072,8 @@ _TIER_JUMP_POINTS = {
 # ── Referral system helpers (Session 28) ──────────────────────────────────────
 
 REFERRAL_DISCOUNT_PRICES = {
-    'mobile': {'monthly': 180, 'annual': 1800},
-    'camera': {'monthly': 180, 'annual': 1800},
+    'mobile': {'monthly': 180, 'half_yearly': 990, 'annual': 1800},
+    'camera': {'monthly': 180, 'half_yearly': 990, 'annual': 1800},
 }
 
 def _generate_referral_code():
@@ -15783,7 +15783,7 @@ def subscribe(track):
         return redirect(url_for('pricing'))
 
     plan = request.args.get('plan', 'monthly')
-    if plan not in ('monthly', 'annual'):
+    if plan not in ('monthly', 'half_yearly', 'annual'):
         plan = 'monthly'
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -15791,27 +15791,29 @@ def subscribe(track):
 
     plan_ids = {
         'mobile': {
-            'monthly': os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
+            'monthly':     os.getenv('GATEWAY_PLAN_MOBILE_MONTHLY', ''),
+            'half_yearly': os.getenv('GATEWAY_PLAN_MOBILE_HALF_YEARLY', ''),
+            'annual':      os.getenv('GATEWAY_PLAN_MOBILE_ANNUAL', ''),
         },
         'camera': {
-            'monthly': os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
+            'monthly':     os.getenv('GATEWAY_PLAN_CAMERA_MONTHLY', ''),
+            'half_yearly': os.getenv('GATEWAY_PLAN_CAMERA_HALF_YEARLY', ''),
+            'annual':      os.getenv('GATEWAY_PLAN_CAMERA_ANNUAL', ''),
         },
         'learning': {
-            'monthly': os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
+            'monthly':     os.getenv('GATEWAY_PLAN_LEARNING_MONTHLY', ''),
+            'annual':      os.getenv('GATEWAY_PLAN_LEARNING_ANNUAL', ''),
         },
         'mentor': {
-            'monthly': os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
+            'monthly':     os.getenv('GATEWAY_PLAN_MENTOR_MONTHLY', ''),
+            'annual':      os.getenv('GATEWAY_PLAN_MENTOR_ANNUAL', ''),
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 99,   'annual': 999},
-        'camera':   {'monthly': 199,  'annual': 1999},
-        'learning': {'monthly': 100,  'annual': 999},
-        'mentor':   {'monthly': 999,  'annual': 9999},
+        'mobile':   {'monthly': 200, 'half_yearly': 1100, 'annual': 2000},
+        'camera':   {'monthly': 200, 'half_yearly': 1100, 'annual': 2000},
+        'learning': {'monthly': 100, 'annual': 1000},
+        'mentor':   {'monthly': 999, 'annual': 9999},
     }
 
     plan_id = plan_ids[track][plan]
@@ -15893,10 +15895,10 @@ def subscribe(track):
             'mentor':   'Human + AI Mentor',
         }
         track_descriptions = {
-            'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award (AEA) · Programmes',
-            'mobile':   '4 photographs evaluated/month · Annual Excellence Award (AEA) · Programmes',
-            'learning': '12 photographs evaluated/month · AI mentor · Improvement paths',
-            'mentor':   '12 photographs evaluated/month · Weekly 1-on-1 · Human + AI',
+            'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award · Programmes',
+            'mobile':   '4 photographs evaluated/month · Mobile League standing · Annual Excellence Award · Programmes',
+            'learning': 'Evaluations + daily brief · No standings · Pure craft focus',
+            'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
         }
         try:
             _ref_disc = db.session.execute(
@@ -17749,12 +17751,16 @@ def admin_subscriptions():
         db.or_(User.is_subscribed == False, User.is_subscribed == None)
     ).order_by(User.created_at.desc()).all()
     total_mrr = sum(
-        (99 if u.subscription_track == 'mobile' else 199)
+        (200 if u.subscription_track == 'mobile' else 200)
         for u in subscribers if u.subscription_plan == 'monthly'
     )
     total_arr = sum(
-        (999 if u.subscription_track == 'mobile' else 1999)
+        2000
         for u in subscribers if u.subscription_plan == 'annual'
+    )
+    total_half_yearly_arr = sum(
+        1100 * 2  # annualised
+        for u in subscribers if u.subscription_plan == 'half_yearly'
     )
     return render_template('admin_subscriptions.html',
         subscribers=subscribers, free_users=free_users,
@@ -17864,8 +17870,8 @@ def admin_export_subscriptions():
         'monthly_value_inr', 'subscribed_at', 'razorpay_sub_id',
     ])
     price_map = {
-        ('mobile', 'monthly'): 99,   ('mobile', 'annual'): 999,
-        ('camera', 'monthly'): 199,  ('camera', 'annual'): 1999,
+        ('mobile', 'monthly'): 200,  ('mobile', 'half_yearly'): 1100,  ('mobile', 'annual'): 2000,
+        ('camera', 'monthly'): 200,  ('camera', 'half_yearly'): 1100,  ('camera', 'annual'): 2000,
     }
     for u in subs:
         price = price_map.get((u.subscription_track, u.subscription_plan), 0)
