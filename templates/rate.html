@@ -1,13 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Rate Images — {{ platform_name }}{% endblock %}
+{% block title %}Peer Evaluation — Shutter League{% endblock %}
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Rate images on the Shutter League peer rating system. Earn credits, help calibrate the platform.">
+<meta name="description" content="Evaluate images on the Shutter League peer evaluation system. Earn credits, help calibrate the platform.">
 {% endblock %}
 {% block extra_css %}
 <style>
-  .rate-wrap { max-width: 720px; margin: 0 auto; }
+  /* ── Page font override ── */
+  .rate-wrap * { font-family: 'Inter', sans-serif !important; }
+
+  .rate-wrap { max-width: 720px; margin: 0 auto; padding: 0 var(--page-pad, 24px); }
+
+  /* Hero strip */
+  .rate-hero {
+    padding: 48px 0 32px;
+  }
+  .rate-hero h1 {
+    font-size: clamp(28px, 5vw, 38px); font-weight: 700;
+    color: var(--text-primary); margin: 0 0 8px; line-height: 1.5;
+    text-shadow: none;
+  }
+  .rate-hero-sub {
+    font-size: 17px; color: var(--text-secondary); line-height: 1.6; margin: 0;
+  }
 
   /* Credits bar */
   .credits-bar {
@@ -18,8 +34,14 @@
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 20px 22px; text-align: center;
   }
-  .credit-val { font-family: var(--font-mono); font-size: 34px; font-weight: 700; color: var(--gold); line-height: 1; }
-  .credit-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 6px; }
+  .credit-val {
+    font-size: 34px; font-weight: 700; line-height: 1.5;
+    color: var(--text-primary);
+  }
+  .credit-lbl {
+    font-size: 16px; letter-spacing: 2px; color: var(--text-muted);
+    text-transform: uppercase; margin-top: 6px;
+  }
 
   /* Rating card */
   .rating-card {
@@ -30,31 +52,47 @@
     width: 100%; max-height: 480px; object-fit: contain;
     background: var(--surface-3); display: block;
   }
+  .rating-image[src] { /* onerror fallback applied inline */ }
   .rating-image-placeholder {
     width: 100%; height: 300px; background: var(--surface-3);
     display: flex; align-items: center; justify-content: center;
-    color: var(--text-muted); font-family: var(--font-mono); font-size: 13px;
+    color: var(--text-muted); font-size: 16px;
   }
   .rating-meta {
     padding: 18px 22px; border-bottom: 1px solid var(--border-subtle);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px;
   }
   .rating-genre {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-primary);
+    background: var(--surface-3); border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 4px; display: inline-block;
   }
   .rating-timer {
-    font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);
+    font-size: 16px; color: var(--text-muted);
   }
 
   /* Sliders */
   .rating-form { padding: 24px 22px; }
   .slider-group { margin-bottom: 22px; }
-  .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-  .slider-label { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary); }
-  .slider-desc { font-size: 13px; color: var(--text-muted); }
-  .slider-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); min-width: 36px; text-align: right; }
+  .slider-header {
+    display: flex; justify-content: space-between;
+    align-items: baseline; margin-bottom: 8px;
+  }
+  .slider-label {
+    font-size: 16px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .slider-desc { font-size: 16px; color: var(--text-muted); line-height: 1.6; }
+  .slider-val {
+    font-size: 20px; font-weight: 700; color: var(--text-primary);
+    min-width: 36px; text-align: right;
+  }
 
+  input, select, textarea { font-size: 16px; }
   input[type=range] {
     width: 100%; height: 6px; border-radius: 3px;
     background: var(--border); outline: none; cursor: pointer;
@@ -62,21 +100,45 @@
   }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; appearance: none;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: var(--gold); cursor: pointer;
-    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #F5C518; cursor: pointer;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   }
   input[type=range]::-moz-range-thumb {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: var(--gold); cursor: pointer;
-    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #F5C518; cursor: pointer;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   }
+
+  /* Submit button */
+  .rate-submit-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 12px 32px;
+    background: #F5C518; color: #1A1A18;
+    font-size: 16px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; border: none; border-radius: 8px;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background 0.18s;
+  }
+  .rate-submit-btn:hover { background: #D9A900; }
+
+  .rate-skip-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 12px 24px;
+    background: none; color: var(--text-secondary);
+    font-size: 16px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.18s;
+  }
+  .rate-skip-btn:hover { border-color: var(--text-secondary); }
 
   /* Minimum time warning */
   .time-warning {
-    background: rgba(184,112,10,0.08); border: 1px solid var(--amber);
-    border-radius: var(--radius-sm); padding: 10px 14px;
-    font-size: 14px; color: var(--amber); margin-bottom: 16px; display: none;
+    background: rgba(184,112,10,0.08); border: 1px solid #B87A0A;
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    font-size: 16px; color: #7A5200; margin-bottom: 16px; display: none;
+    line-height: 1.6;
   }
 
   /* Non-subscriber state */
@@ -87,39 +149,136 @@
   }
 
   /* How it works */
-  .how-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
-  .how-num { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1; flex-shrink: 0; width: 32px; }
-  .how-text { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+  .how-section {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 28px; margin-bottom: 28px;
+  }
+  .how-title {
+    font-size: 16px; font-weight: 600; letter-spacing: 2px;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 20px;
+  }
+  .how-row {
+    display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;
+  }
+  .how-row:last-child { margin-bottom: 0; }
+  .how-num {
+    font-size: 22px; font-weight: 700; color: var(--text-primary);
+    line-height: 1; flex-shrink: 0; width: 32px;
+  }
+  .how-text { font-size: 16px; color: var(--text-secondary); line-height: 1.6; }
   .how-text strong { color: var(--text-primary); }
 
-  @media (max-width: 600px) {
-    .sl-cb-grid { grid-template-columns: 1fr !important; }
+  /* Stats footer */
+  .stats-bar {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 22px; margin-bottom: 28px;
   }
+  .stats-title {
+    font-size: 16px; letter-spacing: 2px; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .stats-row {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    font-size: 16px; color: var(--text-secondary); line-height: 1.6;
+  }
+
+  /* Bonus strip */
+  .bonus-strip {
+    text-align: center; font-size: 16px; font-weight: 700;
+    color: #5C3D00; background: rgba(244,194,13,0.15);
+    border: 1px solid rgba(244,194,13,0.35);
+    border-radius: 20px; padding: 10px 20px;
+    display: block; width: 100%; box-sizing: border-box;
+    margin: 0 0 24px; letter-spacing: 0.01em; line-height: 1.6;
+  }
+
+  /* Checkbox grid */
+  .cb-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .cb-label {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; cursor: pointer;
+    transition: border-color 0.15s; min-height: 44px;
+  }
+  .cb-label input[type=checkbox] {
+    margin-top: 3px; width: 18px; height: 18px;
+    cursor: pointer; flex-shrink: 0; accent-color: #F5C518;
+    font-size: 16px;
+  }
+  .cb-val {
+    font-size: 16px; font-weight: 600; color: var(--text-primary);
+    display: block; line-height: 1.6;
+  }
+  .cb-sub {
+    font-size: 16px; color: var(--text-muted); line-height: 1.6; display: block;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 16px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px;
+  }
+  .section-label-opt {
+    font-size: 16px; font-weight: 400; color: var(--text-muted);
+    text-transform: none; letter-spacing: 0;
+  }
+  .section-hint {
+    font-size: 16px; color: var(--text-muted); margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  /* Bias flag */
+  .bias-flag {
+    background: rgba(192,57,43,0.08); border: 1px solid #C0392B;
+    border-left: 4px solid #C0392B; border-radius: var(--radius-md);
+    padding: 14px 18px; margin-bottom: 24px;
+    font-size: 16px; color: #7B1010; line-height: 1.6;
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .credits-bar { grid-template-columns: 1fr; gap: 10px; }
+    .cb-grid { grid-template-columns: 1fr !important; }
+    .rate-hero { padding: 32px 0 24px; }
+    .rate-hero h1 { font-size: 28px; }
+    .rating-form { padding: 18px 16px; }
+    .stats-row { gap: 14px; font-size: 16px; }
+    .rate-submit-btn, .rate-skip-btn { width: 100%; }
+  }
+
+  @media (max-width: 768px) {
+    .cb-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  -webkit-font-smoothing: antialiased;
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- audit-tokens: min-height: 360px; hero-fade; rgba(13,13,11,0.45); margin: 48px 64px; text-align: justify; text-align: justify; padding: 56px; -->
+
 <div class="rate-wrap">
 
-  <div class="page-header">
-    <h1>Rate Images</h1>
-    <p>Blind peer ratings — help calibrate the platform, earn pool credits</p>
+  <div class="rate-hero">
+    <h1>Peer Evaluation</h1>
+    <p class="rate-hero-sub">Blind peer evaluation — help calibrate the platform, earn pool credits</p>
   </div>
 
   {% if not is_subscriber %}
-  {# ── Non-subscriber state ─────────────────────────────────────── #}
   <div class="upgrade-card">
     <div style="font-size:40px; margin-bottom:16px;">☆</div>
-    <h2 style="font-size:22px; font-weight:700; margin-bottom:10px;">Peer Rating is for subscribers</h2>
+    <h2 style="font-size:22px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">Peer Evaluation is for subscribers</h2>
     <p style="font-size:16px; color:var(--text-secondary); line-height:1.7; max-width:480px; margin:0 auto 24px;">
-      Rate other photographers' images using the DDI framework. Earn credits,
-      unlock peer pool access, and help keep scores honest.
+      Evaluate other photographers' images using the five-dimension framework. Earn credits,
+      unlock peer pool access, and help keep evaluations honest.
     </p>
-    <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Rate →</a>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Evaluate →</a>
   </div>
 
   {% else %}
-  {# ── Credits bar ──────────────────────────────────────────────── #}
+
   <div class="credits-bar">
     <div class="credit-box">
       <div class="credit-val">{{ credits }}</div>
@@ -127,7 +286,7 @@
     </div>
     <div class="credit-box">
       <div class="credit-val">{{ lifetime_given }}</div>
-      <div class="credit-lbl">All-Time Ratings</div>
+      <div class="credit-lbl">All-Time Evaluations</div>
     </div>
     <div class="credit-box">
       <div class="credit-val">{{ queue_remaining }}</div>
@@ -135,25 +294,21 @@
     </div>
   </div>
 
-  <p style="text-align:center; font-size:15px; font-weight:700; color:#5C3D00;
-             background:rgba(244,194,13,.15); border:1px solid rgba(244,194,13,.35);
-             border-radius:20px; padding:8px 20px; display:inline-block;
-             width:100%; box-sizing:border-box; margin:-8px 0 20px; letter-spacing:.01em;">
-    2 pts per evaluation · +2 bonus if your eye matches the engine
-  </p>
+  <span class="bonus-strip">2 pts per evaluation · +2 bonus if your eye matches the engine</span>
 
   {% if bias_flag %}
-  <div style="background:var(--red-dim); border:1px solid var(--red); border-left:4px solid var(--red); border-radius:var(--radius-md); padding:14px 18px; margin-bottom:24px; font-size:14px; color:var(--red);">
-    <strong>Rating pattern flagged.</strong> Your ratings have been flagged for review. You may continue rating, but credits are paused pending admin review.
+  <div class="bias-flag">
+    <strong>Evaluation pattern flagged.</strong> Your evaluations have been flagged for review. You may continue evaluating, but credits are paused pending admin review.
   </div>
   {% endif %}
 
   {% if assignment and image %}
-  {# ── Rating card ──────────────────────────────────────────────── #}
+
   <div class="rating-card">
 
     {% if image.thumb_url %}
-    <img src="{{ image.thumb_url }}" alt="Image to rate" class="rating-image" id="ratingImage">
+    <img src="{{ image.thumb_url }}" alt="Image to evaluate" class="rating-image" id="ratingImage"
+         onerror="this.style.display='none'">
     {% else %}
     <div class="rating-image-placeholder">Image not available</div>
     {% endif %}
@@ -161,7 +316,7 @@
     <div class="rating-meta">
       <div>
         <div class="rating-genre">{{ image.genre }}</div>
-        <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">Rate this image on each DDI dimension · 1–10</div>
+        <div style="font-size:16px; color:var(--text-muted); margin-top:4px; line-height:1.6;">Rate this image on each dimension · 1–10</div>
       </div>
       <div class="rating-timer" id="timerDisplay">⏱ 0s</div>
     </div>
@@ -172,11 +327,11 @@
       <input type="hidden" name="time_spent" id="timeSpent" value="0">
 
       {% set dims = [
-        ('dod',        'DoD',        'Depth of Detail — technical precision, sharpness, compositional complexity'),
-        ('disruption', 'Disruption', 'Visual surprise — unconventional perspective, breaks convention'),
-        ('dm',         'DM',         'Decisive Moment — timing, the unrepeatable instant, narrative peak'),
-        ('wonder',     'Wonder',     'Emotional impact — transcendence, the feeling it leaves'),
-        ('aq',         'AQ',         "Authenticity Quotient — soul, honesty, the photographer's unique voice"),
+        ('dod',        'Depth of Difficulty',  'Technical precision, sharpness, compositional complexity'),
+        ('disruption', 'Disruption',            'Visual surprise — unconventional perspective, breaks convention'),
+        ('dm',         'Decisive Moment',       'Timing — the unrepeatable instant, narrative peak'),
+        ('wonder',     'Wonder',                'Emotional impact — transcendence, the feeling it leaves'),
+        ('aq',         'Affective Quality',     "Soul, honesty, the photographer's unique voice"),
       ] %}
 
       {% for field, label, desc in dims %}
@@ -195,13 +350,13 @@
       {% endfor %}
 
       <div class="time-warning" id="timeWarning">
-        Please spend at least 15 seconds viewing the image before rating.
+        Please spend at least 15 seconds viewing the image before submitting.
       </div>
 
       <div style="margin-bottom:24px;">
-        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">What stood out <span style="font-size:11px; font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">— optional</span></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Select 1–3 things that worked in this image, if any stood out.</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="sl-cb-grid">
+        <div class="section-label">What stood out <span class="section-label-opt">— optional</span></div>
+        <div class="section-hint">Select 1–3 things that worked in this image, if any stood out.</div>
+        <div class="cb-grid">
           {% set stood_out_options = [
             ('Subject isolation',   'Background fell away cleanly'),
             ('Light quality',       'Direction, colour, or quality of light'),
@@ -215,25 +370,24 @@
             ('Technical execution', 'Focus, exposure, sharpness spot-on'),
           ] %}
           {% for val, sub in stood_out_options %}
-          <label style="display:flex; align-items:flex-start; gap:10px; background:var(--surface-3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; transition:border-color .15s;" class="cb-label">
+          <label class="cb-label">
             <input type="checkbox" name="stood_out_tags" value="{{ val }}"
-                   style="margin-top:3px; width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:var(--gold);"
                    onchange="enforceMax(this, 'stood_out_tags', 3)"
                    {% if prefill_stood_out and val in prefill_stood_out %}checked{% endif %}>
             <span>
-              <span style="font-size:14px; font-weight:600; color:var(--text-primary); display:block; line-height:1.6;">{{ val }}</span>
-              <span style="font-size:12px; color:var(--text-muted); line-height:1.6; display:block;">{{ sub }}</span>
+              <span class="cb-val">{{ val }}</span>
+              <span class="cb-sub">{{ sub }}</span>
             </span>
           </label>
           {% endfor %}
         </div>
-        <div id="stood_out_error" style="font-size:13px; color:var(--red, #C0392B); margin-top:6px; display:none;">Please select at least one.</div>
+        <div id="stood_out_error" style="font-size:16px; color:#C0392B; margin-top:6px; display:none; line-height:1.6;">Please select at least one.</div>
       </div>
 
       <div style="margin-bottom:24px;">
-        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">One thing to improve <span style="font-size:11px; font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">— optional</span></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Select the single most important improvement, if any.</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="sl-cb-grid">
+        <div class="section-label">One thing to improve <span class="section-label-opt">— optional</span></div>
+        <div class="section-hint">Select the single most important improvement, if any.</div>
+        <div class="cb-grid">
           {% set improve_options = [
             ('Distracting background', 'Something pulls focus from subject'),
             ('Horizon / tilt',         'Frame needs straightening'),
@@ -247,101 +401,100 @@
             ('Less processing',        'Over-editing masks the original'),
           ] %}
           {% for val, sub in improve_options %}
-          <label style="display:flex; align-items:flex-start; gap:10px; background:var(--surface-3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; transition:border-color .15s;" class="cb-label">
+          <label class="cb-label">
             <input type="checkbox" name="improve_tags" value="{{ val }}"
-                   style="margin-top:3px; width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:var(--gold);"
                    onchange="enforceMax(this, 'improve_tags', 1)"
                    {% if prefill_improve and val in prefill_improve %}checked{% endif %}>
             <span>
-              <span style="font-size:14px; font-weight:600; color:var(--text-primary); display:block; line-height:1.6;">{{ val }}</span>
-              <span style="font-size:12px; color:var(--text-muted); line-height:1.6; display:block;">{{ sub }}</span>
+              <span class="cb-val">{{ val }}</span>
+              <span class="cb-sub">{{ sub }}</span>
             </span>
           </label>
           {% endfor %}
         </div>
-        <div id="improve_error" style="font-size:13px; color:var(--red, #C0392B); margin-top:6px; display:none;">Please select one.</div>
+        <div id="improve_error" style="font-size:16px; color:#C0392B; margin-top:6px; display:none; line-height:1.6;">Please select one.</div>
       </div>
 
-      <div style="margin-bottom:20px;">
-        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px;">Additional comment <span style="font-size:13px; font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">— optional, sent by email only</span></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Specific observations about the photograph only. Please respect the photographer — comments about the person or their abilities will not be accepted.</div>
+      <div style="margin-bottom:24px;">
+        <div class="section-label">Additional comment <span class="section-label-opt">— optional, sent by email only</span></div>
+        <div class="section-hint">Specific observations about the photograph only. Please respect the photographer — comments about the person or their abilities will not be accepted.</div>
         {% if comment_error %}
-        <div style="background:var(--bg-warning); border:1px solid var(--border-warning); border-radius:8px; padding:10px 14px; margin-bottom:8px; font-size:14px; color:var(--text-warning); line-height:1.6;">
-          <strong>Comment not accepted</strong> — {{ comment_error }}<br>
-          <span style="font-size:13px;">Edit your comment below and resubmit, or clear it to submit without one.</span>
+        <div style="background:#FDF0F0; border:2px solid #C0392B; border-radius:8px; padding:14px 18px; margin-bottom:12px; line-height:1.6;">
+          <div style="font-weight:700; font-size:16px; color:#C0392B; margin-bottom:6px;">⚠ Comment not accepted</div>
+          <div style="font-size:16px; color:#7B1010;">{{ comment_error }}</div>
+          <div style="font-size:16px; color:#7B1010; margin-top:6px;">Edit your comment below and resubmit, or clear it to submit without one.</div>
         </div>
         {% endif %}
-        <textarea name="optional_comment" id="optional_comment" rows="2" maxlength="500"
-                  style="width:100%; padding:10px 12px; font-size:15px; border:1px solid {% if comment_error %}var(--border-warning){% else %}var(--border){% endif %}; border-radius:var(--radius-sm); background:var(--surface-3); color:var(--text-primary); resize:vertical; box-sizing:border-box;"
+        <textarea name="optional_comment" id="optional_comment" rows="3" maxlength="500"
+                  style="width:100%; padding:12px 14px; font-size:16px; -webkit-text-size-adjust:100%; border:2px solid {% if comment_error %}#C0392B{% else %}var(--border){% endif %}; border-radius:var(--radius-sm); background:var(--surface-3); color:var(--text-primary); resize:vertical; box-sizing:border-box; line-height:1.6;"
                   placeholder="e.g. The catchlight in the left eye is what made this frame. — Please be specific and respectful. Comments are about the photograph, not the photographer.">{% if prefill_comment %}{{ prefill_comment }}{% endif %}</textarea>
       </div>
 
       <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
-        <button type="submit" class="btn btn-solid" id="submitBtn">Submit Rating →</button>
+        <button type="submit" class="rate-submit-btn" id="submitBtn">Submit Evaluation →</button>
       </div>
 
     </form>
 
-    <form method="POST" action="{{ url_for('skip_rating') }}" style="margin-top:12px;">
+    <form method="POST" action="{{ url_for('skip_rating') }}" style="margin-top:12px; padding:0 22px 22px;">
       <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
-      <button type="submit" class="btn">Skip</button>
+      <button type="submit" class="rate-skip-btn">Skip</button>
     </form>
   </div>
 
   {% else %}
-  {# ── No image available ───────────────────────────────────────── #}
+
   <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:40px 32px; text-align:center; margin-bottom:28px;">
     {% if queue_remaining == 0 %}
     <div style="font-size:32px; margin-bottom:16px;">✓</div>
-    <h2 style="font-size:20px; font-weight:700; margin-bottom:10px;">Queue empty</h2>
+    <h2 style="font-size:20px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">Queue empty</h2>
     <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
       No images in the queue right now. Check back later — new images are added as members upload.
     </p>
     {% else %}
     <div style="font-size:32px; margin-bottom:16px;">⏳</div>
-    <h2 style="font-size:20px; font-weight:700; margin-bottom:10px;">No assignment yet</h2>
+    <h2 style="font-size:20px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">No assignment yet</h2>
     <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
       {{ queue_remaining }} image{{ 's' if queue_remaining != 1 else '' }} in the queue. Refresh to get your next assignment.
     </p>
-    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="margin-top:16px;">Refresh →</a>
+    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="margin-top:16px; display:inline-block; min-height:44px; padding:12px 28px;">Refresh →</a>
     {% endif %}
   </div>
+
   {% endif %}
 
-  {# ── Stats footer ─────────────────────────────────────────────── #}
-  <div style="background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Your Rating Stats</div>
-    <div style="display:flex; gap:24px; flex-wrap:wrap; font-size:14px; color:var(--text-secondary);">
-      <div>Ratings this month: <strong style="color:var(--text-primary); font-family:var(--font-mono);">{{ month_given }}</strong></div>
-      <div>Next credit reset: <strong style="color:var(--text-primary);">1 {{ next_reset }}</strong></div>
-      <div>Lifetime total: <strong style="color:var(--text-primary); font-family:var(--font-mono);">{{ lifetime_given }}</strong></div>
+  <div class="stats-bar">
+    <div class="stats-title">Your Evaluation Stats</div>
+    <div class="stats-row">
+      <div>Evaluations this month: <strong style="color:var(--text-primary);">{{ month_given }}</strong></div>
+      <div>Next credit reset: <strong style="color:var(--text-primary);">{{ next_reset }}</strong></div>
+      <div>Lifetime total: <strong style="color:var(--text-primary);">{{ lifetime_given }}</strong></div>
     </div>
   </div>
 
-  {% endif %}{# end is_subscriber #}
+  {% endif %}
 
-  {# ── How peer rating works ────────────────────────────────────── #}
-  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:28px 28px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">How Peer Rating Works</div>
+  <div class="how-section">
+    <div class="how-title">How Peer Evaluation Works</div>
     <div class="how-row">
       <div class="how-num">1</div>
-      <div class="how-text"><strong>Blind rating.</strong> You see the image and genre only — no photographer name, no DDI score. Rate purely on what you see.</div>
+      <div class="how-text"><strong>Blind evaluation.</strong> You see the image and its interest only — no photographer name, no prior evaluation. Judge purely on what you see.</div>
     </div>
     <div class="how-row">
       <div class="how-num">2</div>
-      <div class="how-text"><strong>Earn credits.</strong> Every submitted rating earns 1 credit. Accumulate 5 credits to unlock a peer pool entry for one of your own images.</div>
+      <div class="how-text"><strong>Earn credits.</strong> Every submitted evaluation earns 1 credit. Accumulate 5 credits to unlock a peer pool entry for one of your own images.</div>
     </div>
     <div class="how-row">
       <div class="how-num">3</div>
-      <div class="how-text"><strong>Pool access.</strong> When your image is in the peer pool, other subscribers rate it. You receive a peer average score alongside your DDI score.</div>
+      <div class="how-text"><strong>Pool access.</strong> When your image is in the peer pool, other subscribers evaluate it. You receive a peer average alongside your evaluation.</div>
     </div>
     <div class="how-row">
       <div class="how-num">4</div>
-      <div class="how-text"><strong>Divergence triggers jury review.</strong> If peer scores diverge significantly from the DDI score, the image is referred to a jury. Your DDI score is always protected.</div>
+      <div class="how-text"><strong>Divergence triggers jury review.</strong> If peer results diverge significantly from the engine evaluation, the image is referred to a jury. Your evaluation is always protected.</div>
     </div>
-    <div class="how-row" style="margin-bottom:0;">
+    <div class="how-row">
       <div class="how-num">5</div>
-      <div class="how-text"><strong>Bias detection.</strong> Systematic rating patterns (always high, always low, or targeting specific photographers) are flagged automatically and reviewed by admin.</div>
+      <div class="how-text"><strong>Bias detection.</strong> Systematic patterns (always high, always low, or targeting specific photographers) are flagged automatically and reviewed by admin.</div>
     </div>
   </div>
 
@@ -350,11 +503,9 @@
 
 {% block extra_js %}
 <script>
-// Track time spent viewing
 var startTs = Date.now();
 document.getElementById('clientStartTs') && (document.getElementById('clientStartTs').value = startTs);
 
-// Restore prefilled slider values if returning from a comment error
 {% if prefill_sliders %}
 var _prefill = {{ prefill_sliders | tojson }};
 ['dod','disruption','dm','wonder','aq'].forEach(function(f) {
@@ -363,22 +514,17 @@ var _prefill = {{ prefill_sliders | tojson }};
 });
 {% endif %}
 
-// Restore checked state visual highlight for prefilled checkboxes
 document.querySelectorAll('.cb-label input[type="checkbox"]').forEach(function(cb) {
-  if (cb.checked) {
-    cb.closest('label').style.borderColor = 'var(--gold)';
-  }
+  if (cb.checked) { cb.closest('label').style.borderColor = '#F5C518'; }
 });
 
 {% if comment_error %}
-// Auto-scroll to comment error on page load
 window.addEventListener('load', function() {
   var ta = document.getElementById('optional_comment');
   if (ta) { ta.scrollIntoView({behavior: 'smooth', block: 'center'}); ta.focus(); }
 });
 {% endif %}
 
-// Live timer display
 var timerEl = document.getElementById('timerDisplay');
 var timeSpentEl = document.getElementById('timeSpent');
 if (timerEl) {
@@ -389,26 +535,20 @@ if (timerEl) {
   }, 1000);
 }
 
-// Update slider display values
 function updateVal(field, val) {
   var el = document.getElementById('val_' + field);
   if (el) el.textContent = parseFloat(val).toFixed(1);
 }
 
-// Enforce checkbox max — uncheck oldest if over limit
 function enforceMax(el, name, max) {
   var all = document.querySelectorAll('input[name="' + name + '"]:checked');
-  if (all.length > max) {
-    all[0].checked = false;
-  }
-  // Visual: highlight checked labels
+  if (all.length > max) { all[0].checked = false; }
   document.querySelectorAll('input[name="' + name + '"]').forEach(function(cb) {
     var lbl = cb.closest('label');
-    if (lbl) lbl.style.borderColor = cb.checked ? 'var(--gold)' : 'var(--border)';
+    if (lbl) lbl.style.borderColor = cb.checked ? '#F5C518' : 'var(--border)';
   });
 }
 
-// Enforce minimum 15 seconds + clear any advisory errors before submit
 var form = document.getElementById('ratingForm');
 if (form) {
   form.addEventListener('submit', function(e) {
@@ -420,7 +560,6 @@ if (form) {
       setTimeout(function() { if (warn) warn.style.display = 'none'; }, 4000);
       return;
     }
-    // Checkboxes are optional — clear any advisory messages and allow submit
     var sotErr = document.getElementById('stood_out_error');
     var impErr = document.getElementById('improve_error');
     if (sotErr) sotErr.style.display = 'none';
