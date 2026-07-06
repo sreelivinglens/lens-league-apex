@@ -19,7 +19,8 @@
    Inter only · argument-first structure
    Dimensions as rows, gradient fills
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+body:has(.sl-sci) main,
+body.page-science main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 .sl-sci, .sl-sci * { font-family: 'Inter', sans-serif !important; }
 
 /* ── SHARED ──────────────────────────────── */
@@ -276,6 +277,9 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   .sl-sci-hero-body { display: none; }
   .sl-sci-sec { padding: 48px 20px; }
   .sl-sci-problem-grid { grid-template-columns: 1fr; gap: 32px; }
+  /* Table overflow — scroll horizontally rather than bust out of viewport */
+  .sl-sci-problem-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+  .sl-sci-problem-table td, .sl-sci-problem-table th { word-break: break-word; overflow-wrap: break-word; min-width: 100px; }
   .sl-sci-h2 { font-size: 26px; }
   .sl-sci-act-grid { grid-template-columns: 1fr; }
   /* Dimensions: stack left panel above body panel */
@@ -302,12 +306,15 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   .sl-sci-cta-btn, .sl-sci-cta-btn-ghost { width: 100%; text-align: center; padding: 16px 20px; font-size: 14px; }
   .sl-sci-cta-row { flex-direction: column; gap: 12px; }
   .sl-sci-integ-head, .sl-sci-not-head { font-size: 24px; text-align: left; }
-  -webkit-tap-highlight-color: transparent;
-  -webkit-font-smoothing: antialiased;
+  /* Truth box — prevent long strings from overflowing */
+  .sl-sci-truth-box { word-break: break-word; overflow-wrap: break-word; }
+  /* Dimension example text — wrap cleanly */
+  .sl-sci-dim-desc, .sl-sci-dim-example { word-break: break-word; overflow-wrap: break-word; }
 }
 </style>
 {% endblock %}
 
+{% block body_class %}page-science{% endblock %}
 {% block content %}
 <div class="sl-sci">
 
