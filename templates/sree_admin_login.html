@@ -1,5 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Sign In — Lens League Apex{% endblock %}
+{% block title %}Admin — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { padding-top: 0 !important; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
@@ -7,7 +13,7 @@
 
     <div class="card" style="padding:32px;">
       <div style="text-align:center; margin-bottom:28px;">
-        <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:10px;">LENS LEAGUE APEX</div>
+        <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:10px;">SHUTTER LEAGUE</div>
         <h1 style="font-size:22px; font-weight:700; color:var(--text-primary);">Admin Access</h1>
       </div>
 
@@ -15,7 +21,7 @@
         <div class="form-group" style="margin-bottom:16px;">
           <label for="email" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Email</label>
           <input type="email" id="email" name="email"
-                 placeholder="admin@lenslague.com"
+                 placeholder="admin@shutterleague.com"
                  style="width:100%; background:#FFFFFF; border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;"
                  onfocus="this.style.borderColor='var(--gold)'"
                  onblur="this.style.borderColor='var(--border)'"
