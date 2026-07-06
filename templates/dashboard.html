@@ -291,11 +291,14 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 {% endblock %}
 
 {% block content %}
-{# ── Time-based greeting ── #}
-{% set ist_hour = now.hour + 5 if now is defined else 10 %}
-{% if ist_hour < 12 %}{% set greeting = 'Good morning' %}{% set g_emoji = '☀️' %}
-{% elif ist_hour < 17 %}{% set greeting = 'Good afternoon' %}{% set g_emoji = '🌤️' %}
-{% else %}{% set greeting = 'Good evening' %}{% set g_emoji = '🌙' %}{% endif %}
+{# ── Time-based greeting — now is passed as datetime.utcnow (callable) ── #}
+{% set ns = namespace(greeting='Good morning', emoji='☀️') %}
+{% set _ist_mins = (now().hour * 60 + now().minute + 330) % 1440 if now is defined else 540 %}
+{% set _ist_h = _ist_mins // 60 %}
+{% if _ist_h >= 21 or _ist_h < 5 %}{% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌙' %}
+{% elif _ist_h >= 17 %}{% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌆' %}
+{% elif _ist_h >= 12 %}{% set ns.greeting = 'Good afternoon' %}{% set ns.emoji = '🌤️' %}
+{% endif %}
 
 {# ── Last scored image ── #}
 {% set _last = images.items[0] if images and images.items else none %}
@@ -368,7 +371,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# ── Greeting + streak ── #}
     <div class="greeting">
       <div>
-        <div class="greeting-name">{{ greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}!</div>
+        <div class="greeting-name">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}!</div>
         <div class="greeting-sub">{% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}{% else %}Today's practice begins here.{% endif %}</div>
       </div>
       <div class="streak">
