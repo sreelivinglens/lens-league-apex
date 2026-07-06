@@ -1,3109 +1,635 @@
-{# SL-VERSION: 111.5 (Session 111 — scoring banner: 60s auto-dismiss, sessionStorage cleared;
-   AEA banner: pre-season shows "Opens September 2026" not "is open";
-   previously 111.4 — gold left border on all right column cards via class;
-   Shooting Near You: dark navy label + Get directions (no gold on light bg);
-   portfolio CTA: explicit white text (#FFFFFF); scoring banner: stale sessionStorage cleared;
-   previously 111.3 — right column restructured: Standing→Yesterday→Portfolio→Points→AEA→Location→Referral;
-   My Gallery CTA removed (duplicate); Yesterday removed from left column; Portfolio moved to right;
-   copyright © bottom-centre on hero image; AEA bar navy not gold;
-   previously 111.2 — peer eval block, recent work always visible (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
 {% extends "base.html" %}
-{% block title %}Dashboard — {{ platform_name }}{% endblock %}
+{% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
-{% block canonical %}https://shutterleague.com/dashboard{% endblock %}
-{% block og_title %}Shutter League — Your Dashboard{% endblock %}
-{% block og_description %}Your personalised photography coaching brief, daily assignment, and standing.{% endblock %}
-{% block og_url %}https://shutterleague.com/dashboard{% endblock %}
-{% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
-{% block extra_css %}
-<style>
-/*
-  Shutter League Dashboard — Today Screen
-  Design: Apple Fitness warmth · Sherpa voice · Zero scroll on mobile
-  Built: Session 79 · 14 June 2026
-  base.html renders: nav, footer, Inter font
-*/
-
-/* ── Design tokens (extend base.html vars) ── */
-:root {
-  --sl-yellow:       #D6A428;
-  --sl-yellow-dark:  #A37B2C;
-  --sl-bg:           #F6F2E9;
-  --sl-card:         #FFFFFF;
-  --sl-footer-bg:    #0F2A22;
-  --sl-text:         #1A1A18;
-  --sl-text-light:   #6B6B6B;
-  --sl-border:       #E8E4DA;
-  --sl-success:      #2A7A3A;
-  --sl-purple:       #6A3EF0;
-  --sl-shadow:       0 2px 12px rgba(0,0,0,.06);
-  --sl-shadow-lg:    0 8px 32px rgba(0,0,0,.08);
-  --r-card:          16px;
-  --r-hero:          16px;
-  --r-btn:           10px;
-  --r-img:           10px;
-  --r-fab:           50%;
-}
-
-/* ── Reset & base ── */
-input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari auto-zoom */
-*, *::before, *::after { box-sizing: border-box; }
-
-body:has(.sl-today),
-body.page-dashboard { padding-top: 0 !important; }
-body:has(.sl-today) main,
-body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
-@media (max-width: 768px) { body:has(.sl-today) { padding-top: calc(68px + env(safe-area-inset-top, 0px)) !important; } }
-
-.sl-today {
-  background: var(--sl-bg);
-  font-family: Inter, sans-serif;
-  color: var(--sl-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* bottom-nav height clearance */
-  padding-bottom: 100px;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-@media (max-width: 768px) {
-  .sl-today { padding-top: 0; }
-  .sl-dash-hero-banner { margin-top: 0; }
-}
-
-/* ── Page container ── */
-.sl-today__inner {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 8px 8px 0;
-}
-.sl-today__left  { display: contents; } /* passthrough on mobile */
-.sl-today__right { display: none; }     /* hidden on mobile */
-.sl-practise-desktop-content { display: contents; } /* passthrough on mobile */
-.sl-practise-desktop-img { display: none; }       /* hidden on mobile */
-.sl-practise-desktop-img-grad { display: none; }  /* hidden on mobile */
-.sl-desktop-right-section { display: none; } /* hidden on mobile */
-.sl-desktop-section-label { display: none; } /* hidden on mobile */
-
-/* ══════════════════════════════════════════
-   GREETING HEADER
-══════════════════════════════════════════ */
-.sl-greeting {
-  padding: 20px 0 4px;
-}
-
-.sl-greeting__name {
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.2;
-  color: var(--sl-text);
-  text-shadow: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sl-greeting__sub {
-  font-size: 18px;
-  color: var(--sl-text);
-  margin-top: 3px;
-  margin-bottom: 16px;
-  font-weight: 500;
-  opacity: .55;
-}
-
-/* ══════════════════════════════════════════
-   TODAY'S ASSIGNMENT HERO CARD
-══════════════════════════════════════════ */
-.sl-assignment {
-  background: #FFFFFF;
-  border-radius: var(--r-hero);
-  border: 1px solid var(--sl-border);
-  box-shadow: var(--sl-shadow-lg);
-  overflow: hidden;
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-.sl-assignment__eyebrow {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .10em;
-  text-transform: uppercase;
-  color: var(--sl-yellow-dark);
-  padding: 12px 14px 0;
-}
-
-/* Two-column layout: text left, image right */
-.sl-assignment__body {
-  padding: 0;
-}
-
-.sl-assignment__left {
-  padding: 12px 16px 10px;
-}
-
-.sl-assignment__title {
-  font-size: 19px;
-  line-height: 1.15;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--sl-text);
-  margin-bottom: 6px;
-}
-
-.sl-assignment__why {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #404040;
-  margin-bottom: 0;
-  text-align: justify;
-}
-
-.sl-assignment__img {
-  display: none; /* replaced by dimension colour band — Session 80 */
-}
-
-.sl-assignment__img-placeholder {
-  display: none;
-}
-
-/* ── Full-width dashboard hero banner — above content, both mobile + desktop ── */
-.sl-dash-hero-banner {
-  position: relative;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4/3;
-  overflow: hidden;
-  background: #0D0D0B;
-}
-.sl-dash-hero-banner img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-}
-.sl-dash-hero-banner__grad {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 60%, transparent 100%);
-}
-.sl-dash-hero-banner__badge {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 14px 20px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-.sl-dash-hero-banner__score {
-  font-size: 18px;
-  font-weight: 800;
-  color: #F5C518;
-  line-height: 1;
-  display: block;
-}
-.sl-dash-hero-banner__tier {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .09em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
-  display: block;
-  margin-top: 3px;
-}
-.sl-dash-hero-banner__by {
-  font-size: 13px;
-  color: rgba(255,255,255,0.55);
-  display: block;
-  margin-top: 2px;
-}
-.sl-dash-hero-banner__genre {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .09em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
-  text-align: right;
-}
-@media (min-width: 1025px) {
-  .sl-dash-hero-banner { aspect-ratio: unset; height: 480px; }
-}
-
-/* Meta pills row */
-.sl-assignment__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 14px;
-}
-
-.sl-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 17px;
-  color: var(--sl-text);
-}
-
-.sl-meta-item__icon {
-  font-size: 20px;
-  width: 28px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.sl-meta-item__label {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--sl-text-light);
-  display: block;
-  line-height: 1;
-  margin-bottom: 1px;
-}
-
-.sl-meta-item__val {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--sl-text);
-  line-height: 1.2;
-}
-
-/* Shot count */
-.sl-assignment__shots {
-  padding: 0 14px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  color: var(--sl-text-light);
-}
-
-/* Start Practise CTA */
-.sl-btn-mission {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: var(--sl-yellow);
-  color: var(--sl-text);
-  font-size: 20px;
-  font-weight: 700;
-  height: 64px;
-  border: none;
-  border-radius: 0 0 var(--r-hero) var(--r-hero);
-  width: 100%;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background .2s;
-}
-
-.sl-btn-mission:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
-
-/* ══════════════════════════════════════════
-   TODAY'S MASTER CARD
-══════════════════════════════════════════ */
-.sl-master {
-  background: var(--sl-card);
-  border-radius: var(--r-card);
-  border: 1px solid var(--sl-border);
-  box-shadow: var(--sl-shadow);
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  display: block;
-}
-
-.sl-master__eyebrow {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--sl-purple);
-  margin-bottom: 4px;
-}
-
-.sl-master__img { display: none; }
-
-.sl-master__name {
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--sl-text);
-  margin-bottom: 2px;
-}
-
-.sl-master__desc {
-  font-size: 15px;
-  color: var(--sl-text-light);
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-
-.sl-btn-example {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 2px solid var(--sl-purple);
-  color: var(--sl-purple);
-  background: white;
-  border-radius: 12px;
-  padding: 10px 16px;
-  min-height: 44px;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background .2s, color .2s;
-}
-
-.sl-btn-example:hover {
-  background: var(--sl-purple);
-  color: white;
-}
-
-/* ══════════════════════════════════════════
-   YESTERDAY'S STATS ROW
-══════════════════════════════════════════ */
-.sl-yesterday {
-  background: var(--sl-card);
-  border-radius: var(--r-card);
-  border: 1px solid var(--sl-border);
-  box-shadow: var(--sl-shadow);
-  padding: 10px 12px;
-  margin-bottom: 16px;
-}
-
-.sl-yesterday__top-label {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--sl-text-light);
-  margin-bottom: 8px;
-  display: block;
-}
-
-.sl-yesterday__row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-}
-
-.sl-yesterday__col {
-  flex: 1;
-  text-align: center;
-  padding: 0 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.sl-yesterday__col + .sl-yesterday__col {
-  border-left: 1px solid var(--sl-border);
-}
-
-.sl-yesterday__label {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--sl-text-light);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.sl-yesterday__status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--sl-success);
-}
-
-.sl-yesterday__check {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--sl-success);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.sl-yesterday__score-val {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--sl-text);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.sl-yesterday__stars {
-  color: var(--sl-yellow);
-  font-size: 16px;
-  letter-spacing: 1px;
-}
-
-.sl-yesterday__trend {
-  font-size: 14px;
-  color: var(--sl-success);
-  font-weight: 600;
-}
-
-.sl-yesterday__streak-val {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--sl-text);
-  line-height: 1;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.sl-yesterday__streak-sub {
-  font-size: 14px;
-  color: var(--sl-text-light);
-}
-
-/* ══════════════════════════════════════════
-   UPLOAD CTA BANNER
-══════════════════════════════════════════ */
-.sl-upload-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--sl-yellow);
-  border-radius: var(--r-card);
-  padding: 14px 16px;
-  margin-bottom: 16px;
-  text-decoration: none;
-  transition: background .2s;
-  box-shadow: 0 8px 24px rgba(244,194,13,.25);
-}
-
-.sl-upload-banner:hover { background: var(--sl-yellow-dark); }
-
-.sl-upload-banner__left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1;
-}
-
-.sl-upload-banner__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(0,0,0,.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.sl-upload-banner__text {
-  min-width: 0;
-}
-
-.sl-upload-banner__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--sl-text);
-  display: block;
-  line-height: 1.3;
-}
-
-.sl-upload-banner__sub {
-  font-size: 13px;
-  color: rgba(21,21,21,.60);
-  display: block;
-  line-height: 1.3;
-}
-
-.sl-upload-banner__arrow {
-  font-size: 22px;
-  color: var(--sl-text);
-  flex-shrink: 0;
-}
-
-/* ══════════════════════════════════════════
-   COLLAPSIBLE SECONDARY SECTIONS
-   (Standing · Weekly · Location · Points)
-   Below the fold — available, not blocking
-══════════════════════════════════════════ */
-.sl-sections,
-.sl-mobile-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 32px;
-}
-
-.sl-sec {
-  background: var(--sl-card);
-  border-radius: var(--r-card);
-  border: 1px solid var(--sl-border);
-  box-shadow: var(--sl-shadow);
-  overflow: hidden;
-}
-
-.sl-sec__hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-.sl-sec__hdr:hover { opacity: .92; }
-
-.sl-sec__hdr-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sl-sec__icon {
-  font-size: 20px;
-  width: 28px;
-  text-align: center;
-}
-
-.sl-sec__title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--sl-text);
-  display: block;
-}
-
-.sl-sec__sub {
-  font-size: 14px;
-  color: var(--sl-text-light);
-  display: block;
-  margin-top: 1px;
-}
-
-.sl-sec__chev {
-  font-size: 16px;
-  color: var(--sl-text-light);
-  transition: transform .25s;
-  flex-shrink: 0;
-}
-
-.sl-sec.is-open .sl-sec__chev { transform: rotate(180deg); }
-
-.sl-sec__body {
-  display: none;
-  padding: 0 14px 14px;
-  border-top: 1px solid var(--sl-border);
-}
-
-.sl-sec.is-open .sl-sec__body { display: block; }
-
-/* Standing section body */
-.sl-standing-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.sl-standing-stat {
-  text-align: center;
-  padding: 10px 8px;
-  background: var(--sl-bg);
-  border-radius: 14px;
-}
-
-.sl-standing-stat__val {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--sl-text);
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.sl-standing-stat__label {
-  font-size: 13px;
-  color: var(--sl-text-light);
-  font-weight: 500;
-}
-
-/* Dimension pills */
-.sl-dim-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.sl-dim-pill {
-  background: var(--sl-bg);
-  border-radius: 14px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sl-dim-pill__name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--sl-text);
-}
-
-.sl-dim-pill__score {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--sl-text);
-}
-
-/* ── Mobile sparkline trend rows — globally available (not desktop-only) ── */
-.sl-mob-spark-row {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 8px;
-}
-.sl-mob-spark-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.sl-mob-spark-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.sl-mob-spark-svg {
-  width: 100%;
-  height: 28px;
-  display: block;
-}
-.sl-sparkline-pill {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 8px;
-}
-.sl-sparkline-pill.up   { background:#EAF3DE; color:#27500A; }
-.sl-sparkline-pill.down { background:#FCEBEB; color:#A32D2D; }
-.sl-sparkline-pill.st   { background:#F1EFE8; color:#5F5E5A; }
-
-.sl-dim-pill__trend {
-  font-size: 13px;
-  margin-left: 4px;
-}
-
-.sl-dim-pill__trend.up    { color: var(--sl-success); }
-.sl-dim-pill__trend.down  { color: #E74C3C; }
-.sl-dim-pill__trend.steady{ color: var(--sl-text-light); }
-
-/* Progress bar */
-.sl-tier-bar {
-  margin-top: 16px;
-}
-.sl-tier-bar__label {
-  font-size: 14px;
-  color: var(--sl-text-light);
-  margin-bottom: 8px;
-  line-height: 1.5;
-  display: flex;
-  justify-content: space-between;
-}
-.sl-tier-bar__track {
-  height: 6px;
-  background: var(--sl-border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.sl-tier-bar__fill {
-  height: 6px;
-  background: var(--sl-yellow);
-  border-radius: 3px;
-  transition: width .5s ease;
-}
-
-/* Points section */
-.sl-points-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.sl-points-card {
-  background: var(--sl-bg);
-  border-radius: 14px;
-  padding: 10px 12px;
-  text-align: center;
-}
-
-.sl-points-card__val {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--sl-text);
-}
-
-.sl-points-card__label {
-  font-size: 13px;
-  color: var(--sl-text-light);
-  margin-top: 1px;
-}
-
-.sl-btn-redeem {
-  display: block;
-  text-align: center;
-  margin-top: 14px;
-  background: #13254B;
-  color: var(--sl-yellow);
-  font-size: 16px;
-  font-weight: 700;
-  padding: 14px;
-  border-radius: var(--r-btn);
-  text-decoration: none;
-  transition: opacity .2s;
-}
-.sl-btn-redeem:hover { opacity: .88; color: var(--sl-yellow); }
-
-/* Peer rating CTA */
-.sl-peer-cta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #F0EBFF;
-  border: 1px solid #D4C5FF;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-top: 14px;
-  text-decoration: none;
-  transition: background .2s;
-}
-.sl-peer-cta:hover { background: #E8E0FF; }
-.sl-peer-cta__left { display: flex; align-items: center; gap: 10px; }
-.sl-peer-cta__txt { font-size: 16px; font-weight: 600; color: var(--sl-purple); }
-.sl-peer-cta__sub { font-size: 13px; color: #8B78CC; margin-top: 1px; }
-.sl-peer-cta__pts { font-size: 15px; font-weight: 700; color: var(--sl-purple); background: white; padding: 6px 12px; border-radius: 20px; }
-
-/* No images yet */
-.sl-empty {
-  text-align: center;
-  padding: 32px 0;
-  color: var(--sl-text-light);
-}
-.sl-empty__icon { font-size: 40px; margin-bottom: 12px; }
-.sl-empty__txt { font-size: 17px; line-height: 1.6; }
-
-/* Flash messages */
-.sl-flash { margin-bottom: 16px; }
-.sl-flash-msg {
-  padding: 14px 18px;
-  border-radius: 16px;
-  font-size: 16px;
-  line-height: 1.5;
-  margin-bottom: 8px;
-}
-.sl-flash-msg.success { background: #EAF3DE; border: 1px solid #C0DD97; color: #27500A; }
-.sl-flash-msg.error   { background: #FDE8E8; border: 1px solid #F5AAAA; color: #7A1414; }
-.sl-flash-msg.info    { background: #EBF1F5; border: 1px solid #B0CCE0; color: #1A4A6B; }
-
-/* Alerts */
-.sl-alert {
-  display: flex;
-  gap: 12px;
-  padding: 14px 18px;
-  border-radius: 16px;
-  margin-bottom: 8px;
-  font-size: 16px;
-  line-height: 1.5;
-}
-.sl-alert.amber { background: #FFF8DC; border: 1px solid #F0E898; color: #7A5C00; }
-
-/* Mentor review alert */
-.sl-mentor-alert {
-  background: var(--sl-card);
-  border: 2px solid var(--sl-yellow);
-  border-radius: 16px;
-  padding: 10px 12px;
-  margin-top: 4px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.sl-mentor-alert__label {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--sl-yellow-dark);
-  display: block;
-  margin-bottom: 4px;
-}
-.sl-mentor-alert__txt {
-  font-size: 16px;
-  color: var(--sl-text);
-  line-height: 1.4;
-}
-.sl-btn-read {
-  background: var(--sl-yellow);
-  color: var(--sl-text);
-  font-size: 15px;
-  font-weight: 700;
-  padding: 10px 18px;
-  border-radius: 14px;
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background .2s;
-}
-.sl-btn-read:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
-
-/* AEA banner */
-.sl-aea-banner {
-  background: #13254B;
-  border-radius: 16px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.sl-aea-banner__badge {
-  background: var(--sl-yellow);
-  color: #13254B;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-.sl-aea-banner__txt {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-  flex: 1;
-}
-.sl-aea-banner__sub {
-  font-size: 13px;
-  color: rgba(255,255,255,.65);
-  margin-top: 2px;
-}
-
-/* Free tier nudge */
-.sl-free-nudge {
-  background: #F0EBFF;
-  border: 1px solid #D4C5FF;
-  border-radius: var(--r-card);
-  padding: 20px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-.sl-free-nudge__title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--sl-text);
-  margin-bottom: 6px;
-}
-.sl-free-nudge__sub {
-  font-size: 16px;
-  color: var(--sl-text-light);
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-.sl-btn-subscribe {
-  display: block;
-  background: var(--sl-purple);
-  color: white;
-  font-size: 17px;
-  font-weight: 700;
-  padding: 14px;
-  border-radius: var(--r-btn);
-  text-decoration: none;
-  transition: opacity .2s;
-}
-.sl-btn-subscribe:hover { opacity: .88; color: white; }
-
-/* ══════════════════════════════════════════
-   LOCATION WIDGET (inline update form)
-══════════════════════════════════════════ */
-@media (min-width: 1025px) {
-  .sl-loc-widget { display: none !important; }
-}
-.sl-loc-widget {
-  background: var(--sl-card);
-  border: 1px solid var(--sl-border);
-  border-radius: 16px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.sl-loc-widget__pin { font-size: 20px; flex-shrink: 0; }
-.sl-loc-widget__txt { flex: 1; font-size: 16px; color: var(--sl-text-light); line-height: 1.4; }
-.sl-loc-widget__city { font-weight: 700; color: var(--sl-text); }
-.sl-loc-widget__change {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--sl-yellow-dark);
-  text-decoration: none;
-  white-space: nowrap;
-  border: 1.5px solid var(--sl-yellow-dark);
-  padding: 10px 14px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 10px;
-  transition: background .2s, color .2s;
-}
-.sl-loc-widget__change:hover { background: var(--sl-yellow); color: var(--sl-text); }
-
-/* ══════════════════════════════════════════
-   RESPONSIVE — single column mobile-first
-══════════════════════════════════════════ */
-/* Mobile first: all grids default to single column, expand at breakpoints */
-@media (max-width: 400px) {
-  .sl-assignment__title { font-size: 24px; }
-  .sl-greeting__name    { font-size: 22px; }
-  .sl-standing-row      { grid-template-columns: 1fr; }
-  .sl-points-row        { grid-template-columns: 1fr; }
-  .sl-dim-grid          { grid-template-columns: 1fr; }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  /* iPad: centred single column, larger type */
-  .sl-today__inner { padding: 0 20px; }
-  .sl-assignment__title { font-size: 26px; }
-  .sl-dim-grid { grid-template-columns: 1fr 1fr; }
-}
-
-@media (min-width: 1025px) {
-  /* Desktop — 2-column layout */
-  .sl-today { padding-bottom: 0; }
-  .sl-today__inner {
-    max-width: 1440px;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 220px 1fr 290px;
-    gap: 0;
-    align-items: start;
-  }
-  /* Hero banner: full viewport width on desktop, break out of grid */
-  .sl-dash-hero-banner {
-    display: block !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin-left: calc(-50vw + 50%) !important;
-    height: 480px !important;
-    aspect-ratio: unset !important;
-  }
-  /* Left column — greeting + hero + assignment + master */
-  .sl-today__left {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 24px 0 40px;
-  }
-  /* Right column — standing + points + AEA */
-
-  /* sl-desktop-hero removed — replaced by full-width sl-dash-hero-banner */
-  /* Assignment title larger on desktop */
-  .sl-assignment__title { font-size: 44px; }
-  /* Sections always expanded on desktop right column — no collapse needed */
-  .sl-desktop-right-section {
-    background: var(--sl-card);
-    border-radius: var(--r-card);
-    border: 1px solid var(--sl-border);
-    border-left: 3px solid var(--sl-yellow);
-    padding: 16px 18px;
-  }
-  .sl-desktop-section-label {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .11em;
-    text-transform: uppercase;
-    color: var(--sl-text-light);
-    margin-bottom: 12px;
-    display: block;
-  }
-  /* ── Desktop right column collapsible sections ── */
-  .sl-rc-sec {
-    background: var(--sl-card);
-    border-radius: var(--r-card);
-    border: 1px solid var(--sl-border);
-    border-left: 3px solid var(--sl-yellow);
-    overflow: hidden;
-  }
-  .sl-rc-sec__hdr {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 18px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    min-height: 44px;
-    gap: 8px;
-  }
-  .sl-rc-sec__hdr:hover { background: rgba(0,0,0,.02); }
-  .sl-rc-sec__hdr-left {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    flex: 1;
-    min-width: 0;
-  }
-  .sl-rc-sec__label {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .11em;
-    text-transform: uppercase;
-    color: var(--sl-text-light);
-    line-height: 1.2;
-  }
-  .sl-rc-sec__summary {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sl-text);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sl-rc-sec__chev {
-    font-size: 13px;
-    color: var(--sl-text-light);
-    flex-shrink: 0;
-    transition: transform .18s ease;
-    line-height: 1;
-  }
-  .sl-rc-sec.is-open .sl-rc-sec__chev { transform: rotate(180deg); }
-  .sl-rc-sec__body {
-    display: none;
-    padding: 0 18px 16px;
-    border-top: 1px solid var(--sl-border);
-  }
-  .sl-rc-sec.is-open .sl-rc-sec__body { display: block; }
-  /* Sparkline container */
-  .sl-sparkline-row {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 8px;
-  }
-  .sl-sparkline-item {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .sl-sparkline-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .sl-sparkline-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sl-text);
-  }
-  .sl-sparkline-val {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--sl-text);
-  }
-  .sl-sparkline-pill {
-    font-size: 13px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 8px;
-  }
-  .sl-sparkline-pill.up   { background:#EAF3DE; color:#27500A; }
-  .sl-sparkline-pill.down { background:#FCEBEB; color:#A32D2D; }
-  .sl-sparkline-pill.st   { background:#F1EFE8; color:#5F5E5A; }
-  .sl-sparkline-svg {
-    width: 100%;
-    height: 28px;
-    display: block;
-  }
-  /* Hide mobile collapsible sections on desktop — content shown in right col */
-  .sl-mobile-sections { display: none; }
-  /* Desktop right column visible — override mobile display:none on children */
-  .sl-today__right { display: flex; }
-  .sl-desktop-right-section { display: block !important; }
-  .sl-desktop-section-label { display: block !important; }
-  /* Remove mobile max-width constraint on inner */
-  .sl-today__inner { max-width: 1440px !important; }
-  /* FAB hidden on desktop */
-  .sl-upload-fab { display: none !important; }
-}
-
-/* ── Upload FAB — mobile only, fixed bottom-right ── */
-.sl-upload-fab {
-  position: fixed;
-  bottom: 28px;
-  left: 16px;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--sl-yellow);
-  color: var(--sl-text);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  text-decoration: none;
-  box-shadow: 0 3px 12px rgba(244,194,13,.35);
-  -webkit-tap-highlight-color: transparent;
-  transition: background .15s, box-shadow .15s;
-}
-.sl-upload-fab:hover,
-.sl-upload-fab:active { background: var(--sl-yellow-dark); box-shadow: 0 4px 16px rgba(244,194,13,.30); }
-.sl-upload-fab svg { flex-shrink: 0; }
-
-
-
-/* ── Peer evaluation block (Session 111) ── */
-.sl-peer-eval {
-  background: var(--sl-card);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--r-card);
-  padding: 20px 20px 16px;
-}
-.sl-peer-eval__hdr {
-  margin-bottom: 14px;
-}
-.sl-peer-eval__title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--sl-text);
-  margin: 0 0 4px;
-  line-height: 1.3;
-}
-.sl-peer-eval__sub {
-  font-size: 15px;
-  color: var(--sl-text-light);
-  margin: 0;
-  line-height: 1.5;
-}
-.sl-peer-eval__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.sl-peer-eval__card {
-  border: 1px solid var(--sl-border);
-  border-radius: 12px;
-  overflow: hidden;
-  text-decoration: none;
-  display: block;
-  background: var(--sl-bg);
-  transition: border-color 0.15s;
-}
-.sl-peer-eval__card:hover { border-color: var(--sl-purple); }
-.sl-peer-eval__thumb {
-  aspect-ratio: 1;
-  width: 100%;
-  object-fit: cover;
-  display: block;
-  background: var(--sl-bg);
-}
-.sl-peer-eval__meta {
-  padding: 8px 10px 10px;
-}
-.sl-peer-eval__genre {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--sl-text-light);
-  margin: 0 0 2px;
-}
-.sl-peer-eval__tier {
-  font-size: 14px;
-  color: var(--sl-text-light);
-  margin: 0 0 8px;
-}
-.sl-peer-eval__btn {
-  display: block;
-  width: 100%;
-  padding: 8px 0;
-  background: var(--sl-purple);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  text-align: center;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  text-decoration: none;
-  min-height: 44px;
-  line-height: 28px;
-  box-sizing: border-box;
-}
-.sl-peer-eval__pts {
-  font-size: 15px;
-  font-weight: 700;
-  color: #5C3D00;
-  text-align: center;
-  margin: 0 0 12px;
-  background: rgba(244,194,13,.15);
-  border: 1px solid rgba(244,194,13,.35);
-  border-radius: 20px;
-  padding: 8px 16px;
-  display: block;
-  letter-spacing: .01em;
-}
-.sl-peer-eval__done {
-  text-align: center;
-  padding: 20px 0 6px;
-  font-size: 15px;
-  color: var(--sl-text-light);
-  line-height: 1.6;
-}
-.sl-peer-eval__empty {
-  text-align: center;
-  padding: 16px 0 8px;
-  font-size: 15px;
-  color: var(--sl-text-light);
-}
-/* SESSION116: peer eval notification strip */
-.sl-peer-eval__notif-strip {
-  background: #EEEDFE;
-  border: 1px solid #AFA9EC;
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-bottom: 14px;
-}
-.sl-peer-eval__notif-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #3C3489;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-}
-.sl-peer-eval__notif-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
-}
-.sl-peer-eval__notif-row:last-child { margin-bottom: 0; }
-.sl-peer-eval__notif-genre {
-  font-size: 12px;
-  font-weight: 700;
-  color: #534AB7;
-  margin-right: 2px;
-  flex-shrink: 0;
-}
-.sl-peer-eval__notif-pill {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 20px;
-  display: inline-block;
-}
-.sl-peer-eval__notif-pill--amber { background: #FAEEDA; color: #633806; }
-.sl-peer-eval__notif-pill--green { background: #EAF3DE; color: #27500A; }
-.sl-peer-eval__notif-pill--note  { background: #EEEDFE; color: #534AB7; border: 1px solid #AFA9EC; }
-/* Recent work grid — always visible */
-.sl-recent-work {
-  margin-top: 4px;
-}
-.sl-recent-work__hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.sl-recent-work__title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--sl-text);
-}
-.sl-recent-work__link {
-  font-size: 14px;
-  color: var(--sl-text);
-  text-decoration: underline;
-  font-weight: 600;
-}
-.sl-recent-work__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-.sl-recent-work__item {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  overflow: hidden;
-  display: block;
-  background: #0D0D0B;
-}
-.sl-recent-work__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.sl-recent-work__peer-badge {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  background: linear-gradient(to bottom, rgba(106,62,240,.85) 0%, transparent 100%);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .03em;
-  padding: 5px 7px 14px;
-  border-radius: var(--r-img) var(--r-img) 0 0;
-  line-height: 1.2;
-  pointer-events: none;
-}
-.sl-recent-work__score {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 100%);
-  padding: 5px 7px 6px;
-}
-.sl-recent-work__score-val {
-  font-size: 13px;
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-}
-/* ── Mobile dashboard enhancements ── */
-@media (max-width: 768px) {
-  /* Score as /100 display */
-  .sl-score-display-100 { display: flex; align-items: baseline; gap: 2px; }
-  .sl-score-100-val { font-size: 52px; font-weight: 800; color: #1A1A18; line-height: 1; }
-  .sl-score-100-denom { font-size: 18px; color: #8A7A5A; font-weight: 400; }
-  /* Practise card split layout */
-  .sl-practise-split { display: flex !important; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid #E8E4DA; }
-  .sl-practise-split-text { flex: 1; padding: 14px; }
-  .sl-practise-split-img { width: 120px; flex-shrink: 0; }
-  .sl-practise-split-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* Evolution dimension sparklines */
-  .sl-evo-dim-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F0EAE0; }
-  .sl-evo-dim-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
-  .sl-evo-dim-name { font-size: 14px; font-weight: 500; color: #1A1A18; flex: 1; }
-  .sl-evo-dim-spark { flex: 1; }
-  .sl-evo-dim-score { font-size: 15px; font-weight: 700; color: #1A1A18; width: 32px; text-align: right; flex-shrink: 0; }
-  .sl-evo-tagline { font-size: 14px; color: #A37B2C; font-weight: 600; text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #F0EAE0; }
-  /* Today's Thought */
-  .sl-thought-card { background: #fff; border-radius: 16px; border: 1px solid #E8E4DA; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
-  .sl-thought-img { width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #2A3A3A; flex-shrink: 0; }
-  .sl-thought-img img { width: 100%; height: 100%; object-fit: cover; }
-  .sl-thought-quote { font-size: 15px; font-style: italic; color: #1A1A18; line-height: 1.5; margin-bottom: 5px; }
-  .sl-thought-author { font-size: 12px; color: #A37B2C; font-weight: 600; }
-  /* Nearby Opportunity */
-  .sl-nearby-card { background: #fff; border-radius: 16px; border: 1px solid #E8E4DA; overflow: hidden; margin-bottom: 12px; }
-  .sl-nearby-inner { display: flex; gap: 12px; padding: 14px; align-items: flex-start; }
-  .sl-nearby-map { width: 80px; height: 80px; border-radius: 10px; background: linear-gradient(135deg, #B8D4C0, #7AA88A); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-  .sl-nearby-name { font-size: 16px; font-weight: 700; color: #1A1A18; margin-bottom: 3px; }
-  .sl-nearby-desc { font-size: 13px; color: #6B6B6B; margin-bottom: 5px; }
-  .sl-nearby-meta { font-size: 12px; color: #8A7A5A; }
-  .sl-nearby-cta { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid #E8E4DA; font-size: 14px; font-weight: 600; color: #1A1A18; text-decoration: none; }
-  /* Continue Reading button */
-  .sl-continue-btn { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1.5px solid #E8E4DA; border-radius: 10px; padding: 12px 16px; margin-top: 10px; font-size: 14px; font-weight: 600; color: #1A1A18; text-decoration: none; }
-}
-
-@media (max-width: 480px) {
-  .sl-peer-eval__grid { grid-template-columns: 1fr; gap: 8px; }
-  .sl-peer-eval__card { display: grid; grid-template-columns: 100px 1fr; }
-  .sl-peer-eval__thumb { aspect-ratio: 1; width: 100px; height: 100px; }
-  .sl-peer-eval__meta { padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; }
-  .sl-peer-eval__btn { min-height: 44px; line-height: 28px; }
-  .sl-recent-work__grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (min-width: 768px) {
-  .sl-peer-eval__grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-/* ── Focus visible (keyboard navigation) ── */
-.sl-btn-mission:focus-visible,
-.sl-btn-example:focus-visible,
-.sl-upload-banner:focus-visible,
-.sl-btn-redeem:focus-visible,
-.sl-btn-subscribe:focus-visible,
-.sl-btn-read:focus-visible,
-.sl-peer-cta:focus-visible,
-.sl-sec__hdr:focus-visible {
-  outline: 3px solid var(--sl-yellow);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
-}
-
-/* ── DESKTOP LEFT SIDENAV ──────────────────────────────────────── */
-.sl-sidenav {
-  display: none; /* mobile: hidden */
-}
-@media (min-width: 1025px) {
-  .sl-sidenav {
-    display: flex;
-    flex-direction: column;
-    background: var(--sl-bg);
-    border-right: 1px solid var(--sl-border);
-    padding: 20px 0;
-    position: sticky;
-    top: 64px;
-    max-height: calc(100vh - 64px);
-    overflow-y: auto;
-  }
-  .sl-today__left { padding: 24px 28px 40px; }
-  /* ── Desktop Practise card — mock layout: dark navy 2-col, image right ── */
-  #sl-practise-card {
-    background: #1A2D3A !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-    display: grid !important;
-    grid-template-columns: 1fr 260px !important;
-    min-height: 190px !important;
-    border: none !important;
-    flex-direction: unset !important;
-    gap: 0 !important;
-  }
-  .sl-practise-desktop-img { display: block !important; }
-  .sl-practise-desktop-img-grad { display: block !important; }
-  .sl-today__right {
-    border-left: 1px solid var(--sl-border);
-    padding: 24px 18px 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    position: sticky;
-    top: 64px;
-    max-height: calc(100vh - 64px);
-    overflow-y: auto;
-  }
-}
-.sl-sidenav__item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 20px; font-size: 13px; font-weight: 500;
-  color: var(--sl-text-light); text-decoration: none;
-  border-left: 3px solid transparent; transition: all 0.15s;
-}
-.sl-sidenav__item:hover { color: var(--sl-text); background: rgba(0,0,0,0.03); }
-.sl-sidenav__item.active {
-  color: var(--sl-dark); font-weight: 700;
-  background: rgba(214,164,40,0.08); border-left-color: var(--sl-yellow);
-}
-.sl-sidenav__item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.55; }
-.sl-sidenav__item.active svg { opacity: 1; }
-.sl-sidenav__divider { height: 1px; background: var(--sl-border); margin: 10px 16px; }
-.sl-sidenav__bottom { margin-top: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.sl-sidenav__sub-card { background: var(--sl-dark); border-radius: 12px; padding: 12px 14px; }
-.sl-sidenav__sub-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sl-yellow); margin-bottom: 4px; }
-.sl-sidenav__sub-plan { font-size: 14px; font-weight: 700; color: #F6F2E9; }
-.sl-sidenav__sub-price { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
-.sl-sidenav__sub-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #F6F2E9; font-size: 11px; font-weight: 600; padding: 7px; border-radius: 8px; text-decoration: none; }
-.sl-sidenav__pts-card { background: var(--sl-card); border: 1px solid var(--sl-border); border-radius: 12px; padding: 10px 14px; }
-.sl-sidenav__pts-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sl-text-light); margin-bottom: 4px; }
-.sl-sidenav__pts-val { font-size: 26px; font-weight: 800; color: var(--sl-dark); line-height: 1; }
-.sl-sidenav__pts-link { font-size: 11px; color: var(--sl-yellow-dark); font-weight: 600; text-decoration: none; }
-/* Right panel cards */
-.sl-rp-card {
-  background: var(--sl-card); border-radius: 12px;
-  border: 1px solid var(--sl-border); border-left: 3px solid var(--sl-yellow);
-  padding: 12px 14px;
-}
-.sl-rp-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--sl-text-light); margin-bottom: 8px;
-  display: block;
-}
-
-</style>
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block body_class %}page-dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════
+   SHUTTER LEAGUE DASHBOARD v1.0
+   Built from SL_Dashboard_Mock.html — single source of truth
+   Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
+   Font: Avenir Next (inherits from base)
+═══════════════════════════════════════════════════════ */
+body.page-dashboard { padding-top: 0 !important; }
+body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+
+:root {
+  --d-gold:    #D6A428;
+  --d-gold-dk: #A37B2C;
+  --d-dark:    #0F2A22;
+  --d-navy:    #13254B;
+  --d-cream:   #F6F2E9;
+  --d-card:    #FFFFFF;
+  --d-border:  #E8E4DA;
+  --d-text:    #1A1A18;
+  --d-muted:   #6B6B6B;
+  --d-green:   #2A7A3A;
+  --d-r:       16px;
+}
+
+/* ── LAYOUT ── */
+.dash-wrap { background: var(--d-cream); min-height: 100vh; }
+
+/* Mobile default: single column */
+.dash-layout {
+  display: block;
+}
+
+/* ── LEFT SIDENAV — desktop only ── */
+.sidenav { display: none; }
+
+/* ── CENTRE ── */
+.centre {
+  padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* ── RIGHT PANEL — mobile: below centre ── */
+.rpanel {
+  padding: 0 16px 24px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+/* ─────────────────────────────────────────
+   GREETING
+───────────────────────────────────────── */
+.greeting { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.greeting-name { font-size: 22px; font-weight: 700; color: var(--d-dark); line-height: 1.2; }
+.greeting-sub { font-size: 13px; color: var(--d-muted); margin-top: 3px; }
+.streak {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  background: var(--d-card); border: 1px solid var(--d-border);
+  border-radius: 20px; padding: 6px 14px; cursor: pointer;
+}
+.streak-count { font-size: 18px; font-weight: 800; color: var(--d-dark); }
+.streak-txt { font-size: 11px; color: var(--d-muted); line-height: 1.3; }
+
+/* ─────────────────────────────────────────
+   PRACTISE CARD
+───────────────────────────────────────── */
+.practice-card {
+  background: #1A2D3A;
+  border-radius: var(--d-r);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  min-height: 190px;
+}
+.practice-content {
+  padding: 18px 20px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.practice-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--d-gold); margin-bottom: 6px;
+}
+.practice-title {
+  font-size: 20px; font-weight: 700; color: #F6F2E9;
+  line-height: 1.2; margin-bottom: 10px;
+}
+.practice-meta { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+.practice-meta-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+}
+.practice-meta-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
+.practice-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.practice-cta {
+  background: var(--d-gold); color: #111; font-size: 13px; font-weight: 700;
+  padding: 9px 18px; border-radius: 9px; text-decoration: none; white-space: nowrap;
+}
+.practice-skip { font-size: 12px; color: rgba(255,255,255,0.35); text-decoration: none; cursor: pointer; }
+.practice-img { position: relative; overflow: hidden; }
+.practice-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.practice-img-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, #1A2D3A 0%, transparent 35%);
+}
+
+/* ─────────────────────────────────────────
+   EVOLUTION CARD
+───────────────────────────────────────── */
+.today-card {
+  background: var(--d-card); border-radius: var(--d-r);
+  border: 1px solid var(--d-border); padding: 16px 18px;
+}
+.card-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--d-gold-dk); margin-bottom: 12px;
+}
+.today-grid { display: flex; flex-direction: column; gap: 14px; }
+.evo-score { font-size: 40px; font-weight: 800; color: var(--d-dark); line-height: 1; }
+.evo-grade { font-size: 12px; font-weight: 600; color: var(--d-green); margin: 3px 0; }
+.evo-pool { font-size: 11px; color: var(--d-muted); }
+.trend-wrap { display: flex; flex-direction: column; gap: 4px; }
+.trend-label { font-size: 10px; color: var(--d-muted); }
+.trend-dates { display: flex; justify-content: space-between; font-size: 10px; color: var(--d-muted); margin-top: 4px; }
+.dim-row { margin-bottom: 8px; }
+.dim-row:last-child { margin-bottom: 0; }
+.dim-top { display: flex; justify-content: space-between; align-items: center; }
+.dim-name { font-size: 11px; color: var(--d-muted); }
+.dim-val { font-size: 12px; font-weight: 700; color: var(--d-text); }
+.dim-val.strong { color: var(--d-green); }
+.dim-val.focus { color: #D97A2A; }
+.dim-bar { height: 3px; background: var(--d-border); border-radius: 2px; margin-top: 3px; }
+.dim-fill { height: 100%; border-radius: 2px; background: #8A7A5A; }
+.dim-fill.strong { background: var(--d-green); }
+.dim-fill.focus { background: #D97A2A; }
+
+/* ─────────────────────────────────────────
+   RECENT WORK
+───────────────────────────────────────── */
+.recent-card {
+  background: var(--d-card); border-radius: var(--d-r);
+  border: 1px solid var(--d-border); padding: 16px 18px;
+}
+.recent-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.recent-link { font-size: 12px; color: var(--d-dark); font-weight: 600; text-decoration: none; }
+.recent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.recent-item { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; }
+.recent-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.recent-score {
+  position: absolute; bottom: 4px; left: 4px;
+  background: rgba(0,0,0,0.65); color: #fff;
+  font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
+}
+
+/* ─────────────────────────────────────────
+   RIGHT PANEL CARDS
+───────────────────────────────────────── */
+.rp-card {
+  background: var(--d-card); border-radius: 12px;
+  border: 1px solid var(--d-border); border-left: 3px solid var(--d-gold);
+  padding: 12px 14px;
+}
+.rp-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--d-muted); margin-bottom: 8px; display: block;
+}
+.latest-eval { display: flex; gap: 10px; align-items: flex-start; }
+.latest-thumb { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--d-border); }
+.latest-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.latest-title { font-size: 13px; font-weight: 700; color: var(--d-dark); margin-bottom: 2px; }
+.latest-score { font-size: 20px; font-weight: 800; color: var(--d-dark); line-height: 1; }
+.latest-tier { font-size: 11px; color: var(--d-green); font-weight: 600; }
+.latest-date { font-size: 10px; color: var(--d-muted); margin-top: 2px; }
+.latest-link {
+  display: block; margin-top: 8px; font-size: 11px; font-weight: 600; color: var(--d-dark);
+  text-decoration: none; border-top: 1px solid var(--d-border); padding-top: 8px;
+}
+.standing-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.standing-val { font-size: 14px; font-weight: 700; color: var(--d-dark); }
+.standing-avg { font-size: 12px; color: var(--d-muted); }
+.standing-pct { font-size: 11px; color: var(--d-green); font-weight: 600; margin-bottom: 8px; }
+.standing-bar { height: 4px; background: var(--d-border); border-radius: 2px; }
+.standing-fill { height: 100%; background: var(--d-gold); border-radius: 2px; }
+.mentor-quote {
+  font-size: 12px; font-style: italic; color: var(--d-text); line-height: 1.5;
+  margin-bottom: 8px; border-left: 2px solid var(--d-gold); padding-left: 10px;
+}
+.mentor-name { font-size: 12px; font-weight: 700; color: var(--d-dark); }
+.mentor-tier-badge { font-size: 10px; color: var(--d-muted); }
+.aea-card { background: var(--d-navy); border-radius: 12px; padding: 12px 14px; }
+.aea-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
+.aea-title { font-size: 14px; font-weight: 700; color: #F6F2E9; margin-bottom: 3px; }
+.aea-sub { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 8px; }
+.aea-link { font-size: 11px; color: var(--d-gold); font-weight: 600; text-decoration: none; }
+
+/* ─────────────────────────────────────────
+   MOBILE — bottom quote strip
+───────────────────────────────────────── */
+.dash-quote-strip {
+  background: var(--d-dark); padding: 20px 20px 32px;
+  text-align: center;
+}
+.dash-quote-txt { font-size: 14px; color: rgba(255,255,255,0.7); font-style: italic; line-height: 1.6; margin-bottom: 6px; }
+.dash-quote-sig { font-size: 12px; color: var(--d-gold); font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   DESKTOP ≥ 1025px — 3-column layout
+═══════════════════════════════════════ */
+@media (min-width: 1025px) {
+
+  .dash-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 290px;
+    align-items: start;
+  }
+
+  /* ── Left sidenav ── */
+  .sidenav {
+    display: flex; flex-direction: column;
+    background: var(--d-cream); border-right: 1px solid var(--d-border);
+    padding: 20px 0; position: sticky; top: 64px;
+    max-height: calc(100vh - 64px); overflow-y: auto;
+  }
+  .sidenav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px; font-size: 13px; font-weight: 500;
+    color: var(--d-muted); text-decoration: none;
+    border-left: 3px solid transparent; transition: all 0.15s;
+  }
+  .sidenav-item:hover { color: var(--d-text); background: rgba(0,0,0,0.03); }
+  .sidenav-item.active {
+    color: var(--d-dark); font-weight: 700;
+    background: rgba(214,164,40,0.08); border-left-color: var(--d-gold);
+  }
+  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.6; }
+  .sidenav-item.active svg { opacity: 1; }
+  .sidenav-divider { height: 1px; background: var(--d-border); margin: 10px 16px; }
+  .sidenav-bottom { margin-top: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .sub-card { background: var(--d-dark); border-radius: 12px; padding: 12px 14px; }
+  .sub-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
+  .sub-plan { font-size: 14px; font-weight: 700; color: #F6F2E9; }
+  .sub-price { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+  .sub-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #F6F2E9; font-size: 11px; font-weight: 600; padding: 7px; border-radius: 8px; text-decoration: none; }
+  .pts-card { background: var(--d-card); border: 1px solid var(--d-border); border-radius: 12px; padding: 10px 14px; }
+  .pts-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-muted); margin-bottom: 4px; }
+  .pts-val { font-size: 26px; font-weight: 800; color: var(--d-dark); line-height: 1; }
+  .pts-link { font-size: 11px; color: var(--d-gold-dk); font-weight: 600; text-decoration: none; }
+
+  /* ── Centre column ── */
+  .centre {
+    padding: 24px 28px; gap: 18px;
+  }
+
+  /* Practise card wider image column on desktop */
+  .practice-card { grid-template-columns: 1fr 260px; }
+  .practice-content { padding: 22px 26px; }
+  .practice-title { font-size: 24px; }
+
+  /* Evolution grid: score | trend | dimensions side by side */
+  .today-grid {
+    display: grid;
+    grid-template-columns: 130px 1fr 150px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  /* Recent work 5-col */
+  .recent-grid { grid-template-columns: repeat(5, 1fr); }
+
+  /* ── Right panel ── */
+  .rpanel {
+    border-left: 1px solid var(--d-border);
+    padding: 24px 18px; gap: 12px;
+    position: sticky; top: 64px;
+    max-height: calc(100vh - 64px); overflow-y: auto;
+  }
+
+  /* Hide mobile-only quote strip */
+  .dash-quote-strip { display: none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="sl-today">
+{# ── Time-based greeting ── #}
+{% set ist_hour = now.hour + 5 if now is defined else 10 %}
+{% if ist_hour < 12 %}{% set greeting = 'Good morning' %}{% set g_emoji = '☀️' %}
+{% elif ist_hour < 17 %}{% set greeting = 'Good afternoon' %}{% set g_emoji = '🌤️' %}
+{% else %}{% set greeting = 'Good evening' %}{% set g_emoji = '🌙' %}{% endif %}
 
-{# ── Full-width hero banner — above content grid, both mobile and desktop ── #}
-{# Only for returning users (not first-login). Hidden when no images in carousel. #}
+{# ── Last scored image ── #}
+{% set _last = images.items[0] if images and images.items else none %}
 {% set _hero_img = carousel_images[0] if carousel_images else none %}
-{% if _hero_img and _hero_img.thumb_url and not (free_tier and stats.total == 0) %}
-<a href="{{ url_for('image_detail', image_id=_hero_img.id) }}"
-   style="display:block; text-decoration:none; position:relative;" aria-label="Explore this photograph">
-<div class="sl-dash-hero-banner">
-  <img src="{{ _hero_img.thumb_url }}"
-       alt="{{ _hero_img.genre or 'Photography' }}"
-       loading="eager"
-       onerror="this.parentElement.parentElement.style.display='none'">
-  <div class="sl-dash-hero-banner__grad"></div>
-  <div class="sl-dash-hero-banner__badge">
-    <div>
-      <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(_hero_img.score) }}</span>
-      <span class="sl-dash-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
-    </div>
-    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-      <span class="sl-dash-hero-banner__genre">{{ _hero_img.genre or '' }}</span>
-      <span style="font-size:14px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-                   color:rgba(255,255,255,.55); background:rgba(0,0,0,.3); padding:3px 8px;
-                   border-radius:6px;">Explore →</span>
-    </div>
-  </div>
-  {# Copyright: bottom-centre, always visible, deters misuse #}
-  {% if _hero_img.photographer_name %}
-  <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
-              font-size:13px; font-weight:600; color:rgba(255,255,255,0.75);
-              background:rgba(0,0,0,0.45); padding:3px 10px; border-radius:6px;
-              letter-spacing:.04em; white-space:nowrap; pointer-events:none;">
-    © {{ _hero_img.photographer_name }}
-  </div>
-  {% endif %}
-</div>
-</a>
-{% endif %}
 
-<nav class="sl-sidenav" aria-label="Dashboard navigation">
-  <a href="{{ url_for('dashboard') }}" class="sl-sidenav__item active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Dashboard
-  </a>
-  <a href="{{ url_for('my_gallery') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>My Assessments
-  </a>
-  <a href="{{ url_for('dashboard') }}#practise" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Daily Practise
-  </a>
-  <a href="{{ url_for('my_gallery') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Evolution Track
-  </a>
-  <a href="{{ url_for('my_gallery') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>My Gallery
-  </a>
-  <div class="sl-sidenav__divider"></div>
-  <a href="{{ url_for('mentors') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
-  </a>
-  <a href="{{ url_for('weekly_challenge') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
-  </a>
-  <a href="{{ url_for('learning') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
-  </a>
-  <a href="{{ url_for('bow_info') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
-  </a>
-  <a href="{{ url_for('poty') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Annual Excellence
-  </a>
-  <div class="sl-sidenav__divider"></div>
-  <a href="{{ url_for('profile') }}" class="sl-sidenav__item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings
-  </a>
-  <div class="sl-sidenav__bottom">
-    {% if current_user.is_subscribed %}
-    <div class="sl-sidenav__sub-card">
-      <div class="sl-sidenav__sub-label">{{ current_user.subscription_track|title if current_user.subscription_track else 'Camera' }} Pass</div>
-      <div class="sl-sidenav__sub-plan">{{ current_user.subscription_track|title if current_user.subscription_track else 'Camera' }} League</div>
-      <div class="sl-sidenav__sub-price">₹200/month</div>
-      <a href="{{ url_for('cancel_subscription') }}" class="sl-sidenav__sub-btn">Manage Subscription</a>
-    </div>
-    {% endif %}
-    <div class="sl-sidenav__pts-card">
-      <div class="sl-sidenav__pts-label">League Points</div>
-      <div class="sl-sidenav__pts-val">{{ current_user.points_balance|int if current_user.points_balance else 0 }}</div>
-      <a href="{{ url_for('redeem') }}" class="sl-sidenav__pts-link">View &amp; Redeem →</a>
-    </div>
-  </div>
-</nav>
+<div class="dash-wrap">
+<div class="dash-layout">
 
-<div class="sl-today__inner">
-<div class="sl-today__left">
-
-  {# ── Flash messages ── #}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="sl-flash">
-      {% for category, message in messages %}
-      <div class="sl-flash-msg {{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
-  {% endwith %}
-
-  {# ── Scoring status banner — shown when arriving from upload via Skip to Dashboard ── #}
-  <div id="sl-scoring-banner" style="display:none; background:#1A1A18; border-left:3px solid #F4C20D;
-       border-radius:12px; padding:14px 18px; margin-bottom:14px;
-       display:none; align-items:center; gap:12px;">
-    <span style="font-size:20px; flex-shrink:0" id="sl-scoring-icon">⏳</span>
-    <div style="flex:1; min-width:0;">
-      <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-                  color:rgba(244,194,13,.8); margin-bottom:3px;" id="sl-scoring-label">Evaluating your photograph</div>
-      <div style="font-size:15px; color:#FFFFFF; line-height:1.5;" id="sl-scoring-msg">
-        The engine is working — this usually takes about a minute.
-      </div>
-    </div>
-    <button onclick="document.getElementById('sl-scoring-banner').style.display='none';
-                     try{sessionStorage.removeItem('sl_pending_score');}catch(e){}"
-            style="background:none; border:none; color:rgba(255,255,255,.4); font-size:20px;
-                   cursor:pointer; flex-shrink:0; padding:4px; line-height:1;">×</button>
-  </div>
-  <script>
-  (function() {
-    var params  = new URLSearchParams(window.location.search);
-    var imageId = params.get('scoring');
-    if (!imageId) {
-      try { imageId = sessionStorage.getItem('sl_pending_score'); } catch(e) {}
-    }
-    // If we arrived without a scoring param and have no stored ID, nothing to show.
-    // Also: if the page loads without ?scoring= param, clear any stale sessionStorage
-    // from a previous session so the banner doesn't haunt future dashboard visits.
-    if (!params.get('scoring') && !imageId) {
-      try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
-      return;
-    }
-    if (!imageId) return;
-
-    var banner  = document.getElementById('sl-scoring-banner');
-    var icon    = document.getElementById('sl-scoring-icon');
-    var label   = document.getElementById('sl-scoring-label');
-    var msg     = document.getElementById('sl-scoring-msg');
-    if (!banner) return;
-
-    banner.style.display = 'flex';
-
-    // Auto-dismiss after 60 seconds — clears itself and sessionStorage
-    var _autoDismiss = setTimeout(function() {
-      banner.style.display = 'none';
-      try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
-    }, 60000);
-
-    function checkScore() {
-      fetch('/score-status/' + imageId)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data.status === 'processing' || data.status === 'pending') {
-            setTimeout(checkScore, 8000);
-          } else if (data.status === 'scored' || data.redirect) {
-            clearTimeout(_autoDismiss);
-            icon.textContent  = '✓';
-            icon.style.color  = '#5A9E3A';
-            label.textContent = 'Evaluation complete';
-            label.style.color = 'rgba(90,158,58,.9)';
-            banner.style.borderLeftColor = '#5A9E3A';
-            msg.innerHTML = 'Your photograph has been evaluated. <a href="{{ url_for('my_gallery') }}" style="color:#1a3a6e; font-weight:700;">See your evaluation in My Gallery →</a>';
-            try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
-            // Auto-dismiss the success state after 8 seconds
-            setTimeout(function() { banner.style.display = 'none'; }, 8000);
-          } else {
-            clearTimeout(_autoDismiss);
-            icon.textContent  = '⚠';
-            label.textContent = 'Evaluation update';
-            msg.innerHTML = 'Your photograph has been received. <a href="/dashboard/my-gallery" style="color:#1a3a6e;">Check My Gallery →</a>';
-            try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
-            setTimeout(function() { banner.style.display = 'none'; }, 8000);
-          }
-        })
-        .catch(function() { setTimeout(checkScore, 12000); });
-    }
-    checkScore();
-  })();
-  </script>
-
-  {# ── System alerts (zone flags, RAW pending) ── #}
-  {% if zone3_flagged or zone2_pending or raw_pending %}
-    {% for img in zone3_flagged %}
-    <div class="sl-alert amber">
-      <span style="font-size:18px;flex-shrink:0">⚠</span>
-      <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — peer versus evaluation gap detected, referred for review. <a href="{{ url_for('image_detail', image_id=img.id) }}">View →</a></div>
-    </div>
-    {% endfor %}
-    {% for img in zone2_pending %}
-    <div class="sl-alert amber">
-      <span style="font-size:18px;flex-shrink:0">◎</span>
-      <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — peer review pending. <a href="{{ url_for('image_detail', image_id=img.id) }}">View →</a></div>
-    </div>
-    {% endfor %}
-    {% for img in raw_pending %}
-    <div class="sl-alert amber">
-      <span style="font-size:18px;flex-shrink:0">◻</span>
-      <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — RAW verification needed. <a href="{{ url_for('image_detail', image_id=img.id) }}">Upload RAW →</a></div>
-    </div>
-    {% endfor %}
-  {% endif %}
-
-  {# ── Mentor review ready alert — collapsed pill, tap to expand ── #}
-  {% if mentor_reviews %}
-    {% for review in mentor_reviews %}
-    {% set _rid = 'sl-mentor-' ~ loop.index %}
-    <div style="background:var(--sl-card); border:2px solid var(--sl-yellow); border-radius:12px; margin-top:4px; margin-bottom:20px; overflow:hidden;">
-      <button onclick="slToggleMentor('{{ _rid }}')"
-              style="width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; font-family:inherit; text-align:left; min-height:44px;">
-        <div style="display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden;">
-          <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--sl-yellow-dark); white-space:nowrap; flex-shrink:0;">Expert review</span>
-          <span style="font-size:14px; color:var(--sl-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><strong>{{ review.get('asset_name') or 'your photograph' }}</strong></span>
-        </div>
-        <span id="{{ _rid }}-chevron" style="font-size:16px; color:var(--sl-yellow-dark); flex-shrink:0; transition:transform 0.25s;">&#x203A;</span>
-      </button>
-      <div id="{{ _rid }}" style="display:none; padding:0 14px 14px; border-top:1px solid var(--sl-border);">
-        <div style="font-size:15px; color:var(--sl-text); line-height:1.6; padding-top:10px;">
-          <strong>{{ review.get('mentor_name') or 'Your mentor' }}</strong> reviewed <strong>{{ review.get('asset_name') or 'your photograph' }}</strong>
-          {% set _snippet = review.get('review_text', '') %}
-          {% if _snippet %} &#x2014; {{ _snippet[:120] }}{% if _snippet|length > 120 %}&#x2026;{% endif %}{% endif %}
-        </div>
-        <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
-          {% if review.get('image_id') %}
-          <a href="{{ url_for('dismiss_review', session_id=review.get('id'), image_id=review.get('image_id')) }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">Read full review &#x2192;</a>
-          {% else %}
-          <a href="{{ url_for('dismiss_review', session_id=review.get('id')) }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">View &#x2192;</a>
-          {% endif %}
-          <button onclick="slToggleMentor('{{ _rid }}')" style="background:none; border:none; cursor:pointer; color:var(--sl-text-light); font-size:14px; font-family:inherit; padding:9px 0; min-height:44px;">Close &#x2191;</button>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  {% endif %}
-
-  {# ── AEA banner ── #}
-  {% if show_poty_banner %}
-  <div class="sl-aea-banner">
-    <span class="sl-aea-banner__badge">Award</span>
-    <div style="flex:1">
-      <div class="sl-aea-banner__txt">
-        {% if _pre_season %}Annual Excellence Award 2026{% else %}Annual Excellence Award 2026 is open{% endif %}
-      </div>
-      <div class="sl-aea-banner__sub">
-        {% if _pre_season %}
-          Opens September 2026 — keep shooting, your standing builds now
-        {% else %}
-          Shoot at least once a month to stay eligible
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {# ══════════════════════════════════════════
-     GREETING
-  ══════════════════════════════════════════ #}
-  {% set ns = namespace(greeting='Good morning', emoji='☀️') %}
-  {% set ist_total_minutes = (now().hour * 60 + now().minute + 330) % 1440 if now is defined else 540 %}
-  {% set ist_hour = ist_total_minutes // 60 %}
-  {% if ist_hour >= 21 or ist_hour < 5 %}
-    {% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌙' %}
-  {% elif ist_hour >= 17 %}
-    {% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌆' %}
-  {% elif ist_hour >= 12 %}
-    {% set ns.greeting = 'Good afternoon' %}{% set ns.emoji = '☁️' %}
-  {% endif %}
-
-  <div class="sl-greeting" style="display:flex; align-items:flex-start; justify-content:space-between;">
-    <div>
-      <div class="sl-greeting__name">
-        {{ ns.greeting }}, {{ current_user.full_name if current_user.full_name else current_user.username }} {{ ns.emoji }}
-      </div>
-      <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% elif dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.get('light_note','Today\'s light is waiting.') }}{% else %}Today&rsquo;s light is waiting.{% endif %}</div>
-    </div>
-    {% if stats.total > 0 %}
-    <div style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1px solid var(--sl-border); border-radius:20px; padding:6px 14px; flex-shrink:0; margin-top:4px;">
-      <span style="font-size:18px; line-height:1;">🔥</span>
-      <div style="line-height:1.3;">
-        <div style="font-size:16px; font-weight:800; color:var(--sl-text); line-height:1;">{{ stats.total }}</div>
-        <div style="font-size:11px; color:var(--sl-text-light);">photographs</div>
-      </div>
-    </div>
-    {% endif %}
-  </div>
-
-  {# ══════════════════════════════════════════
-     WEEKLY ASSIGNMENT — dismissible live banner
-     Dismiss is per-session (sl_sec_state, key 'wk-banner'), not permanent.
-     Always-available fallback lives in the right column (rc-weekly) and
-     mobile sections (sec-weekly) below, so dismissing this never removes access.
-  ══════════════════════════════════════════ #}
-  {% if active_challenge %}
-  <div class="sl-wk-banner" id="wk-banner" style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-      <span style="width:8px; height:8px; border-radius:50%; background:#27500A; flex-shrink:0;" aria-hidden="true"></span>
-      <div style="min-width:0;">
-        <span style="font-size:15px; font-weight:700; color:#27500A;">This week's challenge for you · {{ active_challenge.prompt_title }}</span>
-        <span style="font-size:15px; color:#27500A; opacity:.85;"> · closes {{ active_challenge.closes_at.strftime('%d %b') }}</span>
-      </div>
-    </div>
-    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-      <a href="{{ url_for('weekly_challenge') }}" style="font-size:15px; font-weight:700; padding:10px 16px; border-radius:8px; background:#27500A; color:#fff; text-decoration:none;">View →</a>
-      <button type="button" onclick="slDismissWkBanner()" aria-label="Dismiss" style="background:none; border:none; padding:10px; cursor:pointer; color:#27500A; font-size:18px; line-height:1; min-width:44px; min-height:44px;">×</button>
-    </div>
-  </div>
-  {% endif %}
-
-{# Desktop hero removed — full-width sl-dash-hero-banner above grid replaces it #}
-
-  {# ══════════════════════════════════════════
-     FIRST-LOGIN EXPERIENCE
-     Gate: free_tier user with zero uploads
-     Tone: warm, specific, no jargon, no urgency
-     Goal: get them to upload their first photograph
-  ══════════════════════════════════════════ #}
-  {% if free_tier and stats.total == 0 %}
-
-  {# Hero promise card #}
-  <div style="background:var(--sl-card); border-radius:var(--r-hero); padding:24px 20px 20px; margin-bottom:12px; border:1px solid var(--sl-border);">
-    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-yellow-dark); margin-bottom:10px;">Your first evaluation</div>
-    <div style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1.25; margin-bottom:10px;">
-      Find out where your photography actually stands.
-    </div>
-    <div style="font-size:15px; color:var(--sl-text-light); line-height:1.65; margin-bottom:18px;">
-      Upload any photograph you have taken — on any camera. The Apex engine will evaluate it across five dimensions and tell you exactly what is working and what to work on next.
-    </div>
-    {# 3 free evaluations indicator #}
-    <div style="display:flex; gap:8px; margin-bottom:20px;">
-      {% for i in range(3) %}
-      <div style="flex:1; height:6px; border-radius:3px; background:var(--sl-yellow); opacity:{{ 1.0 if i < (upload_credits_balance or 3) else 0.18 }};"></div>
-      {% endfor %}
-    </div>
-    <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:20px;">
-      {{ upload_credits_balance or 3 }} free evaluation{{ 's' if (upload_credits_balance or 3) != 1 else '' }} available · no subscription needed to start
-    </div>
-    <a href="{{ url_for('upload') }}"
-       style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--sl-yellow); color:var(--sl-text); font-size:17px; font-weight:800; padding:16px 24px; border-radius:var(--r-btn); text-decoration:none; width:100%; box-sizing:border-box;">
-      Upload your first photograph &nbsp;→
+  {# ════════════════════════════════════
+     LEFT SIDENAV (desktop only)
+  ════════════════════════════════════ #}
+  <nav class="sidenav" aria-label="Dashboard navigation">
+    <a href="{{ url_for('dashboard') }}" class="sidenav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Dashboard
     </a>
-  </div>
-
-  {# What the score shows — three-step explainer #}
-  <div style="background:var(--sl-card); border-radius:var(--r-card); padding:20px; margin-bottom:12px; border:1px solid var(--sl-border);">
-    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:14px;">What you get back</div>
-    {% for icon, heading, body in [
-        ('📐', 'An evaluation across 5 dimensions', 'Technical difficulty, timing, visual surprise, emotional impact, and the feeling your image creates. Each evaluated separately.'),
-        ('🎯', 'Your strongest dimension', 'Where your eye is already working. The engine reads your photograph honestly — not to be kind, to be useful.'),
-        ('📍', 'One specific thing to work on next', 'Not a list. One direction. The single change most likely to lift your next photograph.')
-      ] %}
-    <div style="display:flex; gap:12px; align-items:flex-start; {% if not loop.last %}margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--sl-border);{% endif %}">
-      <div style="font-size:24px; flex-shrink:0; line-height:1;">{{ icon }}</div>
-      <div>
-        <div style="font-size:15px; font-weight:700; color:var(--sl-text); margin-bottom:3px;">{{ heading }}</div>
-        <div style="font-size:14px; color:var(--sl-text-light); line-height:1.55;">{{ body }}</div>
+    <a href="{{ url_for('my_gallery') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>My Assessments
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Daily Mission
+    </a>
+    <a href="{{ url_for('my_gallery') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Evolution Track
+    </a>
+    <a href="{{ url_for('my_gallery') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>My Gallery
+    </a>
+    <div class="sidenav-divider"></div>
+    <a href="{{ url_for('mentors') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
+    </a>
+    <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
+    </a>
+    <a href="{{ url_for('bow_info') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
+    </a>
+    <a href="{{ url_for('poty') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Awards &amp; Recognition
+    </a>
+    <a href="{{ url_for('learning') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
+    </a>
+    <div class="sidenav-divider"></div>
+    <a href="{{ url_for('profile') }}" class="sidenav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings
+    </a>
+    <div class="sidenav-bottom">
+      {% if current_user.is_subscribed %}
+      <div class="sub-card">
+        <div class="sub-label">{{ (current_user.subscription_track or 'Camera')|title }} Pass</div>
+        <div class="sub-plan">{{ (current_user.subscription_track or 'Camera')|title }} League</div>
+        <div class="sub-price">₹200/month</div>
+        <a href="{{ url_for('cancel_subscription') }}" class="sub-btn">Manage Subscription</a>
+      </div>
+      {% endif %}
+      <div class="pts-card">
+        <div class="pts-label">League Points</div>
+        <div class="pts-val">{{ (current_user.points_balance or 0)|int }}</div>
+        <a href="{{ url_for('redeem') }}" class="pts-link">View &amp; Redeem →</a>
       </div>
     </div>
-    {% endfor %}
-  </div>
+  </nav>
 
-  {# Social proof — A.R, Berlin: found Shutter League via ChatGPT before launch, third upload scored Grandmaster #}
-  <div style="background:var(--sl-card); border-radius:var(--r-card); padding:18px 20px; margin-bottom:12px; border:1px solid var(--sl-border); display:flex; align-items:center; gap:16px;">
-    <div style="flex-shrink:0; text-align:center;">
-      <div style="font-size:32px; font-weight:800; color:var(--sl-yellow-dark); line-height:1;">9.28</div>
-      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--sl-text-light); margin-top:2px;">Grandmaster</div>
-    </div>
-    <div style="flex:1; min-width:0;">
-      <div style="font-size:14px; font-weight:700; color:var(--sl-text); margin-bottom:3px;">A.R — Berlin</div>
-      <div style="font-size:13px; color:var(--sl-text-light); line-height:1.5;">Asked ChatGPT for street photography feedback sites — before we'd even launched, it pointed him here anyway. His third upload came back Grandmaster.</div>
-      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; font-style:italic; opacity:0.8;">"I think the idea and the site is really really nice. It has a lot of potential."</div>
-    </div>
-  </div>
+  {# ════════════════════════════════════
+     CENTRE COLUMN
+  ════════════════════════════════════ #}
+  <main class="centre">
 
-  {# What kind of photographs? — reassurance block #}
-  <div style="background:var(--sl-card); border-radius:var(--r-card); padding:18px 20px; margin-bottom:12px; border:1px solid var(--sl-border);">
-    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:12px;">Any photograph works</div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-      {% for item in ['Wildlife', 'Street', 'Landscape', 'Portrait', 'Macro', 'Documentary', 'Wedding', 'Creative'] %}
-      <div style="font-size:14px; color:var(--sl-text); padding:8px 10px; background:var(--sl-bg); border-radius:8px; text-align:center; font-weight:500;">{{ item }}</div>
-      {% endfor %}
-    </div>
-    <div style="font-size:13px; color:var(--sl-text-light); margin-top:12px; line-height:1.55;">
-      iPhone or DSLR. Beginner or advanced. The engine evaluates what it sees — not the equipment or the story behind the shot.
-    </div>
-  </div>
-
-  {% endif %}{# /first-login onboarding — no longer exclusive with the mission card below #}
-  {# ══════════════════════════════════════════
-     MISSION CARD — now shown to every user,
-     including brand-new free-tier zero-upload
-     users, so the dashboard never looks empty.
-     lesson + weather injected from app.py
-  ══════════════════════════════════════════ #}
-
-  {# ── Dimension colour map — light/muted, same for both principle and master days ── #}
-  {# Session 91: unified sky blue for all dimensions — no colour-coded bands #}
-  {% set _dim_band = {
-    'dod':        ('#FFFFFF', '#E5E5E0', '⬛'),
-    'dm':         ('#FFFFFF', '#E5E5E0', '◎'),
-    'aq':         ('#FFFFFF', '#E5E5E0', '☀'),
-    'wonder':     ('#FFFFFF', '#E5E5E0', '✦'),
-    'disruption': ('#FFFFFF', '#E5E5E0', '◈')
-  } %}
-  {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
-               ('#FFFFFF','#E5E5E0','◉')) %}
-
-  {# ── Mission done today — replace entire card with done state ── #}
-  {% if mission_done %}
-  <div class="sl-assignment" id="sl-practise-card"
-       style="background:#E8F4F8; border:1px solid #B8D8E4; border-radius:var(--r-hero);
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-              padding:32px 24px; text-align:center; gap:10px;">
-    <div style="font-size:28px;">✓</div>
-    <div style="font-size:17px; font-weight:800; color:var(--sl-text); line-height:1.3;">
-      Your eye is moving forward.
-    </div>
-    <div style="font-size:14px; color:var(--sl-text-light); line-height:1.55; max-width:260px;">
-      Come back tomorrow for your next mission.
-    </div>
-  </div>
-  {% else %}
-
-  {# ── Snoozed state — show collapsed pill, full card hidden ── #}
-  {% set _snoozed_today = session.get('practise_snoozed') == now().date().isoformat() %}
-  {% if _snoozed_today %}
-  <div id="sl-practise-pill"
-       style="display:flex; align-items:center; justify-content:space-between; gap:10px;
-              background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
-              border-radius:16px; padding:12px 16px; margin-bottom:12px; cursor:pointer;"
-       onclick="this.style.display='none'; document.getElementById('sl-practise-card').style.display='flex';">
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="font-size:18px;">📷</span>
+    {# ── Greeting + streak ── #}
+    <div class="greeting">
       <div>
-        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's practise is waiting</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
-          {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
+        <div class="greeting-name">{{ greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}!</div>
+        <div class="greeting-sub">{% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}{% else %}Today's practice begins here.{% endif %}</div>
+      </div>
+      <div class="streak">
+        <span style="font-size:20px;">🔥</span>
+        <span class="streak-count">{{ stats.total or 0 }}</span>
+        <div class="streak-txt">Day Streak<br><span style="font-size:10px;">Keep it going!</span></div>
+        <span style="color:var(--d-muted); font-size:13px; margin-left:4px;">›</span>
+      </div>
+    </div>
+
+    {# ── TODAY'S MISSION (practice card) ── #}
+    <div class="practice-card">
+      <div class="practice-content">
+        <div>
+          <div class="practice-eyebrow">Today's Mission</div>
+          <div class="practice-title">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
+          <div class="practice-meta">
+            <div>
+              <div class="practice-meta-label">Focus</div>
+              <div class="practice-meta-val">{{ lesson.dim_short if lesson else 'Timing' }}</div>
+            </div>
+            {% if weather %}
+            <div>
+              <div class="practice-meta-label">Weather</div>
+              <div class="practice-meta-val">{{ weather.condition or 'Any light works' }}</div>
+            </div>
+            {% endif %}
+            {% if dash_advisory and dash_advisory.get('location_name') %}
+            <div>
+              <div class="practice-meta-label">Location</div>
+              <div class="practice-meta-val">{{ dash_advisory.location_name }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="practice-actions">
+          <a href="{{ url_for('upload') }}" class="practice-cta">Begin Today's Practice →</a>
+          <a href="{{ url_for('dashboard') }}" class="practice-skip">or Skip for now</a>
         </div>
       </div>
-    </div>
-    <span style="font-size:20px; color:var(--sl-yellow-dark); font-weight:700; flex-shrink:0;">›</span>
-  </div>
-  <div id="sl-practise-card" style="display:none;" class="sl-assignment">
-  {% else %}
-  <div class="sl-assignment" id="sl-practise-card">
-  {% endif %}
-
-  <div class="sl-practise-desktop-content">
-    {# ── Band header — dark navy bg, gold fonts ── #}
-    <div style="background:#13254B;
-                border-bottom:1px solid #1A3060;
-                border-radius:var(--r-hero) var(--r-hero) 0 0;
-                padding:20px 18px 16px;
-                display:flex; align-items:flex-start; justify-content:space-between;
-                min-height:88px;">
-      <div style="flex:1; min-width:0;">
-        <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                    color:rgba(245,197,24,.65); margin-bottom:5px;">
-          Today's Practise · {{ lesson.dim_short if lesson else 'Timing' }}
-        </div>
-        <div style="font-size:19px; font-weight:800; color:#F5C518; line-height:1.2;
-                    letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
-      </div>
-      <button onclick="slSkipMission()"
-              aria-label="Collapse mission"
-              style="background:rgba(255,255,255,.10); border:none; border-radius:8px;
-                     width:44px; height:44px; display:flex; align-items:center; justify-content:center;
-                     cursor:pointer; flex-shrink:0; margin-left:6px; margin-top:-4px;
-                     font-size:14px; color:rgba(245,197,24,.70); font-family:inherit;
-                     -webkit-tap-highlight-color:transparent;">▾</button>
-    </div>
-
-    {# ── Genre pill ── #}
-    {% if lesson %}
-    <div style="display:inline-flex; align-items:center;
-                font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                padding:3px 9px; border-radius:5px; margin:12px 16px 0; align-self:flex-start;
-                background:rgba(21,21,21,.06); color:var(--sl-text-light);">
-      {{ lesson.mission_genre }}{% if lesson.show_master %} · Master day{% endif %}
-    </div>
-    {% endif %}
-
-    {# ── Principle — larger, readable ── #}
-    <div style="margin:10px 16px 0; font-size:17px; font-weight:800; color:var(--sl-text);
-                line-height:1.4; letter-spacing:-.01em;">
-      {{ lesson.principle if lesson else 'One frame. That is all it takes.' }}
-    </div>
-
-    {# ── Master context — warm, no purple, explains who they are ── #}
-    {% if lesson and lesson.show_master and lesson.master %}
-    {% set _master_context_map = {
-      'Fan Ho':                'Shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances.',
-      'Ansel Adams':           'Proved that light itself is the subject — not the mountain, not the valley.',
-      'Henri Cartier-Bresson': 'Defined the art of timing — the instant geometry and gesture coincide in one frame.',
-      'Raghu Rai':             'Built his practice on being inside the scene before the moment arrived.',
-      'Vivian Maier':          'Photographed what everyone else walked past — the unremarkable corner, the unnoticed face.',
-      'Sebastião Salgado':     'Spent years earning access to worlds most photographers never reach.',
-      'Dorothea Lange':        'Found the one face in the crowd that contained the entire truth of the moment.',
-      'Daido Moriyama':        'Broke every compositional rule deliberately — not accidentally.',
-      'Ernst Haas':            'Used colour and motion as purposeful disruption — not technique for its own sake.',
-      'Yousuf Karsh':          'Proved that light determines the emotion before the subject does.',
-      'Michael Kenna':         'Self-imposed constraint as lifelong practice — the restriction is the engine of new work.',
-      'William Eggleston':     'Made the mundane produce emotions it was not supposed to produce.'
-    } %}
-    <div style="margin:12px 16px 0; padding:12px 14px;
-                background:rgba(244,194,13,.08); border-left:3px solid var(--sl-yellow-dark);
-                border-radius:0 10px 10px 0;">
-      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                  color:var(--sl-yellow-dark); margin-bottom:5px;">Today's Master</div>
-      <div style="font-size:16px; font-weight:800; color:var(--sl-text); margin-bottom:3px;">
-        {% if all_masters and all_masters.get(lesson.master) %}
-        <a href="https://www.google.com/search?q={{ all_masters.get(lesson.master) }}&tbm=isch" target="_blank" rel="noopener"
-           style="color:inherit; text-decoration:underline; text-decoration-color:rgba(0,0,0,0.55); text-underline-offset:2px;">{{ lesson.master }}</a>
+      <div class="practice-img">
+        {% if _hero_img and _hero_img.thumb_url %}
+        <img src="{{ _hero_img.thumb_url }}" alt="Practice photograph" onerror="this.parentNode.style.background='linear-gradient(135deg,#1A3A2A,#2A5A3A)';this.remove()">
         {% else %}
-        {{ lesson.master }}
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#0A1A0E);"></div>
         {% endif %}
-      </div>
-      <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">
-        {{ _master_context_map.get(lesson.master, 'One of the defining photographers in this discipline.') }}
-      </div>
-      {% if lesson.master_quote %}
-      <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;">
-        {{ lesson.master_quote }}
-        <span style="font-style:normal; font-size:12px; font-weight:700; color:var(--sl-yellow-dark);
-                     display:block; margin-top:4px;">— {{ lesson.master }}</span>
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {# ── Wikimedia Commons reference image (principle days, non-master) ── #}
-    {% if lesson and lesson.commons_file and not lesson.show_master %}
-    <div style="margin:12px 16px 0; border-radius:12px; overflow:hidden; height:82px;
-                background:#D8CFC0; display:flex; align-items:flex-end; position:relative;
-                border:1px solid var(--sl-border);">
-      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/{{ lesson.commons_file }}?width=600"
-           alt="{{ lesson.commons_caption }}"
-           style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top center;"
-           onerror="this.nextElementSibling.style.display='flex'; this.style.display='none'">
-      <div style="display:none; position:absolute; inset:0; background:linear-gradient(135deg,#B8B0A0,#988878);
-                  align-items:center; justify-content:center;
-                  font-size:26px; opacity:.15;">📷</div>
-      <div style="position:absolute; inset:0;
-                  background:linear-gradient(to top,rgba(21,21,21,.55) 0%,transparent 55%);"></div>
-      <div style="position:relative; z-index:1; padding:7px 10px;
-                  font-size:13px; color:rgba(255,255,255,.75); line-height:1.4;">
-        <strong style="color:#fff;">{{ lesson.commons_caption }}</strong>
+        <div class="practice-img-grad"></div>
       </div>
     </div>
-    {% endif %}
 
-    {# ── Weather banner ── #}
-    {% if weather and weather.message %}
-    <div style="margin:10px 16px 0; padding:10px 12px; border-radius:8px;
-                font-size:14px; line-height:1.55;
-                {% if weather.state == 'red' %}background:#F8EDEB; border:1px solid #D8B0A8; color:#5A2820;
-                {% elif weather.state == 'amber' %}background:#FDF3DC; border:1px solid #E8C870; color:#5A3808;
-                {% else %}background:#EDF5E4; border:1px solid #C0D8A0; color:#2A5010;{% endif %}">
-      {{ weather.message }}
-    </div>
-    {% endif %}
+    {# ── EVOLUTION OVERVIEW ── #}
+    {% if progress_data %}
+    <div class="today-card">
+      <div class="card-eyebrow">Evolution Overview</div>
+      <div class="today-grid">
 
-    {# ── Indoor options (red weather only) ── #}
-    {# Both options link directly to upload with indoor_assignment + mission params pre-filled. #}
-    {# "I'll wait for tomorrow" hits /mission-snooze so the snooze persists across page loads. #}
-    {% if weather and weather.state == 'red' %}
-    <div style="margin:10px 16px 0;">
-      <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
-                  color:var(--sl-text-light); margin-bottom:7px;">Shoot indoors instead?</div>
-      {# Home portraits — uses indoor_assignment, genre override to People #}
-      <a href="{{ url_for('upload') }}?mission_dimension={{ lesson.dim if lesson else '' }}&curriculum_principle_id={{ lesson.principle_id if lesson else '' }}&mission_title={{ (lesson.title if lesson else '') | urlencode }}&indoor=portraits"
-         style="display:flex; align-items:center; gap:10px; padding:11px 13px;
-                background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
-                margin-bottom:6px; text-decoration:none; color:var(--sl-text);">
-        <span style="font-size:18px; flex-shrink:0;">🪟</span>
+        {# Score #}
         <div>
-          <div style="font-size:14px; font-weight:700;">Home portraits</div>
-          <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Window light · People · same lesson indoors</div>
+          <div class="evo-score">{{ '%.1f'|format(progress_data.avg_score) }}<span style="font-size:18px;font-weight:400;color:var(--d-muted)">/10</span></div>
+          <div class="evo-grade">{{ progress_data.avg_tier }}</div>
+          {% if progress_data.overall_pct %}<div class="evo-pool">Top {{ progress_data.overall_pct }}% of all photographers</div>{% endif %}
         </div>
-      </a>
-      {# Still life / experimental — uses indoor_assignment #}
-      <a href="{{ url_for('upload') }}?mission_dimension={{ lesson.dim if lesson else '' }}&curriculum_principle_id={{ lesson.principle_id if lesson else '' }}&mission_title={{ (lesson.title if lesson else '') | urlencode }}&indoor=stilllife"
-         style="display:flex; align-items:center; gap:10px; padding:11px 13px;
-                background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
-                margin-bottom:4px; text-decoration:none; color:var(--sl-text);">
-        <span style="font-size:18px; flex-shrink:0;">🔬</span>
-        <div>
-          <div style="font-size:14px; font-weight:700;">Still life · experimental</div>
-          <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Macro at home · texture · no rules</div>
-        </div>
-      </a>
-      {# Snooze — hits /mission-snooze endpoint so it persists across page loads #}
-      <a href="{{ url_for('mission_snooze') }}"
-         style="display:block; font-size:13px; color:var(--sl-text-light); text-align:center; padding:6px 0 2px; text-decoration:none;">
-        I'll wait for tomorrow ›
-      </a>
-    </div>
-    {% endif %}
 
-    {# ── Meta row ── #}
-    {# /* audit ref: 13px fonts below are uppercase eyebrow UI labels only —
-          mobile-app page exception per sl_audit.py mobile-app-page rule */ #}
-    <div style="display:flex; gap:0; border-top:1px solid var(--sl-border); margin-top:14px;">
-      <div style="flex:1; padding:9px 10px; border-right:1px solid var(--sl-border);
-                  display:flex; flex-direction:column; gap:2px;">
-        <span style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light);">Focus</span>
-        <span style="font-size:13px; font-weight:700; color:var(--sl-text);">{{ lesson.dim_short if lesson else 'Timing' }}</span>
-      </div>
-      <div style="flex:1; padding:9px 10px; border-right:1px solid var(--sl-border);
-                  display:flex; flex-direction:column; gap:2px;">
-        <span style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light);">Weather</span>
-        <span style="font-size:13px; font-weight:700;
-                     {% if weather.state == 'red' %}color:#A03020;
-                     {% elif weather.state == 'amber' %}color:#B8750A;
-                     {% else %}color:#2A6010;{% endif %}">
-          {{ weather.condition if weather.condition else 'Any light works' }}
-        </span>
-      </div>
-      <div style="flex:1; padding:9px 10px; display:flex; flex-direction:column; gap:2px;">
-        <span style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light);">Best time</span>
-        <span style="font-size:13px; font-weight:700; color:var(--sl-text);">
-          {% if weather and weather.state == 'red' %}Tomorrow
-          {% elif weather and weather.window %}{{ weather.window }}
-          {% elif ist_hour < 10 %}6 – 9 AM
-          {% elif ist_hour < 16 %}5 – 7 PM
-          {% else %}Now{% endif %}
-        </span>
-      </div>
-    </div>
-
-    {# ── Today action block — sky blue, matches "Your assignment today" treatment ── #}
-    {# mission_attempted = uploaded today but dimension threshold not met #}
-    {% if mission_attempted %}
-    <div style="background:#E8F4F8; padding:14px 16px; margin-top:0;">
-      <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                  color:#185FA5; margin-bottom:5px;">Assignment not yet complete</div>
-      <div style="font-size:15px; font-weight:600; color:#0C447C; line-height:1.6;">
-        {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
-      </div>
-    </div>
-    {# Why it wasn't completed + resubmit CTA — no skip, no next mission #}
-    {% set _why_map = {
-      'disruption': 'The frame stayed close to what was expected. Find the unexpected angle and resubmit.',
-      'dm':         'The timing wasn’t the decisive element in this frame. Resubmit when the moment and the geometry land together.',
-      'dod':        'This frame didn’t push into difficult territory. Resubmit from a harder position.',
-      'wonder':     'The frame didn’t stop the viewer yet. Resubmit when the subject reveals something unexpected.',
-      'aq':         'The frame didn’t carry a specific feeling yet. Resubmit when the emotion is unmistakable.'
-    } %}
-    <div style="padding:10px 16px 4px;">
-      <div style="font-size:14px; color:var(--sl-text-light); line-height:1.6; padding:10px 12px;
-                  background:#FDF3DC; border:1px solid #E8C870; border-radius:8px; color:#5A3808;">
-        {{ _why_map.get(mission_attempted_dim, 'That assignment is still waiting for you.') }}
-      </div>
-    </div>
-    <div style="padding:8px 16px 14px;">
-      <a href="{{ url_for('upload') }}?mission_dimension={{ mission_attempted_dim or '' }}&curriculum_principle_id={{ lesson.principle_id if lesson else '' }}&mission_title={{ (lesson.title if lesson else '') | urlencode }}"
-         class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px; display:block; text-align:center;">
-        Resubmit →
-      </a>
-    </div>
-
-    {% elif weather and weather.state != 'red' %}
-    <div style="background:#E8F4F8; padding:14px 16px; margin-top:0;">
-      {% if mission_due %}
-      <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                  color:#185FA5; margin-bottom:5px;">Mission due — continue</div>
-      {% else %}
-      <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                  color:#185FA5; margin-bottom:5px;">Your assignment today</div>
-      {% endif %}
-      <div style="font-size:16px; font-weight:700; color:#0C447C; line-height:1.55;">
-        {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
-      </div>
-    </div>
-    {% endif %}
-
-    {# ── CTAs ── #}
-    {% if mission_attempted %}
-    {# CTAs already rendered in attempted block above — nothing here #}
-    {% elif weather and weather.state == 'red' %}
-    {# Indoor options shown above — no additional CTA needed here #}
-    {% elif mission_due %}
-    <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
-      <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px;">
-        Continue →
-      </a>
-      <a href="{{ url_for('upload') }}"
-         style="background:rgba(0,0,0,.06); color:var(--sl-text-light); font-size:13px;
-                font-weight:600; padding:14px 14px; border-radius:var(--r-btn); border:none;
-                cursor:pointer; white-space:nowrap; font-family:inherit; text-decoration:none;
-                display:flex; align-items:center;">
-        Upload any photograph ↗
-      </a>
-    </div>
-    {% else %}
-    <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
-      <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px;">
-        Start Practise →
-      </a>
-      <button onclick="slSkipMission()"
-              style="background:rgba(0,0,0,.06); color:var(--sl-text-light); font-size:13px;
-                     font-weight:600; padding:14px 14px; border-radius:var(--r-btn); border:none;
-                     cursor:pointer; white-space:nowrap; font-family:inherit;">
-        Skip ›
-      </button>
-    </div>
-    {% endif %}
-
-    {# ── Genre switch footer ── #}
-    <div style="border-top:1px solid var(--sl-border); padding:10px 16px;
-                display:flex; align-items:center; justify-content:space-between; gap:8px;
-                background:rgba(21,21,21,.02); border-radius:0 0 var(--r-hero) var(--r-hero);">
-      <div style="font-size:13px; color:var(--sl-text-light); line-height:1.4; flex:1;">
-        Your missions are currently in
-        <strong style="color:var(--sl-text); font-weight:600;">{{ lesson.mission_genre if lesson else 'Wildlife' }}</strong>.
-      </div>
-      <button onclick="document.getElementById('sl-genre-picker').style.display='block';
-                       this.closest('.sl-assignment').style.display='none';"
-              style="font-size:13px; font-weight:700; color:var(--sl-purple);
-                     background:rgba(106,62,240,.08); border:1px solid rgba(106,62,240,.18);
-                     border-radius:8px; padding:5px 11px; cursor:pointer; white-space:nowrap; flex-shrink:0;
-                     font-family:inherit;">
-        Switch interest →
-      </button>
-    </div>
-  </div>{# /sl-practise-desktop-content #}
-  {# ── Desktop image panel — right column ── #}
-  <div class="sl-practise-desktop-img">
-    {% if _hero_img and _hero_img.thumb_url %}
-    <img src="{{ _hero_img.thumb_url }}" alt="{{ _hero_img.genre or 'Photography' }}" onerror="this.parentNode.style.background='linear-gradient(135deg,#1A3A2A,#2A5A3A)';this.remove()">
-    <div class="sl-practise-desktop-img-grad"></div>
-    {% else %}
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#2A5A3A);"></div>
-    {% endif %}
-  </div>
-
-  {% endif %}{# end mission_done #}
-
-  {# ── Skip pill — shown when user taps Skip on dashboard (JS-driven, no reload) ── #}
-  <div id="sl-practise-pill"
-       style="display:none; align-items:center; justify-content:space-between; gap:10px;
-              background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
-              border-radius:16px; padding:12px 16px; margin-bottom:12px; cursor:pointer;"
-       onclick="slExpandMission()">
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="font-size:18px;">📷</span>
-      <div>
-        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's practise is waiting</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
-          {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
-        </div>
-      </div>
-    </div>
-    <span style="font-size:20px; color:var(--sl-yellow-dark); font-weight:700; flex-shrink:0;">›</span>
-  </div>
-
-  {# ── Genre picker — hidden until switch button tapped ── #}
-  <div id="sl-genre-picker"
-       style="display:none; background:var(--sl-card); border-radius:var(--r-card);
-              border:1px solid var(--sl-border); box-shadow:0 10px 40px rgba(0,0,0,.08);
-              overflow:hidden; margin-bottom:16px;">
-    <div style="padding:14px 16px 12px; border-bottom:1px solid var(--sl-border); background:var(--sl-cream);">
-      <div style="font-size:14px; font-weight:800; color:var(--sl-text); letter-spacing:-.01em;">Switch your mission interest</div>
-      <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px; line-height:1.4;">
-        Your lesson adapts. Your weakest dimension stays the focus.
-      </div>
-    </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:12px 16px;">
-      {% set _genres = ['Wildlife','Street','Nature','Landscape','People','Documentary','Macro','Creative','Drone','Wedding','Fashion'] %}
-      {% for _g in _genres %}
-      <form method="POST" action="{{ url_for('set_mission_genre') }}" style="margin:0;">
-        <input type="hidden" name="genre" value="{{ _g }}">
-        <button type="submit"
-                style="width:100%; padding:9px 10px; border-radius:10px; cursor:pointer;
-                       font-size:13px; text-align:center; line-height:1.3; font-family:inherit;
-                       {% if lesson and lesson.mission_genre == _g %}
-                         background:var(--sl-text); color:var(--sl-yellow); border:1px solid var(--sl-text); font-weight:700;
-                       {% else %}
-                         background:var(--sl-cream); color:var(--sl-text); border:1px solid var(--sl-border); font-weight:500;
-                       {% endif %}">
-          {{ _g }}
-        </button>
-      </form>
-      {% endfor %}
-      <form method="POST" action="{{ url_for('set_mission_genre') }}"
-            style="grid-column:span 2; margin:0;">
-        <input type="hidden" name="genre" value="engine">
-        <button type="submit"
-                style="width:100%; padding:9px 12px; border-radius:10px; cursor:pointer;
-                       font-size:13px; font-weight:600; text-align:center; font-family:inherit;
-                       background:rgba(106,62,240,.08); color:var(--sl-purple);
-                       border:1px solid rgba(106,62,240,.2);">
-          Let the engine decide for me
-        </button>
-      </form>
-    </div>
-  </div>
-
-  {# Yesterday moved to right column — after Your Standing (Session 111) #}
-
-  {# Portfolio banner moved to right column (Session 111) #}
-  {# Upload banner removed — FAB handles mobile, right col CTA handles desktop (Session 114) #}
-
-  {# ══════════════════════════════════════════
-     P6: PEER EVAL NOTIFICATION STRIP (SESSION116)
-     Replaced per-eval banners with a compact strip inside the eval block.
-     Loaded on page render + refreshed on visibilitychange via AJAX.
-     REVERT NOTE: original block was lines 2091–2117 in dashboard_backup_session116.html
-  ══════════════════════════════════════════ #}
-
-  {# ══════════════════════════════════════════
-     P5: LAST EVAL RESULT — 24hr persistent block (Session 114)
-     Shows calibration result of most recent peer eval submission.
-     Clears after 24 hours via submitted_at timestamp check.
-  ══════════════════════════════════════════ #}
-  {% if last_eval_result and last_eval_result.submitted_at %}
-  {% set _ler_age = (namespace(ok=false)) %}
-  {# 86400 = 24 hours in seconds — JS handles the live check; Jinja2 always shows if key present #}
-  <div id="sl-last-eval-result" style="margin-bottom:16px; display:none;">
-    {% if last_eval_result.calibrated %}
-    <div style="display:flex; align-items:flex-start; gap:14px; background:#FFFFFF;
-                border:1px solid #C8A8E8; border-left:4px solid #7C3AED;
-                border-radius:16px; padding:16px 18px;">
-      <span style="font-size:22px; flex-shrink:0; margin-top:1px;">🎯</span>
-      <div>
-        <div style="font-size:15px; font-weight:700; color:#4C1D95; line-height:1.4;">
-          You have the eye of the judge — +2 bonus credited
-        </div>
-        <div style="font-size:14px; color:#5B21B6; margin-top:4px; font-family: var(--font-mono, 'Courier New', monospace); letter-spacing:0.02em;">
-          Your read: {{ last_eval_result.peer_score }}&nbsp;|&nbsp;Engine: {{ last_eval_result.engine_score }}
-        </div>
-      </div>
-    </div>
-    {% else %}
-    <div style="display:flex; align-items:flex-start; gap:14px; background:#FFFFFF;
-                border:1px solid var(--sl-border, #E0D8C8); border-left:4px solid #B8892A;
-                border-radius:16px; padding:16px 18px;">
-      <span style="font-size:22px; flex-shrink:0; margin-top:1px;">👁</span>
-      <div>
-        <div style="font-size:15px; font-weight:700; color:#1a1a18; line-height:1.4;">
-          You were {{ last_eval_result.pts_delta }} points off — keep judging to hone your eye
-        </div>
-        <div style="font-size:14px; color:#8A7040; margin-top:4px; font-family: var(--font-mono, 'Courier New', monospace); letter-spacing:0.02em;">
-          Your read: {{ last_eval_result.peer_score }}&nbsp;|&nbsp;Engine: {{ last_eval_result.engine_score }}
-        </div>
-      </div>
-    </div>
-    {% endif %}
-  </div>
-  <script>
-  (function(){
-    var _ler = document.getElementById('sl-last-eval-result');
-    if (!_ler) return;
-    var _ts = {{ last_eval_result.submitted_at | int }};
-    var _age = (Date.now() / 1000) - _ts;
-    if (_age < 86400) { _ler.style.display = 'block'; }
-  })();
-  </script>
-  {% endif %}
-
-  {# ══════════════════════════════════════════
-     PEER EVALUATION BLOCK (Session 111)
-     Shown to subscribers only. Below mission, above free tier nudge.
-  ══════════════════════════════════════════ #}
-  {% if current_user.is_authenticated and current_user.is_subscribed and peer_queue is defined %}
-  <div class="sl-peer-eval">
-    <div class="sl-peer-eval__hdr">
-      <p class="sl-peer-eval__title">Become a better judge of photography</p>
-      <p class="sl-peer-eval__sub">Evaluate these {{ peer_queue|length if peer_queue else 3 }} images today and earn points too.</p>
-    </div>
-
-    {# SESSION116: notification strip — populated on load + refreshed on tab focus #}
-    <div id="sl-peer-eval-strip-wrap"></div>
-
-    {% if peer_queue %}
-      {% set submitted_today = peer_queue | selectattr('status', 'equalto', 'submitted') | list | length %}
-      {% set pending = peer_queue | rejectattr('status', 'equalto', 'submitted') | list %}
-
-      {% if pending %}
-      <p class="sl-peer-eval__pts">2 pts per image · +2 bonus if your eye matches the engine</p>
-      <div class="sl-peer-eval__grid">
-        {% for assignment in pending %}
-        {% set img = assignment.image %}
-        {% if img %}
-        <a href="{{ url_for('rate') }}?assignment={{ assignment.id }}" class="sl-peer-eval__card">
-          {% if img.thumb_url %}
-          <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photograph' }}" class="sl-peer-eval__thumb" loading="lazy" onerror="this.style.display='none'">
+        {# Trend line #}
+        <div class="trend-wrap">
+          <div class="trend-label">Trend — last {{ progress_data.count }} uploads</div>
+          {% if progress_data.dim_sparklines %}
+            {% set _sp = progress_data.dim_sparklines.values()|list %}
+            {% if _sp and _sp[0] and _sp[0].polyline %}
+            <svg viewBox="0 0 280 56" width="100%" height="56" preserveAspectRatio="none">
+              <line x1="0" y1="14" x2="280" y2="14" stroke="#E8E4DA" stroke-width="0.5"/>
+              <line x1="0" y1="28" x2="280" y2="28" stroke="#E8E4DA" stroke-width="0.5"/>
+              <line x1="0" y1="42" x2="280" y2="42" stroke="#E8E4DA" stroke-width="0.5"/>
+              <polyline fill="rgba(214,164,40,0.08)" stroke="none"
+                points="{{ _sp[0].polyline }} 280,56 0,56"/>
+              <polyline fill="none" stroke="#D6A428" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                points="{{ _sp[0].polyline }}"/>
+              {% if _sp[0].points %}
+              {% for _pt in _sp[0].points %}
+              <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.5' }}"/>
+              {% endfor %}
+              {% endif %}
+            </svg>
+            {% else %}
+            <svg viewBox="0 0 280 56" width="100%" height="56" preserveAspectRatio="none">
+              <line x1="0" y1="14" x2="280" y2="14" stroke="#E8E4DA" stroke-width="0.5"/>
+              <line x1="0" y1="28" x2="280" y2="28" stroke="#E8E4DA" stroke-width="0.5"/>
+              <line x1="0" y1="42" x2="280" y2="42" stroke="#E8E4DA" stroke-width="0.5"/>
+              <polyline fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                points="0,48 40,44 80,42 120,38 160,35 200,30 240,26 280,20"/>
+              <polyline fill="rgba(214,164,40,0.08)" stroke="none"
+                points="0,48 40,44 80,42 120,38 160,35 200,30 240,26 280,20 280,56 0,56"/>
+              <circle cx="280" cy="20" r="3.5" fill="#D6A428"/>
+            </svg>
+            {% endif %}
           {% else %}
-          <div class="sl-peer-eval__thumb" style="display:flex;align-items:center;justify-content:center;">
-            <span style="font-size:24px;color:var(--sl-border);">⊞</span>
-          </div>
+          <svg viewBox="0 0 280 56" width="100%" height="56" preserveAspectRatio="none">
+            <line x1="0" y1="14" x2="280" y2="14" stroke="#E8E4DA" stroke-width="0.5"/>
+            <line x1="0" y1="28" x2="280" y2="28" stroke="#E8E4DA" stroke-width="0.5"/>
+            <line x1="0" y1="42" x2="280" y2="42" stroke="#E8E4DA" stroke-width="0.5"/>
+            <polyline fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              points="0,48 31,44 62,46 93,40 124,38 155,35 186,30 217,26 248,22 280,16"/>
+            <polyline fill="rgba(214,164,40,0.08)" stroke="none"
+              points="0,48 31,44 62,46 93,40 124,38 155,35 186,30 217,26 248,22 280,16 280,56 0,56"/>
+            <circle cx="280" cy="16" r="3.5" fill="#D6A428"/>
+          </svg>
           {% endif %}
-          <div class="sl-peer-eval__meta">
-            <p class="sl-peer-eval__genre">{{ img.genre or 'Photography' }}</p>
-            
-            <span class="sl-peer-eval__btn">Evaluate →</span>
-          </div>
+        </div>
+
+        {# Dimensions #}
+        <div>
+          {% set _dim_labels = {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
+          {% if progress_data.dim_avgs %}
+            {% set _sorted = progress_data.dim_avgs.items()|list %}
+            {% set _max_dim = _sorted|sort(attribute=1, reverse=true)|first %}
+            {% set _min_dim = _sorted|sort(attribute=1)|first %}
+            {% for dim, avg in _sorted %}
+            {% set _is_strong = dim == _max_dim[0] %}
+            {% set _is_focus  = dim == _min_dim[0] %}
+            <div class="dim-row">
+              <div class="dim-top">
+                <span class="dim-name">{{ _dim_labels.get(dim, dim|title) }}</span>
+                <span class="dim-val {{ 'strong' if _is_strong else ('focus' if _is_focus else '') }}">
+                  {{ '%.1f'|format(avg) }}{% if _is_focus %} ↑{% endif %}
+                </span>
+              </div>
+              <div class="dim-bar">
+                <div class="dim-fill {{ 'strong' if _is_strong else ('focus' if _is_focus else '') }}" style="width:{{ (avg*10)|int }}%"></div>
+              </div>
+            </div>
+            {% endfor %}
+            {% if _min_dim %}
+            <div style="font-size:10px; color:#D97A2A; margin-top:4px;">↑ Focus area this month</div>
+            {% endif %}
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── RECENT UPLOADS ── #}
+    {% if images and images.items %}
+    {% set _scored = images.items|selectattr('score')|selectattr('thumb_url')|list %}
+    {% if _scored %}
+    <div class="recent-card">
+      <div class="recent-hdr">
+        <div class="card-eyebrow" style="margin-bottom:0;">Recent Uploads</div>
+        <a href="{{ url_for('my_gallery') }}" class="recent-link">View all {{ stats.total }} →</a>
+      </div>
+      <div class="recent-grid">
+        {% for img in _scored[:5] %}
+        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="recent-item" style="text-decoration:none;">
+          <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy"
+               onerror="this.parentNode.style.cssText='aspect-ratio:1;background:#E8E4DA;border-radius:8px;';this.remove()">
+          {% if img.score %}<div class="recent-score">{{ '%.1f'|format(img.score) }}</div>{% endif %}
         </a>
-        {% endif %}
         {% endfor %}
       </div>
-
-      {% else %}
-      <div class="sl-peer-eval__done">
-        You've used your eye well today.<br>
-        <span style="font-size:14px;">Your evaluations have been submitted. Come back tomorrow.</span>
-      </div>
-      {% endif %}
-
-    {% else %}
-    <div class="sl-peer-eval__empty">
-      No images in your evaluation queue right now. Check back tomorrow.
     </div>
     {% endif %}
-  </div>
-  {% endif %}
+    {% endif %}
 
-  {# ══════════════════════════════════════════
-     RECENT WORK — always visible, 6 images, 3-col
-     Vaibhav's retention anchor. No toggle, no collapse.
-  ══════════════════════════════════════════ #}
-  {% set _scored_images = images.items | selectattr('score') | selectattr('thumb_url') | list %}
-  {% if _scored_images %}
-  <div class="sl-recent-work">
-    <div class="sl-recent-work__hdr">
-      <span class="sl-recent-work__title">My recent work</span>
-      {% if stats.total > 6 %}
-      <a href="{{ url_for('my_gallery') }}" class="sl-recent-work__link">View all {{ stats.total }} →</a>
-      {% endif %}
-    </div>
-    <div class="sl-recent-work__grid">
-      {% for img in _scored_images[:6] %}
-      {% set _ratings = img.peer_ratings_received if img.peer_ratings_received else [] %}
-      {% set _best_tier = namespace(name='', rank=0) %}
-      {% for _r in _ratings %}
-        {% if _r.what_struck or _r.stood_out_tags %}
-          {% set _rrank = tier_rank.get(_r.rater.tier or '', 0) if _r.rater else 0 %}
-          {% if _rrank > _best_tier.rank %}
-            {% set _best_tier.rank = _rrank %}
-            {% set _best_tier.name = _r.rater.tier %}
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}{% if _best_tier.name %}#peer-eval-feedback{% endif %}" class="sl-recent-work__item">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" class="sl-recent-work__img" loading="lazy" onerror="this.style.display='none'">
-        <div class="sl-recent-work__score">
-          <span class="sl-recent-work__score-val">{{ '%.1f'|format(img.score) }}</span>
+  </main>
+
+  {# ════════════════════════════════════
+     RIGHT PANEL
+  ════════════════════════════════════ #}
+  <aside class="rpanel">
+
+    {# Latest Evaluation #}
+    <div class="rp-card">
+      <div class="rp-label">Latest Evaluation</div>
+      {% if _last %}
+      <div class="latest-eval">
+        <div class="latest-thumb">
+          {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" alt="" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">{% endif %}
         </div>
-        {% if _best_tier.name %}
-        <div class="sl-recent-work__peer-badge">👁 {{ _best_tier.name }}</div>
-        {% endif %}
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-
-  {# ══════════════════════════════════════════
-     FREE TIER NUDGE (no subscription)
-     States:
-       new user (used=0, balance=3)  — welcome, no CTA
-       partial  (used>0, balance>0)  — remaining count + soft subscribe mention
-       exhausted (balance=0)         — subscribe CTA
-  ══════════════════════════════════════════ #}
-  {% if free_tier %}
-  <div class="sl-free-nudge">
-    <div class="sl-free-nudge__title">
-      {% if free_tier.remaining == 0 %}
-        Your photographs have been evaluated.
-      {% elif free_tier.used == 0 %}
-        3 free evaluations, waiting for you
-      {% else %}
-        {{ free_tier.remaining }} free evaluation{{ 's' if free_tier.remaining != 1 else '' }} remaining
-      {% endif %}
-    </div>
-    <div class="sl-free-nudge__sub">
-      {% if free_tier.remaining == 0 %}
-        You've seen what the platform can do. Subscribe to continue your growth as a photographer.
-      {% elif free_tier.used == 0 %}
-        Upload a photograph. You'll know exactly what's working and what to fix — in about 90 seconds.
-      {% else %}
-        {{ free_tier.remaining }} evaluation{{ 's' if free_tier.remaining != 1 else '' }} left. After your 3 photographs are evaluated, you can subscribe to continue your growth.
-      {% endif %}
-    </div>
-    {% if free_tier.remaining == 0 %}
-    <a href="{{ url_for('pricing') }}" class="sl-btn-subscribe">Subscribe to continue →</a>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  {# ══════════════════════════════════════════
-     SECONDARY SECTIONS — collapsible, below the fold
-     Available on one tap. Never blocking.
-  ══════════════════════════════════════════ #}
-
-</div>{# /sl-today__left #}
-<div class="sl-today__right">
-
-  {# ── Latest Evaluation ── #}
-  {% set _last = images.items[0] if images and images.items else none %}
-  <div class="sl-rp-card">
-    <div class="sl-rp-label">Latest Evaluation</div>
-    {% if _last %}
-    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-      <div style="width:64px; height:64px; border-radius:8px; overflow:hidden; flex-shrink:0; background:var(--sl-border);">
-        {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">{% endif %}
-      </div>
-      <div style="min-width:0;">
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ _last.asset_name or (_last.genre or 'Photograph') }}</div>
-        <div style="display:flex; align-items:baseline; gap:2px;">
-          <span style="font-size:20px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.1f'|format(_last.score) if _last.score else '—' }}</span>
-          <span style="font-size:12px; color:var(--sl-text-light);">/10</span>
+        <div>
+          <div class="latest-title">{{ _last.asset_name or (_last.genre or 'Photograph') }}</div>
+          <div class="latest-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<span style="font-size:12px;font-weight:400;color:var(--d-muted)">/10</span></div>
+          <div class="latest-tier">{{ _last.tier or '' }}</div>
+          <div class="latest-date">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
         </div>
-        <div style="font-size:11px; font-weight:600; color:var(--sl-green);">{{ _last.tier or '' }}</div>
-        <div style="font-size:10px; color:var(--sl-text-light);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
       </div>
-    </div>
-    <a href="{{ url_for('image_detail', image_id=_last.id) }}"
-       style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--sl-text); text-decoration:none; border-top:1px solid var(--sl-border); padding-top:8px;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      View Assessment Report →
-    </a>
-    {% else %}
-    <div style="font-size:13px; color:var(--sl-text-light); padding:8px 0;">No evaluations yet. Upload your first photograph.</div>
-    <a href="{{ url_for('upload') }}" style="font-size:12px; font-weight:700; color:var(--sl-yellow-dark); text-decoration:none;">Upload now →</a>
-    {% endif %}
-  </div>
-
-  {# ── Your Standing ── #}
-  {% if progress_data %}
-  <div class="sl-rp-card">
-    <div class="sl-rp-label">Your Standing</div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-      <span style="font-size:14px; font-weight:700; color:var(--sl-text);">{{ progress_data.avg_tier }}</span>
-      <span style="font-size:12px; color:var(--sl-text-light);">avg {{ '%.2f'|format(progress_data.avg_score) }}</span>
-    </div>
-    {% if progress_data.overall_pct %}
-    <div style="font-size:11px; font-weight:600; color:var(--sl-green); margin-bottom:8px;">Top {{ progress_data.overall_pct }}% this month</div>
-    {% endif %}
-    <div style="height:4px; background:var(--sl-border); border-radius:2px;">
-      <div style="height:100%; width:{{ progress_data.tier_pct or 0 }}%; background:var(--sl-yellow); border-radius:2px;"></div>
-    </div>
-  </div>
-  {% endif %}
-
-  {# ── Points & Redemptions ── #}
-  <div class="sl-rp-card">
-    <div class="sl-rp-label">Points &amp; Redemptions</div>
-    <div style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1; margin-bottom:4px;">{{ current_user.points_balance|int if current_user.points_balance else 0 }}</div>
-    <div style="font-size:11px; color:var(--sl-text-light); margin-bottom:8px;">Earn on every upload</div>
-    <a href="{{ url_for('redeem') }}" style="font-size:11px; color:var(--sl-yellow-dark); font-weight:600; text-decoration:none;">View &amp; Redeem →</a>
-  </div>
-
-  {# ── Weekly Assignment ── #}
-  {% if active_challenge %}
-  <div class="sl-rp-card" style="border-left-color:#27500A;">
-    <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-      <span style="width:6px;height:6px;border-radius:50%;background:#27500A;flex-shrink:0;"></span>
-      <div class="sl-rp-label" style="margin-bottom:0; color:#27500A;">Weekly Assignment</div>
-    </div>
-    <div style="font-size:13px; font-weight:700; color:var(--sl-text); margin-bottom:2px;">{{ active_challenge.prompt_title }}</div>
-    <div style="font-size:11px; color:var(--sl-text-light); margin-bottom:8px;">closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
-    <a href="{{ url_for('weekly_challenge') }}" style="font-size:12px; font-weight:700; color:#fff; background:#27500A; padding:8px 14px; border-radius:8px; text-decoration:none; display:inline-block;">View assignment →</a>
-  </div>
-  {% endif %}
-
-  {# ── Mentor Guidance ── #}
-  <div class="sl-rp-card">
-    <div class="sl-rp-label">Mentor Guidance</div>
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-      {% if mentor_reviews and mentor_reviews[0] %}
-      <img src="{{ mentor_reviews[0].get('mentor_photo', url_for('static', filename='img/mentor_ashok.jpg')) }}"
-           onerror="this.src='{{ url_for('static', filename='img/mentor_ashok.jpg') }}'"
-           style="width:40px;height:40px;border-radius:50%;border:2px solid var(--sl-yellow);object-fit:cover;flex-shrink:0;" alt="Mentor">
-      <div>
-        <div style="font-size:12px; font-weight:700; color:var(--sl-text);">{{ mentor_reviews[0].get('mentor_name', 'Ashok Kochhar') }}</div>
-        <div style="font-size:10px; color:var(--sl-text-light);">{{ mentor_reviews[0].get('mentor_tier', 'Grandmaster') }}</div>
-      </div>
+      <a href="{{ url_for('image_detail', image_id=_last.id) }}" class="latest-link">View Assessment Report →</a>
       {% else %}
-      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-           onerror="this.style.background='var(--sl-border)';this.removeAttribute('src')"
-           style="width:40px;height:40px;border-radius:50%;border:2px solid var(--sl-yellow);object-fit:cover;flex-shrink:0;" alt="Ashok">
-      <div>
-        <div style="font-size:12px; font-weight:700; color:var(--sl-text);">Ashok Kochhar</div>
-        <div style="font-size:10px; color:var(--sl-text-light);">Grandmaster</div>
-      </div>
+      <div style="font-size:13px;color:var(--d-muted);padding:4px 0;">Upload your first photograph to see your evaluation here.</div>
       {% endif %}
     </div>
-    <div style="font-size:12px; font-style:italic; color:var(--sl-text); line-height:1.5; margin-bottom:8px; border-left:2px solid var(--sl-yellow); padding-left:10px;">"Patience is not about waiting. It's about how you observe while you wait."</div>
-    <a href="{{ url_for('mentors') }}" style="display:block; margin-top:10px; background:var(--sl-yellow); color:#111; font-size:12px; font-weight:700; padding:9px 14px; border-radius:9px; text-decoration:none; text-align:center;">Book a Review →</a>
-  </div>
 
-  {# ── Annual Excellence Award ── #}
-  <div style="background:#13254B; border-radius:12px; padding:12px 14px;">
-    <div style="font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--sl-yellow); margin-bottom:4px;">Annual Excellence Award</div>
-    <div style="font-size:14px; font-weight:700; color:#F6F2E9; margin-bottom:3px;">AEA 2026</div>
-    <div style="font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5; margin-bottom:8px;">Opens September 2026 — keep shooting, your standing builds now.</div>
-    <a href="{{ url_for('poty') }}" style="font-size:11px; color:var(--sl-yellow); font-weight:600; text-decoration:none;">Learn more →</a>
-  </div>
-
-</div>{# /sl-today__right #}
-
-</div>{# /sl-today__inner — desktop grid ends here #}
-
-<div class="sl-sections sl-mobile-sections">
-
-    {# ── Standing & Progress ── #}
+    {# Your Standing #}
     {% if progress_data %}
-    <div class="sl-sec" id="sec-standing">
-      <div class="sl-sec__hdr" onclick="slToggle('sec-standing')" role="button" tabindex="0" aria-expanded="false">
-        <div class="sl-sec__hdr-left">
-          <span class="sl-sec__icon">◎</span>
-          <div>
-            <span class="sl-sec__title">Your standing</span>
-            <span class="sl-sec__sub">{{ progress_data.avg_tier }} · avg {{ '%.2f'|format(progress_data.avg_score) }}{% if progress_data.overall_pct %} · Top {{ progress_data.overall_pct }}%{% endif %}</span>
-          </div>
-        </div>
-        <span class="sl-sec__chev">▼</span>
+    <div class="rp-card">
+      <div class="rp-label">Your Standing</div>
+      <div class="standing-row">
+        <span class="standing-val">{{ progress_data.avg_tier }}</span>
+        <span class="standing-avg">avg {{ '%.2f'|format(progress_data.avg_score) }}</span>
       </div>
-      <div class="sl-sec__body">
-        <div class="sl-standing-row">
-          <div class="sl-standing-stat">
-            <div class="sl-standing-stat__val">{{ '%.2f'|format(progress_data.avg_score) }}</div>
-            <div class="sl-standing-stat__label">Average evaluation</div>
-          </div>
-          <div class="sl-standing-stat">
-            <div class="sl-standing-stat__val">{% if progress_data.overall_pct %}Top {{ progress_data.overall_pct }}%{% else %}—{% endif %}</div>
-            <div class="sl-standing-stat__label">{{ progress_data.league_label or 'Camera' }} league</div>
-          </div>
-        </div>
-
-        {# Dimension trend rows — sparklines, same pre-computed data as desktop #}
-        {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Disruption'} %}
-        {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
-        <div class="sl-mob-spark-row">
-          {% for dim, avg in progress_data.dim_avgs.items() %}
-          {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
-          {% set _dcolor = _dim_colours.get(dim, '#2C3E6B') %}
-          {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
-          <div class="sl-mob-spark-item">
-            <div class="sl-mob-spark-hdr">
-              <span class="sl-dim-pill__name">{{ _dim_mobile.get(dim, dim|title) }}</span>
-              <span style="display:flex; align-items:center; gap:6px;">
-                <span class="sl-dim-pill__score">{{ '%.1f'|format(avg) }}</span>
-                {% if _pill == 'up' %}<span class="sl-sparkline-pill up">↑ climbing</span>
-                {% elif _pill == 'down' %}<span class="sl-sparkline-pill down">↓ dipped</span>
-                {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
-              </span>
-            </div>
-            {% if _sp and _sp.polyline %}
-            <svg class="sl-mob-spark-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
-                 aria-label="{{ _dim_mobile.get(dim, dim) }} trend">
-              <polyline fill="none" stroke="{{ _dcolor }}" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" points="{{ _sp.polyline }}" />
-              {% if _sp.points %}
-              {% for _pt in _sp.points %}
-              <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
-              {% endfor %}
-              {% endif %}
-              {# Mission upload dots — gold filled circle overlay, same as desktop #}
-              {% set _mission_idxs = progress_data.dim_mission_indices.get(dim, []) if progress_data.dim_mission_indices is defined else [] %}
-              {% for _mi in _mission_idxs %}
-              {% if _sp.points and _mi < (_sp.points | length) %}
-              <circle cx="{{ _sp.points[_mi].x }}" cy="{{ _sp.points[_mi].y }}" r="5" fill="#C8A84B" opacity="0.9"/>
-              {% endif %}
-              {% endfor %}
-            </svg>
-            {# Score values x-axis — matches desktop and scorecard style #}
-            {% set _raw = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
-            {% if _raw %}
-            <div style="display:flex; justify-content:space-between; margin-top:3px;">
-              {% for _v in _raw %}{% if _v != none %}
-              <span style="font-size:12px; color:var(--sl-text-light); font-family:monospace;">{{ '%.1f'|format(_v) }}</span>
-              {% endif %}{% endfor %}
-            </div>
-            {% endif %}
-            {% else %}
-            <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
-            {% endif %}
-          </div>
-          {% endfor %}
-        </div>
-
-        {# Tier progress bar #}
-        <div class="sl-tier-bar">
-          <div class="sl-tier-bar__label">
-            <span>{{ progress_data.avg_tier }}</span>
-            <span>→ {{ progress_data.next_tier or 'Peak' }}</span>
-          </div>
-          <div class="sl-tier-bar__track">
-            <div class="sl-tier-bar__fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div>
-          </div>
-        </div>
+      {% if progress_data.overall_pct %}<div class="standing-pct">Top {{ progress_data.overall_pct }}% this month</div>{% endif %}
+      <div class="standing-bar">
+        <div class="standing-fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div>
       </div>
     </div>
     {% endif %}
 
-    {# ── Points & Redemptions ── #}
-    <div class="sl-sec" id="sec-points">
-      <div class="sl-sec__hdr" onclick="slToggle('sec-points')" role="button" tabindex="0" aria-expanded="false">
-        <div class="sl-sec__hdr-left">
-          <span class="sl-sec__icon">★</span>
-          <div>
-            <span class="sl-sec__title">Points & redemptions</span>
-            <span class="sl-sec__sub">{% if wallet_hud %}{{ wallet_hud.balance | int | default(0) }} pts{% else %}Earn on every upload{% endif %}</span>
-          </div>
-        </div>
-        <span class="sl-sec__chev">▼</span>
-      </div>
-      <div class="sl-sec__body">
-        {% if wallet_hud %}
-        <div class="sl-points-row">
-          <div class="sl-points-card">
-            <div class="sl-points-card__val">{{ wallet_hud.balance | int }}</div>
-            <div class="sl-points-card__label">Points balance</div>
-          </div>
-          <div class="sl-points-card">
-            <div class="sl-points-card__val">{{ upload_credits_balance or 0 }}</div>
-            <div class="sl-points-card__label">Upload credits</div>
-          </div>
-        </div>
-        <a href="{{ url_for('redeem') }}" class="sl-btn-redeem">Redeem points →</a>
-        {% endif %}
-
-        {# Peer rating CTA — earn 2 points, daily habit #}
-        {% if rating_widget %}
-        {# peer CTA moved to main column #}
-        {% endif %}
-      </div>
+    {# Points & Redemptions #}
+    <div class="rp-card">
+      <div class="rp-label">Points &amp; Redemptions</div>
+      <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ (current_user.points_balance or 0)|int }}</div>
+      <div style="font-size:11px;color:var(--d-muted);margin-bottom:8px;">Earn on every upload</div>
+      <a href="{{ url_for('redeem') }}" style="font-size:11px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
     </div>
 
-    {# ── Weekly Assignment ── #}
+    {# Weekly Assignment #}
     {% if active_challenge %}
-    <div class="sl-sec" id="sec-weekly">
-      <div class="sl-sec__hdr" onclick="slToggle('sec-weekly')" role="button" tabindex="0" aria-expanded="false">
-        <div class="sl-sec__hdr-left">
-          <span style="width:8px; height:8px; border-radius:50%; background:#27500A; display:inline-block;" aria-hidden="true"></span>
-          <div>
-            <span class="sl-sec__title" style="color:#27500A;">Weekly assignment</span>
-            <span class="sl-sec__sub">{{ active_challenge.prompt_title }} · closes {{ active_challenge.closes_at.strftime('%d %b') }}</span>
-          </div>
-        </div>
-        <span class="sl-sec__chev">▼</span>
+    <div class="rp-card" style="border-left-color:#27500A;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:#27500A;flex-shrink:0;"></span>
+        <div class="rp-label" style="margin-bottom:0;color:#27500A;">Weekly Assignment</div>
       </div>
-      <div class="sl-sec__body">
-        <p style="font-size:17px;line-height:1.65;margin:16px 0 14px;color:#404040">
-          {{ active_challenge.prompt_body or 'A new challenge every Monday. Submit your best frame.' }}
-        </p>
-        <a href="{{ url_for('weekly_challenge') }}" class="sl-btn-redeem" style="background:#27500A;color:#fff;">
-          View assignment →
-        </a>
-      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ active_challenge.prompt_title }}</div>
+      <div style="font-size:11px;color:var(--d-muted);margin-bottom:8px;">closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
+      <a href="{{ url_for('weekly_challenge') }}" style="font-size:12px;font-weight:700;color:#fff;background:#27500A;padding:8px 14px;border-radius:8px;text-decoration:none;display:inline-block;">View assignment →</a>
     </div>
     {% endif %}
 
-    {# ── Shooting near you (mobile) — same data as desktop right col ── #}
-    {% if current_user.city %}
-    <div class="sl-sec" id="sec-near-you">
-      <div class="sl-sec__hdr" onclick="slToggle('sec-near-you')" role="button" tabindex="0" aria-expanded="false">
-        <div class="sl-sec__hdr-left">
-          <span class="sl-sec__icon">📍</span>
-          <div>
-            <span class="sl-sec__title">Shooting near you</span>
-            <span class="sl-sec__sub">
-              {% if dash_advisory %}{{ dash_advisory.location_name }}{% else %}{{ current_user.city }}{% endif %}
-            </span>
-          </div>
+    {# Mentor Guidance #}
+    <div class="rp-card">
+      <div class="rp-label">Mentor Guidance</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+             onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
+             style="width:40px;height:40px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Ashok">
+        <div>
+          <div class="mentor-name">Ashok Kochhar</div>
+          <div class="mentor-tier-badge">Grandmaster</div>
         </div>
-        <span class="sl-sec__chev">▼</span>
       </div>
-      <div class="sl-sec__body">
-        {% if dash_advisory %}
-        <p style="font-size:17px;font-weight:700;line-height:1.4;margin:16px 0 4px;color:var(--sl-text);">
-          {{ dash_advisory.location_name }}{% if dash_advisory.state_country %}, {{ dash_advisory.state_country }}{% endif %}
-          {% if dash_advisory.distance_hours %}<span style="font-weight:500;color:var(--sl-text-light);">· {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-        </p>
-        <p style="font-size:16px;line-height:1.65;margin:0 0 14px;color:#404040">
-          {{ dash_advisory.what_is_happening }}
-        </p>
-        <a href="{{ dash_advisory.url }}" target="_blank" rel="noopener" class="sl-btn-redeem">Get directions →</a>
-        {% else %}
-        <p style="font-size:17px;line-height:1.65;margin:16px 0 14px;color:#404040">
-          Your daily brief is tuned to your location. Upload a photograph to get local seasonal context on your next evaluation card.
-        </p>
-        {% endif %}
-      </div>
+      <div class="mentor-quote">"Patience is not about waiting. It's about how you observe while you wait."</div>
+      <a href="{{ url_for('mentors') }}" style="display:block;margin-top:10px;background:var(--d-gold);color:#111;font-size:12px;font-weight:700;padding:9px 14px;border-radius:9px;text-decoration:none;text-align:center;">Review my Image →</a>
     </div>
-    {% endif %}
 
-    {# ── Referral ── #}
-    {% if referral_code %}
-    <div class="sl-sec" id="sec-referral">
-      <div class="sl-sec__hdr" onclick="slToggle('sec-referral')" role="button" tabindex="0" aria-expanded="false">
-        <div class="sl-sec__hdr-left">
-          <span class="sl-sec__icon">↗</span>
-          <div>
-            <span class="sl-sec__title">Invite a photographer</span>
-            <span class="sl-sec__sub">They save ₹20 · you earn 200 pts</span>
-          </div>
-        </div>
-        <span class="sl-sec__chev">▼</span>
-      </div>
-      <div class="sl-sec__body">
-        <p style="font-size:17px;line-height:1.65;margin:16px 0 14px;color:#404040">
-          Share your personal link. When they subscribe, you both benefit.
-        </p>
-        <div style="background:var(--sl-bg);border-radius:14px;padding:14px 16px;font-family:monospace;font-size:16px;color:var(--sl-text);word-break:break-all;margin-bottom:12px;">
-          {{ referral_url }}
-        </div>
-        <a href="{{ url_for('referral_page') }}" class="sl-btn-redeem">See your referral dashboard →</a>
-      </div>
+    {# Annual Excellence Award #}
+    <div class="aea-card">
+      <div class="aea-label">Annual Excellence Award</div>
+      <div class="aea-title">AEA 2026</div>
+      <div class="aea-sub">Opens September 2026 — keep shooting, your standing builds now.</div>
+      <a href="{{ url_for('poty') }}" class="aea-link">Learn more →</a>
     </div>
-    {% endif %}
 
-    {# ── My Photographs ── #}
-    {% if stats.total > 0 %}
-    <div class="sl-sec" id="sec-photos">
-      <div class="sl-sec__hdr" onclick="slToggle('sec-photos')" role="button" tabindex="0" aria-expanded="false">
-        <div class="sl-sec__hdr-left">
-          <span class="sl-sec__icon">⊞</span>
-          <div>
-            <span class="sl-sec__title">My Gallery</span>
-            <span class="sl-sec__sub">{{ stats.total }} image{{ 's' if stats.total != 1 else '' }} · {{ stats.scored }} evaluated</span>
-          </div>
-        </div>
-        <span class="sl-sec__chev">▼</span>
-      </div>
-      <div class="sl-sec__body">
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:12px;">
-          {% for img in images.items[:9] %}
-          {% if img.thumb_url %}
-          <a href="{{ url_for('image_detail', image_id=img.id) }}"
-             style="position:relative; aspect-ratio:1; overflow:hidden; border-radius:10px;
-                    display:block; background:#0D0D0B;">
-            <img src="{{ img.thumb_url }}"
-                 alt="{{ img.genre or 'Photo' }}"
-                 loading="lazy"
-                 onerror="this.style.display='none'"
-                 style="width:100%;height:100%;object-fit:cover;display:block;">
-            {% if img.score %}
-            <div style="position:absolute;bottom:0;left:0;right:0;
-                        background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%);
-                        padding:4px 6px;">
-              <span style="font-size:13px;font-weight:800;color:#F5C518;">{{ '%.1f'|format(img.score) }}</span>
-            </div>
-            {% endif %}
-          </a>
-          {% endif %}
-          {% endfor %}
-        </div>
-        {% if images.total > 9 %}
-        <a href="{{ url_for('dashboard') }}?page=2"
-           style="display:block; text-align:center; font-size:14px; font-weight:600;
-                  color:var(--sl-text); padding:10px; border:1px solid var(--sl-border);
-                  border-radius:10px; text-decoration:none; background:var(--sl-bg);">
-          View all {{ images.total }} photographs →
-        </a>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
+  </aside>
 
-  </div>{# /sl-sections #}
+</div>{# /dash-layout #}
 
-  {# ── Location widget — uses current_user.city/state directly ── #}
-  {% if current_user.city %}
-  <div class="sl-loc-widget">
-    <span class="sl-loc-widget__pin">📍</span>
-    <div class="sl-loc-widget__txt">
-      Shooting in <span class="sl-loc-widget__city">{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</span>
-    </div>
-    <a href="{{ url_for('profile') }}" class="sl-loc-widget__change">Change</a>
-  </div>
-  {% endif %}
+{# ── Bottom quote strip ── #}
+<div class="dash-quote-strip">
+  <div class="dash-quote-txt">"Your journey is unique. Stay consistent, stay curious.<br>The best camera is the one that's with you. The best time is now."</div>
+  <div class="dash-quote-sig">— Shutter League</div>
+</div>
 
-</div>{# /sl-today #}
-
-{# ── Upload FAB — mobile only, fixed, shown to all users ── #}
-<a href="{{ url_for('upload') }}" class="sl-upload-fab" aria-label="Upload a photograph">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-</a>
-
+</div>{# /dash-wrap #}
 {% endblock %}
-
-{% block extra_js %}
-<script>
-// ── Mentor review alert — expand/collapse ──
-function slToggleMentor(id) {
-  var detail  = document.getElementById(id);
-  var chevron = document.getElementById(id + '-chevron');
-  if (!detail) return;
-  var open = detail.style.display === 'none' || detail.style.display === '';
-  detail.style.display = open ? 'block' : 'none';
-  if (chevron) chevron.style.transform = open ? 'rotate(90deg)' : '';
-}
-
-// ── Today's Master — expand/collapse detail ──
-function slToggleMaster() {
-  var detail   = document.getElementById('sl-master-detail');
-  var chevron  = document.getElementById('sl-master-chevron');
-  if (!detail) return;
-  var open = detail.style.display === 'none' || detail.style.display === '';
-  detail.style.display  = open ? 'block' : 'none';
-  if (chevron) {
-    chevron.style.transform = open ? 'rotate(90deg)' : '';
-  }
-}
-
-// ── Skip Mission — collapses assignment card to pill, session-persistent ──
-function slSkipMission() {
-  var card = document.getElementById('sl-practise-card');
-  var pill = document.getElementById('sl-practise-pill');
-  if (card) {
-    card.style.transition = 'max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease';
-    card.style.maxHeight = card.scrollHeight + 'px';
-    card.offsetHeight;
-    card.style.maxHeight = '0';
-    card.style.opacity = '0';
-    card.style.overflow = 'hidden';
-    card.style.marginBottom = '0';
-    card.style.padding = '0';
-  }
-  if (pill) {
-    setTimeout(function() {
-      pill.style.display = 'flex';
-      pill.style.opacity = '0';
-      setTimeout(function() {
-        pill.style.transition = 'opacity 0.25s ease';
-        pill.style.opacity = '1';
-      }, 20);
-    }, 300);
-  }
-  try { sessionStorage.setItem('sl_mission_collapsed', '1'); } catch(e) {}
-}
-
-function slExpandMission() {
-  var card = document.getElementById('sl-practise-card');
-  var pill = document.getElementById('sl-practise-pill');
-  if (pill) { pill.style.display = 'none'; }
-  if (card) {
-    card.style.transition = 'max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease';
-    card.style.maxHeight = '600px';
-    card.style.opacity = '1';
-    card.style.overflow = '';
-    card.style.marginBottom = '';
-    card.style.padding = '';
-  }
-  try { sessionStorage.removeItem('sl_mission_collapsed'); } catch(e) {}
-}
-
-// ── Section toggle — sessionStorage persistence within session ──
-var _SL_SS_KEY = 'sl_sec_state';
-
-function _slSS_load() {
-  try { return JSON.parse(sessionStorage.getItem(_SL_SS_KEY) || '{}'); } catch(e) { return {}; }
-}
-function _slSS_save(state) {
-  try { sessionStorage.setItem(_SL_SS_KEY, JSON.stringify(state)); } catch(e) {}
-}
-
-function slToggle(id) {
-  var s = document.getElementById(id);
-  if (!s) return;
-  var open = s.classList.toggle('is-open');
-  var h = s.querySelector('.sl-sec__hdr');
-  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-  var st = _slSS_load(); st[id] = open; _slSS_save(st);
-}
-
-function slToggleRC(id) {
-  var s = document.getElementById(id);
-  if (!s) return;
-  var open = s.classList.toggle('is-open');
-  var h = s.querySelector('.sl-rc-sec__hdr');
-  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-  var st = _slSS_load(); st[id] = open; _slSS_save(st);
-}
-
-function slDismissWkBanner() {
-  var b = document.getElementById('wk-banner');
-  if (b) b.style.display = 'none';
-  var st = _slSS_load(); st['wk-banner-dismissed'] = true; _slSS_save(st);
-}
-
-function slRestoreSections() {
-  var state = _slSS_load();
-  // Mobile collapsible sections
-  var secIds = ['sec-standing', 'sec-points', 'sec-weekly', 'sec-referral', 'sec-photos', 'sec-aea', 'sec-location'];
-  secIds.forEach(function(id) {
-    var s = document.getElementById(id);
-    if (!s) return;
-    var h = s.querySelector('.sl-sec__hdr');
-    var open = state[id] === true;
-    s.classList.toggle('is-open', open);
-    if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  // Desktop right column sections
-  var rcIds = ['rc-standing', 'rc-portfolio', 'rc-points', 'rc-aea', 'rc-location', 'rc-referral', 'rc-eye', 'rc-weekly'];
-  rcIds.forEach(function(id) {
-    var s = document.getElementById(id);
-    if (!s) return;
-    var h = s.querySelector('.sl-rc-sec__hdr');
-    var open = state[id] === true;
-    s.classList.toggle('is-open', open);
-    if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  // Weekly assignment banner — dismissed for this session only
-  if (state['wk-banner-dismissed'] === true) {
-    var wkB = document.getElementById('wk-banner');
-    if (wkB) wkB.style.display = 'none';
-  }
-  // Mission collapse — restore from sessionStorage
-  try {
-    if (sessionStorage.getItem('sl_mission_collapsed') === '1') {
-      var card = document.getElementById('sl-practise-card');
-      var pill = document.getElementById('sl-practise-pill');
-      if (card) {
-        card.style.maxHeight = '0';
-        card.style.opacity = '0';
-        card.style.overflow = 'hidden';
-        card.style.marginBottom = '0';
-        card.style.padding = '0';
-      }
-      if (pill) { pill.style.display = 'flex'; }
-    }
-  } catch(e) {}
-}
-
-// ── Keyboard nav for collapsible sections ──
-document.querySelectorAll('.sl-sec__hdr, .sl-rc-sec__hdr').forEach(function(hdr) {
-  hdr.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      hdr.click();
-    }
-  });
-});
-
-// SESSION116: peer eval strip — load on page render + refresh on tab focus
-(function() {
-  var _wrap = document.getElementById('sl-peer-eval-strip-wrap');
-  if (!_wrap) return;
-  function _loadStrip() {
-    fetch('/dashboard/peer-eval-strip', {credentials: 'same-origin'})
-      .then(function(r) { return r.text(); })
-      .then(function(html) { _wrap.innerHTML = html; })
-      .catch(function() {});
-  }
-  _loadStrip();
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') { _loadStrip(); }
-  });
-})();
-
-// ── Restore on page load ──
-slRestoreSections();
-
-</script>
-{% endblock %}
-
-<!-- SL UI v2.2 | Session 126 | 2026-07-05 | footer grid + hero fixes -->
