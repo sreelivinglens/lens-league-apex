@@ -599,7 +599,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
             <div style="font-size:13px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
-            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
+{% set _adv_genre = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
+            {% if _adv_genre %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">{{ _adv_genre|title }}</span>{% endif %}
           </div>
           <div style="font-size:11px;color:var(--d-muted);line-height:1.5;margin-bottom:6px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if weather and weather.state == 'red' %}
@@ -837,7 +838,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div style="padding:12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
             <div style="font-size:16px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}</div>
-            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
+{% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
+            {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
           </div>
           <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:6px;">{{ dash_advisory.location_desc or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if weather and weather.state == 'red' %}
