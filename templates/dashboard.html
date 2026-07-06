@@ -49,7 +49,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 /* ── CENTRE ── */
 .centre {
   padding: 20px 16px;
-  display: flex; flex-direction: column; gap: 16px;
+  display: flex; flex-direction: column; gap: 24px;
 }
 
 /* ── RIGHT PANEL — mobile: below centre ── */
@@ -545,37 +545,6 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       </div>
     </div>
 
-    {# ── PEER EVALUATE — subtle 1-row strip, desktop only ── #}
-    {% if peer_queue %}
-    <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:14px 18px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-        <div>
-          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:2px;">Sharpen Your Eye</div>
-          <div style="font-size:13px;font-weight:600;color:var(--d-dark);">Evaluate these {{ peer_queue|length }} images · earn 2 pts each</div>
-        </div>
-        <span style="font-size:13px;color:var(--d-muted);font-style:italic;">+2 bonus if your evaluation matches the engine</span>
-      </div>
-      <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
-        {% for _pq in peer_queue %}
-        <a href="{{ url_for('rate') }}?assignment={{ _pq.id }}"
-           style="display:block; border-radius:10px; overflow:hidden; text-decoration:none; position:relative; aspect-ratio:1; background:var(--d-border);">
-          {% set _pimg = _pq.image %}
-          {% if _pimg and _pimg.thumb_url %}
-          <img src="{{ _pimg.thumb_url }}" alt="{{ _pimg.genre or 'Photo' }}"
-               style="width:100%;height:100%;object-fit:cover;display:block;"
-               onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
-          {% endif %}
-          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
-            <span style="font-size:13px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-
     {# ── LOCATION ADVISORY — desktop ── #}
     {% if dash_advisory and dash_advisory.get('location_name') %}
     <div style="background:var(--d-card);border:1px solid var(--d-border);border-radius:10px;overflow:hidden;">
@@ -641,6 +610,33 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <a href="{{ url_for('profile') }}#location"
              style="font-size:13px;color:var(--d-muted);text-decoration:none;white-space:nowrap;">Change location</a>
         </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── PEER EVALUATE — subtle 1-row strip, desktop only ── #}
+    {% if peer_queue %}
+    <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:18px 20px;">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">Sharpen Your Eye</div>
+        <div style="font-size:13px;color:var(--d-dark);line-height:1.6;">Train your eye by judging others — it sharpens your own photography. Earn 2 pts per evaluation, +2 if your read matches the engine.</div>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
+        {% for _pq in peer_queue %}
+        <a href="{{ url_for('rate') }}?assignment={{ _pq.id }}"
+           style="display:block; border-radius:10px; overflow:hidden; text-decoration:none; position:relative; aspect-ratio:1; background:var(--d-border);">
+          {% set _pimg = _pq.image %}
+          {% if _pimg and _pimg.thumb_url %}
+          <img src="{{ _pimg.thumb_url }}" alt="{{ _pimg.genre or 'Photo' }}"
+               style="width:100%;height:100%;object-fit:cover;display:block;"
+               onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
+          {% endif %}
+          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
+          </div>
+        </a>
+        {% endfor %}
       </div>
     </div>
     {% endif %}
