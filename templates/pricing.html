@@ -20,7 +20,8 @@
    #1A2744 slate blue (dark sections)
    #F5C518 gold (dark bg only)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+body:has(.sl-pr) main,
+body.page-pricing main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 .sl-pr, .sl-pr * { font-family: 'Inter', sans-serif !important; }
 
 /* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -694,17 +695,29 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 }
 
 @media (max-width: 768px) {
-  .sl-pr-hero { height: auto; min-height: 360px; }
-  .sl-pr-hero-content { margin: 0 20px; padding: 48px 0;
-  bottom: 15px;
-  left: clamp(16px, 4vw, 48px);
+  /* Hero — stack image above content like science page */
+  .sl-pr-hero { height: auto; min-height: unset; flex-direction: column; display: flex; }
+  .sl-pr-hero-img { position: static; width: 100%; aspect-ratio: 16/9; height: auto; display: block; object-fit: cover; }
+  .sl-pr-hero-fade { display: none; }
+  .sl-pr-hero-content {
+    position: static;
+    margin: 0;
+    left: auto;
+    bottom: auto;
+    background: rgba(13,11,8,0.88);
+    padding: 24px 20px 28px;
+    width: 100%;
+    max-width: none;
   }
-  .sl-pr-hero h1 { font-size: 30px; text-shadow: none; }
-  .sl-pr-hero-copy { font-size: 16px; }
+  .sl-pr-hero h1 { font-size: 28px; text-shadow: none; margin-bottom: 12px; }
+  .sl-pr-hero-copy { font-size: 15px; }
+  .sl-pr-hero-note { margin: 12px 0 20px; }
+  .sl-pr-hero-actions { flex-direction: column; gap: 10px; }
+  .sl-pr-btn-gold, .sl-pr-btn-ghost { width: 100%; text-align: center; display: block; }
 
   .sl-pr-sec,
   .sl-pr-sec-warm,
-  .sl-pr-sec-slate { padding: 56px 20px; }
+  .sl-pr-sec-slate { padding: 40px 20px; }
 
   .sl-pr-free-card {
     grid-template-columns: 1fr;
@@ -725,10 +738,10 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
   .sl-pr-topup-right { min-width: 0; }
 
   .sl-pr-bottom-row { grid-template-columns: 1fr; }
-  .sl-pr-learning { padding: 56px 20px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.08); }
-  .sl-pr-faq { padding: 56px 20px; }
+  .sl-pr-learning { padding: 40px 20px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.08); }
+  .sl-pr-faq { padding: 40px 20px; }
 
-  .sl-pr-final { grid-template-columns: 1fr; padding: 56px 20px; gap: 28px; }
+  .sl-pr-final { grid-template-columns: 1fr; padding: 48px 20px; gap: 28px; }
   .sl-pr-final-img { width: 100%; opacity: 0.15; }
   .sl-pr-final-fade { background: rgba(26,39,68,0.80); }
   .sl-pr-final-copy h2 { font-size: 26px; text-shadow: none; }
@@ -755,6 +768,7 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 </style>
 {% endblock %}
 
+{% block body_class %}page-pricing{% endblock %}
 {% block content %}
 <div class="sl-pr">
 
@@ -767,6 +781,9 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
       class="sl-pr-hero-img"
       onerror="this.style.display='none'"
     >
+    {% if poty_hero.photographer_name %}
+    <span style="position:absolute;bottom:10px;right:16px;z-index:3;background:rgba(13,11,8,0.52);color:rgba(255,255,255,0.88);font-size:13px;font-weight:500;letter-spacing:0.04em;padding:3px 10px;border-radius:4px;white-space:nowrap;pointer-events:none;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);">© {{ poty_hero.photographer_name }}{% if poty_hero.score %} · {{ '%.2f'|format(poty_hero.score) }}{% endif %}</span>
+    {% endif %}
     {% endif %}
     <div class="sl-pr-hero-fade"></div>
     <div class="sl-pr-hero-content">
@@ -974,7 +991,7 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
         <li>12 images / month</li>
       </ul>
       <div class="sl-pr-learning-price">₹100 <span>/ month</span></div>
-      <button class="sl-pr-btn-outline">Notify Me</button>
+      <button class="sl-pr-btn-outline" onclick="slShowPaymentSoon('learning')">Notify Me</button>
     </div>
 
     <div class="sl-pr-faq">
@@ -1061,7 +1078,11 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 <script>
 function slShowPaymentSoon(league) {
   var label = document.getElementById('sl-modal-league-label');
-  label.textContent = 'SHUTTER LEAGUE · ₹200/month';
+  if (league === 'learning') {
+    label.textContent = 'LEARNING PLAN · ₹100/MONTH — COMING SOON';
+  } else {
+    label.textContent = 'SHUTTER LEAGUE · ₹200/month';
+  }
   var modal = document.getElementById('sl-payment-modal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
