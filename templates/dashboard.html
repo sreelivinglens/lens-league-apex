@@ -41,6 +41,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 .dash-layout {
   display: block;
 }
+.mobile-dash { display: none; }
 
 /* ── LEFT SIDENAV — desktop only ── */
 .sidenav { display: none; }
@@ -60,9 +61,14 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 /* ─────────────────────────────────────────
    GREETING
 ───────────────────────────────────────── */
-.greeting { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.greeting-name { font-size: 22px; font-weight: 700; color: var(--d-dark); line-height: 1.2; }
-.greeting-sub { font-size: 13px; color: var(--d-muted); margin-top: 3px; }
+.greeting {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; padding: 20px 0 4px 3px;
+  border-left: 3px solid var(--d-gold); padding-left: 14px;
+}
+.greeting-name { font-size: 22px; font-weight: 800; color: var(--d-dark); line-height: 1.2; }
+.greeting-sub { font-size: 13px; color: var(--d-muted); margin-top: 4px; line-height: 1.5; }
+.greeting-sub strong { color: var(--d-dark); font-weight: 700; }
 .streak {
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   background: var(--d-card); border: 1px solid var(--d-border);
@@ -258,7 +264,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
   /* ── Centre column ── */
   .centre {
-    padding: 24px 28px; gap: 18px;
+    padding: 16px 28px 28px; gap: 18px;
   }
 
   /* Practise card wider image column on desktop */
@@ -288,6 +294,115 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
   /* Hide mobile-only quote strip */
   .dash-quote-strip { display: none; }
+}
+
+/* ── Standing modal ── */
+.standing-modal {
+  display: none; position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
+  padding: 20px;
+}
+.standing-modal-inner {
+  background: var(--d-cream); border-radius: 20px;
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  padding: 24px; position: relative;
+}
+.standing-modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: 1px solid var(--d-border);
+  border-radius: 50%; width: 32px; height: 32px;
+  cursor: pointer; font-size: 16px; color: var(--d-muted);
+  display: flex; align-items: center; justify-content: center;
+}
+.standing-modal-close:hover { border-color: var(--d-dark); color: var(--d-dark); }
+.dim-sparkline-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--d-border);
+}
+.dim-sparkline-row:last-child { border-bottom: none; }
+.dim-sparkline-name { font-size: 14px; font-weight: 600; color: var(--d-dark); min-width: 90px; }
+.dim-sparkline-val { font-size: 14px; font-weight: 800; color: var(--d-dark); min-width: 36px; text-align: right; }
+.dim-trend-pill {
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px;
+  white-space: nowrap;
+}
+.dim-trend-pill.up { background: #EAF3DE; color: #2A7A3A; }
+.dim-trend-pill.steady { background: #F0EDEA; color: #6B6B6B; }
+.dim-trend-pill.down { background: #FEF0E8; color: #C05A1A; }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE DASHBOARD — approved design
+═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Hide desktop sidenav */
+  .sidenav { display: none !important; }
+  
+  /* Hide desktop-only sections */
+  .rpanel { display: none !important; }
+  
+  /* Show mobile dashboard instead */
+  .mobile-dash { display: flex !important; }
+  
+  /* Hide desktop centre */
+  .centre { display: none !important; }
+
+  /* Practice card — mobile 2-col with image */
+  .mob-practice {
+    background: var(--d-card); border-radius: var(--d-r);
+    border: 1px solid var(--d-border); overflow: hidden;
+  }
+  .mob-practice-inner {
+    display: grid; grid-template-columns: 1fr 120px; min-height: 140px;
+  }
+  .mob-practice-content { padding: 14px 16px; }
+  .mob-practice-img { position: relative; overflow: hidden; }
+  .mob-practice-img img { width:100%;height:100%;object-fit:cover;display:block; }
+
+  /* Reflection card */
+  .mob-reflection {
+    background: var(--d-card); border-radius: var(--d-r);
+    border: 1px solid var(--d-border); padding: 16px;
+  }
+
+  /* Evolution rows */
+  .mob-evolution {
+    background: var(--d-card); border-radius: var(--d-r);
+    border: 1px solid var(--d-border); padding: 16px;
+  }
+  .mob-dim-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--d-border);
+  }
+  .mob-dim-row:last-of-type { border-bottom: none; }
+  .mob-dim-icon { width: 24px; height: 24px; flex-shrink: 0; opacity: 0.6; }
+  .mob-dim-name { font-size: 14px; font-weight: 500; color: var(--d-dark); flex: 1; }
+  .mob-dim-spark { flex: 1; }
+  .mob-dim-val { font-size: 14px; font-weight: 700; color: var(--d-dark); min-width: 30px; text-align: right; }
+
+  /* Thought card */
+  .mob-thought {
+    background: var(--d-card); border-radius: var(--d-r);
+    border: 1px solid var(--d-border); padding: 14px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .mob-thought-photo { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+  .mob-thought-photo img { width:100%;height:100%;object-fit:cover;display:block; }
+
+  /* Nearby card */
+  .mob-nearby {
+    background: var(--d-card); border-radius: var(--d-r);
+    border: 1px solid var(--d-border); overflow: hidden;
+  }
+  .mob-nearby-map { height: 80px; background: #D4E8C4; position: relative; overflow: hidden; }
+  .mob-nearby-map img { width:100%;height:100%;object-fit:cover;display:block; }
+  .mob-nearby-body { padding: 12px 14px; }
+
+  /* Mentor card */
+  .mob-mentor {
+    background: var(--d-card); border-radius: var(--d-r);
+    border: 1px solid var(--d-border); padding: 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
 }
 </style>
 {% endblock %}
@@ -357,11 +472,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <a href="{{ url_for('cancel_subscription') }}" class="sub-btn">Manage Subscription</a>
       </div>
       {% endif %}
-      <div class="pts-card">
-        <div class="pts-label">League Points</div>
-        <div class="pts-val">{{ (current_user.points_balance or 0)|int }}</div>
-        <a href="{{ url_for('redeem') }}" class="pts-link">View &amp; Redeem →</a>
-      </div>
+{# Points shown in right panel — not duplicated in sidenav #}
     </div>
   </nav>
 
@@ -435,6 +546,36 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div class="practice-img-grad"></div>
       </div>
     </div>
+
+    {# ── PEER EVALUATE — subtle 1-row strip, desktop only ── #}
+    {% if peer_queue %}
+    <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:14px 18px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:2px;">Sharpen Your Eye</div>
+          <div style="font-size:13px;font-weight:600;color:var(--d-dark);">Evaluate these {{ peer_queue|length }} images · earn 2 pts each</div>
+        </div>
+        <span style="font-size:12px;color:var(--d-muted);font-style:italic;">+2 bonus if your score matches the engine</span>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
+        {% for _pq in peer_queue %}
+        <a href="{{ url_for('peer_score_image', assignment_id=_pq.id) }}"
+           style="display:block; border-radius:10px; overflow:hidden; text-decoration:none; position:relative; aspect-ratio:1; background:var(--d-border);">
+          {% set _pimg = _pq.image %}
+          {% if _pimg and _pimg.thumb_url %}
+          <img src="{{ _pimg.thumb_url }}" alt="{{ _pimg.genre or 'Photo' }}"
+               style="width:100%;height:100%;object-fit:cover;display:block;"
+               onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
+          {% endif %}
+          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
+            <span style="font-size:11px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     {# ── EVOLUTION OVERVIEW ── #}
     {% if progress_data %}
@@ -578,10 +719,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       {% endif %}
     </div>
 
-    {# Your Standing #}
+    {# Your Standing — opens full-screen sparkline modal #}
     {% if progress_data %}
-    <div class="rp-card">
-      <div class="rp-label">Your Standing</div>
+    <div class="rp-card" style="cursor:pointer;" onclick="document.getElementById('standing-modal').style.display='flex'" title="Click to see full evolution">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div class="rp-label" style="margin-bottom:0;">Your Standing</div>
+        <span style="font-size:11px;color:var(--d-muted);">▲ tap for full view</span>
+      </div>
       <div class="standing-row">
         <span class="standing-val">{{ progress_data.avg_tier }}</span>
         <span class="standing-avg">avg {{ '%.2f'|format(progress_data.avg_score) }}</span>
@@ -642,11 +786,253 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
 </div>{# /dash-layout #}
 
+
+{# ════════════════════════════════════
+   MOBILE DASHBOARD — approved design
+════════════════════════════════════ #}
+<div class="mobile-dash" style="flex-direction:column; gap:0; background:var(--d-cream);">
+
+  {# ── Top bar ── #}
+  <div style="padding:16px 20px 4px; padding-top:calc(68px + env(safe-area-inset-top,0px) + 12px);">
+
+    {# ── Greeting + avatar ── #}
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px;">
+      <div>
+        <div style="font-size:26px; font-weight:700; color:var(--d-dark); line-height:1.15;">{{ ns.greeting }},<br>{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
+        <div style="font-size:13px; color:var(--d-muted); margin-top:4px;">
+          {% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}{% else %}Today's practice begins here.{% endif %}
+        </div>
+      </div>
+      <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--d-dark);border:2px solid var(--d-gold);">
+        {% if current_user.profile_photo_url %}
+        <img src="{{ current_user.profile_photo_url }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        {% else %}
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#F6F2E9;">{{ current_user.full_name[0] if current_user.full_name else '?' }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:0 16px; display:flex; flex-direction:column; gap:12px; padding-bottom:100px;">
+
+    {# ── TODAY'S PRACTICE ── #}
+    <div class="mob-practice">
+      <div style="padding:12px 14px 8px; border-bottom:1px solid var(--d-border);">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
+      </div>
+      <div class="mob-practice-inner">
+        <div class="mob-practice-content">
+          <div style="font-size:17px;font-weight:700;color:var(--d-dark);line-height:1.3;margin-bottom:8px;">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
+          {% if lesson and lesson.principle %}
+          <div style="font-size:12px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
+          {% endif %}
+          {% if dash_advisory and dash_advisory.get('location_name') %}
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--d-muted);margin-bottom:4px;">
+            <span>📍</span><span>{{ dash_advisory.location_name }}</span>
+          </div>
+          {% endif %}
+          {% if weather %}
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--d-muted);">
+            <span>⏱</span><span>{{ weather.best_time or '6:05 – 7:20 am' }}</span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="mob-practice-img">
+          {% if _hero_img and _hero_img.thumb_url %}
+          <img src="{{ _hero_img.thumb_url }}" alt="Practice" onerror="this.parentNode.style.background='#1A3A2A';this.remove()">
+          {% else %}
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#2A5A3A);"></div>
+          {% endif %}
+        </div>
+      </div>
+      <div style="padding:10px 14px;">
+        <a href="{{ url_for('mission') }}" style="display:block;background:var(--d-gold);color:#111;font-size:14px;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;text-align:center;">Begin Today's Practice →</a>
+      </div>
+    </div>
+
+    {# ── TODAY'S REFLECTION ── #}
+    {% if _last and _last.score %}
+    <div class="mob-reflection">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">Today's Reflection</div>
+      <div style="font-size:12px;color:var(--d-muted);margin-bottom:2px;">Latest Score</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+        <div style="font-size:48px;font-weight:800;color:var(--d-dark);line-height:1;">{{ (_last.score * 10)|int }}<span style="font-size:20px;font-weight:400;color:var(--d-muted)">/100</span></div>
+        {# Mini sparkline #}
+        {% if progress_data and progress_data.dim_sparklines %}
+        {% set _sp = progress_data.dim_sparklines.values()|list %}
+        {% if _sp and _sp[0] %}
+        <svg viewBox="0 0 100 40" width="100" height="40" style="flex-shrink:0;">
+          {% if _sp[0].polyline %}
+          <polyline fill="none" stroke="{{ '#D6A428' }}" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" points="{{ _sp[0].polyline }}"/>
+          {% if _sp[0].points %}
+          {% for _pt in _sp[0].points %}
+          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.4' }}"/>
+          {% endfor %}
+          {% endif %}
+          {% else %}
+          <polyline fill="none" stroke="#D6A428" stroke-width="2" points="0,35 20,30 40,28 60,22 80,18 100,12"/>
+          <circle cx="100" cy="12" r="3" fill="#D6A428"/>
+          {% endif %}
+        </svg>
+        {% endif %}
+        {% endif %}
+      </div>
+      <a href="{{ url_for('my_gallery') }}" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:10px 14px;border:1px solid var(--d-border);border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;color:var(--d-dark);">
+        <span>Continue Reading</span><span>→</span>
+      </a>
+    </div>
+    {% endif %}
+
+    {# ── YOUR EVOLUTION ── #}
+    {% if progress_data and progress_data.dim_sparklines %}
+    {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
+    {% set _dim_icons  = {'dod':'⬛','dm':'⏱','aq':'👁','wonder':'✦','disruption':'◈'} %}
+    {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
+    <div class="mob-evolution">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:10px;">Your Evolution</div>
+      {% for dim, sp in progress_data.dim_sparklines.items() %}
+      {% set _avg = progress_data.dim_avgs.get(dim, 0) %}
+      <div class="mob-dim-row">
+        <span class="mob-dim-icon" style="font-size:16px;">{{ _dim_icons.get(dim,'◉') }}</span>
+        <span class="mob-dim-name">{{ _dim_labels.get(dim, dim|title) }}</span>
+        <svg viewBox="0 0 80 20" width="80" height="20" class="mob-dim-spark">
+          {% if sp.polyline %}
+          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round" points="{{ sp.polyline }}"/>
+          {% if sp.points %}
+          <circle cx="{{ sp.points[-1].x if sp.points else 80 }}" cy="{{ sp.points[-1].y if sp.points else 10 }}" r="2" fill="{{ _dim_colours.get(dim,'#8A7A5A') }}"/>
+          {% endif %}
+          {% else %}
+          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5" points="0,15 20,12 40,14 60,10 80,8"/>
+          {% endif %}
+        </svg>
+        <span class="mob-dim-val">{{ '%.1f'|format(_avg) }}</span>
+      </div>
+      {% endfor %}
+      <div style="font-size:13px;font-weight:600;color:var(--d-gold-dk);text-align:center;margin-top:10px;padding-top:8px;">You're evolving. Keep photographing.</div>
+    </div>
+    {% endif %}
+
+    {# ── TODAY'S THOUGHT ── #}
+    {% if lesson and lesson.master %}
+    <div class="mob-thought">
+      {% if lesson.master_photo %}
+      <div class="mob-thought-photo">
+        <img src="{{ lesson.master_photo }}" alt="{{ lesson.master }}" onerror="this.parentNode.style.background='#2A3A2A';this.remove()">
+      </div>
+      {% endif %}
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Thought</div>
+        {% if lesson.master_quote %}
+        <div style="font-size:14px;font-style:italic;color:var(--d-dark);line-height:1.5;margin-bottom:4px;">"{{ lesson.master_quote[:100] }}{% if lesson.master_quote|length > 100 %}…{% endif %}"</div>
+        {% endif %}
+        <div style="font-size:12px;color:var(--d-muted);">– {{ lesson.master }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── NEARBY OPPORTUNITY ── #}
+    {% if dash_advisory and dash_advisory.get('location_name') %}
+    <div class="mob-nearby">
+      <div class="mob-nearby-map">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,#B8D4A8,#8ABD7A,#6BA05A);"></div>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;">📍</div>
+      </div>
+      <div class="mob-nearby-body">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Nearby Opportunity</div>
+        <div style="font-size:15px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ dash_advisory.location_name }}</div>
+        {% if dash_advisory.get('light_note') %}<div style="font-size:12px;color:var(--d-muted);margin-bottom:6px;">{{ dash_advisory.light_note }}</div>{% endif %}
+        {% if weather %}<div style="font-size:11px;color:var(--d-muted);margin-bottom:10px;">⏱ {{ weather.best_time or '6:05 – 7:20 am' }}</div>{% endif %}
+        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
+           style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--d-border);border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;color:var(--d-dark);">
+          <span>Get Directions</span><span>→</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── MENTOR GUIDANCE ── #}
+    <div class="mob-mentor">
+      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+           onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
+           style="width:44px;height:44px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Mentor">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
+        <div style="font-size:13px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
+        <div style="font-size:11px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
+      </div>
+      <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:11px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
+    </div>
+
+  </div>
+
+</div>
 {# ── Bottom quote strip ── #}
 <div class="dash-quote-strip">
   <div class="dash-quote-txt">"Your journey is unique. Stay consistent, stay curious.<br>The best camera is the one that's with you. The best time is now."</div>
   <div class="dash-quote-sig">— Shutter League</div>
 </div>
 
+
+{# ── STANDING FULL-SCREEN MODAL ── #}
+<div class="standing-modal" id="standing-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="standing-modal-inner">
+    <button class="standing-modal-close" onclick="document.getElementById('standing-modal').style.display='none'">×</button>
+    {% if progress_data %}
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">Your Standing</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
+        <span style="font-size:32px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
+        <span style="font-size:14px;color:var(--d-muted);">Average evaluation</span>
+      </div>
+      <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
+      <div style="font-size:12px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
+      <div style="height:5px;background:var(--d-border);border-radius:3px;margin-bottom:16px;">
+        <div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--d-gold);border-radius:3px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--d-muted);margin-bottom:20px;">
+        <span>{{ progress_data.prev_tier or '' }}</span>
+        <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.avg_tier }}</span>
+        <span>→ {{ progress_data.next_tier or '' }}</span>
+      </div>
+    </div>
+    {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
+    {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
+    {% if progress_data.dim_sparklines %}
+      {% for dim, sp in progress_data.dim_sparklines.items() %}
+      {% set _avg = progress_data.dim_avgs.get(dim, 0) %}
+      {% set _pill = progress_data.dim_pills.get(dim, {}) %}
+      <div class="dim-sparkline-row">
+        <span class="dim-sparkline-name">{{ _dim_labels.get(dim, dim|title) }}</span>
+        <svg viewBox="0 0 120 28" width="120" height="28" style="flex:1;">
+          {% if sp.polyline %}
+          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round" points="{{ sp.polyline }}"/>
+          {% if sp.points %}
+          {% for _pt in sp.points %}
+          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}"
+            r="{{ '2.5' if loop.last else '1.8' }}"
+            fill="{{ _dim_colours.get(dim,'#8A7A5A') }}"
+            opacity="{{ '1' if loop.last else '0.4' }}"/>
+          {% endfor %}
+          {% endif %}
+          {% else %}
+          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5"
+            points="0,20 24,18 48,16 72,14 96,12 120,10"/>
+          {% endif %}
+        </svg>
+        <span class="dim-sparkline-val">{{ '%.1f'|format(_avg) }}</span>
+        {% if _pill %}
+        <span class="dim-trend-pill {{ 'up' if _pill.dir == 'up' else ('down' if _pill.dir == 'down' else 'steady') }}">
+          {{ '↑ climbing' if _pill.dir == 'up' else ('↓ sliding' if _pill.dir == 'down' else '— steady') }}
+        </span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
 </div>{# /dash-wrap #}
 {% endblock %}
