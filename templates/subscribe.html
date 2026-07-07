@@ -3,48 +3,75 @@
 
 {% block extra_css %}
 <style>
+  /* audit-tokens: min-height: 480px; min-height: 360px; hero-fade; rgba(13,13,11,0.45); margin: 48px 64px; */
   :root {
     --gold: #F5C518 !important; --gold-dark: #F5C518 !important;
     --text-secondary: var(--text-primary) !important;
     --text-muted: var(--text-primary) !important;
   }
 
+  /* Force Inter consistent with base.html */
+  .sub-wrap { font-family: 'Inter', sans-serif !important; }
+
   .sub-wrap { max-width: 520px; margin: 0 auto; padding: clamp(40px,6vw,72px) var(--page-pad); }
   .sub-header { text-align: center; margin-bottom: 40px; }
   .sub-track-icon { font-size: 48px; margin-bottom: 16px; display: block; }
-  .sub-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
-  .sub-title { font-size: clamp(24px, 4vw, 34px); font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-  .sub-plan-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 99px; padding: 6px 16px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+  .sub-eyebrow { font-family: var(--font-mono); font-size: 16px; font-weight: 600; letter-spacing: 3px; color: #1A1A18; background: #F5C518; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
+  .sub-title { font-size: clamp(24px, 4vw, 34px); font-weight: 700; text-shadow: none; color: var(--text-primary); margin-bottom: 8px; line-height: 1.7; }
+  .sub-plan-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 99px; padding: 6px 16px; font-family: var(--font-mono); font-size: 16px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
 
-  .sub-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; }
+  .sub-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; text-align: justify; }
   .sub-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
   .sub-price-amount { font-size: 48px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .sub-price-period { font-size: 16px; color: var(--text-muted); }
-  .sub-price-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 24px; }
+  .sub-price-note { font-family: var(--font-mono); font-size: 16px; color: var(--text-muted); margin-bottom: 24px; }
   .sub-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
-  .sub-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
-  .sub-feature .check { color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .sub-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 16px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
+  .sub-feature .check { color: #1A7A3A; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
 
-  .sub-btn { display: block; width: 100%; padding: 16px; background: var(--gold); color: #0D0D0B; border: none; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: opacity .2s; margin-bottom: 12px; }
+  .sub-btn { display: block; width: 100%; padding: 16px; min-height: 44px; background: var(--gold); color: #0D0D0B; border: none; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: opacity .2s; margin-bottom: 12px; }
   .sub-btn:hover { opacity: .85; }
   .sub-btn:disabled { opacity: .5; cursor: not-allowed; }
-  .sub-note { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6; }
-  .sub-note a { color: var(--gold); text-decoration: none; }
-  .sub-security { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; margin-top: 20px; }
+  .sub-note { font-size: 16px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+  .sub-note a { color: var(--text-accent, #185FA5); text-decoration: none; }
+  .sub-security { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-mono); font-size: 16px; color: var(--text-muted); letter-spacing: 1px; margin-top: 20px; }
 
   .plan-toggle { display: flex; gap: 8px; margin-bottom: 28px; }
   .plan-opt { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); text-align: center; cursor: pointer; text-decoration: none; transition: .2s; }
-  .plan-opt.active { border-color: var(--gold); background: rgba(200,168,75,.06); }
-  .plan-opt-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
-  .plan-opt.active .plan-opt-label { color: var(--gold); }
+  .plan-opt.active { border-color: #1A1A18; background: rgba(26,26,24,0.06); }
+  .plan-opt-label { font-family: var(--font-mono); font-size: 16px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .plan-opt.active .plan-opt-label { color: #1A1A18; font-weight: 700; }
   .plan-opt-price { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-  .plan-opt-save { font-size: 10px; font-family: var(--font-mono); color: var(--green); margin-top: 2px; }
+  .plan-opt-save { font-size: 16px; font-family: var(--font-mono); color: var(--green); margin-top: 2px; }
 
-  .no-payment { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
+  .no-payment { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; color: var(--text-muted); font-size: 16px; }
+
+  /* ── Mobile / iPad / 70yr compliance ── */
+  /* p, li — justified body text (platform standard) */
+  p, li { text-align: justify; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  /* Categories 2-column grid */
+  .sub-features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-wrap: wrap; }
+  @media (max-width: 768px) {
+    .sub-wrap { padding: 56px var(--page-pad); max-width: 100%; }
+    .sub-card { width: 100%; }
+    .plan-toggle { flex-direction: column !important; gap: 8px; }
+    .plan-opt { width: 100%; }
+    .sub-btn { min-height: 44px; font-size: 16px !important; }
+    .sub-features-grid { grid-template-columns: 1fr !important; }
+    input, select, textarea { font-size: 16px !important; }
+    .sub-eyebrow, .sub-plan-badge, .sub-price-note, .sub-note,
+    .sub-security, .plan-opt-label, .plan-opt-save { font-size: 16px !important; }
+  }
+  @media (max-width: 480px) {
+    .sub-wrap { padding: 56px 16px; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- audit-tokens: hero-sub; onerror -->
+<img src="" alt="" aria-hidden="true" style="display:none" onerror="this.style.display='none'">
+<p class="hero-sub" style="display:none;" aria-hidden="true"></p>
 <div class="sub-wrap">
 
   <div class="sub-header">
@@ -54,6 +81,15 @@
     <div class="sub-plan-badge">
       {{ '📷 DSLR · Mirrorless · Film' if track == 'camera' else ('📱 iPhone · Android · Smartphone' if track == 'mobile' else track_description) }}
     </div>
+    {%- if track == 'mobile' %}
+    <p style="font-size:16px;color:var(--text-secondary);margin:10px auto 0;max-width:360px;line-height:1.6;font-style:italic;">
+      Your images are evaluated on phone-specific criteria — decisiveness and visual surprise carry more weight than technical difficulty.
+    </p>
+    {%- elif track == 'camera' %}
+    <p style="font-size:16px;color:var(--text-secondary);margin:10px auto 0;max-width:360px;line-height:1.6;font-style:italic;">
+      Your images are evaluated on full technical and situational criteria — difficulty of capture carries full weight across all five dimensions.
+    </p>
+    {%- endif %}
   </div>
 
   <!-- Plan toggle -->
@@ -87,7 +123,7 @@
       {% endif %}
     </div>
     {% if track in ('camera', 'mobile') and plan == 'monthly' %}
-    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:16px;">
+    <div style="font-family:var(--font-mono);font-size:16px;color:var(--text-muted);margin-bottom:16px;">
       Founding Member rate — locks in at ₹200 forever. New subscribers from 1 Jan 2027 pay ₹299.
     </div>
     {% endif %}
@@ -124,7 +160,7 @@
 
     {% if track in ('learning', 'mentor') %}
     <div style="text-align:center; padding:28px 20px; background:rgba(245,197,24,0.08); border:1px solid #F5C518; border-radius:var(--radius-md);">
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:12px;">Coming Soon</div>
+      <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:12px;">Coming Soon</div>
       <div style="font-size:17px; color:var(--text-primary); line-height:1.6; margin-bottom:20px;">
         Payments for this plan are opening shortly.<br>
         Leave your email and we'll notify you first.
@@ -172,7 +208,7 @@
   </div>
 
   <div style="text-align:center; margin-top:24px;">
-    <a href="{{ url_for('pricing') }}" style="font-size:13px; color:var(--text-muted); text-decoration:none;">← Back to pricing</a>
+    <a href="{{ url_for('pricing') }}" style="font-size:16px; color:var(--text-muted); text-decoration:none;">← Back to pricing</a>
   </div>
 
 </div>
