@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <meta property="og:title" content="Annual Excellence Award — Shutter League">
-<meta property="og:description" content="Year-round photography excellence. Your best 6 evaluations in your strongest genre, ranked against every photographer on the platform.">
+<meta property="og:description" content="Year-round photography excellence. Your best 6 evaluations across the platform, recognised year-round.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -22,9 +22,9 @@
    #0D0D0B hero/footer bg · #1A2744 navy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-poty),
-body.page-poty { padding-top: 0 !important; }
+body.page-aea { padding-top: 0 !important; }
 body:has(.sl-poty) main,
-body.page-poty main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+body.page-aea main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
 .sl-poty, .sl-poty * {
   font-family: 'Inter', sans-serif !important;
@@ -74,7 +74,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   left: clamp(16px, 4vw, 48px);
   }
 .sl-poty-eyebrow {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase; color: #F5C518;
@@ -90,13 +90,13 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.08;
+  line-height: 1.5;
   letter-spacing: -0.03em;
   margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .sl-poty-hero-sub {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase; color: #F5C518;
@@ -143,7 +143,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   font-size: 13px;
   font-weight: 600;
   color: #1A1A18;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
@@ -155,7 +155,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   margin: 0 auto;
 }
 .sl-poty-sec-eyebrow {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -173,7 +173,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   font-weight: 600;
   letter-spacing: -0.03em;
   color: #1A1A18;
-  line-height: 1.15;
+  line-height: 1.5;
   margin-bottom: 18px;
 }
 .sl-poty-body {
@@ -352,7 +352,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
 .sl-poty-tab {
   display: inline-block;
   padding: 10px 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -365,7 +365,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   border-collapse: collapse;
 }
 .sl-poty-lb-table th {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.10em;
   text-transform: uppercase;
@@ -405,7 +405,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   justify-content: center;
 }
 .sl-poty-lb-note {
-  font-size: 12px;
+  font-size: 14px;
   color: rgba(26,26,24,0.42);
   font-style: italic;
   margin-top: 10px;
@@ -502,7 +502,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   background: #1a1810;
 }
 .sl-poty-kd-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -529,7 +529,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   font-size: 13px;
   font-weight: 500;
   color: rgba(26,26,24,0.70);
-  line-height: 1.45;
+  line-height: 1.5;
   text-align: justify;
 }
 .sl-poty-cat-list {
@@ -631,7 +631,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   opacity: 0.88;
 }
 .sl-poty-cta-micro {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: rgba(13,13,11,0.60);
   letter-spacing: 0.04em;
@@ -691,7 +691,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
     font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
-    line-height: 1.2;
+    line-height: 1.5;
     letter-spacing: -0.02em;
     margin-bottom: 0;
     text-shadow: none;
@@ -870,7 +870,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
 .sl-hero-credit-pill {
   position: absolute; bottom: 8px; right: 10px; z-index: 3;
   background: rgba(13,11,8,0.52); color: rgba(255,255,255,0.88);
-  font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.04em;
   padding: 2px 8px; border-radius: 4px; white-space: nowrap;
   pointer-events: none;
   backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
@@ -905,10 +905,15 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
   }
 }
 
+
+@media (max-width: 600px) {
+  .sl-poty-sec { padding: 48px 16px; }
+  a[href] { min-height: 44px; }
+}
 </style>
 {% endblock %}
 
-{% block body_class %}page-poty{% endblock %}
+{% block body_class %}page-aea{% endblock %}
 {% block content %}
 <div class="sl-poty">
 
@@ -954,7 +959,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
       <div class="sl-poty-trust-icon">
         <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       </div>
-      <span class="sl-poty-trust-label">For all genres and<br>experience levels</span>
+      <span class="sl-poty-trust-label">Open to all subjects and<br>experience levels</span>
     </div>
     <div class="sl-poty-trust-item">
       <div class="sl-poty-trust-icon">
@@ -1088,7 +1093,7 @@ body.page-poty main { padding: 0 !important; max-width: none !important; margin:
           <table class="sl-poty-lb-table">
             <thead>
               <tr>
-                <th style="width:48px;">Rank</th>
+                <th style="width:48px;">Standing</th>
                 <th>Photographer</th>
                 <th style="text-align:right;">Avg. Evaluation</th>
               </tr>
