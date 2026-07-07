@@ -331,8 +331,39 @@ def build_card1(photo_path, data, out_path):
         draw.text((col_cx - scw//2, LBL_Y + lh(fnt(28, mono=True))*2 + 14),
                   str(mscore), font=fnt(76, bold=True), fill=col)
 
+    # ── Device label + track badge (Session 132 — Mobile DDI) ────────────────
+    device_label  = (data.get('device_label') or '').strip()
+    camera_track  = (data.get('camera_track') or '').strip()
+    track_icon    = '📱' if camera_track == 'mobile' else ('📷' if camera_track == 'camera' else '')
+    track_label   = ('MOBILE LEAGUE' if camera_track == 'mobile'
+                     else 'CAMERA LEAGUE' if camera_track == 'camera' else '')
+
+    # Device label line below photographer credit (if available)
+    if device_label and pip_y < BAND_Y + BAND_H - 40:
+        pip_y += 6
+        pip_y = draw_text(draw, device_label, fnt(30, mono=True), T3, SX, pip_y, SW, 4)
+
+    # Track badge — small pill in bottom-left of band
+    if track_label:
+        _badge_text = f'{track_icon}  {track_label}'
+        _badge_font = fnt(26, bold=True, mono=True)
+        _bw = tw(draw, _badge_text, _badge_font)
+        _bx = SX
+        _by = BAND_Y + BAND_H - 44
+        draw.rounded_rectangle([_bx - 4, _by - 4, _bx + _bw + 12, _by + 30],
+                                radius=6,
+                                fill=DARK if camera_track == 'mobile' else SURFACE)
+        draw.text((_bx + 4, _by),
+                  _badge_text, font=_badge_font,
+                  fill=GOLD if camera_track == 'mobile' else SLATE)
+
+    # Footer stamp includes device label when present
+    _footer_stamp = 'SL  ·  ' + score + '  ·  ' + tier
+    if device_label:
+        _footer_stamp += '  ·  ' + device_label
+
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
-    draw_footer(canvas, draw, 'SL  ·  ' + score + '  ·  ' + tier)
+    draw_footer(canvas, draw, _footer_stamp)
     canvas.save(out_path, 'JPEG', quality=96)
     return out_path
 
