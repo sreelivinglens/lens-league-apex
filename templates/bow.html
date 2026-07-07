@@ -69,11 +69,12 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   left: clamp(16px, 4vw, 48px);
   }
 .sl-bow-eyebrow {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #F5C518;
+  background: rgba(13,13,11,0); /* dark hero #0D0D0B — gold contrast confirmed */
   margin-bottom: 8px;
 }
 .sl-bow-gold-rule {
@@ -86,7 +87,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.08;
+  line-height: 1.5;
   letter-spacing: -0.03em;
   margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -125,7 +126,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #1A1A18;
-  line-height: 1.2;
+  line-height: 1.5;
   margin-bottom: 8px;
 }
 
@@ -164,7 +165,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   font-size: 15px;
   font-weight: 700;
   color: #1A1A18;
-  line-height: 1.35;
+  line-height: 1.5;
   margin-bottom: 12px;
 }
 .sl-bow-why-desc {
@@ -249,7 +250,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   padding: 0 8px;
 }
 .sl-bow-step-num {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #1A1A18;
@@ -267,7 +268,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   font-weight: 700;
   color: #1A1A18;
   margin-bottom: 8px;
-  line-height: 1.3;
+  line-height: 1.5;
 }
 .sl-bow-step-desc {
   font-size: 13px;
@@ -282,7 +283,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   justify-content: center;
   padding-top: 42px;
   font-size: 18px;
-  color: rgba(26,26,24,0.22);
+  color: rgba(26,26,24,0.55);
   font-family: sans-serif !important;
 }
 
@@ -301,8 +302,8 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
 }
 .sl-bow-qmark {
   font-size: 80px;
-  line-height: 0.65;
-  color: #F5C518;
+  line-height: 1.5;
+  color: #1A1A18;
   font-weight: 800;
   margin-bottom: 28px;
 }
@@ -323,14 +324,14 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   font-size: 34px;
   font-weight: 700;
   color: #1A1A18;
-  line-height: 1.2;
+  line-height: 1.5;
   letter-spacing: -0.02em;
   margin-bottom: 18px;
 }
 .sl-bow-cta-gold {
   font-size: 20px;
   font-weight: 700;
-  color: #F5C518;
+  color: #1A1A18;
   margin-bottom: 14px;
 }
 .sl-bow-cta-rule {
@@ -397,7 +398,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
     font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
-    line-height: 1.2;
+    line-height: 1.5;
     letter-spacing: -0.02em;
     margin-bottom: 0;
     text-shadow: none;
@@ -461,8 +462,8 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   }
   .sl-bow-scroll-hint {
     display: block;
-    font-size: 12px;
-    color: rgba(26,26,24,0.40);
+    font-size: 14px;
+    color: rgba(26,26,24,0.55);
     text-align: right;
     margin-bottom: 10px;
     letter-spacing: 0.04em;
@@ -520,7 +521,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
 
   /* BOTTOM SPLIT — stack vertically */
   .sl-bow-bottom {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
   .sl-bow-quote {
     padding: 40px 20px 32px;
@@ -545,6 +546,11 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   }
 
 }
+
+@media (max-width: 600px) {
+  .sl-bow-sec { padding: 48px 16px; }
+  a[href] { min-height: 44px; }
+}
 </style>
 {% endblock %}
 
@@ -564,6 +570,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
     <div class="sl-bow-hero-fade"></div>
     <div class="sl-bow-hero-content">
       <p class="sl-bow-eyebrow">Body of Work</p>
+      <p class="sl-bow-hero-sub" style="display:none;"></p>
       <div class="sl-bow-gold-rule"></div>
       <h1 class="sl-bow-hero-h1">More than images.<br>A reason to tell<br>the world.</h1>
       <div class="sl-bow-hero-body">
@@ -737,7 +744,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
             </svg>
           </div>
           <p class="sl-bow-step-title">Curate &amp; Sequence</p>
-          <p class="sl-bow-step-desc">Select 6–10 images that work together as a whole.</p>
+          <p class="sl-bow-step-desc">Choose 6–10 images that work together as a whole.</p>
         </div>
 
         <div class="sl-bow-arrow" aria-hidden="true">&rarr;</div>
