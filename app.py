@@ -1004,6 +1004,14 @@ def _run_startup_tasks():
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_software VARCHAR(180)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_has_gps BOOLEAN",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_device_tier VARCHAR(40)",
+                    # Session 132 — Mobile DDI: EXIF verification flag
+                    # TRUE  = EXIF make/model present and consistent with subscription_track
+                    # FALSE = EXIF absent; track trusted from user's subscription declaration
+                    # NULL  = legacy image scored before this system (never retroactively flagged)
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_verified BOOLEAN DEFAULT NULL",
+                    # Session 132 — Mobile DDI: weekly challenge track separation
+                    # 'mobile' | 'camera' | 'both' (default: 'both' — all existing challenges visible to all)
+                    "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS track VARCHAR(20) DEFAULT 'both'",
                     # v75 — genre suggestions from onboarding 'Other' field
                     "CREATE TABLE IF NOT EXISTS genre_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_genre VARCHAR(60) NOT NULL, created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
                     # v76 — location suggestions from free-text country/state/city
@@ -3302,7 +3310,9 @@ def mission():
     Powered by Photo School curriculum — same lesson as dashboard card.
     """
     progress_data    = _build_progress_data(current_user)
-    active_challenge = _get_active_challenge()
+    active_challenge = _get_active_challenge(
+        user_track=getattr(current_user, 'subscription_track', None) or None
+    )
 
     # ── Get today's curriculum lesson (same as dashboard) ────────────────
     lesson = None
@@ -3781,8 +3791,9 @@ def dashboard():
             'min_images':     POTY_MIN_IMAGES,
         }
 
-    # Weekly challenge banner
-    active_challenge = _get_active_challenge()
+    # Weekly challenge banner — track-aware (Session 132 Mobile DDI)
+    _dash_user_track = getattr(current_user, 'subscription_track', None) or None
+    active_challenge = _get_active_challenge(user_track=_dash_user_track)
 
     # Zone notification data -- all pages, not just current
     zone3_flagged = Image.query.filter(
@@ -4501,6 +4512,38 @@ def dismiss_location_update():
 # Profile  -  edit name/username + change password (combined page)
 # ---------------------------------------------------------------------------
 
+
+def _build_device_label(img) -> str:
+    """
+    Returns a human-readable device string for share cards and scorecard display.
+    Priority: exif_make + exif_model → subscription_track fallback → empty string.
+    Session 132 — Mobile DDI.
+    """
+    make  = (getattr(img, 'exif_make',  '') or '').strip()
+    model = (getattr(img, 'exif_model', '') or '').strip()
+
+    # Clean up redundant make prefix in model name
+    # e.g. "Apple iPhone 15 Pro" → "iPhone 15 Pro"
+    if make and model and model.lower().startswith(make.lower()):
+        device = model
+    elif make and model:
+        device = f'{make} {model}'
+    elif model:
+        device = model
+    elif make:
+        device = make
+    else:
+        # EXIF absent — fall back to track declaration
+        track = (getattr(img, 'camera_track', '') or '').strip()
+        if track == 'mobile':
+            return 'Shot on Mobile'
+        elif track == 'camera':
+            return 'Shot on Camera'
+        return ''
+
+    return f'Shot on {device}'
+
+
 def _build_progress_data(user):
     """Returns progress dict for profile dashboard, or None if < 5 scored images."""
     scored = (Image.query
@@ -5011,9 +5054,23 @@ def _get_curriculum_lesson(user, progress_data):
     # ever trigger for a future lesson with an image but no master.
     show_master = bool(lesson.get('master'))
 
-    # Get genre-specific assignment
-    assignment = lesson['assignments'].get(mission_genre,
-                 lesson['assignments'].get('Wildlife', ''))
+    # ── Get genre-specific assignment — mobile-aware (Session 132) ───────────
+    # Mobile League users get a mobile-specific assignment variant when available.
+    # Mobile variants are keyed as '{genre}_mobile' in the assignments dict.
+    # Falls back to the standard genre assignment if no mobile variant exists.
+    # This allows curriculum_data.py to be updated incrementally — any lesson
+    # without a mobile variant silently falls back to the camera assignment.
+    _user_track = getattr(user, 'subscription_track', 'camera') or 'camera'
+    if _user_track == 'mobile':
+        assignment = (
+            lesson['assignments'].get(f'{mission_genre}_mobile')
+            or lesson['assignments'].get(mission_genre)
+            or lesson['assignments'].get('Wildlife_mobile')
+            or lesson['assignments'].get('Wildlife', '')
+        )
+    else:
+        assignment = lesson['assignments'].get(mission_genre,
+                     lesson['assignments'].get('Wildlife', ''))
 
     return {
         'principle_id':     lesson['id'],
@@ -5031,6 +5088,7 @@ def _get_curriculum_lesson(user, progress_data):
         'master':           lesson.get('master') if show_master else None,
         'master_quote':     lesson.get('master_quote') if show_master else None,
         'mission_genre':    mission_genre,
+        'user_track':       _user_track,
     }
 
 
@@ -5697,7 +5755,9 @@ def upload():
         from engine.auto_score import get_device_tier, build_exif_context
         _camera_track_for_tier = request.form.get('camera_track') or getattr(current_user, 'subscription_track', None)
         _device_tier   = get_device_tier(exif_data)
-        _exif_context  = build_exif_context(exif_data, camera_track=_camera_track_for_tier)
+        _upload_genre  = request.form.get('genre', '')
+        _exif_context  = build_exif_context(exif_data, camera_track=_camera_track_for_tier,
+                                            genre=_upload_genre)
 
         if os.path.exists(raw_path): os.remove(raw_path)
 
@@ -6068,6 +6128,15 @@ def upload():
             exif_gps_lat          = exif_data.get('gps_lat'),
             exif_gps_lon          = exif_data.get('gps_lon'),
             exif_device_tier      = _device_tier or None,
+            # Session 132 — Mobile DDI: EXIF verification flag
+            # TRUE  = EXIF make/model present (verified at upload time)
+            # FALSE = EXIF absent; league trusted from subscription_track declaration
+            # NULL  = not applicable (non-mobile or legacy)
+            exif_verified         = (
+                True  if (exif_data.get('make') or exif_data.get('model')) else
+                False if _camera_track_for_tier == 'mobile' else
+                None
+            ),
         )
         db.session.add(img)
         img.sub_genre = sub_genre
@@ -6713,7 +6782,8 @@ def upload():
                                     'has_gps': _img.exif_has_gps,
                                 },
                                 camera_track=_img.camera_track,
-                            ) if _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
+                                genre=_img.genre or '',
+                            ) if _img.camera_track == 'mobile' or _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
                             seasonal_context  = _sc_seasonal_ctx + _csi_boost_ctx,
                             portfolio_summary = _sc_portfolio,
                             user_city         = _sc_user_city,
@@ -7511,7 +7581,8 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                  'lens': img.exif_lens, 'software': img.exif_software,
                  'has_gps': img.exif_has_gps},
                 camera_track=img.camera_track,
-            ) if (img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
+                genre=img.genre or '',
+            ) if (img.camera_track == 'mobile' or img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
 
             _owner = User.query.get(img.user_id)
             _primary_genre = get_primary_genre(_owner) if _owner else (img.genre or '')
@@ -7828,7 +7899,8 @@ def _retry_score_in_background(image_id, old_status):
                  'lens': img.exif_lens, 'software': img.exif_software,
                  'has_gps': img.exif_has_gps},
                 camera_track=img.camera_track,
-            ) if (img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
+                genre=img.genre or '',
+            ) if (img.camera_track == 'mobile' or img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
 
             result = auto_score(
                 image_path   = thumb_path,
@@ -8146,7 +8218,8 @@ def upload_edited_version(image_id):
                                 'has_gps': _img.exif_has_gps,
                             },
                             camera_track=_img.camera_track,
-                        ) if (_img.exif_make or _img.exif_model or _img.exif_focal_length_35mm) else ''
+                            genre=_img.genre or '',
+                        ) if (_img.camera_track == 'mobile' or _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm) else ''
 
                         # Portfolio context from history
                         _edit_portfolio = None
@@ -8623,7 +8696,11 @@ def image_detail(image_id):
     if img.status == 'scored' and img.score and not getattr(img, 'is_flagged', False):
         try:
             from engine.scoring import compute_percentile
-            percentile_data = compute_percentile(float(img.score), genre=img.genre)
+            percentile_data = compute_percentile(
+                float(img.score),
+                genre=img.genre,
+                camera_track=getattr(img, 'camera_track', None),
+            )
         except Exception as e:
             app.logger.warning(f'[percentile] {e}')
     # Fetch all versions of this image (siblings sharing same root)
@@ -9241,6 +9318,8 @@ def leaderboard():
             pass
 
     # Top Photographers  -  grouped by user_id, sorted by avg_score DESC
+    # Session 132 — Mobile DDI: subscription_track added to SELECT so
+    # photographer rows show the correct league badge (Option C — authoritative).
     pg_base = (
         db.session.query(
             Image.user_id,
@@ -9249,6 +9328,7 @@ def leaderboard():
             User.city,
             User.state,
             User.created_at.label('user_created_at'),
+            User.subscription_track.label('subscription_track'),
             func.avg(Image.score).label('avg_score'),
             func.max(Image.score).label('best_score'),
             func.count(Image.id).label('image_count'),
@@ -9261,7 +9341,11 @@ def leaderboard():
     pg_per_page = 25
     pg_all      = (
         pg_base
-        .group_by(Image.user_id, User.username, User.full_name, User.city, User.state, User.created_at)
+        .group_by(
+            Image.user_id, User.username, User.full_name,
+            User.city, User.state, User.created_at,
+            User.subscription_track,
+        )
         .order_by(desc('avg_score'))
         .all()
     )
@@ -9299,6 +9383,8 @@ def leaderboard():
             'total_peer_ratings': int(row.total_peer_ratings or 0),
             'joined_months':      _jm,
             'under_qualification': _jm < 6,
+            # Session 132 — Mobile DDI: subscription_track for league badge
+            'subscription_track': row.subscription_track or None,
         })
 
     # Cities for filter dropdown
@@ -9433,6 +9519,9 @@ def leaderboard():
         user_img_rank      = user_img_rank,
         user_pg_rank       = user_pg_rank,
         user_join_map      = user_join_map,
+        # Session 132 — Mobile DDI
+        # Lenses tab is camera-only — hide it when Mobile plan filter is active
+        show_lenses_tab    = (track != 'mobile'),
     )
 
 
@@ -13934,38 +14023,56 @@ def sree_admin_login():
 
 @app.route('/poty')
 def poty():
+    # Session 132 — Mobile DDI: track filter for separate Mobile/Camera standings
+    _poty_track = request.args.get('track', 'all').strip().lower()
+    if _poty_track not in ('mobile', 'camera', 'all'):
+        _poty_track = 'all'
+
+    def _track_filter(q):
+        """Apply camera_track filter to a query when track != 'all'."""
+        if _poty_track == 'mobile':
+            return q.filter(Image.camera_track == 'mobile')
+        elif _poty_track == 'camera':
+            return q.filter(db.or_(
+                Image.camera_track == 'camera',
+                Image.camera_track == None,  # legacy images default to camera
+            ))
+        return q
+
     try:
-        poty_hero = (Image.query
-                     .filter(Image.status == 'scored',
-                             Image.score != None,
-                             Image.is_public == True,
-                             Image.is_flagged == False,
-                             Image.thumb_url != None,
-                             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                             Image.score >= 8.0,
-                             Image.width > Image.height)
-                     .order_by(db.func.random())
-                     .first())
+        _ph_q     = Image.query.filter(
+            Image.status == 'scored',
+            Image.score != None,
+            Image.is_public == True,
+            Image.is_flagged == False,
+            Image.thumb_url != None,
+            Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+            Image.score >= 8.0,
+            Image.width > Image.height,
+        )
+        _ph_q     = _track_filter(_ph_q)
+        poty_hero = _ph_q.order_by(db.func.random()).first()
     except Exception:
         poty_hero = None
     try:
         exclude_id = poty_hero.id if poty_hero else 0
-        lb_hero = (Image.query
-                   .filter(Image.status == 'scored',
-                           Image.score != None,
-                           Image.is_public == True,
-                           Image.is_flagged == False,
-                           Image.thumb_url != None,
-                           Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
-                           Image.score >= 8.0,
-                           Image.id != exclude_id,
-                           Image.width > Image.height)
-                   .order_by(db.func.random())
-                   .first())
+        _lb_q = Image.query.filter(
+            Image.status == 'scored',
+            Image.score != None,
+            Image.is_public == True,
+            Image.is_flagged == False,
+            Image.thumb_url != None,
+            Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+            Image.score >= 8.0,
+            Image.id != exclude_id,
+            Image.width > Image.height,
+        )
+        _lb_q   = _track_filter(_lb_q)
+        lb_hero = _lb_q.order_by(db.func.random()).first()
     except Exception:
         lb_hero = None
     try:
-        pg_rows = (
+        _pg_q = (
             db.session.query(
                 Image.user_id,
                 User.username,
@@ -13978,10 +14085,12 @@ def poty():
                     Image.status == 'scored',
                     Image.is_public == True,
                     db.or_(Image.is_flagged == False, Image.is_flagged == None))
-            .group_by(Image.user_id, User.username, User.full_name)
-            .order_by(db.func.avg(Image.score).desc())
-            .limit(5).all()
         )
+        _pg_q    = _track_filter(_pg_q)
+        pg_rows  = (_pg_q
+                    .group_by(Image.user_id, User.username, User.full_name)
+                    .order_by(db.func.avg(Image.score).desc())
+                    .limit(5).all())
         photographer_stats = [
             {'display_name': r.full_name or r.username,
              'avg_score': round(float(r.avg_score), 2)}
@@ -13989,6 +14098,7 @@ def poty():
         ]
     except Exception:
         photographer_stats = []
+
     def _cat_img(genre_key, exclude_ids=None):
         try:
             q = Image.query.filter(
@@ -13999,6 +14109,7 @@ def poty():
                 Image.thumb_url != None,
                 Image.score >= 7.0,
                 Image.genre == normalise_genre(genre_key))
+            q = _track_filter(q)
             if exclude_ids:
                 q = q.filter(Image.id.notin_(exclude_ids))
             return q.order_by(db.func.random()).first()
@@ -14015,7 +14126,8 @@ def poty():
                            cat_street=cat_street,
                            cat_wildlife=cat_wildlife,
                            cat_people=cat_people,
-                           cat_wedding=cat_wedding)
+                           cat_wedding=cat_wedding,
+                           poty_track=_poty_track)  # Session 132 — Mobile DDI track tabs
 
 @app.route('/about')
 def about():
@@ -15457,16 +15569,42 @@ def open_contest_enter():
 # Weekly Assignment
 # ===========================================================================
 
-def _get_active_challenge():
-    """Return the currently open challenge, or the most recent one."""
+def _get_active_challenge(user_track: str = None):
+    """
+    Return the currently open challenge for the given subscription track.
+
+    Session 132 — Mobile DDI: weekly_challenges now has a `track` column
+    ('mobile' | 'camera' | 'both'). When user_track is supplied, the query
+    filters to challenges matching that track or 'both'. Defaults to returning
+    any active challenge when track is unknown (pre-login or admin views).
+    """
     now = datetime.utcnow()
-    ch = WeeklyChallenge.query.filter(
+    base = WeeklyChallenge.query.filter(
         WeeklyChallenge.opens_at <= now,
         WeeklyChallenge.closes_at >= now,
         WeeklyChallenge.is_active == True,
-    ).first()
+    )
+    if user_track in ('mobile', 'camera'):
+        base = base.filter(
+            db.or_(
+                WeeklyChallenge.track == user_track,
+                WeeklyChallenge.track == 'both',
+                WeeklyChallenge.track == None,   # legacy rows have no track
+            )
+        )
+    ch = base.first()
     if not ch:
-        ch = WeeklyChallenge.query.filter_by(is_active=True)               .order_by(WeeklyChallenge.opens_at.desc()).first()
+        # Fallback — most recent active challenge for this track
+        fallback = WeeklyChallenge.query.filter_by(is_active=True)
+        if user_track in ('mobile', 'camera'):
+            fallback = fallback.filter(
+                db.or_(
+                    WeeklyChallenge.track == user_track,
+                    WeeklyChallenge.track == 'both',
+                    WeeklyChallenge.track == None,
+                )
+            )
+        ch = fallback.order_by(WeeklyChallenge.opens_at.desc()).first()
     return ch
 
 
