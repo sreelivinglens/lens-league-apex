@@ -551,6 +551,16 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   .sl-bow-sec { padding: 48px 16px; }
   a[href] { min-height: 44px; }
 }
+
+/* ── Hero credit pill ─────────────────────────────────────────── */
+.sl-hero-credit-pill {
+  position: absolute; bottom: 10px; right: 12px; z-index: 3;
+  background: rgba(13,11,8,0.72); color: rgba(255,255,255,0.95);
+  font-size: 16px; font-weight: 500; letter-spacing: 0.04em;
+  padding: 3px 10px; border-radius: 4px; white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
 </style>
 {% endblock %}
 
@@ -566,6 +576,9 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
     >
+    {% if bow_hero.photographer_name %}
+    <span class="sl-hero-credit-pill">&copy; {{ bow_hero.photographer_name }}{% if bow_hero.score %} &middot; {{ '%.2f'|format(bow_hero.score) }}{% endif %}</span>
+    {% endif %}
     {% endif %}
     <div class="sl-bow-hero-fade"></div>
     <div class="sl-bow-hero-content">
