@@ -266,6 +266,23 @@
     <p class="rate-hero-sub">Blind peer evaluation — help calibrate the platform, earn pool credits</p>
   </div>
 
+  {%- if assignment and image %}
+  {%- if image.camera_track == 'mobile' %}
+  <div style="display:flex; align-items:flex-start; gap:12px; background:#1A1A18; color:#F5F0E8; border-radius:8px; padding:14px 18px; margin-bottom:24px; line-height:1.6;">
+    <span style="font-size:20px; flex-shrink:0;">📱</span>
+    <div>
+      <div style="font-size:16px; font-weight:700; color:#F5C518; margin-bottom:2px;">Evaluate — Phone Shot</div>
+      <div style="font-size:16px; color:#D8D4CC;">This image was uploaded by a Mobile League photographer. Decisiveness and visual surprise carry more weight than technical difficulty for phone photography.</div>
+    </div>
+  </div>
+  {%- elif image.camera_track == 'camera' %}
+  <div style="display:flex; align-items:center; gap:10px; background:#F5F0E8; border:0.5px solid #E8E4DA; border-radius:8px; padding:12px 16px; margin-bottom:24px; font-size:16px; color:#4A4840; line-height:1.6;">
+    <span style="font-size:18px;">📷</span>
+    <span style="font-weight:600;">Evaluate — Camera Shot</span>
+  </div>
+  {%- endif %}
+  {%- endif %}
+
   {% if not is_subscriber %}
   <div class="upgrade-card">
     <div style="font-size:40px; margin-bottom:16px;">☆</div>
@@ -326,13 +343,23 @@
       <input type="hidden" name="client_start_ts" id="clientStartTs" value="">
       <input type="hidden" name="time_spent" id="timeSpent" value="0">
 
-      {% set dims = [
+      {%- if image and image.camera_track == 'mobile' %}
+      {%- set dims = [
+        ('dod',        'Depth of Difficulty',  'How hard was this to capture on a phone? Consider: did proximity replace a telephoto? Was the light challenging for a small sensor? Was it spontaneous and uncatchable without a phone?'),
+        ('disruption', 'Disruption',            'Does this image surprise you given it came from a phone? Does it exceed what you'd expect from a phone camera?'),
+        ('dm',         'Decisive Moment',       'Mobile photographers cannot set up or pre-focus. Did they catch the exact right moment without being able to prepare?'),
+        ('wonder',     'Wonder',                'Does this image arrest you? Would it stop a stranger scrolling? Same standard as Camera League — instrument-agnostic.'),
+        ('aq',         'Affective Quality',     'What specific emotion does this create? Same standard as Camera League — emotion does not depend on the camera.'),
+      ] %}
+      {%- else %}
+      {%- set dims = [
         ('dod',        'Depth of Difficulty',  'Technical precision, sharpness, compositional complexity'),
         ('disruption', 'Disruption',            'Visual surprise — unconventional perspective, breaks convention'),
         ('dm',         'Decisive Moment',       'Timing — the unrepeatable instant, narrative peak'),
         ('wonder',     'Wonder',                'Emotional impact — transcendence, the feeling it leaves'),
         ('aq',         'Affective Quality',     "Soul, honesty, the photographer's unique voice"),
       ] %}
+      {%- endif %}
 
       {% for field, label, desc in dims %}
       <div class="slider-group">
