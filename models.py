@@ -378,6 +378,7 @@ class PeerRating(db.Model):
     time_spent_seconds = db.Column(db.Integer, nullable=True)
     what_struck        = db.Column(db.Text, nullable=True)
     improvement        = db.Column(db.Text, nullable=True)
+    optional_comment   = db.Column(db.Text, nullable=True)   # free-text, email-only, flaggable
     rated_at           = db.Column(db.DateTime, default=datetime.utcnow)
     rater  = db.relationship('User',  foreign_keys=[rater_id],  backref='peer_ratings_given',    lazy=True)
     image  = db.relationship('Image', foreign_keys=[image_id],  backref='peer_ratings_received', lazy=True)
