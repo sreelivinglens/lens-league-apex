@@ -264,11 +264,13 @@ table { max-width: none; }
   transform: scale(1.05);
 }
 /* Add padding so page content clears the tab bar — homepage excluded (full-bleed hero) */
-body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
-/* Hide on desktop */
-@media (min-width: 769px) {
+/* Only fires on mobile (<=900px) where the bottom tab bar replaces the top nav */
+@media (max-width: 900px) {
+  body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+}
+/* Hide bottom tab bar on desktop */
+@media (min-width: 901px) {
   .sl-bottom-nav { display: none !important; }
-  body { padding-top: 0; }
 }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
