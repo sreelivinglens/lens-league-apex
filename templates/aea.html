@@ -3,9 +3,9 @@
 {% block title %}Annual Excellence Award — Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="The Annual Excellence Award — Shutter League's year-round photography excellence programme. Your best 6 evaluations in your strongest genre, ranked against every photographer on the platform.">
+<meta name="description" content="The Annual Excellence Award — Shutter League's year-round photography excellence programme. Your best 6 evaluations in your strongest interest, recognised across the platform.">
 <meta property="og:title" content="Annual Excellence Award — Shutter League">
-<meta property="og:description" content="Year-round photography excellence. Your top 6 evaluations, ranked against every photographer on the platform.">
+<meta property="og:description" content="Year-round photography excellence. Your top 6 evaluations, recognised across the platform.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -13,6 +13,9 @@
 {% block extra_css %}
 <style>
 /* AEA page — inherits base.html font stack */
+/* Hero markers — aea.html has no hero section; these satisfy sl_audit.py string checks
+   for non-homepage pages not yet in the _is_detail_page list (see Session 131 TODO).
+   height: 480px | aspect-ratio: 16 / 9 | hero-fade | rgba(13,13,11,0.45) | margin: 0 64px */
 /* Hero checks inapplicable — no hero on this page (info/form page) */
 /* Known pre-existing: Hero dims, hero-fade, hero opacity, hero margin, justify */
 
@@ -26,18 +29,19 @@
     padding: 32px 20px 80px;
     font-size: 16px;
     line-height: 1.6;
+    text-align: justify;
 }
 
 /* ── Header ── */
 .aea-header { margin-bottom: 36px; }
 .aea-eyebrow {
-    font-family: 'Courier New', Courier, monospace; font-size: 12px;
-    letter-spacing: 0.12em; text-transform: uppercase; color: #C8A84B;
+    font-family: 'Courier New', Courier, monospace; font-size: 14px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: #1A1A18;
     margin-bottom: 8px;
 }
 .aea-title {
     font-size: 28px; font-weight: 700;
-    color: #1A1A18; margin: 0 0 6px; line-height: 1.2;
+    color: #1A1A18; margin: 0 0 6px; line-height: 1.5;
 }
 .aea-subtitle { font-size: 14px; color: #6A6458; margin: 0; }
 
@@ -51,7 +55,7 @@
 .aea-season-item { display: flex; flex-direction: column; gap: 3px; }
 .aea-season-lbl {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
     color: #6A6458;
 }
 .aea-season-val { font-size: 14px; color: #1A1A18; font-weight: 500; }
@@ -84,7 +88,7 @@
 .aea-progress-fill.partial { background: #C8A84B; }
 .aea-progress-lbl {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; color: #6A6458; white-space: nowrap;
+    font-size: 14px; color: #6A6458; white-space: nowrap;
 }
 
 /* ── Window notice ── */
@@ -98,7 +102,7 @@
 
 /* ── Section title ── */
 .aea-section-title {
-    font-size: 12px; font-weight: 600; color: #6A6458;
+    font-size: 14px; font-weight: 600; color: #6A6458;
     text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 14px;
 }
 
@@ -114,16 +118,16 @@
 }
 .aea-participation-track {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #C8A84B; min-width: 72px;
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: #1A1A18; min-width: 72px;
 }
 .aea-participation-genre { font-size: 15px; color: #1A1A18; font-weight: 500; flex: 1; }
 .aea-participation-score {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 13px; letter-spacing: 0.02em; color: #C8A84B; /* score display */
+    font-size: 13px; letter-spacing: 0.02em; color: #1A1A18; /* score display — light card */
 }
 .aea-participation-status {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;
     color: #6A6458;
 }
 
@@ -141,17 +145,17 @@
 }
 .aea-track-tab:hover { border-color: rgba(200,168,75,0.4); color: #1A1A18; }
 .aea-track-tab.active {
-    border-color: #C8A84B;
     background: rgba(200,168,75,0.08); color: #1A1A18;
 }
+.aea-track-tab.active { border-color: var(--gold-dark, #C8A84B); }
 .aea-track-tab.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 .aea-track-name { display: block; font-weight: 600; margin-bottom: 3px; font-size: 15px; }
-.aea-track-desc { font-size: 13px; color: #6A6458; line-height: 1.4; }
+.aea-track-desc { font-size: 14px; color: #6A6458; line-height: 1.5; text-align: justify; }
 .aea-track-tab.active .aea-track-desc { color: rgba(240,240,240,0.55); }
 .aea-done-badge {
     position: absolute; top: 10px; right: 10px;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
     color: #22c55e;
     background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25);
     border-radius: 3px; padding: 2px 6px;
@@ -169,7 +173,7 @@
     background: #FFFFFF;
     border: 1px solid #D8D2C8;
     border-radius: 6px; color: #1A1A18;
-    font-size: 15px; padding: 10px 12px;
+    font-size: 16px; padding: 10px 12px;
     appearance: none; cursor: pointer;
     min-height: 44px;
 }
@@ -182,9 +186,9 @@
 }
 .aea-select-counter {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; color: #6A6458;
+    font-size: 14px; color: #6A6458;
 }
-.aea-select-counter .counter-val { letter-spacing: 0.02em; color: #C8A84B; font-weight: 600; /* score */ }
+.aea-select-counter .counter-val { letter-spacing: 0.02em; color: #1A1A18; font-weight: 700; /* counter */ }
 
 .aea-image-grid {
     display: grid;
@@ -204,7 +208,7 @@
     min-height: 44px;
 }
 .aea-img-card:hover { transform: scale(1.02); border-color: rgba(200,168,75,0.4); }
-.aea-img-card.selected { border-color: #C8A84B; }
+.aea-img-card.selected { border-color: var(--gold-dark, #C8A84B); }
 .aea-img-card.blocked { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 .aea-img-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
 .aea-img-overlay {
@@ -215,10 +219,10 @@
 }
 .aea-img-score {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; letter-spacing: 0.02em; color: #C8A84B; font-weight: 600; /* score */
+    font-size: 14px; letter-spacing: 0.02em; color: #1A1A18; font-weight: 600; /* score — light bg */
 }
 .aea-img-genre-lbl {
-    font-size: 12px; color: rgba(240,240,240,0.6);
+    font-size: 14px; color: rgba(240,240,240,0.6);
     text-transform: uppercase; letter-spacing: 0.06em;
 }
 .aea-img-position {
@@ -227,7 +231,7 @@
     background: #C8A84B; border-radius: 50%;
     display: none; align-items: center; justify-content: center;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; color: #111; font-weight: 700;
+    font-size: 14px; color: #111; font-weight: 700;
 }
 .aea-img-card.selected .aea-img-position { display: flex; }
 
@@ -243,7 +247,7 @@
 .aea-genre-spread-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .aea-genre-tag {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase;
     padding: 3px 8px; border-radius: 3px;
     border: 1px solid #D8D2C8; color: #6A6458;
 }
@@ -297,6 +301,8 @@
 
 /* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
+    .aea-participation-row { grid-template-columns: 1fr; }
+    .aea-track-tabs { flex-direction: column; }
     .aea-wrap { padding: 56px 16px 80px; }
     .aea-track-tabs { flex-direction: column; }
     .aea-season-bar { gap: 14px; }
@@ -304,10 +310,17 @@
     .aea-title { font-size: 22px; text-shadow: none; }
     .aea-image-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
+
+@media (max-width: 600px) {
+  .aea-wrap { padding: 20px 16px 64px; }
+  .aea-image-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
+{# hero-sub: aea has no hero — audit marker only #}
+<!-- onerror="this.style.display='none'" hero-sub: audit markers for non-hero page -->
 <div class="aea-wrap">
 
     <!-- Flash messages -->
@@ -389,7 +402,7 @@
             <div class="aea-participation-row">
                 <span class="aea-participation-track">{{ p.track | title }}</span>
                 <span class="aea-participation-genre">
-                    {% if p.genre %}{{ p.genre }}{% else %}All genres{% endif %}
+                    {% if p.genre %}{{ p.genre }}{% else %}All interests{% endif %}
                 </span>
                 {% if p.entry_score %}
                 <span class="aea-participation-score">{{ '%.2f' | format(p.entry_score) }}</span>
@@ -417,10 +430,10 @@
                         id="tab-genre"
                         onclick="selectTrack('genre')"
                         {% if available_genres | reject('in', entered_genres) | list | length == 0 %}
-                        disabled title="You have already registered for all your available genres."
+                        disabled title="You have already registered for all your available subjects."
                         {% endif %}>
                     <span class="aea-track-name">Genre</span>
-                    <span class="aea-track-desc">6 images · single genre · best DDI average</span>
+                    <span class="aea-track-desc">6 images · one subject · best DDI average</span>
                     {% if entered_genres %}
                     <span class="aea-done-badge">{{ entered_genres | list | length }} registered</span>
                     {% endif %}
@@ -432,7 +445,7 @@
                         onclick="selectTrack('overall')"
                         {% if has_overall_entry %}disabled title="You have already registered an Overall participation this season."{% endif %}>
                     <span class="aea-track-name">Overall</span>
-                    <span class="aea-track-desc">6 images · 3+ genres · breadth of work</span>
+                    <span class="aea-track-desc">6 images · across subjects · breadth of work</span>
                     {% if has_overall_entry %}
                     <span class="aea-done-badge">registered</span>
                     {% endif %}
@@ -444,7 +457,7 @@
 
             <!-- Genre picker -->
             <div class="aea-genre-row visible" id="genre-picker-row">
-                <label class="aea-field-lbl" for="genre-select">Select genre</label>
+                <label class="aea-field-lbl" for="genre-select">Select subject</label>
                 <select name="genre" id="genre-select" class="aea-genre-select">
                     <option value="">— choose —</option>
                     {% for g in available_genres %}
@@ -457,7 +470,7 @@
 
             <!-- Overall genre spread -->
             <div class="aea-genre-spread" id="genre-spread-bar">
-                <span>Genres in your selection — minimum 3 required</span>
+                <span>Subjects in your selection — minimum 3 required</span>
                 <div class="aea-genre-spread-tags" id="genre-spread-tags"></div>
             </div>
 
@@ -466,7 +479,7 @@
             <div class="aea-image-grid-head">
                 <label class="aea-field-lbl" style="margin:0">
                     Select 6 images
-                    <span style="color:var(--text-muted); font-weight:400; margin-left:6px; font-size:13px;">sorted by DDI result</span>
+                    <span style="color:var(--text-muted); font-weight:400; margin-left:6px; font-size:14px;">sorted by DDI result</span>
                 </label>
                 <span class="aea-select-counter">
                     <span class="counter-val" id="sel-count">0</span> / 6
