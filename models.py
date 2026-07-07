@@ -121,6 +121,12 @@ class User(db.Model, UserMixin):
     # Session 112 — user's current tier, updated on every score, used for peer eval queue
     tier                      = db.Column(db.String(60), nullable=True)
 
+    # Peer eval conduct — upheld flags against this user's comments
+    # eval_flag_strikes: incremented each time admin removes a comment by this rater
+    # peer_eval_banned: True after 2nd strike — blocks /rate and eval queue permanently
+    eval_flag_strikes         = db.Column(db.Integer, default=0, nullable=False)
+    peer_eval_banned          = db.Column(db.Boolean, default=False, nullable=False)
+
     images = db.relationship('Image', backref='author', lazy=True)
 
     def __repr__(self):
