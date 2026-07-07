@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Shutter League — Know if you're getting better.{% endblock %}
-{% block meta_description %}The independent benchmark for photographic growth. Upload your photograph. Know if you're getting better.{% endblock %}
+{% block meta_description %}Shutter League is an AI-powered photography skill assessment and training platform. Submit your photograph, receive a structured evaluation across five dimensions, and track your improvement over time. Separate leagues for camera and smartphone photographers.{% endblock %}
 {% block canonical %}https://shutterleague.com{% endblock %}
-{% block og_title %}Know if you're getting better. — Shutter League{% endblock %}
-{% block og_description %}Photography Assessment & Evolution Platform. The independent benchmark against which photographic growth is measured.{% endblock %}
+{% block og_title %}Shutter League — Photography Assessment & Skill Training Platform{% endblock %}
+{% block og_description %}AI-powered photography skill assessment platform. Upload a photograph, receive an objective evaluation across five dimensions, and track your growth. Camera League and Mobile League for all photographers.{% endblock %}
 {% block og_url %}https://shutterleague.com{% endblock %}
 
 {% block extra_head %}
@@ -11,6 +11,77 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="keywords" content="photography assessment, photography training, AI photo evaluation, photography skill development, photography platform India, photo critique, photography improvement, camera league, mobile photography">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "Shutter League",
+  "alternateName": "Shutter League Photography Assessment Platform",
+  "url": "https://shutterleague.com",
+  "logo": "https://shutterleague.com/static/img/sl-logo.png",
+  "description": "Shutter League is an AI-powered photography skill assessment and training platform. Photographers submit images for structured evaluation across five dimensions — Depth of Difficulty, Disruption, Decisive Moment, Wonder, and Affective Quality — and receive actionable feedback to track improvement over time.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Bengaluru",
+    "addressRegion": "Karnataka",
+    "addressCountry": "IN"
+  },
+  "sameAs": [
+    "https://www.instagram.com/shutterleague"
+  ],
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Camera League — Monthly",
+      "description": "Monthly photography skill assessment subscription for DSLR and mirrorless camera photographers. Includes AI-powered image evaluations, mission assignments, peer evaluation, and platform standings.",
+      "price": "200",
+      "priceCurrency": "INR",
+      "billingDuration": "P1M",
+      "category": "Photography Training Subscription"
+    },
+    {
+      "@type": "Offer",
+      "name": "Mobile League — Monthly",
+      "description": "Monthly photography skill assessment subscription for smartphone photographers. Calibrated scoring for mobile photography with separate league standings.",
+      "price": "200",
+      "priceCurrency": "INR",
+      "billingDuration": "P1M",
+      "category": "Photography Training Subscription"
+    }
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Photography Skill Assessment Plans",
+    "itemListElement": [
+      {
+        "@type": "OfferCatalog",
+        "name": "Camera League",
+        "description": "Photography assessment and training for DSLR, mirrorless, and medium format photographers"
+      },
+      {
+        "@type": "OfferCatalog",
+        "name": "Mobile League",
+        "description": "Photography assessment and training for smartphone photographers"
+      }
+    ]
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Shutter League",
+  "url": "https://shutterleague.com",
+  "description": "Photography Assessment and Evolution Platform. AI-powered skill evaluation for photographers.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://shutterleague.com/recent-work?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 {% endblock %}
 
 {% block extra_css %}
