@@ -509,15 +509,23 @@ def compute_calibration_stats(images):
 
 
 # ── Global Percentile Engine ──────────────────────────────────────────────────
-def compute_percentile(score: float, genre: str = None) -> dict:
+def compute_percentile(score: float, genre: str = None,
+                       camera_track: str = None) -> dict:
     """
     Returns percentile position and comparison benchmarks for a scored image.
 
     Queries the DB at call time — import is deferred to avoid circular imports.
     Returns {} (empty dict) on any failure; template silently skips the block.
 
+    camera_track: 'mobile' | 'camera' | None — when provided, computes a
+        second percentile within that track's pool so the scorecard can show
+        both "Top 12% in Mobile League" and "Top 34% overall".
+
     Keys returned:
-        top_pct         : int   — e.g. 12  means "Top 12%"
+        top_pct         : int   — percentile across ALL scored images
+        track_pct       : int   — percentile within camera_track pool (or None)
+        track_total     : int   — total images in camera_track pool (or None)
+        camera_track    : str   — the track used for track_pct (or None)
         platform_avg    : float — mean score across ALL scored images
         master_avg      : float — mean score for Master tier images
         grandmaster_avg : float — mean score for Grandmaster tier images
@@ -534,7 +542,8 @@ def compute_percentile(score: float, genre: str = None) -> dict:
             ImageModel.score.isnot(None),
             ImageModel.is_flagged.isnot(True),
             ImageModel.needs_review.isnot(True),
-        ).with_entities(ImageModel.score, ImageModel.genre).all()
+        ).with_entities(ImageModel.score, ImageModel.genre,
+                        ImageModel.camera_track).all()
 
         if not scored:
             return {}
@@ -542,7 +551,7 @@ def compute_percentile(score: float, genre: str = None) -> dict:
         all_scores = [float(r.score) for r in scored]
         total = len(all_scores)
 
-        # How many images score BELOW this one → percentile rank
+        # How many images score BELOW this one → percentile rank (combined pool)
         below = sum(1 for s in all_scores if s < score)
         top_pct = max(1, round((1 - below / total) * 100))
         rank = total - below  # 1 = best
@@ -563,18 +572,37 @@ def compute_percentile(score: float, genre: str = None) -> dict:
         ) if canonical else []
         top10_in_genre = round(sum(genre_scores[:10]) / len(genre_scores[:10]), 2) if len(genre_scores) >= 3 else None
 
-        # Adaptive context sentence — no pool size mention
-        if top_pct <= 5:
+        # ── Track-specific percentile (Session 132 — Mobile DDI) ─────────────
+        # Computes percentile within the user's own league pool (Mobile or Camera).
+        # Both figures shown on scorecard: "Top 12% in Mobile League · Top 34% overall"
+        track_pct   = None
+        track_total = None
+        if camera_track in ('mobile', 'camera'):
+            track_scores_all = [
+                float(r.score) for r in scored
+                if (r.camera_track or 'camera') == camera_track
+            ]
+            if track_scores_all:
+                track_total  = len(track_scores_all)
+                below_track  = sum(1 for s in track_scores_all if s < score)
+                track_pct    = max(1, round((1 - below_track / track_total) * 100))
+
+        # Adaptive context sentence — uses track_pct when available, else top_pct
+        _pct_for_context = track_pct if track_pct is not None else top_pct
+        if _pct_for_context <= 5:
             context = "Elite territory — your score puts you among the highest rated on this platform."
-        elif top_pct <= 15:
+        elif _pct_for_context <= 15:
             context = "You're scoring at a high level — well above the platform average."
-        elif top_pct <= 35:
+        elif _pct_for_context <= 35:
             context = "Above average — keep refining your craft to close the gap to Master tier."
         else:
             context = "Every rescore is a chance to move up — focus on Disruption and AQ to climb."
 
         return {
             'top_pct':         top_pct,
+            'track_pct':       track_pct,
+            'track_total':     track_total,
+            'camera_track':    camera_track,
             'rank':            rank,
             'platform_avg':    platform_avg,
             'master_avg':      master_avg,
