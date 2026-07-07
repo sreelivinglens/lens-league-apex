@@ -381,6 +381,72 @@ Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation 
 CRITICAL JSON FORMATTING RULE: All string values must be valid JSON strings. If you need to quote a phrase, a master photographer's words, or an exposure setting within any text field, use single quotes (') or curly quotes (' ' or " ") — NEVER use a literal straight double-quote character (") inside a string value, as this will break JSON parsing. For example, write 'this is what Adams called pre-visualisation' or 'Salgado made this same exposure choice' — not "this is what Adams called pre-visualisation". NEVER use a literal line break (newline) inside a string value — every text field must be written as a single continuous line with no actual line breaks, even for multi-sentence fields. If you need to separate sentences or ideas, use a space — never a newline. A string value containing a raw line break will break JSON parsing. Double-check every string field for stray unescaped double quotes AND literal line breaks before responding.
 """
 
+# ═══════════════════════════════════════════════════════════════════════════
+# MOBILE LEAGUE — DIMENSION WEIGHT OVERRIDES (Session 129 Spec v1.0)
+# ═══════════════════════════════════════════════════════════════════════════
+# Disruption +15pp and DM +10pp vs Camera League weights.
+# DoD, Wonder, AQ absorb the reduction proportionally so total = 100%.
+#
+# Drone is EXCLUDED — a drone is a dedicated aerial device, not a phone.
+# Drone images always score under Camera League weights regardless of
+# subscription_track.
+#
+# Computed weights per genre (Camera → Mobile):
+#   Wildlife    DoD 20→12% | Disruption 12→27% | DM 27→37% | Wonder 26→15% | AQ 15→9%
+#   Nature      DoD 13→9%  | Disruption 11→26% | DM 13→23% | Wonder 37→25% | AQ 26→17%
+#   Landscape   DoD 13→9%  | Disruption 12→27% | DM 11→21% | Wonder 32→22% | AQ 32→22%
+#   Street      DoD 8→5%   | Disruption 13→28% | DM 17→27% | Wonder 30→19% | AQ 32→21%
+#   Wedding     DoD 7→4%   | Disruption 9→24%  | DM 22→32% | Wonder 10→6%  | AQ 52→33%
+#   People      DoD 7→5%   | Disruption 13→28% | DM 12→22% | Wonder 16→11% | AQ 52→35%
+#   Macro       DoD 26→17% | Disruption 16→31% | DM 12→22% | Wonder 27→18% | AQ 19→12%
+#   Creative    DoD 12→8%  | Disruption 18→33% | DM 10→20% | Wonder 30→20% | AQ 30→20%
+#   Documentary DoD 13→8%  | Disruption 9→24%  | DM 20→30% | Wonder 33→21% | AQ 25→16%
+#   Fashion     DoD 10→6%  | Disruption 20→35% | DM 16→26% | Wonder 24→15% | AQ 30→18%
+# ═══════════════════════════════════════════════════════════════════════════
+
+MOBILE_DISRUPTION_BOOST = 0.15
+MOBILE_DM_BOOST         = 0.10
+MOBILE_EXCLUDED_GENRES  = {'Drone'}  # always Camera League scoring
+
+
+def compute_mobile_weights(genre: str) -> dict:
+    """
+    Returns mobile-adjusted dimension weights for a given genre.
+    Returns None for excluded genres (Drone) or unknown genres.
+    All weights sum to exactly 1.0 (floating-point remainder distributed
+    to the largest reduced dimension to avoid rounding drift).
+    """
+    from engine.scoring import GENRE_WEIGHTS
+    if genre in MOBILE_EXCLUDED_GENRES:
+        return None
+    w = dict(GENRE_WEIGHTS.get(genre, {}))
+    if not w:
+        return None
+    new_dis = w['disruption'] + MOBILE_DISRUPTION_BOOST
+    new_dm  = w['dm']         + MOBILE_DM_BOOST
+    boost   = MOBILE_DISRUPTION_BOOST + MOBILE_DM_BOOST  # always 0.25
+    others  = {k: w[k] for k in ('dod', 'wonder', 'aq')}
+    tot     = sum(others.values())
+    for k in others:
+        others[k] = others[k] - boost * (others[k] / tot)
+    result = {
+        'dod':        others['dod'],
+        'disruption': new_dis,
+        'dm':         new_dm,
+        'wonder':     others['wonder'],
+        'aq':         others['aq'],
+    }
+    # Normalise to exactly 1.0 — distribute floating-point remainder
+    # to the dimension with the largest absolute value among the reduced set
+    raw_total = sum(result.values())
+    remainder = 1.0 - raw_total
+    if abs(remainder) > 1e-9:
+        largest_key = max(('dod', 'wonder', 'aq'), key=lambda k: result[k])
+        result[largest_key] += remainder
+    # Round to 4dp for display — total will be 1.0 within float precision
+    return {k: round(v, 4) for k, v in result.items()}
+
+
 SCORE_PROMPT = """Analyse this photograph using the Apex DDI Engine.
 
 Genre: {genre}
@@ -3529,7 +3595,8 @@ _TIER_VALID_ADVICE = {
 }
 
 
-def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
+def build_exif_context(exif_data: dict, camera_track: str = None,
+                       genre: str = '') -> str:
     """
     Build a human-readable EXIF block to inject into the DDI scoring prompt.
     Includes device tier and gated advice rules so the engine gives
@@ -3537,9 +3604,14 @@ def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
 
     camera_track: 'mobile' | 'camera' | None — from subscription plan.
     exif_data: dict returned by extract_exif().
+    genre: image genre string — used to inject mobile DDI scoring block and
+           to apply the Drone bypass (Drone always scores as Camera League).
     """
     if not exif_data:
-        return ''
+        # Even with no EXIF, if camera_track is known we must inject the
+        # Mobile DDI scoring block so the engine applies correct criteria.
+        # Build a minimal exif_data shell so the function continues.
+        exif_data = {}
 
     lines = ['\nDEVICE & CAPTURE CONTEXT (verified from EXIF — use this for all advice):']
 
@@ -3634,6 +3706,146 @@ def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
         lines.append('- Full lens, focal length, and technique advice is valid — dedicated camera confirmed.')
 
     lines.append('')
+
+    # ── Mobile DDI Scoring Block (Session 129 Spec v1.0 / Session 132) ───────
+    # Injected when camera_track == 'mobile'.
+    # Drone genre is excluded — always Camera League weights regardless of track.
+    # When EXIF is absent but camera_track == 'mobile', the block still fires:
+    # the user's subscription declaration is treated as ground truth.
+    if camera_track == 'mobile':
+        _effective_genre = genre or ''
+        if _effective_genre in MOBILE_EXCLUDED_GENRES:
+            # Drone — explicitly note Camera League applies
+            lines.append('═' * 60)
+            lines.append('DRONE GENRE — CAMERA LEAGUE SCORING APPLIES')
+            lines.append('A drone is a dedicated aerial device, not a mobile phone.')
+            lines.append('Apply Camera League weights and full Drone criteria.')
+            lines.append('Ignore Mobile League criteria for this image.')
+            lines.append('═' * 60)
+            lines.append('')
+        else:
+            mw = compute_mobile_weights(_effective_genre) if _effective_genre else None
+            exif_make  = exif_data.get('make', '') or ''
+            exif_model = exif_data.get('model', '') or ''
+            exif_absent = not (exif_make or exif_model)
+
+            lines.append('═' * 60)
+            lines.append('MOBILE LEAGUE SCORING — MANDATORY (read before scoring)')
+            lines.append('═' * 60)
+            lines.append('')
+            lines.append('This image was uploaded by a Mobile League subscriber.')
+            if exif_absent:
+                lines.append('EXIF device data is absent from this image.')
+                lines.append('The photographer has declared this a phone image.')
+                lines.append('Treat that declaration as ground truth.')
+                lines.append('Apply full Mobile League criteria as written below.')
+            else:
+                lines.append('The photographer shoots Mobile League.')
+                lines.append('Apply Mobile League criteria as written below.')
+            lines.append('')
+
+            # Weight override
+            if mw:
+                lines.append('MOBILE DIMENSION WEIGHTS — USE THESE, NOT THE GENRE DEFAULTS:')
+                lines.append(
+                    f'DoD={int(mw["dod"]*100)}%  '
+                    f'Disruption={int(mw["disruption"]*100)}%  '
+                    f'DM={int(mw["dm"]*100)}%  '
+                    f'Wonder={int(mw["wonder"]*100)}%  '
+                    f'AQ={int(mw["aq"]*100)}%'
+                )
+                lines.append('These weights already encode the +15% Disruption and +10% DM')
+                lines.append('boosts. DoD, Wonder, and AQ are proportionally reduced.')
+                lines.append('')
+
+            # DoD — split definition
+            lines.append('DOD — SCORED AS TWO COMPONENTS, AVERAGED:')
+            lines.append('')
+            lines.append('  Situational DoD (same as Camera League):')
+            lines.append('  Physical presence, access, environmental conditions, risk.')
+            lines.append('  A Masai Mara shot on iPhone scores identically to DSLR')
+            lines.append('  on situational DoD. Being there is the same achievement.')
+            lines.append('')
+            lines.append('  Technical DoD (scored against mobile ceiling only):')
+            lines.append('  Lighting difficulty for a small sensor.')
+            lines.append('  Proximity required by absence of optical telephoto.')
+            lines.append('  Spontaneity demand — cannot set up, pre-focus, or burst.')
+            lines.append('  Over-processing penalty — see below.')
+            lines.append('')
+            lines.append('  Final DoD = average of Situational DoD and Technical DoD.')
+            lines.append('')
+
+            # Disruption rationale
+            lines.append('DISRUPTION (weighted up — already reflected in weights above):')
+            lines.append('The surprise of extraordinary output from a phone is itself')
+            lines.append('part of the disruption. Did this image exceed what a viewer')
+            lines.append('expects from a phone? If yes, score Disruption high.')
+            lines.append('')
+
+            # DM rationale
+            lines.append('DECISIVE MOMENT (weighted up — already reflected in weights above):')
+            lines.append('Mobile photographers cannot set up. They either caught it or')
+            lines.append('they did not. Weight the decisiveness of capture accordingly.')
+            lines.append('')
+
+            # Wonder and AQ
+            lines.append('WONDER and AQ — UNCHANGED. Universal. Instrument-agnostic.')
+            lines.append('Emotional truth and visual arrest do not depend on the camera.')
+            lines.append('')
+
+            # Over-processing detection
+            lines.append('OVER-PROCESSING DETECTION — MANDATORY CHECK:')
+            lines.append('Before finalising DoD, examine for:')
+            lines.append('  Heavy HDR: haloed edges, crushed shadows, unnatural tonal')
+            lines.append('  compression, sky and foreground equally exposed.')
+            lines.append('  Artificial bokeh: portrait mode edge fringing, subject outline')
+            lines.append('  with unnatural sharpness against blurred background, bokeh')
+            lines.append('  cutting through hair or fur unnaturally.')
+            lines.append('  Excessive saturation: colours beyond natural range, skin tones')
+            lines.append('  orange, foliage neon green.')
+            lines.append('  AI enhancement artefacts: texture smoothing, generated detail,')
+            lines.append('  unnaturally clean noise at high ISO.')
+            lines.append('')
+            lines.append('If ANY detected:')
+            lines.append('  Apply Technical DoD penalty (score Technical DoD lower).')
+            lines.append('  In mentor_technical, include this coaching note:')
+            lines.append('  "The processing choices have worked against the image\'s natural')
+            lines.append('  strength." Then explain specifically what was detected.')
+            lines.append('  Do NOT penalise Situational DoD.')
+            lines.append('  Do NOT mention over-processing in hard_truth or what_stood_out.')
+            lines.append('  Coaching note belongs in mentor_technical only.')
+            lines.append('')
+
+            # Genre-specific ceiling notes
+            if _effective_genre in ('Wildlife', 'Nature'):
+                lines.append('WILDLIFE / NATURE — MOBILE NOTE:')
+                lines.append('Situational DoD scores full — being in the habitat is the')
+                lines.append('same physical achievement regardless of instrument.')
+                lines.append('Technical DoD: no optical telephoto means proximity IS the')
+                lines.append('technical achievement. A sharp bird in flight on a phone')
+                lines.append('required extreme proximity — score Technical DoD higher.')
+                lines.append('Note the constraint as coaching, not penalty:')
+                lines.append('"Without a telephoto, proximity was the discipline —')
+                lines.append('that closeness is itself a skill worth building."')
+                lines.append('')
+            elif _effective_genre in ('Street', 'Documentary'):
+                lines.append('STREET / DOCUMENTARY — MOBILE NOTE:')
+                lines.append('The phone\'s invisibility IS the access. A phone documentary')
+                lines.append('frame made inside an event that a camera would have been')
+                lines.append('barred from scores Access Wonder at the top of its range.')
+                lines.append('Score Disruption and DM at the elevated mobile weights.')
+                lines.append('')
+            elif _effective_genre == 'Macro':
+                lines.append('MACRO — MOBILE NOTE:')
+                lines.append('A sharp macro on a phone requires extreme proximity, manual')
+                lines.append('focus, and a cooperative subject. This is harder than macro')
+                lines.append('on a dedicated lens with a tripod. Score Technical DoD high')
+                lines.append('when execution is clean.')
+                lines.append('')
+
+            lines.append('═' * 60)
+            lines.append('')
+
     return '\n'.join(lines)
 
 
@@ -4695,7 +4907,37 @@ def build_audit_data(result, image_obj):
         "dm_reasoning":       result.get("dm_reasoning", ""),
         "wonder_reasoning":   result.get("wonder_reasoning", ""),
         "aq_reasoning":       result.get("aq_reasoning", ""),
+        # ── Session 132 — Mobile DDI: device attribution for share card ────────
+        "camera_track":  getattr(image_obj, 'camera_track', '') or '',
+        "device_label":  _build_audit_device_label(image_obj),
     }
+
+
+def _build_audit_device_label(image_obj) -> str:
+    """
+    Build device attribution string for share card and scorecard.
+    Called from build_audit_data() — image_obj is the Image ORM instance.
+    Mirrors app.py's _build_device_label() but lives here so it is
+    accessible during scoring without importing from app.
+    """
+    make  = (getattr(image_obj, 'exif_make',  '') or '').strip()
+    model = (getattr(image_obj, 'exif_model', '') or '').strip()
+    if make and model and model.lower().startswith(make.lower()):
+        device = model
+    elif make and model:
+        device = f'{make} {model}'
+    elif model:
+        device = model
+    elif make:
+        device = make
+    else:
+        track = (getattr(image_obj, 'camera_track', '') or '').strip()
+        if track == 'mobile':
+            return 'Shot on Mobile'
+        elif track == 'camera':
+            return 'Shot on Camera'
+        return ''
+    return f'Shot on {device}'
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -4748,10 +4990,14 @@ Output exactly those 8 keys now. Any additional key is a failure.
 """
 
 
-def auto_score_ddi_fast(image_path, genre, sub_genre=None):
+def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
     """
     Fast, DDI-only scoring for the admin curation tool. Single API call,
     no narrative, no vision grounding call, no species research.
+
+    camera_track: 'mobile' | 'camera' | None — when 'mobile' and genre is not
+        Drone, injects Mobile League weight override into the prompt so the
+        fast path scores consistently with full auto_score().
 
     Returns a dict: {dod, disruption, dm, wonder, aq, score, tier, archetype}
     Raises ValueError on API failure (same contract as auto_score()).
@@ -4765,7 +5011,23 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None):
     effective_genre = get_effective_genre(genre, sub_genre) if sub_genre else genre
     genre_context = GENRE_CONTEXT.get(effective_genre, GENRE_CONTEXT.get(genre, ''))
 
-    prompt = DDI_FAST_PROMPT.format(genre=genre, genre_context=genre_context)
+    # ── Mobile weight override for fast path ──────────────────────────────────
+    _mobile_weight_note = ''
+    if camera_track == 'mobile' and genre not in MOBILE_EXCLUDED_GENRES:
+        mw = compute_mobile_weights(genre)
+        if mw:
+            _mobile_weight_note = (
+                f'\n\nMOBILE LEAGUE IMAGE — USE THESE WEIGHTS INSTEAD OF GENRE DEFAULTS:\n'
+                f'DoD={int(mw["dod"]*100)}%  '
+                f'Disruption={int(mw["disruption"]*100)}%  '
+                f'DM={int(mw["dm"]*100)}%  '
+                f'Wonder={int(mw["wonder"]*100)}%  '
+                f'AQ={int(mw["aq"]*100)}%\n'
+                f'DoD = average of Situational DoD (same as Camera League) '
+                f'and Technical DoD (scored against mobile ceiling).\n'
+            )
+
+    prompt = DDI_FAST_PROMPT.format(genre=genre, genre_context=genre_context) + _mobile_weight_note
 
     payload = {
         "model":       MODEL,
