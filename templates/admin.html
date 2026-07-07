@@ -605,6 +605,127 @@
   </div>
 
   {# ══════════════════════════════════════════════════════════════════
+     SECTION — FLAGGED EVAL COMMENTS
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section{% if eval_flags_pending %} danger{% endif %}" id="section-evalflags">
+    <div class="admin-section-header" onclick="toggleSection('evalflags')">
+      <div class="admin-section-title">
+        🚩 Flagged Comments
+        {% if eval_flags_pending %}
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(192,57,43,0.12);color:var(--red);border:1px solid #7a2222;">
+          {{ eval_flags_pending|length }}
+        </span>
+        {% endif %}
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="admin-section-meta">{{ eval_flags_pending|length }} pending</span>
+        <span class="admin-chevron{% if eval_flags_pending %} open{% endif %}" id="chev-evalflags">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body{% if not eval_flags_pending %} collapsed{% endif %}" id="body-evalflags">
+
+      {% if not eval_flags_pending %}
+      <p style="font-size:14px;color:var(--text-muted);margin:0;">No flagged comments pending review.</p>
+      {% else %}
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        {% for f in eval_flags_pending %}
+        <div style="border:1px solid {% if f.rater_strikes >= 1 %}#8B0000{% else %}#7a2222{% endif %};border-radius:var(--radius-md);background:var(--surface-1);overflow:hidden;">
+
+          {# Header row #}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:{% if f.rater_strikes >= 1 %}rgba(139,0,0,0.08){% else %}rgba(192,57,43,0.05){% endif %};border-bottom:1px solid #7a2222;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);">Flag #{{ f.id }}</span>
+              <span style="font-size:13px;color:var(--text-muted);">{{ f.flagged_at.strftime('%d %b %Y, %H:%M') if f.flagged_at else '—' }}</span>
+              <a href="{{ url_for('image_detail', image_id=f.image_id) }}" target="_blank"
+                 style="font-size:13px;color:var(--gold);text-decoration:none;font-weight:600;">
+                {{ f.image_name or 'Image #' ~ f.image_id }} · {{ f.image_genre or '' }} →
+              </a>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:13px;color:var(--text-muted);">
+                Photographer: <strong>{{ f.owner_name or f.owner_username }}</strong>
+              </span>
+              <span style="font-size:13px;color:var(--text-muted);">
+                Evaluator: <strong>{{ f.rater_name or f.rater_username }}</strong>
+                {% if f.rater_tier %}<span style="background:rgba(245,197,24,0.15);color:var(--gold);border-radius:99px;padding:1px 7px;font-size:13px;font-weight:700;margin-left:4px;">{{ f.rater_tier }}</span>{% endif %}
+              </span>
+              {# Strike indicator — critical context for admin decision #}
+              {% if f.rater_strikes == 0 %}
+              <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;background:rgba(245,197,24,0.15);color:#8B6914;border:1px solid #B8892A;border-radius:99px;padding:2px 10px;">
+                No prior strikes — removing = STRIKE 1 + warning
+              </span>
+              {% elif f.rater_strikes == 1 %}
+              <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;background:rgba(192,57,43,0.15);color:#C0392B;border:1px solid #7a2222;border-radius:99px;padding:2px 10px;">
+                ⚠ STRIKE 1 on record — removing = STRIKE 2 + PERMANENT BAN
+              </span>
+              {% else %}
+              <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;background:#7a2222;color:#fff;border-radius:99px;padding:2px 10px;">
+                {{ f.rater_strikes }} strikes — already banned: {{ f.rater_banned }}
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          {# Comment body #}
+          <div style="padding:14px 16px;">
+            <p style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin:0 0 8px;">Flagged comment</p>
+            <p style="font-size:15px;line-height:1.7;color:var(--text-primary);background:#fef9f9;border-left:3px solid #C0392B;padding:10px 14px;border-radius:0 6px 6px 0;margin:0 0 16px;">
+              {{ f.optional_comment or '(comment text unavailable)' }}
+            </p>
+
+            {# Action buttons — confirm dialog reflects strike consequence #}
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <form method="POST" action="{{ url_for('admin_eval_flag_dismiss', flag_id=f.id) }}"
+                    onsubmit="return confirm('Dismiss this flag? Comment stands. Photographer notified — no violation found. No strike recorded.')">
+                <button type="submit" class="act-btn act-ref" style="font-size:13px;padding:6px 14px;">
+                  ✓ Dismiss — no violation
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin_eval_flag_warn_rater', flag_id=f.id) }}"
+                    onsubmit="return confirm('Warn the rater? Comment stays. Rater gets a formal warning email. No strike recorded.')">
+                <button type="submit" class="act-btn" style="font-size:13px;padding:6px 14px;border-color:var(--gold);color:#1a1a18;background:rgba(245,197,24,0.15);">
+                  ⚠ Warn rater — comment stays
+                </button>
+              </form>
+              {% if f.rater_strikes >= 1 %}
+              {# Strike 2 — inline reason form required before ban #}
+              <div style="width:100%;margin-top:8px;border:1px solid #7a2222;border-radius:var(--radius-sm);background:#fff8f8;padding:14px 16px;">
+                <p style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">🚫 Strike 2 — Permanent Ban</p>
+                <p style="font-size:15px;color:#3a3a38;margin:0 0 10px;line-height:1.6;">Enter the reason for this ban. This is stored on the user record and cannot be changed after submission.</p>
+                <form method="POST" action="{{ url_for('admin_eval_flag_remove_comment', flag_id=f.id) }}"
+                      onsubmit="return confirm('PERMANENT BAN — this cannot be undone. Confirm?')">
+                  <textarea name="ban_reason" required maxlength="500"
+                            placeholder="e.g. Repeated abusive comments targeting the photographer personally. Second upheld flag within 30 days."
+                            style="width:100%;min-height:80px;padding:10px 12px;font-family:var(--font-body);font-size:15px;
+                                   border:1px solid #C0392B;border-radius:var(--radius-sm);background:#fff;
+                                   color:#1a1a18;resize:vertical;box-sizing:border-box;margin-bottom:10px;"></textarea>
+                  <button type="submit" class="act-btn act-del" style="font-size:13px;padding:6px 16px;font-weight:700;">
+                    🚫 Confirm — Remove comment + Ban permanently
+                  </button>
+                </form>
+              </div>
+              {% else %}
+              {# Strike 1 — standard confirm, optional note #}
+              <form method="POST" action="{{ url_for('admin_eval_flag_remove_comment', flag_id=f.id) }}"
+                    onsubmit="return confirm('Strike 1 — comment removed, rater warned that next offence = permanent ban. Cannot be undone.')">
+                <input type="hidden" name="ban_reason" value="">
+                <button type="submit" class="act-btn act-del" style="font-size:13px;padding:6px 14px;">
+                  🗑 Remove comment (Strike 1)
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
      SECTION — NEW SIGNUPS
   ══════════════════════════════════════════════════════════════════ #}
   <div class="admin-section{% if new_signups_today %} urgent{% endif %}" id="section-signups">
