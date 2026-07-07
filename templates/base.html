@@ -1053,6 +1053,8 @@ footer {
   color: rgba(255,255,255,0.75);
 }
 @media (max-width: 768px) {
+  /* 70yr rule — nav chevrons min 14px on mobile */
+  .nav-more-chevron, .nav-lj-chevron { font-size: 14px; }
   .footer-top { grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 16px var(--page-pad) 20px; }
   .footer-brand-col { grid-column: 1 / -1; }
   .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
@@ -1293,7 +1295,7 @@ img {
          alt="Shutter League"
          style="height:34px; width:auto; display:block;"
          onerror="this.style.display='none'">
-    <span style="font-size:9px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
+    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
   </a>
 
   <!-- Desktop nav -->
