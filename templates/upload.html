@@ -419,7 +419,7 @@
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png">
         <span class="dz-icon">🖼️</span>
         <div class="dz-label">Drop your image here or <strong>click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 20 MB &nbsp;·&nbsp; Min 1500px on the shorter side</div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 20 MB &nbsp;·&nbsp; Min 1500px on the shorter side &nbsp;·&nbsp; Resize to 2000px before uploading</div>
       </div>
 
       <!-- Soft size warning — amber, not a block -->
@@ -900,13 +900,16 @@
     if (!file) { showError('Please select an image to upload.'); return; }
     if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
 
-    // Hard block only above 20 MB (and only when iOS has reported a real size)
+    // Size check at submit time — more reliable on iOS than at file-select time
+    // iOS Camera Roll photos report size=0 until the asset is fully copied
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
       showError(
-        `⚠️ This file is ${(file.size / 1024 / 1024).toFixed(1)} MB — over the 20 MB limit. ` +
-        `Please reduce the file size before uploading.\n\n` +
-        `On iPhone: share the photo → choose "Medium" or "Small" size.\n` +
-        `On Samsung: use Gallery → share → resize before sending.`
+        `⚠️ Your image is ${sizeMB} MB — over the ${MAX_MB} MB limit.\n\n` +
+        `Please resize before uploading:\n` +
+        `• iPhone: use a free app like Compress Photos, or share → Mail → resize\n` +
+        `• Android: use your gallery's "resize" option when sharing\n` +
+        `• Desktop: export at 2000px wide from Lightroom / Photos / any editor`
       );
       return;
     }
@@ -1002,7 +1005,15 @@
 
     xhr.onload = function () {
       if (xhr.status === 413) {
-        showError('File too large — please keep files under 20 MB.');
+        overlay.classList.remove('active');
+        submitBtn.disabled = false;
+        showError(
+          '⚠️ File too large — please resize your image to under 20 MB.\n' +
+          'On iPhone: share the photo → tap the size option → choose "Small" or "Medium".\n' +
+          'On Android: use your gallery app's resize/compress option before uploading.'
+        );
+        fileInput.value = '';
+        previewArea.style.display = 'none';
         return;
       }
       if (xhr.status === 409) {
