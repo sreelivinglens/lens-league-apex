@@ -246,6 +246,11 @@ class Image(db.Model):
     exif_gps_lat           = db.Column(db.Float,       nullable=True)  # GPS latitude, decimal degrees (internal only, never displayed)
     exif_gps_lon           = db.Column(db.Float,       nullable=True)  # GPS longitude, decimal degrees (internal only, never displayed)
     exif_device_tier       = db.Column(db.String(40),  nullable=True)  # iphone_pro / android_ultra etc.
+    # Session 132 — Mobile DDI: EXIF verification flag
+    # TRUE  = EXIF make/model confirmed and consistent with subscription_track
+    # FALSE = EXIF absent; track trusted from user's subscription declaration
+    # NULL  = legacy image (scored before this system — never retroactively flagged)
+    exif_verified          = db.Column(db.Boolean,     nullable=True)
 
     dod_score           = db.Column(db.Float, nullable=True)
     disruption_score    = db.Column(db.Float, nullable=True)
@@ -620,6 +625,9 @@ class WeeklyChallenge(db.Model):
     results_hold_until = db.Column(db.DateTime, nullable=True)
     created_by         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
+    # Session 132 — Mobile DDI: challenge track separation
+    # 'mobile' | 'camera' | 'both' — 'both' is default (all existing challenges visible to all)
+    track              = db.Column(db.String(20), default='both', nullable=False)
     submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic',
                                   cascade='all, delete-orphan')
     topups      = db.relationship('ChallengeTopup',   lazy=True,
