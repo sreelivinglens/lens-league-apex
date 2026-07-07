@@ -1087,8 +1087,25 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
           <p class="sl-poty-body" style="font-size:17px;margin-top:12px;">Programme standings are updated regularly throughout the year.</p>
         </div>
         <div>
-          <div class="sl-poty-tab-bar">
-            <span class="sl-poty-tab">Overall Provisional</span>
+          <div class="sl-poty-tab-bar" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <a href="{{ url_for('poty', track='all') }}"
+               class="sl-poty-tab {% if poty_track == 'all' or not poty_track %}active{% endif %}"
+               style="text-decoration:none;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:600;
+                 {% if poty_track == 'all' or not poty_track %}background:#1A1A18;color:#F5C518;{% else %}background:#F5F0E8;color:#4A4840;border:1px solid #E0D8C8;{% endif %}">
+              All
+            </a>
+            <a href="{{ url_for('poty', track='mobile') }}"
+               class="sl-poty-tab {% if poty_track == 'mobile' %}active{% endif %}"
+               style="text-decoration:none;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:600;
+                 {% if poty_track == 'mobile' %}background:#1A1A18;color:#F5C518;{% else %}background:#F5F0E8;color:#4A4840;border:1px solid #E0D8C8;{% endif %}">
+              📱 Mobile League
+            </a>
+            <a href="{{ url_for('poty', track='camera') }}"
+               class="sl-poty-tab {% if poty_track == 'camera' %}active{% endif %}"
+               style="text-decoration:none;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:600;
+                 {% if poty_track == 'camera' %}background:#1A1A18;color:#F5C518;{% else %}background:#F5F0E8;color:#4A4840;border:1px solid #E0D8C8;{% endif %}">
+              📷 Camera League
+            </a>
           </div>
           <table class="sl-poty-lb-table">
             <thead>
