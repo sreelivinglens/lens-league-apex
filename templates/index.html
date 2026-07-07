@@ -2,8 +2,8 @@
 {% block title %}Shutter League — Know if you're getting better.{% endblock %}
 {% block meta_description %}Shutter League is an AI-powered photography skill assessment and training platform. Submit your photograph, receive a structured evaluation across five dimensions, and track your improvement over time. Separate leagues for camera and smartphone photographers.{% endblock %}
 {% block canonical %}https://shutterleague.com{% endblock %}
-{% block og_title %}Shutter League — Photography Assessment & Skill Training Platform{% endblock %}
-{% block og_description %}AI-powered photography skill assessment platform. Upload a photograph, receive an objective evaluation across five dimensions, and track your growth. Camera League and Mobile League for all photographers.{% endblock %}
+{% block og_title %}Shutter League — Know if you're getting better.{% endblock %}
+{% block og_description %}A platform that remembers every image you make — and guides what you make next. Photography's independent evolution platform. Camera League and Mobile League.{% endblock %}
 {% block og_url %}https://shutterleague.com{% endblock %}
 
 {% block extra_head %}
@@ -197,6 +197,15 @@ body.page-home {
   margin-bottom: 10px;
 }
 
+.sl-hero-arc {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(246,242,233,0.82);
+  line-height: 1.55;
+  margin-bottom: 10px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+}
+
 .sl-hero-philosophy {
   font-size: 17px;
   font-weight: 400;
@@ -204,6 +213,13 @@ body.page-home {
   letter-spacing: -0.1px;
   margin-bottom: 22px;
   text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+}
+
+.sl-hero-below-cta {
+  font-size: 13px;
+  color: rgba(246,242,233,0.50);
+  line-height: 1.6;
+  margin-bottom: 14px;
 }
 
 .sl-hero-ctas {
@@ -645,6 +661,10 @@ body.page-home {
     <h1 class="sl-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
     <p class="sl-hero-tagline">Photography Assessment &amp; Evolution Platform</p>
     <div class="sl-hero-divider"></div>
+    {# POST-KYC NOTE: Once KYC is approved, remove the tagline above and the divider,
+       and change class="sl-hero-arc" to class="sl-hero-tagline" on the line below.
+       Option B: new line alone carries the full weight without the category descriptor. #}
+    <p class="sl-hero-arc">A platform that remembers every image &mdash; and guides what you make next.</p>
     <p class="sl-hero-philosophy">Making Images Matter.</p>
     <div class="sl-hero-ctas">
       <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
@@ -664,6 +684,7 @@ body.page-home {
         How it works
       </a>
     </div>
+    <p class="sl-hero-below-cta">Not a one-time evaluation. A record of how your seeing evolves.</p>
     <div class="sl-hero-mentors">
       <div class="sl-hero-mentor-avatars">
         <div class="sl-hero-mentor-avatar">
@@ -708,6 +729,7 @@ body.page-home {
   <div class="sl-mob-copy">
     <h1 class="sl-mob-h1">Know if you&rsquo;re<br>getting better.</h1>
     <p class="sl-mob-tagline">Photography Assessment<br>&amp; Evolution Platform.</p>
+    <p class="sl-mob-philosophy" style="font-size:15px;color:rgba(26,26,24,0.72);font-weight:400;margin-bottom:6px;">A platform that remembers every image &mdash; and guides what you make next.</p>
     <p class="sl-mob-philosophy">Making Images Matter.</p>
   </div>
 
@@ -734,6 +756,8 @@ body.page-home {
     </a>
     <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
   </div>
+
+  <p style="font-size:13px;color:#6B6B6B;line-height:1.6;padding:0 20px 12px;margin:0;">Not a one-time evaluation. A record of how your seeing evolves.</p>
 
   {% if gallery_imgs %}
   <div class="sl-mob-gallery">
