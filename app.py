@@ -1754,6 +1754,9 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_eval_banned BOOLEAN DEFAULT FALSE NOT NULL"
                 ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_eval_ban_reason TEXT DEFAULT NULL"
+                ))
                 db.session.commit()
                 print('Peer eval conduct columns OK.')
             except Exception as _pec_mig:
@@ -10644,6 +10647,8 @@ def admin_dashboard():
                                       u_rater.username  AS rater_username,
                                       u_rater.full_name AS rater_name,
                                       u_rater.tier      AS rater_tier,
+                                      COALESCE(u_rater.eval_flag_strikes, 0) AS rater_strikes,
+                                      COALESCE(u_rater.peer_eval_banned, FALSE) AS rater_banned,
                                       i.id              AS image_id,
                                       i.asset_name      AS image_name,
                                       i.genre           AS image_genre
@@ -16943,13 +16948,22 @@ def admin_eval_flag_remove_comment(flag_id):
     _new_strikes      = _current_strikes + 1
     _is_ban           = _new_strikes >= 2   # 2nd upheld removal = permanent ban
 
+    # Ban reason — required on Strike 2, optional on Strike 1
+    _ban_reason = (request.form.get('ban_reason') or '').strip()[:500]
+    if _is_ban and not _ban_reason:
+        flash('Ban reason is required. Please enter a reason before banning.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
     try:
         # Clear the comment from peer_ratings
         db.session.execute(db.text(
             "UPDATE peer_ratings SET optional_comment=NULL WHERE id=:rid"
         ), {'rid': row.peer_rating_id})
-        # Resolve the flag
-        _note = 'comment removed — ban applied' if _is_ban else 'comment removed — strike 1 warning'
+        # Resolve the flag — store ban reason in admin_note
+        if _is_ban:
+            _note = f'comment removed — BANNED. Reason: {_ban_reason}'
+        else:
+            _note = f'comment removed — strike 1 warning{(". Note: " + _ban_reason) if _ban_reason else ""}'
         db.session.execute(db.text(
             "UPDATE eval_flags SET status='resolved', resolved_at=NOW(), resolved_by=:uid, "
             "admin_note=:note WHERE id=:fid"
@@ -16957,7 +16971,8 @@ def admin_eval_flag_remove_comment(flag_id):
         # Increment strike counter; apply ban if threshold reached
         _rater.eval_flag_strikes = _new_strikes
         if _is_ban:
-            _rater.peer_eval_banned = True
+            _rater.peer_eval_banned     = True
+            _rater.peer_eval_ban_reason = _ban_reason
         db.session.commit()
     except Exception as _e:
         db.session.rollback()
@@ -16966,7 +16981,7 @@ def admin_eval_flag_remove_comment(flag_id):
 
     app.logger.warning(
         f'[eval_flag] flag={flag_id} rater={_rater.id} ({_rater.username}) '
-        f'strikes={_new_strikes} banned={_is_ban}'
+        f'strikes={_new_strikes} banned={_is_ban} reason="{_ban_reason[:80]}"'
     )
 
     # ── Notify photographer — comment removed ─────────────────────────────────
