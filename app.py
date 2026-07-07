@@ -1744,25 +1744,6 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'Photo School columns migration warning: {_ps_mig}')
 
-            # ── Peer eval conduct columns (Session 129) ──────────────────────────
-            # eval_flag_strikes: count of upheld flags against this rater's comments
-            # peer_eval_banned: True after 2nd strike — blocks /rate and eval queue permanently
-            try:
-                db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS eval_flag_strikes INTEGER DEFAULT 0 NOT NULL"
-                ))
-                db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_eval_banned BOOLEAN DEFAULT FALSE NOT NULL"
-                ))
-                db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_eval_ban_reason TEXT DEFAULT NULL"
-                ))
-                db.session.commit()
-                print('Peer eval conduct columns OK.')
-            except Exception as _pec_mig:
-                db.session.rollback()
-                print(f'Peer eval conduct columns migration warning: {_pec_mig}')
-
             # ── Session 119 — onboarding phone/address were never persisted ────
             # onboarding.html has had required phone + address fields since
             # before this session, but the onboarding() POST handler never
@@ -4124,7 +4105,7 @@ def dashboard():
 
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
-    if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin' and not getattr(current_user, 'peer_eval_banned', False):
+    if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
         try:
             from models import RatingAssignment as _RA
             from datetime import timedelta as _td
@@ -10637,29 +10618,7 @@ def admin_dashboard():
                            )).scalar() or 0,
                            unread_contact_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM contact_messages WHERE replied=FALSE"
-                           )).scalar() or 0,
-                           eval_flags_pending=db.session.execute(db.text("""
-                               SELECT ef.id, ef.flagged_at, ef.peer_rating_id,
-                                      pr.optional_comment,
-                                      u_owner.username  AS owner_username,
-                                      u_owner.full_name AS owner_name,
-                                      u_owner.email     AS owner_email,
-                                      u_rater.username  AS rater_username,
-                                      u_rater.full_name AS rater_name,
-                                      u_rater.tier      AS rater_tier,
-                                      COALESCE(u_rater.eval_flag_strikes, 0) AS rater_strikes,
-                                      COALESCE(u_rater.peer_eval_banned, FALSE) AS rater_banned,
-                                      i.id              AS image_id,
-                                      i.asset_name      AS image_name,
-                                      i.genre           AS image_genre
-                               FROM eval_flags ef
-                               JOIN peer_ratings pr ON pr.id = ef.peer_rating_id
-                               JOIN images i        ON i.id  = pr.image_id
-                               JOIN users u_owner   ON u_owner.id = i.user_id
-                               JOIN users u_rater   ON u_rater.id = pr.rater_id
-                               WHERE ef.status = 'pending'
-                               ORDER BY ef.flagged_at ASC
-                           """)).fetchall() or [])
+                           )).scalar() or 0)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
@@ -14338,7 +14297,8 @@ def robots_txt():
         "Disallow: /rate\n"
         "Disallow: /raw\n"
         "Disallow: /judge\n"
-        "Crawl-delay: 10\n"
+        "\n"
+        "Sitemap: https://shutterleague.com/sitemap-index.xml\n"
         "\n"
         "# Automated scraping, bulk harvesting, and data extraction are\n"
         "# strictly prohibited. See /terms for full legal restrictions.\n"
@@ -16762,16 +16722,14 @@ def _make_flag_token(peer_rating_id: int) -> str:
 
 
 @app.route('/peer-flag/<int:rating_id>/<token>')
+@login_required
 def peer_flag_comment(rating_id, token):
     """
     One-click flag route embedded in peer eval email.
     Photographer clicks link → comment flagged → admin notified.
     SESSION116: structured eval system — flags optional_comment only.
-    No @login_required — HMAC token is the auth. User may not have an active
-    session when clicking from email. Token verified first; login required only
-    to confirm identity against image ownership.
     """
-    # Verify token first — before any auth check
+    # Verify token
     if token != _make_flag_token(rating_id):
         flash('Invalid flag link.', 'error')
         return redirect(url_for('dashboard'))
@@ -16782,18 +16740,9 @@ def peer_flag_comment(rating_id, token):
         flash('Evaluation not found.', 'error')
         return redirect(url_for('dashboard'))
 
-    img = Image.query.get(pr.image_id)
-    if not img:
-        flash('Image not found.', 'error')
-        return redirect(url_for('dashboard'))
-
-    # Require login at this point only — to verify image ownership
-    if not current_user.is_authenticated:
-        flash('Please log in to submit your flag.', 'info')
-        return redirect(url_for('login', next=request.url))
-
     # Only the image owner can flag
-    if img.user_id != current_user.id:
+    img = Image.query.get(pr.image_id)
+    if not img or img.user_id != current_user.id:
         flash('You can only flag evaluations on your own images.', 'error')
         return redirect(url_for('dashboard'))
 
@@ -16833,16 +16782,16 @@ def peer_flag_comment(rating_id, token):
                 _admin_emails,
                 f'[Flag] Peer eval comment flagged — image #{img.id}',
                 f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                f'<p style="font-size:15px;font-weight:700;color:#C0392B;">PEER EVAL FLAG</p>'
-                f'<p style="font-size:15px;line-height:1.7;">'
+                f'<p style="font-size:14px;font-weight:700;color:#C0392B;">PEER EVAL FLAG</p>'
+                f'<p style="font-size:14px;line-height:1.7;">'
                 f'Image: <a href="{_site}/image/{img.id}">{img.asset_name or "Untitled"}</a> (ID: {img.id})<br>'
                 f'Photographer: {current_user.username} ({current_user.email})<br>'
                 f'Rater tier: {_rater_tier}<br>'
                 f'Rating ID: {rating_id}</p>'
-                f'<p style="font-size:15px;font-weight:700;color:#C0392B;margin-top:16px;">Flagged comment:</p>'
-                f'<p style="font-size:15px;background:#fef2f2;border-left:3px solid #C0392B;padding:12px 16px;">'
+                f'<p style="font-size:13px;font-weight:700;color:#C0392B;margin-top:16px;">Flagged comment:</p>'
+                f'<p style="font-size:14px;background:#fef2f2;border-left:3px solid #C0392B;padding:12px 16px;">'
                 f'{pr.optional_comment or "(no comment)"}</p>'
-                f'<p style="font-size:15px;color:#8A8478;margin-top:24px;">'
+                f'<p style="font-size:13px;color:#8A8478;margin-top:24px;">'
                 f'Action needed: review and resolve at /admin · Rule: warn on first flag, ban on repeat.</p>'
                 f'</div>'
             )
@@ -16853,329 +16802,6 @@ def peer_flag_comment(rating_id, token):
     return redirect(url_for('image_detail', image_id=img.id))
 
 
-# ---------------------------------------------------------------------------
-# Admin — Flagged eval comment actions (Dismiss / Remove / Warn)
-# ---------------------------------------------------------------------------
-
-def _get_flag_row(flag_id):
-    """Fetch flag row with joined peer_rating and image data."""
-    return db.session.execute(db.text("""
-        SELECT ef.id, ef.peer_rating_id, ef.flagged_by, ef.status,
-               pr.optional_comment, pr.rater_id,
-               i.id AS image_id, i.asset_name, i.user_id AS owner_id
-        FROM eval_flags ef
-        JOIN peer_ratings pr ON pr.id = ef.peer_rating_id
-        JOIN images i ON i.id = pr.image_id
-        WHERE ef.id = :fid
-    """), {'fid': flag_id}).fetchone()
-
-
-@app.route('/admin/eval-flag/<int:flag_id>/dismiss', methods=['POST'])
-@login_required
-@admin_required
-def admin_eval_flag_dismiss(flag_id):
-    """Dismiss flag — comment stands, photographer notified, no action on rater."""
-    row = _get_flag_row(flag_id)
-    if not row:
-        flash('Flag not found.', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    try:
-        db.session.execute(db.text(
-            "UPDATE eval_flags SET status='dismissed', resolved_at=NOW(), resolved_by=:uid WHERE id=:fid"
-        ), {'uid': current_user.id, 'fid': flag_id})
-        db.session.commit()
-    except Exception as _e:
-        db.session.rollback()
-        flash(f'Could not update flag: {_e}', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    # Notify photographer — reviewed, no violation found
-    try:
-        _owner = User.query.get(row.owner_id)
-        if _owner:
-            _oname = _owner.full_name or _owner.username
-            send_email(
-                to_addresses=[_owner.email],
-                subject='Your flagged comment — reviewed by Shutter League',
-                html_body=(
-                    f'<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                    f'<p style="font-family:\'Courier New\',monospace;font-size:15px;font-weight:700;letter-spacing:2px;'
-                    f'text-transform:uppercase;color:#B8892A;margin:0 0 20px;">SHUTTER LEAGUE · PEER EVALUATION</p>'
-                    f'<p style="font-size:22px;font-weight:700;margin:0 0 16px;">We reviewed your flag</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Hi {_oname},</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">We reviewed the comment you flagged on your '
-                    f'<strong>{row.asset_name or "image"}</strong> and found it does not violate our community guidelines. '
-                    f'No action has been taken.</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Thank you for helping keep Shutter League a respectful community.</p>'
-                    f'<p style="font-size:15px;color:#8A8478;margin-top:24px;">Questions? <a href="mailto:support@shutterleague.com" '
-                    f'style="color:#B8892A;">support@shutterleague.com</a></p></div>'
-                ),
-                text_body=(
-                    f'Hi {_oname},\n\nWe reviewed the comment you flagged on your image '
-                    f'"{row.asset_name or "image"}" and found it does not violate our guidelines. '
-                    f'No action has been taken.\n\nThank you.\nThe Shutter League Team'
-                )
-            )
-    except Exception as _me:
-        app.logger.error(f'[eval_flag dismiss email] {_me}')
-
-    flash(f'Flag #{flag_id} dismissed — photographer notified.', 'success')
-    return redirect(url_for('admin_dashboard'))
-
-
-@app.route('/admin/eval-flag/<int:flag_id>/remove-comment', methods=['POST'])
-@login_required
-@admin_required
-def admin_eval_flag_remove_comment(flag_id):
-    """
-    Remove comment + enforce strike ladder.
-    Strike 1: comment removed, rater warned — next offence = permanent ban.
-    Strike 2: comment removed, peer eval access permanently revoked.
-    """
-    row = _get_flag_row(flag_id)
-    if not row:
-        flash('Flag not found.', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    # Load rater and compute new strike count BEFORE committing anything
-    _rater = User.query.get(row.rater_id)
-    if not _rater:
-        flash('Rater account not found.', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    _current_strikes = getattr(_rater, 'eval_flag_strikes', 0) or 0
-    _new_strikes      = _current_strikes + 1
-    _is_ban           = _new_strikes >= 2   # 2nd upheld removal = permanent ban
-
-    # Ban reason — required on Strike 2, optional on Strike 1
-    _ban_reason = (request.form.get('ban_reason') or '').strip()[:500]
-    if _is_ban and not _ban_reason:
-        flash('Ban reason is required. Please enter a reason before banning.', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    try:
-        # Clear the comment from peer_ratings
-        db.session.execute(db.text(
-            "UPDATE peer_ratings SET optional_comment=NULL WHERE id=:rid"
-        ), {'rid': row.peer_rating_id})
-        # Resolve the flag — store ban reason in admin_note
-        if _is_ban:
-            _note = f'comment removed — BANNED. Reason: {_ban_reason}'
-        else:
-            _note = f'comment removed — strike 1 warning{(". Note: " + _ban_reason) if _ban_reason else ""}'
-        db.session.execute(db.text(
-            "UPDATE eval_flags SET status='resolved', resolved_at=NOW(), resolved_by=:uid, "
-            "admin_note=:note WHERE id=:fid"
-        ), {'uid': current_user.id, 'fid': flag_id, 'note': _note})
-        # Increment strike counter; apply ban if threshold reached
-        _rater.eval_flag_strikes = _new_strikes
-        if _is_ban:
-            _rater.peer_eval_banned     = True
-            _rater.peer_eval_ban_reason = _ban_reason
-        db.session.commit()
-    except Exception as _e:
-        db.session.rollback()
-        flash(f'Could not remove comment: {_e}', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    app.logger.warning(
-        f'[eval_flag] flag={flag_id} rater={_rater.id} ({_rater.username}) '
-        f'strikes={_new_strikes} banned={_is_ban} reason="{_ban_reason[:80]}"'
-    )
-
-    # ── Notify photographer — comment removed ─────────────────────────────────
-    try:
-        _owner = User.query.get(row.owner_id)
-        if _owner:
-            _oname = _owner.full_name or _owner.username
-            send_email(
-                to_addresses=[_owner.email],
-                subject='Your flagged comment has been removed — Shutter League',
-                html_body=(
-                    f'<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                    f'<p style="font-family:\'Courier New\',monospace;font-size:15px;font-weight:700;letter-spacing:2px;'
-                    f'text-transform:uppercase;color:#B8892A;margin:0 0 20px;">SHUTTER LEAGUE · PEER EVALUATION</p>'
-                    f'<p style="font-size:22px;font-weight:700;margin:0 0 16px;">Comment removed</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Hi {_oname},</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">We reviewed the comment you flagged on your '
-                    f'<strong>{row.asset_name or "image"}</strong>. It violated our community guidelines '
-                    f'and has been permanently removed.</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Thank you for flagging it. '
-                    f'We take the quality of peer feedback on Shutter League seriously.</p>'
-                    f'<p style="font-size:15px;color:#8A8478;margin-top:24px;">Questions? '
-                    f'<a href="mailto:support@shutterleague.com" style="color:#B8892A;">support@shutterleague.com</a>'
-                    f'</p></div>'
-                ),
-                text_body=(
-                    f'Hi {_oname},\n\nThe comment you flagged on your image '
-                    f'"{row.asset_name or "image"}" violated our guidelines '
-                    f'and has been permanently removed.\n\n'
-                    f'Thank you for flagging it.\nThe Shutter League Team'
-                )
-            )
-    except Exception as _me:
-        app.logger.error(f'[eval_flag remove owner email] {_me}')
-
-
-    # ── Notify rater — strike 1 warning or permanent ban ─────────────────────
-    try:
-        _rname = _rater.full_name or _rater.username
-        if _is_ban:
-            _subj      = 'Peer evaluation access removed — Shutter League'
-            _headline  = 'Peer evaluation access permanently removed'
-            _body_para = (
-                f'A second comment you left during a peer evaluation has been flagged and removed for '
-                f'violating Shutter League\u2019s community guidelines. As communicated in our previous notice, '
-                f'a second violation results in permanent removal of peer evaluation access.'
-            )
-            _warning_box = (
-                f'You can no longer submit peer evaluations on Shutter League. '
-                f'This decision is permanent and cannot be appealed.'
-            )
-            _txt_warning = (
-                f'Your peer evaluation access has been permanently removed. '
-                f'This decision is final.'
-            )
-        else:
-            _subj      = 'Your peer evaluation comment has been removed — Shutter League'
-            _headline  = 'Your comment was removed — formal warning'
-            _body_para = (
-                f'A comment you left during a peer evaluation was flagged by the photographer and reviewed '
-                f'by our team. It violated Shutter League’s community guidelines and has been permanently removed.'
-            )
-            _warning_box = (
-                f'This is a formal warning. A second violation of this kind will result in permanent '
-                f'removal of your peer evaluation access with no further notice.'
-            )
-            _txt_warning = (
-                f'This is a formal warning. A second violation will permanently remove '
-                f'your peer evaluation access.'
-            )
-
-        send_email(
-            to_addresses=[_rater.email],
-            subject=_subj,
-            html_body=(
-                f'<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                f'<p style="font-family:\'Courier New\',monospace;font-size:15px;font-weight:700;letter-spacing:2px;'
-                f'text-transform:uppercase;color:#C0392B;margin:0 0 20px;">SHUTTER LEAGUE · COMMUNITY GUIDELINES</p>'
-                f'<p style="font-size:22px;font-weight:700;margin:0 0 16px;">{_headline}</p>'
-                f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Hi {_rname},</p>'
-                f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">{_body_para}</p>'
-                f'<p style="font-size:15px;line-height:1.7;background:#fef2f2;border-left:3px solid #C0392B;'
-                f'padding:12px 16px;margin:16px 0;">{_warning_box}</p>'
-                f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Peer evaluation comments must be '
-                f'constructive, respectful, and focused on the work.</p>'
-                f'<p style="font-size:15px;color:#8A8478;margin-top:24px;">Questions? '
-                f'<a href="mailto:support@shutterleague.com" style="color:#B8892A;">support@shutterleague.com</a>'
-                f'</p></div>'
-            ),
-            text_body=(
-                f'Hi {_rname},\n\n{_body_para}\n\n{_txt_warning}\n\nThe Shutter League Team'
-            )
-        )
-    except Exception as _me:
-        app.logger.error(f'[eval_flag remove rater email] {_me}')
-
-
-    _flash_msg = (
-        f'Flag #{flag_id} — comment removed, peer eval access permanently banned for {_rater.username}.'
-        if _is_ban else
-        f'Flag #{flag_id} — comment removed, strike 1 warning sent to {_rater.username}.'
-    )
-    flash(_flash_msg, 'success' if not _is_ban else 'warning')
-    return redirect(url_for('admin_dashboard'))
-
-
-@app.route('/admin/eval-flag/<int:flag_id>/warn-rater', methods=['POST'])
-@login_required
-@admin_required
-def admin_eval_flag_warn_rater(flag_id):
-    """Warn rater — comment stays, photographer notified it was reviewed, rater warned."""
-    row = _get_flag_row(flag_id)
-    if not row:
-        flash('Flag not found.', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    try:
-        db.session.execute(db.text(
-            "UPDATE eval_flags SET status='warned', resolved_at=NOW(), resolved_by=:uid, "
-            "admin_note='rater warned, comment retained' WHERE id=:fid"
-        ), {'uid': current_user.id, 'fid': flag_id})
-        db.session.commit()
-    except Exception as _e:
-        db.session.rollback()
-        flash(f'Could not update flag: {_e}', 'error')
-        return redirect(url_for('admin_dashboard'))
-
-    # Notify photographer — reviewed, warning issued
-    try:
-        _owner = User.query.get(row.owner_id)
-        if _owner:
-            _oname = _owner.full_name or _owner.username
-            send_email(
-                to_addresses=[_owner.email],
-                subject='Your flagged comment — Shutter League update',
-                html_body=(
-                    f'<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                    f'<p style="font-family:\'Courier New\',monospace;font-size:15px;font-weight:700;letter-spacing:2px;'
-                    f'text-transform:uppercase;color:#B8892A;margin:0 0 20px;">SHUTTER LEAGUE · PEER EVALUATION</p>'
-                    f'<p style="font-size:22px;font-weight:700;margin:0 0 16px;">We reviewed your flag</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Hi {_oname},</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">We reviewed the comment you flagged on your '
-                    f'<strong>{row.asset_name or "image"}</strong>. While the comment was borderline, we have issued a formal '
-                    f'warning to the evaluator. The comment has been noted on their record.</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Thank you for keeping Shutter League accountable.</p>'
-                    f'<p style="font-size:15px;color:#8A8478;margin-top:24px;">Questions? <a href="mailto:support@shutterleague.com" '
-                    f'style="color:#B8892A;">support@shutterleague.com</a></p></div>'
-                ),
-                text_body=(
-                    f'Hi {_oname},\n\nWe reviewed the comment you flagged on your image "{row.asset_name or "image"}". '
-                    f'We have issued a formal warning to the evaluator.\n\nThank you.\nThe Shutter League Team'
-                )
-            )
-    except Exception as _me:
-        app.logger.error(f'[eval_flag warn owner email] {_me}')
-
-    # Warn the rater
-    try:
-        _rater = User.query.get(row.rater_id)
-        if _rater:
-            _rname = _rater.full_name or _rater.username
-            send_email(
-                to_addresses=[_rater.email],
-                subject='Your peer evaluation comment — Shutter League',
-                html_body=(
-                    f'<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                    f'<p style="font-family:\'Courier New\',monospace;font-size:15px;font-weight:700;letter-spacing:2px;'
-                    f'text-transform:uppercase;color:#C0392B;margin:0 0 20px;">SHUTTER LEAGUE · COMMUNITY GUIDELINES</p>'
-                    f'<p style="font-size:22px;font-weight:700;margin:0 0 16px;">Formal warning</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Hi {_rname},</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">A comment you left during a peer evaluation '
-                    f'was flagged by the photographer and reviewed by our team. While it has not been removed, '
-                    f'it was found to be borderline and does not meet the standard we expect for peer feedback.</p>'
-                    f'<p style="font-size:15px;background:#fef2f2;border-left:3px solid #C0392B;padding:12px 16px;margin:16px 0;">'
-                    f'This is a formal warning. If further comments are flagged and upheld, '
-                    f'your peer evaluation privileges may be suspended.</p>'
-                    f'<p style="font-size:15px;line-height:1.7;color:#3a3a38;">Peer evaluation comments must be constructive, '
-                    f'respectful, and focused on the work.</p>'
-                    f'<p style="font-size:15px;color:#8A8478;margin-top:24px;">Questions? <a href="mailto:support@shutterleague.com" '
-                    f'style="color:#B8892A;">support@shutterleague.com</a></p></div>'
-                ),
-                text_body=(
-                    f'Hi {_rname},\n\nA comment you left during a peer evaluation was flagged and reviewed. '
-                    f'This is a formal warning. Further violations may result in suspension of your peer evaluation privileges.\n\n'
-                    f'The Shutter League Team'
-                )
-            )
-    except Exception as _me:
-        app.logger.error(f'[eval_flag warn rater email] {_me}')
-
-    flash(f'Flag #{flag_id} — rater warned, photographer notified.', 'success')
-    return redirect(url_for('admin_dashboard'))
-
-
 @app.route('/rate')
 @login_required
 def rate():
@@ -17184,12 +16810,6 @@ def rate():
     from sqlalchemy import extract
 
     user = current_user
-
-    # Peer eval conduct ban — permanently blocked after 2nd upheld flag
-    if getattr(user, 'peer_eval_banned', False):
-        flash('Your peer evaluation access has been permanently removed due to repeated community guideline violations.', 'error')
-        return redirect(url_for('dashboard'))
-
     user.reset_credits_if_needed()
     db.session.commit()
 
