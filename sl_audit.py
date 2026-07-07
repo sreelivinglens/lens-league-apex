@@ -526,7 +526,7 @@ def audit_html(filepath):
         'upload.html', 'upload_edited', 'bulk_upload',
         'onboarding_interests', 'onboarding.html', 'referral_landing',
         'dashboard.html', 'mission_detail.html', 'first_login.html',
-        'faq.html', 'pricing.html', 'programmes.html', 'redeem.html',
+        'faq.html', 'pricing.html', 'programmes.html', 'redeem.html', 'aea.html',
         'challenge.html',
         'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
         'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
