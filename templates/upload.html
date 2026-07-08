@@ -102,6 +102,7 @@
   }
   .drop-zone input[type="file"] {
     position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    z-index: 2;  /* sits above dz-icon/label so clicks hit the input directly */
   }
   .dz-icon { font-size: 3rem; margin-bottom: 14px; display: block; }
   .dz-label { font-size: 17px; color: var(--text-primary); margin-bottom: 6px; font-weight: 500; }
@@ -686,31 +687,36 @@
     ev.preventDefault(); dropZone.classList.add('dragover');
   }));
   dropZone.addEventListener('dragleave', ev => {
-    // Only remove highlight when leaving the dropzone itself, not a child element
     if (!dropZone.contains(ev.relatedTarget)) {
       dropZone.classList.remove('dragover');
     }
   });
   dropZone.addEventListener('drop', ev => {
-    ev.preventDefault(); dropZone.classList.remove('dragover');
+    ev.preventDefault();
+    dropZone.classList.remove('dragover');
+    const f = ev.dataTransfer.files[0];
+    if (!f) return;
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      fileInput.files = dt.files;
+    } catch(_) {}
+    handleFile(f);
   });
-  dropZone.addEventListener('drop', e => {
-    const f = e.dataTransfer.files[0];
-    if (f) {
-      // fileInput.files is read-only — must use DataTransfer to assign
-      try {
-        const dt = new DataTransfer();
-        dt.items.add(f);
-        fileInput.files = dt.files;
-      } catch(_) {
-        // DataTransfer not supported (old Safari) — handleFile still works for preview;
-        // form submit will re-read from input. No silent failure.
-      }
-      handleFile(f);
-    }
+
+  // ── Click to browse — explicit trigger for iOS Safari reliability ──────
+  // input[type=file] is opacity:0 absolute — direct click on it works on desktop
+  // but on some iOS versions the change event doesn't fire. Explicit trigger fixes this.
+  dropZone.addEventListener('click', function(ev) {
+    // Don't re-trigger if the click came from the input itself
+    if (ev.target === fileInput) return;
+    fileInput.click();
   });
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+
+  // ── File selected via browser dialog ─────────────────────────────────
+  fileInput.addEventListener('change', function() {
+    const f = this.files[0];
+    if (f) handleFile(f);
   });
 
   function handleFile(file) {
