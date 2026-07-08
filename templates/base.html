@@ -489,13 +489,11 @@ table { max-width: none; }
   .sl-hero-body { display: none; }   /* hidden on mobile — keeps it clean */
   .sl-hero-tagline { display: none; }
   .sl-hero-gold-rule { margin-bottom: 14px; }
-  /* Credit pill stays on the image on mobile */
+  /* Credit — mobile: clean text, stays on image */
   .sl-hero-credit-pill {
     font-size: 13px;
-    padding: 1px 6px 2px;
-    max-width: 120px;
-    right: 10px;
-    bottom: 6px;
+    right: 12px;
+    bottom: 10px;
   }
 }
 
@@ -1480,27 +1478,20 @@ img {
 
 /* ── Photographer credit pill (shared — all hero pages) ────────────── */
 .sl-hero-credit-pill {
+  /* Matches index.html credit treatment — no box, no blur, pure text */
   position: absolute;
-  bottom: 12px;
-  right: 12px;
-  z-index: 4;
-  display: inline-flex;
+  bottom: 20px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(10,8,6,0.46);
-  color: rgba(255,255,255,0.88);
+  gap: 6px;
+  pointer-events: none;
   font-size: 13px;
   font-weight: 400;
-  letter-spacing: 0.06em;
-  padding: 3px 10px 4px;
-  border-radius: 3px;
+  color: rgba(255,255,255,0.70);
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  pointer-events: none;
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
-  border: 0.5px solid rgba(255,255,255,0.18);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.70);
-  text-align: center;
 }
 .sl-hero-img-wrap {
   position: absolute;
@@ -1517,9 +1508,8 @@ img {
   }
   .sl-hero-credit-pill {
     font-size: 13px;
-    padding: 2px 8px 3px;
-    right: 10px;
-    bottom: 8px;
+    right: 12px;
+    bottom: 10px;
   }
 }
 </style>
