@@ -928,7 +928,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
       onerror="this.style.display='none'"
     >
     {% if poty_hero and poty_hero.photographer_name %}
-    <span class="sl-hero-credit-pill">&copy; {{ poty_hero.photographer_name }}{% if poty_hero.score %} &middot; {{ '%.2f'|format(poty_hero.score) }}{% endif %}</span>
+    <span style="position:absolute;bottom:12px;right:14px;z-index:4;color:#F5C518;font-size:14px;font-weight:600;letter-spacing:0.04em;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,0.70);">{{ poty_hero.photographer_name }}{%- if poty_hero.score %} &middot; {{ '%.2f'|format(poty_hero.score) }}{%- endif %}</span>
     {% endif %}
     </div>
     {% endif %}
