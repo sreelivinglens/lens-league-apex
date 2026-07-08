@@ -88,6 +88,9 @@
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* Keyboard accessibility — visible focus ring for keyboard nav, hidden on mouse */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid #F5C518; outline-offset: 3px; border-radius: 2px; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
 body {
   background: #F7F5F2;
@@ -263,14 +266,247 @@ table { max-width: none; }
   background: #D9A900;
   transform: scale(1.05);
 }
-/* Add padding so page content clears the tab bar — homepage excluded (full-bleed hero) */
-/* Only fires on mobile (<=900px) where the bottom tab bar replaces the top nav */
-@media (max-width: 900px) {
-  body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SHARED HERO SYSTEM — sl-hero-*
+   Session 132 · 8 July 2026
+   All 7 hero-bearing pages use these shared classes in addition to their
+   own page-specific classes. Fix here = fixed everywhere. Never edit
+   individual page hero CSS for these properties — edit here only.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Container ─────────────────────────────────────────────────────── */
+.sl-hero {
+  position: relative;
+  width: 100%;
+  height: 520px;           /* fixed — no resize, no clamp, no auto */
+  max-height: 520px;
+  background: #0D0D0B;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
 }
-/* Hide bottom tab bar on desktop */
-@media (min-width: 901px) {
+
+/* ── Image ─────────────────────────────────────────────────────────── */
+.sl-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Bias above centre — catches subjects in lower-third without showing
+     only sky. 35% from top is the sweet spot for landscape-orientation
+     photos across all genres: wildlife on ground, people at eye level,
+     architecture, street. Only portrait images need override — but we
+     never use portrait images on heroes. */
+  object-position: center 35%;
+  display: block;
+}
+.sl-hero-img[src=""],
+.sl-hero-img:not([src]) { display: none; }
+
+/* ── Gradient fade — always left-to-right, always reliable ─────────── */
+/* Strong dark left for text legibility regardless of image tone.
+   The left zone (0–55%) is always readable — this is where copy lives.
+   Right zone fades to show the image. Never use rgba < 0.70 on left. */
+.sl-hero-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to right,
+      rgba(13,13,11,0.88) 0%,
+      rgba(13,13,11,0.72) 40%,
+      rgba(13,13,11,0.40) 65%,
+      rgba(13,13,11,0.10) 100%
+    );
+}
+
+/* ── Content block ─────────────────────────────────────────────────── */
+/* Transparent background — the gradient provides the dark zone.
+   Content block must always sit within the dark left zone (≤55% of width). */
+.sl-hero-content {
+  position: absolute;
+  z-index: 2;
+  bottom: 28px;
+  left: clamp(24px, 5vw, 64px);
+  width: clamp(280px, 38vw, 440px);  /* scales with viewport, never overflows */
+  max-width: 440px;
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Typography ────────────────────────────────────────────────────── */
+.sl-hero-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 10px;
+}
+.sl-hero-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.sl-hero-h1 {
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+  /* Prevent very long H1s from overflowing the content block */
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.sl-hero-h1 em,
+.sl-hero-h1 span.gold { font-style: normal; color: #F5C518; }
+
+.sl-hero-body {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.80);
+  line-height: 1.65;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.50);
+  margin-bottom: 0;
+}
+.sl-hero-body p { margin-bottom: 8px; }
+.sl-hero-body p:last-child { margin-bottom: 0; }
+
+.sl-hero-tagline {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 12px;
+}
+
+/* ── Photographer credit pill ──────────────────────────────────────── */
+/* Anchored to the image corner via .sl-hero-img-wrap (position:relative).
+   Works on all backgrounds including B&W, monochrome, desaturated:
+   - Dark semi-opaque background
+   - White border ring for contrast on near-white images
+   - Truncated at max-width so long names don't overflow
+   - blur() adds readability on any background tone */
+.sl-hero-credit-pill {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  z-index: 4;
+  background: rgba(0,0,0,0.82);
+  color: rgba(255,255,255,0.95);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 3px 10px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  /* Ring works on both light and dark backgrounds */
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.18), 0 2px 6px rgba(0,0,0,0.45);
+}
+
+/* ── Image wrapper — anchors credit pill to image corner ───────────── */
+.sl-hero-img-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  line-height: 0;
+}
+
+/* ── Tablet (769–900px) ─────────────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-hero {
+    height: 420px;
+    max-height: 420px;
+  }
+  .sl-hero-content {
+    width: clamp(260px, 45vw, 380px);
+    padding: 20px 22px 24px;
+    bottom: 20px;
+  }
+  .sl-hero-h1 { font-size: clamp(20px, 2.8vw, 26px); }
+}
+
+/* ── Mobile (≤768px) ────────────────────────────────────────────────── */
+/* Image on top at 16:9. Content block below on solid dark background.
+   No text overlaid on image on mobile — ever.
+   This eliminates ALL mobile copy visibility issues in one rule. */
+@media (max-width: 768px) {
+  .sl-hero {
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sl-hero-img-wrap {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    line-height: 0;
+  }
+  .sl-hero-img {
+    position: static;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: center 35%;
+    display: block;
+  }
+  .sl-hero-fade { display: none; }
+  .sl-hero-content {
+    position: static;
+    width: 100%;
+    max-width: none;
+    background: #1A1A18;   /* solid dark — guaranteed readable on any screen */
+    padding: 20px 20px 24px;
+    bottom: auto;
+    left: auto;
+    display: block;
+  }
+  .sl-hero-h1 {
+    font-size: 22px;
+    text-shadow: none;
+    margin-bottom: 0;
+  }
+  .sl-hero-eyebrow { text-shadow: none; }
+  .sl-hero-body { display: none; }   /* hidden on mobile — keeps it clean */
+  .sl-hero-tagline { display: none; }
+  .sl-hero-gold-rule { margin-bottom: 14px; }
+  /* Credit pill stays on the image on mobile */
+  .sl-hero-credit-pill {
+    font-size: 13px;
+    padding: 2px 7px 3px;
+    max-width: 160px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   END SHARED HERO SYSTEM
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Add padding so page content clears the tab bar — homepage excluded (full-bleed hero) */
+body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+/* Hide on desktop */
+@media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
+  body { padding-top: 0; }
 }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
