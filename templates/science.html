@@ -58,15 +58,15 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
 }
 
 /* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-sci-hero {
-  position: relative; width: 100%; height: 480px; max-height: 480px;
+.sl-sci-hero{
+  position: relative; width: 100%; max-
   background: #1A2744; overflow: hidden;
 }
 .sl-sci-hero-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: center; display: block;
+  object-fit: cover; display: block;
 }
-.sl-sci-hero-fade { position: absolute; inset: 0; background: linear-gradient(to right, rgba(13,13,11,0.78) 0%, rgba(13,13,11,0.45) 65%, rgba(13,13,11,0.20) 100%); }
+.sl-sci-hero-fade { position: absolute; inset: 0; }
 .sl-sci-hero-content {
   position: absolute; z-index: 2;
   padding: 28px 36px 32px; width: 420px;
@@ -271,10 +271,10 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
 }
 @media (max-width: 768px) {
   a[href], button { min-height: 44px; }
-  .sl-sci-hero { height: auto; max-height: none; flex-direction: column; }
+  .sl-sci-hero{ max- flex-direction: column; }
   .sl-sci-hero-img { position: static; width: 100%; aspect-ratio: 16/9; height: auto; display: block; }
   .sl-sci-hero-fade { display: none; }
-  .sl-sci-hero-content { position: static; background: rgba(13,11,8,0.55); margin: 0; padding: 16px 16px 24px; width: 100%; max-width: none; display: block; }
+  .sl-sci-hero-content { position: static; margin: 0; padding: 16px 16px 24px; width: 100%; max-width: none; display: block; }
   .sl-sci-hero-h1 { font-size: 24px; margin-bottom: 0; text-shadow: none; }
   .sl-sci-hero-body { display: none; }
   .sl-sci-sec { padding: 48px 20px; }
@@ -359,10 +359,10 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
 <div class="sl-sci">
 
   <!-- ── HERO ─────────────────────────────────────────────────────── -->
-  <section class="sl-sci-hero">
+  <section class="sl-sci-hero sl-hero">
     {% if sci_hero and sci_hero.thumb_url %}
-    <div class="sl-hero-img-wrap">
-    <img class="sl-sci-hero-img" src="{{ sci_hero.thumb_url }}"
+    <div class="sl-hero-img-wrap sl-hero-img-wrap-inner">
+    <img class="sl-sci-hero-img sl-hero-img" src="{{ sci_hero.thumb_url }}"
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'">
     {% if sci_hero.photographer_name %}
@@ -370,10 +370,10 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
     {% endif %}
     </div>
     {% endif %}
-    <div class="sl-sci-hero-fade"></div>
-    <div class="sl-sci-hero-content">
+    <div class="sl-sci-hero-fade sl-hero-fade"></div>
+    <div class="sl-sci-hero-content sl-hero-content">
       <span class="sl-sci-ddi-tag">Depth Dimension Index</span>
-      <h1 class="sl-sci-hero-h1">Beyond opinion.<br>Toward photographic<br><em>understanding.</em></h1>
+      <h1 class="sl-sci-hero-h1 sl-hero-h1">Beyond opinion.<br>Toward photographic<br><em>understanding.</em></h1>
       <p class="sl-sci-hero-body hero-sub">Five dimensions. One consistent standard. An evaluation that tells you what worked, what didn't, and what to practise — not just what someone thought of your photograph.</p>
       <p class="sl-sci-hero-body hero-sub" style="margin-top:10px; opacity:0.85;">A platform that remembers every image — and guides what you make next.</p>
     </div>
