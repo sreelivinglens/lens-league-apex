@@ -102,7 +102,7 @@
   }
   .drop-zone input[type="file"] {
     position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    z-index: 2;  /* sits above dz-icon/label so clicks hit the input directly */
+    z-index: 2;
   }
   .dz-icon { font-size: 3rem; margin-bottom: 14px; display: block; }
   .dz-label { font-size: 17px; color: var(--text-primary); margin-bottom: 6px; font-weight: 500; }
@@ -435,14 +435,14 @@
         <span class="field-label">Shot On <span style="color:var(--red);font-size:16px;">*</span></span>
         <div class="shot-on-options">
           <div class="shot-on-option">
-            <input type="radio" id="track_camera" name="camera_track" value="camera">
+            <input type="radio" id="track_camera" name="camera_track" value="camera"{% if subscription_track == 'camera' %} checked{% endif %}>
             <label for="track_camera">
               <span class="shot-icon">📷</span>
               <span class="shot-text">Camera<small>DSLR · Mirrorless · Film</small></span>
             </label>
           </div>
           <div class="shot-on-option">
-            <input type="radio" id="track_mobile" name="camera_track" value="mobile">
+            <input type="radio" id="track_mobile" name="camera_track" value="mobile"{% if subscription_track == 'mobile' %} checked{% endif %}>
             <label for="track_mobile">
               <span class="shot-icon">📱</span>
               <span class="shot-text">Mobile<small>iPhone · Android · Smartphone</small></span>
@@ -687,33 +687,24 @@
     ev.preventDefault(); dropZone.classList.add('dragover');
   }));
   dropZone.addEventListener('dragleave', ev => {
-    if (!dropZone.contains(ev.relatedTarget)) {
-      dropZone.classList.remove('dragover');
-    }
+    if (!dropZone.contains(ev.relatedTarget)) dropZone.classList.remove('dragover');
   });
   dropZone.addEventListener('drop', ev => {
     ev.preventDefault();
     dropZone.classList.remove('dragover');
     const f = ev.dataTransfer.files[0];
     if (!f) return;
-    try {
-      const dt = new DataTransfer();
-      dt.items.add(f);
-      fileInput.files = dt.files;
-    } catch(_) {}
+    try { const dt = new DataTransfer(); dt.items.add(f); fileInput.files = dt.files; } catch(e) {}
     handleFile(f);
   });
 
-  // ── Click to browse — explicit trigger for iOS Safari reliability ──────
-  // input[type=file] is opacity:0 absolute — direct click on it works on desktop
-  // but on some iOS versions the change event doesn't fire. Explicit trigger fixes this.
+  // ── Click to browse — explicit trigger (fixes iOS Safari opacity:0 input) ──
   dropZone.addEventListener('click', function(ev) {
-    // Don't re-trigger if the click came from the input itself
     if (ev.target === fileInput) return;
+    fileInput.value = '';
     fileInput.click();
   });
 
-  // ── File selected via browser dialog ─────────────────────────────────
   fileInput.addEventListener('change', function() {
     const f = this.files[0];
     if (f) handleFile(f);
