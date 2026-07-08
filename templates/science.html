@@ -373,7 +373,7 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'">
     {% if sci_hero.photographer_name %}
-    <span class="sl-hero-credit-pill">&copy; {{ sci_hero.photographer_name }}{% if sci_hero.score %} &middot; {{ '%.2f'|format(sci_hero.score) }}{% endif %}</span>
+    <span style="position:absolute;bottom:12px;right:14px;z-index:4;color:#F5C518;font-size:14px;font-weight:600;letter-spacing:0.04em;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,0.70);">{{ sci_hero.photographer_name }}{%- if sci_hero.score %} &middot; {{ '%.2f'|format(sci_hero.score) }}{%- endif %}</span>
     {% endif %}
     </div>
     {% endif %}
@@ -580,7 +580,7 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
           alt="Shutter League community photograph — highly evaluated image"
           onerror="this.style.display='none'">
         {% if sci_mid.photographer_name %}
-        <span class="sl-sci-credit">© {{ sci_mid.photographer_name }}</span>
+        <span class="sl-sci-credit">{{ sci_mid.photographer_name }}</span>
         {% endif %}
         {% endif %}
       </div>
@@ -671,7 +671,7 @@ body.page-science main { padding: 0 !important; max-width: none !important; marg
           alt="Shutter League — photographic excellence"
           onerror="this.style.display='none'">
         {% if sci_cta.photographer_name %}
-        <span class="sl-sci-credit">© {{ sci_cta.photographer_name }}</span>
+        <span class="sl-sci-credit">{{ sci_cta.photographer_name }}</span>
         {% endif %}
         {% endif %}
       </div>
