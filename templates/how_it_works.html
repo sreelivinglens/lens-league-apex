@@ -30,11 +30,10 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 }
 
 /* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-hiw-hero {
+.sl-hiw-hero{
   position: relative;
   width: 100%;
-  height: 480px;
-  max-height: 480px;
+  max-
   background: #0D0D0B;
   display: flex;
   align-items: flex-end;
@@ -47,7 +46,6 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
   display: block;
 }
 .sl-hiw-hero-img[src=""],
@@ -57,7 +55,6 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 .sl-hiw-hero-fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(13,13,11,0.78) 0%, rgba(13,13,11,0.45) 65%, rgba(13,13,11,0.20) 100%);
   text-shadow: none;
 }
 .sl-hiw-hero-content {
@@ -67,7 +64,6 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   width: 380px;
   display: flex;
   flex-direction: column;
-  background: rgba(13,11,8,0.12);
   
   margin: 0 64px;
   bottom: 15px;
@@ -461,9 +457,8 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   a[href], button { min-height: 44px; }
 
   /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
-  .sl-hiw-hero {
-    height: auto;
-    max-height: none;
+  .sl-hiw-hero{
+    max-
     flex-direction: column;
     align-items: flex-end;
   }
@@ -473,7 +468,6 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
     aspect-ratio: 16 / 9;
     height: auto;
     object-fit: cover;
-    object-position: center;
     display: block;
   }
   .sl-hiw-hero-fade {
@@ -481,7 +475,6 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   }
   .sl-hiw-hero-content {
     position: static;
-    background: rgba(13,11,8,0.55);
     margin: 0;
     padding: 12px 16px 20px;
     width: 100%;
@@ -713,11 +706,11 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 <div class="sl-hiw">
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
-  <section class="sl-hiw-hero">
+  <section class="sl-hiw-hero sl-hero">
     {% if hiw_hero and hiw_hero.thumb_url %}
     <div class="sl-hero-img-wrap">
     <img
-      class="sl-hiw-hero-img"
+      class="sl-hiw-hero-img sl-hero-img"
       src="{{ hiw_hero.thumb_url }}"
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
@@ -726,12 +719,11 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
     <span class="sl-hero-credit-pill">&copy; {{ hiw_hero.photographer_name }}{% if hiw_hero.score %} &middot; {{ '%.2f'|format(hiw_hero.score) }}{% endif %}</span>
     {% endif %}
     </div>
-    {% endif %}
-    <div class="sl-hiw-hero-fade"></div>
-    <div class="sl-hiw-hero-content">
+    <div class="sl-hiw-hero-fade sl-hero-fade"></div>
+    <div class="sl-hiw-hero-content sl-hero-content">
       <p class="sl-hiw-eyebrow">How It Works</p>
       <div class="sl-hiw-gold-rule"></div>
-      <h1 class="sl-hiw-hero-h1">How it works</h1>
+      <h1 class="sl-hiw-hero-h1 sl-hero-h1">How it works</h1>
       <p class="sl-hiw-hero-tagline">HONEST FEEDBACK. REAL IMPROVEMENT.</p>
       <p class="sl-hiw-hero-sub">A platform that remembers every image — and guides what you make next. Here's how the journey works.</p>
     </div>
