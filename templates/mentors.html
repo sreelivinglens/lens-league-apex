@@ -30,11 +30,10 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 }
 
 /* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-men-hero {
+.sl-men-hero{
   position: relative;
   width: 100%;
-  height: 480px;
-  max-height: 480px;
+  max-
   background: #0D0D0B;
   display: flex;
   align-items: flex-end-end;
@@ -46,7 +45,6 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
   display: block;
 }
 .sl-men-hero-img[src=""],
@@ -56,7 +54,6 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 .sl-men-hero-fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(13,13,11,0.78) 0%, rgba(13,13,11,0.45) 65%, rgba(13,13,11,0.20) 100%);
 }
 .sl-men-hero-content {
   position: absolute;
@@ -65,7 +62,6 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   width: 380px;
   display: flex;
   flex-direction: column;
-  background: rgba(13,11,8,0.12);
   
   margin: 0 64px;
   bottom: 15px;
@@ -477,7 +473,7 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 /* ── iPad 900px ── */
 @media (min-width: 769px) and (max-width: 900px) {
-  .sl-men-hero { align-items: flex-end-end; }
+  .sl-men-hero{ align-items: flex-end-end; }
   .sl-men-hero-content {
     width: 360px;
     padding: 20px 24px 24px;
@@ -489,9 +485,8 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 @media (max-width: 768px) {
 
   /* HERO */
-  .sl-men-hero {
-    height: auto;
-    max-height: none;
+  .sl-men-hero{
+    max-
     flex-direction: column;
     align-items: flex-end;
   }
@@ -508,7 +503,6 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   }
   .sl-men-hero-content {
     position: static;
-    background: rgba(13,11,8,0.55);
     margin: 0;
     padding: 12px 16px 20px;
     width: 100%;
@@ -674,11 +668,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 <div class="sl-men">
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
-  <section class="sl-men-hero">
+  <section class="sl-men-hero sl-hero">
     {% if men_hero and men_hero.thumb_url %}
     <div class="sl-hero-img-wrap">
     <img
-      class="sl-men-hero-img"
+      class="sl-men-hero-img sl-hero-img"
       src="{{ men_hero.thumb_url }}"
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
@@ -688,11 +682,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
     {% endif %}
     </div>
     {% endif %}
-    <div class="sl-men-hero-fade"></div>
-    <div class="sl-men-hero-content">
+    <div class="sl-men-hero-fade sl-hero-fade"></div>
+    <div class="sl-men-hero-content sl-hero-content">
       <p class="sl-men-eyebrow">Mentors</p>
       <div class="sl-men-gold-rule"></div>
-      <h1 class="sl-men-hero-h1">More than an evaluation.<br>A perspective that<br>helps you grow.</h1>
+      <h1 class="sl-men-hero-h1 sl-hero-h1">More than an evaluation.<br>A perspective that<br>helps you grow.</h1>
       <div class="sl-men-hero-body">
         <p>Your image receives an honest evaluation. But improvement comes from understanding why.</p>
         <p>That's where mentors make the difference.</p>
