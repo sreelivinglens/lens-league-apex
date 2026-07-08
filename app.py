@@ -10520,9 +10520,12 @@ def admin_dashboard():
     scored       = Image.query.filter_by(status='scored').count()
     pending      = Image.query.filter_by(status='pending').count()
 
-    admin_q    = request.args.get('q', '').strip()
-    admin_page = request.args.get('page', 1, type=int)
-    img_query  = Image.query.order_by(Image.created_at.desc())
+    admin_q     = request.args.get('q', '').strip()
+    admin_track = request.args.get('track', 'all').strip().lower()
+    if admin_track not in ('mobile', 'camera', 'all'):
+        admin_track = 'all'
+    admin_page  = request.args.get('page', 1, type=int)
+    img_query   = Image.query.order_by(Image.created_at.desc())
     if admin_q:
         img_query = img_query.join(User, User.id == Image.user_id).filter(
             db.or_(
@@ -10532,6 +10535,13 @@ def admin_dashboard():
                 User.username.ilike(f'%{admin_q}%'),
                 User.full_name.ilike(f'%{admin_q}%'),
             )
+        )
+    # Session 132 — Mobile DDI: filter image list by track
+    if admin_track == 'mobile':
+        img_query = img_query.filter(Image.camera_track == 'mobile')
+    elif admin_track == 'camera':
+        img_query = img_query.filter(
+            db.or_(Image.camera_track == 'camera', Image.camera_track == None)
         )
     recent_pages = img_query.paginate(page=admin_page, per_page=40, error_out=False)
     recent       = recent_pages.items
@@ -10687,7 +10697,8 @@ def admin_dashboard():
 
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
-                           recent_pages=recent_pages, admin_q=admin_q, recent_users=recent_users,
+                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track,
+                           recent_users=recent_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
                            all_users=all_users, open_reports_count=open_reports_count,
                            suspended_users=suspended_users, mismatch_users=mismatch_users,
