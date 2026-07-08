@@ -390,34 +390,25 @@ table { max-width: none; }
   margin-bottom: 12px;
 }
 
-/* ── Photographer credit pill ──────────────────────────────────────── */
-/* Anchored to the image corner via .sl-hero-img-wrap (position:relative).
-   Works on all backgrounds including B&W, monochrome, desaturated:
-   - Dark semi-opaque background
-   - White border ring for contrast on near-white images
-   - Truncated at max-width so long names don't overflow
-   - blur() adds readability on any background tone */
+/* ── Photographer credit — plain gold text, no pill ────────────────── */
+/* Anchored to image corner via .sl-hero-img-wrap (position:relative).
+   Gold #F5C518 on dark hero context. Text-shadow for legibility on
+   any image tone. No background, no border, no blur. */
 .sl-hero-credit-pill {
   position: absolute;
-  bottom: 10px;
-  right: 12px;
+  bottom: 12px;
+  right: 14px;
   z-index: 4;
-  background: rgba(10,8,6,0.48);
-  color: rgba(255,255,255,0.90);
-  font-size: 11px;
-  font-weight: 400;
+  color: #F5C518;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: 0.04em;
-  padding: 2px 7px 3px;
-  border-radius: 3px;
   white-space: nowrap;
-  max-width: 160px;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 0.5px solid rgba(255,255,255,0.22);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.60);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.70);
 }
 
 /* ── Image wrapper — anchors credit pill to image corner ───────────── */
@@ -489,9 +480,9 @@ table { max-width: none; }
   .sl-hero-body { display: none; }   /* hidden on mobile — keeps it clean */
   .sl-hero-tagline { display: none; }
   .sl-hero-gold-rule { margin-bottom: 14px; }
-  /* Credit — mobile: clean text, stays on image */
+  /* Credit — mobile: gold text on image, 14px for 70yr rule */
   .sl-hero-credit-pill {
-    font-size: 13px;
+    font-size: 14px;
     right: 12px;
     bottom: 10px;
   }
@@ -1476,22 +1467,24 @@ img {
 /* First accordion open by default via HTML open attribute — all others collapsed */
 
 
-/* ── Photographer credit pill (shared — all hero pages) ────────────── */
+/* ── Photographer credit — plain gold text (shared — all hero pages) ── */
+/* Second definition intentionally overrides first for cascade safety.
+   Gold, 14px, no pill, no blur — consistent across all banners. */
 .sl-hero-credit-pill {
-  /* Matches index.html credit treatment — no box, no blur, pure text */
   position: absolute;
-  bottom: 20px;
-  right: 24px;
+  bottom: 12px;
+  right: 14px;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   pointer-events: none;
-  font-size: 13px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.70);
+  font-size: 14px;
+  font-weight: 600;
+  color: #F5C518;
   letter-spacing: 0.04em;
   white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.70);
 }
 .sl-hero-img-wrap {
   position: absolute;
@@ -1507,7 +1500,7 @@ img {
     width: 100%;
   }
   .sl-hero-credit-pill {
-    font-size: 13px;
+    font-size: 14px;
     right: 12px;
     bottom: 10px;
   }
