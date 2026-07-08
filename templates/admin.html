@@ -382,6 +382,34 @@
         {% endif %}
       </form>
 
+      {# Session 132 — Mobile DDI: track filter #}
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted);">Track</span>
+        <a href="{{ url_for('admin_dashboard', q=admin_q or '', track='all') }}"
+           style="padding:4px 14px; border-radius:20px; font-size:13px; font-weight:600; text-decoration:none; border:1px solid;
+             {% if not admin_track or admin_track == 'all' %}background:#1A1A18; color:#F5C518; border-color:#1A1A18;
+             {% else %}background:var(--surface-2); color:var(--text-secondary); border-color:var(--border);{% endif %}">
+          All
+        </a>
+        <a href="{{ url_for('admin_dashboard', q=admin_q or '', track='mobile') }}"
+           style="padding:4px 14px; border-radius:20px; font-size:13px; font-weight:600; text-decoration:none; border:1px solid;
+             {% if admin_track == 'mobile' %}background:#1A1A18; color:#F5C518; border-color:#1A1A18;
+             {% else %}background:var(--surface-2); color:var(--text-secondary); border-color:var(--border);{% endif %}">
+          📱 Mobile
+        </a>
+        <a href="{{ url_for('admin_dashboard', q=admin_q or '', track='camera') }}"
+           style="padding:4px 14px; border-radius:20px; font-size:13px; font-weight:600; text-decoration:none; border:1px solid;
+             {% if admin_track == 'camera' %}background:#1A1A18; color:#F5C518; border-color:#1A1A18;
+             {% else %}background:var(--surface-2); color:var(--text-secondary); border-color:var(--border);{% endif %}">
+          📷 Camera
+        </a>
+        {% if admin_track and admin_track != 'all' %}
+        <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-left:4px;">
+          {{ recent_pages.total }} image{{ 's' if recent_pages.total != 1 else '' }}
+        </span>
+        {% endif %}
+      </div>
+
       <form id="bulkForm" onsubmit="return false;">
         <div class="bulk-bar">
 
@@ -482,8 +510,18 @@
                 <span>{{ img.genre or '—' }}</span>
                 <span>{{ img.created_at.strftime('%d %b') }}</span>
               </div>
-              <div style="font-family:var(--font-mono); font-size:13px; color:#1a1a18; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                @{{ recent_users.get(img.user_id, img.user_id) }}
+              <div style="font-family:var(--font-mono); font-size:13px; color:#1a1a18; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:5px;">
+                <span>@{{ recent_users.get(img.user_id, img.user_id) }}</span>
+                {%- if img.camera_track == 'mobile' %}
+                <span style="background:#1A1A18; color:#F5C518; font-size:13px; padding:1px 5px; border-radius:3px; font-weight:700; flex-shrink:0;">📱</span>
+                {%- elif img.camera_track == 'camera' %}
+                <span style="background:#F5F0E8; color:#4A4840; font-size:13px; padding:1px 5px; border-radius:3px; border:0.5px solid #E0D8C8; font-weight:700; flex-shrink:0;">📷</span>
+                {%- endif %}
+                {%- if img.exif_verified == True %}
+                <span style="color:#2A7A3A; font-size:13px;" title="EXIF verified">✓</span>
+                {%- elif img.exif_verified == False %}
+                <span style="color:#C0392B; font-size:13px;" title="EXIF absent — track from declaration">⚠</span>
+                {%- endif %}
               </div>
               <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
                 <div class="admin-tile-score">{{ img.score or '—' }}</div>
@@ -588,14 +626,14 @@
       {% if recent_pages.pages > 1 %}
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
         {% if recent_pages.has_prev %}
-        <a href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q) }}"
+        <a href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q, track=admin_track) }}"
            style="font-family:var(--font-mono); font-size:13px; padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; color:var(--text-primary);">← Prev</a>
         {% endif %}
         <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">
           Page {{ recent_pages.page }} of {{ recent_pages.pages }} &nbsp;·&nbsp; {{ recent_pages.total }} images
         </span>
         {% if recent_pages.has_next %}
-        <a href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q) }}"
+        <a href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q, track=admin_track) }}"
            style="font-family:var(--font-mono); font-size:13px; padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; color:var(--text-primary);">Next →</a>
         {% endif %}
       </div>
