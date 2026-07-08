@@ -553,12 +553,17 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
   <!-- ── HERO ──────────────────────────────────────────────────── -->
   <section class="sl-bow-hero sl-hero">
     {% if bow_hero and bow_hero.thumb_url %}
-    <img
-      class="sl-bow-hero-img sl-hero-img"
-      src="{{ bow_hero.thumb_url }}"
-      alt="Photograph by a Shutter League member — Master level or above"
-      onerror="this.style.display='none'"
-    >
+    <div class="sl-hero-img-wrap">
+      <img
+        class="sl-bow-hero-img sl-hero-img"
+        src="{{ bow_hero.thumb_url }}"
+        alt="Photograph by a Shutter League member — Master level or above"
+        onerror="this.style.display='none'"
+      >
+      {% if bow_hero.photographer_name %}
+      <span class="sl-hero-credit-pill">&copy; {{ bow_hero.photographer_name }}{% if bow_hero.score %} &middot; {{ '%.2f'|format(bow_hero.score) }}{% endif %}</span>
+      {% endif %}
+    </div>
     {% endif %}
     <div class="sl-bow-hero-fade sl-hero-fade"></div>
     <div class="sl-bow-hero-content sl-hero-content">
