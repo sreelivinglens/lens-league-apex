@@ -561,7 +561,7 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
         onerror="this.style.display='none'"
       >
       {% if bow_hero.photographer_name %}
-      <span class="sl-hero-credit-pill">&copy; {{ bow_hero.photographer_name }}{% if bow_hero.score %} &middot; {{ '%.2f'|format(bow_hero.score) }}{% endif %}</span>
+      <span style="position:absolute;bottom:12px;right:14px;z-index:4;color:#FFD700;font-size:14px;font-weight:700;letter-spacing:0.04em;pointer-events:none;">{{ bow_hero.photographer_name }}{%- if bow_hero.score %} &middot; {{ '%.2f'|format(bow_hero.score) }}{%- endif %}</span>
       {% endif %}
     </div>
     {% endif %}
