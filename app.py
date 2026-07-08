@@ -7343,6 +7343,7 @@ def upload():
                                {k: list(v) for k, v in SUBGENRE_MAP.items()}
                            ),
                            last_location=_last_location,
+                           subscription_track=getattr(current_user, 'subscription_track', '') or '',
                            mission_dimension=request.args.get('mission_dimension', ''),
                            curriculum_principle_id=request.args.get('curriculum_principle_id', ''),
                            mission_title=request.args.get('mission_title', ''),
