@@ -136,9 +136,17 @@
   .exif-note strong { color: #2C3E6B; }
 
   .shot-on-group { margin-top: 24px; margin-bottom: 0; }
+  .shot-on-group {
+    background: #FFFBF0;
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+  }
   .shot-on-group .field-label {
-    display: block; font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-    letter-spacing: 2px; color: #2C3E6B; text-transform: uppercase; margin-bottom: 10px;
+    display: block; font-family: var(--font-mono); font-size: 16px; font-weight: 700;
+    letter-spacing: 2px; color: #1A1A18; text-transform: uppercase; margin-bottom: 10px;
   }
   .shot-on-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .shot-on-option { position: relative; min-width: 0; }
@@ -422,6 +430,27 @@
         <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 20 MB &nbsp;·&nbsp; Min 1500px on the shorter side &nbsp;·&nbsp; Resize to 2000px before uploading</div>
       </div>
 
+      <div class="form-group shot-on-group">
+        <span class="field-label">Shot On <span style="color:var(--red);font-size:16px;">*</span></span>
+        <div class="shot-on-options">
+          <div class="shot-on-option">
+            <input type="radio" id="track_camera" name="camera_track" value="camera">
+            <label for="track_camera">
+              <span class="shot-icon">📷</span>
+              <span class="shot-text">Camera<small>DSLR · Mirrorless · Film</small></span>
+            </label>
+          </div>
+          <div class="shot-on-option">
+            <input type="radio" id="track_mobile" name="camera_track" value="mobile">
+            <label for="track_mobile">
+              <span class="shot-icon">📱</span>
+              <span class="shot-text">Mobile<small>iPhone · Android · Smartphone</small></span>
+            </label>
+          </div>
+        </div>
+        <div class="shot-on-required-hint" id="trackRequiredHint">Please select Camera or Mobile.</div>
+      </div>
+
       <!-- Soft size warning — amber, not a block -->
       <div style="margin-top:10px; padding:10px 14px; background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark); border-radius:var(--radius-sm); font-size:16px; color:var(--text-muted); line-height:1.6;">
         📂 <strong style="color:var(--text-primary);">Keep your original RAW file.</strong>
@@ -502,26 +531,6 @@
         <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">The engine uses this as ground truth — overrides vision detection if Wikipedia returns the wrong species.</div>
       </div>
 
-      <div class="form-group shot-on-group">
-        <span class="field-label">Shot On <span style="color:var(--red);font-size:16px;">*</span></span>
-        <div class="shot-on-options">
-          <div class="shot-on-option">
-            <input type="radio" id="track_camera" name="camera_track" value="camera">
-            <label for="track_camera">
-              <span class="shot-icon">📷</span>
-              <span class="shot-text">Camera<small>DSLR · Mirrorless · Film</small></span>
-            </label>
-          </div>
-          <div class="shot-on-option">
-            <input type="radio" id="track_mobile" name="camera_track" value="mobile">
-            <label for="track_mobile">
-              <span class="shot-icon">📱</span>
-              <span class="shot-text">Mobile<small>iPhone · Android · Smartphone</small></span>
-            </label>
-          </div>
-        </div>
-        <div class="shot-on-required-hint" id="trackRequiredHint">Please select Camera or Mobile.</div>
-      </div>
 
       <div class="form-group" id="location-field-wrap">
         <label for="location">Current Location</label>
@@ -676,12 +685,29 @@
   ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
     ev.preventDefault(); dropZone.classList.add('dragover');
   }));
-  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
+  dropZone.addEventListener('dragleave', ev => {
+    // Only remove highlight when leaving the dropzone itself, not a child element
+    if (!dropZone.contains(ev.relatedTarget)) {
+      dropZone.classList.remove('dragover');
+    }
+  });
+  dropZone.addEventListener('drop', ev => {
     ev.preventDefault(); dropZone.classList.remove('dragover');
-  }));
+  });
   dropZone.addEventListener('drop', e => {
     const f = e.dataTransfer.files[0];
-    if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); }
+    if (f) {
+      // fileInput.files is read-only — must use DataTransfer to assign
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        fileInput.files = dt.files;
+      } catch(_) {
+        // DataTransfer not supported (old Safari) — handleFile still works for preview;
+        // form submit will re-read from input. No silent failure.
+      }
+      handleFile(f);
+    }
   });
   fileInput.addEventListener('change', () => {
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
