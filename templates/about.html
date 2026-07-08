@@ -576,12 +576,17 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
   <!-- ── HERO ──────────────────────────────────────────────────── -->
   <section class="sl-ab-hero">
     {% if about_hero and about_hero.thumb_url %}
+    <div class="sl-hero-img-wrap">
     <img
       class="sl-ab-hero-img"
       src="{{ about_hero.thumb_url }}"
       alt="Photograph by a Shutter League member"
       onerror="this.style.display='none'"
     >
+    {% if about_hero.photographer_name %}
+    <span style="position:absolute;bottom:12px;right:14px;z-index:4;color:#F5C518;font-size:14px;font-weight:600;letter-spacing:0.04em;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,0.70);">{{ about_hero.photographer_name }}{% if about_hero.score %} &middot; {{ '%.2f'|format(about_hero.score) }}{% endif %}</span>
+    {% endif %}
+    </div>
     {% endif %}
     <div class="sl-ab-hero-fade"></div>
     <div class="sl-ab-hero-content">
