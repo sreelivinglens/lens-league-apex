@@ -56,7 +56,15 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 .sl-hiw-hero-fade {
   position: absolute;
   inset: 0;
-  text-shadow: none;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to right,
+      rgba(13,13,11,0.88) 0%,
+      rgba(13,13,11,0.72) 40%,
+      rgba(13,13,11,0.40) 65%,
+      rgba(13,13,11,0.10) 100%
+    );
 }
 .sl-hiw-hero-content {
   position: absolute;
