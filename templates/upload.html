@@ -583,8 +583,8 @@
         </label>
       </div>
 
-      <button type="submit" class="btn btn-solid" id="submitBtn" style="width:100%; padding:15px; font-size:16px; letter-spacing:2px; margin-top:4px;">
-        ⬆ Submit for Evaluation
+      <button type="submit" class="btn btn-solid" id="submitBtn" style="width:100%; padding:15px; font-size:16px; letter-spacing:1px; margin-top:4px;">
+        Submit for Evaluation
       </button>
     </form>
   </div>
@@ -741,7 +741,7 @@
     fileError.textContent    = msg;
     fileError.style.display  = 'block';
     submitBtn.disabled       = false;
-    submitBtn.textContent    = '⬆ Submit for Evaluation';
+    submitBtn.textContent    = 'Submit for Evaluation';
     document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -834,7 +834,7 @@
     fileSizeWarn.style.padding       = '16px 18px';
     document.getElementById('scoringOverlay').classList.remove('active');
     submitBtn.disabled    = false;
-    submitBtn.textContent = '⬆ Submit for Evaluation';
+    submitBtn.textContent = 'Submit for Evaluation';
     fileSizeWarn.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -972,7 +972,7 @@
     if (!document.querySelector('input[name="camera_track"]:checked')) {
       trackHint.style.display = 'block';
       trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Evaluation';
+      submitBtn.disabled = false; submitBtn.textContent = 'Submit for Evaluation';
       return;
     }
 
@@ -981,7 +981,7 @@
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       legalCheck.addEventListener('change', () =>
         legalBox.classList.remove('error-highlight'), { once: true });
-      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Evaluation';
+      submitBtn.disabled = false; submitBtn.textContent = 'Submit for Evaluation';
       return;
     }
 
@@ -993,7 +993,7 @@
         const _sw = Math.min(_tmpImg.naturalWidth, _tmpImg.naturalHeight);
         if (_sw < 1500) {
           submitBtn.disabled = false;
-          submitBtn.textContent = '⬆ Submit for Evaluation';
+          submitBtn.textContent = 'Submit for Evaluation';
           showError(
             'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
             'The shorter side must be at least 1500px. ' +
