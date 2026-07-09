@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% from "glossary_links.html" import glink %}
-{% block title %}Programme Standings — {{ platform_name }}{% endblock %}
+{% block title %}Programme Gallery — {{ platform_name }}{% endblock %}
 
 {% block extra_head %}
-<meta property="og:title" content="Programme Standings — Shutter League">
-<meta property="og:description" content="Photography programme standings. Camera League and Mobile League. Ordered by Depth Dimension Index (DDI) evaluation.">
+<meta property="og:title" content="Programme Gallery — Shutter League">
+<meta property="og:description" content="Recent photographs evaluated by the Shutter League DDI engine, grouped by tier. Camera League and Mobile League.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -131,6 +131,22 @@
 .tile-track.camera { background: rgba(245,197,24,0.15); color: #1a1200; }
 .tile-track.mobile { background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.18); }
 .tile-track-icon { display: none; font-size: 14px; line-height: 1; flex-shrink: 0; }
+/* ── Tier group headers ── */
+.lb-tier-group { margin-bottom: 40px; }
+.lb-tier-group-header {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.lb-tier-group-name {
+  font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 12px; border-radius: 99px; line-height: 1.5;
+}
+.lb-tier-group-sub {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 400;
+  color: var(--text-muted); letter-spacing: 0.5px; line-height: 1.5;
+}
 .tile-img-wrap { position: relative; overflow: hidden; }
 .tile-img {
   width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
@@ -303,11 +319,11 @@ a.lb-page-btn:focus-visible { outline: 2px solid #F5C518; outline-offset: 2px; }
 {% block content %}
 <div class="lb-wrap">
   <div class="lb-header">
-    <h1>Programme Standings</h1>
-    <p class="lb-sub">Positioned by {{ glink("DDI")|safe }} evaluation &middot; updated on every re-evaluation</p>
+    <h1>Programme Gallery</h1>
+    <p class="lb-sub">Recent work evaluated by {{ glink("DDI")|safe }} &middot; grouped by tier &middot; no particular order within a tier</p>
   </div>
   <div class="score-notice">
-    &#128269; &nbsp; Tap any image to read the full evaluation &mdash; score, dimension breakdown, and the analysis behind it.
+    &#128269; &nbsp; Images are grouped by tier &mdash; not ordered by position. Equal evaluations appear in no particular sequence. Tap any image to read the full evaluation.
   </div>
   <!-- FILTERS -->
   <div class="lb-filters">
@@ -315,7 +331,7 @@ a.lb-page-btn:focus-visible { outline: 2px solid #F5C518; outline-offset: 2px; }
       <label>Period</label>
       <div class="lb-pills">
         {% for val, label in [('all','All time'),('month','This month'),('week','This week')] %}
-        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
            class="lb-pill {% if period == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
       </div>
@@ -324,7 +340,7 @@ a.lb-page-btn:focus-visible { outline: 2px solid #F5C518; outline-offset: 2px; }
       <label>Plan</label>
       <div class="lb-pills">
         {% for val, label in [('all','All Plans'),('camera','Camera'),('mobile','Mobile')] %}
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}&city={{ city }}"
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}"
            class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
       </div>
@@ -348,112 +364,116 @@ a.lb-page-btn:focus-visible { outline: 2px solid #F5C518; outline-offset: 2px; }
           {% endfor %}
         </select>
       </div>
-      {% if cities %}
-      <div class="lb-filter-group">
-        <label for="city-sel">City</label>
-        <select id="city-sel" onchange="applyFilter('city', this.value)">
-          <option value="all" {% if city=='all' %}selected{% endif %}>All cities</option>
-          {% for c in cities %}
-          <option value="{{ c }}" {% if city==c %}selected{% endif %}>{{ c }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      {% endif %}
+
     </div>
   </div>
   <!-- TABS -->
   <div class="lb-tabs">
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='images' %}active{% endif %}">Top Images</a>
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='photographers' %}active{% endif %}">Top Photographers</a>
-    <a href="?tab=cameras&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+    <a href="?tab=cameras&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='cameras' %}active{% endif %}">Cameras</a>
     {%- if show_lenses_tab %}
-    <a href="?tab=lenses&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+    <a href="?tab=lenses&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='lenses' %}active{% endif %}">Lenses</a>
     {%- endif %}
   </div>
   {% if tab == 'images' %}
-  {% if top_images %}
-  <div class="lb-tile-grid">
-    {% for image in top_images %}
-    {%- set rank = (img_page - 1) * 25 + loop.index -%}
-    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
-    {%- set pc = 'podium-'~rank if rank<=3 else '' -%}
-    {%- set tk = (image.tier or 'apprentice') | lower | replace(' ', '-') -%}
-    <a href="{{ url_for('image_detail', image_id=image.id) }}" class="lb-tile {{ pc }}">
-      <div class="tile-rank {{ rc }}">{{ rank }}</div>
-      {% if image.camera_track %}
-      <div class="tile-track {{ image.camera_track }}">
-        {{ 'Camera' if image.camera_track == 'camera' else 'Mobile' }}
-      </div>
-      {% endif %}
-      <div class="tile-img-wrap">
-        {% if image.thumb_url %}
-        <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="tile-img" loading="lazy" onerror="this.style.display='none'">
-        {% else %}
-        <div class="tile-img-placeholder">&#128444;</div>
-        {% endif %}
-        {% set _crs_key = 'cont' ~ 'est_result_status' %}{% if image[_crs_key] == 'published' and image.judge_final_score %}
-        <div style="position:absolute;top:8px;right:8px;z-index:4;background:#F5C518;color:#1a1a18;padding:4px 8px;border-radius:4px;font-size:16px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.5px;pointer-events:none;">Winner</div>
-        {% endif %}
-        {% if image.archetype %}
-        <div class="tile-analysis">
-          <div class="tile-analysis-label">Why this evaluation</div>
-          <div class="tile-analysis-text">{{ image.archetype }}</div>
-          <div class="tile-analysis-cta">Read full evaluation &rarr;</div>
+
+  {# ── Tier-grouped gallery — no positional ordering ── #}
+  {%- set tier_order = ['Legend','Grandmaster','Master','Maverick','Craftsman','Contender','Shooter','Rookie'] -%}
+  {%- set ns = namespace(any_shown=false) -%}
+  {%- for tier_name in tier_order %}
+    {%- set tier_images = top_images | selectattr('tier', 'equalto', tier_name) | list -%}
+    {%- if tier_images %}
+    {%- set ns.any_shown = true %}
+  <div class="lb-tier-group">
+    <div class="lb-tier-group-header">
+      {%- set tk_h = tier_name | lower | replace(' ', '-') -%}
+      <span class="lb-tier-group-name tier-{{ tk_h }}">{{ tier_name }}</span>
+      <span class="lb-tier-group-sub">Recent images evaluated at this level &middot; in no particular order</span>
+    </div>
+    <div class="lb-tile-grid">
+      {% for image in tier_images %}
+      {%- set tk = (image.tier or 'rookie') | lower | replace(' ', '-') -%}
+      <a href="{{ url_for('image_detail', image_id=image.id) }}" class="lb-tile">
+        {% if image.camera_track %}
+        <div class="tile-track {{ image.camera_track }}">
+          {{ 'Camera' if image.camera_track == 'camera' else 'Mobile' }}
         </div>
         {% endif %}
-      </div>
-      <div class="tile-body">
-        <div class="tile-meta-row">
-          <span class="tile-tier-pill tier-{{ tk }}">{{ image.tier or '&mdash;' }}</span>
-          <span class="tile-score">{{ '%.2f'|format(image.score) }}{% if image.soul_bonus %}<span class="tile-soul">&#10022;</span>{% endif %}</span>
-          {% if image.peer_rating_count and image.peer_rating_count > 0 %}
-          <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
+        <div class="tile-img-wrap">
+          {% if image.thumb_url %}
+          <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="tile-img" loading="lazy" onerror="this.style.display='none'">
+          {% else %}
+          <div class="tile-img-placeholder">&#128444;</div>
           {% endif %}
-          {% if image.camera_track %}
-          <span class="tile-track-icon" title="{{ 'Camera League' if image.camera_track == 'camera' else 'Mobile League' }}">
-            {% if image.camera_track == 'camera' %}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Camera League"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="3"/></svg>
-            {% else %}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Mobile League"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+          {% set _crs_key = 'cont' ~ 'est_result_status' %}{% if image[_crs_key] == 'published' and image.judge_final_score %}
+          <div style="position:absolute;top:8px;left:8px;z-index:4;background:#F5C518;color:#1a1a18;padding:4px 8px;border-radius:4px;font-size:16px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.5px;pointer-events:none;">Winner</div>
+          {% endif %}
+          {% if image.archetype %}
+          <div class="tile-analysis">
+            <div class="tile-analysis-label">Why this evaluation</div>
+            <div class="tile-analysis-text">{{ image.archetype }}</div>
+            <div class="tile-analysis-cta">Read full evaluation &rarr;</div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="tile-body">
+          <div class="tile-meta-row">
+            <span class="tile-tier-pill tier-{{ tk }}">{{ image.tier or '&mdash;' }}</span>
+            <span class="tile-score">{{ '%.2f'|format(image.score) }}{% if image.soul_bonus %}<span class="tile-soul">&#10022;</span>{% endif %}</span>
+            {% if image.peer_rating_count and image.peer_rating_count > 0 %}
+            <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
             {% endif %}
-          </span>
-          {% endif %}
+            {% if image.camera_track %}
+            <span class="tile-track-icon" title="{{ 'Camera League' if image.camera_track == 'camera' else 'Mobile League' }}">
+              {% if image.camera_track == 'camera' %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
+              {% else %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+              {% endif %}
+            </span>
+            {% endif %}
+          </div>
+          <div class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
+          <div class="tile-genre">{{ image.genre or '&mdash;' }}</div>
+          <div class="tile-photographer">{{ image.photographer_name or '&mdash;' }}</div>
         </div>
-        <div class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
-        <div class="tile-genre">{{ image.genre or '&mdash;' }}</div>
-        <div class="tile-photographer">{{ image.photographer_name or '&mdash;' }}</div>
-      </div>
-    </a>
-    {% endfor %}
+      </a>
+      {% endfor %}
+    </div>
   </div>
-  {% else %}
+    {%- endif %}
+  {%- endfor %}
+  {%- if not ns.any_shown %}
   <div class="lb-empty">No evaluated photographs match these filters.</div>
-  {% endif %}
+  {%- endif %}
+
   {% if img_pages > 1 %}
   <nav class="lb-pagination" aria-label="Image pages">
     {% if img_page > 1 %}
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&img_page={{ img_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
     {% else %}
     <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
     {% endif %}
     {% for p in range(1, img_pages + 1) %}
       {% if p == img_page %}<span class="lb-page-btn active">{{ p }}</span>
       {% elif p == 1 or p == img_pages or (p >= img_page - 2 and p <= img_page + 2) %}
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ p }}" class="lb-page-btn">{{ p }}</a>
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&img_page={{ p }}" class="lb-page-btn">{{ p }}</a>
       {% elif p == img_page - 3 or p == img_page + 3 %}<span class="lb-page-btn ellipsis">&hellip;</span>
       {% endif %}
     {% endfor %}
     {% if img_page < img_pages %}
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&img_page={{ img_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
     {% else %}
     <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
     {% endif %}
   </nav>
   {% endif %}
+
   {% else %}
   {% if photographer_stats %}
   <div class="lb-pg-grid">
@@ -525,19 +545,19 @@ a.lb-page-btn:focus-visible { outline: 2px solid #F5C518; outline-offset: 2px; }
   {% if pg_pages > 1 %}
   <nav class="lb-pagination" aria-label="Photographer pages">
     {% if pg_page > 1 %}
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
     {% else %}
     <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
     {% endif %}
     {% for p in range(1, pg_pages + 1) %}
       {% if p == pg_page %}<span class="lb-page-btn active">{{ p }}</span>
       {% elif p == 1 or p == pg_pages or (p >= pg_page - 2 and p <= pg_page + 2) %}
-      <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ p }}" class="lb-page-btn">{{ p }}</a>
+      <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&pg_page={{ p }}" class="lb-page-btn">{{ p }}</a>
       {% elif p == pg_page - 3 or p == pg_page + 3 %}<span class="lb-page-btn ellipsis">&hellip;</span>
       {% endif %}
     {% endfor %}
     {% if pg_page < pg_pages %}
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
     {% else %}
     <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
     {% endif %}
