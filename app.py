@@ -13348,7 +13348,7 @@ def public_profile(username):
     )
 
 
-@app.route('/how-it-works')
+@app.route('/how_it_works')
 def how_it_works():
     try:
         hiw_hero = (Image.query
@@ -13364,7 +13364,7 @@ def how_it_works():
                     .first())
     except Exception:
         hiw_hero = None
-    return render_template('how-it-works.html', hiw_hero=hiw_hero)
+    return render_template('how_it_works.html', hiw_hero=hiw_hero)
 
 @app.route('/example-score')
 def example_score():
@@ -14437,7 +14437,7 @@ def sitemap():
     pages = [
         ('/', '1.0', 'weekly'),
         ('/about', '0.9', 'monthly'),
-        ('/how-it-works', '0.9', 'monthly'),
+        ('/how_it_works', '0.9', 'monthly'),
         ('/pricing', '0.9', 'weekly'),
         ('/terms', '0.8', 'monthly'),
         ('/privacy', '0.8', 'monthly'),
