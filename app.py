@@ -13363,7 +13363,7 @@ def how_it_works():
                     .first())
     except Exception:
         hiw_hero = None
-    return render_template('how-it-works.html', hiw_hero=hiw_hero)
+    return render_template('how_it_works.html', hiw_hero=hiw_hero)
 
 @app.route('/example-score')
 def example_score():
