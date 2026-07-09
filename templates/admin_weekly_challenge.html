@@ -139,6 +139,34 @@
           <input type="text" name="sponsor_prize" placeholder="Sigma 56mm f/1.4 lens" maxlength="200">
         </div>
 
+        <div class="form-group full">
+          <label>Track</label>
+          <div style="display:flex; gap:20px; flex-wrap:wrap; padding:10px 0;">
+            <label style="display:flex; align-items:center; gap:7px; cursor:pointer;
+                          font-family:inherit; font-size:15px; color:var(--text-primary);
+                          text-transform:none; letter-spacing:0; font-weight:400;">
+              <input type="radio" name="track" value="both" checked
+                     style="width:16px; height:16px; accent-color:var(--gold); cursor:pointer;">
+              Both leagues
+            </label>
+            <label style="display:flex; align-items:center; gap:7px; cursor:pointer;
+                          font-family:inherit; font-size:15px; color:var(--text-primary);
+                          text-transform:none; letter-spacing:0; font-weight:400;">
+              <input type="radio" name="track" value="camera"
+                     style="width:16px; height:16px; accent-color:var(--gold); cursor:pointer;">
+              Camera League only
+            </label>
+            <label style="display:flex; align-items:center; gap:7px; cursor:pointer;
+                          font-family:inherit; font-size:15px; color:var(--text-primary);
+                          text-transform:none; letter-spacing:0; font-weight:400;">
+              <input type="radio" name="track" value="mobile"
+                     style="width:16px; height:16px; accent-color:var(--gold); cursor:pointer;">
+              Mobile League only
+            </label>
+          </div>
+          <span class="hint">Camera / Mobile subscribers can only enter challenges matching their track, or Both.</span>
+        </div>
+
       </div>
 
       <div style="margin-top:20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
@@ -165,6 +193,7 @@
       <tr>
         <th>Week</th>
         <th>Prompt</th>
+        <th>Track</th>
         <th>Status</th>
         <th>Opens</th>
         <th>Closes</th>
@@ -178,6 +207,25 @@
       <tr>
         <td><strong style="font-family:var(--font-mono); color:var(--gold);">{{ ch.week_ref }}</strong></td>
         <td>{{ ch.prompt_title }}</td>
+        <td>
+          {% if ch.track == 'camera' %}
+            <span style="font-family:var(--font-mono);font-size:12px;padding:3px 8px;
+                         border-radius:3px;background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;">
+              Camera
+            </span>
+          {% elif ch.track == 'mobile' %}
+            <span style="font-family:var(--font-mono);font-size:12px;padding:3px 8px;
+                         border-radius:3px;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;">
+              Mobile
+            </span>
+          {% else %}
+            <span style="font-family:var(--font-mono);font-size:12px;padding:3px 8px;
+                         border-radius:3px;background:var(--surface-3);color:var(--text-muted);
+                         border:1px solid var(--border);">
+              Both
+            </span>
+          {% endif %}
+        </td>
         <td>
           {% if not ch.is_active %}
             <span style="color:var(--text-disabled); font-size:13px;">Inactive</span>
@@ -341,6 +389,37 @@
                                 letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Prize description (optional)</label>
                   <input type="text" name="sponsor_prize" value="{{ ch.sponsor_prize or '' }}"
                          class="edit-input" maxlength="200" placeholder="e.g. Sigma 56mm f/1.4 lens">
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:5px; grid-column:1/-1;">
+                  <label style="font-family:var(--font-mono); font-size:13px; font-weight:600;
+                                letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Track</label>
+                  <div style="display:flex; gap:20px; flex-wrap:wrap; padding:6px 0;">
+                    <label style="display:flex; align-items:center; gap:7px; cursor:pointer;
+                                  font-size:14px; color:var(--text-primary); text-transform:none;
+                                  letter-spacing:0; font-weight:400; font-family:inherit;">
+                      <input type="radio" name="track" value="both"
+                             {% if ch.track in ('both', none, '') %}checked{% endif %}
+                             style="width:15px; height:15px; accent-color:var(--gold); cursor:pointer;">
+                      Both leagues
+                    </label>
+                    <label style="display:flex; align-items:center; gap:7px; cursor:pointer;
+                                  font-size:14px; color:var(--text-primary); text-transform:none;
+                                  letter-spacing:0; font-weight:400; font-family:inherit;">
+                      <input type="radio" name="track" value="camera"
+                             {% if ch.track == 'camera' %}checked{% endif %}
+                             style="width:15px; height:15px; accent-color:var(--gold); cursor:pointer;">
+                      Camera League only
+                    </label>
+                    <label style="display:flex; align-items:center; gap:7px; cursor:pointer;
+                                  font-size:14px; color:var(--text-primary); text-transform:none;
+                                  letter-spacing:0; font-weight:400; font-family:inherit;">
+                      <input type="radio" name="track" value="mobile"
+                             {% if ch.track == 'mobile' %}checked{% endif %}
+                             style="width:15px; height:15px; accent-color:var(--gold); cursor:pointer;">
+                      Mobile League only
+                    </label>
+                  </div>
                 </div>
 
               </div>
