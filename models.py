@@ -628,6 +628,9 @@ class WeeklyChallenge(db.Model):
     # Session 132 — Mobile DDI: challenge track separation
     # 'mobile' | 'camera' | 'both' — 'both' is default (all existing challenges visible to all)
     track              = db.Column(db.String(20), default='both', nullable=False)
+    # Session 136 — scheduled notification
+    # NULL=no notification requested, False=pending (fires at opens_at), True=sent
+    notification_sent  = db.Column(db.Boolean, default=None, nullable=True)
     submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic',
                                   cascade='all, delete-orphan')
     topups      = db.relationship('ChallengeTopup',   lazy=True,
