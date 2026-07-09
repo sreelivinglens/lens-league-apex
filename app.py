@@ -333,9 +333,38 @@ def send_challenge_notification(challenge):
 
     sent = 0
     for user in users:
-        is_sub    = getattr(user, 'is_subscribed', False)
-        slot_text = '3 images this week' if is_sub else '1 image this week (subscribe for 3)'
-        cta_text  = 'Submit your image' if is_sub else 'Enter the challenge'
+        is_sub  = getattr(user, 'is_subscribed', False)
+        u_track = (getattr(user, 'subscription_track', None) or '').strip().lower()
+        u_tier  = (getattr(user, 'tier', None) or '').strip()
+        cta_text = 'Submit your image' if is_sub else 'Enter the challenge'
+
+        # ── Track-aware instrument line ───────────────────────────────────
+        ch_track = (getattr(challenge, 'track', None) or 'both').strip().lower()
+        if ch_track == 'mobile':
+            instrument_line = 'Shoot on your phone. Camera images are not eligible for this assignment.'
+        elif ch_track == 'camera':
+            instrument_line = 'Shoot with your camera. This assignment is for Camera League.'
+        else:
+            if u_track == 'mobile':
+                instrument_line = 'Shoot on your phone. Your evaluation will be judged under Mobile League criteria.'
+            else:
+                instrument_line = 'Shoot with your camera. Your evaluation will be judged under Camera League criteria.'
+
+        # ── Tier line ─────────────────────────────────────────────────────
+        if u_tier:
+            tier_line_html = f'You are currently rated <strong style="color:#1a1a18;">{u_tier}</strong>. Every evaluated image this week moves that number.'
+            tier_line_text = f'{u_tier} — every evaluated image this week moves that number.'
+        else:
+            tier_line_html = 'Every evaluated image this week builds your standing on the platform.'
+            tier_line_text = 'Every evaluated image this week builds your standing on the platform.'
+
+        # ── Slot text ─────────────────────────────────────────────────────
+        if is_sub:
+            slot_html = '3 feedback credits this week'
+            slot_text = '3 feedback credits this week'
+        else:
+            slot_html = f'1 feedback credit this week &mdash; <a href="{site_url}/pricing" style="color:#1a1a18;">subscribe for 3</a>'
+            slot_text = '1 feedback credit this week'
 
         html_body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -368,22 +397,39 @@ def send_challenge_notification(challenge):
 
       <!-- Challenge banner -->
       <tr><td style="background:#3D5A80;padding:0 32px 28px;" class="sl-email-pad">
-        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;color:#ffffff;text-transform:uppercase;line-height:1.6;opacity:0.7;">Weekly Assignment · {challenge.week_ref}</p>
+        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;color:#ffffff;text-transform:uppercase;line-height:1.6;opacity:0.7;">Weekly Assignment &middot; {challenge.week_ref}</p>
         <h1 class="sl-email-h1" style="margin:0;font-size:34px;font-style:italic;color:#C8A84B;line-height:1.6;">{challenge.prompt_title}</h1>
       </td></tr>
 
       <!-- Body -->
       <tr><td style="padding:28px 32px;" class="sl-email-pad">
-        <p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">Get your photo evaluated to be in the reckoning to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong></p>
-        {'<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
+
+        <!-- Tier line -->
+        <p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">{tier_line_html}</p>
+
+        <!-- Prompt brief -->
+        {'<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
+
+        <!-- Instrument line -->
+        <p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.7;">{instrument_line}</p>
+
         {sponsor_line}
-        <p style="margin:0 0 8px;font-size:15px;color:#6a6458;line-height:1.7;">
-          <strong style="color:#1a1a18;">You have:</strong> {slot_text}
+
+        <!-- Credits + closes -->
+        <p style="margin:0 0 6px;font-size:15px;color:#6a6458;line-height:1.7;">
+          <strong style="color:#1a1a18;">You have:</strong> {slot_html}
         </p>
-        <p style="margin:0 0 28px;font-size:15px;color:#6a6458;line-height:1.7;">
+        <p style="margin:0 0 24px;font-size:15px;color:#6a6458;line-height:1.7;">
           Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
         </p>
-        <a href="{challenge_url}" class="sl-email-cta" style="display:inline-block;background:#1a1a18;color:#ffffff;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;line-height:1.6;">{cta_text} →</a>
+
+        <a href="{challenge_url}" class="sl-email-cta" style="display:inline-block;background:#1a1a18;color:#ffffff;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;line-height:1.6;">{cta_text} &rarr;</a>
+
+        <!-- AEA line — end of body, separated -->
+        <p style="margin:28px 0 0;font-size:15px;color:#8a8070;line-height:1.7;border-top:1px solid #E0D8C8;padding-top:20px;">
+          Photographs evaluated this week count toward your Annual Excellence Award eligibility.
+        </p>
+
       </td></tr>
 
       <!-- Footer -->
@@ -404,12 +450,18 @@ def send_challenge_notification(challenge):
 This week: {challenge.prompt_title}
 {challenge.week_ref}
 
+{tier_line_text}
+
 {'Brief: ' + challenge.prompt_body if challenge.prompt_body else ''}
+
+{instrument_line}
 
 You have: {slot_text}
 Closes: {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
 
-Enter here: {challenge_url}
+{cta_text}: {challenge_url}
+
+Photographs evaluated this week count toward your Annual Excellence Award eligibility.
 
  -  Shutter League"""
 
@@ -15783,9 +15835,6 @@ def admin_weekly_challenge():
             closes_str   = request.form.get('closes_at', '').strip()
             sponsor_name = request.form.get('sponsor_name', '').strip() or None
             sponsor_prize= request.form.get('sponsor_prize', '').strip() or None
-            ch_track     = request.form.get('track', 'both').strip()
-            if ch_track not in ('mobile', 'camera', 'both'):
-                ch_track = 'both'
 
             if not all([week_ref, prompt_title, opens_str, closes_str]):
                 flash('Week ref, prompt title, opens and closes dates are required.', 'error')
@@ -15811,7 +15860,6 @@ def admin_weekly_challenge():
                 results_at=closes_at + timedelta(days=1),
                 sponsor_name=sponsor_name,
                 sponsor_prize=sponsor_prize,
-                track=ch_track,
                 created_by=current_user.id,
             )
             db.session.add(ch)
@@ -15915,9 +15963,6 @@ def admin_weekly_challenge():
             ch.prompt_body   = request.form.get('prompt_body', '').strip() or None
             ch.sponsor_name  = request.form.get('sponsor_name', '').strip() or None
             ch.sponsor_prize = request.form.get('sponsor_prize', '').strip() or None
-            _edit_track = request.form.get('track', '').strip()
-            if _edit_track in ('mobile', 'camera', 'both'):
-                ch.track = _edit_track
             opens_str  = request.form.get('opens_at', '').strip()
             closes_str = request.form.get('closes_at', '').strip()
             try:
