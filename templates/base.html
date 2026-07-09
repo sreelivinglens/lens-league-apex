@@ -390,10 +390,10 @@ table { max-width: none; }
   margin-bottom: 12px;
 }
 
-/* ── Photographer credit — plain gold text, no pill ────────────────── */
+/* ── Photographer credit — gold text on 20% grey fill rect ─────────── */
 /* Anchored to image corner via .sl-hero-img-wrap (position:relative).
-   Gold #F5C518 on dark hero context. Text-shadow for legibility on
-   any image tone. No background, no border, no blur. */
+   Rectangular background rgba(0,0,0,0.20) ensures legibility on any
+   image tone — light, dark, grey, monochrome. Session 133 fix. */
 .sl-hero-credit-pill {
   position: absolute;
   bottom: 12px;
@@ -408,6 +408,8 @@ table { max-width: none; }
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
+  background: rgba(0,0,0,0.20);
+  padding: 3px 8px;
 }
 
 /* ── Image wrapper — anchors credit pill to image corner ───────────── */
