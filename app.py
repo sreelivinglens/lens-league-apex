@@ -9292,20 +9292,20 @@ def leaderboard():
             q = q.filter(db.text("camera_track = 'mobile'"))
         return q
 
-    # Images tab — tier-grouped gallery (no rank numbers)
-    # Order: score desc, then scored_at desc for ties (most recently evaluated first)
+    # Images tab — fetch up to 12 images per tier so every tier with images
+    # is always represented regardless of how many higher-tier images exist.
+    # Score desc, then scored_at desc for ties (most recently evaluated first).
     from flask_login import current_user as _cu
-    img_q      = apply_filters(Image.query, user_already_joined=False).order_by(
-                     desc(Image.score), desc(Image.scored_at)
-                 )
-    img_total  = img_q.count()
+    _all_tiers_ordered = ['Legend','Grandmaster','Master','Maverick','Craftsman','Contender','Shooter','Rookie']
+    _imgs_per_tier = 12
+    top_images = []
+    for _t in _all_tiers_ordered:
+        _tq = apply_filters(Image.query, user_already_joined=False)              .filter(Image.tier == _t)              .order_by(desc(Image.score), desc(Image.scored_at))              .limit(_imgs_per_tier).all()
+        top_images.extend(_tq)
 
-    # Pagination applies within the full ordered set; tier grouping is done in template
-    img_page     = request.args.get('img_page', 1, type=int)
-    img_per_page = 50
-    img_pages    = min(10, max(1, (img_total + img_per_page - 1) // img_per_page))
-    img_page     = max(1, min(img_page, img_pages))
-    top_images   = img_q.offset((img_page - 1) * img_per_page).limit(img_per_page).all()
+    img_total  = len(top_images)
+    img_page   = 1
+    img_pages  = 1
 
     user_img_rank = None  # deprecated — no rank numbers in gallery mode
 
