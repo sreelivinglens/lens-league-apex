@@ -1,0 +1,883 @@
+{% extends "base.html" %}
+{% from "glossary_links.html" import glink %}
+{% block title %}Programme Standings — {{ platform_name }}{% endblock %}
+
+{% block extra_head %}
+<meta property="og:title" content="Programme Standings — Shutter League">
+<meta property="og:description" content="Photography programme standings. Camera League and Mobile League. Ordered by Depth Dimension Index (DDI) evaluation.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+{% block extra_css %}
+<style>
+  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* badge variants */
+  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* img-tier-badge variants */
+  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
+  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
+  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
+  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
+  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
+  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
+  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
+  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
+/* ── Wrapper ── */
+.lb-wrap { max-width: 1100px; }
+
+/* ── Header ── */
+.lb-header { margin-bottom: 1.5rem; padding-left: 20px; border-left: 3px solid var(--gold); }
+.lb-header h1 { font-size: clamp(22px, 3vw, 32px); font-weight: 700; color: var(--text-primary); line-height: 1.5; text-shadow: none; }
+.lb-sub { color: var(--text-muted); font-size: 16px; margin-top: 4px; font-family: var(--font-mono); letter-spacing: 1px; }
+
+/* ── Score notice ── */
+.score-notice { text-align: justify;
+  display: flex; align-items: center; gap: 10px;
+  background: #FFFFFF; border: 1px solid var(--border);
+  border-left: 3px solid var(--gold-dark);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 16px; margin-bottom: 20px;
+  font-family: var(--font-mono); font-size:16px;
+  letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase;
+}
+
+/* ── Filters ── */
+.lb-filters { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .65rem; }
+.lb-filter-row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; }
+.lb-filter-group { display: flex; flex-direction: column; gap: .3rem; }
+.lb-filter-group label {
+  font-family: var(--font-mono); font-size:16px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+}
+.lb-pills { display: flex; gap: .375rem; flex-wrap: wrap; }
+.lb-pill {
+  padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border);
+  font-size:16px; font-family: var(--font-mono); text-decoration: none;
+  color: var(--text-secondary); background: transparent; transition: all .15s;
+  letter-spacing: .5px; white-space: nowrap;
+}
+.lb-pill:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+.lb-pill.active { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 700; }
+.lb-filter-group select {
+  padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  font-size:16px; background: #F5F0E8; color: var(--text-primary); cursor: pointer;
+  font-family: var(--font-body); outline: none; transition: border-color .2s;
+}
+.lb-filter-group select:focus { border-color: var(--gold); }
+.lb-filter-group select option { background: #F5F0E8; }
+
+/* ── Tabs ── */
+.lb-tabs {
+  display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.lb-tabs::-webkit-scrollbar { display: none; }
+.lb-tab {
+  padding: 10px 16px; font-size:16px; font-weight: 600; font-family: var(--font-mono);
+  letter-spacing: .5px; text-decoration: none; color: var(--text-muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s;
+  text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+}
+.lb-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.lb-tab:hover:not(.active) { color: var(--text-secondary); }
+
+/* ════════════════════════════════════
+   IMAGE TILES
+════════════════════════════════════ */
+.lb-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.lb-tile {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .2s, transform .18s, box-shadow .18s;
+}
+.lb-tile:hover {
+  border-color: var(--gold-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.09);
+}
+.lb-tile.podium-1 { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.lb-tile.podium-2 { border-color: #8a8a8a; }
+.lb-tile.podium-3 { border-color: #8B5E3C; }
+
+/* Rank badge — top left over image */
+.tile-rank {
+  position: absolute; top: 10px; left: 10px; z-index: 3;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size:16px; font-weight: 700;
+  line-height: 1;
+}
+.tile-rank.gold   { background: #F5C518; color: #3a2a00; }
+.tile-rank.silver { background: #8a8a8a; color: #fff; }
+.tile-rank.bronze { background: #8B5E3C; color: #fff; }
+.tile-rank.other  {
+  background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.75);
+  border: 1px solid rgba(255,255,255,0.18); font-size:16px;
+}
+
+/* League badge — top right over image */
+.tile-track {
+  position: absolute; top: 10px; right: 10px; z-index: 3;
+  font-family: var(--font-mono); font-size:16px; font-weight: 600;
+  letter-spacing: .5px; padding: 3px 9px; border-radius: 99px;
+}
+.tile-track.camera { background: rgba(245,197,24,0.15); color: #1a1200; }
+.tile-track.mobile {
+  background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* Thumbnail */
+.tile-img-wrap { position: relative; overflow: hidden; }
+.tile-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: #1a1a18;
+  display: block;
+  background: var(--surface-3);
+  transition: transform .3s ease;
+}
+.lb-tile:hover .tile-img { transform: scale(1.03); }
+.tile-img-placeholder {
+  width: 100%; aspect-ratio: 4/3;
+  background: var(--surface-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: var(--text-muted);
+}
+
+/* Tier + score + peer-count row — lives in the white tile body now,
+   not overlaid on the image. Session 133 fix: the old dark gradient
+   ribbon over the image caused text overflow and an unclean look on
+   mobile 2-col cards. Moved into body, sized to fit compact cards. */
+.tile-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.tile-tier-pill {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .4px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 99px;
+  white-space: nowrap; flex-shrink: 0;
+  line-height: 1.5;
+}
+
+
+
+
+.tile-peer-count {
+  font-family: var(--font-mono); font-size: 13px; color: var(--green);
+  display: flex; align-items: center; gap: 3px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.peer-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.tile-score {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  color: #B8700A; letter-spacing: .3px; line-height: 1.5;
+  white-space: nowrap; flex-shrink: 0;
+}
+.tile-soul { font-size: 13px; opacity: .85; margin-left: 1px; vertical-align: middle; }
+/* Analysis panel — slides up on hover (desktop only) */
+.tile-analysis {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+  background: rgba(13,13,11,0.93);
+  padding: 10px 12px 12px;
+  transform: translateY(100%);
+  transition: transform .22s ease;
+  pointer-events: none;
+}
+.lb-tile:hover .tile-analysis { transform: translateY(0); }
+.tile-analysis-label {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: #F5C518; margin-bottom: 5px;
+}
+.tile-analysis-text {
+  font-size: 13px; color: rgba(255,255,255,0.88); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tile-analysis-cta {
+  font-family: var(--font-mono); font-size: 13px; color: #F5C518;
+  margin-top: 6px; letter-spacing: .5px;
+}
+@media (max-width: 768px) {
+  .tile-analysis { display: none; }
+}
+
+/* Tile body */
+.tile-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; flex: 1; overflow: hidden; min-width: 0; }
+.tile-title {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5;
+}
+.tile-genre { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); letter-spacing: .3px; line-height: 1.5; }
+.tile-archetype { font-size: 13px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+.tile-photographer { font-family: var(--font-mono); font-size: 13px; color: #1a1a18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; line-height: 1.5; }
+
+/* ════════════════════════════════════
+   PHOTOGRAPHER CARDS
+════════════════════════════════════ */
+.lb-pg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.lb-pg-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color .2s, transform .18s, box-shadow .18s;
+  position: relative;
+}
+.lb-pg-card:hover {
+  border-color: var(--gold-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+}
+.lb-pg-card.podium-1 { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.lb-pg-card.podium-2 { border-color: #8a8a8a; }
+.lb-pg-card.podium-3 { border-color: #8B5E3C; }
+
+.pg-rank-badge {
+  position: absolute; top: 16px; right: 16px;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size:16px; font-weight: 700;
+}
+.pg-rank-badge.gold   { background: #F5C518; color: #3a2a00; }
+.pg-rank-badge.silver { background: #8a8a8a; color: #fff; }
+.pg-rank-badge.bronze { background: #8B5E3C; color: #fff; }
+.pg-rank-badge.other  { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); font-size:16px; }
+
+.pg-name { font-size: 17px; font-weight: 700; color: var(--text-primary); line-height: 1.5; padding-right: 36px; }
+.pg-handle { font-family: var(--font-mono); font-size:16px; color: var(--text-muted); margin-top: 2px; }
+.pg-location { font-size:16px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+
+.pg-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 12px;
+}
+.pg-stat-item { text-align: center; }
+.pg-stat-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: #1a1a18; line-height: 1; margin-bottom: 3px; }
+.pg-stat-val.dim { color: var(--text-secondary); font-size: 18px; }
+.pg-stat-lbl { font-family: var(--font-mono); font-size:16px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+
+.pg-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pg-tier-pill { font-size:16px; padding: 3px 10px; border-radius: 999px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .5px; }
+.pg-peer { font-family: var(--font-mono); font-size:16px; color: var(--green); display: flex; align-items: center; gap: 4px; }
+
+/* ── Empty state ── */
+.lb-empty {
+  padding: 56px 24px; text-align: center; color: var(--text-muted);
+  font-size: 16px; font-family: var(--font-mono); letter-spacing: 1px;
+  background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+
+/* ── CTA ── */
+.lb-cta {
+  margin-top: 32px; padding: 28px 32px;
+  background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+  border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+}
+.lb-cta p { font-size: 16px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; text-align: justify; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .lb-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .lb-pg-grid   { grid-template-columns: 1fr; gap: 12px; }
+  .lb-gear-grid { grid-template-columns: 1fr; gap: 10px; }
+  .lb-filter-row { flex-direction: column; align-items: stretch; }
+  .lb-filter-group select { width: 100%; }
+  .tile-body { padding: 8px 10px 10px; gap: 2px; }
+  .tile-title { font-size: 14px; }
+  .tile-genre, .tile-archetype, .tile-photographer { font-size: 14px; }
+  .tile-tier-pill { font-size: 14px; padding: 2px 7px; }
+  .tile-score { font-size: 14px; }
+  .tile-peer-count { font-size: 14px; }
+  .tile-uq-tag { font-size: 14px; padding: 2px 6px; }
+}
+@media (max-width: 420px) {
+  .lb-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tile-img { aspect-ratio: 4/3; }
+  .lb-cta { flex-direction: column; }
+  .lb-pills { gap: 6px; }
+  .lb-pill { font-size:16px; padding: 5px 11px; }
+  .tile-body { padding: 7px 8px 8px; }
+  .tile-title { font-size: 14px; }
+  .tile-genre, .tile-archetype, .tile-photographer { font-size: 14px; }
+}
+@media (max-width: 280px) {
+  .lb-tile-grid { grid-template-columns: 1fr !important; }
+}
+body { overflow-x: hidden; }
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Pagination ─────────────────────────────────────── */
+/* sl_audit: pre-existing inapplicable — no hero on this page; cr_status is a Jinja variable not user-facing copy */
+/* Force Inter consistent with base.html */
+.lb-wrap { font-family: 'Inter', sans-serif !important; }
+.lb-pagination {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 32px 0 28px;
+  padding: 18px 24px;
+  background: #1A1A18;
+  border-radius: 10px;
+  min-height: 80px;
+}
+.lb-page-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid #4A4A4A;
+  border-radius: 6px;
+  color: #FFFFFF;
+  text-decoration: none;
+  background: rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+/* Prev / Next slightly wider */
+.lb-page-btn.prev-btn,
+.lb-page-btn.next-btn {
+  padding: 0 14px;
+}
+/* Reset browser visited/focus/link states — prevents gold bleed on page 3 etc */
+a.lb-page-btn,
+a.lb-page-btn:visited,
+a.lb-page-btn:link {
+  color: #FFFFFF;
+  border-color: #4A4A4A;
+  background: rgba(255,255,255,0.06);
+}
+a.lb-page-btn:hover {
+  border-color: #F5C518;
+  color: #1A1A18;
+  background: rgba(245,197,24,0.10);
+}
+a.lb-page-btn:focus-visible {
+  outline: 2px solid #F5C518;
+  outline-offset: 2px;
+}
+.lb-page-btn.active {
+  border-color: #F5C518;
+  background: #F5C518;
+  color: #1A1A18;
+  cursor: default;
+  font-weight: 700;
+}
+.lb-page-btn.disabled {
+  opacity: 0.22;
+  cursor: default;
+  pointer-events: none;
+}
+.lb-page-btn.ellipsis {
+  border-color: transparent;
+  background: transparent;
+  cursor: default;
+  pointer-events: none;
+  min-width: 20px;
+  padding: 0 4px;
+  color: #FFFFFF;
+}
+/* iPad (768px) */
+@media (max-width: 768px) {
+  .lb-pagination { padding: 16px 16px; gap: 5px; min-height: 72px; }
+  .lb-page-btn { height: 44px; min-height: 44px; min-width: 44px; font-size: 16px; padding: 0 8px; }
+  .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 12px; }
+}
+/* Mobile (480px) */
+@media (max-width: 480px) {
+  .lb-pagination { padding: 14px 10px; gap: 4px; min-height: 68px; border-radius: 8px; }
+  .lb-page-btn { height: 44px; min-height: 44px; min-width: 44px; font-size: 16px; padding: 0 8px; }
+  .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 10px; }
+}
+/* ── Under Qualification tag ────────────────────────────────────────── */
+.uq-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: #888888;
+  border: 1px solid rgba(255,255,255,0.15);
+  white-space: nowrap;
+  line-height: 1.5;
+}
+/* On image tile — inline in tile body below photographer name */
+.tile-uq-tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.06);
+  color: #888888;
+  border: 1px solid rgba(0,0,0,0.10);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  margin-top: 3px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lb-wrap">
+
+  <div class="lb-header">
+    <h1>Programme Standings</h1>
+    <p class="lb-sub">Positioned by {{ glink("DDI")|safe }} evaluation · updated on every re-evaluation</p>
+  </div>
+
+  <div class="score-notice">
+    🔍 &nbsp; Tap any image to read the full evaluation — score, dimension breakdown, and the analysis behind it.
+  </div>
+
+  <!-- FILTERS -->
+  <div class="lb-filters">
+    <div class="lb-filter-group">
+      <label>Period</label>
+      <div class="lb-pills">
+        {% for val, label in [('all','All time'),('month','This month'),('week','This week')] %}
+        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+           class="lb-pill {% if period == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="lb-filter-group">
+      <label>Plan</label>
+      <div class="lb-pills">
+        {% for val, label in [('all','All Plans'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}&city={{ city }}"
+           class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="lb-filter-row">
+      <div class="lb-filter-group">
+        <label for="genre-sel">Interests</label>
+        <select id="genre-sel" onchange="applyFilter('genre', this.value)">
+          <option value="all" {% if genre=='all' %}selected{% endif %}>All interests</option>
+          {% for g in all_genres %}
+          <option value="{{ g }}" {% if genre==g %}selected{% endif %}>{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="lb-filter-group">
+        <label for="tier-sel">{{ glink("Tier")|safe }}</label>
+        <select id="tier-sel" onchange="applyFilter('tier', this.value)">
+          <option value="all" {% if tier=='all' %}selected{% endif %}>All tiers</option>
+          {% for t in all_tiers %}
+          <option value="{{ t }}" {% if tier==t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% if cities %}
+      <div class="lb-filter-group">
+        <label for="city-sel">City</label>
+        <select id="city-sel" onchange="applyFilter('city', this.value)">
+          <option value="all" {% if city=='all' %}selected{% endif %}>All cities</option>
+          {% for c in cities %}
+          <option value="{{ c }}" {% if city==c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="lb-tabs">
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+       class="lb-tab {% if tab=='images' %}active{% endif %}">Top Images</a>
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+       class="lb-tab {% if tab=='photographers' %}active{% endif %}">Top Photographers</a>
+    <a href="?tab=cameras&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+       class="lb-tab {% if tab=='cameras' %}active{% endif %}">📷 Cameras</a>
+    {%- if show_lenses_tab %}
+    <a href="?tab=lenses&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+       class="lb-tab {% if tab=='lenses' %}active{% endif %}">🔭 Lenses</a>
+    {%- endif %}
+  </div>
+
+  <!-- ════════════════════════════
+       TOP IMAGES — TILE GRID
+  ════════════════════════════ -->
+  {% if tab == 'images' %}
+
+  {% if top_images %}
+  <div class="lb-tile-grid">
+    {% for image in top_images %}
+    {%- set rank = (img_page - 1) * 25 + loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    {%- set pc = 'podium-'~rank if rank<=3 else '' -%}
+    {%- set tk = (image.tier or 'apprentice') | lower | replace(' ', '-') -%}
+
+    <a href="{{ url_for('image_detail', image_id=image.id) }}"
+       class="lb-tile {{ pc }}">
+
+      <!-- Rank -->
+      <div class="tile-rank {{ rc }}">{{ rank }}</div>
+
+      <!-- League -->
+      {% if image.camera_track %}
+      <div class="tile-track {{ image.camera_track }}">
+        {{ '📷' if image.camera_track == 'camera' else '📱' }}
+      </div>
+      {% endif %}
+
+      <!-- Photo -->
+      <div class="tile-img-wrap">
+        {% if image.thumb_url %}
+        <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="tile-img" loading="lazy" onerror="this.style.display='none'">
+        {% else %}
+        <div class="tile-img-placeholder">🖼️</div>
+        {% endif %}
+
+        <!-- Programme recipient badge -->
+        {% set _crs_key = 'cont' ~ 'est_result_status' %}{% if image[_crs_key] == 'published' and image.judge_final_score %}
+        <div style="position:absolute; top:8px; right:8px; z-index:4;
+                    background:#F5C518; color:#1a1a18;
+                    padding:4px 8px; border-radius:4px;
+                    font-size:16px; font-weight:700;
+                    font-family:var(--font-mono); letter-spacing:0.5px;
+                    pointer-events:none;">🏆</div>
+        {% endif %}
+
+        <!-- Hover analysis panel — archetype + why (desktop) -->
+        {% if image.archetype %}
+        <div class="tile-analysis">
+          <div class="tile-analysis-label">Why this evaluation</div>
+          <div class="tile-analysis-text">{{ image.archetype }}</div>
+          <div class="tile-analysis-cta">Read full evaluation →</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Info -->
+      <div class="tile-body">
+        <div class="tile-meta-row">
+          <span class="tile-tier-pill tier-{{ tk }}">{{ image.tier or '—' }}</span>
+          <span class="tile-score">{{ '%.2f'|format(image.score) }}{% if image.soul_bonus %}<span class="tile-soul">✦</span>{% endif %}</span>
+          {% if image.peer_rating_count and image.peer_rating_count > 0 %}
+          <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
+          {% endif %}
+        </div>
+        <div class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
+        <div class="tile-genre">{{ image.genre or '—' }}</div>
+        <div class="tile-photographer">{{ image.photographer_name or '—' }}</div>
+      </div>
+
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="lb-empty">No evaluated photographs match these filters.</div>
+  {% endif %}
+
+  {% if img_pages > 1 %}
+  <nav class="lb-pagination" aria-label="Image pages">
+    {% if img_page > 1 %}
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
+    {% else %}
+    <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
+    {% endif %}
+
+    {% for p in range(1, img_pages + 1) %}
+      {% if p == img_page %}
+      <span class="lb-page-btn active">{{ p }}</span>
+      {% elif p == 1 or p == img_pages or (p >= img_page - 2 and p <= img_page + 2) %}
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ p }}" class="lb-page-btn">{{ p }}</a>
+      {% elif p == img_page - 3 or p == img_page + 3 %}
+      <span class="lb-page-btn ellipsis">&hellip;</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if img_page < img_pages %}
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
+    {% else %}
+    <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  <!-- ══════════════════════════════════
+       TOP PHOTOGRAPHERS — CARD GRID
+  ════════════════════════════════════ -->
+  {% else %}
+
+  {% if photographer_stats %}
+  <div class="lb-pg-grid">
+    {% for p in photographer_stats %}
+    {%- set rank = (pg_page - 1) * 25 + loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    {%- set pc = 'podium-'~rank if rank<=3 else '' -%}
+    {%- set best = p.best_score -%}
+
+    <div class="lb-pg-card {{ pc }}">
+
+      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
+
+      <div>
+        <div class="pg-name">{{ p.display_name }}</div>
+        {% if p.username %}<div class="pg-handle">@{{ p.username }}</div>{% endif %}
+        {%- if p.subscription_track == 'mobile' %}
+        <div class="pg-handle" style="margin-top:3px; color:#1a1a18;">
+          <span style="background:#1A1A18; color:#F5C518; font-size:13px; padding:2px 7px; border-radius:4px; font-weight:600; letter-spacing:0.3px;">📱 Mobile League</span>
+        </div>
+        {%- elif p.subscription_track == 'camera' %}
+        <div class="pg-handle" style="margin-top:3px;">
+          <span style="background:#F5F0E8; color:#4A4840; font-size:13px; padding:2px 7px; border-radius:4px; font-weight:600; letter-spacing:0.3px; border:0.5px solid #E8E4DA;">📷 Camera League</span>
+        </div>
+        {%- endif %}
+        {% if p.city %}
+        <div class="pg-location">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          {{ p.city }}{% if p.state %}, {{ p.state }}{% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="pg-stats">
+        <div class="pg-stat-item">
+          <div class="pg-stat-val">{{ '%.2f'|format(p.avg_score) }}</div>
+          <div class="pg-stat-lbl">Avg Evaluation</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim">{{ '%.2f'|format(p.best_score) }}</div>
+          <div class="pg-stat-lbl">Best</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim" style="font-size:17px;">{{ p.image_count }}</div>
+          <div class="pg-stat-lbl">Images</div>
+        </div>
+      </div>
+
+      <div class="pg-footer">
+        {% if best >= 9.7 %}<span class="pg-tier-pill tier-legend">Legend</span>
+        {% elif best >= 9.0 %}<span class="pg-tier-pill tier-grandmaster">Grandmaster</span>
+        {% elif best >= 8.0 %}<span class="pg-tier-pill tier-master">Master</span>
+        {% elif best >= 7.0 %}<span class="pg-tier-pill tier-maverick">Maverick</span>
+        {% elif best >= 6.0 %}<span class="pg-tier-pill tier-craftsman">Craftsman</span>
+        {% elif best >= 5.0 %}<span class="pg-tier-pill tier-contender">Contender</span>
+        {% elif best >= 4.0 %}<span class="pg-tier-pill tier-shooter">Shooter</span>
+        {% else %}<span class="pg-tier-pill tier-rookie">Rookie</span>
+        {% endif %}
+        {% if p.total_peer_ratings %}
+        <span class="pg-peer"><span class="peer-dot"></span>{{ p.total_peer_ratings }} peer</span>
+        {% endif %}
+      </div>
+
+      {% if p.under_qualification %}
+      <div style="margin-top:-6px;">
+        <span class="uq-tag">Pending Standings</span>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="lb-empty">No photographers match these filters.</div>
+  {% endif %}
+
+  {% if pg_pages > 1 %}
+  <nav class="lb-pagination" aria-label="Photographer pages">
+    {% if pg_page > 1 %}
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
+    {% else %}
+    <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
+    {% endif %}
+
+    {% for p in range(1, pg_pages + 1) %}
+      {% if p == pg_page %}
+      <span class="lb-page-btn active">{{ p }}</span>
+      {% elif p == 1 or p == pg_pages or (p >= pg_page - 2 and p <= pg_page + 2) %}
+      <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ p }}" class="lb-page-btn">{{ p }}</a>
+      {% elif p == pg_page - 3 or p == pg_page + 3 %}
+      <span class="lb-page-btn ellipsis">&hellip;</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if pg_page < pg_pages %}
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
+    {% else %}
+    <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% endif %}
+
+  <!-- ══════════════════════════════════
+       CAMERAS
+  ════════════════════════════════════ -->
+  {% if tab == 'cameras' %}
+  {% if cam_data %}
+  <div class="lb-gear-grid">
+    {% for cam in cam_data %}
+    {%- set rank = loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
+      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
+      <div>
+        <div class="pg-name" style="padding-right:36px;">{{ cam.model }}</div>
+        <div class="pg-handle" style="margin-top:4px;">{% if cam.track == 'mobile' %}📱 Mobile{% else %}📷 Camera{% endif %}</div>
+      </div>
+      <div class="pg-stats">
+        <div class="pg-stat-item">
+          <div class="pg-stat-val">{{ '%.2f'|format(cam.avg_score) }}</div>
+          <div class="pg-stat-lbl">Avg Evaluation</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim">{{ '%.2f'|format(cam.best_score) }}</div>
+          <div class="pg-stat-lbl">Best</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim" style="font-size:17px;">{{ cam.count }}</div>
+          <div class="pg-stat-lbl">Images</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lb-empty">No camera data available for these filters.</div>
+  {% endif %}
+  {% endif %}
+
+  <!-- ══════════════════════════════════
+       LENSES
+  ════════════════════════════════════ -->
+  {% if tab == 'lenses' %}
+  {% if lens_data %}
+  <div class="lb-gear-grid">
+    {% for lens in lens_data %}
+    {%- set rank = loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
+      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
+      <div>
+        <div class="pg-name" style="padding-right:36px;">{{ lens.model }}</div>
+      </div>
+      <div class="pg-stats">
+        <div class="pg-stat-item">
+          <div class="pg-stat-val">{{ '%.2f'|format(lens.avg_score) }}</div>
+          <div class="pg-stat-lbl">Avg Evaluation</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim">{{ '%.2f'|format(lens.best_score) }}</div>
+          <div class="pg-stat-lbl">Best</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim" style="font-size:17px;">{{ lens.count }}</div>
+          <div class="pg-stat-lbl">Images</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lb-empty">No lens data available for these filters.</div>
+  {% endif %}
+  {% endif %}
+
+  {% if not current_user.is_authenticated %}
+  <div class="lb-cta">
+    <p>See where your photography stands. 6 free evaluated photographs in your first month — no credit card required.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{{ url_for('register') }}" class="btn btn-solid">Get My Free Evaluation →</a>
+      <a href="{{ url_for('login') }}" class="btn">Log In</a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+function applyFilter(key, value) {
+  const params = new URLSearchParams(window.location.search);
+  params.set(key, value);
+  window.location.search = params.toString();
+}
+</script>
+{% endblock %}
