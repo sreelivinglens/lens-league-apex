@@ -1580,10 +1580,10 @@ img {
       {% else %}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('my_gallery') }}" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
+        <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Programme Gallery</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint in ['weekly_challenge', 'challenge_submit', 'challenge_withdraw', 'challenge_topup'] %}nav-active{% endif %}">Weekly Assignment</a>
         <a href="{{ url_for('recent_work') }}" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
-        <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Programme Standings</a>
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
         <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
         <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Excellence Award</a>
@@ -1642,11 +1642,11 @@ img {
     {% else %}
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('my_gallery') }}" onclick="toggleNav()">My Gallery</a>
+      <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Programme Gallery</a>
       <a href="{{ url_for('portfolio_manager') }}" onclick="toggleNav()">My Portfolio</a>
       <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
       <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
       <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
-      <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Programme Standings</a>
       <a href="{{ url_for('contests') }}" onclick="toggleNav()">Programmes</a>
       <a href="{{ url_for('poty') }}" onclick="toggleNav()">Excellence Award</a>
       <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
@@ -1666,7 +1666,7 @@ img {
     <a href="/mentors" onclick="toggleNav()">Mentors</a>
     <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
     <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
-    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Programme Standings</a>
+    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Programme Gallery</a>
     <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
     <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
@@ -1721,7 +1721,7 @@ img {
           <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
           <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
           <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
-          <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
+          <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Gallery</a>
           <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
           <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Annual Excellence</a>
           <a href="{{ url_for('portfolio_manager') }}" onclick="closeBottomMore()">My Portfolio</a>
