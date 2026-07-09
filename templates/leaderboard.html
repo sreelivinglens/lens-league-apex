@@ -524,7 +524,7 @@ body { overflow-x: hidden; }
     {%- set ns.any_shown = true -%}
     {%- set tk_h = tier_name | lower | replace(' ','-') -%}
     {%- set visible = tier_images[:10] -%}
-    {%- set has_more = (tier_images | length) > 10 -%}
+    {%- set has_more = (tier_images | length) >= 12 -%}
 
   <div class="lb-tier-group">
     <div class="lb-tier-group-header">
@@ -602,27 +602,7 @@ body { overflow-x: hidden; }
   <div class="lb-empty">No evaluated photographs match these filters.</div>
   {%- endif %}
 
-  {% if img_pages > 1 %}
-  <nav class="lb-pagination" aria-label="Image pages">
-    {% if img_page > 1 %}
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&img_page={{ img_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
-    {% else %}
-    <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
-    {% endif %}
-    {% for p in range(1, img_pages + 1) %}
-      {% if p == img_page %}<span class="lb-page-btn active">{{ p }}</span>
-      {% elif p == 1 or p == img_pages or (p >= img_page - 2 and p <= img_page + 2) %}
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&img_page={{ p }}" class="lb-page-btn">{{ p }}</a>
-      {% elif p == img_page - 3 or p == img_page + 3 %}<span class="lb-page-btn ellipsis">&hellip;</span>
-      {% endif %}
-    {% endfor %}
-    {% if img_page < img_pages %}
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&img_page={{ img_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
-    {% else %}
-    <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
-    {% endif %}
-  </nav>
-  {% endif %}
+
 
   <!-- ═══════════════════════
        PHOTOGRAPHERS
