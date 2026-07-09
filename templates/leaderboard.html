@@ -130,6 +130,7 @@
 }
 .tile-track.camera { background: rgba(245,197,24,0.15); color: #1a1200; }
 .tile-track.mobile { background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.18); }
+.tile-track-icon { display: none; font-size: 14px; line-height: 1; flex-shrink: 0; }
 .tile-img-wrap { position: relative; overflow: hidden; }
 .tile-img {
   width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
@@ -234,6 +235,8 @@
   .tile-score { font-size: 14px; }
   .tile-peer-count { font-size: 14px; }
   .tile-uq-tag { font-size: 14px; padding: 2px 6px; }
+  .tile-track { display: none; }
+  .tile-track-icon { display: inline-flex; align-items: center; }
   .lb-pill { min-height: 44px; padding: 12px 11px; font-size: 16px; }
 }
 @media (max-width: 420px) {
@@ -409,6 +412,15 @@ a.lb-page-btn:focus-visible { outline: 2px solid #F5C518; outline-offset: 2px; }
           <span class="tile-score">{{ '%.2f'|format(image.score) }}{% if image.soul_bonus %}<span class="tile-soul">&#10022;</span>{% endif %}</span>
           {% if image.peer_rating_count and image.peer_rating_count > 0 %}
           <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
+          {% endif %}
+          {% if image.camera_track %}
+          <span class="tile-track-icon" title="{{ 'Camera League' if image.camera_track == 'camera' else 'Mobile League' }}">
+            {% if image.camera_track == 'camera' %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Camera League"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="3"/></svg>
+            {% else %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Mobile League"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+            {% endif %}
+          </span>
           {% endif %}
         </div>
         <div class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
