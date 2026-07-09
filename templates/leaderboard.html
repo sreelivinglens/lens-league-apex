@@ -11,23 +11,24 @@
 {% block extra_css %}
 <style>
 /* ── Tier pill colours (dark bg — used on image overlay and header) ── */
-.tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
-.tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
-.tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
-.tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
-.tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
-.tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
-.tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
-.tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
-/* Photographer card tier pills */
-.pg-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
-.pg-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
-.pg-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
-.pg-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
-.pg-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
-.pg-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
-.pg-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
-.pg-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+/* ── Tier pill colours — light bg, coloured text, NO black backgrounds ── */
+.tier-legend       { background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; }
+.tier-grandmaster  { background:#FDF3CC; color:#B45309; border:1px solid #F5C518; }
+.tier-master       { background:#EDEDEB; color:#2D2D2D; border:1px solid #C4C4C0; }
+.tier-maverick     { background:#EDE9FE; color:#5B21B6; border:1px solid #C4B5FD; }
+.tier-craftsman    { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
+.tier-contender    { background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7; }
+.tier-shooter      { background:#F3F4F6; color:#374151; border:1px solid #D1D5DB; }
+.tier-rookie       { background:#F9FAFB; color:#6B7280; border:1px solid #E5E7EB; }
+/* Photographer card tier pills — same palette */
+.pg-tier-legend      { background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; }
+.pg-tier-grandmaster { background:#FDF3CC; color:#B45309; border:1px solid #F5C518; }
+.pg-tier-master      { background:#EDEDEB; color:#2D2D2D; border:1px solid #C4C4C0; }
+.pg-tier-maverick    { background:#EDE9FE; color:#5B21B6; border:1px solid #C4B5FD; }
+.pg-tier-craftsman   { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
+.pg-tier-contender   { background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7; }
+.pg-tier-shooter     { background:#F3F4F6; color:#374151; border:1px solid #D1D5DB; }
+.pg-tier-rookie      { background:#F9FAFB; color:#6B7280; border:1px solid #E5E7EB; }
 /* ── Colour tokens ── */
 :root {
   --gold:           #F5C518 !important;
@@ -97,7 +98,7 @@
 /* ── Tier group ── */
 .lb-tier-group { margin-bottom: 48px; }
 .lb-tier-group-header {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center;
   gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
 }
 .lb-tier-group-header-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
@@ -119,6 +120,10 @@
   min-height: 36px; display: inline-flex; align-items: center; gap: 6px;
 }
 .lb-tier-view-more:hover { border-color: var(--gold); color: var(--gold); }
+/* View more footer — bottom-right after last image row */
+.lb-tier-footer {
+  display: flex; justify-content: flex-end; margin-top: 12px;
+}
 /* ── Image tile grid — 4 col desktop ── */
 .lb-tile-grid {
   display: grid;
@@ -428,12 +433,12 @@ body { overflow-x: hidden; }
           <span class="lb-tier-group-sub">Equal evaluations appear in no particular order.</span>
         </div>
       </div>
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}"
-         class="lb-tier-view-more">View more &rsaquo;</a>
     </div>
 
+    {%- set visible = tier_images[:8] -%}
+    {%- set has_more = tier_images | length > 8 -%}
     <div class="lb-tile-grid">
-      {% for image in tier_images %}
+      {% for image in visible %}
       {%- set tk = (image.tier or 'rookie') | lower | replace(' ', '-') -%}
       <a href="{{ url_for('image_detail', image_id=image.id) }}" class="lb-tile">
 
@@ -486,6 +491,12 @@ body { overflow-x: hidden; }
       </a>
       {% endfor %}
     </div>
+    {%- if has_more %}
+    <div class="lb-tier-footer">
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}"
+         class="lb-tier-view-more">View more &rsaquo;</a>
+    </div>
+    {%- endif %}
   </div>
 
     {%- endif %}
