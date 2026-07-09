@@ -668,8 +668,15 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 }
 /* ── Photographer credit — styled by base.html shared .sl-hero-credit-pill ──
    Per SHARED HERO SYSTEM rule (Session 132): credit styling lives in
-   base.html only. Grey 20% box fix applied there Session 133. Do not
-   re-define credit CSS in this file. ── */
+   base.html only. Grey 20% box fix applied there Session 133.
+   Position override here because this page's img is a direct child of
+   the hero section (not wrapped separately), so we anchor to .sl-hiw-hero. ── */
+.sl-hiw-hero .sl-hero-credit-pill {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  z-index: 5;
+}
 /* ── Hero image wrapper — anchors credit pill to image corner ── */
 .sl-hero-img-wrap {
   position: relative;
@@ -721,10 +728,10 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
       alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
     >
+    </div>
     {% if hiw_hero and hiw_hero.photographer_name %}
     <span class="sl-hero-credit-pill">{{ hiw_hero.photographer_name }}{% if hiw_hero.score %} &middot; {{ '%.2f'|format(hiw_hero.score) }}{% endif %}</span>
     {% endif %}
-    </div>
     <div class="sl-hiw-hero-fade sl-hero-fade"></div>
     <div class="sl-hiw-hero-content sl-hero-content">
       <p class="sl-hiw-eyebrow">How It Works</p>
