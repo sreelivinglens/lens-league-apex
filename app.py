@@ -9259,7 +9259,6 @@ def leaderboard():
     period = request.args.get('period', 'all')
     track  = request.args.get('track', 'all')
     tab    = request.args.get('tab', 'images')
-    city   = request.args.get('city', 'all')
 
     now = datetime.utcnow()
     if period == 'week':
@@ -9291,33 +9290,24 @@ def leaderboard():
             ))
         elif track == 'mobile':
             q = q.filter(db.text("camera_track = 'mobile'"))
-        if city != 'all':
-            if not user_already_joined:
-                q = q.join(User, Image.user_id == User.id)
-            q = q.filter(User.city == city)
         return q
 
+    # Images tab — tier-grouped gallery (no rank numbers)
+    # Order: score desc, then scored_at desc for ties (most recently evaluated first)
+    from flask_login import current_user as _cu
+    img_q      = apply_filters(Image.query, user_already_joined=False).order_by(
+                     desc(Image.score), desc(Image.scored_at)
+                 )
+    img_total  = img_q.count()
+
+    # Pagination applies within the full ordered set; tier grouping is done in template
     img_page     = request.args.get('img_page', 1, type=int)
-    img_per_page = 25
-    img_q        = apply_filters(Image.query, user_already_joined=False).order_by(desc(Image.score))
-    img_total    = img_q.count()
-    img_pages    = min(25, max(1, (img_total + img_per_page - 1) // img_per_page))
+    img_per_page = 50
+    img_pages    = min(10, max(1, (img_total + img_per_page - 1) // img_per_page))
     img_page     = max(1, min(img_page, img_pages))
     top_images   = img_q.offset((img_page - 1) * img_per_page).limit(img_per_page).all()
 
-    # Find current user's best image rank for "your position" indicator
-    from flask_login import current_user as _cu
-    user_img_rank = None
-    if _cu.is_authenticated:
-        try:
-            all_scored = apply_filters(Image.query, user_already_joined=False)\
-                .order_by(desc(Image.score)).all()
-            for _i, _img in enumerate(all_scored):
-                if _img.user_id == _cu.id:
-                    user_img_rank = _i + 1
-                    break
-        except Exception:
-            pass
+    user_img_rank = None  # deprecated — no rank numbers in gallery mode
 
     # Top Photographers  -  grouped by user_id, sorted by avg_score DESC
     # Session 132 — Mobile DDI: subscription_track added to SELECT so
@@ -9388,14 +9378,6 @@ def leaderboard():
             # Session 132 — Mobile DDI: subscription_track for league badge
             'subscription_track': row.subscription_track or None,
         })
-
-    # Cities for filter dropdown
-    cities = [c[0] for c in (
-        db.session.query(User.city)
-        .join(Image, Image.user_id == User.id)
-        .filter(User.city != None, Image.status == 'scored', Image.is_public == True)
-        .distinct().order_by(User.city).all()
-    ) if c[0]]
 
     all_tiers = ['Rookie', 'Shooter', 'Contender', 'Craftsman', 'Maverick', 'Master', 'Grandmaster', 'Legend']
 
@@ -9505,13 +9487,11 @@ def leaderboard():
         lens_data          = lens_rankings,
         all_genres         = GENRE_IDS,
         all_tiers          = all_tiers,
-        cities             = cities,
         genre              = genre,
         tier               = tier,
         period             = period,
         track              = track,
         tab                = tab,
-        city               = city,
         img_page           = img_page,
         img_pages          = img_pages,
         img_total          = img_total,
@@ -13348,7 +13328,7 @@ def public_profile(username):
     )
 
 
-@app.route('/how_it_works')
+@app.route('/how-it-works')
 def how_it_works():
     try:
         hiw_hero = (Image.query
@@ -14437,7 +14417,7 @@ def sitemap():
     pages = [
         ('/', '1.0', 'weekly'),
         ('/about', '0.9', 'monthly'),
-        ('/how_it_works', '0.9', 'monthly'),
+        ('/how-it-works', '0.9', 'monthly'),
         ('/pricing', '0.9', 'weekly'),
         ('/terms', '0.8', 'monthly'),
         ('/privacy', '0.8', 'monthly'),
