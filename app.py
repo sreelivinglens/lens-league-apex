@@ -5922,9 +5922,10 @@ def upload():
                     if os.path.exists(thumb_path): os.remove(thumb_path)
                     app.logger.info(f'[upload] watermark rejected: {_wm_data.get("description")} uid={current_user.id}')
                     _wm_msg = (
-                        'Your image appears to contain a watermark, logo, or text overlay. '
-                        'Shutter League evaluates the original photograph only — please remove any '
-                        'added text, handles, or branding and re-upload the clean image.'
+                        'Your image appears to contain a watermark, logo, text overlay, or UI elements '
+                        '(such as app interface or screenshot chrome). '
+                        'Shutter League evaluates the original photograph only — please export directly '
+                        'from your camera or editing app and re-upload the clean image.'
                     )
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
                         return jsonify({'error': True, 'message': _wm_msg}), 422
@@ -13363,7 +13364,7 @@ def how_it_works():
                     .first())
     except Exception:
         hiw_hero = None
-    return render_template('how_it_works.html', hiw_hero=hiw_hero)
+    return render_template('how-it-works.html', hiw_hero=hiw_hero)
 
 @app.route('/example-score')
 def example_score():
