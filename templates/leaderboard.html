@@ -67,46 +67,71 @@
   border: 1px solid var(--border); border-radius: var(--radius-md);
   overflow: hidden;
 }
+/* Each row has its own tint colour */
 .lb-filter-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 11px 16px; border-bottom: 1px solid var(--border);
-  flex-wrap: wrap; background: #FFFFFF;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 .lb-filter-row:last-child { border-bottom: none; }
+.lb-filter-row.row-period   { background: #FAFAFA; }
+.lb-filter-row.row-plan     { background: #EFF6FF; }
+.lb-filter-row.row-interests { background: #F0FDF4; }
+.lb-filter-row.row-tier     { background: #FFFBEB; }
+/* Labels — coloured to match row */
 .lb-filter-label {
   font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase; color: #5F5E5A;
-  min-width: 90px; flex-shrink: 0;
+  letter-spacing: 2px; text-transform: uppercase;
+  min-width: 100px; flex-shrink: 0;
   display: flex; align-items: center; gap: 7px;
 }
-/* Pills container — horizontal scroll on small screens */
+.lb-filter-label.lbl-period   { color: #374151; }
+.lb-filter-label.lbl-plan     { color: #1D4ED8; }
+.lb-filter-label.lbl-interests { color: #166534; }
+.lb-filter-label.lbl-tier     { color: #B45309; }
+/* Pills container */
 .lb-pills {
   display: flex; gap: 6px; flex-wrap: nowrap;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   scrollbar-width: none; padding-bottom: 2px;
 }
 .lb-pills::-webkit-scrollbar { display: none; }
-/* Base pill */
+/* Base pill — neutral inactive */
 .lb-pill {
-  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border);
+  padding: 7px 16px; border-radius: 999px; border: 1px solid #D1D5DB;
   font-size: 15px; font-family: var(--font-mono); text-decoration: none;
-  color: var(--text-primary); background: transparent; transition: all .15s;
+  color: #374151; background: #FFFFFF; transition: all .15s;
   letter-spacing: .3px; white-space: nowrap; min-height: 36px;
-  display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0;
 }
-.lb-pill:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
-.lb-pill.active { background: var(--gold); color: #1A1A18; border-color: var(--gold); font-weight: 700; }
-/* Tier pills — inherit tier colour when active */
+/* PERIOD pills: active = black */
+.lb-pill.period-active { background: #1A1A18; color: #FFFFFF; border-color: #1A1A18; font-weight: 700; }
+.lb-pill.period-inactive:hover { border-color: #1A1A18; color: #1A1A18; }
+/* PLAN pills: inactive = blue border+text, active = blue fill */
+.lb-pill.plan-pill { color: #1D4ED8; border-color: #93C5FD; background: #FFFFFF; }
+.lb-pill.plan-pill:hover { background: #DBEAFE; }
+.lb-pill.plan-active { background: #2563EB; color: #FFFFFF; border-color: #2563EB; font-weight: 700; }
+/* INTERESTS pills: inactive = green border+text, active = dark green fill */
+.lb-pill.interest-pill { color: #166534; border-color: #86EFAC; background: #FFFFFF; }
+.lb-pill.interest-pill:hover { background: #DCFCE7; }
+.lb-pill.interest-active { background: #166534; color: #FFFFFF; border-color: #166534; font-weight: 700; }
+/* TIER pills: inactive = tier-coloured border+text, active = tier fill */
+.lb-pill.tier-pill-legend      { color:#92400E; border-color:#F59E0B; background:#FFFFFF; }
+.lb-pill.tier-pill-grandmaster { color:#B45309; border-color:#F5C518; background:#FFFFFF; }
+.lb-pill.tier-pill-master      { color:#374151; border-color:#9CA3AF; background:#FFFFFF; }
+.lb-pill.tier-pill-maverick    { color:#5B21B6; border-color:#C4B5FD; background:#FFFFFF; }
+.lb-pill.tier-pill-craftsman   { color:#1E40AF; border-color:#93C5FD; background:#FFFFFF; }
+.lb-pill.tier-pill-contender   { color:#065F46; border-color:#6EE7B7; background:#FFFFFF; }
+.lb-pill.tier-pill-shooter     { color:#374151; border-color:#D1D5DB; background:#FFFFFF; }
+.lb-pill.tier-pill-rookie      { color:#6B7280; border-color:#E5E7EB; background:#FFFFFF; }
 .lb-pill.tp-active-legend      { background:#FEF3C7; color:#92400E; border-color:#F59E0B; font-weight:700; }
 .lb-pill.tp-active-grandmaster { background:#FDF3CC; color:#B45309; border-color:#F5C518; font-weight:700; }
-.lb-pill.tp-active-master      { background:#EDEDEB; color:#2D2D2D; border-color:#C4C4C0; font-weight:700; }
+.lb-pill.tp-active-master      { background:#4B5563; color:#FFFFFF;  border-color:#4B5563; font-weight:700; }
 .lb-pill.tp-active-maverick    { background:#EDE9FE; color:#5B21B6; border-color:#C4B5FD; font-weight:700; }
 .lb-pill.tp-active-craftsman   { background:#DBEAFE; color:#1E40AF; border-color:#93C5FD; font-weight:700; }
 .lb-pill.tp-active-contender   { background:#D1FAE5; color:#065F46; border-color:#6EE7B7; font-weight:700; }
 .lb-pill.tp-active-shooter     { background:#F3F4F6; color:#374151; border-color:#D1D5DB; font-weight:700; }
 .lb-pill.tp-active-rookie      { background:#F9FAFB; color:#6B7280; border-color:#E5E7EB; font-weight:700; }
-/* Interests — active = dark green fill matching designer */
-.lb-pill.interest-active { background:#2D6A4F; color:#FFFFFF; border-color:#2D6A4F; font-weight:700; }
 
 /* ════════════════════════════════════════
    TABS
@@ -398,62 +423,73 @@ body { overflow-x: hidden; }
   <div class="lb-filter-section">
 
     <!-- Period -->
-    <div class="lb-filter-row">
-      <span class="lb-filter-label">
+    <div class="lb-filter-row row-period">
+      <span class="lb-filter-label lbl-period">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Period
       </span>
       <div class="lb-pills">
-        {% for val, label in [('all','All Time'),('month','This Month'),('week','This Week')] %}
+        {%- for val, label, icon in [('all','All Time','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'),('month','This Month','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'),('week','This Week','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>')] %}
         <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
-           class="lb-pill {% if period == val %}active{% endif %}">{{ label }}</a>
-        {% endfor %}
+           class="lb-pill {% if period == val %}period-active{% else %}period-inactive{% endif %}">{{ icon|safe }} {{ label }}</a>
+        {%- endfor %}
       </div>
     </div>
 
     <!-- Plan -->
-    <div class="lb-filter-row">
-      <span class="lb-filter-label">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
+    <div class="lb-filter-row row-plan">
+      <span class="lb-filter-label lbl-plan">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
         Plan
       </span>
       <div class="lb-pills">
-        {% for val, label in [('all','All Plans'),('camera','Camera'),('mobile','Mobile')] %}
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}"
-           class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
-        {% endfor %}
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track=all"
+           class="lb-pill plan-pill {% if track == 'all' %}plan-active{% endif %}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          All Plans
+        </a>
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track=camera"
+           class="lb-pill plan-pill {% if track == 'camera' %}plan-active{% endif %}">
+          <svg width="14" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
+          Camera
+        </a>
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track=mobile"
+           class="lb-pill plan-pill {% if track == 'mobile' %}plan-active{% endif %}">
+          <svg width="11" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          Mobile
+        </a>
       </div>
     </div>
 
     <!-- Interests -->
-    <div class="lb-filter-row">
-      <span class="lb-filter-label">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <div class="lb-filter-row row-interests">
+      <span class="lb-filter-label lbl-interests">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         Interests
       </span>
       <div class="lb-pills">
         <a href="?tab={{ tab }}&period={{ period }}&genre=all&tier={{ tier }}&track={{ track }}"
-           class="lb-pill {% if genre=='all' %}interest-active{% endif %}">All Interests</a>
+           class="lb-pill interest-pill {% if genre=='all' %}interest-active{% endif %}">All Interests</a>
         {% for g in all_genres %}
         <a href="?tab={{ tab }}&period={{ period }}&genre={{ g }}&tier={{ tier }}&track={{ track }}"
-           class="lb-pill {% if genre==g %}interest-active{% endif %}">{{ g }}</a>
+           class="lb-pill interest-pill {% if genre==g %}interest-active{% endif %}">{{ g }}</a>
         {% endfor %}
       </div>
     </div>
 
     <!-- Tier -->
-    <div class="lb-filter-row">
-      <span class="lb-filter-label">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+    <div class="lb-filter-row row-tier">
+      <span class="lb-filter-label lbl-tier">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
         Tier
       </span>
       <div class="lb-pills">
         <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier=all&track={{ track }}"
-           class="lb-pill {% if tier=='all' %}active{% endif %}">All Tiers</a>
+           class="lb-pill {% if tier=='all' %}period-active{% endif %}">All Tiers</a>
         {% for t in all_tiers %}
         {%- set tk_f = t | lower | replace(' ','-') -%}
         <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ t }}&track={{ track }}"
-           class="lb-pill {% if tier==t %}tp-active-{{ tk_f }}{% endif %}">{{ t }}</a>
+           class="lb-pill tier-pill-{{ tk_f }} {% if tier==t %}tp-active-{{ tk_f }}{% endif %}">{{ t }}</a>
         {% endfor %}
       </div>
     </div>
