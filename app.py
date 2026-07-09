@@ -15783,6 +15783,9 @@ def admin_weekly_challenge():
             closes_str   = request.form.get('closes_at', '').strip()
             sponsor_name = request.form.get('sponsor_name', '').strip() or None
             sponsor_prize= request.form.get('sponsor_prize', '').strip() or None
+            ch_track     = request.form.get('track', 'both').strip()
+            if ch_track not in ('mobile', 'camera', 'both'):
+                ch_track = 'both'
 
             if not all([week_ref, prompt_title, opens_str, closes_str]):
                 flash('Week ref, prompt title, opens and closes dates are required.', 'error')
@@ -15808,6 +15811,7 @@ def admin_weekly_challenge():
                 results_at=closes_at + timedelta(days=1),
                 sponsor_name=sponsor_name,
                 sponsor_prize=sponsor_prize,
+                track=ch_track,
                 created_by=current_user.id,
             )
             db.session.add(ch)
@@ -15911,6 +15915,9 @@ def admin_weekly_challenge():
             ch.prompt_body   = request.form.get('prompt_body', '').strip() or None
             ch.sponsor_name  = request.form.get('sponsor_name', '').strip() or None
             ch.sponsor_prize = request.form.get('sponsor_prize', '').strip() or None
+            _edit_track = request.form.get('track', '').strip()
+            if _edit_track in ('mobile', 'camera', 'both'):
+                ch.track = _edit_track
             opens_str  = request.form.get('opens_at', '').strip()
             closes_str = request.form.get('closes_at', '').strip()
             try:
