@@ -249,7 +249,7 @@
 }
 
 /* Tile body */
-.tile-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.tile-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; flex: 1; overflow: hidden; min-width: 0; }
 .tile-title {
   font-size: 14px; font-weight: 700; color: var(--text-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5;
@@ -476,7 +476,7 @@ a.lb-page-btn:focus-visible {
 }
 /* On image tile — inline in tile body below photographer name */
 .tile-uq-tag {
-  display: inline-block;
+  display: block;
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
@@ -488,8 +488,12 @@ a.lb-page-btn:focus-visible {
   color: #888888;
   border: 1px solid rgba(0,0,0,0.10);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.5;
   margin-top: 3px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 </style>
 {% endblock %}
@@ -638,11 +642,7 @@ a.lb-page-btn:focus-visible {
         </div>
         <div class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
         <div class="tile-genre">{{ image.genre or '—' }}</div>
-        {% if image.archetype %}<div class="tile-archetype">{{ image.archetype }}</div>{% endif %}
         <div class="tile-photographer">{{ image.photographer_name or '—' }}</div>
-        {% if user_join_map.get(image.user_id) %}
-        <span class="tile-uq-tag">Pending Standings</span>
-        {% endif %}
       </div>
 
     </a>
