@@ -343,12 +343,13 @@ def send_challenge_notification(challenge):
         if ch_track == 'mobile':
             instrument_line = 'Shoot on your phone. Camera images are not eligible for this assignment.'
         elif ch_track == 'camera':
-            instrument_line = 'Shoot with your camera. This assignment is for Camera League.'
+            instrument_line = 'Shoot with your camera. This assignment is for Camera League only.'
         else:
+            # Both leagues — tell each user what their instrument is, but confirm both are eligible
             if u_track == 'mobile':
-                instrument_line = 'Shoot on your phone. Your evaluation will be judged under Mobile League criteria.'
+                instrument_line = 'Shoot on your phone. Both Mobile League and Camera League photographs are eligible this week — yours will be evaluated under Mobile League criteria.'
             else:
-                instrument_line = 'Shoot with your camera. Your evaluation will be judged under Camera League criteria.'
+                instrument_line = 'Shoot with your camera. Both Camera League and Mobile League photographs are eligible this week — yours will be evaluated under Camera League criteria.'
 
         # ── Tier line ─────────────────────────────────────────────────────
         if u_tier:
@@ -1064,6 +1065,9 @@ def _run_startup_tasks():
                     # Session 132 — Mobile DDI: weekly challenge track separation
                     # 'mobile' | 'camera' | 'both' (default: 'both' — all existing challenges visible to all)
                     "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS track VARCHAR(20) DEFAULT 'both'",
+                    # Session 136 — challenge notification scheduling
+                    # NULL=no notification requested, FALSE=pending (fires at opens_at), TRUE=sent
+                    "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS notification_sent BOOLEAN DEFAULT NULL",
                     # v75 — genre suggestions from onboarding 'Other' field
                     "CREATE TABLE IF NOT EXISTS genre_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_genre VARCHAR(60) NOT NULL, created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
                     # v76 — location suggestions from free-text country/state/city
@@ -15865,27 +15869,16 @@ def admin_weekly_challenge():
             db.session.add(ch)
             db.session.commit()
 
-            # Send email notification to all users
+            # Schedule notification to fire at opens_at — cron picks it up when opens_at passes
+            # notification_sent = False means pending; True means sent; None means no email requested
             notify = request.form.get('notify_users') == '1'
             if notify:
-                flash(f'Challenge "{prompt_title}" ({week_ref}) created. Sending notifications...', 'success')
+                ch.notification_sent = False
+                db.session.commit()
+                opens_ist = (ch.opens_at + _IST_OFFSET).strftime('%d %b %Y, %H:%M IST')
+                flash(f'Challenge "{prompt_title}" ({week_ref}) created. Notification scheduled for {opens_ist}.', 'success')
             else:
                 flash(f'Challenge "{prompt_title}" ({week_ref}) created.', 'success')
-
-            if notify:
-                # Fire email in background thread  -  pass ID only, re-query inside thread
-                import threading
-                def _notify(challenge_id):
-                    with app.app_context():
-                        try:
-                            ch_fresh = WeeklyChallenge.query.get(challenge_id)
-                            if ch_fresh:
-                                sent = send_challenge_notification(ch_fresh)
-                                app.logger.info(f'[challenge] Notifications sent to {sent} users')
-                        except Exception as _e:
-                            app.logger.error(f'[challenge] Notification failed: {_e}')
-                t = threading.Thread(target=_notify, args=(ch.id,), daemon=True)
-                t.start()
 
             return redirect(url_for('admin_weekly_challenge'))
 
@@ -23911,6 +23904,36 @@ def run_peer_eval_digest():
         app.logger.info(f'[peer_eval_digest] Run complete. {sent} digests sent.')
 
 
+
+def run_challenge_notification_job():
+    """
+    Runs every 5 minutes via APScheduler. Session 136.
+    Finds WeeklyChallenge rows where notification_sent = FALSE and opens_at <= now.
+    Sends the notification email and marks notification_sent = TRUE.
+    Replaces the previous immediate-fire approach — notifications now go out
+    at opens_at (IST midnight on the challenge start day), not at admin create time.
+    """
+    with app.app_context():
+        try:
+            now = datetime.utcnow()
+            pending = WeeklyChallenge.query.filter(
+                WeeklyChallenge.notification_sent == False,
+                WeeklyChallenge.opens_at <= now,
+                WeeklyChallenge.is_active == True,
+            ).all()
+            for ch in pending:
+                try:
+                    sent = send_challenge_notification(ch)
+                    ch.notification_sent = True
+                    db.session.commit()
+                    app.logger.info(f'[challenge_notify] {ch.week_ref} — {sent} users notified')
+                except Exception as _e:
+                    db.session.rollback()
+                    app.logger.error(f'[challenge_notify] {ch.week_ref} failed: {_e}')
+        except Exception as _e:
+            app.logger.error(f'[challenge_notify] job error: {_e}')
+
+
 if _sched_lock_held:
     _scheduler = BackgroundScheduler(timezone='UTC')
     _scheduler.add_job(
@@ -24017,6 +24040,15 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute='0,15,30,45', timezone='UTC'),
         id               = 'scheduled_contest_announcements',
         name             = 'Dispatch ContestAnnouncements whose send_at has passed',
+        replace_existing = True,
+    )
+    # Session 136 — challenge open notification — every 5 minutes
+    # Fires when opens_at has passed and notification_sent = False.
+    _scheduler.add_job(
+        func             = run_challenge_notification_job,
+        trigger          = CronTrigger(minute='0,5,10,15,20,25,30,35,40,45,50,55', timezone='UTC'),
+        id               = 'challenge_notification',
+        name             = 'Send challenge open notifications at opens_at',
         replace_existing = True,
     )
     _scheduler.start()
