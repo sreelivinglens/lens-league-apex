@@ -513,14 +513,22 @@
               <div style="font-family:var(--font-mono); font-size:13px; color:#1a1a18; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:5px;">
                 <span>@{{ recent_users.get(img.user_id, img.user_id) }}</span>
                 {%- if img.camera_track == 'mobile' %}
-                <span style="background:#1A1A18; color:#F5C518; font-size:13px; padding:1px 5px; border-radius:3px; font-weight:700; flex-shrink:0;">📱</span>
+                <span title="Mobile League" style="display:inline-flex;align-items:center;background:#1A1A18;padding:2px 5px;border-radius:3px;flex-shrink:0;">
+                  <svg width="11" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="#F5C518" stroke="none"/></svg>
+                </span>
                 {%- elif img.camera_track == 'camera' %}
-                <span style="background:#F5F0E8; color:#4A4840; font-size:13px; padding:1px 5px; border-radius:3px; border:0.5px solid #E0D8C8; font-weight:700; flex-shrink:0;">📷</span>
+                <span title="Camera League" style="display:inline-flex;align-items:center;background:#F5F0E8;padding:2px 5px;border-radius:3px;border:0.5px solid #E0D8C8;flex-shrink:0;">
+                  <svg width="14" height="11" viewBox="0 0 24 24" fill="none" stroke="#4A4840" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
+                </span>
                 {%- endif %}
                 {%- if img.exif_verified == True %}
-                <span style="color:#2A7A3A; font-size:13px;" title="EXIF verified">✓</span>
+                <span title="EXIF verified" style="display:inline-flex;align-items:center;flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2A7A3A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
                 {%- elif img.exif_verified == False %}
-                <span style="color:#C0392B; font-size:13px;" title="EXIF absent — track from declaration">⚠</span>
+                <span title="EXIF absent — track from declaration" style="display:inline-flex;align-items:center;flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </span>
                 {%- endif %}
               </div>
               <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
