@@ -467,7 +467,8 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 
   /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
   .sl-hiw-hero{
-    max-
+    height: auto;
+    max-height: none;
     flex-direction: column;
     align-items: flex-end;
   }
@@ -665,21 +666,10 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
     font-size: 15px;
   }
 }
-.sl-hero-credit-pill {
-  position: absolute;
-  bottom: 20px;
-  right: 24px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  pointer-events: none;
-  font-size: 13px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.70);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
+/* ── Photographer credit — styled by base.html shared .sl-hero-credit-pill ──
+   Per SHARED HERO SYSTEM rule (Session 132): credit styling lives in
+   base.html only. Grey 20% box fix applied there Session 133. Do not
+   re-define credit CSS in this file. ── */
 /* ── Hero image wrapper — anchors credit pill to image corner ── */
 .sl-hero-img-wrap {
   position: relative;
@@ -732,7 +722,7 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
       onerror="this.style.display='none'"
     >
     {% if hiw_hero and hiw_hero.photographer_name %}
-    <span style="position:absolute;bottom:12px;right:14px;z-index:4;color:#FFD700;font-size:14px;font-weight:700;letter-spacing:0.04em;pointer-events:none;">{{ hiw_hero.photographer_name }}{% if hiw_hero.score %} &middot; {{ '%.2f'|format(hiw_hero.score) }}{% endif %}</span>
+    <span class="sl-hero-credit-pill">{{ hiw_hero.photographer_name }}{% if hiw_hero.score %} &middot; {{ '%.2f'|format(hiw_hero.score) }}{% endif %}</span>
     {% endif %}
     </div>
     <div class="sl-hiw-hero-fade sl-hero-fade"></div>
