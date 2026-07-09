@@ -440,6 +440,83 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   text-align: left;
 }
 
+/* ━━ TIER PROGRESSION ━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-tier-head {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-hiw-tier-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin: 0 auto 14px;
+}
+.sl-hiw-tier-sub {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 400;
+  color: #1A1A18;
+  line-height: 1.6;
+  max-width: 560px;
+  margin: 0 auto 52px;
+}
+.sl-hiw-tier-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  border-left: 1px solid rgba(26,26,24,0.10);
+}
+.sl-hiw-tier-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 10px 24px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+  border-bottom: 1px solid rgba(26,26,24,0.10);
+}
+.sl-hiw-tier-pill {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+  white-space: nowrap;
+}
+.sl-hiw-tier-score {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-hiw-tier-desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: #5F5E5A;
+  text-align: center;
+  line-height: 1.5;
+}
+.sl-hiw-tier-note {
+  text-align: center;
+  font-size: 15px;
+  color: #5F5E5A;
+  margin-top: 28px;
+  line-height: 1.6;
+}
+.sl-hiw-tp-rookie      { background: #EDEAE4; color: #444441; }
+.sl-hiw-tp-shooter     { background: #E6E4DC; color: #444441; }
+.sl-hiw-tp-contender   { background: #DDE4F0; color: #0C447C; }
+.sl-hiw-tp-craftsman   { background: #D8EDF8; color: #0C447C; }
+.sl-hiw-tp-maverick    { background: #DDF0E2; color: #085041; }
+.sl-hiw-tp-master      { background: #CBE8DD; color: #085041; }
+.sl-hiw-tp-grandmaster { background: #FDF3CC; color: #633806; }
+.sl-hiw-tp-legend      { background: #FAE8C0; color: #412402; border: 1px solid rgba(186,117,23,0.35); }
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — max-width 768px
    Per MOBILE_CONTENT_BEHAVIOR.docx
@@ -460,6 +537,7 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   .sl-hiw-diff-col { padding: 24px 18px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.10); }
   .sl-hiw-diff-col:nth-child(odd) { border-right: 1px solid rgba(26,26,24,0.10); }
   .sl-hiw-steps { gap: 16px; }
+  .sl-hiw-tier-row { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -647,6 +725,15 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   .sl-hiw-diff-col:nth-child(4) {
     border-bottom: none;
   }
+
+  /* TIER PROGRESSION — mobile: 2 columns */
+  .sl-hiw-tier-head { font-size: 26px; }
+  .sl-hiw-tier-sub  { font-size: 16px; margin-bottom: 32px; }
+  .sl-hiw-tier-row  { grid-template-columns: repeat(2, 1fr); }
+  .sl-hiw-tier-pill { font-size: 13px; white-space: normal; text-align: center; }
+  .sl-hiw-tier-desc { font-size: 14px; }
+  .sl-hiw-tier-score { font-size: 14px; }
+  .sl-hiw-tier-note { font-size: 16px; }
 
   /* CTA */
   .sl-hiw-cta {
@@ -915,6 +1002,67 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
         </div>
 
       </div>
+    </div>
+  </section>
+
+  <!-- ── TIER PROGRESSION ─────────────────────────────────────── -->
+  <section class="sl-hiw-sec" style="background:#FFFFFF;">
+    <div class="sl-hiw-inner">
+      <p class="sl-hiw-tier-head">Eight tiers. One direction.</p>
+      <div class="sl-hiw-tier-rule"></div>
+      <p class="sl-hiw-tier-sub">Every evaluation places your work on this path. Your standing is calculated from your average across all evaluated images — consistency is what earns the next tier, not a single great photograph.</p>
+      <div class="sl-hiw-tier-row">
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-rookie">Rookie</span>
+          <span class="sl-hiw-tier-score">0 – 4</span>
+          <span class="sl-hiw-tier-desc">Starting out</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-shooter">Shooter</span>
+          <span class="sl-hiw-tier-score">4 – 5</span>
+          <span class="sl-hiw-tier-desc">Fundamentals forming</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-contender">Contender</span>
+          <span class="sl-hiw-tier-score">5 – 6</span>
+          <span class="sl-hiw-tier-desc">Awareness developing</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-craftsman">Craftsman</span>
+          <span class="sl-hiw-tier-score">6 – 7</span>
+          <span class="sl-hiw-tier-desc">Intent behind the frame</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-maverick">Maverick</span>
+          <span class="sl-hiw-tier-score">7 – 8</span>
+          <span class="sl-hiw-tier-desc">Distinct voice emerging</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-master">Master</span>
+          <span class="sl-hiw-tier-score">8 – 9</span>
+          <span class="sl-hiw-tier-desc">Consistent excellence</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-grandmaster">Grandmaster</span>
+          <span class="sl-hiw-tier-score">9 – 9.7</span>
+          <span class="sl-hiw-tier-desc">Rare technical mastery</span>
+        </div>
+
+        <div class="sl-hiw-tier-col">
+          <span class="sl-hiw-tier-pill sl-hiw-tp-legend">Legend</span>
+          <span class="sl-hiw-tier-score">9.7 – 10</span>
+          <span class="sl-hiw-tier-desc">Jury reviewed</span>
+        </div>
+
+      </div>
+      <p class="sl-hiw-tier-note">The top two tiers — Grandmaster and Legend — are jury reviewed as part of the Annual Excellence Award.</p>
     </div>
   </section>
 
