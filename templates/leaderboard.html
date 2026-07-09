@@ -194,32 +194,32 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin-bottom: 2px;
 }
 .tile-tier-pill {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
   letter-spacing: .4px; text-transform: uppercase;
-  padding: 2px 7px; border-radius: 99px;
+  padding: 2px 8px; border-radius: 99px;
   white-space: nowrap; flex-shrink: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 
 
 
 .tile-peer-count {
-  font-family: var(--font-mono); font-size: 11px; color: var(--green);
+  font-family: var(--font-mono); font-size: 13px; color: var(--green);
   display: flex; align-items: center; gap: 3px;
   white-space: nowrap; flex-shrink: 0;
 }
 .peer-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 .tile-score {
-  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-  color: #B8700A; letter-spacing: .3px; line-height: 1;
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  color: #B8700A; letter-spacing: .3px; line-height: 1.5;
   white-space: nowrap; flex-shrink: 0;
 }
-.tile-soul { font-size: 11px; opacity: .85; margin-left: 1px; vertical-align: middle; }
+.tile-soul { font-size: 13px; opacity: .85; margin-left: 1px; vertical-align: middle; }
 /* Analysis panel — slides up on hover (desktop only) */
 .tile-analysis {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
@@ -252,11 +252,11 @@
 .tile-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .tile-title {
   font-size: 14px; font-weight: 700; color: var(--text-primary);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5;
 }
-.tile-genre { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: .3px; }
-.tile-archetype { font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile-photographer { font-family: var(--font-mono); font-size: 11px; color: #1a1a18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.tile-genre { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); letter-spacing: .3px; line-height: 1.5; }
+.tile-archetype { font-size: 13px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+.tile-photographer { font-family: var(--font-mono); font-size: 13px; color: #1a1a18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; line-height: 1.5; }
 
 /* ════════════════════════════════════
    PHOTOGRAPHER CARDS
@@ -338,12 +338,12 @@
   .lb-filter-row { flex-direction: column; align-items: stretch; }
   .lb-filter-group select { width: 100%; }
   .tile-body { padding: 8px 10px 10px; gap: 2px; }
-  .tile-title { font-size: 13px; }
-  .tile-genre, .tile-archetype, .tile-photographer { font-size: 10px; }
-  .tile-tier-pill { font-size: 9px; padding: 2px 6px; }
-  .tile-score { font-size: 12px; }
-  .tile-peer-count { font-size: 10px; }
-  .tile-uq-tag { font-size: 9px; padding: 2px 5px; }
+  .tile-title { font-size: 14px; }
+  .tile-genre, .tile-archetype, .tile-photographer { font-size: 14px; }
+  .tile-tier-pill { font-size: 14px; padding: 2px 7px; }
+  .tile-score { font-size: 14px; }
+  .tile-peer-count { font-size: 14px; }
+  .tile-uq-tag { font-size: 14px; padding: 2px 6px; }
 }
 @media (max-width: 420px) {
   .lb-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
@@ -352,8 +352,8 @@
   .lb-pills { gap: 6px; }
   .lb-pill { font-size:16px; padding: 5px 11px; }
   .tile-body { padding: 7px 8px 8px; }
-  .tile-title { font-size: 12px; }
-  .tile-genre, .tile-archetype, .tile-photographer { font-size: 9.5px; }
+  .tile-title { font-size: 14px; }
+  .tile-genre, .tile-archetype, .tile-photographer { font-size: 14px; }
 }
 @media (max-width: 280px) {
   .lb-tile-grid { grid-template-columns: 1fr !important; }
@@ -478,17 +478,17 @@ a.lb-page-btn:focus-visible {
 .tile-uq-tag {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.3px;
   text-transform: uppercase;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
   background: rgba(0,0,0,0.06);
   color: #888888;
   border: 1px solid rgba(0,0,0,0.10);
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.5;
   margin-top: 3px;
 }
 </style>
