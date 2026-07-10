@@ -236,6 +236,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     padding: 16px 12px; position: sticky; top: 64px;
     height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
+    justify-content: space-between;
   }
   .sidenav-item {
     display: flex; align-items: center; gap: 9px;
@@ -430,7 +431,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   ════════════════════════════════════ #}
   <nav class="sidenav" aria-label="Dashboard navigation" style="gap:0; justify-content:space-between;">
 
-    <div style="display:flex;flex-direction:column;gap:20px;">
+    <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;">
       <a href="{{ url_for('mission') }}" class="sidenav-item nav-mission">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Mission
       </a>
