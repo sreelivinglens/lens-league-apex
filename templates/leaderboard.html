@@ -594,9 +594,10 @@ body { overflow-x: hidden; }
     </div>
 
     {%- if tier == 'all' and has_more %}
-    {# All-tiers view: "View more" narrows to this tier at page 1 #}
+    {# All-tiers view: "View more" narrows to this tier at page 2
+       (page 1 = what's already visible, so skip straight to the next batch) #}
     <div class="lb-tier-footer">
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page=1"
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page=2"
          class="lb-tier-view-more">View more &rsaquo;</a>
     </div>
     {%- elif tier != 'all' %}
