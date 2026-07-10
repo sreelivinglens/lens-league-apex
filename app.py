@@ -5280,8 +5280,9 @@ def profile():
             # confirm_location_update / Item B).
             if new_city and new_city != old_city and new_city != 'Other':
                 try:
-                    from engine.seasonal_discovery import enqueue_priority_combo
+                    from engine.seasonal_discovery import enqueue_priority_combo, discover_one
                     from engine.seasonal_calendar import get_primary_genre
+                    import threading as _threading
                     genres = []
                     try:
                         genres = json.loads(current_user.genre_interests or '[]')[:3]
@@ -5292,6 +5293,26 @@ def profile():
                     for _g in genres:
                         if _g:
                             enqueue_priority_combo(db.session, new_city, _g)
+                    # Run discovery synchronously in background so next dashboard
+                    # load already has data for the new city — no waiting for cron.
+                    _disc_city   = new_city
+                    _disc_genres = [g for g in genres if g]
+                    _disc_month  = datetime.utcnow().month
+                    def _run_city_discovery():
+                        try:
+                            from flask import current_app
+                            with current_app.app_context():
+                                for _dg in _disc_genres:
+                                    _n = discover_one(db.session, _disc_city, _dg,
+                                                      current_month=_disc_month)
+                                    app.logger.info(
+                                        f'[update_location] on-demand discovery '
+                                        f'({_disc_city}, {_dg}): {_n} row(s)'
+                                    )
+                        except Exception as _de:
+                            app.logger.warning(f'[update_location] discovery thread: {_de}')
+                    _t = _threading.Thread(target=_run_city_discovery, daemon=True)
+                    _t.start()
                 except Exception as _disc_err:
                     app.logger.warning(f'[update_location] priority discovery enqueue failed: {_disc_err}')
 
