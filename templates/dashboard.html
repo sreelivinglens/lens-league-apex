@@ -233,44 +233,35 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   .sidenav {
     display: flex; flex-direction: column;
     background: var(--d-cream); border-right: 1px solid var(--d-border);
-    padding: 20px 14px 20px; position: sticky; top: 64px;
+    padding: 16px 12px; position: sticky; top: 64px;
     height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
-    gap: 8px;
   }
   .sidenav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 14px; font-size: 13px; font-weight: 700;
-    color: #fff; text-decoration: none;
-    border-radius: 12px; border: none;
-    transition: opacity 0.15s, transform 0.1s;
-    min-height: 44px;
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 11px; font-size: 13px; font-weight: 600;
+    text-decoration: none; border-radius: 8px;
+    border-left-width: 3px; border-left-style: solid;
+    border-top: 1px solid transparent;
+    border-right: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    transition: opacity 0.15s;
+    min-height: 40px;
   }
-  .sidenav-item:hover { opacity: 0.88; transform: translateX(2px); color: #fff; }
-  .sidenav-item.active { box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
-  .sidenav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.9; }
+  .sidenav-item:hover { opacity: 0.82; }
+  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-  /* Per-item colours */
-  .sidenav-item.nav-mission    { background: #C8960A; }
-  .sidenav-item.nav-gallery    { background: #C87820; }
-  .sidenav-item.nav-portfolio  { background: #A05A10; }
-  .sidenav-item.nav-mentor     { background: #2A7A3A; }
-  .sidenav-item.nav-challenges { background: #1A6B6B; }
-  .sidenav-item.nav-bow        { background: #1A2744; }
-  .sidenav-item.nav-awards     { background: #7A2040; }
-  .sidenav-item.nav-learning   { background: #2C4A7A; }
-  .sidenav-item.nav-settings   { background: #4A4840; }
+  .sidenav-item.nav-mission  { background:#FDF6DC; border-left-color:#C8960A; color:#7A5500; }
+  .sidenav-item.nav-portfolio{ background:#F5EDE0; border-left-color:#7A5A3A; color:#5A3A1A; }
+  .sidenav-item.nav-mentor   { background:#EAF3DE; border-left-color:#2A7A3A; color:#1A5A28; }
+  .sidenav-item.nav-challenges{ background:#E0F0F0; border-left-color:#1A6B6B; color:#0A4A4A; }
+  .sidenav-item.nav-bow      { background:#E0E8F5; border-left-color:#1A2744; color:#0A1A3A; }
+  .sidenav-item.nav-awards   { background:#F5E0E8; border-left-color:#7A2040; color:#5A1030; }
+  .sidenav-item.nav-learning { background:#E4EAF5; border-left-color:#2C4A7A; color:#1A2A5A; }
+  .sidenav-item.nav-settings { background:#F0EFED; border-left-color:#8A8A88; color:#6B6B6B; }
 
   .sidenav-divider { display: none; }
-  .sidenav-bottom { margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 10px; }
-  .sub-card { background: var(--d-dark); border-radius: 12px; padding: 12px 14px; }
-  .sub-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
-  .sub-plan { font-size: 14px; font-weight: 700; color: #F6F2E9; }
-  .sub-price { font-size: 13px; color: rgba(255,255,255,0.65); }
-  .pts-card { background: var(--d-card); border: 1px solid var(--d-border); border-radius: 12px; padding: 10px 14px; }
-  .pts-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-muted); margin-bottom: 4px; }
-  .pts-val { font-size: 26px; font-weight: 800; color: var(--d-dark); line-height: 1; }
-  .pts-link { font-size: 12px; color: var(--d-gold-dk); font-weight: 600; text-decoration: none; }
+  .sidenav-bottom  { margin-top: auto; padding-top: 8px; }
 
   /* ── Centre column ── */
   .centre {
@@ -437,42 +428,36 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   {# ════════════════════════════════════
      LEFT SIDENAV (desktop only)
   ════════════════════════════════════ #}
-  <nav class="sidenav" aria-label="Dashboard navigation">
+  <nav class="sidenav" aria-label="Dashboard navigation" style="gap:0; justify-content:space-between;">
 
-    <a href="{{ url_for('mission') }}" class="sidenav-item nav-mission">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Mission
-    </a>
-    <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item nav-portfolio">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>My Portfolio
-    </a>
-    <a href="{{ url_for('mentors') }}" class="sidenav-item nav-mentor">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
-    </a>
-    <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item nav-challenges">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
-    </a>
-    <a href="{{ url_for('bow_info') }}" class="sidenav-item nav-bow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
-    </a>
-    <a href="{{ url_for('poty') }}" class="sidenav-item nav-awards">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Awards &amp; Recognition
-    </a>
-    <a href="{{ url_for('learning') }}" class="sidenav-item nav-learning">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
-    </a>
-    <a href="{{ url_for('profile') }}" class="sidenav-item nav-settings">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <a href="{{ url_for('mission') }}" class="sidenav-item nav-mission">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Mission
+      </a>
+      <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item nav-portfolio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>My Portfolio
+      </a>
+      <a href="{{ url_for('mentors') }}" class="sidenav-item nav-mentor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
+      </a>
+      <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item nav-challenges">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
+      </a>
+      <a href="{{ url_for('bow_info') }}" class="sidenav-item nav-bow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
+      </a>
+      <a href="{{ url_for('poty') }}" class="sidenav-item nav-awards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Awards &amp; Recognition
+      </a>
+      <a href="{{ url_for('learning') }}" class="sidenav-item nav-learning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
+      </a>
+    </div>
+
+    <a href="{{ url_for('profile') }}" class="sidenav-item nav-settings" style="margin-top:auto;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings
     </a>
 
-    <div class="sidenav-bottom">
-      {% if current_user.is_subscribed %}
-      <div class="sub-card">
-        <div class="sub-label">{{ (current_user.subscription_track or 'Camera')|title }} Pass</div>
-        <div class="sub-plan">{{ (current_user.subscription_track or 'Camera')|title }} League</div>
-        <div class="sub-price">₹200/month</div>
-      </div>
-      {% endif %}
-    </div>
   </nav>
 
   {# ════════════════════════════════════
