@@ -4444,6 +4444,7 @@ def my_gallery():
     query   = request.args.get('q', '').strip()
     genre   = request.args.get('genre', '').strip()
     sort    = request.args.get('sort', 'newest').strip()
+    track   = request.args.get('track', '').strip()
 
     images_q = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False)
 
@@ -4458,6 +4459,10 @@ def my_gallery():
         )
     if genre:
         images_q = images_q.filter(Image.genre.ilike(f'%{genre}%'))
+    if track == 'mobile':
+        images_q = images_q.filter(Image.camera_track == 'mobile')
+    elif track == 'camera':
+        images_q = images_q.filter(db.or_(Image.camera_track == 'camera', Image.camera_track == None))
 
     if sort == 'score_desc':
         images_q = images_q.filter(Image.score != None).order_by(Image.score.desc())
@@ -4493,7 +4498,7 @@ def my_gallery():
     }
     return render_template('my_gallery.html',
                            images=images, stats=stats, genres=genres,
-                           query=query, genre=genre, sort=sort,
+                           query=query, genre=genre, sort=sort, track=track,
                            tier_rank=TIER_RANK)
 
 
