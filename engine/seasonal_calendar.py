@@ -32,8 +32,8 @@ from sqlalchemy import text as _sql_text
 # to the seeded spelling at query time — no data migration needed, and it
 # self-heals for every existing and future user immediately.
 CITY_ALIASES = {
-    "bengaluru":  "Bangalore",
-    "bangalore":  "Bangalore",
+    "bengaluru":  "Bengaluru",
+    "bangalore":  "Bengaluru",
     "bombay":     "Mumbai",
     "mumbai":     "Mumbai",
     "calcutta":   "Kolkata",
@@ -557,7 +557,7 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
     if not user_city or not primary_genre:
         return "", []
 
-    # Normalise city spelling (Bengaluru -> Bangalore, etc) before matching
+    # Normalise city spelling (Bangalore -> Bengaluru, etc) before matching
     _normalized_city = normalize_city(user_city)
 
     rows = []
