@@ -1780,6 +1780,29 @@ def _run_startup_tasks():
                 print(f'Location advisory link columns migration warning: {_loc_url_mig}')
 
             try:
+                db.session.execute(db.text(
+                    "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS "
+                    "event_type VARCHAR(20) NOT NULL DEFAULT 'seasonal'"
+                ))
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS city_event_scan_log (
+                        id           SERIAL PRIMARY KEY,
+                        city         VARCHAR(80) NOT NULL,
+                        scanned_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
+                        events_found INTEGER     NOT NULL DEFAULT 0
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_city_event_scan_log_city_at "
+                    "ON city_event_scan_log (city, scanned_at)"
+                ))
+                db.session.commit()
+                print('Session 139: city_event_scan schema OK.')
+            except Exception as _ces_mig:
+                db.session.rollback()
+                print(f'Session 139 city_event_scan migration warning: {_ces_mig}')
+
+            try:
                 # Photo School — mission genre override + curriculum progress tracker
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS mission_genre VARCHAR(20) DEFAULT NULL"
