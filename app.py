@@ -1779,6 +1779,33 @@ def _run_startup_tasks():
                 print(f'Location advisory link columns migration warning: {_loc_url_mig}')
 
             try:
+                # Session 139 — city_event_scan: live event type column +
+                # city_event_scan_log table for the daily live-event cron.
+                # event_type='live'     — time-bound event from city_event_scan.py
+                # event_type='seasonal' — evergreen row (existing data, DEFAULT)
+                db.session.execute(db.text(
+                    "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS "
+                    "event_type VARCHAR(20) NOT NULL DEFAULT 'seasonal'"
+                ))
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS city_event_scan_log (
+                        id           SERIAL PRIMARY KEY,
+                        city         VARCHAR(80) NOT NULL,
+                        scanned_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
+                        events_found INTEGER     NOT NULL DEFAULT 0
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_city_event_scan_log_city_at "
+                    "ON city_event_scan_log (city, scanned_at)"
+                ))
+                db.session.commit()
+                print('Session 139: city_event_scan schema OK.')
+            except Exception as _ces_mig:
+                db.session.rollback()
+                print(f'Session 139 city_event_scan migration warning: {_ces_mig}')
+
+            try:
                 # Photo School — mission genre override + curriculum progress tracker
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS mission_genre VARCHAR(20) DEFAULT NULL"
@@ -2545,6 +2572,24 @@ def run_seasonal_discovery_job():
 
 
 # ── Re-engagement Emailer ─────────────────────────────────────────────────────
+
+def run_city_event_scan_job():
+    """
+    Runs daily via APScheduler at 20:30 UTC (02:00 IST).
+    Scans all cities with upload activity in the last 7 days for
+    time-bound photography events (festivals, exhibitions, etc.) and
+    writes them as event_type='live' rows into seasonal_calendar.
+    Cities are prioritised by recent upload count (most active first).
+    Cities scanned within the last 20 hours are skipped (idempotent).
+    """
+    with app.app_context():
+        try:
+            from engine.city_event_scan import run_city_event_scan
+            summary = run_city_event_scan(db.session)
+            app.logger.info(f'[city_event_scan] Daily run complete: {summary}')
+        except Exception as e:
+            app.logger.error(f'[city_event_scan] Daily run error: {e}')
+
 
 def run_reengagement_emailer():
     """
@@ -4170,6 +4215,16 @@ def dashboard():
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
+    # Session 139 — live event advisory (time-bound events from city_event_scan)
+    # Shown above the seasonal advisory on the dashboard. None if no live events.
+    _dash_live_event = None
+    try:
+        if current_user.city:
+            from engine.city_event_scan import get_live_event_advisory
+            _dash_live_event = get_live_event_advisory(db.session, current_user.city)
+    except Exception as _lee:
+        app.logger.warning(f'[dashboard] live_event: {_lee}')
+
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
@@ -4314,6 +4369,7 @@ def dashboard():
                            mission_done=_mission_done,
                            show_mission=_show_mission,
                            dash_advisory=_dash_advisory,
+                           dash_live_event=_dash_live_event,
                            peer_queue=_peer_queue,
                            tier_rank=TIER_RANK,
                            eye_of_judge=_eye_of_judge,
@@ -9377,31 +9433,13 @@ def leaderboard():
     # Images tab — fetch up to 12 images per tier so every tier with images
     # is always represented regardless of how many higher-tier images exist.
     # Score desc, then scored_at desc for ties (most recently evaluated first).
-    #
-    # tier_page: when a specific tier is selected (tier != 'all'), supports
-    # paginating through that tier 12 at a time. Fetch 13 to detect has_more.
-    # When tier == 'all', always show first page of every tier (tier_page ignored).
     from flask_login import current_user as _cu
     _all_tiers_ordered = ['Legend','Grandmaster','Master','Maverick','Craftsman','Contender','Shooter','Rookie']
     _imgs_per_tier = 12
-    tier_page  = request.args.get('tier_page', 1, type=int)
-    tier_page  = max(1, tier_page)
-    # tier_has_more: keyed by tier name — True if a next page exists
-    tier_has_more = {}
     top_images = []
     for _t in _all_tiers_ordered:
-        # Only apply offset when a single tier is selected
-        _use_page = (tier != 'all' and tier == _t)
-        _offset   = (tier_page - 1) * _imgs_per_tier if _use_page else 0
-        _limit    = _imgs_per_tier + 1  # fetch one extra to detect next page
-        _tq = apply_filters(Image.query, user_already_joined=False) \
-                  .filter(Image.tier == _t) \
-                  .order_by(desc(Image.score), desc(Image.scored_at)) \
-                  .offset(_offset) \
-                  .limit(_limit).all()
-        _has_more = len(_tq) > _imgs_per_tier
-        tier_has_more[_t] = _has_more
-        top_images.extend(_tq[:_imgs_per_tier])  # trim the sentinel row
+        _tq = apply_filters(Image.query, user_already_joined=False)              .filter(Image.tier == _t)              .order_by(desc(Image.score), desc(Image.scored_at))              .limit(_imgs_per_tier).all()
+        top_images.extend(_tq)
 
     img_total  = len(top_images)
     img_page   = 1
@@ -9601,8 +9639,6 @@ def leaderboard():
         user_img_rank      = user_img_rank,
         user_pg_rank       = user_pg_rank,
         user_join_map      = user_join_map,
-        tier_page          = tier_page,
-        tier_has_more      = tier_has_more,
         # Session 132 — Mobile DDI
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
@@ -24095,6 +24131,16 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute='0,5,10,15,20,25,30,35,40,45,50,55', timezone='UTC'),
         id               = 'challenge_notification',
         name             = 'Send challenge open notifications at opens_at',
+        replace_existing = True,
+    )
+    # Session 139 — daily live event scan — 20:30 UTC (02:00 IST)
+    # Finds time-bound photography events for all cities with recent upload
+    # activity. Writes event_type='live' rows; auto-expire once date_end < today.
+    _scheduler.add_job(
+        func             = run_city_event_scan_job,
+        trigger          = CronTrigger(hour=20, minute=30, timezone='UTC'),
+        id               = 'city_event_scan',
+        name             = 'Daily live event scan — photography events near active cities',
         replace_existing = True,
     )
     _scheduler.start()
