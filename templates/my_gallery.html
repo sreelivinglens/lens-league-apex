@@ -319,6 +319,50 @@
   pointer-events: none;
 }
 
+/* ── Track filter pills ── */
+.mg-track-pills {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.mg-track-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--mg-border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: Inter, sans-serif;
+  color: var(--mg-text-light);
+  background: var(--mg-bg);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.mg-track-pill:hover {
+  background: #f0ede6;
+  color: var(--mg-text);
+}
+.mg-track-pill.active-mobile {
+  background: #E8F4FF;
+  border-color: #5B9BD5;
+  color: #1A4A7A;
+}
+.mg-track-pill.active-camera {
+  background: #FFF8E6;
+  border-color: #D9A900;
+  color: #7A5500;
+}
+.mg-track-pill.active-all {
+  background: var(--mg-text);
+  border-color: var(--mg-text);
+  color: #fff;
+}
+
 /* ── Pagination ── */
 .mg-pagination {
   display: flex;
@@ -394,12 +438,23 @@
 
   {# ── Filters ── #}
   <div class="mg-filters">
+    {# Track pills — outside the form, preserve other filters via query string #}
+    <div class="mg-track-pills">
+      <a href="{{ url_for('my_gallery', q=query, genre=genre, sort=sort, track='mobile') }}"
+         class="mg-track-pill {% if track == 'mobile' %}active-mobile{% endif %}">📱 Mobile</a>
+      <a href="{{ url_for('my_gallery', q=query, genre=genre, sort=sort, track='camera') }}"
+         class="mg-track-pill {% if track == 'camera' %}active-camera{% endif %}">📷 Camera</a>
+      <a href="{{ url_for('my_gallery', q=query, genre=genre, sort=sort) }}"
+         class="mg-track-pill {% if not track %}active-all{% endif %}">All</a>
+    </div>
     <form method="GET" action="{{ url_for('my_gallery') }}">
+      {# Carry track through form submits #}
+      {% if track %}<input type="hidden" name="track" value="{{ track }}">{% endif %}
       <input class="mg-filter-input"
              type="text"
              name="q"
              value="{{ query or '' }}"
-             placeholder="Search by title, genre, location…">
+             placeholder="Search by title, subject, location…">
       <select class="mg-filter-select" name="genre">
         <option value="">All interests</option>
         {% for g in genres %}
@@ -413,7 +468,7 @@
         <option value="score_asc"  {% if sort == 'score_asc' %}selected{% endif %}>Lowest evaluation</option>
       </select>
       <button class="mg-filter-btn" type="submit">Filter</button>
-      {% if query or genre or sort != 'newest' %}
+      {% if query or genre or sort != 'newest' or track %}
       <a href="{{ url_for('my_gallery') }}" class="mg-filter-clear">Clear</a>
       {% endif %}
     </form>
@@ -425,8 +480,9 @@
     {% if images.items %}
     <div class="mg-count">
       {{ images.total }} photograph{{ 's' if images.total != 1 else '' }}
+      {% if track == 'mobile' %} from 📱 Mobile League{% elif track == 'camera' %} from 📷 Camera League{% endif %}
       {% if query %} matching "{{ query }}"{% endif %}
-      {% if genre %} in {{ genre }}{% endif %}
+      {% if genre %} · {{ genre }}{% endif %}
     </div>
 
     <div class="mg-grid">
@@ -489,19 +545,19 @@
     {# ── Pagination ── #}
     {% if images.pages > 1 %}
     <div class="mg-pagination">
-      <a href="{{ url_for('my_gallery', page=images.prev_num, q=query, genre=genre, sort=sort) }}"
+      <a href="{{ url_for('my_gallery', page=images.prev_num, q=query, genre=genre, sort=sort, track=track) }}"
          class="mg-page-btn {% if not images.has_prev %}disabled{% endif %}">← Prev</a>
 
       {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
         {% if p %}
-        <a href="{{ url_for('my_gallery', page=p, q=query, genre=genre, sort=sort) }}"
+        <a href="{{ url_for('my_gallery', page=p, q=query, genre=genre, sort=sort, track=track) }}"
            class="mg-page-btn {% if p == images.page %}active{% endif %}">{{ p }}</a>
         {% else %}
         <span class="mg-page-btn disabled" style="border:none;">…</span>
         {% endif %}
       {% endfor %}
 
-      <a href="{{ url_for('my_gallery', page=images.next_num, q=query, genre=genre, sort=sort) }}"
+      <a href="{{ url_for('my_gallery', page=images.next_num, q=query, genre=genre, sort=sort, track=track) }}"
          class="mg-page-btn {% if not images.has_next %}disabled{% endif %}">Next →</a>
     </div>
     {% endif %}
