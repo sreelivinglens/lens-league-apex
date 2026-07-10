@@ -9377,13 +9377,31 @@ def leaderboard():
     # Images tab — fetch up to 12 images per tier so every tier with images
     # is always represented regardless of how many higher-tier images exist.
     # Score desc, then scored_at desc for ties (most recently evaluated first).
+    #
+    # tier_page: when a specific tier is selected (tier != 'all'), supports
+    # paginating through that tier 12 at a time. Fetch 13 to detect has_more.
+    # When tier == 'all', always show first page of every tier (tier_page ignored).
     from flask_login import current_user as _cu
     _all_tiers_ordered = ['Legend','Grandmaster','Master','Maverick','Craftsman','Contender','Shooter','Rookie']
     _imgs_per_tier = 12
+    tier_page  = request.args.get('tier_page', 1, type=int)
+    tier_page  = max(1, tier_page)
+    # tier_has_more: keyed by tier name — True if a next page exists
+    tier_has_more = {}
     top_images = []
     for _t in _all_tiers_ordered:
-        _tq = apply_filters(Image.query, user_already_joined=False)              .filter(Image.tier == _t)              .order_by(desc(Image.score), desc(Image.scored_at))              .limit(_imgs_per_tier).all()
-        top_images.extend(_tq)
+        # Only apply offset when a single tier is selected
+        _use_page = (tier != 'all' and tier == _t)
+        _offset   = (tier_page - 1) * _imgs_per_tier if _use_page else 0
+        _limit    = _imgs_per_tier + 1  # fetch one extra to detect next page
+        _tq = apply_filters(Image.query, user_already_joined=False) \
+                  .filter(Image.tier == _t) \
+                  .order_by(desc(Image.score), desc(Image.scored_at)) \
+                  .offset(_offset) \
+                  .limit(_limit).all()
+        _has_more = len(_tq) > _imgs_per_tier
+        tier_has_more[_t] = _has_more
+        top_images.extend(_tq[:_imgs_per_tier])  # trim the sentinel row
 
     img_total  = len(top_images)
     img_page   = 1
@@ -9583,6 +9601,8 @@ def leaderboard():
         user_img_rank      = user_img_rank,
         user_pg_rank       = user_pg_rank,
         user_join_map      = user_join_map,
+        tier_page          = tier_page,
+        tier_has_more      = tier_has_more,
         # Session 132 — Mobile DDI
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
