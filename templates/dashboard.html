@@ -233,30 +233,40 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   .sidenav {
     display: flex; flex-direction: column;
     background: var(--d-cream); border-right: 1px solid var(--d-border);
-    padding: 20px 0 0; position: sticky; top: 64px;
+    padding: 20px 14px 20px; position: sticky; top: 64px;
     height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
+    gap: 8px;
   }
   .sidenav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 7px 16px; font-size: 13px; font-weight: 500;
-    color: var(--d-muted); text-decoration: none;
-    border-left: 3px solid transparent; transition: all 0.15s;
+    padding: 11px 14px; font-size: 13px; font-weight: 700;
+    color: #fff; text-decoration: none;
+    border-radius: 12px; border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    min-height: 44px;
   }
-  .sidenav-item:hover { color: var(--d-text); background: rgba(0,0,0,0.03); }
-  .sidenav-item.active {
-    color: var(--d-dark); font-weight: 700;
-    background: rgba(214,164,40,0.08); border-left-color: var(--d-gold);
-  }
-  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.6; }
-  .sidenav-item.active svg { opacity: 1; }
-  .sidenav-divider { height: 1px; background: var(--d-border); margin: 10px 16px; }
-  .sidenav-bottom { margin-top: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .sidenav-item:hover { opacity: 0.88; transform: translateX(2px); color: #fff; }
+  .sidenav-item.active { box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+  .sidenav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.9; }
+
+  /* Per-item colours */
+  .sidenav-item.nav-mission    { background: #C8960A; }
+  .sidenav-item.nav-gallery    { background: #C87820; }
+  .sidenav-item.nav-portfolio  { background: #A05A10; }
+  .sidenav-item.nav-mentor     { background: #2A7A3A; }
+  .sidenav-item.nav-challenges { background: #1A6B6B; }
+  .sidenav-item.nav-bow        { background: #1A2744; }
+  .sidenav-item.nav-awards     { background: #7A2040; }
+  .sidenav-item.nav-learning   { background: #2C4A7A; }
+  .sidenav-item.nav-settings   { background: #4A4840; }
+
+  .sidenav-divider { display: none; }
+  .sidenav-bottom { margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 10px; }
   .sub-card { background: var(--d-dark); border-radius: 12px; padding: 12px 14px; }
   .sub-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
   .sub-plan { font-size: 14px; font-weight: 700; color: #F6F2E9; }
-  .sub-price { font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 8px; }
-  .sub-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #F6F2E9; font-size: 12px; font-weight: 600; padding: 7px; border-radius: 8px; text-decoration: none; }
+  .sub-price { font-size: 13px; color: rgba(255,255,255,0.65); }
   .pts-card { background: var(--d-card); border: 1px solid var(--d-border); border-radius: 12px; padding: 10px 14px; }
   .pts-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-muted); margin-bottom: 4px; }
   .pts-val { font-size: 26px; font-weight: 800; color: var(--d-dark); line-height: 1; }
@@ -428,49 +438,40 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
      LEFT SIDENAV (desktop only)
   ════════════════════════════════════ #}
   <nav class="sidenav" aria-label="Dashboard navigation">
-    <a href="{{ url_for('dashboard') }}" class="sidenav-item active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Dashboard
-    </a>
 
-    <a href="{{ url_for('mission') }}" class="sidenav-item">
+    <a href="{{ url_for('mission') }}" class="sidenav-item nav-mission">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Mission
     </a>
-    <a href="{{ url_for('my_gallery') }}" class="sidenav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>My Gallery
-    </a>
-    <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item">
+    <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item nav-portfolio">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>My Portfolio
     </a>
-    <div class="sidenav-divider"></div>
-    <a href="{{ url_for('mentors') }}" class="sidenav-item">
+    <a href="{{ url_for('mentors') }}" class="sidenav-item nav-mentor">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
     </a>
-    <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item">
+    <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item nav-challenges">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
     </a>
-    <a href="{{ url_for('bow_info') }}" class="sidenav-item">
+    <a href="{{ url_for('bow_info') }}" class="sidenav-item nav-bow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
     </a>
-    <a href="{{ url_for('poty') }}" class="sidenav-item">
+    <a href="{{ url_for('poty') }}" class="sidenav-item nav-awards">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Awards &amp; Recognition
     </a>
-    <a href="{{ url_for('learning') }}" class="sidenav-item">
+    <a href="{{ url_for('learning') }}" class="sidenav-item nav-learning">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
     </a>
-    <div class="sidenav-divider"></div>
-    <a href="{{ url_for('profile') }}" class="sidenav-item">
+    <a href="{{ url_for('profile') }}" class="sidenav-item nav-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings
     </a>
+
     <div class="sidenav-bottom">
       {% if current_user.is_subscribed %}
       <div class="sub-card">
         <div class="sub-label">{{ (current_user.subscription_track or 'Camera')|title }} Pass</div>
         <div class="sub-plan">{{ (current_user.subscription_track or 'Camera')|title }} League</div>
         <div class="sub-price">₹200/month</div>
-        <a href="{{ url_for('cancel_subscription') }}" class="sub-btn">Manage Subscription</a>
       </div>
       {% endif %}
-{# Points shown in right panel — not duplicated in sidenav #}
     </div>
   </nav>
 
@@ -578,14 +579,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           {% endif %}
           {% if progress_data and progress_data.weakest %}
           {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          {% set _genre_map = {'Wildlife':'Wildlife photography','Street':'Street photography','Landscape':'Landscape photography','Portrait':'Portrait photography','Architecture':'Architecture photography','Creative':'Creative photography','Documentary':'Documentary photography'} %}
-          <div style="font-size:13px;color:var(--d-green);font-style:italic;line-height:1.5;margin-top:6px;padding:6px 10px;background:#EAF3DE;border-radius:6px;">
-            {% if progress_data.top_genre and dash_advisory.get('genre') and progress_data.top_genre|lower == dash_advisory.genre|lower %}
-            Your best interest is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
-            {% else %}
-            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your evaluation.
-            {% endif %}
-          </div>
+          <div style="font-size:13px;color:var(--d-green);font-weight:600;margin-top:4px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
           {% endif %}
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             {% if dash_advisory.get('best_light_time') %}<span style="font-size:13px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
@@ -610,8 +604,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% if peer_queue %}
     <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:18px 20px;">
       <div style="margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">Sharpen Your Eye</div>
-        <div style="font-size:13px;color:var(--d-dark);line-height:1.6;">Train your eye by judging others — it sharpens your own photography. Earn 2 pts per evaluation, +2 if your read matches the engine.</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);">Sharpen Your Eye</div>
       </div>
       <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
         {% for _pq in peer_queue %}
@@ -716,8 +709,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         {# Points & Redemptions #}
     <div class="rp-card">
       <div class="rp-label">Points &amp; Redemptions</div>
-      <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ (current_user.points_balance or 0)|int }}</div>
-      <div style="font-size:13px;color:var(--d-muted);margin-bottom:8px;">Earn on every upload</div>
+      <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:8px;">{{ (current_user.points_balance or 0)|int }}</div>
       <a href="{{ url_for('redeem') }}" style="font-size:13px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
     </div>
 
@@ -857,14 +849,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           {% endif %}
           {% if progress_data and progress_data.weakest %}
           {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          {% set _genre_map = {'Wildlife':'Wildlife photography','Street':'Street photography','Landscape':'Landscape photography','Portrait':'Portrait photography','Architecture':'Architecture photography','Creative':'Creative photography','Documentary':'Documentary photography'} %}
-          <div style="font-size:13px;color:var(--d-green);font-style:italic;line-height:1.5;margin-bottom:10px;padding:8px 12px;background:#EAF3DE;border-radius:8px;">
-            {% if progress_data.top_genre and dash_advisory.get('genre') and progress_data.top_genre|lower == dash_advisory.genre|lower %}
-            Your best interest is {{ _genre_map.get(progress_data.top_genre, progress_data.top_genre) }} — this location is a strong match. Focus on <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong>, your current growth area.
-            {% else %}
-            Shooting here will challenge your <strong>{{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</strong> — your current growth dimension. Even one session here can move your evaluation.
-            {% endif %}
-          </div>
+          <div style="font-size:13px;color:var(--d-green);font-weight:600;margin-bottom:8px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
           {% endif %}
           <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
             {% if dash_advisory.get('best_light_time') %}<span style="font-size:13px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
