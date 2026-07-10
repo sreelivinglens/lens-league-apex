@@ -524,7 +524,13 @@ body { overflow-x: hidden; }
     {%- set ns.any_shown = true -%}
     {%- set tk_h = tier_name | lower | replace(' ','-') -%}
     {%- set visible = tier_images[:10] -%}
-    {%- set has_more = (tier_images | length) >= 12 -%}
+    {# has_more: use server-supplied dict when a specific tier is selected,
+       otherwise fall back to the 12-image sentinel check for the all-tiers view #}
+    {%- if tier == 'all' -%}
+      {%- set has_more = (tier_images | length) >= 12 -%}
+    {%- else -%}
+      {%- set has_more = tier_has_more.get(tier_name, false) -%}
+    {%- endif -%}
 
   <div class="lb-tier-group">
     <div class="lb-tier-group-header">
@@ -587,11 +593,26 @@ body { overflow-x: hidden; }
       {% endfor %}
     </div>
 
-    {%- if has_more %}
+    {%- if tier == 'all' and has_more %}
+    {# All-tiers view: "View more" narrows to this tier at page 1 #}
     <div class="lb-tier-footer">
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}"
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page=1"
          class="lb-tier-view-more">View more &rsaquo;</a>
     </div>
+    {%- elif tier != 'all' %}
+    {# Single-tier view: show prev / next page controls #}
+    {%- if tier_page > 1 or has_more %}
+    <div class="lb-tier-footer" style="gap:10px;">
+      {%- if tier_page > 1 %}
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page={{ tier_page - 1 }}"
+         class="lb-tier-view-more">&lsaquo; Previous</a>
+      {%- endif %}
+      {%- if has_more %}
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page={{ tier_page + 1 }}"
+         class="lb-tier-view-more">View more &rsaquo;</a>
+      {%- endif %}
+    </div>
+    {%- endif %}
     {%- endif %}
   </div>
 
