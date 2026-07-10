@@ -1779,33 +1779,6 @@ def _run_startup_tasks():
                 print(f'Location advisory link columns migration warning: {_loc_url_mig}')
 
             try:
-                # Session 139 — city_event_scan: live event type column +
-                # city_event_scan_log table for the daily live-event cron.
-                # event_type='live'     — time-bound event from city_event_scan.py
-                # event_type='seasonal' — evergreen row (existing data, DEFAULT)
-                db.session.execute(db.text(
-                    "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS "
-                    "event_type VARCHAR(20) NOT NULL DEFAULT 'seasonal'"
-                ))
-                db.session.execute(db.text("""
-                    CREATE TABLE IF NOT EXISTS city_event_scan_log (
-                        id           SERIAL PRIMARY KEY,
-                        city         VARCHAR(80) NOT NULL,
-                        scanned_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
-                        events_found INTEGER     NOT NULL DEFAULT 0
-                    )
-                """))
-                db.session.execute(db.text(
-                    "CREATE INDEX IF NOT EXISTS idx_city_event_scan_log_city_at "
-                    "ON city_event_scan_log (city, scanned_at)"
-                ))
-                db.session.commit()
-                print('Session 139: city_event_scan schema OK.')
-            except Exception as _ces_mig:
-                db.session.rollback()
-                print(f'Session 139 city_event_scan migration warning: {_ces_mig}')
-
-            try:
                 # Photo School — mission genre override + curriculum progress tracker
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS mission_genre VARCHAR(20) DEFAULT NULL"
@@ -2572,24 +2545,6 @@ def run_seasonal_discovery_job():
 
 
 # ── Re-engagement Emailer ─────────────────────────────────────────────────────
-
-def run_city_event_scan_job():
-    """
-    Runs daily via APScheduler at 20:30 UTC (02:00 IST).
-    Scans all cities with upload activity in the last 7 days for
-    time-bound photography events (festivals, exhibitions, etc.) and
-    writes them as event_type='live' rows into seasonal_calendar.
-    Cities are prioritised by recent upload count (most active first).
-    Cities scanned within the last 20 hours are skipped (idempotent).
-    """
-    with app.app_context():
-        try:
-            from engine.city_event_scan import run_city_event_scan
-            summary = run_city_event_scan(db.session)
-            app.logger.info(f'[city_event_scan] Daily run complete: {summary}')
-        except Exception as e:
-            app.logger.error(f'[city_event_scan] Daily run error: {e}')
-
 
 def run_reengagement_emailer():
     """
@@ -4215,16 +4170,6 @@ def dashboard():
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
-    # Session 139 — live event advisory (time-bound events from city_event_scan)
-    # Shown above the seasonal advisory on the dashboard. None if no live events.
-    _dash_live_event = None
-    try:
-        if current_user.city:
-            from engine.city_event_scan import get_live_event_advisory
-            _dash_live_event = get_live_event_advisory(db.session, current_user.city)
-    except Exception as _lee:
-        app.logger.warning(f'[dashboard] live_event: {_lee}')
-
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
@@ -4369,7 +4314,6 @@ def dashboard():
                            mission_done=_mission_done,
                            show_mission=_show_mission,
                            dash_advisory=_dash_advisory,
-                           dash_live_event=_dash_live_event,
                            peer_queue=_peer_queue,
                            tier_rank=TIER_RANK,
                            eye_of_judge=_eye_of_judge,
@@ -5365,6 +5309,18 @@ def profile():
                                         f'[update_location] on-demand discovery '
                                         f'({_disc_city}, {_dg}): {_n} row(s)'
                                     )
+                                # Session 139 — also scan for live events in the
+                                # new city immediately so the dashboard advisory
+                                # is populated without waiting for the daily cron.
+                                try:
+                                    from engine.city_event_scan import scan_city as _scan_city
+                                    _ev = _scan_city(db.session, _disc_city)
+                                    app.logger.info(
+                                        f'[update_location] live event scan '
+                                        f'({_disc_city}): {_ev} event(s)'
+                                    )
+                                except Exception as _cese:
+                                    app.logger.warning(f'[update_location] live event scan: {_cese}')
                         except Exception as _de:
                             app.logger.warning(f'[update_location] discovery thread: {_de}')
                     _t = _threading.Thread(target=_run_city_discovery, daemon=True)
@@ -24131,16 +24087,6 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute='0,5,10,15,20,25,30,35,40,45,50,55', timezone='UTC'),
         id               = 'challenge_notification',
         name             = 'Send challenge open notifications at opens_at',
-        replace_existing = True,
-    )
-    # Session 139 — daily live event scan — 20:30 UTC (02:00 IST)
-    # Finds time-bound photography events for all cities with recent upload
-    # activity. Writes event_type='live' rows; auto-expire once date_end < today.
-    _scheduler.add_job(
-        func             = run_city_event_scan_job,
-        trigger          = CronTrigger(hour=20, minute=30, timezone='UTC'),
-        id               = 'city_event_scan',
-        name             = 'Daily live event scan — photography events near active cities',
         replace_existing = True,
     )
     _scheduler.start()
