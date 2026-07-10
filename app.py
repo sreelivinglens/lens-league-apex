@@ -4171,6 +4171,14 @@ def dashboard():
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
 
+    _dash_live_event = None
+    try:
+        if current_user.city:
+            from engine.city_event_scan import get_live_event_advisory
+            _dash_live_event = get_live_event_advisory(db.session, current_user.city)
+    except Exception as _lee:
+        app.logger.warning(f'[dashboard] live_event: {_lee}')
+
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
@@ -4315,6 +4323,7 @@ def dashboard():
                            mission_done=_mission_done,
                            show_mission=_show_mission,
                            dash_advisory=_dash_advisory,
+                           dash_live_event=_dash_live_event,
                            peer_queue=_peer_queue,
                            tier_rank=TIER_RANK,
                            eye_of_judge=_eye_of_judge,
