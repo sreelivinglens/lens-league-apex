@@ -55,7 +55,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 /* ── RIGHT PANEL — mobile: below centre ── */
 .rpanel {
   padding: 0 16px 16px;
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; flex-direction: column; gap: 16px;
 }
 
 /* ─────────────────────────────────────────
@@ -296,7 +296,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   /* ── Right panel ── */
   .rpanel {
     border-left: 1px solid var(--d-border);
-    padding: 16px 14px; gap: 8px;
+    padding: 16px 14px; gap: 14px;
     position: sticky; top: 64px;
     height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
@@ -661,7 +661,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   <aside class="rpanel">
 
     {# Latest Evaluation #}
-    <div class="rp-card">
+    <div class="rp-card" style="border-left-color:#C87820;">
       <div class="rp-label">Latest Evaluation</div>
       {% if _last %}
       <div class="latest-eval">
@@ -683,7 +683,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# My Standing — compact card, full detail in modal #}
     {% if progress_data %}
-    <div class="rp-card" style="cursor:pointer;" onclick="document.getElementById('standing-modal').style.display='flex'">
+    <div class="rp-card" style="cursor:pointer;border-left-color:#1A2744;" onclick="document.getElementById('standing-modal').style.display='flex'">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
         <div class="rp-label" style="margin-bottom:0;">My Standing</div>
         <span style="font-size:13px;color:var(--d-muted);">▲ full view</span>
@@ -707,7 +707,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
 
         {# Points & Redemptions #}
-    <div class="rp-card">
+    <div class="rp-card" style="border-left-color:#1A6B6B;">
       <div class="rp-label">Points &amp; Redemptions</div>
       <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:8px;">{{ (current_user.points_balance or 0)|int }}</div>
       <a href="{{ url_for('redeem') }}" style="font-size:13px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
@@ -727,7 +727,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
 
     {# Mentor Guidance #}
-    <div class="rp-card">
+    <div class="rp-card" style="border-left-color:#2A7A3A;">
       <div class="rp-label">Mentor Guidance</div>
       <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;text-decoration:none;">
         <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
