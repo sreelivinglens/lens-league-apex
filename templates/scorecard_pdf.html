@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+/* ── SL Tokens ── */
+:root {
+  --navy:   #0F2A22;
+  --dark:   #1A1A18;
+  --gold:   #D6A428;
+  --gold-dk:#A37B2C;
+  --cream:  #F6F2E9;
+  --green:  #1A3A2A;
+  --green-lt:#2A5A3A;
+  --muted:  #8A8A7A;
+  --border: #2A2A28;
+  --white:  #FFFFFF;
+  --col-green: #3A5A3A;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 9pt;
+  color: var(--dark);
+  background: var(--cream);
+}
+
+/* ════════════════════════════════════
+   PAGE 1
+════════════════════════════════════ */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  background: var(--dark);
+  page-break-after: always;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-2 {
+  background: var(--cream);
+  page-break-after: auto;
+}
+
+/* ── Photo block ── */
+.photo-block {
+  width: 100%;
+  height: 148mm;
+  overflow: hidden;
+  position: relative;
+  background: #111;
+}
+
+.photo-block img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.photo-watermark {
+  position: absolute;
+  bottom: 8pt;
+  right: 10pt;
+  font-size: 7pt;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1.5px;
+  font-weight: 500;
+}
+
+/* ── Header strip ── */
+.header-strip {
+  background: var(--navy);
+  padding: 4pt 14pt 3pt;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.sl-brand {
+  font-size: 7.5pt;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.header-right {
+  font-size: 6.5pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ── Score block ── */
+.score-block {
+  background: var(--navy);
+  padding: 12pt 14pt 10pt;
+}
+
+.score-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14pt;
+  margin-bottom: 8pt;
+}
+
+.score-main {
+  flex-shrink: 0;
+}
+
+.score-number {
+  font-size: 52pt;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.score-tier {
+  font-size: 10pt;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 1pt;
+}
+
+.score-dots {
+  display: flex;
+  gap: 3pt;
+  margin-top: 4pt;
+}
+
+.score-dot {
+  width: 14pt;
+  height: 3pt;
+  border-radius: 2pt;
+  background: var(--border);
+}
+
+.score-dot.active {
+  background: var(--gold);
+}
+
+.score-meta {
+  flex: 1;
+  padding-top: 6pt;
+}
+
+.score-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 2pt;
+  line-height: 1.25;
+}
+
+.score-credit {
+  font-size: 8pt;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 3pt;
+}
+
+.score-submeta {
+  font-size: 7.5pt;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+}
+
+.affective-state {
+  font-size: 7pt;
+  color: var(--gold-dk);
+  letter-spacing: 0.5px;
+  margin-top: 2pt;
+}
+
+/* ── Dimensions ── */
+.dimensions {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  margin-top: 8pt;
+}
+
+.dim-col {
+  flex: 1;
+  text-align: center;
+  padding: 7pt 4pt 6pt;
+  border-right: 1px solid var(--border);
+}
+
+.dim-col:last-child { border-right: none; }
+
+.dim-label {
+  font-size: 5.5pt;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.4;
+  margin-bottom: 4pt;
+  min-height: 16pt;
+}
+
+.dim-score {
+  font-size: 16pt;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1;
+}
+
+.dim-score.gold { color: var(--gold); }
+
+/* ── Opening bold ── */
+.opening-block {
+  background: var(--navy);
+  padding: 10pt 14pt 12pt;
+  border-top: 1px solid var(--border);
+}
+
+.opening-bold {
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.6;
+}
+
+/* ── P1 footer ── */
+.p1-footer {
+  background: var(--dark);
+  padding: 6pt 14pt;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.p1-footer-txt {
+  font-size: 6.5pt;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+}
+
+.p1-footer-score {
+  font-size: 7pt;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* ════════════════════════════════════
+   PAGE 2
+════════════════════════════════════ */
+.p2-header {
+  background: var(--navy);
+  padding: 5pt 14pt 4pt;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p2-header-left {
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.p2-header-right {
+  font-size: 6.5pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ── Four columns ── */
+.four-cols {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #D0CAB8;
+}
+
+.eval-col {
+  flex: 1;
+  padding: 10pt 10pt 12pt;
+  border-right: 1px solid #D0CAB8;
+}
+
+.eval-col:last-child { border-right: none; }
+
+.eval-eyebrow {
+  font-size: 5.5pt;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-dk);
+  margin-bottom: 4pt;
+}
+
+.eval-headline {
+  font-size: 9pt;
+  font-weight: 800;
+  color: var(--dark);
+  line-height: 1.3;
+  margin-bottom: 6pt;
+}
+
+.eval-body {
+  font-size: 7.5pt;
+  color: #3A3A38;
+  line-height: 1.65;
+}
+
+.eval-body p { margin-bottom: 4pt; }
+.eval-body p:last-child { margin-bottom: 0; }
+
+/* ── Edit guide ── */
+.edit-section {
+  padding: 10pt 14pt 10pt;
+  border-bottom: 1px solid #D0CAB8;
+}
+
+.edit-eyebrow {
+  font-size: 5.5pt;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6pt;
+}
+
+.edit-grid {
+  display: flex;
+  gap: 12pt;
+}
+
+.edit-col {
+  flex: 1;
+}
+
+.edit-col-label {
+  font-size: 6pt;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3pt;
+}
+
+.edit-col-sub {
+  font-size: 5.5pt;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 4pt;
+}
+
+.edit-col-body {
+  font-size: 7.5pt;
+  color: #3A3A38;
+  line-height: 1.65;
+}
+
+/* ── Where to shoot ── */
+.where-section {
+  background: var(--green);
+  padding: 10pt 14pt 12pt;
+}
+
+.where-eyebrow {
+  font-size: 5.5pt;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #7AAA8A;
+  margin-bottom: 6pt;
+}
+
+.where-grid {
+  display: flex;
+  gap: 12pt;
+}
+
+.where-col { flex: 1; }
+
+.where-col-label {
+  font-size: 5.5pt;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #7AAA8A;
+  margin-bottom: 3pt;
+}
+
+.where-body {
+  font-size: 7.5pt;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.65;
+}
+
+.where-urgent {
+  font-size: 7.5pt;
+  font-weight: 700;
+  color: var(--gold);
+  margin-top: 6pt;
+  line-height: 1.55;
+}
+
+.where-link {
+  font-size: 6.5pt;
+  color: #7AAA8A;
+  letter-spacing: 0.5px;
+  margin-top: 4pt;
+  display: block;
+}
+
+/* ── Quote strip ── */
+.quote-strip {
+  padding: 8pt 14pt 6pt;
+  border-top: 1px solid #D0CAB8;
+  background: var(--cream);
+}
+
+.quote-text {
+  font-size: 7.5pt;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 2pt;
+}
+
+.quote-attr {
+  font-size: 6.5pt;
+  color: #AAAAAA;
+  letter-spacing: 0.5px;
+}
+
+/* ── P2 footer ── */
+.p2-footer {
+  background: var(--navy);
+  padding: 5pt 14pt;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p2-footer-txt {
+  font-size: 5.5pt;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
+
+.p2-footer-score {
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  body { background: white; }
+  .page { page-break-after: always; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ PAGE 1 ════════ -->
+<div class="page">
+
+  <!-- Header strip -->
+  <div class="header-strip">
+    <span class="sl-brand">Shutter League</span>
+    <span class="header-right">Apex DDI Engine &nbsp;·&nbsp; Full Evaluation</span>
+  </div>
+
+  <!-- Photo -->
+  <div class="photo-block">
+    {% if photo_url %}
+    <img src="{{ photo_url }}" alt="{{ image.asset_name or 'Photograph' }}">
+    {% endif %}
+    <span class="photo-watermark">© {{ image.photographer_name or '' }}</span>
+  </div>
+
+  <!-- Score block -->
+  <div class="score-block">
+    <div class="score-row">
+      <div class="score-main">
+        <div class="score-number">{{ '%.2f'|format(image.score) }}</div>
+        <div class="score-tier">{{ image.tier or '' }}</div>
+        <div class="score-dots">
+          {% set tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+          {% set tier_idx = tiers.index(image.tier) if image.tier in tiers else 0 %}
+          {% for i in range(8) %}
+          <div class="score-dot {% if i <= tier_idx %}active{% endif %}"></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="score-meta">
+        <div class="score-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
+        {% if image.photographer_name %}
+        <div class="score-credit">Photography by : {{ image.photographer_name }}</div>
+        {% endif %}
+        <div class="score-submeta">
+          {{ image.genre or '' }}{% if image.format %} . {{ image.format }}{% endif %}{% if image.location %} . {{ image.location }}{% endif %}
+        </div>
+        {% if affective_state %}
+        <div class="affective-state">Affective State: {{ affective_state }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Dimensions -->
+    <div class="dimensions">
+      {% for dim in dim_breakdown %}
+      <div class="dim-col">
+        <div class="dim-label">{{ dim.l1 }}<br>{{ dim.l2 }}</div>
+        <div class="dim-score {% if dim.score == dim_breakdown|map(attribute='score')|max %}gold{% endif %}">
+          {{ '%.1f'|format(dim.score) }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Opening bold paragraph -->
+  {% if wso %}
+  <div class="opening-block">
+    <div class="opening-bold">{{ wso }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Page 1 footer -->
+  <div class="p1-footer">
+    <span class="p1-footer-txt">Better Light. &nbsp;More Clarity. &nbsp;Stronger Story. &nbsp;You, One Frame at a Time.</span>
+    <span class="p1-footer-score">SL &nbsp;·&nbsp; {{ '%.2f'|format(image.score) }} &nbsp;·&nbsp; {{ image.tier or '' }}</span>
+  </div>
+
+</div>
+
+<!-- ════════ PAGE 2 ════════ -->
+<div class="page page-2">
+
+  <!-- P2 header -->
+  <div class="p2-header">
+    <span class="p2-header-left">Full Evaluation &nbsp;·&nbsp; {{ image.asset_name or 'Untitled' }}</span>
+    <span class="p2-header-right">Apex DDI Engine &nbsp;·&nbsp; Rated by Science</span>
+  </div>
+
+  <!-- Four evaluation columns -->
+  <div class="four-cols">
+
+    <div class="eval-col">
+      <div class="eval-eyebrow">The Photographer's Advice</div>
+      {% set c1_headline = c1_body.split('.')[0] ~ '.' if c1_body else '' %}
+      <div class="eval-headline">{{ c1_headline }}</div>
+      <div class="eval-body">
+        {% for para in c1_body.split('\n') if para.strip() %}
+        <p>{{ para.strip() }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="eval-col">
+      <div class="eval-eyebrow">What You Controlled</div>
+      {% set c2_headline = c2_body.split('.')[0] ~ '.' if c2_body else '' %}
+      <div class="eval-headline">{{ c2_headline }}</div>
+      <div class="eval-body">
+        {% for para in c2_body.split('\n') if para.strip() %}
+        <p>{{ para.strip() }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="eval-col">
+      <div class="eval-eyebrow">What to Watch Next</div>
+      {% set c3_first = c3_body.split('.')[0] ~ '.' if c3_body else '' %}
+      <div class="eval-headline">{{ c3_first }}</div>
+      <div class="eval-body">
+        {% for para in c3_body.split('\n') if para.strip() %}
+        <p>{{ para.strip() }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="eval-col">
+      <div class="eval-eyebrow">Keep This in Mind</div>
+      {% set c4_first = c4_body.split('.')[0] ~ '.' if c4_body else '' %}
+      <div class="eval-headline">{{ c4_first }}</div>
+      <div class="eval-body">
+        {% for para in c4_body.split('\n') if para.strip() %}
+        <p>{{ para.strip() }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Edit guide -->
+  {% if edit_base or edit_creative %}
+  <div class="edit-section">
+    <div class="edit-eyebrow">Edit Guide</div>
+    <div class="edit-grid">
+      {% if edit_base %}
+      <div class="edit-col">
+        <div class="edit-col-label">Standard Edit</div>
+        <div class="edit-col-sub">Balanced. Light editing.</div>
+        <div class="edit-col-body">{{ edit_base }}</div>
+      </div>
+      {% endif %}
+      {% if edit_creative %}
+      <div class="edit-col">
+        <div class="edit-col-label">Creative Edit</div>
+        <div class="edit-col-sub">Artistic. Heavy editing.</div>
+        <div class="edit-col-body">{{ edit_creative }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Where to shoot next -->
+  {% if mentor_location_1 or mentor_location_2 %}
+  <div class="where-section">
+    <div class="where-eyebrow">Where to Shoot Next</div>
+    <div class="where-grid">
+      {% if mentor_location_1 %}
+      <div class="where-col">
+        <div class="where-col-label">Now Open</div>
+        <div class="where-body">{{ mentor_location_1 }}</div>
+        {% if location_links and location_links|length >= 1 %}
+        <a class="where-link" href="{{ location_links[0].url }}">GET DIRECTIONS →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if mentor_location_2 %}
+      <div class="where-col">
+        <div class="where-col-label">Coming Up</div>
+        <div class="where-body">{{ mentor_location_2 }}</div>
+        {% if location_links and location_links|length >= 2 %}
+        <a class="where-link" href="{{ location_links[1].url }}">GET DIRECTIONS →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% if days_since_language %}
+    <div class="where-urgent">{{ days_since_language }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Quote -->
+  <div class="quote-strip">
+    <div class="quote-text">"To photograph is to hold one's breath when all faculties converge to capture fleeting reality."</div>
+    <div class="quote-attr">— Henri Cartier-Bresson</div>
+  </div>
+
+  <!-- P2 footer -->
+  <div class="p2-footer">
+    <span class="p2-footer-txt">Better Light. &nbsp;More Clarity. &nbsp;Stronger Story. &nbsp;You, One Frame at a Time.</span>
+    <span class="p2-footer-score">SL &nbsp;·&nbsp; {{ '%.2f'|format(image.score) }} &nbsp;·&nbsp; {{ image.tier or '' }}</span>
+  </div>
+
+</div>
+
+</body>
+</html>
