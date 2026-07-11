@@ -798,7 +798,7 @@ _ADVISORY_TTL = 6 * 3600  # 6 hours
 
 
 def _run_sherpa(db_session, user_city, primary_genre, current_month,
-            progress_data, user_id, _cache_key, base):
+            progress_data, user_id, _cache_key, base, follow_up: bool = False):
     """Run Sherpa Claude call and populate cache. Called from background thread."""
     # ── Build DDI profile string ──────────────────────────────────────────
     _dim_labels = {
@@ -889,6 +889,16 @@ def _run_sherpa(db_session, user_city, primary_genre, current_month,
     Never invent specific subjects, objects, or scenes that are not mentioned in the location data provided to you. Only describe what you know is actually there.
     Total length: 120–160 words maximum. Dense. Every word earns its place."""
 
+    # ── Follow-up instruction (item 4 — session memory) ──────────────────
+    _followup_note = ""
+    if follow_up:
+        _followup_note = (
+            "\nFOLLOW-UP VISIT: This photographer saw the brief for this location yesterday. "
+            "Do NOT repeat the same gap shot or stretch shot. Give a completely different angle — "
+            "different time of day, different compositional layer, the next level of the same subject. "
+            "Acknowledge they have been there before in one word maximum ('Again:' or nothing), then move straight to the new brief."
+        )
+
     _user_prompt = f"""Photographer profile:
     - Current standing: {_avg_tier} ({_count} images evaluated)
     - Primary genre: {_top_genre}
@@ -898,9 +908,10 @@ def _run_sherpa(db_session, user_city, primary_genre, current_month,
     - Strongest dimension: {_dim_labels.get(_strongest, _strongest)}
     - {_recent_context}
 
-    Location: {base.get('location_name', '')}, {base.get('state_country', '')}
+    Location: {base.get('location_name', '')}{', ' + base.get('state_country', '') if base.get('state_country') else ''}
     What is happening: {base.get('what_is_happening', '')}
-    Genre context: {primary_genre}
+    {('Why it matters: ' + base.get('why_it_matters', '')) if base.get('why_it_matters') else ''}
+    Genre context: {primary_genre}{_followup_note}
 
     Write the three-part Sherpa advisory for this photographer at this location.
     Return ONLY the advisory text — no labels, no headers, no preamble."""
@@ -980,6 +991,8 @@ def get_personalised_advisory(
     current_month: int,
     progress_data: dict | None = None,
     user_id: int | None = None,
+    live_event: dict | None = None,
+    follow_up: bool = False,
 ) -> dict | None:
     """
     Sherpa-voiced location advisory personalised to the user's DDI profile.
@@ -996,6 +1009,14 @@ def get_personalised_advisory(
                           their upload history. "You got slow shutter right
                           at Chidambaram — 7.6. Here's how this gets to Master."
 
+    live_event: when provided, the Sherpa brief is written for the live event
+      rather than the seasonal DB row. Pass the raw dict returned by
+      get_live_event_advisory(). The dict must have location_name,
+      what_is_happening, why_it_matters at minimum.
+
+    follow_up: when True, the Sherpa prompt signals that the user saw this
+      location's brief yesterday — give a different angle today, not a repeat.
+
     Falls back to the unmodified get_dashboard_advisory() result if:
       - progress_data is None (< 5 images, no profile yet)
       - Claude call fails for any reason
@@ -1004,8 +1025,11 @@ def get_personalised_advisory(
     The template dict shape is identical to get_dashboard_advisory() —
     no template changes needed.
     """
-    # ── Base advisory from DB ─────────────────────────────────────────────
-    base = get_dashboard_advisory(db_session, user_city, primary_genre, current_month)
+    # ── Base: live event takes priority over DB seasonal row ─────────────
+    if live_event:
+        base = live_event
+    else:
+        base = get_dashboard_advisory(db_session, user_city, primary_genre, current_month)
     if not base:
         return None
 
@@ -1013,21 +1037,25 @@ def get_personalised_advisory(
     if not progress_data:
         return base
 
-    # ── Cache check ───────────────────────────────────────────────────────
-    _cache_key = f"{user_id}:{user_city}:{primary_genre}:{current_month}"
+    # ── Cache — include live_event id + follow_up flag so each variant
+    #    gets its own cached entry and doesn't collide across calls ────────
+    _live_key = str(live_event.get('id', 'live')) if live_event else 'none'
+    _cache_key = (
+        f"{user_id}:{user_city}:{primary_genre}:{current_month}"
+        f":{_live_key}:{'fu' if follow_up else 'std'}"
+    )
     with _advisory_cache_lock:
         _cached = _advisory_cache.get(_cache_key)
         if _cached and (_time.time() - _cached['ts']) < _ADVISORY_TTL:
             return _cached['data']
 
     # ── No cache — return base immediately, generate Sherpa in background ─
-    # This prevents the dashboard blocking for 3-4 seconds on first load
-    # after a city change. The Sherpa brief appears on the next dashboard
-    # refresh (seconds later) once the background thread completes.
+    # Prevents the dashboard blocking 3–4 s on first load after a city change.
     def _generate_sherpa_async():
         try:
             _run_sherpa(db_session, user_city, primary_genre, current_month,
-                        progress_data, user_id, _cache_key, base)
+                        progress_data, user_id, _cache_key, base,
+                        follow_up=follow_up)
         except Exception:
             pass
     _threading.Thread(target=_generate_sherpa_async, daemon=True).start()
@@ -1079,6 +1107,142 @@ def get_primary_genre(user) -> str:
         except (json.JSONDecodeError, IndexError):
             pass
     return ""
+
+
+# ── Item 4 — advisory_shown_log (session memory) ─────────────────────────────
+# Tracks which calendar row (or live event id) was shown to which user on
+# which IST date. Next day, get_personalised_advisory() passes follow_up=True
+# so the Sherpa gives a different angle rather than the same instructions.
+#
+# calendar_id is the seasonal_calendar.id; for live events (no calendar row)
+# store live_event_db_id (the city_events.id) in the live_event_id column.
+# Only one of calendar_id / live_event_id is set per row.
+
+ADVISORY_SHOWN_LOG_MIGRATION_SQL = """
+CREATE TABLE IF NOT EXISTS advisory_shown_log (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER     NOT NULL,
+    calendar_id     INTEGER,
+    live_event_id   INTEGER,
+    city            VARCHAR(80) NOT NULL,
+    shown_date      DATE        NOT NULL,
+    follow_up_shown BOOLEAN     NOT NULL DEFAULT FALSE,
+    shown_at        TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_advisory_shown_user_date
+    ON advisory_shown_log (user_id, shown_date);
+
+CREATE INDEX IF NOT EXISTS idx_advisory_shown_cal
+    ON advisory_shown_log (user_id, calendar_id, shown_date);
+"""
+
+
+def log_advisory_shown(db_session, user_id: int, city: str,
+                        calendar_id: int | None = None,
+                        live_event_id: int | None = None) -> None:
+    """
+    Record that a dashboard advisory was shown to this user today (IST).
+    Call once per dashboard load when dash_advisory or dash_live_event is
+    served — NOT on every page load, only when the advisory block is shown.
+
+    Safe to call with calendar_id=None AND live_event_id=None — inserts a
+    city-level row which still feeds the follow-up logic for the next day.
+    Idempotent per (user_id, calendar_id/live_event_id, shown_date) —
+    duplicate same-day rows are silently ignored.
+    """
+    import datetime as _dt
+    # IST date = UTC + 5:30
+    _ist_date = (_dt.datetime.utcnow() + _dt.timedelta(hours=5, minutes=30)).date()
+    try:
+        db_session.execute(
+            _sql_text("""
+                INSERT INTO advisory_shown_log
+                    (user_id, calendar_id, live_event_id, city, shown_date, shown_at)
+                VALUES
+                    (:uid, :cid, :lid, :city, :date, NOW())
+                ON CONFLICT DO NOTHING
+            """),
+            {
+                'uid':  user_id,
+                'cid':  calendar_id,
+                'lid':  live_event_id,
+                'city': city,
+                'date': _ist_date,
+            }
+        )
+        db_session.commit()
+    except Exception as _e:
+        db_session.rollback()
+        print(f"[log_advisory_shown] error: {_e}")
+
+
+def check_advisory_follow_up(db_session, user_id: int,
+                              calendar_id: int | None = None,
+                              live_event_id: int | None = None) -> bool:
+    """
+    Returns True if this user was shown this advisory (by calendar_id or
+    live_event_id) yesterday (IST). Used by the dashboard route to pass
+    follow_up=True to get_personalised_advisory().
+
+    'Yesterday' = IST today minus 1 day. We look back exactly one day
+    so stale logs from 3 days ago do not keep triggering follow-up mode.
+    """
+    import datetime as _dt
+    _ist_now  = _dt.datetime.utcnow() + _dt.timedelta(hours=5, minutes=30)
+    _yesterday = (_ist_now - _dt.timedelta(days=1)).date()
+
+    if calendar_id is None and live_event_id is None:
+        return False
+    try:
+        if calendar_id is not None:
+            row = db_session.execute(
+                _sql_text("""
+                    SELECT id FROM advisory_shown_log
+                    WHERE user_id    = :uid
+                      AND calendar_id = :cid
+                      AND shown_date  = :date
+                    LIMIT 1
+                """),
+                {'uid': user_id, 'cid': calendar_id, 'date': _yesterday}
+            ).fetchone()
+        else:
+            row = db_session.execute(
+                _sql_text("""
+                    SELECT id FROM advisory_shown_log
+                    WHERE user_id       = :uid
+                      AND live_event_id = :lid
+                      AND shown_date    = :date
+                    LIMIT 1
+                """),
+                {'uid': user_id, 'lid': live_event_id, 'date': _yesterday}
+            ).fetchone()
+        return row is not None
+    except Exception as _e:
+        print(f"[check_advisory_follow_up] error: {_e}")
+        return False
+
+
+def prune_advisory_shown_log(db_session, days: int = 7) -> int:
+    """
+    Delete advisory_shown_log entries older than `days` (default 7 —
+    only yesterday matters for follow-up logic; anything older is dead weight).
+    Returns rows deleted, or -1 on error.
+    """
+    try:
+        result = db_session.execute(
+            _sql_text(
+                "DELETE FROM advisory_shown_log "
+                "WHERE shown_at < NOW() - INTERVAL '1 day' * :days"
+            ),
+            {"days": days}
+        )
+        db_session.commit()
+        return result.rowcount
+    except Exception as _e:
+        print(f"[prune_advisory_shown_log] error: {_e}")
+        db_session.rollback()
+        return -1
 
 
 def seed_seasonal_calendar(db_session):
