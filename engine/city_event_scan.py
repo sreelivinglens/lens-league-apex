@@ -50,7 +50,7 @@ seasonal advisory when present.
 
 import os
 import json
-import anthropic
+import httpx
 from datetime import datetime, timedelta, date
 from sqlalchemy import text as _sql
 
@@ -269,14 +269,24 @@ def scan_city(db_session, city):
     system = _SYSTEM.replace("{today}", today_str)
 
     try:
-        client = anthropic.Anthropic()  # picks up ANTHROPIC_API_KEY from env
-        response = client.messages.create(
-            model      = MODEL,
-            max_tokens = 1000,
-            system     = system,
-            messages   = [{"role": "user", "content": prompt}],
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        resp = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":      MODEL,
+                "max_tokens": 1000,
+                "system":     system,
+                "messages":   [{"role": "user", "content": prompt}],
+            },
+            timeout=45,
         )
-        raw = response.content[0].text.strip()
+        resp.raise_for_status()
+        raw = resp.json()["content"][0]["text"].strip()
 
         # Strip markdown fences if model adds them despite instructions
         if raw.startswith("```"):
