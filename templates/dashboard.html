@@ -569,8 +569,10 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
              style="font-size:13px;font-weight:700;color:#D6A428;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:5px 11px;border-radius:7px;">Get directions →</a>
           {% if dash_live_event.source_url %}
           <a href="{{ dash_live_event.source_url }}" target="_blank"
-             style="font-size:12px;color:rgba(246,242,233,0.45);text-decoration:none;white-space:nowrap;">Event details ↗</a>
+             style="font-size:13px;color:rgba(246,242,233,0.45);text-decoration:none;white-space:nowrap;">Event details ↗</a>
           {% endif %}
+          <a href="{{ url_for('profile') }}#location"
+             style="font-size:13px;color:rgba(246,242,233,0.45);text-decoration:none;white-space:nowrap;">Change location</a>
         </div>
       </div>
     </div>
@@ -807,7 +809,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px;">
       <div>
         <div style="font-size:26px; font-weight:700; color:var(--d-dark); line-height:1.15;">{{ ns.greeting }},<br>{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
-        <div style="font-size:13px; color:var(--d-muted); margin-top:4px; line-height:1.5;">
+        <div style="font-size:14px; color:var(--d-muted); margin-top:4px; line-height:1.5;">
           {% if progress_data and progress_data.count > 0 and progress_data.strongest %}
             {% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}. {% endif %}
             From your {{ progress_data.count }} photographs, you've improved most in <strong style="color:var(--d-dark);">{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong> — keep building on <strong style="color:var(--d-dark);">{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.weakest, progress_data.weakest|title) }}</strong>.
@@ -834,13 +836,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% if show_mission %}
     <div class="mob-practice">
       <div style="padding:12px 14px 8px; border-bottom:1px solid var(--d-border);">
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
+        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
       </div>
       <div class="mob-practice-inner">
         <div class="mob-practice-content">
           <div style="font-size:17px;font-weight:700;color:var(--d-dark);line-height:1.3;margin-bottom:8px;">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
           {% if lesson and lesson.principle %}
-          <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
+          <div style="font-size:14px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
           {% endif %}
         </div>
         <div class="mob-practice-img">
@@ -854,7 +856,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="padding:10px 14px;">
         <a href="{{ url_for('mission') }}" style="display:block;background:var(--d-gold);color:#111;font-size:14px;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;">Begin Today's Practice →</a>
         <form method="POST" action="{{ url_for('skip_mission') }}" style="text-align:center;margin-top:8px;">
-          <button type="submit" style="background:none;border:none;font-size:13px;color:var(--d-muted);cursor:pointer;padding:4px 0;">or Skip for now</button>
+          <button type="submit" style="background:none;border:none;font-size:14px;color:var(--d-muted);cursor:pointer;padding:4px 0;">or Skip for now</button>
         </form>
       </div>
     </div>
@@ -867,38 +869,38 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div style="background:#D6A428;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:7px;">
             <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
-            <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
+            <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
           </div>
           {% if dash_live_event.deadline_label %}
-          <span style="background:rgba(0,0,0,0.18);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
+          <span style="background:rgba(0,0,0,0.18);color:#111;font-size:14px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
           {% endif %}
         </div>
         <div style="padding:12px 14px;">
           <div style="font-size:16px;font-weight:700;color:#F6F2E9;margin-bottom:2px;">{{ dash_live_event.location_name }}</div>
           {% if dash_live_event.subject %}
-          <div style="font-size:13px;font-weight:600;color:#D6A428;margin-bottom:6px;">{{ dash_live_event.subject }}</div>
+          <div style="font-size:14px;font-weight:600;color:#D6A428;margin-bottom:6px;">{{ dash_live_event.subject }}</div>
           {% endif %}
           {% if dash_live_event.genre %}
-          <span style="background:rgba(255,255,255,0.12);color:#F6F2E9;font-size:13px;font-weight:600;padding:2px 10px;border-radius:20px;display:inline-block;margin-bottom:8px;">{{ dash_live_event.genre|title }}</span>
+          <span style="background:rgba(255,255,255,0.12);color:#F6F2E9;font-size:14px;font-weight:600;padding:2px 10px;border-radius:20px;display:inline-block;margin-bottom:8px;">{{ dash_live_event.genre|title }}</span>
           {% endif %}
           {% if dash_live_event.what_is_happening %}
-          <div style="font-size:13px;color:rgba(246,242,233,0.75);line-height:1.5;margin-bottom:4px;">{{ dash_live_event.what_is_happening }}</div>
+          <div style="font-size:14px;color:rgba(246,242,233,0.75);line-height:1.5;margin-bottom:4px;">{{ dash_live_event.what_is_happening }}</div>
           {% endif %}
           {% if dash_live_event.why_it_matters %}
-          <div style="font-size:13px;color:#F6F2E9;font-style:italic;line-height:1.5;margin-bottom:8px;">{{ dash_live_event.why_it_matters }}</div>
+          <div style="font-size:14px;color:#F6F2E9;font-style:italic;line-height:1.5;margin-bottom:8px;">{{ dash_live_event.why_it_matters }}</div>
           {% endif %}
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-            {% if dash_live_event.best_light_time %}<span style="font-size:13px;color:rgba(246,242,233,0.6);">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
-            {% if dash_live_event.distance_hours %}<span style="font-size:13px;color:rgba(246,242,233,0.6);">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
+            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:rgba(246,242,233,0.6);">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
+            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:rgba(246,242,233,0.6);">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);">
             <a href="{{ dash_live_event.url }}" target="_blank"
-               style="font-size:13px;font-weight:700;color:#D6A428;text-decoration:none;display:flex;align-items:center;gap:5px;">
+               style="font-size:14px;font-weight:700;color:#D6A428;text-decoration:none;display:flex;align-items:center;gap:5px;">
               📍 Get directions →
             </a>
             {% if dash_live_event.source_url %}
             <a href="{{ dash_live_event.source_url }}" target="_blank"
-               style="font-size:12px;color:rgba(246,242,233,0.45);text-decoration:none;">Event details ↗</a>
+               style="font-size:14px;color:rgba(246,242,233,0.45);text-decoration:none;">Event details ↗</a>
             {% endif %}
           </div>
         </div>
@@ -910,49 +912,49 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="background:var(--d-card);border:1px solid var(--d-border);border-radius:12px;overflow:hidden;">
         <div style="background:#EAF3DE;padding:10px 14px;display:flex;align-items:center;gap:6px;">
           <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-          <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
+          <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
         </div>
         <div style="padding:12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
             <div style="font-size:16px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}</div>
 {% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
-            {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
+            {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
           </div>
-          <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div style="font-size:14px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if dash_advisory.get('why_it_matters') %}
-          <div style="font-size:13px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_advisory.why_it_matters }}</div>
+          <div style="font-size:14px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
           {% if weather and weather.state == 'red' %}
-          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
+          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
             ⚠ {{ weather.message or 'Poor conditions today — skip the outdoor session.' }}
           </div>
           {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
+          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
             ⚡ {{ weather.message or 'Marginal conditions — go early or plan for indoors.' }}
           </div>
           {% endif %}
           {% if progress_data and progress_data.weakest %}
           {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          <div style="font-size:13px;color:var(--d-green);font-weight:600;margin-bottom:8px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
+          <div style="font-size:14px;color:var(--d-green);font-weight:600;margin-bottom:8px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
           {% endif %}
           <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:13px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:13px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:13px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+            {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+            {% if weather and weather.condition %}<span style="font-size:14px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-            {% if dash_advisory.get('light_note') %}<span style="background:#FDF3DC;color:#8A5A00;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>{% endif %}
-            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
+            {% if dash_advisory.get('light_note') %}<span style="background:#FDF3DC;color:#8A5A00;font-size:14px;font-weight:600;padding:3px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>{% endif %}
+            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:14px;font-weight:600;padding:3px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--d-border);">
             <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-               style="font-size:13px;font-weight:600;color:var(--d-dark);text-decoration:none;display:flex;align-items:center;gap:5px;">
+               style="font-size:14px;font-weight:600;color:var(--d-dark);text-decoration:none;display:flex;align-items:center;gap:5px;">
               📍 Get directions
             </a>
-            <span style="font-size:13px;color:var(--d-dark);">→</span>
+            <span style="font-size:14px;color:var(--d-dark);">→</span>
           </div>
           <a href="{{ url_for('profile') }}#location"
-             style="display:block;font-size:13px;color:var(--d-muted);text-decoration:none;margin-top:6px;">Not your city? Update location →</a>
+             style="display:block;font-size:14px;color:var(--d-muted);text-decoration:none;margin-top:6px;">Not your city? Update location →</a>
         </div>
       </div>
       {% endif %}
@@ -960,8 +962,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# ── TODAY'S REFLECTION ── #}
     {% if _last and _last.score %}
     <div class="mob-reflection">
-      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">My Gallery</div>
-      <div style="font-size:13px;color:var(--d-muted);margin-bottom:2px;">Latest Evaluation</div>
+      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">My Gallery</div>
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:2px;">Latest Evaluation</div>
       <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
         <div style="font-size:48px;font-weight:800;color:var(--d-dark);line-height:1;">{{ '%.1f'|format(_last.score) }}<span style="font-size:20px;font-weight:400;color:var(--d-muted)">/10</span></div>
         {# Mini sparkline #}
@@ -985,7 +987,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         {% endif %}
         {% endif %}
       </div>
-      <a href="{{ url_for('my_gallery') }}" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:10px 14px;border:1px solid var(--d-border);border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;color:var(--d-dark);">
+      <a href="{{ url_for('my_gallery') }}" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:10px 14px;border:1px solid var(--d-border);border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;color:var(--d-dark);">
         <span>View My Gallery</span><span>→</span>
       </a>
     </div>
@@ -997,7 +999,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% set _dim_icons  = {'dod':'⬛','dm':'⏱','aq':'👁','wonder':'✦','disruption':'◈'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     <div class="mob-evolution">
-      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:10px;">Your Evolution</div>
+      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:10px;">Your Evolution</div>
       {% for dim, sp in progress_data.dim_sparklines.items() %}
       {% set _avg = progress_data.dim_avgs.get(dim, 0) %}
       <div class="mob-dim-row">
@@ -1017,7 +1019,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <span class="mob-dim-val">{{ '%.1f'|format(_avg) }}</span>
       </div>
       {% endfor %}
-      <div style="font-size:13px;font-weight:600;color:var(--d-gold-dk);text-align:center;margin-top:10px;padding-top:8px;">You're evolving. Keep photographing.</div>
+      <div style="font-size:14px;font-weight:600;color:var(--d-gold-dk);text-align:center;margin-top:10px;padding-top:8px;">You're evolving. Keep photographing.</div>
     </div>
     {% endif %}
 
@@ -1030,11 +1032,11 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       </div>
       {% endif %}
       <div style="flex:1; min-width:0;">
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Thought</div>
+        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Thought</div>
         {% if lesson.master_quote %}
         <div style="font-size:14px;font-style:italic;color:var(--d-dark);line-height:1.5;margin-bottom:4px;">"{{ lesson.master_quote[:100] }}{% if lesson.master_quote|length > 100 %}…{% endif %}"</div>
         {% endif %}
-        <div style="font-size:13px;color:var(--d-muted);">– {{ lesson.master }}</div>
+        <div style="font-size:14px;color:var(--d-muted);">– {{ lesson.master }}</div>
       </div>
     </div>
     {% endif %}
@@ -1048,12 +1050,12 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
              onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
              style="width:44px;height:44px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Mentor">
         <div style="min-width:0;">
-          <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
-          <div style="font-size:13px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
-          <div style="font-size:13px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
+          <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
+          <div style="font-size:14px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
+          <div style="font-size:14px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
         </div>
       </a>
-      <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:13px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
+      <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:14px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
     </div>
 
   </div>
@@ -1072,17 +1074,17 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     <button class="standing-modal-close" onclick="document.getElementById('standing-modal').style.display='none'">×</button>
     {% if progress_data %}
     <div style="margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">My Standing</div>
+      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">My Standing</div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
         <span style="font-size:32px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
         <span style="font-size:14px;color:var(--d-muted);">Average evaluation</span>
       </div>
       <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
-      <div style="font-size:13px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
       <div style="height:5px;background:var(--d-border);border-radius:3px;margin-bottom:16px;">
         <div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--d-gold);border-radius:3px;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--d-muted);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--d-muted);margin-bottom:16px;">
         <span>{{ progress_data.prev_tier or '' }}</span>
         <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.avg_tier }}</span>
         <span>→ {{ progress_data.next_tier or '' }}</span>
@@ -1092,8 +1094,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {# Lifetime score trend #}
     {% if progress_data.trend and progress_data.trend|length >= 2 %}
     <div style="margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:3px;">Lifetime evaluation trend</div>
-      <div style="font-size:13px;color:var(--d-muted);margin-bottom:4px;">All {{ progress_data.count }} uploads</div>
+      <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:3px;">Lifetime evaluation trend</div>
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:4px;">All {{ progress_data.count }} uploads</div>
       {% set _t = progress_data.trend %}
       {% set _scores = _t|map(attribute='score')|list %}
       {% set _min = _scores|min %}
@@ -1123,7 +1125,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last 10 images</div>
+    <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last 10 images</div>
     {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     {% if progress_data.dim_sparklines %}
