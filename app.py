@@ -9241,14 +9241,29 @@ def score_image(image_id):
 @app.route('/image/<int:image_id>/download')
 @login_required
 def download_card(image_id):
+    """
+    Session 141 — redirects to the new HTML-to-PDF route (download_card_pdf).
+    The old compositor JPG approach is replaced by a WeasyPrint render that
+    matches the on-screen evaluation layout exactly. Redirect is transparent
+    to the user — the button and URL stay the same.
+    """
+    return redirect(url_for('download_card_pdf', image_id=image_id))
+
+
+@app.route('/image/<int:image_id>/download-pdf')
+@login_required
+def download_card_pdf(image_id):
+    """
+    Session 141 — HTML-to-PDF scorecard download.
+    Replaces the compositor JPG-stitch approach with a WeasyPrint render of
+    scorecard_pdf.html — same colour tokens, same sections, same layout as
+    image_detail.html. Subscriber-only gate matches download_card().
+    """
     img = Image.query.get_or_404(image_id)
     if not img.score:
         return "This image has not been scored yet.", 404
 
-    # Free tier gate — per investor doc, free users get score + tier only.
-    # Full evaluation PDF (Hard Truth, Gap Analysis, Edit Guide, mentor fields)
-    # is a subscriber-only feature. This is the primary conversion hook.
-    _is_sub = getattr(current_user, 'is_subscribed', False)
+    _is_sub   = getattr(current_user, 'is_subscribed', False)
     _is_owner = (img.user_id == current_user.id)
     _is_admin = (current_user.role == 'admin')
     if _is_owner and not _is_sub and not _is_admin:
@@ -9259,111 +9274,102 @@ def download_card(image_id):
         )
         return redirect(url_for('pricing'))
 
-    import io, tempfile, os as _os
-    from engine.compositor import build_card1, build_card2
+    _audit = img.get_audit() or {}
 
-    audit = img.get_audit() or {}
-    app.logger.info(f'[download] img={image_id} audit_keys={list(audit.keys())}')
-    modules = [(n,v) for n,v in [
-        ('DoD', img.dod_score),
-        ('VD',  img.disruption_score),
-        ('DM',  img.dm_score),
-        ('WF',  img.wonder_score),
-        ('AQ',  img.aq_score),
-    ] if v and float(v) > 0]
+    # ── Resolve evaluation body fields — same logic as card_public route ──
+    _wso = (_audit.get('what_stood_out') or '').strip() or (_audit.get('hard_truth') or '').strip()
+    _rows = _audit.get('rows') or []
+    _tech_val = _mom_val = _next_val = ''
+    for _row in _rows:
+        if _row and len(_row) >= 2:
+            if _row[0] in ('Depth of\nDifficulty', 'Technical'): _tech_val = _row[1] or ''
+            if _row[0] in ('Decisive\nMoment',     'Moment'):    _mom_val  = _row[1] or ''
+            if _row[0] == 'Next':                                 _next_val = _row[1] or ''
+    _c1 = (_audit.get('transferable_advice') or '').strip() or _tech_val.strip()
+    _c2 = (_tech_val.strip() or _mom_val.strip()) if (_audit.get('transferable_advice') or '').strip() else _mom_val.strip()
+    _bgcheck = (_audit.get('background_check') or '').strip() or (_audit.get('byline_1') or '').strip()
+    _c3 = _bgcheck or _next_val.strip()
+    _c4 = (_audit.get('byline_2_body') or '').strip() or (_audit.get('byline_2') or '').strip()
+    _edit_base     = (_audit.get('edit_base') or '').strip()
+    _edit_creative = (_audit.get('edit_creative') or '').strip()
+    _affective     = (_audit.get('affective_state') or '').strip()
+    _days_since    = (_audit.get('days_since_language') or '').strip()
+    _mentor_1      = (_audit.get('mentor_location_1') or '').strip()
+    _mentor_2      = (_audit.get('mentor_location_2') or '').strip()
 
-    card_data = {
-        'score':         img.score,
-        'tier':          img.tier or '',
-        'asset':         img.asset_name or img.original_filename or 'Untitled',
-        'meta':          '  .  '.join(filter(None,[img.genre,img.format,img.location])),
-        'dec':           img.archetype or '',
-        'credit':        img.photographer_name or '',
-        'soul_bonus':    bool(img.soul_bonus),
-        'iucn_tag':      audit.get('iucn_tag',''),
-        'modules':       modules,
-        'rows':          audit.get('rows',[]),
-        'byline_1':      audit.get('byline_1',''),
-        'byline_2_body': audit.get('byline_2_body','') or audit.get('byline_2',''),
-        'badges_g':      audit.get('badges_g',[]),
-        'badges_w':      audit.get('badges_w',[]),
-        'hard_truth':          audit.get('hard_truth',''),
-        'edit_base':           audit.get('edit_base',''),
-        'edit_creative':       audit.get('edit_creative',''),
-        'what_stood_out':      audit.get('what_stood_out',''),
-        'transferable_advice': audit.get('transferable_advice',''),
-        'background_check':    audit.get('background_check',''),
-        'mentor_location_1':   audit.get('mentor_location_1',''),
-        'mentor_location_2':   audit.get('mentor_location_2',''),
-        'mentor_location_3':   audit.get('mentor_location_3',''),
-        'days_since_language': audit.get('days_since_language',''),
-        'genre_tag':           audit.get('genre_tag',''),
-        'composition_technique': audit.get('composition_technique',''),
-    }
+    # ── Dimension breakdown ──
+    _dim_breakdown = []
+    for _dattr, _dl1, _dl2 in [
+        ('dod_score',        'How Difficult', 'It Was'),
+        ('disruption_score', 'Visual',        'Disruption'),
+        ('dm_score',         'Whether the Timing', 'Was Right'),
+        ('wonder_score',     'Whether it Made', 'You Feel'),
+        ('aq_score',         'The Emotion',   'It Creates'),
+    ]:
+        _dval = getattr(img, _dattr, None)
+        if _dval is not None:
+            _dim_breakdown.append({'score': float(_dval), 'l1': _dl1, 'l2': _dl2})
 
-    photo_tmp  = None
-    photo_path = img.thumb_path if (img.thumb_path and _os.path.exists(img.thumb_path)) else None
-    if not photo_path and img.thumb_url:
-        try:
-            from storage import get_client, BUCKET
-            tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-            get_client().download_fileobj(BUCKET, 'thumbs/'+img.thumb_url.split('/thumbs/')[-1], tf)
-            tf.close()
-            photo_path = photo_tmp = tf.name
-        except Exception as e:
-            app.logger.warning(f'Thumb fetch failed: {e}')
-
+    # ── Location links ──
+    _location_links = []
     try:
-        t1 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        t2 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        t1.close(); t2.close()
+        from engine.seasonal_calendar import get_location_links as _gll
+        _cal_ids_raw = getattr(img, 'seasonal_calendar_ids_shown', None)
+        if _cal_ids_raw:
+            import json as _jsc
+            _cal_ids = _jsc.loads(_cal_ids_raw) if isinstance(_cal_ids_raw, str) else _cal_ids_raw
+            _location_links = _gll(db.session, _cal_ids)
+    except Exception:
+        pass
 
-        # Run compositor in a thread with a hard timeout so a slow build
-        # never pins the gunicorn sync worker and triggers maintenance mode.
-        _build_exc = [None]
-        def _run_build():
-            try:
-                build_card1(photo_path, card_data, t1.name)
-                build_card2(card_data, t2.name)
-            except Exception as _be:
-                _build_exc[0] = _be
+    # ── Photo URL — prefer thumb_url (CDN), fall back to local path ──
+    _photo_url = img.thumb_url or ''
 
-        _bt = threading.Thread(target=_run_build, daemon=True)
-        _bt.start()
-        _bt.join(timeout=55)
-        if _bt.is_alive():
-            app.logger.error(f'[download] build timeout img={image_id}')
-            return Response('PDF generation timed out. Please try again.', status=503,
-                            mimetype='text/plain')
-        if _build_exc[0]:
-            raise _build_exc[0]
+    # ── Render HTML ──
+    try:
+        html_str = render_template(
+            'scorecard_pdf.html',
+            image           = img,
+            wso             = _wso,
+            c1_body         = _c1,
+            c2_body         = _c2,
+            c3_body         = _c3,
+            c4_body         = _c4,
+            edit_base       = _edit_base,
+            edit_creative   = _edit_creative,
+            affective_state = _affective,
+            days_since_language = _days_since,
+            mentor_location_1   = _mentor_1,
+            mentor_location_2   = _mentor_2,
+            location_links  = _location_links,
+            dim_breakdown   = _dim_breakdown,
+            photo_url       = _photo_url,
+        )
+    except Exception as _te:
+        app.logger.error(f'[download_card_pdf] template error: {_te}')
+        return "PDF generation failed — template error.", 500
 
-        import re as _re
-        raw = img.asset_name or 'card'
-        clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
-        clean = clean[:40].replace(' ','_')
+    # ── WeasyPrint render ──
+    try:
+        from weasyprint import HTML as _WP_HTML
+        import io as _io
+        _pdf_bytes = _WP_HTML(string=html_str, base_url=request.host_url).write_pdf()
+    except Exception as _wpe:
+        app.logger.error(f'[download_card_pdf] weasyprint error: {_wpe}')
+        return "PDF generation failed. Please try again.", 500
 
-        # Build 2-page PDF (page 1 = score card, page 2 = analysis)
-        from PIL import Image as _PILImg
-        pg1 = _PILImg.open(t1.name).convert('RGB')
-        pg2 = _PILImg.open(t2.name).convert('RGB')
-        pdf_buf = io.BytesIO()
-        pg1.save(pdf_buf, format='PDF', save_all=True, append_images=[pg2], resolution=150)
-        pdf_bytes = pdf_buf.getvalue()
+    import re as _re
+    _raw = img.asset_name or 'card'
+    _clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+', '', _raw).strip('_- ') or 'RatingCard'
+    _clean = _clean[:40].replace(' ', '_')
 
-    finally:
-        for p in [t1.name if t1 else None, t2.name if t2 else None, photo_tmp]:
-            try:
-                if p: _os.unlink(p)
-            except: pass
-
-    from flask import Response
-    return Response(
-        pdf_bytes,
+    from flask import Response as _Resp
+    return _Resp(
+        _pdf_bytes,
         headers={
             'Content-Type':        'application/pdf',
-            'Content-Disposition': f'inline; filename="ShutterLeague_{clean}_RatingCard.pdf"',
-            'Content-Length':      str(len(pdf_bytes)),
+            'Content-Disposition': f'inline; filename="ShutterLeague_{_clean}_Evaluation.pdf"',
+            'Content-Length':      str(len(_pdf_bytes)),
             'Cache-Control':       'no-store, no-cache, must-revalidate',
             'Pragma':              'no-cache',
             'X-Content-Type-Options': 'nosniff',
