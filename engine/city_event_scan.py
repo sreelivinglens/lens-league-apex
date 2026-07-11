@@ -279,7 +279,7 @@ def scan_city(db_session, city):
             },
             json={
                 "model":      MODEL,
-                "max_tokens": 1000,
+                "max_tokens": 2000,
                 "system":     system,
                 "messages":   [{"role": "user", "content": prompt}],
             },
@@ -295,14 +295,30 @@ def scan_city(db_session, city):
                 raw = raw[4:]
             raw = raw.strip()
 
-        events = json.loads(raw)
+        # Find the JSON array boundaries — guards against preamble/postamble text
+        _start = raw.find("[")
+        _end   = raw.rfind("]")
+        if _start != -1 and _end != -1 and _end > _start:
+            raw = raw[_start:_end + 1]
+
+        # Repair common JSON issues from LLM output:
+        # 1. Trailing commas before ] or }  e.g. [..., ]
+        import re as _re
+        raw = _re.sub(r",\s*([\]}])", r"\1", raw)
+        # 2. Unescaped apostrophes inside strings are valid JSON — no fix needed
+        # 3. If still broken, log the raw output for diagnosis
+        try:
+            events = json.loads(raw)
+        except json.JSONDecodeError as _je:
+            # Last resort: ask the model to fix its own output
+            print(f"[city_event_scan] {city}: JSON parse error — {_je}")
+            print(f"[city_event_scan] {city}: raw output snippet — {raw[:300]}")
+            return 0
+
         if not isinstance(events, list):
             print(f"[city_event_scan] {city}: non-list response — skipping")
             return 0
 
-    except json.JSONDecodeError as e:
-        print(f"[city_event_scan] {city}: JSON parse error — {e}")
-        return 0
     except Exception as e:
         print(f"[city_event_scan] {city}: API error — {e}")
         return 0
