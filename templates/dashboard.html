@@ -559,8 +559,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
             {{ _live_full }}
             <button onclick="document.getElementById('live-body-short').style.display='block';document.getElementById('live-body-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
           </div>
-          <div style="font-size:14px;color:#A37B2C;font-weight:600;margin-top:6px;">
-            {% if dash_live_event.best_light_time %}⏱ {{ dash_live_event.best_light_time }}{% endif %}{% if dash_live_event.best_light_time and dash_live_event.access_notes %} · {% endif %}{% if dash_live_event.access_notes %}📌 {{ dash_live_event.access_notes }}{% endif %}{% if dash_live_event.distance_hours %} · 🚗 {{ dash_live_event.distance_hours }}h away{% endif %}
+          <div style="font-size:14px;color:#A37B2C;font-weight:600;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {% if dash_live_event.best_light_time %}⏱ {{ dash_live_event.best_light_time }}{% endif %}{% if dash_live_event.best_light_time and dash_live_event.access_notes %} · {% endif %}{% if dash_live_event.access_notes %}📌 {{ dash_live_event.access_notes[:40] }}{% if dash_live_event.access_notes|length > 40 %}…{% endif %}{% endif %}{% if dash_live_event.distance_hours %} · 🚗 {{ dash_live_event.distance_hours }}h away{% endif %}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
