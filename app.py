@@ -5310,8 +5310,7 @@ def profile():
                     _disc_month  = datetime.utcnow().month
                     def _run_city_discovery():
                         try:
-                            from flask import current_app
-                            with current_app.app_context():
+                            with app.app_context():
                                 for _dg in _disc_genres:
                                     _n = discover_one(db.session, _disc_city, _dg,
                                                       current_month=_disc_month)
@@ -24116,4 +24115,3 @@ if __name__ == '__main__':
     else:
         # Local development: `python app.py` (no args) -- unchanged behavior.
         app.run(debug=True)
-# wake Sat Jul 11 10:12:57 IST 2026
