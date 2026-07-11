@@ -413,8 +413,7 @@ def _draw_page2(c, data):
         half_w = (PW - 2*PAD - 10*mm) / 2
         l1_h   = _block_height(loc1, half_w, 11, line_height=6*mm)
         l2_h   = _block_height(loc2, half_w, 11, line_height=6*mm) if loc2 else 0
-        dl_h   = 10*mm if days_lang else 0
-        box_h  = 10*mm + max(l1_h, l2_h) + dl_h + 10*mm
+        box_h  = 10*mm + max(l1_h, l2_h) + 10*mm
 
         box_top = ey - 3*mm
         box_bot = box_top - box_h
@@ -446,15 +445,6 @@ def _draw_page2(c, data):
             _draw_text_block(c, loc1, PAD+5*mm, iy, PW-2*PAD-10*mm,
                              11, bold=False, color=WHERE_TXT,
                              line_height=6*mm, max_lines=10)
-
-        if days_lang:
-            # Slightly deeper pastel strip for days language
-            c.setFillColor(WHERE_DAYS_BG)
-            c.rect(PAD, box_bot, PW-2*PAD, dl_h, fill=1, stroke=0)
-            _draw_text_block(c, days_lang, PAD+5*mm, box_bot + dl_h - 3*mm,
-                             PW-2*PAD-10*mm,
-                             11, bold=True, color=WHERE_DAYS_TXT,
-                             line_height=6*mm, max_lines=2)
 
         ey = box_bot - 6*mm
 
