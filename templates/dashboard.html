@@ -581,61 +581,62 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# ── LOCATION ADVISORY — desktop ── #}
     {% if dash_advisory and dash_advisory.get('location_name') %}
-    <div style="background:var(--d-card);border:1px solid var(--d-border);border-radius:10px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#EAF3DE 0%,#F4FAF0 100%);border:1px solid #C8DDB8;border-radius:12px;overflow:hidden;">
       {# Header #}
-      <div style="background:#EAF3DE;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <div style="width:5px;height:5px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-          <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
+      <div style="background:linear-gradient(90deg,#2A7A3A 0%,#3A9A50 100%);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;"></div>
+          <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;">Nearby Opportunity &middot; Now</span>
         </div>
-        <div style="display:flex;gap:5px;">
+        <div style="display:flex;gap:5px;align-items:center;">
           {% if dash_advisory.get('light_note') %}
-          <span style="background:#FDF3DC;color:#8A5A00;font-size:13px;font-weight:600;padding:2px 8px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>
+          <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:600;padding:2px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>
           {% endif %}
           {% if dash_advisory.get('genre') %}
-          <span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:600;padding:2px 8px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
+          <span style="background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
           {% endif %}
         </div>
       </div>
       {# Body #}
-      <div style="padding:10px 14px;display:flex;align-items:flex-start;gap:12px;">
+      <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:14px;">
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-            <div style="font-size:13px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
-{% set _adv_genre = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
-            {% if _adv_genre %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:13px;font-weight:700;padding:2px 8px;border-radius:20px;">{{ _adv_genre|title }}</span>{% endif %}
+          <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">
+            {{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}
           </div>
-          <div style="font-size:13px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          {% set _adv_genre = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
+          {% if _adv_genre %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;display:inline-block;margin-bottom:8px;">{{ _adv_genre|title }}</span>{% endif %}
+          {% if dash_advisory.get('subject') %}
+          <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:6px;">{{ dash_advisory.subject }}</div>
+          {% endif %}
+          <div style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if dash_advisory.get('why_it_matters') %}
-          <div style="font-size:13px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:4px;">{{ dash_advisory.why_it_matters }}</div>
+          <div style="font-size:15px;color:#1A4A2A;font-style:italic;line-height:1.6;margin-bottom:8px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
           {% if weather and weather.state == 'red' %}
-          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FDEAEA;border-radius:6px;color:#A32D2D;">
+          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
             ⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }} Skip the outdoor session today.
           </div>
           {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-top:6px;padding:6px 10px;background:#FEF3DC;border-radius:6px;color:#7A4A00;">
+          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
             ⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}
           </div>
           {% endif %}
           {% if progress_data and progress_data.weakest %}
           {% set _dim_map = {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          <div style="font-size:13px;color:var(--d-green);font-weight:600;margin-top:4px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
+          <div style="font-size:14px;color:var(--d-green);font-weight:700;margin-top:4px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
           {% endif %}
-          <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:13px;color:var(--d-muted);display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:13px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:13px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
+            {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:#2A7A3A;font-weight:600;display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+            {% if weather and weather.condition %}<span style="font-size:14px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0;">
-          <div style="width:56px;height:56px;border-radius:8px;background:#C8DDB8;display:flex;align-items:center;justify-content:center;">
-            <div style="width:12px;height:12px;background:#D6A428;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:1.5px solid #fff;"></div>
-          </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:10px;flex-shrink:0;">
+          <div style="width:56px;height:56px;border-radius:10px;background:rgba(42,122,58,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
           <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-             style="font-size:13px;font-weight:600;color:var(--d-dark);text-decoration:none;white-space:nowrap;">Get directions →</a>
+             style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:5px 12px;border-radius:8px;">Get directions →</a>
           <a href="{{ url_for('profile') }}#location"
-             style="font-size:13px;color:var(--d-muted);text-decoration:none;white-space:nowrap;">Change location</a>
+             style="font-size:14px;color:var(--d-muted);text-decoration:none;white-space:nowrap;">Change location</a>
         </div>
       </div>
     </div>
@@ -909,20 +910,25 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
       {# ── LOCATION ADVISORY — mobile ── #}
       {% if dash_advisory and dash_advisory.get('location_name') %}
-      <div style="background:var(--d-card);border:1px solid var(--d-border);border-radius:12px;overflow:hidden;">
-        <div style="background:#EAF3DE;padding:10px 14px;display:flex;align-items:center;gap:6px;">
-          <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-          <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#27500A;">Nearby opportunity &middot; now</span>
-        </div>
-        <div style="padding:12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-            <div style="font-size:16px;font-weight:700;color:var(--d-dark);">{{ dash_advisory.location_name }}</div>
-{% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
-            {% if _adv_genre_mob %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ _adv_genre_mob|title }}</span>{% endif %}
+      <div style="background:linear-gradient(135deg,#EAF3DE 0%,#F4FAF0 100%);border:1px solid #C8DDB8;border-radius:12px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,#2A7A3A 0%,#3A9A50 100%);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;"></div>
+            <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;">Nearby Opportunity &middot; Now</span>
           </div>
-          <div style="font-size:14px;color:var(--d-muted);line-height:1.5;margin-bottom:4px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          {% if dash_advisory.get('genre') %}
+          <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
+          {% endif %}
+        </div>
+        <div style="padding:14px 16px;">
+          <div style="font-size:17px;font-weight:700;color:var(--d-dark);margin-bottom:4px;">{{ dash_advisory.location_name }}</div>
+{% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
+          {% if dash_advisory.get('subject') %}
+          <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:8px;">{{ dash_advisory.subject }}</div>
+          {% endif %}
+          <div style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
           {% if dash_advisory.get('why_it_matters') %}
-          <div style="font-size:14px;color:var(--d-dark);font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_advisory.why_it_matters }}</div>
+          <div style="font-size:15px;color:#1A4A2A;font-style:italic;line-height:1.6;margin-bottom:8px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
           {% if weather and weather.state == 'red' %}
           <div style="font-size:14px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
