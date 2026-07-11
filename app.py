@@ -9613,6 +9613,7 @@ def leaderboard():
         # Session 132 — Mobile DDI
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
+        tier_has_more      = {},
     )
 
 
