@@ -158,7 +158,7 @@ def _query_calendar_rows(db_session, city, genres, current_month, country=None):
             params[f"g{i}"] = g.lower()
 
     sql = f"""
-        SELECT id, base_city, location_name, state_country, distance_hours,
+        SELECT id, base_city, genre, location_name, state_country, distance_hours,
                subject, what_is_happening, why_it_matters, best_light_time,
                access_notes, date_start, date_end
         FROM seasonal_calendar
