@@ -552,7 +552,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <div style="font-size:15px;font-weight:700;color:#A37B2C;margin-bottom:8px;">{{ dash_live_event.subject }}</div>
           {% endif %}
           <div id="live-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ (dash_live_event.what_is_happening or '')[:200] }}{% if (dash_live_event.what_is_happening or '')|length > 200 %}<span>… <button onclick="document.getElementById('live-body-short').style.display='none';document.getElementById('live-body-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
+            {% set _live_body = dash_live_event.what_is_happening or '' %}
+            {% if _live_body|length > 180 %}{{ _live_body[:180].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('live-body-short').style.display='none';document.getElementById('live-body-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _live_body }}{% endif %}
           </div>
           <div id="live-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
             {{ dash_live_event.what_is_happening or '' }}
@@ -560,18 +561,18 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           </div>
           {% if dash_live_event.why_it_matters %}
           <div id="live-why-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:8px;">
-            {{ dash_live_event.why_it_matters[:200] }}{% if dash_live_event.why_it_matters|length > 200 %}<span>… <button onclick="document.getElementById('live-why-short').style.display='none';document.getElementById('live-why-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
+            {% set _live_why = dash_live_event.why_it_matters %}
+            {% if _live_why|length > 180 %}{{ _live_why[:180].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('live-why-short').style.display='none';document.getElementById('live-why-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _live_why }}{% endif %}
           </div>
           <div id="live-why-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:8px;">
             {{ dash_live_event.why_it_matters }}
             <button onclick="document.getElementById('live-why-short').style.display='block';document.getElementById('live-why-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
           </div>
           {% endif %}
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center;">
-            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
-            {% if dash_live_event.best_light_time and dash_live_event.access_notes %}<span style="font-size:14px;color:#C8A040;">·</span>{% endif %}
-            {% if dash_live_event.access_notes %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">📌 {{ dash_live_event.access_notes }}</span>{% endif %}
-            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">· 🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
+          <div style="display:flex;gap:8px;margin-top:4px;align-items:baseline;">
+            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:#A37B2C;font-weight:600;white-space:nowrap;">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
+            {% if dash_live_event.access_notes %}<span style="font-size:14px;color:#C8A040;">·</span><span style="font-size:14px;color:#A37B2C;font-weight:600;">📌 {{ dash_live_event.access_notes }}</span>{% endif %}
+            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:#C8A040;">·</span><span style="font-size:14px;color:#A37B2C;font-weight:600;white-space:nowrap;">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
