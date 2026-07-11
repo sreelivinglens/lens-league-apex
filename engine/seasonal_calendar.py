@@ -855,8 +855,7 @@ def get_personalised_advisory(
     _avg_tier = progress_data.get('avg_tier', '')
     _top_genre = progress_data.get('top_genre', primary_genre)
 
-    _dim_profile = '
-'.join([
+    _dim_profile = '\n'.join([
         f"  {_dim_labels.get(d, d)}: {v:.2f}"
         for d, v in sorted(_avgs.items(), key=lambda x: x[1])
     ]) if _avgs else "  No dimension data available"
