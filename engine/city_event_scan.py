@@ -66,7 +66,7 @@ _SYSTEM = """You are a photography opportunity researcher for Shutter League,
 a photography evolution platform based in India.
 
 Your job: find current, time-bound, photography-relevant events happening
-in or very near a given city in the next 30 days.
+in or very near a given city in the next 90 days.
 
 Events of interest:
 - Festivals (religious, cultural, harvest) with strong visual subjects
@@ -109,6 +109,7 @@ Return ONLY a JSON array. No preamble, no markdown fences. Example shape:
 
 If there are no relevant events, return an empty array: []
 Dates must be ISO format YYYY-MM-DD. Be accurate — do not invent events.
+For events more than 30 days away, note in what_is_happening that this is an upcoming event worth planning for.
 Today's date is {today}.
 """
 
@@ -263,7 +264,7 @@ def scan_city(db_session, city):
     today_str = date.today().isoformat()
     prompt = (
         f"Find photography-relevant events happening in or near {city} "
-        f"in the next 30 days (from {today_str}). "
+        f"in the next 90 days (from {today_str}). "
         f"Focus on events with strong visual subjects accessible to the public."
     )
     system = _SYSTEM.replace("{today}", today_str)
