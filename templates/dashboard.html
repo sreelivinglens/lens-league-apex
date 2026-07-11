@@ -580,26 +580,20 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
 
     {# ── LOCATION ADVISORY — desktop ── #}
-    {% if dash_advisory and dash_advisory.get('location_name') %}
+    {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
     <div style="background:linear-gradient(135deg,#EAF3DE 0%,#F4FAF0 100%);border:1px solid #C8DDB8;border-radius:12px;overflow:hidden;">
-      {# Header #}
-      <div style="background:linear-gradient(90deg,#2A7A3A 0%,#3A9A50 100%);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:7px;">
-          <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;"></div>
-          <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;">Nearby Opportunity &middot; Now</span>
-        </div>
-        <div style="display:flex;gap:5px;align-items:center;">
-          {% if dash_advisory.get('light_note') %}
-          <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:600;padding:2px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>
-          {% endif %}
-          {% if dash_advisory.get('genre') %}
-          <span style="background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
-          {% endif %}
-        </div>
-      </div>
       {# Body #}
-      <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:14px;">
+      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
         <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
+              <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2A7A3A;">Nearby Opportunity &middot; Now</span>
+            </div>
+            {% if dash_advisory.get('genre') %}
+            <span style="background:#fff;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>
+            {% endif %}
+          </div>
           <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">
             {{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}
           </div>
@@ -915,18 +909,18 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       {% endif %}
 
       {# ── LOCATION ADVISORY — mobile ── #}
-      {% if dash_advisory and dash_advisory.get('location_name') %}
+      {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
       <div style="background:linear-gradient(135deg,#EAF3DE 0%,#F4FAF0 100%);border:1px solid #C8DDB8;border-radius:12px;overflow:hidden;">
-        <div style="background:linear-gradient(90deg,#2A7A3A 0%,#3A9A50 100%);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:7px;">
-            <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;"></div>
-            <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;">Nearby Opportunity &middot; Now</span>
+        <div style="padding:16px 18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
+              <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2A7A3A;">Nearby Opportunity &middot; Now</span>
+            </div>
+            {% if dash_advisory.get('genre') %}
+            <span style="background:#fff;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>
+            {% endif %}
           </div>
-          {% if dash_advisory.get('genre') %}
-          <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:700;padding:2px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>
-          {% endif %}
-        </div>
-        <div style="padding:14px 16px;">
           <div style="font-size:17px;font-weight:700;color:var(--d-dark);margin-bottom:4px;">{{ dash_advisory.location_name }}</div>
 {% set _adv_genre_mob = dash_advisory.get('genre') or (progress_data.top_genre if progress_data else none) %}
           {% if dash_advisory.get('subject') %}
