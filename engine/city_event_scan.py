@@ -79,6 +79,15 @@ Do NOT include:
 - Ongoing permanent attractions (museums, landmarks that are always there)
 - Events with no public spectator access
 - Events further than 2 hours drive from the city
+- Events you are not confident are actually happening on the stated dates — if unsure, return []
+
+Genre rules (assign carefully — this affects how the event is shown to photographers):
+- Festivals, processions, cultural gatherings, religious events → "Street" or "Documentary"
+- Art exhibitions, studio events → "Creative"
+- Nature phenomena (migrations, blooms, astronomical) → "Nature" or "Landscape"
+- Sporting events with crowds → "Street" or "Documentary"
+- NEVER assign "Wildlife" to a human festival or cultural event
+- NEVER assign "Wedding", "Fashion", "Macro", or "Drone" to public events
 
 Return ONLY a JSON array. No preamble, no markdown fences. Example shape:
 [
@@ -179,8 +188,15 @@ def _write_event(db_session, city, event):
     Returns True on success.
     """
     try:
-        # Resolve genre — default to Street for city-wide events
-        genre = event.get("genre") or "Street"
+        # Resolve genre — validate against allowlist for live events
+        # Wildlife / Wedding / Fashion / Macro / Drone are never valid for
+        # city festivals or cultural events; default anything unexpected to Street
+        _LIVE_EVENT_GENRE_ALLOWLIST = {
+            "Street", "Documentary", "People", "Creative",
+            "Nature", "Landscape",
+        }
+        _raw_genre = (event.get("genre") or "Street").strip().title()
+        genre = _raw_genre if _raw_genre in _LIVE_EVENT_GENRE_ALLOWLIST else "Street"
 
         # Parse dates — must be valid ISO strings
         date_start_raw = event.get("date_start")
