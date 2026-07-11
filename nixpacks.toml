@@ -1,9 +1,10 @@
 [phases.setup]
 nixPkgs = [
-  "gobject-introspection",
+  "glib",
   "pango",
   "cairo",
   "gdk-pixbuf",
   "libffi",
-  "shared-mime-info",
+  "fontconfig",
+  "freetype",
 ]
