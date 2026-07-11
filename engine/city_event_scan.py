@@ -89,7 +89,7 @@ Genre rules (assign carefully — this affects how the event is shown to photogr
 - NEVER assign "Wildlife" to a human festival or cultural event
 - NEVER assign "Wedding", "Fashion", "Macro", or "Drone" to public events
 
-Return ONLY a JSON array. No preamble, no markdown fences. Example shape:
+Return ONLY a raw JSON array starting with [ and ending with ]. No preamble, no reasoning, no markdown fences, no explanation. If you are uncertain, return []. The very first character of your response must be [.
 [
   {
     "location_name": "Rath Yatra Procession, Puri",
