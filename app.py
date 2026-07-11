@@ -9614,6 +9614,8 @@ def leaderboard():
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
         tier_has_more      = {},
+        tier_page          = 1,
+        has_more           = False,
     )
 
 
