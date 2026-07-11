@@ -493,8 +493,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
 
     {# ── FIRST VISIT WELCOME CARD ── #}
-    {# Only shown on visit 1. Lightweight — no images, no API calls. #}
-    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 %}
+    {# Only shown on visit 1 AND user has no images — guards against existing users on first load after deploy. #}
+    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 and stats.total == 0 %}
     <div style="background:linear-gradient(135deg,#13254B 0%,#1A3460 100%);border-radius:14px;padding:20px 22px;color:#fff;">
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.9);margin-bottom:8px;">Welcome to Shutter League</div>
       <div style="font-size:18px;font-weight:700;line-height:1.35;margin-bottom:10px;">Your photography evaluation platform is ready.</div>
@@ -854,7 +854,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   <div style="padding:0 16px; display:flex; flex-direction:column; gap:12px; padding-bottom:100px;">
 
     {# ── FIRST VISIT WELCOME CARD — mobile ── #}
-    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 %}
+    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 and stats.total == 0 %}
     <div style="background:linear-gradient(135deg,#13254B 0%,#1A3460 100%);border-radius:14px;padding:18px 16px;color:#fff;">
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.9);margin-bottom:6px;">Welcome to Shutter League</div>
       <div style="font-size:17px;font-weight:700;line-height:1.35;margin-bottom:8px;">Your photography evaluation platform is ready.</div>
