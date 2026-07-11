@@ -128,7 +128,7 @@ def _block_height(text, width, font_size, bold=False, line_height=None, max_line
 # ── Gradient simulation — stacked rectangles light→white ──────────────────────
 def _gradient_rect(c, x, y, w, h, color_hex, steps=12):
     """Simulate top-to-bottom gradient: pastel at top fading to near-white at bottom."""
-    base = HexColor(color_hex)
+    base = color_hex if not isinstance(color_hex, str) else HexColor(color_hex)
     br, bg, bb = base.red, base.green, base.blue
     step_h = h / steps
     for i in range(steps):
@@ -337,7 +337,7 @@ def _draw_page2(c, data):
 
         # Pastel gradient background
         bg_hex, accent, ey_col, hl_col = CARD_STYLES[i]
-        _gradient_rect(c, cx, cy_bot, col_w, COL_H, bg_hex.hexval(), steps=16)
+        _gradient_rect(c, cx, cy_bot, col_w, COL_H, bg_hex, steps=16)
 
         # Top accent line (2pt)
         c.setFillColor(accent)
