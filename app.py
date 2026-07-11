@@ -9325,37 +9325,34 @@ def download_card_pdf(image_id):
     # ── Photo URL — prefer thumb_url (CDN), fall back to local path ──
     _photo_url = img.thumb_url or ''
 
-    # ── Render HTML ──
+    # ── Reportlab render — pure Python, no system dependencies ──
     try:
-        html_str = render_template(
-            'scorecard_pdf.html',
-            image           = img,
-            wso             = _wso,
-            c1_body         = _c1,
-            c2_body         = _c2,
-            c3_body         = _c3,
-            c4_body         = _c4,
-            edit_base       = _edit_base,
-            edit_creative   = _edit_creative,
-            affective_state = _affective,
-            days_since_language = _days_since,
-            mentor_location_1   = _mentor_1,
-            mentor_location_2   = _mentor_2,
-            location_links  = _location_links,
-            dim_breakdown   = _dim_breakdown,
-            photo_url       = _photo_url,
-        )
-    except Exception as _te:
-        app.logger.error(f'[download_card_pdf] template error: {_te}')
-        return "PDF generation failed — template error.", 500
-
-    # ── WeasyPrint render ──
-    try:
-        from weasyprint import HTML as _WP_HTML
-        import io as _io
-        _pdf_bytes = _WP_HTML(string=html_str, base_url=request.host_url).write_pdf()
-    except Exception as _wpe:
-        app.logger.error(f'[download_card_pdf] weasyprint error: {_wpe}')
+        from engine.reportlab_card import build_scorecard_pdf
+        _pdf_data = {
+            'score':             img.score,
+            'tier':              img.tier or '',
+            'asset':             img.asset_name or img.original_filename or 'Untitled',
+            'credit':            _audit.get('credit','') or img.photographer_name or '',
+            'genre':             img.genre or '',
+            'format':            img.format or '',
+            'location':          img.location or '',
+            'affective_state':   _affective,
+            'wso':               _wso,
+            'dim_breakdown':     _dim_breakdown,
+            'c1_body':           _c1,
+            'c2_body':           _c2,
+            'c3_body':           _c3,
+            'c4_body':           _c4,
+            'edit_base':         _edit_base,
+            'edit_creative':     _edit_creative,
+            'mentor_location_1': _mentor_1,
+            'mentor_location_2': _mentor_2,
+            'days_since_language': _days_since,
+            'photo_url':         _photo_url,
+        }
+        _pdf_bytes = build_scorecard_pdf(_pdf_data)
+    except Exception as _rle:
+        app.logger.error(f'[download_card_pdf] reportlab error: {_rle}')
         return "PDF generation failed. Please try again.", 500
 
     import re as _re
