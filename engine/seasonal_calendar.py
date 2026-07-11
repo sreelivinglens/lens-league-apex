@@ -869,9 +869,17 @@ def get_personalised_advisory(
     if _trend and len(_trend) >= 2:
         _last = _trend[-1]
         _prev = _trend[-2]
+        _last_genre = _last.get('genre', '')
+        _prev_genre = _prev.get('genre', '')
         _recent_context = (
-            f"Their last scored image: {_last.get('tier','')} {_last.get('score','')}. "
-            f"Previous: {_prev.get('tier','')} {_prev.get('score','')}."
+            f"Their last scored image: "
+            f"{'a ' + _last_genre + ' photograph, ' if _last_genre else ''}"
+            f"{_last.get('tier','')} tier, scored {_last.get('score','')}. "
+            f"The one before: "
+            f"{'a ' + _prev_genre + ' photograph, ' if _prev_genre else ''}"
+            f"{_prev.get('tier','')} tier, scored {_prev.get('score','')}. "
+            f"Use this history to make the progression line specific — "
+            f"reference the genre they were shooting, not just the score."
         )
 
     # ── Sherpa prompt ─────────────────────────────────────────────────────
@@ -918,6 +926,7 @@ TONE: Quiet. Confident. Honest. Never encouraging for its own sake.
 Never use: "wonderful", "amazing", "great opportunity", "beautiful", "stunning".
 Never hedge. Never say "consider" or "perhaps" or "you might".
 Write in second person ("you", "your").
+Never write "shoot [person's name]" — use "photograph" when referencing a named individual. "Shoot the crowd" is fine. "Shoot Thaman" is not.
 Never use shorthand the user has not been taught. Never write "12" or any number to mean a score pattern — write it out: "your last two images both scored 7.1", "three consecutive scores at 7.2".
 Never write a score as "7. 12" or combine two scores into one number — each score is a separate number with one decimal place.
 Never invent specific subjects, objects, or scenes that are not mentioned in the location data provided to you. Only describe what you know is actually there.
