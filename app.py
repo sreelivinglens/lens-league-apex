@@ -4163,10 +4163,15 @@ def dashboard():
     _dash_advisory = None
     try:
         if current_user.city:
-            from engine.seasonal_calendar import get_dashboard_advisory, get_primary_genre as _gpg2
+            from engine.seasonal_calendar import get_personalised_advisory, get_primary_genre as _gpg2
             _adv_genre = _gpg2(current_user)
-            _dash_advisory = get_dashboard_advisory(
-                db.session, current_user.city, _adv_genre or 'Wildlife', datetime.utcnow().month
+            _dash_advisory = get_personalised_advisory(
+                db.session,
+                current_user.city,
+                _adv_genre or 'Wildlife',
+                datetime.utcnow().month,
+                progress_data=progress_data,
+                user_id=current_user.id,
             )
     except Exception as _dae:
         app.logger.warning(f'[dashboard] advisory: {_dae}')
