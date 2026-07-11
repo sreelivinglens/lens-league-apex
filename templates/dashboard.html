@@ -526,53 +526,53 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# ── LIVE EVENT ADVISORY — desktop ── #}
     {% if dash_live_event %}
-    <div style="background:#1A2A1A;border-radius:10px;overflow:hidden;">
-      {# Header #}
-      <div style="background:#D6A428;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="background:linear-gradient(135deg,#FDF6DC 0%,#FFFDF5 100%);border:1px solid #E8C84A;border-radius:12px;overflow:hidden;">
+      {# Compact gold eyebrow #}
+      <div style="background:#D6A428;padding:6px 16px;display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:7px;">
-          <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
-          <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
+          <div style="width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
+          <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
         </div>
         <div style="display:flex;gap:5px;align-items:center;">
           {% if dash_live_event.deadline_label %}
-          <span style="background:rgba(0,0,0,0.18);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
+          <span style="background:rgba(0,0,0,0.12);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
           {% endif %}
           {% if dash_live_event.genre %}
-          <span style="background:rgba(255,255,255,0.3);color:#111;font-size:13px;font-weight:600;padding:2px 8px;border-radius:20px;">{{ dash_live_event.genre|title }}</span>
+          <span style="background:rgba(255,255,255,0.4);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.genre|title }}</span>
           {% endif %}
         </div>
       </div>
-      {# Body #}
-      <div style="padding:10px 14px;display:flex;align-items:flex-start;gap:12px;">
+      {# Body — same layout as advisory #}
+      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;color:#F6F2E9;margin-bottom:3px;">
+          <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">
             {{ dash_live_event.location_name }}{% if dash_live_event.state_country %}, {{ dash_live_event.state_country }}{% endif %}
           </div>
           {% if dash_live_event.subject %}
-          <div style="font-size:13px;font-weight:600;color:#D6A428;margin-bottom:4px;">{{ dash_live_event.subject }}</div>
+          <div style="font-size:15px;font-weight:700;color:#A37B2C;margin-bottom:8px;">{{ dash_live_event.subject }}</div>
           {% endif %}
-          {% if dash_live_event.what_is_happening %}
-          <div style="font-size:13px;color:rgba(246,242,233,0.75);line-height:1.5;margin-bottom:4px;">{{ dash_live_event.what_is_happening }}</div>
-          {% endif %}
+          <div id="live-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ (dash_live_event.what_is_happening or '')[:200] }}{% if (dash_live_event.what_is_happening or '')|length > 200 %}<span>… <button onclick="document.getElementById('live-body-short').style.display='none';document.getElementById('live-body-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
+          </div>
+          <div id="live-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ dash_live_event.what_is_happening or '' }}
+            <button onclick="document.getElementById('live-body-short').style.display='block';document.getElementById('live-body-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
+          </div>
           {% if dash_live_event.why_it_matters %}
-          <div style="font-size:13px;color:#F6F2E9;font-style:italic;line-height:1.5;margin-bottom:6px;">{{ dash_live_event.why_it_matters }}</div>
+          <div style="font-size:15px;color:#5A4A1A;font-style:italic;line-height:1.6;margin-bottom:8px;">{{ dash_live_event.why_it_matters }}</div>
           {% endif %}
-          <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            {% if dash_live_event.best_light_time %}<span style="font-size:13px;color:rgba(246,242,233,0.6);display:flex;align-items:center;gap:3px;">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
-            {% if dash_live_event.distance_hours %}<span style="font-size:13px;color:rgba(246,242,233,0.6);">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
-            {% if dash_live_event.access_notes %}<span style="font-size:13px;color:rgba(246,242,233,0.6);">{{ dash_live_event.access_notes }}</span>{% endif %}
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
+            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
+            {% if dash_live_event.access_notes %}<span style="font-size:14px;color:var(--d-muted);">{{ dash_live_event.access_notes }}</span>{% endif %}
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0;">
-          <div style="width:56px;height:56px;border-radius:8px;background:rgba(214,164,40,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
+          <div style="width:48px;height:48px;border-radius:10px;background:rgba(214,164,40,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;">📍</div>
           <a href="{{ dash_live_event.url }}" target="_blank"
-             style="font-size:13px;font-weight:700;color:#D6A428;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:5px 11px;border-radius:7px;">Get directions →</a>
-          {% if dash_live_event.source_url %}
-          <a href="{{ dash_live_event.source_url }}" target="_blank"
-             style="font-size:13px;color:rgba(246,242,233,0.45);text-decoration:none;white-space:nowrap;">Event details ↗</a>
-          {% endif %}
+             style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:6px 12px;border-radius:8px;">Get directions →</a>
           <a href="{{ url_for('profile') }}#location"
-             style="font-size:14px;color:#D6A428;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
+             style="font-size:14px;color:#A37B2C;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
         </div>
       </div>
     </div>
@@ -581,7 +581,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# ── LOCATION ADVISORY — desktop ── #}
     {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
-    <div style="background:linear-gradient(135deg,#EAF3DE 0%,#F4FAF0 100%);border:1px solid #C8DDB8;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:12px;overflow:hidden;">
       {# Body #}
       <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
         <div style="flex:1;min-width:0;">
@@ -866,43 +866,47 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
       {# ── LIVE EVENT ADVISORY — mobile ── #}
       {% if dash_live_event %}
-      <div style="background:#1A2A1A;border-radius:12px;overflow:hidden;">
-        <div style="background:#D6A428;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="background:linear-gradient(135deg,#FDF6DC 0%,#FFFDF5 100%);border:1px solid #E8C84A;border-radius:12px;overflow:hidden;">
+        <div style="background:#D6A428;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:7px;">
-            <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
-            <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
+            <div style="width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
+            <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
           </div>
-          {% if dash_live_event.deadline_label %}
-          <span style="background:rgba(0,0,0,0.18);color:#111;font-size:14px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
-          {% endif %}
+          <div style="display:flex;gap:5px;">
+            {% if dash_live_event.deadline_label %}
+            <span style="background:rgba(0,0,0,0.12);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
+            {% endif %}
+            {% if dash_live_event.genre %}
+            <span style="background:rgba(255,255,255,0.4);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.genre|title }}</span>
+            {% endif %}
+          </div>
         </div>
-        <div style="padding:12px 14px;">
-          <div style="font-size:16px;font-weight:700;color:#F6F2E9;margin-bottom:2px;">{{ dash_live_event.location_name }}</div>
+        <div style="padding:16px 18px;">
+          <div style="font-size:17px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ dash_live_event.location_name }}</div>
           {% if dash_live_event.subject %}
-          <div style="font-size:14px;font-weight:600;color:#D6A428;margin-bottom:6px;">{{ dash_live_event.subject }}</div>
+          <div style="font-size:15px;font-weight:700;color:#A37B2C;margin-bottom:8px;">{{ dash_live_event.subject }}</div>
           {% endif %}
-          {% if dash_live_event.genre %}
-          <span style="background:rgba(255,255,255,0.12);color:#F6F2E9;font-size:14px;font-weight:600;padding:2px 10px;border-radius:20px;display:inline-block;margin-bottom:8px;">{{ dash_live_event.genre|title }}</span>
-          {% endif %}
-          {% if dash_live_event.what_is_happening %}
-          <div style="font-size:14px;color:rgba(246,242,233,0.75);line-height:1.5;margin-bottom:4px;">{{ dash_live_event.what_is_happening }}</div>
-          {% endif %}
+          <div id="mob-live-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ (dash_live_event.what_is_happening or '')[:200] }}{% if (dash_live_event.what_is_happening or '')|length > 200 %}<span>… <button onclick="document.getElementById('mob-live-short').style.display='none';document.getElementById('mob-live-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
+          </div>
+          <div id="mob-live-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ dash_live_event.what_is_happening or '' }}
+            <button onclick="document.getElementById('mob-live-short').style.display='block';document.getElementById('mob-live-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
+          </div>
           {% if dash_live_event.why_it_matters %}
-          <div style="font-size:14px;color:#F6F2E9;font-style:italic;line-height:1.5;margin-bottom:8px;">{{ dash_live_event.why_it_matters }}</div>
+          <div style="font-size:15px;color:#5A4A1A;font-style:italic;line-height:1.6;margin-bottom:8px;">{{ dash_live_event.why_it_matters }}</div>
           {% endif %}
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:rgba(246,242,233,0.6);">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
-            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:rgba(246,242,233,0.6);">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
+            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
+            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #E8C84A;">
             <a href="{{ dash_live_event.url }}" target="_blank"
-               style="font-size:14px;font-weight:700;color:#D6A428;text-decoration:none;display:flex;align-items:center;gap:5px;">
+               style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;display:flex;align-items:center;gap:5px;">
               📍 Get directions →
             </a>
-            {% if dash_live_event.source_url %}
-            <a href="{{ dash_live_event.source_url }}" target="_blank"
-               style="font-size:14px;color:rgba(246,242,233,0.45);text-decoration:none;">Event details ↗</a>
-            {% endif %}
+            <a href="{{ url_for('profile') }}#location"
+               style="font-size:14px;color:#A37B2C;text-decoration:underline;font-weight:600;">Change location →</a>
           </div>
         </div>
       </div>
@@ -910,7 +914,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
       {# ── LOCATION ADVISORY — mobile ── #}
       {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
-      <div style="background:linear-gradient(135deg,#EAF3DE 0%,#F4FAF0 100%);border:1px solid #C8DDB8;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:12px;overflow:hidden;">
         <div style="padding:16px 18px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div style="display:flex;align-items:center;gap:6px;">
