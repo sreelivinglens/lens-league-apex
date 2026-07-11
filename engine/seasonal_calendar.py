@@ -796,53 +796,10 @@ _advisory_cache_lock = _threading.Lock()
 _ADVISORY_TTL = 6 * 3600  # 6 hours
 
 
-def get_personalised_advisory(
-    db_session,
-    user_city: str,
-    primary_genre: str,
-    current_month: int,
-    progress_data: dict | None = None,
-    user_id: int | None = None,
-) -> dict | None:
-    """
-    Sherpa-voiced location advisory personalised to the user's DDI profile.
 
-    Wraps get_dashboard_advisory() with a single Claude call that rewrites
-    what_is_happening and why_it_matters in the Sherpa voice, targeting:
-
-      1. The GAP SHOT   — directly addresses the user's weakest DDI dimension
-                          at this specific location. Unconventional, exact.
-      2. The STRETCH SHOT — a technique that elevates a dimension they're
-                          already decent at. Slow shutter, ND filter, bokeh,
-                          etc. Something requiring deliberate craft.
-      3. THE PROGRESSION LINE — one sentence connecting this location to
-                          their upload history. "You got slow shutter right
-                          at Chidambaram — 7.6. Here's how this gets to Master."
-
-    Falls back to the unmodified get_dashboard_advisory() result if:
-      - progress_data is None (< 5 images, no profile yet)
-      - Claude call fails for any reason
-      - Cached result exists and is < 6 hours old
-
-    The template dict shape is identical to get_dashboard_advisory() —
-    no template changes needed.
-    """
-    # ── Base advisory from DB ─────────────────────────────────────────────
-    base = get_dashboard_advisory(db_session, user_city, primary_genre, current_month)
-    if not base:
-        return None
-
-    # ── No profile yet — return base advisory unchanged ───────────────────
-    if not progress_data:
-        return base
-
-    # ── Cache check ───────────────────────────────────────────────────────
-    _cache_key = f"{user_id}:{user_city}:{primary_genre}:{current_month}"
-    with _advisory_cache_lock:
-        _cached = _advisory_cache.get(_cache_key)
-        if _cached and (_time.time() - _cached['ts']) < _ADVISORY_TTL:
-            return _cached['data']
-
+def _run_sherpa(db_session, user_city, primary_genre, current_month,
+            progress_data, user_id, _cache_key, base):
+    """Run Sherpa Claude call and populate cache. Called from background thread."""
     # ── Build DDI profile string ──────────────────────────────────────────
     _dim_labels = {
         'dod': 'Depth of Difficulty',
@@ -885,68 +842,68 @@ def get_personalised_advisory(
     # ── Sherpa prompt ─────────────────────────────────────────────────────
     _system = """You are the Sherpa — the coaching voice of Shutter League, a photography evolution platform.
 
-Your job: write a personalised location advisory for a specific photographer at a specific location.
-The advisory has FOUR parts:
+    Your job: write a personalised location advisory for a specific photographer at a specific location.
+    The advisory has FOUR parts:
 
-PART 0 — SUBJECT LINE (one line only)
-A single sharp line — what to shoot and why, in plain language any photographer understands.
-Use the location name and what is actually happening there, from the information provided.
-Do not use jargon like "convention floor density" or "exhibition space". Say what a person will see and shoot.
-Examples:
-  "Practise people photography with the Messi trophy display at Bhartiya Mall"
-  "Shoot the rope pullers at Rath Yatra — the frame no one else is making"
-  "80 photographers' work on one wall at Chitrakala Parishath — study how each one used the same lens differently"
-Write this line first, then a blank line, then the three parts below.
+    PART 0 — SUBJECT LINE (one line only)
+    A single sharp line — what to shoot and why, in plain language any photographer understands.
+    Use the location name and what is actually happening there, from the information provided.
+    Do not use jargon like "convention floor density" or "exhibition space". Say what a person will see and shoot.
+    Examples:
+      "Practise people photography with the Messi trophy display at Bhartiya Mall"
+      "Shoot the rope pullers at Rath Yatra — the frame no one else is making"
+      "80 photographers' work on one wall at Chitrakala Parishath — study how each one used the same lens differently"
+    Write this line first, then a blank line, then the three parts below.
 
-PART 1 — THE GAP SHOT
-Target the photographer's WEAKEST DDI dimension at this exact location.
-Be specific to the location. Name the exact vantage point, the exact moment, the exact angle.
-This is not generic advice — it is what THIS photographer needs to fix at THIS location.
-Never say "try to" or "you might want to" — say what to do and where to stand.
+    PART 1 — THE GAP SHOT
+    Target the photographer's WEAKEST DDI dimension at this exact location.
+    Be specific to the location. Name the exact vantage point, the exact moment, the exact angle.
+    This is not generic advice — it is what THIS photographer needs to fix at THIS location.
+    Never say "try to" or "you might want to" — say what to do and where to stand.
 
-PART 2 — THE STRETCH SHOT  
-Suggest one technique challenge that elevates a dimension they are already decent at.
-Think: slow shutter on moving subjects, ND filter in harsh light, bokeh on ambient light sources,
-silhouette against a bright background, reflections, shadow play.
-Be specific to what is physically present at this location right now.
-Name the technique, the subject, and what the resulting image should feel like.
+    PART 2 — THE STRETCH SHOT  
+    Suggest one technique challenge that elevates a dimension they are already decent at.
+    Think: slow shutter on moving subjects, ND filter in harsh light, bokeh on ambient light sources,
+    silhouette against a bright background, reflections, shadow play.
+    Be specific to what is physically present at this location right now.
+    Name the technique, the subject, and what the resulting image should feel like.
 
-PART 3 — THE PROGRESSION LINE
-One sentence only. Connect this location/event to their history and trajectory.
-If the event is more than 30 days away: make this a preparation arc —
-what they should be practising between now and then to be ready.
-Example: "Holi in Mathura is 11 weeks away — your Disruption needs to move
-from 7.2 to 8.0 before you walk into that crowd, and the next 8 weeks of
-street practice in your city is how you get there."
-If the event is immediate: connect it to their recent scores.
-Example: "You got slow shutter right at Chidambaram — 7.6. Bada Danda gets that to Master."
-Sound like a coach who has been watching them for months — because the platform has.
+    PART 3 — THE PROGRESSION LINE
+    One sentence only. Connect this location/event to their history and trajectory.
+    If the event is more than 30 days away: make this a preparation arc —
+    what they should be practising between now and then to be ready.
+    Example: "Holi in Mathura is 11 weeks away — your Disruption needs to move
+    from 7.2 to 8.0 before you walk into that crowd, and the next 8 weeks of
+    street practice in your city is how you get there."
+    If the event is immediate: connect it to their recent scores.
+    Example: "You got slow shutter right at Chidambaram — 7.6. Bada Danda gets that to Master."
+    Sound like a coach who has been watching them for months — because the platform has.
 
-TONE: Quiet. Confident. Honest. Never encouraging for its own sake.
-Never use: "wonderful", "amazing", "great opportunity", "beautiful", "stunning".
-Never hedge. Never say "consider" or "perhaps" or "you might".
-Write in second person ("you", "your").
-Never write "shoot [person's name]" — use "photograph" when referencing a named individual. "Shoot the crowd" is fine. "Shoot Thaman" is not.
-Never use shorthand the user has not been taught. Never write "12" or any number to mean a score pattern — write it out: "your last two images both scored 7.1", "three consecutive scores at 7.2".
-Never write a score as "7. 12" or combine two scores into one number — each score is a separate number with one decimal place.
-Never invent specific subjects, objects, or scenes that are not mentioned in the location data provided to you. Only describe what you know is actually there.
-Total length: 120–160 words maximum. Dense. Every word earns its place."""
+    TONE: Quiet. Confident. Honest. Never encouraging for its own sake.
+    Never use: "wonderful", "amazing", "great opportunity", "beautiful", "stunning".
+    Never hedge. Never say "consider" or "perhaps" or "you might".
+    Write in second person ("you", "your").
+    Never write "shoot [person's name]" — use "photograph" when referencing a named individual. "Shoot the crowd" is fine. "Shoot Thaman" is not.
+    Never use shorthand the user has not been taught. Never write "12" or any number to mean a score pattern — write it out: "your last two images both scored 7.1", "three consecutive scores at 7.2".
+    Never write a score as "7. 12" or combine two scores into one number — each score is a separate number with one decimal place.
+    Never invent specific subjects, objects, or scenes that are not mentioned in the location data provided to you. Only describe what you know is actually there.
+    Total length: 120–160 words maximum. Dense. Every word earns its place."""
 
     _user_prompt = f"""Photographer profile:
-- Current standing: {_avg_tier} ({_count} images evaluated)
-- Primary genre: {_top_genre}
-- Dimension scores (lowest to highest):
-{_dim_profile}
-- Weakest dimension: {_dim_labels.get(_weakest, _weakest)}
-- Strongest dimension: {_dim_labels.get(_strongest, _strongest)}
-- {_recent_context}
+    - Current standing: {_avg_tier} ({_count} images evaluated)
+    - Primary genre: {_top_genre}
+    - Dimension scores (lowest to highest):
+    {_dim_profile}
+    - Weakest dimension: {_dim_labels.get(_weakest, _weakest)}
+    - Strongest dimension: {_dim_labels.get(_strongest, _strongest)}
+    - {_recent_context}
 
-Location: {base.get('location_name', '')}, {base.get('state_country', '')}
-What is happening: {base.get('what_is_happening', '')}
-Genre context: {primary_genre}
+    Location: {base.get('location_name', '')}, {base.get('state_country', '')}
+    What is happening: {base.get('what_is_happening', '')}
+    Genre context: {primary_genre}
 
-Write the three-part Sherpa advisory for this photographer at this location.
-Return ONLY the advisory text — no labels, no headers, no preamble."""
+    Write the three-part Sherpa advisory for this photographer at this location.
+    Return ONLY the advisory text — no labels, no headers, no preamble."""
 
     try:
         import os
@@ -1015,6 +972,68 @@ Return ONLY the advisory text — no labels, no headers, no preamble."""
         print(f"[personalised_advisory] Claude call failed ({user_city}, {primary_genre}): {_e}")
         # Fall back to base advisory — never break the dashboard
         return base
+
+def get_personalised_advisory(
+    db_session,
+    user_city: str,
+    primary_genre: str,
+    current_month: int,
+    progress_data: dict | None = None,
+    user_id: int | None = None,
+) -> dict | None:
+    """
+    Sherpa-voiced location advisory personalised to the user's DDI profile.
+
+    Wraps get_dashboard_advisory() with a single Claude call that rewrites
+    what_is_happening and why_it_matters in the Sherpa voice, targeting:
+
+      1. The GAP SHOT   — directly addresses the user's weakest DDI dimension
+                          at this specific location. Unconventional, exact.
+      2. The STRETCH SHOT — a technique that elevates a dimension they're
+                          already decent at. Slow shutter, ND filter, bokeh,
+                          etc. Something requiring deliberate craft.
+      3. THE PROGRESSION LINE — one sentence connecting this location to
+                          their upload history. "You got slow shutter right
+                          at Chidambaram — 7.6. Here's how this gets to Master."
+
+    Falls back to the unmodified get_dashboard_advisory() result if:
+      - progress_data is None (< 5 images, no profile yet)
+      - Claude call fails for any reason
+      - Cached result exists and is < 6 hours old
+
+    The template dict shape is identical to get_dashboard_advisory() —
+    no template changes needed.
+    """
+    # ── Base advisory from DB ─────────────────────────────────────────────
+    base = get_dashboard_advisory(db_session, user_city, primary_genre, current_month)
+    if not base:
+        return None
+
+    # ── No profile yet — return base advisory unchanged ───────────────────
+    if not progress_data:
+        return base
+
+    # ── Cache check ───────────────────────────────────────────────────────
+    _cache_key = f"{user_id}:{user_city}:{primary_genre}:{current_month}"
+    with _advisory_cache_lock:
+        _cached = _advisory_cache.get(_cache_key)
+        if _cached and (_time.time() - _cached['ts']) < _ADVISORY_TTL:
+            return _cached['data']
+
+    # ── No cache — return base immediately, generate Sherpa in background ─
+    # This prevents the dashboard blocking for 3-4 seconds on first load
+    # after a city change. The Sherpa brief appears on the next dashboard
+    # refresh (seconds later) once the background thread completes.
+    def _generate_sherpa_async():
+        try:
+            _run_sherpa(db_session, user_city, primary_genre, current_month,
+                        progress_data, user_id, _cache_key, base)
+        except Exception:
+            pass
+    _threading.Thread(target=_generate_sherpa_async, daemon=True).start()
+    return base
+
+
 
 
 def prune_seasonal_shown_log(db_session, days: int = 60):
