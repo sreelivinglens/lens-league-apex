@@ -89,10 +89,15 @@ Genre rules (assign carefully — this affects how the event is shown to photogr
 - NEVER assign "Wildlife" to a human festival or cultural event
 - NEVER assign "Wedding", "Fashion", "Macro", or "Drone" to public events
 
+CRITICAL — location_name field: write the EVENT NAME at the venue, not just the venue name.
+WRONG: "Hitex Exhibition Centre" or "Chitrakala Parishath"
+RIGHT: "India International Trade Expo, Hitex" or "Ricoh GR Decisive Pocket Exhibition, Chitrakala Parishath"
+If you do not know the specific event name, do not include that row.
+
 Return ONLY a raw JSON array starting with [ and ending with ]. No preamble, no reasoning, no markdown fences, no explanation. If you are uncertain, return []. The very first character of your response must be [.
 [
   {
-    "location_name": "Rath Yatra Procession, Puri",
+    "location_name": "Ricoh GR Decisive Pocket Exhibition, Chitrakala Parishath",
     "state_country": "Puri, Odisha, India",
     "distance_hours": 0.0,
     "genre": "Street",
