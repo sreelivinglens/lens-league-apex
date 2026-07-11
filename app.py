@@ -1894,6 +1894,46 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'CSI tables migration warning: {_csi_mig}')
 
+            # Session 141 — dashboard_visit_count (first login vs returning)
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
+                    "dashboard_visit_count INTEGER NOT NULL DEFAULT 0"
+                ))
+                db.session.commit()
+                print('dashboard_visit_count column OK.')
+            except Exception as _dvc_mig:
+                db.session.rollback()
+                print(f'dashboard_visit_count migration warning: {_dvc_mig}')
+
+            # Session 141 — advisory_shown_log (session memory / follow-up)
+            try:
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS advisory_shown_log (
+                        id              SERIAL PRIMARY KEY,
+                        user_id         INTEGER     NOT NULL,
+                        calendar_id     INTEGER,
+                        live_event_id   INTEGER,
+                        city            VARCHAR(80) NOT NULL,
+                        shown_date      DATE        NOT NULL,
+                        follow_up_shown BOOLEAN     NOT NULL DEFAULT FALSE,
+                        shown_at        TIMESTAMP   NOT NULL DEFAULT NOW()
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_advisory_shown_user_date "
+                    "ON advisory_shown_log (user_id, shown_date)"
+                ))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_advisory_shown_cal "
+                    "ON advisory_shown_log (user_id, calendar_id, shown_date)"
+                ))
+                db.session.commit()
+                print('advisory_shown_log table OK.')
+            except Exception as _asl_mig:
+                db.session.rollback()
+                print(f'advisory_shown_log migration warning: {_asl_mig}')
+
             print('Columns migrated OK.')
 
             # Purge expired date-bound seasonal_calendar rows on every startup.
@@ -2522,6 +2562,26 @@ def run_page_view_prune():
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'[page_view_prune] Error: {e}')
+
+
+# ── Session 141 — advisory_shown_log prune ───────────────────────────────────
+
+def run_advisory_shown_log_prune():
+    """
+    Runs daily via APScheduler. Deletes advisory_shown_log entries older than
+    7 days — only yesterday's entry matters for follow-up detection; anything
+    older is dead weight.
+    """
+    with app.app_context():
+        try:
+            from engine.seasonal_calendar import prune_advisory_shown_log
+            deleted = prune_advisory_shown_log(db.session, days=7)
+            if deleted >= 0:
+                app.logger.info(f'[advisory_shown_log_prune] Deleted {deleted} entries older than 7 days.')
+            else:
+                app.logger.warning('[advisory_shown_log_prune] Prune failed — see prior log line.')
+        except Exception as e:
+            app.logger.error(f'[advisory_shown_log_prune] Error: {e}')
 
 
 # ── Item D — seasonal auto-discovery ──────────────────────────────────────────
@@ -4160,29 +4220,76 @@ def dashboard():
     # ── data as the scorecard's "What's happening near you", just a         ──
     # ── lighter single-match version for the sidebar widget. Falls back to  ──
     # ── the existing generic placeholder in dashboard.html if no match.     ──
-    _dash_advisory = None
+    # ── Session 141 — increment dashboard visit count ──────────────────────
     try:
-        if current_user.city:
-            from engine.seasonal_calendar import get_personalised_advisory, get_primary_genre as _gpg2
-            _adv_genre = _gpg2(current_user)
-            _dash_advisory = get_personalised_advisory(
-                db.session,
-                current_user.city,
-                _adv_genre or 'Wildlife',
-                datetime.utcnow().month,
-                progress_data=progress_data,
-                user_id=current_user.id,
-            )
-    except Exception as _dae:
-        app.logger.warning(f'[dashboard] advisory: {_dae}')
+        db.session.execute(db.text(
+            "UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count,0)+1 "
+            "WHERE id = :uid"
+        ), {'uid': current_user.id})
+        db.session.commit()
+        _dash_visit_count = (getattr(current_user, 'dashboard_visit_count', 0) or 0) + 1
+    except Exception as _dvc_err:
+        db.session.rollback()
+        _dash_visit_count = 1
+        app.logger.warning(f'[dashboard] visit_count: {_dvc_err}')
 
+    _dash_advisory = None
     _dash_live_event = None
     try:
         if current_user.city:
+            from engine.seasonal_calendar import (
+                get_personalised_advisory, get_primary_genre as _gpg2,
+                log_advisory_shown, check_advisory_follow_up,
+            )
             from engine.city_event_scan import get_live_event_advisory
+
+            _adv_genre       = _gpg2(current_user)
             _dash_live_event = get_live_event_advisory(db.session, current_user.city)
-    except Exception as _lee:
-        app.logger.warning(f'[dashboard] live_event: {_lee}')
+
+            if _dash_live_event:
+                # ── Live event: run Sherpa personalisation + check follow-up ──
+                _live_ev_db_id = _dash_live_event.get('id')
+                _adv_follow_up = check_advisory_follow_up(
+                    db.session, current_user.id,
+                    live_event_id=_live_ev_db_id,
+                )
+                _dash_advisory = get_personalised_advisory(
+                    db.session,
+                    current_user.city,
+                    _adv_genre or 'Wildlife',
+                    datetime.utcnow().month,
+                    progress_data=progress_data,
+                    user_id=current_user.id,
+                    live_event=_dash_live_event,
+                    follow_up=_adv_follow_up,
+                )
+                # Log today's show so tomorrow gets a follow-up brief
+                log_advisory_shown(
+                    db.session, current_user.id, current_user.city,
+                    live_event_id=_live_ev_db_id,
+                )
+            else:
+                # ── Green advisory: check follow-up + run Sherpa ──────────────
+                _adv_follow_up = check_advisory_follow_up(
+                    db.session, current_user.id,
+                    calendar_id=None,
+                )
+                _dash_advisory = get_personalised_advisory(
+                    db.session,
+                    current_user.city,
+                    _adv_genre or 'Wildlife',
+                    datetime.utcnow().month,
+                    progress_data=progress_data,
+                    user_id=current_user.id,
+                    follow_up=_adv_follow_up,
+                )
+                if _dash_advisory:
+                    log_advisory_shown(
+                        db.session, current_user.id, current_user.city,
+                        calendar_id=None,
+                    )
+    except Exception as _adv_err:
+        app.logger.warning(f'[dashboard] advisory/live_event: {_adv_err}')
 
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
     _peer_queue = []
@@ -4333,7 +4440,8 @@ def dashboard():
                            tier_rank=TIER_RANK,
                            eye_of_judge=_eye_of_judge,
                            peer_ratings_given=_peer_ratings_given,
-                           last_eval_result=session.get('last_eval_result'))
+                           last_eval_result=session.get('last_eval_result'),
+                           dashboard_visit_count=_dash_visit_count)
 
 
 # ---------------------------------------------------------------------------
@@ -9613,9 +9721,9 @@ def leaderboard():
         # Session 132 — Mobile DDI
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
-        tier_has_more      = {},
+        tier_has_more      = {t: (len([i for i in top_images if i.tier == t]) >= _imgs_per_tier) for t in _all_tiers_ordered},
         tier_page          = 1,
-        has_more           = False,
+        has_more           = any(len([i for i in top_images if i.tier == t]) >= _imgs_per_tier for t in _all_tiers_ordered),
     )
 
 
@@ -24069,6 +24177,14 @@ if _sched_lock_held:
         trigger          = CronTrigger(hour=3, minute=50, timezone='UTC'),
         id               = 'page_view_prune',
         name             = 'Prune page_views entries older than 90 days',
+        replace_existing = True,
+    )
+    # Session 141 — advisory_shown_log prune (>7 days) — daily 03:55 UTC
+    _scheduler.add_job(
+        func             = run_advisory_shown_log_prune,
+        trigger          = CronTrigger(hour=3, minute=55, timezone='UTC'),
+        id               = 'advisory_shown_log_prune',
+        name             = 'Prune advisory_shown_log entries older than 7 days',
         replace_existing = True,
     )
     # Item D — seasonal auto-discovery — weekly, Sunday 04:00 UTC
