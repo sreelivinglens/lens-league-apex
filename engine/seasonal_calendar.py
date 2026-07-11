@@ -778,10 +778,197 @@ def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, curre
         'location_name':     row.location_name,
         'state_country':     row.state_country,
         'distance_hours':    row.distance_hours,
+        'genre':             row.genre,
         'what_is_happening': row.what_is_happening,
         'url':               f"https://www.google.com/maps/search/?api=1&query={_q}",
     }
 
+
+
+# ── Sherpa advisory cache (in-process, per user, 6-hour TTL) ─────────────────
+import threading as _threading
+import time as _time
+_advisory_cache = {}
+_advisory_cache_lock = _threading.Lock()
+_ADVISORY_TTL = 6 * 3600  # 6 hours
+
+
+def get_personalised_advisory(
+    db_session,
+    user_city: str,
+    primary_genre: str,
+    current_month: int,
+    progress_data: dict | None = None,
+    user_id: int | None = None,
+) -> dict | None:
+    """
+    Sherpa-voiced location advisory personalised to the user's DDI profile.
+
+    Wraps get_dashboard_advisory() with a single Claude call that rewrites
+    what_is_happening and why_it_matters in the Sherpa voice, targeting:
+
+      1. The GAP SHOT   — directly addresses the user's weakest DDI dimension
+                          at this specific location. Unconventional, exact.
+      2. The STRETCH SHOT — a technique that elevates a dimension they're
+                          already decent at. Slow shutter, ND filter, bokeh,
+                          etc. Something requiring deliberate craft.
+      3. THE PROGRESSION LINE — one sentence connecting this location to
+                          their upload history. "You got slow shutter right
+                          at Chidambaram — 7.6. Here's how this gets to Master."
+
+    Falls back to the unmodified get_dashboard_advisory() result if:
+      - progress_data is None (< 5 images, no profile yet)
+      - Claude call fails for any reason
+      - Cached result exists and is < 6 hours old
+
+    The template dict shape is identical to get_dashboard_advisory() —
+    no template changes needed.
+    """
+    # ── Base advisory from DB ─────────────────────────────────────────────
+    base = get_dashboard_advisory(db_session, user_city, primary_genre, current_month)
+    if not base:
+        return None
+
+    # ── No profile yet — return base advisory unchanged ───────────────────
+    if not progress_data:
+        return base
+
+    # ── Cache check ───────────────────────────────────────────────────────
+    _cache_key = f"{user_id}:{user_city}:{primary_genre}:{current_month}"
+    with _advisory_cache_lock:
+        _cached = _advisory_cache.get(_cache_key)
+        if _cached and (_time.time() - _cached['ts']) < _ADVISORY_TTL:
+            return _cached['data']
+
+    # ── Build DDI profile string ──────────────────────────────────────────
+    _dim_labels = {
+        'dod': 'Depth of Difficulty',
+        'disruption': 'Disruption',
+        'dm': 'Decisive Moment',
+        'wonder': 'Wonder',
+        'aq': 'Affective Quotient',
+    }
+    _weakest  = progress_data.get('weakest', '')
+    _strongest = progress_data.get('strongest', '')
+    _avgs     = progress_data.get('dim_avgs') or progress_data.get('avgs') or {}
+    _count    = progress_data.get('count', 0)
+    _avg_tier = progress_data.get('avg_tier', '')
+    _top_genre = progress_data.get('top_genre', primary_genre)
+
+    _dim_profile = '
+'.join([
+        f"  {_dim_labels.get(d, d)}: {v:.2f}"
+        for d, v in sorted(_avgs.items(), key=lambda x: x[1])
+    ]) if _avgs else "  No dimension data available"
+
+    # ── Recent upload context for progression line ────────────────────────
+    _trend = progress_data.get('trend', [])
+    _recent_context = ""
+    if _trend and len(_trend) >= 2:
+        _last = _trend[-1]
+        _prev = _trend[-2]
+        _recent_context = (
+            f"Their last scored image: {_last.get('tier','')} {_last.get('score','')}. "
+            f"Previous: {_prev.get('tier','')} {_prev.get('score','')}."
+        )
+
+    # ── Sherpa prompt ─────────────────────────────────────────────────────
+    _system = """You are the Sherpa — the coaching voice of Shutter League, a photography evolution platform.
+
+Your job: write a personalised location advisory for a specific photographer at a specific location.
+The advisory has THREE parts, written as flowing prose (not bullet points, not headers):
+
+PART 1 — THE GAP SHOT
+Target the photographer's WEAKEST DDI dimension at this exact location.
+Be specific to the location. Name the exact vantage point, the exact moment, the exact angle.
+This is not generic advice — it is what THIS photographer needs to fix at THIS location.
+Never say "try to" or "you might want to" — say what to do and where to stand.
+
+PART 2 — THE STRETCH SHOT  
+Suggest one technique challenge that elevates a dimension they are already decent at.
+Think: slow shutter on moving subjects, ND filter in harsh light, bokeh on ambient light sources,
+silhouette against a bright background, reflections, shadow play.
+Be specific to what is physically present at this location right now.
+Name the technique, the subject, and what the resulting image should feel like.
+
+PART 3 — THE PROGRESSION LINE
+One sentence only. Connect this session to their history.
+Reference their current tier and what the next tier requires.
+Sound like a coach who has been watching them for months — because the platform has.
+Example: "You've been catching moments — now make the frame itself surprising."
+
+TONE: Quiet. Confident. Honest. Never encouraging for its own sake.
+Never use: "wonderful", "amazing", "great opportunity", "beautiful", "stunning".
+Never hedge. Never say "consider" or "perhaps" or "you might".
+Write in second person ("you", "your").
+Total length: 120–160 words maximum. Dense. Every word earns its place."""
+
+    _user_prompt = f"""Photographer profile:
+- Current standing: {_avg_tier} ({_count} images evaluated)
+- Primary genre: {_top_genre}
+- Dimension scores (lowest to highest):
+{_dim_profile}
+- Weakest dimension: {_dim_labels.get(_weakest, _weakest)}
+- Strongest dimension: {_dim_labels.get(_strongest, _strongest)}
+- {_recent_context}
+
+Location: {base.get('location_name', '')}, {base.get('state_country', '')}
+What is happening: {base.get('what_is_happening', '')}
+Genre context: {primary_genre}
+
+Write the three-part Sherpa advisory for this photographer at this location.
+Return ONLY the advisory text — no labels, no headers, no preamble."""
+
+    try:
+        import os
+        import json
+        import httpx as _httpx
+
+        _resp = _httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         os.environ.get("ANTHROPIC_API_KEY", ""),
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":      "claude-sonnet-4-6",
+                "max_tokens": 400,
+                "system":     _system,
+                "messages":   [{"role": "user", "content": _user_prompt}],
+            },
+            timeout=20,
+        )
+        _resp.raise_for_status()
+        _sherpa_text = _resp.json()["content"][0]["text"].strip()
+
+        # Split into what_is_happening (gap + stretch) and why_it_matters (progression)
+        # Split on last sentence (progression line is always the last sentence)
+        _sentences = [s.strip() for s in _sherpa_text.replace('\n', ' ').split('.') if s.strip()]
+        if len(_sentences) >= 2:
+            _progression = _sentences[-1] + '.'
+            _main = '. '.join(_sentences[:-1]) + '.'
+        else:
+            _main = _sherpa_text
+            _progression = ''
+
+        _result = {
+            **base,
+            'what_is_happening': _main,
+            'why_it_matters':    _progression,
+            'sherpa':            True,
+        }
+
+        # Cache it
+        with _advisory_cache_lock:
+            _advisory_cache[_cache_key] = {'data': _result, 'ts': _time.time()}
+
+        return _result
+
+    except Exception as _e:
+        print(f"[personalised_advisory] Claude call failed ({user_city}, {primary_genre}): {_e}")
+        # Fall back to base advisory — never break the dashboard
+        return base
 
 
 def prune_seasonal_shown_log(db_session, days: int = 60):
