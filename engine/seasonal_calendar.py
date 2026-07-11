@@ -779,7 +779,10 @@ def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, curre
         'state_country':     row.state_country,
         'distance_hours':    row.distance_hours,
         'genre':             row.genre,
+        'subject':           row.subject,
         'what_is_happening': row.what_is_happening,
+        'why_it_matters':    row.why_it_matters,
+        'best_light_time':   row.best_light_time,
         'url':               f"https://www.google.com/maps/search/?api=1&query={_q}",
     }
 
@@ -875,7 +878,16 @@ def get_personalised_advisory(
     _system = """You are the Sherpa — the coaching voice of Shutter League, a photography evolution platform.
 
 Your job: write a personalised location advisory for a specific photographer at a specific location.
-The advisory has THREE parts, written as flowing prose (not bullet points, not headers):
+The advisory has FOUR parts:
+
+PART 0 — SUBJECT LINE (one line only)
+A single sharp line — what to shoot and why, specific to this location and this photographer.
+Not a place name. Not generic. The specific photographic opportunity.
+Examples:
+  "Practise people photography with the Messi trophy display at Bhartiya Mall"
+  "Shoot the rope pullers at Rath Yatra — the frame no one else is making"
+  "Convention floor density at Hitex — break your wildlife centring instinct here"
+Write this line first, then a blank line, then the three parts below.
 
 PART 1 — THE GAP SHOT
 Target the photographer's WEAKEST DDI dimension at this exact location.
@@ -905,6 +917,7 @@ TONE: Quiet. Confident. Honest. Never encouraging for its own sake.
 Never use: "wonderful", "amazing", "great opportunity", "beautiful", "stunning".
 Never hedge. Never say "consider" or "perhaps" or "you might".
 Write in second person ("you", "your").
+Never use shorthand the user has not been taught. Never write "12" or any number to mean a score pattern — write it out: "two consecutive 7s", "your last three images all scored 7.1".
 Total length: 120–160 words maximum. Dense. Every word earns its place."""
 
     _user_prompt = f"""Photographer profile:
@@ -937,7 +950,7 @@ Return ONLY the advisory text — no labels, no headers, no preamble."""
             },
             json={
                 "model":      "claude-sonnet-4-6",
-                "max_tokens": 400,
+                "max_tokens": 500,
                 "system":     _system,
                 "messages":   [{"role": "user", "content": _user_prompt}],
             },
@@ -946,18 +959,35 @@ Return ONLY the advisory text — no labels, no headers, no preamble."""
         _resp.raise_for_status()
         _sherpa_text = _resp.json()["content"][0]["text"].strip()
 
-        # Split into what_is_happening (gap + stretch) and why_it_matters (progression)
-        # Split on last sentence (progression line is always the last sentence)
-        _sentences = [s.strip() for s in _sherpa_text.replace('\n', ' ').split('.') if s.strip()]
+        # Part 0 is the subject line — first line before the blank line
+        # Parts 1-3 are the body text
+        _sherpa_lines = _sherpa_text.split('\n')
+        _sherpa_subject = ''
+        _sherpa_body = _sherpa_text
+
+        # Extract subject line — first non-empty line, separated from body by blank line
+        _non_empty = [l.strip() for l in _sherpa_lines if l.strip()]
+        if len(_non_empty) >= 2:
+            _sherpa_subject = _non_empty[0]
+            # Body is everything after the first blank line
+            _blank_idx = next((i for i, l in enumerate(_sherpa_lines) if not l.strip() and i > 0), 1)
+            _sherpa_body = '\n'.join(_sherpa_lines[_blank_idx + 1:]).strip()
+            if not _sherpa_body:
+                _sherpa_body = ' '.join(_non_empty[1:])
+
+        # Split body into what_is_happening (gap + stretch) and why_it_matters (progression)
+        # Progression line is always the last sentence
+        _sentences = [s.strip() for s in _sherpa_body.replace('\n', ' ').split('.') if s.strip()]
         if len(_sentences) >= 2:
             _progression = _sentences[-1] + '.'
             _main = '. '.join(_sentences[:-1]) + '.'
         else:
-            _main = _sherpa_text
+            _main = _sherpa_body
             _progression = ''
 
         _result = {
             **base,
+            'subject':           _sherpa_subject or base.get('subject', ''),
             'what_is_happening': _main,
             'why_it_matters':    _progression,
             'sherpa':            True,
