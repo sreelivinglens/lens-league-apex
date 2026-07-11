@@ -572,7 +572,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
              style="font-size:13px;color:rgba(246,242,233,0.45);text-decoration:none;white-space:nowrap;">Event details ↗</a>
           {% endif %}
           <a href="{{ url_for('profile') }}#location"
-             style="font-size:13px;color:rgba(246,242,233,0.45);text-decoration:none;white-space:nowrap;">Change location</a>
+             style="font-size:14px;color:#D6A428;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
         </div>
       </div>
     </div>
@@ -608,7 +608,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           {% if dash_advisory.get('subject') %}
           <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:6px;">{{ dash_advisory.subject }}</div>
           {% endif %}
-          <div style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div id="adv-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.')[:200] }}{% if (dash_advisory.what_is_happening or '')|length > 200 %}<span id="adv-ellipsis">… <button onclick="document.getElementById('adv-body-short').style.display='none';document.getElementById('adv-body-full').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
+          </div>
+          <div id="adv-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}
+            <button onclick="document.getElementById('adv-body-short').style.display='block';document.getElementById('adv-body-full').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
+          </div>
           {% if dash_advisory.get('why_it_matters') %}
           <div style="font-size:15px;color:#1A4A2A;font-style:italic;line-height:1.6;margin-bottom:8px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
@@ -636,7 +642,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
              style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:5px 12px;border-radius:8px;">Get directions →</a>
           <a href="{{ url_for('profile') }}#location"
-             style="font-size:14px;color:var(--d-muted);text-decoration:none;white-space:nowrap;">Change location</a>
+             style="font-size:14px;color:#2A7A3A;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
         </div>
       </div>
     </div>
@@ -926,7 +932,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           {% if dash_advisory.get('subject') %}
           <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:8px;">{{ dash_advisory.subject }}</div>
           {% endif %}
-          <div style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">{{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}</div>
+          <div id="adv-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.')[:200] }}{% if (dash_advisory.what_is_happening or '')|length > 200 %}<span id="adv-ellipsis">… <button onclick="document.getElementById('adv-body-short').style.display='none';document.getElementById('adv-body-full').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
+          </div>
+          <div id="adv-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
+            {{ dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.' }}
+            <button onclick="document.getElementById('adv-body-short').style.display='block';document.getElementById('adv-body-full').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
+          </div>
           {% if dash_advisory.get('why_it_matters') %}
           <div style="font-size:15px;color:#1A4A2A;font-style:italic;line-height:1.6;margin-bottom:8px;">{{ dash_advisory.why_it_matters }}</div>
           {% endif %}
