@@ -280,7 +280,7 @@ def scan_city(db_session, city):
             },
             json={
                 "model":      MODEL,
-                "max_tokens": 2000,
+                "max_tokens": 3000,
                 "system":     system,
                 "messages":   [{"role": "user", "content": prompt}],
             },
