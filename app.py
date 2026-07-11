@@ -4649,7 +4649,8 @@ def _build_progress_data(user):
         avgs[d] = round(sum(vals) / len(vals), 2) if vals else 0.0
 
     trend_imgs = scored[-10:]
-    trend = [{'label': f'#{i+1}', 'tier': img.tier or get_tier(img.score), 'score': img.score}
+    trend = [{'label': f'#{i+1}', 'tier': img.tier or get_tier(img.score), 'score': img.score,
+              'genre': img.genre or ''}
              for i, img in enumerate(trend_imgs)]
 
     # Per-dimension trend + pill — last 8 images, for dashboard sparkline charts
@@ -24101,6 +24102,24 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute='0,5,10,15,20,25,30,35,40,45,50,55', timezone='UTC'),
         id               = 'challenge_notification',
         name             = 'Send challenge open notifications at opens_at',
+        replace_existing = True,
+    )
+    # Session 140 — daily live event scan — 6am IST (00:30 UTC)
+    # Scans all active cities for photography events via three-pass web+social search.
+    # Runs at 6am IST so advisories are fresh when users open the app in the morning.
+    def _run_city_event_scan_job():
+        try:
+            with app.app_context():
+                from engine.city_event_scan import run_city_event_scan
+                run_city_event_scan(db.session)
+        except Exception as _cese:
+            app.logger.warning(f'[city_event_scan_cron] error: {_cese}')
+
+    _scheduler.add_job(
+        func             = _run_city_event_scan_job,
+        trigger          = CronTrigger(hour='22,4,10,16', minute=30, timezone='UTC'),
+        id               = 'city_event_scan',
+        name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
         replace_existing = True,
     )
     _scheduler.start()
