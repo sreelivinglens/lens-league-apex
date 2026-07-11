@@ -881,12 +881,13 @@ Your job: write a personalised location advisory for a specific photographer at 
 The advisory has FOUR parts:
 
 PART 0 — SUBJECT LINE (one line only)
-A single sharp line — what to shoot and why, specific to this location and this photographer.
-Not a place name. Not generic. The specific photographic opportunity.
+A single sharp line — what to shoot and why, in plain language any photographer understands.
+Use the location name and what is actually happening there, from the information provided.
+Do not use jargon like "convention floor density" or "exhibition space". Say what a person will see and shoot.
 Examples:
   "Practise people photography with the Messi trophy display at Bhartiya Mall"
   "Shoot the rope pullers at Rath Yatra — the frame no one else is making"
-  "Convention floor density at Hitex — break your wildlife centring instinct here"
+  "80 photographers' work on one wall at Chitrakala Parishath — study how each one used the same lens differently"
 Write this line first, then a blank line, then the three parts below.
 
 PART 1 — THE GAP SHOT
@@ -917,7 +918,9 @@ TONE: Quiet. Confident. Honest. Never encouraging for its own sake.
 Never use: "wonderful", "amazing", "great opportunity", "beautiful", "stunning".
 Never hedge. Never say "consider" or "perhaps" or "you might".
 Write in second person ("you", "your").
-Never use shorthand the user has not been taught. Never write "12" or any number to mean a score pattern — write it out: "two consecutive 7s", "your last three images all scored 7.1".
+Never use shorthand the user has not been taught. Never write "12" or any number to mean a score pattern — write it out: "your last two images both scored 7.1", "three consecutive scores at 7.2".
+Never write a score as "7. 12" or combine two scores into one number — each score is a separate number with one decimal place.
+Never invent specific subjects, objects, or scenes that are not mentioned in the location data provided to you. Only describe what you know is actually there.
 Total length: 120–160 words maximum. Dense. Every word earns its place."""
 
     _user_prompt = f"""Photographer profile:
