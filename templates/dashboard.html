@@ -582,6 +582,11 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
              style="font-size:14px;color:#A37B2C;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
         </div>
       </div>
+      <div style="padding:10px 18px 14px;border-top:1px solid #E8C84A;">
+        <a href="{{ url_for('upload') }}" style="font-size:14px;color:#A37B2C;font-weight:700;text-decoration:none;">
+          📷 Photograph today → get your evaluation → tomorrow's brief builds on it →
+        </a>
+      </div>
     </div>
     <style>@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:0.35}}</style>
     {% endif %}
@@ -916,6 +921,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
             <a href="{{ url_for('profile') }}#location"
                style="font-size:14px;color:#A37B2C;text-decoration:underline;font-weight:600;">Change location →</a>
           </div>
+          <a href="{{ url_for('upload') }}" style="display:block;margin-top:12px;font-size:14px;color:#A37B2C;font-weight:700;text-decoration:none;padding-top:10px;border-top:1px solid #E8C84A;">
+            📷 Photograph today → get your evaluation → tomorrow's brief builds on it →
+          </a>
         </div>
       </div>
       {% endif %}
