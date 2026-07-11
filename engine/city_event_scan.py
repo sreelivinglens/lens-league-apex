@@ -256,21 +256,129 @@ def _write_event(db_session, city, event):
         return False
 
 
+def _web_search(query: str, api_key: str) -> str:
+    """
+    Run a single web search via Claude API web_search tool.
+    Returns the text content of the search results, or empty string on failure.
+    City-agnostic — works for any city, any language, any platform.
+    """
+    try:
+        resp = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":      MODEL,
+                "max_tokens": 2000,
+                "tools":      [{"type": "web_search_20250305", "name": "web_search"}],
+                "messages":   [{"role": "user", "content": query}],
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        blocks = resp.json().get("content", [])
+        # Extract all text blocks from the response
+        return " ".join(
+            b.get("text", "") for b in blocks if b.get("type") == "text"
+        ).strip()
+    except Exception as e:
+        print(f"[city_event_scan] web search failed for query '{query[:60]}': {e}")
+        return ""
+
+
+def _parse_events_json(raw: str, city: str) -> list:
+    """Parse and repair JSON from LLM output. Returns list or []."""
+    import re as _re
+    if not raw:
+        return []
+    # Strip markdown fences
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+    # Find array boundaries
+    _start = raw.find("[")
+    _end   = raw.rfind("]")
+    if _start != -1 and _end != -1 and _end > _start:
+        raw = raw[_start:_end + 1]
+    # Repair trailing commas
+    raw = _re.sub(r",\s*([}\]])", r"", raw)
+    try:
+        result = json.loads(raw)
+        return result if isinstance(result, list) else []
+    except json.JSONDecodeError as e:
+        print(f"[city_event_scan] {city}: JSON parse error — {e}")
+        print(f"[city_event_scan] {city}: raw snippet — {raw[:300]}")
+        return []
+
+
 def scan_city(db_session, city):
     """
-    Run one city scan: call Claude API, parse events, write to DB.
+    Run one city scan using three search passes, then one extraction call.
+    City-agnostic — works for any city worldwide.
+
+    Pass 1 — General web: finds events with public web presence
+    Pass 2 — Social/platform: finds Instagram, Facebook, Eventbrite, local
+              event aggregators (allevents.in, timeout.com, insider.in etc.)
+    Pass 3 — Brand/community: finds camera brand events, photo walks,
+              club meetups (Ricoh, Fujifilm, Sony, photography club)
+
+    All three results feed one extraction call that deduplicates, merges
+    duplicate events found across multiple platforms, and returns 1-3
+    confident, distinct events as a JSON array.
+
     Returns the number of events written.
     """
     today_str = date.today().isoformat()
-    prompt = (
-        f"Find photography-relevant events happening in or near {city} "
-        f"in the next 90 days (from {today_str}). "
-        f"Focus on events with strong visual subjects accessible to the public."
+    api_key   = os.environ.get("ANTHROPIC_API_KEY", "")
+    system    = _SYSTEM.replace("{today}", today_str)
+
+    # ── Three search passes ───────────────────────────────────────────────
+    pass1 = _web_search(
+        f"photography exhibition walk talk event festival happening in {city} "
+        f"next 90 days from {today_str}",
+        api_key
     )
-    system = _SYSTEM.replace("{today}", today_str)
+    pass2 = _web_search(
+        f"photography exhibition OR photo walk OR camera event OR photography festival "
+        f"{city} 2026 site:instagram.com OR site:facebook.com OR site:eventbrite.com "
+        f"OR site:timeout.com OR site:allevents.in OR site:insider.in OR site:bookmyshow.com",
+        api_key
+    )
+    pass3 = _web_search(
+        f"Ricoh OR Fujifilm OR Nikon OR Sony OR Leica OR Canon OR photography club "
+        f"OR photo walk OR camera walk event {city} 2026",
+        api_key
+    )
+
+    # Combine all search results
+    combined = "\n\n---\n\n".join(
+        f"SOURCE {i+1}:\n{r}" for i, r in enumerate([pass1, pass2, pass3]) if r
+    )
+
+    if not combined.strip():
+        print(f"[city_event_scan] {city}: all three search passes returned nothing")
+        _log_scan(db_session, city, 0)
+        return 0
+
+    # ── Single extraction call ────────────────────────────────────────────
+    extraction_prompt = (
+        f"You have search results from three different sources about events in {city}.\n"
+        "Extract the best 1-3 distinct photography-relevant events.\n"
+        "DEDUPLICATION: If the same event appears in multiple sources, merge them "
+        "into ONE row using the most complete information available. "
+        "If dates conflict between sources, use the most specific/confirmed date.\n"
+        "CONFIDENCE: Only include events you are confident are real and current. "
+        "If an event has no confirmed dates, omit it.\n"
+        "The very first character of your response must be [.\n\n"
+        f"Search results:\n{combined[:8000]}"
+    )
 
     try:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         resp = httpx.post(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -282,46 +390,19 @@ def scan_city(db_session, city):
                 "model":      MODEL,
                 "max_tokens": 3000,
                 "system":     system,
-                "messages":   [{"role": "user", "content": prompt}],
+                "messages":   [{"role": "user", "content": extraction_prompt}],
             },
             timeout=45,
         )
         resp.raise_for_status()
         raw = resp.json()["content"][0]["text"].strip()
-
-        # Strip markdown fences if model adds them despite instructions
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-            raw = raw.strip()
-
-        # Find the JSON array boundaries — guards against preamble/postamble text
-        _start = raw.find("[")
-        _end   = raw.rfind("]")
-        if _start != -1 and _end != -1 and _end > _start:
-            raw = raw[_start:_end + 1]
-
-        # Repair common JSON issues from LLM output:
-        # 1. Trailing commas before ] or }  e.g. [..., ]
-        import re as _re
-        raw = _re.sub(r",\s*([\]}])", r"\1", raw)
-        # 2. Unescaped apostrophes inside strings are valid JSON — no fix needed
-        # 3. If still broken, log the raw output for diagnosis
-        try:
-            events = json.loads(raw)
-        except json.JSONDecodeError as _je:
-            # Last resort: ask the model to fix its own output
-            print(f"[city_event_scan] {city}: JSON parse error — {_je}")
-            print(f"[city_event_scan] {city}: raw output snippet — {raw[:300]}")
-            return 0
-
-        if not isinstance(events, list):
-            print(f"[city_event_scan] {city}: non-list response — skipping")
-            return 0
-
     except Exception as e:
-        print(f"[city_event_scan] {city}: API error — {e}")
+        print(f"[city_event_scan] {city}: extraction API error — {e}")
+        return 0
+
+    events = _parse_events_json(raw, city)
+    if not events:
+        _log_scan(db_session, city, 0)
         return 0
 
     written = 0
