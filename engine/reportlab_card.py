@@ -8,7 +8,7 @@ Two A4 portrait pages:
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.lib.colors import HexColor, white, black
+from reportlab.lib.colors import HexColor, white, black, Color
 from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.lib.utils import ImageReader
 import io, textwrap, re, requests
@@ -136,7 +136,7 @@ def _gradient_rect(c, x, y, w, h, color_hex, steps=12):
         r = br + (1.0 - br) * t
         g = bg + (1.0 - bg) * t
         b = bb + (1.0 - bb) * t
-        c.setFillColor(HexColor((r, g, b)))
+        c.setFillColor(Color(r, g, b))
         c.rect(x, y + (steps - 1 - i) * step_h, w, step_h + 0.5, fill=1, stroke=0)
 
 # ── Header / Footer ───────────────────────────────────────────────────────────
