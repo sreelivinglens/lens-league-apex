@@ -52,11 +52,6 @@ from sqlalchemy import text as _sql_text
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _anthropic_call(messages, tools=None, max_tokens=1500, model="claude-haiku-4-5-20251001"):
-    """
-    Minimal direct call to the Anthropic Messages API — same pattern as the
-    watermark check in app.py (urllib, no SDK dependency). Returns the parsed
-    response dict, or raises on error.
-    """
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
         raise RuntimeError('ANTHROPIC_API_KEY not set')
@@ -84,7 +79,6 @@ def _anthropic_call(messages, tools=None, max_tokens=1500, model="claude-haiku-4
 
 
 def _extract_text_blocks(response):
-    """Concatenate all text blocks in an Anthropic API response."""
     return '\n'.join(
         block.get('text', '')
         for block in response.get('content', [])
@@ -93,15 +87,6 @@ def _extract_text_blocks(response):
 
 
 def get_active_city_genre_combos(db_session):
-    """
-    Returns a sorted list of distinct (city, genre) tuples across all users
-    with a populated city and at least one genre interest.
-
-    Uses up to 3 genres from genre_interests (the handoff flagged that only
-    genre_interests[0] was being used elsewhere — this uses all of them,
-    since a user's seasonal advice should cover all their stated interests).
-    Falls back to no genre (skipped) if genre_interests is empty/invalid.
-    """
     combos = set()
     try:
         rows = db_session.execute(_sql_text(
@@ -129,37 +114,12 @@ def get_active_city_genre_combos(db_session):
 
 
 def enqueue_missing_combos(db_session, refresh_after_days: int = 30):
-    """
-    For each active (city, genre) combo, check whether seasonal_calendar
-    has data, AND whether that data is still fresh.
-
-    - No rows at all          -> enqueue (general sweep).
-    - Newest row older than
-      `refresh_after_days`     -> enqueue (general sweep) for re-discovery,
-                                   so new one-off exhibitions/festivals get
-                                   picked up over time rather than the combo
-                                   being "covered forever" after its first
-                                   discovery run.
-    - Newest row fresh enough -> skip.
-
-    Safe to run repeatedly: the partial unique index on
-    discovery_queue(city, genre) WHERE status='pending' prevents duplicates,
-    and discover_one() prunes stale rows for the combo before inserting new
-    ones (see discover_one).
-
-    Returns the number of new queue entries created.
-    """
     from .seasonal_calendar import normalize_city, GENRE_FALLBACK
 
     combos = get_active_city_genre_combos(db_session)
     enqueued = 0
 
     for city, genre in combos:
-        # Session 98: genres that always redirect to a fallback genre
-        # (Wedding, Fashion -> People) never need their own discovery —
-        # build_seasonal_context() never even reaches an empty result for
-        # them, so queuing a search that can structurally never succeed
-        # just burns API cost for nothing.
         _rule = GENRE_FALLBACK.get(genre)
         if _rule and _rule[0] == "replace":
             continue
@@ -174,7 +134,7 @@ def enqueue_missing_combos(db_session, refresh_after_days: int = 30):
             if newest is not None:
                 age_days = (datetime.utcnow() - newest).days
                 if age_days < refresh_after_days:
-                    continue  # fresh enough — skip
+                    continue
 
             db_session.execute(_sql_text(
                 "INSERT INTO discovery_queue (city, genre, priority, status) "
@@ -193,13 +153,6 @@ def enqueue_missing_combos(db_session, refresh_after_days: int = 30):
 
 
 def enqueue_priority_combo(db_session, city: str, genre: str):
-    """
-    Item B hook — call when a user's GPS-detected city has been flagged
-    (pending_location_update set, or confirmed via /location-update/confirm)
-    and that city has no seasonal_calendar data yet. Inserts a
-    priority=TRUE discovery_queue row so it's processed before the next
-    general sweep, rather than waiting for the weekly batch.
-    """
     from .seasonal_calendar import normalize_city
     normalized = normalize_city(city)
 
@@ -210,7 +163,7 @@ def enqueue_priority_combo(db_session, city: str, genre: str):
         ), {"city": normalized, "genre": genre}).scalar()
 
         if existing > 0:
-            return False  # already have data — nothing to queue
+            return False
 
         db_session.execute(_sql_text(
             "INSERT INTO discovery_queue (city, genre, priority, status) "
@@ -240,8 +193,8 @@ shooting opportunities as a JSON array. Each item must have this exact shape:
   "subject": "<short phrase — the specific subject/scene that makes it worth shooting>",
   "what_is_happening": "<2-3 sentences, present tense, what's happening now/seasonally there>",
   "why_it_matters": "<2-3 sentences — why this is a worthwhile photographic opportunity for this genre>",
-  "best_light_time": "<short phrase or null>",
-  "access_notes": "<practical access info, or null>",
+  "best_light_time": "<short phrase under 75 characters, or null>",
+  "access_notes": "<practical access info under 75 characters, or null>",
   "month_start": <integer 1-12 — for RECURRING seasonal windows, the start month>,
   "month_end": <integer 1-12 — for RECURRING seasonal windows, the end month>,
   "date_start": "<YYYY-MM-DD or null — ONLY for one-off dated events (exhibitions, festivals with specific dates)>",
@@ -254,6 +207,7 @@ set month_start/month_end to the typical window and set date_start/date_end to n
 - If the opportunity is a ONE-OFF DATED EVENT (e.g. a specific exhibition or festival with known \
 dates), set date_start/date_end to the actual dates (YYYY-MM-DD) and set month_start/month_end \
 to the month of the event (both equal to that month).
+- best_light_time and access_notes must each be under 75 characters. Truncate if needed.
 - Only include opportunities you have reasonable confidence in based on the search results — \
 do not invent specific dates or locations not supported by the results.
 - If nothing relevant is found, return an empty JSON array: []
@@ -262,37 +216,6 @@ do not invent specific dates or locations not supported by the results.
 
 
 def discover_one(db_session, city: str, genre: str, current_month: int | None = None):
-    """
-    Run discovery for a single (city, genre) combo:
-      1. Web search for recurring seasons + current/upcoming exhibitions.
-      2. LLM-extract into seasonal_calendar row(s).
-      3. Insert the row(s).
-
-    current_month: if provided (1-12), the search and extraction are scoped to
-    what is happening NOW — the extracted rows are guaranteed to cover this month.
-    Pass datetime.utcnow().month from the scoring thread for on-demand discovery.
-
-    Session 98:
-      - Wedding/Fashion always return 0 immediately — they never have a
-        standalone location concept (see GENRE_FALLBACK in
-        seasonal_calendar.py), so a search for "wedding locations near
-        {city}" would just waste a web-search + LLM-extraction call on a
-        query that can't structurally succeed. This is a defensive
-        backstop; enqueue_missing_combos() already keeps them out of the
-        weekly queue, but discover_one() can also be called directly
-        (e.g. on-demand discovery from the scoring thread).
-      - Documentary's search additionally covers breaking/current civic
-        events (protests, demonstrations, newsworthy gatherings), not just
-        scheduled exhibitions and recurring seasons.
-      - Drone's search explicitly excludes restricted/no-fly airspace, and
-        its extraction is required to append a regulation-verification
-        reminder to access_notes — drone law varies by country and
-        changes over time, so a suggested spot is never asserted as
-        cleared to fly.
-
-    Returns the number of rows inserted (0 on no results or error — never
-    raises, so a single bad combo doesn't break the batch).
-    """
     from .seasonal_calendar import normalize_city, GENRE_FALLBACK
     import calendar as _cal
 
@@ -307,7 +230,6 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
     _genre_lower = genre.lower()
 
     try:
-        # ── Step 1: web search ────────────────────────────────────────────
         _month_clause = (
             f"currently happening in {_month_name} near "
             if _month_name else
@@ -347,7 +269,6 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
             print(f"[seasonal_discovery] No search summary for ({normalized_city}, {genre}) — skipping")
             return 0
 
-        # ── Step 2: LLM extraction into seasonal_calendar row shape ───────
         _month_rule = (
             f"\nCRITICAL: This discovery is for month {current_month} ({_month_name}). "
             f"Every extracted row MUST have month_start <= {current_month} AND month_end >= {current_month} "
@@ -364,12 +285,6 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
             "location is cleared to fly."
             if _genre_lower == "drone" else ''
         )
-        # NOTE: the entire content string is parenthesised so the ternary
-        # covers ALL f-strings in the with-month branch, not just the last one.
-        # Previously the ternary bound only to the final f-string, silently
-        # dropping _month_rule and the "Current month:" line every time
-        # current_month was supplied — causing LLM to generate rows for its
-        # own preferred season rather than the requested month.
         _extraction_content = (
             (
                 f"{_EXTRACTION_SYSTEM}{_month_rule}{_drone_extraction_rule}\n\n"
@@ -401,10 +316,7 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
             print(f"[seasonal_discovery] No items extracted for ({normalized_city}, {genre})")
             return 0
 
-        # ── Step 2.5: prune expired one-off events for this combo ─────────
-        # Re-discovery runs would otherwise accumulate stale dated rows
-        # (e.g. last quarter's exhibition) forever. Recurring-season rows
-        # (date_start/date_end NULL) are left alone — they're evergreen.
+        # Prune expired one-off events for this combo
         try:
             db_session.execute(_sql_text("""
                 DELETE FROM seasonal_calendar
@@ -415,20 +327,12 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
         except Exception as prune_err:
             print(f"[seasonal_discovery] prune error for ({normalized_city}, {genre}): {prune_err}")
 
-        # ── Step 3: insert rows ────────────────────────────────────────────
         inserted = 0
-        for item in items[:2]:  # cap at 2 rows per combo
+        for item in items[:2]:
             try:
                 _ms = int(item.get("month_start", 1) or 1)
                 _me = int(item.get("month_end", 12) or 12)
 
-                # Server-side month clamp — even with the corrected prompt the
-                # LLM can still return a window that doesn't cover current_month
-                # (e.g. it finds a Nov–Feb season when we asked for June).
-                # If current_month is set and the row wouldn't pass
-                # build_seasonal_context's filter, widen the window to include
-                # it rather than silently inserting a row that's invisible.
-                # We log the correction so it's visible in the scoring thread.
                 if current_month:
                     _original = (_ms, _me)
                     if _ms > current_month:
@@ -444,6 +348,16 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
                             f"to cover current_month={current_month}"
                         )
 
+                # Truncate VARCHAR fields to their column limits
+                _best_light = (item.get("best_light_time") or None)
+                if _best_light:
+                    _best_light = _best_light[:75]
+                _access = (item.get("access_notes") or None)
+                if _access:
+                    _access = _access[:75]
+                _state_country = (item.get("state_country", "") or "")[:80]
+                _location_name = (item.get("location_name", "") or "")[:120]
+
                 db_session.execute(_sql_text("""
                     INSERT INTO seasonal_calendar
                         (base_city, genre, location_name, state_country, distance_hours,
@@ -458,31 +372,27 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
                 """), {
                     "base_city":         normalized_city,
                     "genre":             genre,
-                    "location_name":     item.get("location_name", "")[:120],
-                    "state_country":     item.get("state_country", "")[:80],
+                    "location_name":     _location_name,
+                    "state_country":     _state_country,
                     "distance_hours":    float(item.get("distance_hours", 0.0) or 0.0),
                     "month_start":       _ms,
                     "month_end":         _me,
                     "subject":           item.get("subject", ""),
                     "what_is_happening": item.get("what_is_happening", ""),
                     "why_it_matters":    item.get("why_it_matters", ""),
-                    "best_light_time":   item.get("best_light_time") or None,
-                    "access_notes":      item.get("access_notes") or None,
+                    "best_light_time":   _best_light,
+                    "access_notes":      _access,
                     "date_start":        item.get("date_start") or None,
                     "date_end":          item.get("date_end") or None,
                 })
                 inserted += 1
             except Exception as item_err:
                 print(f"[seasonal_discovery] row insert error for ({normalized_city}, {genre}): {item_err}")
+                db_session.rollback()
                 continue
 
         db_session.commit()
 
-        # Post-insert validation: confirm the rows we just wrote will actually
-        # be found by build_seasonal_context for current_month. If not, the
-        # clamp above should have prevented it — but log clearly so any future
-        # regression is immediately visible rather than silently producing the
-        # "inserted N row(s) but month filter returned no context" warning.
         if current_month and inserted > 0:
             _matched = db_session.execute(_sql_text(
                 "SELECT COUNT(*) FROM seasonal_calendar "
@@ -513,23 +423,6 @@ def discover_one(db_session, city: str, genre: str, current_month: int | None = 
 
 
 def run_seasonal_discovery(db_session, batch_size: int = 5):
-    """
-    Weekly cron entry point.
-
-      1. enqueue_missing_combos() — refresh the queue with any newly active
-         (city, genre) combos that don't have seasonal data yet.
-      2. Process ALL pending priority items (item B — new/changed cities;
-         normally very few per week).
-      3. Process up to `batch_size` pending general items.
-
-    Each processed item is marked 'done' (rows inserted, even if 0 — a
-    confirmed "nothing found" still counts as processed so it doesn't get
-    re-queued every week) or 'error' (exception — eligible for retry next
-    week since it stays out of 'pending'... actually marked 'error' so it
-    won't auto-retry; re-enqueue manually if needed).
-
-    Returns a summary dict.
-    """
     enqueue_missing_combos(db_session)
 
     summary = {"priority_processed": 0, "general_processed": 0, "rows_inserted": 0, "errors": 0}
@@ -555,7 +448,6 @@ def run_seasonal_discovery(db_session, batch_size: int = 5):
             print(f"[seasonal_discovery] failed to update queue id={row.id}: {e}")
             db_session.rollback()
 
-    # Priority items — all of them
     try:
         priority_rows = db_session.execute(_sql_text(
             "SELECT id, city, genre FROM discovery_queue "
@@ -570,7 +462,6 @@ def run_seasonal_discovery(db_session, batch_size: int = 5):
         _process(row)
         summary["priority_processed"] += 1
 
-    # General items — bounded batch
     try:
         general_rows = db_session.execute(_sql_text(
             "SELECT id, city, genre FROM discovery_queue "
