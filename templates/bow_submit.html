@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Body of Work Submission — Shutter League{% endblock %}
+{% block title %}Body of Work — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -160,7 +160,7 @@
 
   <!-- Rules -->
   <div class="bow-rules">
-    <strong>Before you submit:</strong> Your Body of Work is judged as a unified series — thematic coherence, narrative arc, and sustained creative vision matter as much as individual image quality. Images must be previously scored on your account. Cross-genre series are welcome. You may submit only once per platform year. Submissions cannot be modified after submission.
+    <strong>Before you send:</strong> Your Body of Work is judged as a unified series — thematic coherence, narrative arc, and sustained creative vision matter as much as individual image quality. Images must have been previously evaluated on your account. Cross-interest series are welcome. You may send only once per platform year. Your Body of Work cannot be modified after sending.
     <br><br>
     <strong>BOW Annual Honours</strong> — Gold · Silver · Bronze. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for full amounts. Results within 45 days of Month 11 close. Judged exclusively by Jury Legends.
   </div>
@@ -172,7 +172,7 @@
     <h2>Your Body of Work is Submitted</h2>
     <div class="series-name">"{{ existing.series_title }}"</div>
     <p class="meta">{{ existing.image_count }} images · Submitted {{ existing.submitted_at.strftime('%d %b %Y') }} · {{ existing.platform_year }} platform year</p>
-    <p style="margin-top:16px;">Your series is in the jury queue. Results are announced within 45 days of the Month 11 submission deadline. You will be notified when evaluation begins.</p>
+    <p style="margin-top:16px;">Your series is in the jury queue. Results are announced within 45 days of the Month 11 closing date. You will be notified when evaluation begins.</p>
     <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       <a href="{{ url_for('contests') }}" class="btn btn-solid">View Programmes →</a>
       <a href="{{ url_for('dashboard') }}" class="btn">My Dashboard</a>
@@ -251,7 +251,7 @@
 
     {% else %}
     <div class="no-images">
-      <p>You don't have any scored images yet. Upload and score at least 6 images before submitting a Body of Work.</p>
+      <p>You don't have any evaluated photographs yet. Upload and have at least 6 photographs evaluated before sending a Body of Work.</p>
       <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Images →</a>
     </div>
     {% endif %}
@@ -285,7 +285,7 @@
     <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark);
                 border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; margin-bottom:20px;
                 font-size:13px; color:var(--text-secondary); line-height:1.7;">
-      ⚠️ <strong style="color:var(--gold);">Submissions are final.</strong>
+      ⚠️ <strong style="color:var(--gold);">Your Body of Work is final once sent.</strong>
       Once submitted, your Body of Work cannot be modified or withdrawn.
       Make sure your series, title, and statement accurately represent your creative vision.
     </div>
