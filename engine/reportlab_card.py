@@ -200,7 +200,7 @@ def _draw_gradient_bg(c, x, y, w, h, color_top, color_bot, steps=60):
 def _draw_page1(c, data):
     HEADER_H = 8  * mm
     FOOTER_H = 7  * mm
-    PHOTO_H  = PH * 0.40
+    PHOTO_H  = PH * 0.32
 
     photo_bot = PH - HEADER_H - PHOTO_H
     band_top  = photo_bot
@@ -215,7 +215,7 @@ def _draw_page1(c, data):
     if img:
         try:
             iw, ih = img.getSize()
-            scale  = max(PW/iw, PHOTO_H/ih)
+            scale  = min(PW/iw, PHOTO_H/ih)   # contain — full image, no crop
             nw, nh = iw*scale, ih*scale
             ox = (PW-nw)/2
             oy = photo_bot + (PHOTO_H-nh)/2
@@ -410,9 +410,29 @@ def _draw_page2(c, data):
             c.line(PAD + 6*mm, ey, PW - PAD, ey)
 
     ey -= 6*mm
-    c.setStrokeColor(BORDER); c.setLineWidth(0.5)
-    c.line(PAD, ey, PW-PAD, ey)
-    ey -= 5*mm
+
+    _draw_footer(c, f"SL  ·  {score_str}  ·  {tier_str}")
+
+
+# ════════════════════════════════════════════════════════════════════════
+#  PAGE 3
+# ════════════════════════════════════════════════════════════════════════
+def _draw_page3(c, data):
+    HEADER_H = 8 * mm
+    FOOTER_H = 7 * mm
+    PAGE_TOP  = PH - HEADER_H
+
+    score_str = f"{float(data.get('score',0)):.2f}"
+    tier_str  = (data.get('tier') or '').upper()
+    asset     = data.get('asset','Untitled')
+
+    _draw_header(c, f"EDIT GUIDE  ·  {asset}",
+                 'APEX DDI ENGINE  ·  RATED BY SCIENCE', PH)
+
+    c.setFillColor(CREAM)
+    c.rect(0, FOOTER_H, PW, PH-HEADER_H-FOOTER_H, fill=1, stroke=0)
+
+    ey = PAGE_TOP - 5*mm
 
     # ── Edit Guide ───────────────────────────────────────────────────────────
     edit_base     = _clean(data.get('edit_base',''))
@@ -437,8 +457,7 @@ def _draw_page2(c, data):
             c.drawString(sx, ey_l, '· Balanced. Light editing.')
             ey_l -= 6*mm
             ey_l = _draw_text_block(c, edit_base, PAD+2*mm, ey_l, half_w,
-                                    11, bold=False, color=DARK2,
-                                    line_height=6*mm)
+                                    11, bold=False, color=DARK2, line_height=6*mm)
 
         if edit_creative:
             rx = PAD + half_w + 10*mm
@@ -449,8 +468,7 @@ def _draw_page2(c, data):
             c.drawString(sx, ey_r, '· Artistic. Heavy editing.')
             ey_r -= 6*mm
             ey_r = _draw_text_block(c, edit_creative, rx+2*mm, ey_r, half_w,
-                                    11, bold=False, color=DARK2,
-                                    line_height=6*mm)
+                                    11, bold=False, color=DARK2, line_height=6*mm)
 
         ey = min(ey_l, ey_r) - 6*mm
         c.setStrokeColor(BORDER); c.setLineWidth(0.4)
@@ -514,7 +532,7 @@ def _draw_page2(c, data):
 #  PUBLIC ENTRY POINT
 # ════════════════════════════════════════════════════════════════════════
 def build_scorecard_pdf(data: dict) -> bytes:
-    """Two-page A4 portrait PDF. Pure Python, no system deps."""
+    """Three-page A4 portrait PDF. Pure Python, no system deps."""
     buf = io.BytesIO()
     c   = rl_canvas.Canvas(buf, pagesize=A4)
     c.setTitle(f"Shutter League Evaluation — {data.get('asset','')}")
@@ -522,6 +540,8 @@ def build_scorecard_pdf(data: dict) -> bytes:
     _draw_page1(c, data)
     c.showPage()
     _draw_page2(c, data)
+    c.showPage()
+    _draw_page3(c, data)
     c.showPage()
     c.save()
     return buf.getvalue()
