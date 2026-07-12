@@ -121,7 +121,7 @@ def _draw_text_block(c, text, x, y, width, font_size, bold=False,
     lh    = line_height or (font_size * 1.55)
     lines = _wrap(text, width, font_size, bold)
     if max_lines and len(lines) > max_lines:
-        lines = lines[:max_lines - 1] + [lines[max_lines - 1].rstrip() + '…']
+        lines = lines[:max_lines]
     for line in lines:
         if y < 8 * mm:
             break
@@ -230,38 +230,34 @@ def _draw_page1(c, data):
         _set(c, 7, bold=False, color=HexColor('#AAAAAA'))
         c.drawRightString(PW - 4*mm, photo_bot + 3*mm, display)
 
-    # ── Sky-blue gradient background for score band + rows ──
-    _draw_gradient_bg(c, 0, FOOTER_H, PW, band_top - FOOTER_H,
-                      GRAD_BOT, GRAD_TOP)
+    # ── Cream background below photo (matches page 2) ──
+    c.setFillColor(CREAM)
+    c.rect(0, FOOTER_H, PW, band_top - FOOTER_H, fill=1, stroke=0)
 
     score_str = f"{float(data.get('score',0)):.2f}"
     tier_str  = (data.get('tier') or '').upper()
 
-    # ── Score block — fixed layout with explicit spacing ──
-    # Start 22mm below the photo bottom for breathing room
+    # ── Score block ──
     sx = PAD
-    sy = band_top - 22*mm   # score baseline
+    sy = band_top - 22*mm
 
     _set(c, 56, bold=True, color=DARK)
     score_w = c.stringWidth(score_str, _font(True), 56)
     c.drawString(sx, sy, score_str)
 
-    # Tier label — 8mm below score baseline
     _set(c, 11, bold=True, color=GOLD)
     c.drawString(sx, sy - 8*mm, tier_str)
-
-    # Tier dots — 5mm below tier label
     _draw_tier_dots(c, data.get('tier',''), sx, sy - 13*mm)
 
-    # ── Meta block — right of score, vertically centred in score height ──
+    # ── Meta block ──
     mx = sx + score_w + 10*mm
-    my = sy + 4*mm   # align top of meta with top of score numeral
+    my = sy + 4*mm
 
+    credit = data.get('credit','')
     if credit:
-        _set(c, 9, bold=True, color=GOLD)
+        _set(c, 9, bold=True, color=GOLD_DK)
         c.drawString(mx, my, f"PHOTOGRAPHY BY :  {credit.upper()}")
         my -= 5*mm
-        # Thin gold rule under photographer name
         c.setStrokeColor(GOLD_DK)
         c.setLineWidth(0.4)
         c.line(mx, my + 0.5*mm, mx + 80*mm, my + 0.5*mm)
@@ -271,7 +267,7 @@ def _draw_page1(c, data):
                                        data.get('format',''),
                                        data.get('location','')]))
     if meta:
-        _set(c, 8, bold=False, color=HexColor('#334455'))
+        _set(c, 8, bold=False, color=DARK2)
         c.drawString(mx, my, meta)
         my -= 6*mm
 
@@ -280,9 +276,9 @@ def _draw_page1(c, data):
         _set(c, 8, bold=False, color=GOLD_DK)
         c.drawString(mx, my, f"Affective State: {aff}")
 
-    # ── Dimension separator — 18mm below score baseline ──
+    # ── Dimensions ──
     sep_y = sy - 19*mm
-    c.setStrokeColor(HexColor('#A0BDD0'))
+    c.setStrokeColor(BORDER)
     c.setLineWidth(0.5)
     c.line(PAD, sep_y, PW-PAD, sep_y)
 
@@ -295,85 +291,58 @@ def _draw_page1(c, data):
         for i, dim in enumerate(dims):
             cx = PAD + i*dw
             if i > 0:
-                c.setStrokeColor(HexColor('#A0BDD0'))
+                c.setStrokeColor(BORDER)
                 c.setLineWidth(0.5)
                 c.line(cx, dy, cx, dy - 16*mm)
             for j, lbl in enumerate([dim['l1'], dim['l2']]):
-                _set(c, 7.5, bold=False, color=DIM_LBL)
+                _set(c, 7.5, bold=False, color=MUTED)
                 lx = cx + dw/2 - c.stringWidth(lbl, _font(False), 7.5)/2
                 c.drawString(lx, dy - j*4.5*mm, lbl)
             sc   = f"{dim['score']:.1f}"
-            scol = GOLD if dim['score']==max_sc else DARK
+            scol = GOLD_DK if dim['score']==max_sc else DARK
             _set(c, 20, bold=True, color=scol)
             sw = c.stringWidth(sc, _font(True), 20)
             c.drawString(cx + dw/2 - sw/2, dy - 11.5*mm, sc)
 
-    # ── Opening bold — 6mm clear below dimensions ──
+    # ── Opening bold ──
     wso   = _clean(data.get('wso',''))
     wso_y = sep_y - 22*mm
+    wso_end = wso_y - 3*mm
     if wso:
-        c.setStrokeColor(HexColor('#A0BDD0'))
+        c.setStrokeColor(BORDER)
         c.setLineWidth(0.5)
         c.line(PAD, wso_y + 2*mm, PW-PAD, wso_y + 2*mm)
         wso_end = _draw_text_block(
             c, wso, PAD, wso_y - 3*mm, PW - 2*PAD,
-            11, bold=True, color=DARK, line_height=6.5*mm, max_lines=3)
-    else:
-        wso_end = wso_y - 3*mm
+            12, bold=True, color=DARK, line_height=7*mm)
 
-    # ── Four evaluation rows ──
-    row_data = [
-        ("The Photographer's Advice", data.get('c1_body','')),
-        ("What You Controlled",       data.get('c2_body','')),
-        ("What to Watch Next",        data.get('c3_body','')),
-        ("Keep This in Mind",         data.get('c4_body','')),
-    ]
+    # ── The Photographer's Advice — row 1 on page 1 ──
+    c1_body = _clean(data.get('c1_body',''))
+    if c1_body:
+        accent  = ROW_ACCENTS[0]
+        BODY_FS = 11
+        BODY_LH = 6*mm
+        LABEL_H = 5.5*mm
+        ROW_PAD = 5*mm
+        LABEL_GAP = 4*mm
+        bh    = _block_height(c1_body, PW-2*PAD-8*mm, BODY_FS, line_height=BODY_LH)
+        row_h = ROW_PAD + LABEL_H + LABEL_GAP + bh + ROW_PAD
+        ry    = wso_end - 4*mm
 
-    BODY_FS   = 11
-    LABEL_FS  = 9
-    BODY_LH   = 6*mm
-    LABEL_H   = 5.5*mm
-    ROW_PAD   = 5*mm     # top/bottom padding inside each row
-    LABEL_GAP = 5*mm     # explicit gap between label and body text (~2 lines breathing room)
-    MAX_LINES = 3
+        c.setStrokeColor(BORDER); c.setLineWidth(0.5)
+        c.line(PAD, ry + 1*mm, PW-PAD, ry + 1*mm)
 
-    ry = wso_end - 3*mm
-
-    for i, (label, raw) in enumerate(row_data):
-        body   = _clean(raw)
-        if not body:
-            continue
-        accent = ROW_ACCENTS[i]
-        bh     = _block_height(body, PW-2*PAD-8*mm, BODY_FS,
-                               line_height=BODY_LH, max_lines=MAX_LINES)
-        row_h  = ROW_PAD + LABEL_H + LABEL_GAP + bh + ROW_PAD
-
-        # Alternating bg
-        if i % 2 == 1:
-            c.setFillColor(ROW_BG_ALT)
-            c.rect(0, ry - row_h, PW, row_h, fill=1, stroke=0)
-
-        # Accent left bar
         c.setFillColor(accent)
         c.rect(PAD, ry - row_h + 3*mm, 3, row_h - 6*mm, fill=1, stroke=0)
 
-        # Label
-        _set(c, LABEL_FS, bold=True, color=accent)
-        c.drawString(PAD + 6*mm, ry - ROW_PAD - LABEL_H + 1.5*mm, label.upper())
+        _set(c, 9, bold=True, color=accent)
+        c.drawString(PAD + 6*mm, ry - ROW_PAD - LABEL_H + 1.5*mm,
+                     "THE PHOTOGRAPHER'S ADVICE")
 
-        # Body — starts LABEL_GAP below the label baseline
         _draw_text_block(
-            c, body,
-            PAD + 6*mm, ry - ROW_PAD - LABEL_H - LABEL_GAP,
+            c, c1_body, PAD + 6*mm, ry - ROW_PAD - LABEL_H - LABEL_GAP,
             PW - 2*PAD - 10*mm,
-            BODY_FS, bold=False, color=DARK,
-            line_height=BODY_LH, max_lines=MAX_LINES)
-
-        ry -= row_h
-        if i < 3:
-            c.setStrokeColor(ROW_SEP)
-            c.setLineWidth(0.4)
-            c.line(PAD + 6*mm, ry, PW - PAD, ry)
+            BODY_FS, bold=False, color=DARK, line_height=BODY_LH)
 
     _draw_footer(c, f"SL  ·  {score_str}  ·  {tier_str}")
 
@@ -384,7 +353,7 @@ def _draw_page1(c, data):
 def _draw_page2(c, data):
     HEADER_H = 8 * mm
     FOOTER_H = 7 * mm
-    PAGE_TOP = PH - HEADER_H
+    PAGE_TOP  = PH - HEADER_H
 
     score_str = f"{float(data.get('score',0)):.2f}"
     tier_str  = (data.get('tier') or '').upper()
@@ -398,7 +367,54 @@ def _draw_page2(c, data):
 
     ey = PAGE_TOP - 5*mm
 
-    # ── Edit Guide ──
+    # ── Evaluation rows 2–4 ──────────────────────────────────────────────────
+    row_data = [
+        ("What You Controlled",  data.get('c2_body','')),
+        ("What to Watch Next",   data.get('c3_body','')),
+        ("Keep This in Mind",    data.get('c4_body','')),
+    ]
+
+    BODY_FS   = 11
+    LABEL_FS  = 9
+    BODY_LH   = 6*mm
+    LABEL_H   = 5.5*mm
+    ROW_PAD   = 5*mm
+    LABEL_GAP = 4*mm
+
+    for i, (label, raw) in enumerate(row_data):
+        body = _clean(raw)
+        if not body:
+            continue
+        accent = ROW_ACCENTS[i]
+        bh     = _block_height(body, PW-2*PAD-8*mm, BODY_FS, line_height=BODY_LH)
+        row_h  = ROW_PAD + LABEL_H + LABEL_GAP + bh + ROW_PAD
+
+        if i % 2 == 1:
+            c.setFillColor(HexColor('#EEEAE0'))
+            c.rect(0, ey - row_h, PW, row_h, fill=1, stroke=0)
+
+        c.setFillColor(accent)
+        c.rect(PAD, ey - row_h + 3*mm, 3, row_h - 6*mm, fill=1, stroke=0)
+
+        _set(c, LABEL_FS, bold=True, color=accent)
+        c.drawString(PAD + 6*mm, ey - ROW_PAD - LABEL_H + 1.5*mm, label.upper())
+
+        _draw_text_block(
+            c, body, PAD + 6*mm, ey - ROW_PAD - LABEL_H - LABEL_GAP,
+            PW - 2*PAD - 10*mm,
+            BODY_FS, bold=False, color=DARK, line_height=BODY_LH)
+
+        ey -= row_h
+        if i < 3:
+            c.setStrokeColor(BORDER); c.setLineWidth(0.4)
+            c.line(PAD + 6*mm, ey, PW - PAD, ey)
+
+    ey -= 6*mm
+    c.setStrokeColor(BORDER); c.setLineWidth(0.5)
+    c.line(PAD, ey, PW-PAD, ey)
+    ey -= 5*mm
+
+    # ── Edit Guide ───────────────────────────────────────────────────────────
     edit_base     = _clean(data.get('edit_base',''))
     edit_creative = _clean(data.get('edit_creative',''))
 
@@ -408,7 +424,7 @@ def _draw_page2(c, data):
         ey -= 5*mm
         c.setStrokeColor(BORDER); c.setLineWidth(0.5)
         c.line(PAD, ey+1*mm, PW-PAD, ey+1*mm)
-        ey -= 3*mm
+        ey -= 4*mm
 
         half_w = (PW - 2*PAD - 10*mm) / 2
         ey_l = ey_r = ey
@@ -422,7 +438,7 @@ def _draw_page2(c, data):
             ey_l -= 6*mm
             ey_l = _draw_text_block(c, edit_base, PAD+2*mm, ey_l, half_w,
                                     11, bold=False, color=DARK2,
-                                    line_height=6*mm, max_lines=10)
+                                    line_height=6*mm)
 
         if edit_creative:
             rx = PAD + half_w + 10*mm
@@ -434,30 +450,28 @@ def _draw_page2(c, data):
             ey_r -= 6*mm
             ey_r = _draw_text_block(c, edit_creative, rx+2*mm, ey_r, half_w,
                                     11, bold=False, color=DARK2,
-                                    line_height=6*mm, max_lines=10)
+                                    line_height=6*mm)
 
         ey = min(ey_l, ey_r) - 6*mm
         c.setStrokeColor(BORDER); c.setLineWidth(0.4)
         c.line(PAD, ey+1*mm, PW-PAD, ey+1*mm)
 
-    # ── Where to Shoot Next — pastel sage ──
-    loc1      = _clean(data.get('mentor_location_1',''))
-    loc2      = _clean(data.get('mentor_location_2',''))
-    days_lang = data.get('days_since_language','')
+    # ── Where to Shoot Next ───────────────────────────────────────────────────
+    loc1 = _clean(data.get('mentor_location_1',''))
+    loc2 = _clean(data.get('mentor_location_2',''))
 
     if loc1:
         half_w = (PW - 2*PAD - 10*mm) / 2
-        l1_h   = _block_height(loc1, half_w, 11, line_height=6*mm)
+        l1_h   = _block_height(loc1, PW-2*PAD-10*mm if not loc2 else half_w,
+                               11, line_height=6*mm)
         l2_h   = _block_height(loc2, half_w, 11, line_height=6*mm) if loc2 else 0
         box_h  = 10*mm + max(l1_h, l2_h) + 10*mm
 
         box_top = ey - 3*mm
         box_bot = box_top - box_h
 
-        # Pastel sage background
         c.setFillColor(WHERE_BG)
         c.rect(PAD, box_bot, PW-2*PAD, box_h, fill=1, stroke=0)
-        # Subtle border
         c.setStrokeColor(HexColor('#A8CEB0')); c.setLineWidth(0.5)
         c.rect(PAD, box_bot, PW-2*PAD, box_h, fill=0, stroke=1)
 
@@ -472,19 +486,16 @@ def _draw_page2(c, data):
             c.drawString(PAD+5*mm+half_w+10*mm, iy, 'COMING UP')
             iy -= 5*mm
             _draw_text_block(c, loc1, PAD+5*mm, iy, half_w,
-                             11, bold=False, color=WHERE_TXT,
-                             line_height=6*mm, max_lines=14)
+                             11, bold=False, color=WHERE_TXT, line_height=6*mm)
             _draw_text_block(c, loc2, PAD+5*mm+half_w+10*mm, iy, half_w,
-                             11, bold=False, color=WHERE_TXT,
-                             line_height=6*mm, max_lines=14)
+                             11, bold=False, color=WHERE_TXT, line_height=6*mm)
         else:
             _draw_text_block(c, loc1, PAD+5*mm, iy, PW-2*PAD-10*mm,
-                             11, bold=False, color=WHERE_TXT,
-                             line_height=6*mm, max_lines=10)
+                             11, bold=False, color=WHERE_TXT, line_height=6*mm)
 
         ey = box_bot - 6*mm
 
-    # ── HCB Quote ──
+    # ── HCB Quote ─────────────────────────────────────────────────────────────
     if ey > FOOTER_H + 16*mm:
         quote = ('\u201cTo photograph is to hold one\u2019s breath when all '
                  'faculties converge to capture fleeting reality.\u201d')
