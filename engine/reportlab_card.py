@@ -17,37 +17,42 @@ from reportlab.lib.utils import ImageReader
 import io, textwrap, re, requests
 
 # ── Palette ───────────────────────────────────────────────────────────────────
-NAVY      = HexColor('#0F2A22')
-NAVY_DK   = HexColor('#0A1A12')
-NAVY_ROW  = HexColor('#122E26')
-GOLD      = HexColor('#D6A428')
-GOLD_DK   = HexColor('#A37B2C')
+NAVY      = HexColor('#D6EAF8')   # pastel sky blue (light bg)
+NAVY_DK   = HexColor('#1A2A3A')   # dark footer
+NAVY_ROW  = HexColor('#BFD9EE')   # slightly deeper pastel for alt rows
+GOLD      = HexColor('#B8860B')   # dark gold — readable on light bg
+GOLD_DK   = HexColor('#8B6508')
 CREAM     = HexColor('#F6F2E9')
 DARK      = HexColor('#1A1A18')
 DARK2     = HexColor('#3A3A38')
 BORDER    = HexColor('#D0CAB8')
-MUTED     = HexColor('#888880')
-BAND_BD   = HexColor('#2A2A28')
-DIM_LBL   = HexColor('#BBBBBB')
-ROW_SEP   = HexColor('#1E3830')
+MUTED     = HexColor('#555555')
+BAND_BD   = HexColor('#A0BDD0')   # muted blue border
+DIM_LBL   = HexColor('#334455')   # dark label text
+ROW_SEP   = HexColor('#A0BDD0')
+
+# Pastel sky blue gradient stops (light → very light)
+GRAD_TOP  = HexColor('#C2DCF0')   # medium pastel sky
+GRAD_MID  = HexColor('#D6EAF8')   # pastel sky blue
+GRAD_BOT  = HexColor('#EBF5FB')   # near-white sky
 
 # Pastel where-to-shoot background
-WHERE_BG      = HexColor('#E8F2EC')   # pale sage
-WHERE_TXT     = HexColor('#1A3A2A')   # dark green text
-WHERE_LBL     = HexColor('#2A6A3A')   # section label
-WHERE_DAYS_BG = HexColor('#D4EAD8')   # slightly deeper for days row
+WHERE_BG      = HexColor('#E8F2EC')
+WHERE_TXT     = HexColor('#1A3A2A')
+WHERE_LBL     = HexColor('#2A6A3A')
+WHERE_DAYS_BG = HexColor('#D4EAD8')
 WHERE_DAYS_TXT= HexColor('#1A3A2A')
 
-# Row accent colours — left bar + eyebrow
+# Row accent colours — left bar + eyebrow (dark enough for light bg)
 ROW_ACCENTS = [
-    HexColor('#D6A428'),   # gold   — Photographer's Advice
-    HexColor('#5A9ABF'),   # blue   — What You Controlled
-    HexColor('#5A9A6A'),   # green  — What to Watch Next
-    HexColor('#BF7A9A'),   # rose   — Keep This in Mind
+    HexColor('#B8860B'),   # dark gold  — Photographer's Advice
+    HexColor('#1A6A9A'),   # dark blue  — What You Controlled
+    HexColor('#1A6A3A'),   # dark green — What to Watch Next
+    HexColor('#8A3A6A'),   # dark rose  — Keep This in Mind
 ]
 
-# Pastel row backgrounds (alternating)
-ROW_BG_ALT = HexColor('#162A22')   # slightly lighter navy for odd rows
+# Alt row background — slightly deeper pastel
+ROW_BG_ALT = HexColor('#BFD9EE')
 
 PW, PH = A4
 PAD = 12 * mm
@@ -147,7 +152,7 @@ def _draw_footer(c, stamp):
     h = 7 * mm
     c.setFillColor(NAVY_DK)
     c.rect(0, 0, PW, h, fill=1, stroke=0)
-    _set(c, 6, bold=False, color=HexColor('#555555'))
+    _set(c, 6, bold=False, color=HexColor('#CCCCCC'))
     c.drawString(PAD, 2.5*mm,
                  'BETTER LIGHT.  MORE CLARITY.  STRONGER STORY.  YOU, ONE FRAME AT A TIME.')
     _set(c, 7, bold=True, color=GOLD)
@@ -178,6 +183,20 @@ def _fetch_photo(url):
 # ════════════════════════════════════════════════════════════════════════
 #  PAGE 1
 # ════════════════════════════════════════════════════════════════════════
+def _draw_gradient_bg(c, x, y, w, h, color_top, color_bot, steps=60):
+    """Simulate a vertical linear gradient with stacked thin rects."""
+    step_h = h / steps
+    r0, g0, b0 = color_top.red, color_top.green, color_top.blue
+    r1, g1, b1 = color_bot.red, color_bot.green, color_bot.blue
+    for i in range(steps):
+        t  = i / (steps - 1)
+        rc = r0 + (r1 - r0) * t
+        gc = g0 + (g1 - g0) * t
+        bc = b0 + (b1 - b0) * t
+        c.setFillColor(Color(rc, gc, bc))
+        c.rect(x, y + i * step_h, w, step_h + 0.5, fill=1, stroke=0)
+
+
 def _draw_page1(c, data):
     HEADER_H = 8  * mm
     FOOTER_H = 7  * mm
@@ -189,7 +208,7 @@ def _draw_page1(c, data):
     _draw_header(c, 'SHUTTER LEAGUE',
                  'APEX DDI ENGINE  ·  FULL EVALUATION', PH)
 
-    # Photo
+    # ── Photo ──
     c.setFillColor(HexColor('#111111'))
     c.rect(0, photo_bot, PW, PHOTO_H, fill=1, stroke=0)
     img = _fetch_photo(data.get('photo_url'))
@@ -211,46 +230,60 @@ def _draw_page1(c, data):
         _set(c, 7, bold=False, color=HexColor('#AAAAAA'))
         c.drawRightString(PW - 4*mm, photo_bot + 3*mm, display)
 
-    # Navy band
-    c.setFillColor(NAVY)
-    c.rect(0, FOOTER_H, PW, band_top - FOOTER_H, fill=1, stroke=0)
+    # ── Sky-blue gradient background for score band + rows ──
+    _draw_gradient_bg(c, 0, FOOTER_H, PW, band_top - FOOTER_H,
+                      GRAD_TOP, GRAD_BOT)
 
     score_str = f"{float(data.get('score',0)):.2f}"
     tier_str  = (data.get('tier') or '').upper()
 
-    # Score
-    _set(c, 56, bold=True, color=white)
-    score_w = c.stringWidth(score_str, _font(True), 56)
+    # ── Score block — fixed layout with explicit spacing ──
+    # Start 22mm below the photo bottom for breathing room
     sx = PAD
-    sy = band_top - 18*mm
+    sy = band_top - 22*mm   # score baseline
+
+    _set(c, 56, bold=True, color=DARK)
+    score_w = c.stringWidth(score_str, _font(True), 56)
     c.drawString(sx, sy, score_str)
 
+    # Tier label — 8mm below score baseline
     _set(c, 11, bold=True, color=GOLD)
-    c.drawString(sx, sy - 7*mm, tier_str)
-    _draw_tier_dots(c, data.get('tier',''), sx, sy - 11.5*mm)
+    c.drawString(sx, sy - 8*mm, tier_str)
 
-    # Meta
-    mx = sx + score_w + 8*mm
-    my = sy + 2*mm
+    # Tier dots — 5mm below tier label
+    _draw_tier_dots(c, data.get('tier',''), sx, sy - 13*mm)
+
+    # ── Meta block — right of score, vertically centred in score height ──
+    mx = sx + score_w + 10*mm
+    my = sy + 4*mm   # align top of meta with top of score numeral
+
     if credit:
         _set(c, 9, bold=True, color=GOLD)
         c.drawString(mx, my, f"PHOTOGRAPHY BY :  {credit.upper()}")
-        my -= 6*mm
-    meta = '  ·  '.join(filter(None,[data.get('genre',''),
-                                      data.get('format',''),
-                                      data.get('location','')]))
-    if meta:
-        _set(c, 8, bold=False, color=HexColor('#AAAAAA'))
-        c.drawString(mx, my, meta)
         my -= 5*mm
+        # Thin gold rule under photographer name
+        c.setStrokeColor(GOLD_DK)
+        c.setLineWidth(0.4)
+        c.line(mx, my + 0.5*mm, mx + 80*mm, my + 0.5*mm)
+        my -= 5*mm
+
+    meta = '  ·  '.join(filter(None, [data.get('genre',''),
+                                       data.get('format',''),
+                                       data.get('location','')]))
+    if meta:
+        _set(c, 8, bold=False, color=HexColor('#334455'))
+        c.drawString(mx, my, meta)
+        my -= 6*mm
+
     aff = data.get('affective_state','')
     if aff:
         _set(c, 8, bold=False, color=GOLD_DK)
         c.drawString(mx, my, f"Affective State: {aff}")
 
-    # Dimensions
-    sep_y = sy - 14*mm
-    c.setStrokeColor(BAND_BD); c.setLineWidth(0.5)
+    # ── Dimension separator — 18mm below score baseline ──
+    sep_y = sy - 19*mm
+    c.setStrokeColor(HexColor('#A0BDD0'))
+    c.setLineWidth(0.5)
     c.line(PAD, sep_y, PW-PAD, sep_y)
 
     dims = data.get('dim_breakdown', [])
@@ -262,31 +295,33 @@ def _draw_page1(c, data):
         for i, dim in enumerate(dims):
             cx = PAD + i*dw
             if i > 0:
-                c.setStrokeColor(BAND_BD); c.setLineWidth(0.5)
+                c.setStrokeColor(HexColor('#A0BDD0'))
+                c.setLineWidth(0.5)
                 c.line(cx, dy, cx, dy - 16*mm)
             for j, lbl in enumerate([dim['l1'], dim['l2']]):
                 _set(c, 7.5, bold=False, color=DIM_LBL)
                 lx = cx + dw/2 - c.stringWidth(lbl, _font(False), 7.5)/2
                 c.drawString(lx, dy - j*4.5*mm, lbl)
             sc   = f"{dim['score']:.1f}"
-            scol = GOLD if dim['score']==max_sc else white
+            scol = GOLD if dim['score']==max_sc else DARK
             _set(c, 20, bold=True, color=scol)
             sw = c.stringWidth(sc, _font(True), 20)
             c.drawString(cx + dw/2 - sw/2, dy - 11.5*mm, sc)
 
-    # Opening bold
-    wso = _clean(data.get('wso',''))
-    wso_y = sep_y - 18*mm
+    # ── Opening bold — 6mm clear below dimensions ──
+    wso   = _clean(data.get('wso',''))
+    wso_y = sep_y - 22*mm
     if wso:
-        c.setStrokeColor(BAND_BD); c.setLineWidth(0.5)
-        c.line(PAD, wso_y + 1.5*mm, PW-PAD, wso_y + 1.5*mm)
+        c.setStrokeColor(HexColor('#A0BDD0'))
+        c.setLineWidth(0.5)
+        c.line(PAD, wso_y + 2*mm, PW-PAD, wso_y + 2*mm)
         wso_end = _draw_text_block(
-            c, wso, PAD, wso_y - 2*mm, PW - 2*PAD,
-            11, bold=True, color=white, line_height=6*mm, max_lines=3)
+            c, wso, PAD, wso_y - 3*mm, PW - 2*PAD,
+            11, bold=True, color=DARK, line_height=6.5*mm, max_lines=3)
     else:
-        wso_end = wso_y - 2*mm
+        wso_end = wso_y - 3*mm
 
-    # Four evaluation rows
+    # ── Four evaluation rows ──
     row_data = [
         ("The Photographer's Advice", data.get('c1_body','')),
         ("What You Controlled",       data.get('c2_body','')),
@@ -298,10 +333,11 @@ def _draw_page1(c, data):
     LABEL_FS  = 9
     BODY_LH   = 6*mm
     LABEL_H   = 5.5*mm
-    ROW_PAD   = 3.5*mm
-    MAX_LINES = 3      # 3 lines at 11pt fits cleanly with 4 rows
+    ROW_PAD   = 5*mm     # top/bottom padding inside each row
+    LABEL_GAP = 5*mm     # explicit gap between label and body text (~2 lines breathing room)
+    MAX_LINES = 3
 
-    ry = wso_end - 5*mm
+    ry = wso_end - 8*mm
 
     for i, (label, raw) in enumerate(row_data):
         body   = _clean(raw)
@@ -310,7 +346,7 @@ def _draw_page1(c, data):
         accent = ROW_ACCENTS[i]
         bh     = _block_height(body, PW-2*PAD-8*mm, BODY_FS,
                                line_height=BODY_LH, max_lines=MAX_LINES)
-        row_h  = ROW_PAD + LABEL_H + bh + ROW_PAD
+        row_h  = ROW_PAD + LABEL_H + LABEL_GAP + bh + ROW_PAD
 
         # Alternating bg
         if i % 2 == 1:
@@ -319,24 +355,24 @@ def _draw_page1(c, data):
 
         # Accent left bar
         c.setFillColor(accent)
-        c.rect(PAD, ry - row_h + 2.5*mm, 3, row_h - 5*mm, fill=1, stroke=0)
+        c.rect(PAD, ry - row_h + 3*mm, 3, row_h - 6*mm, fill=1, stroke=0)
 
         # Label
         _set(c, LABEL_FS, bold=True, color=accent)
         c.drawString(PAD + 6*mm, ry - ROW_PAD - LABEL_H + 1.5*mm, label.upper())
 
-        # Body
+        # Body — starts LABEL_GAP below the label baseline
         _draw_text_block(
             c, body,
-            PAD + 6*mm, ry - ROW_PAD - LABEL_H - 1.5*mm,
+            PAD + 6*mm, ry - ROW_PAD - LABEL_H - LABEL_GAP,
             PW - 2*PAD - 10*mm,
-            BODY_FS, bold=False, color=HexColor('#DDDDDD'),
+            BODY_FS, bold=False, color=DARK,
             line_height=BODY_LH, max_lines=MAX_LINES)
 
-        # Separator
         ry -= row_h
         if i < 3:
-            c.setStrokeColor(ROW_SEP); c.setLineWidth(0.4)
+            c.setStrokeColor(ROW_SEP)
+            c.setLineWidth(0.4)
             c.line(PAD + 6*mm, ry, PW - PAD, ry)
 
     _draw_footer(c, f"SL  ·  {score_str}  ·  {tier_str}")
