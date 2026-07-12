@@ -775,6 +775,7 @@ def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, curre
     from urllib.parse import quote_plus
     _q = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
     return {
+        'calendar_id':       row.id,          # Session 142 — enables location-specific follow-up logging
         'location_name':     row.location_name,
         'state_country':     row.state_country,
         'distance_hours':    row.distance_hours,
