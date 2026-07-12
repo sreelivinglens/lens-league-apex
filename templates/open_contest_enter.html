@@ -36,7 +36,7 @@
   .oc-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600;
     letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; display: block; }
 
-  /* Genre grid */
+  /* Interest area grid */
   .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 32px; }
   .genre-tile { position: relative; cursor: pointer; }
   .genre-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -109,7 +109,7 @@
 
   <div class="oc-eyebrow">Open Programme {{ platform_year }}</div>
   <h1 class="oc-heading">Enter the Open.</h1>
-  <p class="oc-sub">No track split. Camera and Mobile participate together. One recipient per genre. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for participation fees.</p>
+  <p class="oc-sub">No track split. Camera and Mobile participate together. One recipient per interest area. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for participation fees.</p>
 
   <!-- Step indicators -->
   <div class="oc-steps">
@@ -146,7 +146,7 @@
     <input type="hidden" name="confirm" value="0">
 
     <div class="oc-card">
-      <span class="oc-label">1 — Choose a Genre</span>
+      <span class="oc-label">1 — Choose an Interest Area</span>
       <div class="genre-grid">
         {% for gid in genres %}
         <label class="genre-tile {% if gid in entered_genres %}entered{% endif %}">
@@ -161,7 +161,7 @@
       <span class="oc-label">2 — Choose Your Image</span>
       {% if entered_genres %}
       <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:16px;letter-spacing:.5px;">
-        ✓ marked genres already have a participation record this year.
+        ✓ marked interest areas already have a participation record this year.
       </p>
       {% endif %}
       <div class="image-grid">
@@ -218,7 +218,7 @@
       </div>
     </div>
     <div style="padding:0 32px 24px; font-size:12px; color:var(--text-muted); line-height:1.6; font-family:var(--font-mono);">
-      This fee covers jury review and administration — it is not an entry stake, and no cash prize is paid on results.
+      This fee covers jury review and administration — it is not a participation stake, and no monetary award is paid on results.
     </div>
   </div>
 
