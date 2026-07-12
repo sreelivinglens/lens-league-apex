@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Programme Entries — Shutter League{% endblock %}
+{% block title %}My Programme Participations — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -103,8 +103,8 @@
 <div class="entries-wrap">
 
   <div class="page-header">
-    <h1>My Programme Entries</h1>
-    <p>Your chosen images for each genre programme, by month</p>
+    <h1>My Programme Participations</h1>
+    <p>Your chosen images for each interest area programme, by month</p>
   </div>
 
   <div style="display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap;">
@@ -167,7 +167,7 @@
   {% else %}
   <div class="empty-entries">
     <p>You haven&#39;t entered any programmes yet.<br>
-    Upload your images, get them scored, then choose your entry for each genre.</p>
+    Upload your images, have them evaluated, then choose your participation for each interest area.</p>
     <a href="{{ url_for('contests') }}" class="btn btn-solid">Go to Programmes &rarr;</a>
   </div>
   {% endif %}
