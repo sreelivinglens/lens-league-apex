@@ -144,7 +144,7 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
                    placeholder="e.g. 5">
           </div>
           <div class="sl-pmgr-field">
-            <label for="portfolio_genres">Primary genres</label>
+            <label for="portfolio_genres">Primary interests</label>
             <input type="text" name="portfolio_genres" id="portfolio_genres"
                    value="{{ user_data.portfolio_genres or '' }}"
                    placeholder="e.g. People, Street, Documentary">
@@ -174,8 +174,8 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
 
       <div class="sl-pmgr-toggle-row">
         <div>
-          <div class="sl-pmgr-toggle-label">DDI scores on images</div>
-          <div class="sl-pmgr-toggle-sub">Show the DDI score and tier label on each image card</div>
+          <div class="sl-pmgr-toggle-label">Evaluations on images</div>
+          <div class="sl-pmgr-toggle-sub">Show the evaluation and tier label on each image card</div>
         </div>
         <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_scores != False else 'off' }}"
                 onclick="toggleField(this, 'portfolio_show_scores')">
@@ -213,8 +213,8 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
 
       <div class="sl-pmgr-toggle-row">
         <div>
-          <div class="sl-pmgr-toggle-label">Genre proficiency</div>
-          <div class="sl-pmgr-toggle-sub">Show genre breakdown and average scores per genre</div>
+          <div class="sl-pmgr-toggle-label">Interest proficiency</div>
+          <div class="sl-pmgr-toggle-sub">Show interest area breakdown and average evaluations per interest area</div>
         </div>
         <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_genres != False else 'off' }}"
                 onclick="toggleField(this, 'portfolio_show_genres')">
@@ -227,7 +227,7 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
       <div class="sl-pmgr-toggle-row">
         <div>
           <div class="sl-pmgr-toggle-label">Awards &amp; commendations</div>
-          <div class="sl-pmgr-toggle-sub">Show contest wins and judge commendations</div>
+          <div class="sl-pmgr-toggle-sub">Show programme recognition and judge commendations</div>
         </div>
         <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_awards != False else 'off' }}"
                 onclick="toggleField(this, 'portfolio_show_awards')">
