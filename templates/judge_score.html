@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Score Image — Lens League Apex{% endblock %}
+{% block title %}Evaluate Image — Lens League Apex{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -136,7 +136,7 @@
 <div class="score-wrap">
 
   <div class="page-header">
-    <h1>Score Image</h1>
+    <h1>Evaluate Image</h1>
     <p>
       Assignment {{ loop.index if loop else '' }} &nbsp;·&nbsp;
       <a href="{{ url_for('judge_dashboard') }}" style="color:var(--gold);">← Back to Dashboard</a>
@@ -146,7 +146,7 @@
   <!-- Blind reminder -->
   <div class="blind-banner">
     <div class="blind-dot"></div>
-    <div class="blind-text">Blind Rating — Photographer identity and DDI score are hidden</div>
+    <div class="blind-text">Blind Rating — Photographer identity and DDI evaluation are hidden</div>
   </div>
 
   <!-- RAW verified indicator -->
@@ -182,7 +182,7 @@
     <input type="hidden" name="action" value="score">
 
     <div class="score-section">
-      <div class="score-section-title">Score Each Dimension — 0.0 to 10.0</div>
+      <div class="score-section-title">Evaluate Each Dimension — 0.0 to 10.0</div>
 
       {% set dims = [
         ('dod_score',        'DoD',        ddi_descriptions.DoD),
@@ -213,7 +213,7 @@
 
       <!-- Running average preview -->
       <div class="score-preview">
-        <div class="score-preview-label">Your Average Score (preview)</div>
+        <div class="score-preview-label">Your Average Evaluation (preview)</div>
         <div class="score-preview-value" id="totalPreview">5.0</div>
       </div>
     </div>
@@ -221,7 +221,7 @@
     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
       <button type="submit" class="btn btn-solid"
               style="flex:1; padding:18px; font-size:18px; letter-spacing:2px; min-width:200px;">
-        Submit Score &amp; Next →
+        Submit Evaluation &amp; Next →
       </button>
       <form method="POST" action="{{ url_for('judge_skip_assignment', assignment_id=assignment.id) }}" style="flex-shrink:0;">
         <button type="submit" class="btn"
@@ -238,7 +238,7 @@
   <div class="flag-section">
     <div class="flag-section-title">🚩 Flag this Image Instead of Scoring</div>
     <p style="font-size:17px; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
-      If you have a serious concern about the authenticity or integrity of this image, flag it rather than score it. Flagged images go to admin for review. You cannot both score and flag the same image.
+      If you have a serious concern about the authenticity or integrity of this image, flag it rather than evaluate it. Flagged images go to admin for review. You cannot both evaluate and flag the same image.
     </p>
 
     <form method="POST" action="{{ url_for('judge_score_image', assignment_id=assignment.id) }}" id="flagForm">
