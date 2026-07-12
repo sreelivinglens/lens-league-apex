@@ -102,7 +102,7 @@
   <h1 class="stats-headline">Photographers who know<br><em>where they stand.</em></h1>
 
   <p class="stats-intro">
-    Every image scored, every tier earned, every archetype assigned — live data from the Apex DDI Engine. Updated in real time.
+    Every image evaluated, every tier earned, every archetype assigned — live data from the Apex DDI Engine. Updated in real time.
   </p>
 
   <!-- Big 3 numbers -->
@@ -124,7 +124,7 @@
   <!-- Genre breakdown -->
   {% if genre_stats %}
   <div class="genre-section">
-    <div class="genre-section-label">Images by Genre</div>
+    <div class="genre-section-label">Images by Interest Area</div>
     <div class="genre-bars">
       {% set max_count = genre_stats.values() | map(attribute='count') | max %}
       {% for genre, s in genre_stats.items() %}
@@ -141,7 +141,7 @@
   {% endif %}
 
   <div class="stats-cta">
-    <p>Add your photographs to the leaderboard. 3 free scores — no credit card.</p>
+    <p>Add your photographs to the standings. 3 free evaluations — no credit card.</p>
     <a href="/upload" class="btn btn-solid" style="padding:13px 32px;">Upload Free</a>
   </div>
 
