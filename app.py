@@ -7438,7 +7438,10 @@ def upload():
                                     _uname = (_u.full_name or _u.username) if _u else 'Photographer'
                                     _iurl = f'https://shutterleague.com/image/{_img.id}'
                                     _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
-                                    if _img.score >= 9.0 and ai_suspicion < 0.4:
+                                    # Session 142 — Option C: Mobile League users shoot on phones;
+                                    # JPEG is their original file. RAW verification does not apply.
+                                    _is_mobile_league = (_u and getattr(_u, 'subscription_track', None) == 'mobile')
+                                    if _img.score >= 9.0 and ai_suspicion < 0.4 and not _is_mobile_league:
                                         _img.raw_verification_required = True
                                         _deadline = datetime.utcnow() + timedelta(days=7)
                                         # ── JPEG provenance path check ──
@@ -7955,43 +7958,48 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 )
             elif img.score >= 9.0 and not img.needs_review and _ai_susp < 0.4:
                 # New score crossed INTO Grandmaster territory on rescore — flag it
-                img.needs_review              = True
-                img.raw_verification_required = True
-                img.is_public                 = False
-                img.flagged_reason            = f'Grandmaster score {img.score:.2f} requires RAW verification'
-                app.logger.info(
-                    f'[force_rescore] image={image_id} new score {img.score:.2f} '
-                    f'crossed into Grandmaster — flagged for RAW verification'
-                )
-                # Notify the photographer — same Sherpa email as the original
-                # scoring path, and create the raw_submissions deadline record
-                # so /raw/submit/weekly/<id> works the same way.
-                try:
-                    _owner = User.query.get(img.user_id)
-                    if _owner:
-                        _uname    = _owner.full_name or _owner.username
-                        _deadline = datetime.utcnow() + timedelta(days=7)
-                        _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
-                        _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
-                        try:
-                            db.session.execute(db.text(
-                                "INSERT INTO raw_submissions "
-                                "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
-                                "VALUES (:iid, :uid, 'grandmaster', 'weekly', :dl, 'awaiting') "
-                                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
-                            ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
-                        except Exception:
-                            pass
-                        _send_grandmaster_raw_email(
-                            user_email = _owner.email,
-                            user_name  = _uname,
-                            asset_name = img.asset_name,
-                            score      = img.score,
-                            tier       = img.tier,
-                            submit_url = _submit_url,
-                        )
-                except Exception as _gme:
-                    app.logger.error(f'[force_rescore grandmaster email] {_gme}')
+                # Session 142 — Option C: skip RAW gate for Mobile League users
+                _rescore_owner_track = getattr(User.query.get(img.user_id), 'subscription_track', None)
+                if _rescore_owner_track == 'mobile':
+                    app.logger.info(f'[force_rescore] image={image_id} Grandmaster score — RAW gate skipped (Mobile League)')
+                else:
+                    img.needs_review              = True
+                    img.raw_verification_required = True
+                    img.is_public                 = False
+                    img.flagged_reason            = f'Grandmaster score {img.score:.2f} requires RAW verification'
+                    app.logger.info(
+                        f'[force_rescore] image={image_id} new score {img.score:.2f} '
+                        f'crossed into Grandmaster — flagged for RAW verification'
+                    )
+                    # Notify the photographer — same Sherpa email as the original
+                    # scoring path, and create the raw_submissions deadline record
+                    # so /raw/submit/weekly/<id> works the same way.
+                    try:
+                        _owner = User.query.get(img.user_id)
+                        if _owner:
+                            _uname    = _owner.full_name or _owner.username
+                            _deadline = datetime.utcnow() + timedelta(days=7)
+                            _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+                            _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+                            try:
+                                db.session.execute(db.text(
+                                    "INSERT INTO raw_submissions "
+                                    "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                                    "VALUES (:iid, :uid, 'grandmaster', 'weekly', :dl, 'awaiting') "
+                                    "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+                                ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
+                            except Exception:
+                                pass
+                            _send_grandmaster_raw_email(
+                                user_email = _owner.email,
+                                user_name  = _uname,
+                                asset_name = img.asset_name,
+                                score      = img.score,
+                                tier       = img.tier,
+                                submit_url = _submit_url,
+                            )
+                    except Exception as _gme:
+                        app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
             if img.is_public and not img.is_flagged:
                 _ensure_share_token(img)
@@ -9515,12 +9523,31 @@ def leaderboard():
     # Images tab — fetch up to 12 images per tier so every tier with images
     # is always represented regardless of how many higher-tier images exist.
     # Score desc, then scored_at desc for ties (most recently evaluated first).
+    # Session 142 — tier pagination: when a single tier is selected, read
+    # tier_page from the request and apply offset so "View more" advances.
     from flask_login import current_user as _cu
     _all_tiers_ordered = ['Legend','Grandmaster','Master','Maverick','Craftsman','Contender','Shooter','Rookie']
-    _imgs_per_tier = 12
+    _imgs_per_tier = 10   # display 10 per page in single-tier view
+    _fetch_limit   = 11   # fetch 11 to detect whether a next page exists
+    tier_page      = request.args.get('tier_page', 1, type=int)
+    if tier_page < 1:
+        tier_page = 1
     top_images = []
-    for _t in _all_tiers_ordered:
-        _tq = apply_filters(Image.query, user_already_joined=False)              .filter(Image.tier == _t)              .order_by(desc(Image.score), desc(Image.scored_at))              .limit(_imgs_per_tier).all()
+    if tier == 'all':
+        # All-tiers view: fetch first 12 of each tier (unchanged behaviour)
+        for _t in _all_tiers_ordered:
+            _tq = apply_filters(Image.query, user_already_joined=False)\
+                .filter(Image.tier == _t)\
+                .order_by(desc(Image.score), desc(Image.scored_at))\
+                .limit(12).all()
+            top_images.extend(_tq)
+    else:
+        # Single-tier view: paginated fetch
+        _offset = (tier_page - 1) * _imgs_per_tier
+        _tq = apply_filters(Image.query, user_already_joined=False)\
+            .filter(Image.tier == tier)\
+            .order_by(desc(Image.score), desc(Image.scored_at))\
+            .offset(_offset).limit(_fetch_limit).all()
         top_images.extend(_tq)
 
     img_total  = len(top_images)
@@ -9724,9 +9751,12 @@ def leaderboard():
         # Session 132 — Mobile DDI
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
-        tier_has_more      = {t: (len([i for i in top_images if i.tier == t]) >= _imgs_per_tier) for t in _all_tiers_ordered},
-        tier_page          = 1,
-        has_more           = any(len([i for i in top_images if i.tier == t]) >= _imgs_per_tier for t in _all_tiers_ordered),
+        # Session 142 — tier pagination
+        # all-tiers view: has_more when a tier returned 12 images (sentinel)
+        # single-tier view: has_more when fetch returned 11 (one beyond the page size)
+        tier_has_more      = {t: (len([i for i in top_images if i.tier == t]) >= (12 if tier == 'all' else _fetch_limit)) for t in _all_tiers_ordered},
+        tier_page          = tier_page,
+        has_more           = any(len([i for i in top_images if i.tier == t]) >= (12 if tier == 'all' else _fetch_limit) for t in _all_tiers_ordered),
     )
 
 
