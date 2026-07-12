@@ -4,7 +4,7 @@
 
 {% block extra_head %}
 <meta property="og:title" content="Annual Excellence Award Standings — Shutter League">
-<meta property="og:description" content="Annual Excellence Award programme standings. Your best 6 evaluations in your strongest genre.">
+<meta property="og:description" content="Annual Excellence Award programme standings. Your best 6 evaluations in your strongest interest area.">
 <meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -237,8 +237,8 @@
     {# ── GENRE TRACK ── #}
     {% if genres_dict %}
     <p class="aeas-section-hdr" style="margin-top:40px;">
-        Genre — {{ genres_dict.values() | map('length') | sum }} participant{{ 's' if (genres_dict.values() | map('length') | sum) != 1 }}
-        across {{ genres_dict | length }} genre{{ 's' if genres_dict | length != 1 }}
+        Interest — {{ genres_dict.values() | map('length') | sum }} participant{{ 's' if (genres_dict.values() | map('length') | sum) != 1 }}
+        across {{ genres_dict | length }} interest{{ 's' if genres_dict | length != 1 }}
     </p>
 
     {% for genre, participants in genres_dict.items() %}
@@ -280,7 +280,7 @@
 
     {% else %}
     <p class="aeas-section-hdr" style="margin-top:40px;">Genre</p>
-    <div class="aeas-empty">No Genre participations registered yet for {{ year }}.</div>
+    <div class="aeas-empty">No interest area participations registered yet for {{ year }}.</div>
     {% endif %}
 
 </div>
