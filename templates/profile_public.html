@@ -114,7 +114,7 @@
     letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
   }
 
-  /* ── Genre bar ── */
+  /* ── Interest bar ── */
   .genre-section { margin-bottom: 32px; }
   .section-title {
     font-family: var(--font-mono); font-size: 14px; font-weight: 600;
@@ -277,15 +277,15 @@
     </div>
     <div class="pstat">
       <div class="pstat-val">{{ avg_score }}</div>
-      <div class="pstat-lbl">Avg Score</div>
+      <div class="pstat-lbl">Avg Evaluation</div>
     </div>
     <div class="pstat">
       <div class="pstat-val">{{ best_score }}</div>
-      <div class="pstat-lbl">Best Score</div>
+      <div class="pstat-lbl">Best Evaluation</div>
     </div>
     <div class="pstat">
       <div class="pstat-val">{{ genres_count }}</div>
-      <div class="pstat-lbl">Genres</div>
+      <div class="pstat-lbl">Interests</div>
     </div>
   </div>
 
@@ -305,11 +305,11 @@
   </div>
   {% endif %}
 
-  <!-- ── Genres ── -->
+  <!-- ── Interests ── -->
   {% if genre_list %}
   <div class="genre-section">
     <div class="section-title">
-      <span>Genres</span>
+      <span>Interests</span>
     </div>
     <div class="genre-pills">
       {% for g in genre_list %}
@@ -349,8 +349,8 @@
 
   <!-- ── CTA ── -->
   <div class="profile-cta">
-    <p>Want your own ranked portfolio?<br>
-    Upload your work and get a scientific score, a city rank, and a public profile.</p>
+    <p>Want your own standing in the platform?<br>
+    Upload your work and get a scientific evaluation, a city standing, and a public profile.</p>
     <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-right:10px; min-height:44px; display:inline-flex; align-items:center;">Join Free →</a>
     <a href="{{ url_for('leaderboard') }}" class="btn" style="min-height:44px; display:inline-flex; align-items:center;">View Community</a>
   </div>
