@@ -205,7 +205,7 @@
         <div class="form-group">
           <label>Genre <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(applies to all)</span></label>
           <select name="genre" required>
-            <option value="" disabled selected>Select a genre…</option>
+            <option value="" disabled selected>Select an interest…</option>
             {% for g in genres %}
             <option value="{{ g }}">{{ g }}</option>
             {% endfor %}
@@ -674,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
       clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
       if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`;  overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;        overlaySub.textContent = 'Transferring to server.'; }
       else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine evaluating image ${imgNum}…`;          overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
-      else if (imgSecs < 28) { overlayPhase.textContent = `EVALUATING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI evaluation for image ${imgNum}…`;   overlaySub.textContent = 'Applying genre weights and safeguards.'; }
+      else if (imgSecs < 28) { overlayPhase.textContent = `EVALUATING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI evaluation for image ${imgNum}…`;   overlaySub.textContent = 'Applying interest weights and safeguards.'; }
       else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating evaluation card for image ${imgNum}…`;   overlaySub.textContent = 'Building archetype and improvement tip.'; }
     }, 1000);
 
