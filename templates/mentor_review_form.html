@@ -81,7 +81,7 @@ body:has(.sl-mrf) main { padding: 0 !important; max-width: none !important; marg
         {% endif %}
 
         <div class="sl-mrf-ctx-body">
-          <div class="sl-mrf-ctx-title">Submission Details</div>
+          <div class="sl-mrf-ctx-title">Session Details</div>
           <div class="sl-mrf-ctx-row">
             <span class="sl-mrf-ctx-key">Photographer</span>
             <span class="sl-mrf-ctx-val">{{ mentor_session.full_name or mentor_session.username }}</span>
@@ -137,7 +137,7 @@ body:has(.sl-mrf) main { padding: 0 !important; max-width: none !important; marg
                     placeholder="Write your full review here. Be specific, honest, and constructive. Address what the photographer asked for, acknowledge strengths, and give clear improvements they can act on."
                     required minlength="50">{{ request.form.get('review_text', '') }}</textarea>
           <div class="sl-mrf-char-count" id="charCount">0 characters</div>
-          <p class="hint">Your review will be emailed to the photographer immediately on submission.</p>
+          <p class="hint">Your review will be emailed to the photographer immediately on sending.</p>
         </div>
         <button type="submit" class="sl-mrf-submit">Submit Review &amp; Notify Photographer</button>
       </form>
