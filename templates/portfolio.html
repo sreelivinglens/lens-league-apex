@@ -172,7 +172,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
   <div class="sl-port-stats">
     {% if stats.total %}
     <div class="sl-port-stat">
-      <div class="sl-port-stat-label">Images scored</div>
+      <div class="sl-port-stat-label">Photographs evaluated</div>
       <div class="sl-port-stat-val">{{ stats.total }}</div>
     </div>
     {% endif %}
@@ -185,7 +185,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
     {% endif %}
     {% if stats.best_score %}
     <div class="sl-port-stat">
-      <div class="sl-port-stat-label">Best score</div>
+      <div class="sl-port-stat-label">Best evaluation</div>
       <div class="sl-port-stat-val">{{ "%.2f"|format(stats.best_score|float) }}</div>
     </div>
     {% endif %}
