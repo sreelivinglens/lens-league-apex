@@ -4238,7 +4238,8 @@ def dashboard():
     try:
         if current_user.city:
             from engine.seasonal_calendar import (
-                get_personalised_advisory, get_primary_genre as _gpg2,
+                get_personalised_advisory, get_dashboard_advisory,
+                get_primary_genre as _gpg2,
                 log_advisory_shown, check_advisory_follow_up,
             )
             from engine.city_event_scan import get_live_event_advisory
@@ -4270,9 +4271,20 @@ def dashboard():
                 )
             else:
                 # ── Green advisory: check follow-up + run Sherpa ──────────────
+                # Session 142 — fetch base advisory first so we have calendar_id
+                # before calling check_advisory_follow_up. Without calendar_id
+                # the follow-up check always returns False (city-level logs are
+                # not specific enough for the location match).
+                _base_advisory = get_dashboard_advisory(
+                    db.session,
+                    current_user.city,
+                    _adv_genre or 'Wildlife',
+                    datetime.utcnow().month,
+                )
+                _cal_id = _base_advisory.get('calendar_id') if _base_advisory else None
                 _adv_follow_up = check_advisory_follow_up(
                     db.session, current_user.id,
-                    calendar_id=None,
+                    calendar_id=_cal_id,
                 )
                 _dash_advisory = get_personalised_advisory(
                     db.session,
@@ -4286,7 +4298,7 @@ def dashboard():
                 if _dash_advisory:
                     log_advisory_shown(
                         db.session, current_user.id, current_user.city,
-                        calendar_id=None,
+                        calendar_id=_cal_id,
                     )
     except Exception as _adv_err:
         app.logger.warning(f'[dashboard] advisory/live_event: {_adv_err}')
@@ -9326,6 +9338,8 @@ def download_card_pdf(image_id):
         if _cal_ids_raw:
             import json as _jsc
             _cal_ids = _jsc.loads(_cal_ids_raw) if isinstance(_cal_ids_raw, str) else _cal_ids_raw
+            if isinstance(_cal_ids, int):
+                _cal_ids = [_cal_ids]
             _location_links = _gll(db.session, _cal_ids)
     except Exception:
         pass
