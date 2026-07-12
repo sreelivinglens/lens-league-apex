@@ -315,7 +315,7 @@
   {% if current_user.is_authenticated %}
   <a href="{{ url_for('download_card', image_id=image.id) }}"
      class="action-btn action-primary"
-     target="_blank">↓ Save Rating Card (PDF)</a>
+     target="_blank">↓ Save Evaluation Card (PDF)</a>
   {% else %}
   <a href="{{ url_for('register') }}" class="action-btn action-primary">Get My Images Rated Free →</a>
   {% endif %}
