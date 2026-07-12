@@ -32,9 +32,9 @@ DIM_LBL   = HexColor('#334455')   # dark label text
 ROW_SEP   = HexColor('#A0BDD0')
 
 # Pastel sky blue gradient stops (light → very light)
-GRAD_TOP  = HexColor('#C2DCF0')   # medium pastel sky
+GRAD_TOP  = HexColor('#EBF5FB')   # near-white sky — top of page (lightest)
 GRAD_MID  = HexColor('#D6EAF8')   # pastel sky blue
-GRAD_BOT  = HexColor('#EBF5FB')   # near-white sky
+GRAD_BOT  = HexColor('#C2DCF0')   # medium pastel sky — bottom of page (slightly deeper)
 
 # Pastel where-to-shoot background
 WHERE_BG      = HexColor('#E8F2EC')
@@ -232,7 +232,7 @@ def _draw_page1(c, data):
 
     # ── Sky-blue gradient background for score band + rows ──
     _draw_gradient_bg(c, 0, FOOTER_H, PW, band_top - FOOTER_H,
-                      GRAD_TOP, GRAD_BOT)
+                      GRAD_BOT, GRAD_TOP)
 
     score_str = f"{float(data.get('score',0)):.2f}"
     tier_str  = (data.get('tier') or '').upper()
@@ -337,7 +337,7 @@ def _draw_page1(c, data):
     LABEL_GAP = 5*mm     # explicit gap between label and body text (~2 lines breathing room)
     MAX_LINES = 3
 
-    ry = wso_end - 8*mm
+    ry = wso_end - 3*mm
 
     for i, (label, raw) in enumerate(row_data):
         body   = _clean(raw)
