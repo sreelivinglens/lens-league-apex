@@ -59,7 +59,7 @@
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
       <h1>Submit to this week's challenge</h1>
-      <p>Select a scored image from your portfolio — or upload a new one.</p>
+      <p>Select an evaluated photograph from your portfolio — or upload a new one.</p>
     </div>
     <a href="{{ url_for('upload') }}?next=challenge"
        class="btn btn-solid" style="white-space:nowrap; flex-shrink:0;">
@@ -71,7 +71,7 @@
   <div style="background:var(--surface-2); border:1px solid var(--gold-dark);
               border-left:3px solid var(--gold); border-radius:var(--radius-md);
               padding:14px 18px; margin-bottom:20px; font-size:15px; color:var(--text-secondary);">
-    ✓ Your new image has been scored and is highlighted below. Select it to submit.
+    ✓ Your new image has been evaluated and is highlighted below. Select it to send.
   </div>
   {% endif %}
 
@@ -84,7 +84,7 @@
       {% if slots_used == 0 %}
         You can submit up to <strong>{{ slot_limit }}</strong> image{{ 's' if slot_limit > 1 else '' }} this week
       {% else %}
-        <strong>{{ slots_remaining }}</strong> submission{{ 's' if slots_remaining != 1 else '' }} remaining this week &nbsp;·&nbsp; {{ slots_used }}/{{ slot_limit }} used
+        <strong>{{ slots_remaining }}</strong> photograph{{ 's' if slots_remaining != 1 else '' }} remaining this week &nbsp;·&nbsp; {{ slots_used }}/{{ slot_limit }} used
       {% endif %}
     </div>
   </div>
@@ -154,8 +154,8 @@
   <div class="no-images">
     <div style="font-size:18px; margin-bottom:12px;">No eligible images found.</div>
     <div style="margin-bottom:20px;">
-      You need at least one scored image to enter the challenge.<br>
-      Upload and score an image first, then come back.
+      You need at least one evaluated photograph to enter the challenge.<br>
+      Upload and have a photograph evaluated first, then come back.
     </div>
     <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
       <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an image →</a>
