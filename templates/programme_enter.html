@@ -200,12 +200,12 @@
     <span class="contest-meta-pill gold">{{ month_name }}</span>
     <span class="contest-meta-pill">{{ track | title }} League</span>
     <span class="contest-meta-pill">{{ genre_label }}</span>
-    <span class="contest-meta-pill">One entry per genre</span>
+    <span class="contest-meta-pill">One participation per interest area</span>
     <span class="contest-meta-pill">Peer-rated blind</span>
   </div>
 
   {% if existing %}
-  <!-- Show current entry -->
+  <!-- Show current participation -->
   <div class="current-entry-banner">
     {% if existing.image.thumb_url %}
     <img src="{{ existing.image.thumb_url }}" alt="{{ existing.image.asset_name }}" class="current-entry-thumb">
@@ -214,18 +214,18 @@
       <div class="current-entry-label">✅ Current Entry</div>
       <div class="current-entry-name">{{ existing.image.asset_name or 'Untitled' }}</div>
       <div class="current-entry-meta">
-        Score {{ "%.2f"|format(existing.image.score) }} · {{ existing.image.tier }}
+        Evaluation {{ "%.2f"|format(existing.image.score) }} · {{ existing.image.tier }}
         · Entered {{ existing.entered_at.strftime('%d %b %Y') }}
       </div>
     </div>
-    <div style="font-size:13px; color:var(--text-muted);">Select a different image below to change your entry.</div>
+    <div style="font-size:13px; color:var(--text-muted);">Select a different image below to change your participation.</div>
   </div>
   {% endif %}
 
   <form method="POST" id="entryForm">
     {% if eligible %}
     <p style="font-size:14px; color:var(--text-secondary); margin-bottom:20px;">
-      Select your best image for this genre. Only your scored {{ track | title }} League images are shown.
+      Select your best image for this interest area. Only your evaluated {{ track | title }} League images are shown.
       <strong style="color:var(--text-primary);">{{ eligible|length }} image{{ 's' if eligible|length != 1 else '' }} eligible.</strong>
     </p>
 
@@ -251,25 +251,25 @@
     <!-- Sticky submit bar -->
     <div class="submit-bar">
       <div class="submit-bar-note">
-        <strong>One entry per genre per month.</strong><br>
-        You can change your entry any time before the month closes.
+        <strong>One participation per interest area per month.</strong><br>
+        You can change your selection any time before the month closes.
       </div>
       <div style="display:flex; gap:12px; flex-wrap:wrap;">
         <a href="{{ url_for('contests') }}" class="btn">Cancel</a>
         <button type="submit" class="btn btn-solid" id="submitBtn"
                 style="padding:12px 28px; font-size:12px; letter-spacing:1.5px;">
-          {% if existing %}Update Entry &rarr;{% else %}Confirm Entry &rarr;{% endif %}
+          {% if existing %}Update Participation &rarr;{% else %}Confirm Participation &rarr;{% endif %}
         </button>
       </div>
     </div>
 
     {% else %}
     <div class="empty-eligible">
-      <p>You have no scored {{ track | title }} League images in <strong>{{ genre_label }}</strong> yet.</p>
-      <p style="margin-bottom:24px;">Upload and score an image in this genre first, then come back to enter.</p>
+      <p>You have no evaluated {{ track | title }} League images in <strong>{{ genre_label }}</strong> yet.</p>
+      <p style="margin-bottom:24px;">Upload and have an image evaluated in this interest area first, then come back to participate.</p>
       <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image &rarr;</a>
     </div>
-    <a href="{{ url_for('contests') }}" class="btn">Back to Contests</a>
+    <a href="{{ url_for('contests') }}" class="btn">Back to Programmes</a>
     {% endif %}
   </form>
 
