@@ -298,13 +298,13 @@
   <!-- Register CTA — logged-out only -->
   {% if not current_user.is_authenticated %}
   <div class="register-cta">
-    <div class="cta-eyebrow">You just saw what a score looks like.</div>
-    <h3>What would YOUR photo score?</h3>
+    <div class="cta-eyebrow">You just saw what an evaluation looks like.</div>
+    <h3>What would YOUR photo evaluate at?</h3>
     <p>Upload free. Get your number in 60 seconds.</p>
     <div class="cta-btns">
       <a href="{{ url_for('register') }}" class="btn-join-cta">FIND OUT FREE →</a>
     </div>
-    <div class="cta-note">No credit card &nbsp;·&nbsp; 3 free scores &nbsp;·&nbsp; Instant result</div>
+    <div class="cta-note">No credit card &nbsp;·&nbsp; 3 free evaluations &nbsp;·&nbsp; Instant result</div>
   </div>
   {% endif %}
 
@@ -352,7 +352,7 @@
           <option value="">— select —</option>
           <option value="AI-generated">AI-generated</option>
           <option value="Stolen">Stolen / not their work</option>
-          <option value="Duplicate">Duplicate submission</option>
+          <option value="Duplicate">Duplicate photograph</option>
           <option value="Other">Other</option>
         </select>
       </div>
