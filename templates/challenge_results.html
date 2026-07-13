@@ -7,7 +7,7 @@
   .results-hero  { background: var(--surface-2); border: 1px solid var(--border);
                    border-left: 3px solid var(--gold); border-radius: var(--radius-md);
                    padding: 28px 32px; margin-bottom: 32px; }
-  .week-label    { font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  .week-label    { font-family: var(--font-mono); font-size: 13px; font-weight: 600;
                    letter-spacing: 2px; color: var(--gold); text-transform: uppercase;
                    margin-bottom: 8px; }
   .results-title { font-size: 32px; font-weight: 700; color: var(--text-primary);
@@ -23,7 +23,7 @@
   .podium-card.rank-3 { border-color: var(--border); }
   .podium-img    { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
   .podium-info   { padding: 14px 16px; }
-  .podium-rank   { font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  .podium-rank   { font-family: var(--font-mono); font-size: 13px; font-weight: 700;
                    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
   .podium-rank.rank-1 { color: var(--gold); }
   .podium-rank.rank-2 { color: var(--text-muted); }
@@ -44,7 +44,16 @@
   .sub-img       { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
   .sub-info      { padding: 8px 10px; }
   .sub-username  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-  .sub-score     { font-family: var(--font-mono); font-size: 12px; color: var(--gold); margin-top: 1px; }
+  .sub-score     { font-family: var(--font-mono); font-size: 13px; color: var(--gold); margin-top: 1px; }
+
+@media (max-width: 600px) {
+  .results-wrap { padding: 0 8px; }
+  .results-hero { padding: 16px 18px; margin-bottom: 20px; }
+  .results-title { font-size: 22px; }
+  .podium { grid-template-columns: 1fr; }
+  .sub-grid { grid-template-columns: repeat(2, 1fr); }
+  .results-wrap .btn { min-height: 44px; display: inline-flex; align-items: center; }
+}
 </style>
 {% endblock %}
 
