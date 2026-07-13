@@ -18,7 +18,7 @@
   @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
   .blind-text {
     font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold);
+    letter-spacing: 1.5px; text-transform: uppercase; color: #2C3E6B;
   }
 
   .image-frame {
@@ -35,8 +35,8 @@
   .genre-pill {
     font-family: var(--font-mono); font-size: 13px; font-weight: 600;
     letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 14px;
-    border-radius: 99px; border: 1px solid var(--gold-dark); color: var(--gold);
-    background: var(--gold-subtle);
+    border-radius: 99px; border: 1px solid #2C3E6B; color: #2C3E6B;
+    background: rgba(44,62,107,0.08);
   }
   .image-frame img {
     width: 100%; max-height: 520px; object-fit: contain; display: block;
@@ -50,7 +50,7 @@
   }
   .score-section-title {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    letter-spacing: 2px; text-transform: uppercase; color: #2C3E6B;
     margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
   }
   .dimension-row { margin-bottom: 28px; }
@@ -67,6 +67,7 @@
   .dimension-value {
     font-family: var(--font-mono); font-size: 32px; font-weight: 700;
     color: var(--gold); min-width: 52px; text-align: right; flex-shrink: 0; line-height: 1;
+    background: rgba(0,0,0,0.75); border-radius: 4px; padding: 2px 8px;
   }
   .slider-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
   .slider-label { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); flex-shrink: 0; }
@@ -96,6 +97,7 @@
   }
   .score-preview-value {
     font-family: var(--font-mono); font-size: 36px; font-weight: 700; color: var(--gold);
+    background: rgba(0,0,0,0.75); border-radius: 4px; padding: 2px 8px;
   }
 
   /* Flag section */
@@ -250,7 +252,7 @@
         <input type="radio" name="flag_type" value="ai_generated" disabled>
         <div>
           <div style="font-weight:700;">AI-Generated
-            <span style="font-family:var(--font-mono); font-size:12px; font-weight:600;
+            <span style="font-family:var(--font-mono); font-size: 13px; font-weight:600;
                          letter-spacing:1px; text-transform:uppercase; color:var(--green);
                          margin-left:10px; padding:2px 8px; border:1px solid var(--green);
                          border-radius:3px;">✓ RAW Verified</span>
