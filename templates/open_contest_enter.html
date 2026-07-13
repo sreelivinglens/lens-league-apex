@@ -8,11 +8,11 @@
 <style>
   .oc-wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
 
-  .oc-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  .oc-eyebrow { font-family: var(--font-mono); font-size: 13px; font-weight: 600;
     letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
 
   .oc-heading { font-family: var(--font-display); font-size: clamp(28px,5vw,42px);
-    font-weight: 700; color: var(--text-primary); line-height: 1.15; margin-bottom: 8px; }
+    font-weight: 700; color: var(--text-primary); line-height: 1.5; margin-bottom: 8px; }
 
   .oc-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 40px; }
 
@@ -24,7 +24,7 @@
     border: 2px solid var(--border); color: var(--text-muted); background: var(--surface-2); flex-shrink: 0; }
   .oc-step.active .oc-step-num { border-color: var(--gold); color: var(--gold); background: rgba(200,168,75,.1); }
   .oc-step.done .oc-step-num { border-color: var(--gold); background: var(--gold); color: #000; }
-  .oc-step-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+  .oc-step-label { font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
   .oc-step.active .oc-step-label { color: var(--text-primary); }
   .oc-step-line { flex: 1; height: 1px; background: var(--border); min-width: 24px; margin: 0 8px; }
@@ -33,7 +33,7 @@
   .oc-card { background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; }
 
-  .oc-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  .oc-label { font-family: var(--font-mono); font-size: 13px; font-weight: 600;
     letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; display: block; }
 
   /* Interest area grid */
@@ -41,7 +41,7 @@
   .genre-tile { position: relative; cursor: pointer; }
   .genre-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
   .genre-tile-inner { padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 1px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px;
     color: var(--text-muted); text-transform: uppercase; text-align: center;
     transition: all .15s ease; background: var(--surface-1); }
   .genre-tile input:checked + .genre-tile-inner { border-color: var(--gold); color: var(--gold);
@@ -59,10 +59,10 @@
   .img-tile input:checked + .img-tile-inner { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(200,168,75,.3); }
   .img-tile-inner img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
   .img-tile-meta { padding: 8px 10px; }
-  .img-tile-name { font-size: 11px; color: var(--text-primary); white-space: nowrap;
+  .img-tile-name { font-size: 13px; color: var(--text-primary); white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-  .img-tile-score { font-family: var(--font-mono); font-size: 11px; color: var(--gold); margin-top: 2px; }
-  .img-tile-genre { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: .5px; }
+  .img-tile-score { font-family: var(--font-mono); font-size: 13px; color: var(--gold); margin-top: 2px; }
+  .img-tile-genre { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); letter-spacing: .5px; }
 
   /* Summary card */
   .summary-card { background: var(--surface-2); border: 1px solid var(--gold-dark);
@@ -72,7 +72,7 @@
   .summary-row { display: flex; justify-content: space-between; align-items: center;
     padding: 12px 0; border-bottom: 1px solid var(--border); }
   .summary-row:last-child { border-bottom: none; }
-  .summary-key { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+  .summary-key { font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--text-muted); }
   .summary-val { font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: right; }
   .summary-fee { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--gold); }
@@ -84,16 +84,16 @@
   .payment-stub-icon { font-size: 28px; flex-shrink: 0; }
   .payment-stub-text { flex: 1; }
   .payment-stub-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-  .payment-stub-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: .5px; }
+  .payment-stub-note { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); letter-spacing: .5px; }
 
   /* Buttons */
   .oc-btn-primary { display: inline-block; padding: 14px 32px; background: var(--gold);
-    color: #000; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    color: #000; font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; border: none; border-radius: var(--radius-md);
     cursor: pointer; text-decoration: none; transition: opacity .15s; }
   .oc-btn-primary:hover { opacity: .85; }
   .oc-btn-secondary { display: inline-block; padding: 14px 32px; background: transparent;
-    color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; font-weight: 600;
     letter-spacing: 2px; text-transform: uppercase; border: 1px solid var(--border);
     border-radius: var(--radius-md); cursor: pointer; text-decoration: none; transition: all .15s; }
   .oc-btn-secondary:hover { border-color: var(--gold-dark); color: var(--text-primary); }
@@ -101,6 +101,11 @@
 
   .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
   .empty-state a { color: var(--gold); text-decoration: none; font-weight: 600; }
+@media (max-width: 600px) {
+  .oc-wrap { padding: 24px 14px 56px; }
+  .oc-btn-primary, .oc-btn-secondary { min-height: 44px; width: 100%; text-align: center; }
+  h1.oc-heading { text-shadow: none; font-size: 28px; }
+}
 </style>
 {% endblock %}
 
@@ -160,7 +165,7 @@
 
       <span class="oc-label">2 — Choose Your Image</span>
       {% if entered_genres %}
-      <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:16px;letter-spacing:.5px;">
+      <p style="font-family:var(--font-mono);font-size: 13px;color:var(--text-muted);margin-bottom:16px;letter-spacing:.5px;">
         ✓ marked interest areas already have a participation record this year.
       </p>
       {% endif %}
@@ -217,7 +222,7 @@
         <span class="summary-val summary-fee"><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></span>
       </div>
     </div>
-    <div style="padding:0 32px 24px; font-size:12px; color:var(--text-muted); line-height:1.6; font-family:var(--font-mono);">
+    <div style="padding:0 32px 24px; font-size: 13px; color:var(--text-muted); line-height:1.6; font-family:var(--font-mono);">
       This fee covers jury review and administration — it is not a participation stake, and no monetary award is paid on results.
     </div>
   </div>
