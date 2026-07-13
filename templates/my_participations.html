@@ -8,7 +8,7 @@
   .month-group { margin-bottom: 40px; }
   .month-heading {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -24,7 +24,7 @@
     background: var(--gold-subtle);
     border: 1px solid var(--gold-dark);
     color: var(--gold);
-    font-size: 9px;
+    font-size: 13px;
     padding: 2px 8px;
     border-radius: 99px;
     letter-spacing: 1.5px;
@@ -62,7 +62,7 @@
     margin-bottom: 3px;
   }
   .entry-meta {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     font-family: var(--font-mono);
     display: flex;
@@ -80,7 +80,7 @@
   }
   .entry-score small {
     display: block;
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1.5px;
     color: var(--text-muted);
     font-weight: 400;
@@ -96,6 +96,12 @@
     text-align: center;
   }
   .empty-entries p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.7; }
+@media (max-width: 600px) {
+  .entries-wrap { padding: 0 12px; }
+  .entry-row { flex-wrap: wrap; }
+  .btn, .btn.btn-solid { min-height: 44px; width: 100%; text-align: center; }
+  h1 { text-shadow: none; }
+}
 </style>
 {% endblock %}
 
@@ -156,7 +162,7 @@
         {% if entry.contest_month == current_month %}
         <div class="entry-actions">
           <a href="{{ url_for('contest_enter_monthly', genre=entry.genre) }}"
-             class="btn" style="font-size:11px; padding:6px 14px;">Change</a>
+             class="btn" style="font-size: 13px; padding:6px 14px;">Change</a>
         </div>
         {% endif %}
       </div>
