@@ -29,7 +29,9 @@
   .not-eligible { color:#7A1A1A; font-weight:700; }
 
   /* Mobile: stack table rows as cards */
-  @media (max-width:600px) {
+  @media (max-width: 600px) {
+    .oc-btn-primary, .btn, button[type="submit"], a[class*="btn"] { min-height: 44px; }
+    details summary { min-height: 44px; display: flex; align-items: center; }
     .refund-table, .refund-table thead, .refund-table tbody,
     .refund-table th, .refund-table td, .refund-table tr { display:block; }
     .refund-table thead { display:none; }
@@ -50,7 +52,7 @@
   .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
   .policy-links a { font-size:16px; color:#2C3E6B; text-decoration:none; }
   .policy-links a:hover { text-decoration:underline; }
-  @media (max-width:600px) {
+  @media (max-width: 600px) {
     .policy-hero h1 { font-size:28px; }
   }
 </style>
