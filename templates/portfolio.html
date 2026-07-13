@@ -4,7 +4,8 @@
 {% block extra_css %}
 <style>
 body:has(.sl-port) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
-.sl-port { background: #F7F5F2; min-height: 100vh; font-family: 'Inter', sans-serif !important; }
+.sl-port { background: #F7F5F2; min-height: 100vh;
+  min-height: -webkit-fill-available; font-family: 'Inter', sans-serif !important; }
 .sl-port * { font-family: 'Inter', sans-serif !important; }
 
 /* Hero */
@@ -14,30 +15,30 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .sl-port-avatar-initials { font-size: 24px; font-weight: 700; color: #F5C518; font-family: 'Courier New', monospace !important; }
 .sl-port-name-block { flex: 1; min-width: 200px; }
-.sl-port-name { font-size: 26px; font-weight: 700; color: #FFFFFF; line-height: 1.1; margin-bottom: 6px; text-shadow: none; }
+.sl-port-name { font-size: 26px; font-weight: 700; color: #FFFFFF; line-height: 1.5; margin-bottom: 6px; text-shadow: none; }
 .sl-port-meta { display: flex; gap: 16px; flex-wrap: wrap; }
 .sl-port-meta-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: rgba(255,255,255,0.55); }
 .sl-port-meta-item i { font-size: 14px; color: #1a3a6e; }
 .sl-port-tier { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,197,24,0.12); border: 1px solid rgba(245,197,24,0.30); padding: 7px 14px; flex-shrink: 0; }
-.sl-port-tier-label { font-family: 'Courier New', monospace !important; font-size: 12px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(255,255,255,0.40); }
+.sl-port-tier-label { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(255,255,255,0.40); }
 .sl-port-tier-val { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #1a1a18; }
-.sl-port-share-btn { background: #F5C518; color: #1A1A18; font-family: 'Courier New', monospace !important; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 18px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 44px; }
+.sl-port-share-btn { background: #F5C518; color: #1A1A18; font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 18px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 44px; }
 .sl-port-bio-row { border-top: 1px solid rgba(255,255,255,0.10); padding-top: 18px; }
 .sl-port-bio { font-size: 15px; color: rgba(255,255,255,0.68); line-height: 1.75; text-align: justify; }
-.sl-port-url { font-family: 'Courier New', monospace !important; font-size: 12px; color: rgba(255,255,255,0.22); margin-top: 8px; letter-spacing: 0.04em; }
+.sl-port-url { font-family: 'Courier New', monospace !important; font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 8px; letter-spacing: 0.04em; }
 
 /* Stats bar */
 .sl-port-stats { background: #EDEAE4; padding: 18px 48px; display: flex; gap: 0; border-bottom: 1px solid rgba(26,26,24,0.08); }
 .sl-port-stat { flex: 1; padding: 0 20px; border-right: 1px solid rgba(26,26,24,0.12); }
 .sl-port-stat:first-child { padding-left: 0; }
 .sl-port-stat:last-child { border-right: none; }
-.sl-port-stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 3px; }
+.sl-port-stat-label { font-size: 13px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 3px; }
 .sl-port-stat-val { font-size: 20px; font-weight: 700; color: #1A1A18; font-family: 'Courier New', monospace !important; }
-.sl-port-stat-sub { font-size: 12px; color: rgba(26,26,24,0.45); }
+.sl-port-stat-sub { font-size: 13px; color: rgba(26,26,24,0.45); }
 
 /* Body */
 .sl-port-body { padding: 36px 48px; max-width: 1080px; text-align: justify; }
-.sl-port-section-title { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(26,26,24,0.40); }
+.sl-port-section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(26,26,24,0.40); }
 .sl-port-section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 
 /* Awards */
@@ -46,11 +47,11 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-award-icon { width: 36px; height: 36px; background: #1A2744; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sl-port-award-icon i { font-size: 18px; color: #F5C518; }
 .sl-port-award-title { font-size: 13px; font-weight: 700; color: #1A1A18; }
-.sl-port-award-sub { font-size: 12px; color: rgba(26,26,24,0.45); }
+.sl-port-award-sub { font-size: 13px; color: rgba(26,26,24,0.45); }
 
 /* Filter */
 .sl-port-filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.sl-port-filter-btn { font-family: 'Courier New', monospace !important; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 14px; border: 1px solid rgba(26,26,24,0.18); background: transparent; cursor: pointer; color: rgba(26,26,24,0.55); min-height: 44px; }
+.sl-port-filter-btn { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 14px; border: 1px solid rgba(26,26,24,0.18); background: transparent; cursor: pointer; color: rgba(26,26,24,0.55); min-height: 44px; }
 .sl-port-filter-btn.active { background: #1A2744; color: #F5C518; border-color: #1A2744; }
 
 /* Image grid */
@@ -59,13 +60,13 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.10); overflow: hidden; }
 .sl-port-card-img { width: 100%; aspect-ratio: 4/3; object-fit: contain; display: block; background: #1a1a18; }
 .sl-port-card-img-ph { width: 100%; aspect-ratio: 4/3; background: #EDEAE4; display: flex; align-items: center; justify-content: center; }
-.sl-port-card-img-ph i { font-size: 28px; color: rgba(26,26,24,0.15); }
+.sl-port-card-img-ph i { font-size: 28px; color: rgba(26,26,24,0.55); }
 .sl-port-card-body { padding: 12px 14px; }
 .sl-port-card-title { font-size: 16px; font-weight: 700; color: #1A1A18; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sl-port-card-meta { display: flex; align-items: center; justify-content: space-between; }
-.sl-port-card-genre { font-size: 12px; color: rgba(26,26,24,0.45); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'Courier New', monospace !important; }
+.sl-port-card-genre { font-size: 13px; color: rgba(26,26,24,0.45); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'Courier New', monospace !important; }
 .sl-port-card-score { font-family: 'Courier New', monospace !important; font-size: 16px; font-weight: 700; color: #1A1A18; }
-.sl-port-card-tier { font-size: 12px; font-family: 'Courier New', monospace !important; font-weight: 700; padding: 2px 8px; background: #1A2744; color: #F5C518; }
+.sl-port-card-tier { font-size: 13px; font-family: 'Courier New', monospace !important; font-weight: 700; padding: 2px 8px; background: #1A2744; color: #F5C518; }
 
 /* Genre proficiency */
 .sl-port-genre-section { margin-top: 36px; }
@@ -74,13 +75,13 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-genre-label { font-size: 13px; color: #1A1A18; width: 120px; flex-shrink: 0; }
 .sl-port-genre-bar-wrap { flex: 1; background: rgba(26,26,24,0.08); height: 8px; }
 .sl-port-genre-bar-fill { height: 8px; background: #1A2744; }
-.sl-port-genre-score { font-family: 'Courier New', monospace !important; font-size: 12px; font-weight: 700; color: #1A1A18; width: 40px; text-align: right; }
+.sl-port-genre-score { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #1A1A18; width: 40px; text-align: right; }
 
 /* Shared by SL badge */
 .sl-port-footer { padding: 24px 48px; border-top: 1px solid rgba(26,26,24,0.08); display: flex; align-items: center; justify-content: center; }
 .sl-port-footer-badge { display: flex; align-items: center; gap: 8px; }
-.sl-port-footer-badge span { font-size: 12px; color: rgba(26,26,24,0.40); }
-.sl-port-footer-badge a { font-family: 'Courier New', monospace !important; font-size: 12px; font-weight: 700; color: #1A2744; text-decoration: none; letter-spacing: 0.04em; }
+.sl-port-footer-badge span { font-size: 13px; color: rgba(26,26,24,0.40); }
+.sl-port-footer-badge a { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #1A2744; text-decoration: none; letter-spacing: 0.04em; }
 
 @media (max-width: 768px) {
   .sl-port-hero { padding: 20px 16px 18px; }
@@ -106,7 +107,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: #F5C518; font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 8px; min-height: 44px; min-width: 44px; }
 .sl-lightbox-caption { margin-top: 12px; text-align: center; }
 .sl-lightbox-title { font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
-.sl-lightbox-meta { font-family: 'Courier New', monospace !important; font-size: 12px; color: rgba(255,255,255,0.50); letter-spacing: 0.06em; }
+.sl-lightbox-meta { font-family: 'Courier New', monospace !important; font-size: 13px; color: rgba(255,255,255,0.50); letter-spacing: 0.06em; }
 .sl-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(26,26,24,0.60); border: 1px solid rgba(255,255,255,0.15); color: #F5C518; font-size: 20px; cursor: pointer; padding: 12px 14px; min-height: 44px; min-width: 44px; line-height: 1; }
 .sl-lightbox-prev { left: -56px; }
 .sl-lightbox-next { right: -56px; }
@@ -117,6 +118,10 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 /* Right-click protection */
 .sl-port-card-img, .sl-lightbox-img { pointer-events: none; }
 .sl-port-card { cursor: pointer; }
+@media (max-width: 600px) {
+  .sl-port-grid { grid-template-columns: 1fr !important; }
+  h1 { text-shadow: none; }
+}
 </style>
 {% endblock %}
 
@@ -254,7 +259,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
       {% endfor %}
     </div>
     {% else %}
-    <div style="text-align:center; padding: 48px 0; color: rgba(26,26,24,0.35); font-size: 16px;">No images in this portfolio yet.</div>
+    <div style="text-align:center; padding: 48px 0; color: rgba(26,26,24,0.60); font-size: 16px;">No images in this portfolio yet.</div>
     {% endif %}
 
     {% if genre_stats %}
