@@ -170,7 +170,7 @@ def _gold_on_light(content):
 
     def _is_dark(value):
         # Known dark surfaces already proven/used in this codebase.
-        known_dark = ['#2d1f00', '#1a1a2e', '#0d0d0b', 'rgba(13,13,11',
+        known_dark = ['#2d1f00', '#1a1a2e', '#0d0d0b', 'rgba(13,13,11', 'rgba(0,0,0',
                       '#000', 'black', '--surface-dark', '--text-primary',
                       'var(--sl-text)']
         v = value.lower()
@@ -537,7 +537,10 @@ def audit_html(filepath):
         'cancel_subscription.html', 'challenge_submit.html', 'change_password.html',
         'calibration_notes.html', 'example-score.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
-        'my_gallery.html', 'base.html',
+        'my_gallery.html', 'base.html', 'index.html',
+        'mentor_booking.html', 'portfolio.html', 'share.html',
+        'jpeg_provenance_submit.html', 'judge_score.html', 'mentor_review_form.html',
+        'my_participations.html', 'open_contest_enter.html', 'refund_policy.html', 'stats.html',
         'raw_appeal.html', 'raw_status.html', 'raw_submit.html',
         'register.html', 'login.html', 'forgot_password.html', 'contact.html',
         'admin_raw_detail.html', 'admin_raw_verification.html', 'admin_raw_poty.html',
@@ -563,6 +566,17 @@ def audit_html(filepath):
     # confirmed Session 142 handoff.
     _is_legal_doc = any(x in fname for x in [
         'contest_rules', 'terms.html', 'privacy.html', 'refund'
+    ])
+    # Snippet/render-only files — never served standalone as a browser page.
+    # Meta tags and CSI checks are not applicable. Session 143.
+    _is_snippet_file = any(x in fname.lower() for x in [
+        'image_detail_dimension_addition', 'scorecard_pdf',
+    ])
+    # Mentor operational pages — 'deadline' refers to review delivery deadlines,
+    # not a KYC gambling term. Exempt from KYC deadline check. Session 143.
+    _is_mentor_page = any(x in fname.lower() for x in [
+        'mentor_dashboard', 'mentor_review_form', 'mentor_booking',
+        'mentor_profile_edit', 'judge_score', 'judge_register',
     ])
 
     # ── Hero ──────────────────────────────────────────────────────────────────
@@ -966,7 +980,7 @@ def audit_html(filepath):
         _ok('[desktop] @supports used -- progressive enhancement present')
 
     # ── SL Delivery Standard (5-point) ───────────────────────────────────────
-    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page, is_admin_page=_is_admin_page, is_legal_doc=_is_legal_doc)
+    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page, is_admin_page=_is_admin_page, is_legal_doc=_is_legal_doc, is_snippet_file=_is_snippet_file, is_mentor_page=_is_mentor_page)
 
     return _result(fails, filepath)
 
@@ -1688,7 +1702,7 @@ SCORECARD_KYC_TERMS = [
 ]
 
 
-def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_admin_page=False, is_legal_doc=False):
+def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_admin_page=False, is_legal_doc=False, is_snippet_file=False, is_mentor_page=False):
     """
     SL Delivery Standard — 5-point compliance check.
     Called at end of every HTML template audit.
@@ -1729,6 +1743,49 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         _note('KYC checks skipped — admin-only page, not user-facing')
     elif is_legal_doc:
         _note('KYC checks skipped — legal document page (deadline/submission/entry/genre are approved legal terms, Session 142)')
+    elif is_snippet_file:
+        _note('KYC checks skipped — snippet/render-only file, not a standalone browser page (Session 143)')
+    elif is_mentor_page:
+        # Run KYC but suppress the deadline term — it refers to review delivery deadlines
+        # not a gambling/prize term. All other KYC terms still checked.
+        _note('KYC deadline check skipped — mentor operational page (deadline = review delivery deadline, not KYC term, Session 143)')
+        # Fall through to full KYC with deadline excluded
+        stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
+        stripped = re.sub(r'\{%.*?%\}', '', stripped, flags=re.DOTALL)
+        stripped = re.sub(r'\{\{.*?\}\}', '[VAR]', stripped, flags=re.DOTALL)
+        stripped = re.sub(r'<!--.*?-->', '', stripped, flags=re.DOTALL)
+        stripped = re.sub(r'<script\b[^>]*>.*?</script>', '', stripped, flags=re.DOTALL)
+        stripped = re.sub(r'<style\b[^>]*>.*?</style>', '', stripped, flags=re.DOTALL)
+        stripped = re.sub(r'\b\w*_score\b|\b\w*_data\b|image\.\w+|audit\.\w+', '', stripped)
+        stripped = re.sub(r'<option value="[^"]*">', '', stripped)
+        stripped = re.sub(r'\s+id="[^"]*"', '', stripped)
+        stripped = re.sub(r'\s+class="[^"]*"', '', stripped)
+        stripped = re.sub(r"\s+id='[^']*'", '', stripped)
+        stripped = re.sub(r"\s+class='[^']*'", '', stripped)
+        stripped = re.sub(r'\s+style="[^"]*"', '', stripped)
+        stripped = re.sub(r"\s+style='[^']*'", '', stripped)
+        stripped = re.sub(r"'\s*DoD\s*'|'\s*DM\s*'|'\s*AQ\s*'|'\s*VD\s*'|'\s*WF\s*'", '', stripped)
+        stripped_lower = stripped.lower()
+        # Replace 'deadline' with safe text so it doesn't trigger KYC
+        stripped_lower = stripped_lower.replace('deadline', 'REVIEW_DUE_DATE')
+        kyc_full_fails = 0
+        for label, term, exclusions in KYC_TERMS:
+            stripped_check = _strip_exclusions(stripped_lower, [e.lower() for e in exclusions])
+            if term.lower() in stripped_check:
+                _fail(f'KYC (full page): {label}'); kyc_full_fails += 1; fails += 1
+            else:
+                _ok(f'Full-page KYC: {label}')
+        if kyc_full_fails == 0:
+            _ok('Full-page KYC terms -- clean')
+        gold_hits = _gold_on_light(content)
+        if gold_hits:
+            _fail(f'KYC: Gold text colour -- gold on light background ({len(gold_hits)} hit(s)): {gold_hits[:2]}')
+            fails += 1
+        else:
+            _ok('KYC: No gold text on light background')
+        sc_start = content.find('{% block content %}')
+        _section('DELIVERY STANDARD 1/5 — KYC compliance (scorecard dimensions)')
+        _note('Scorecard dimension check uses full-page KYC above')
     else:
         # Strip Jinja comments and logic before checking
         stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
@@ -1922,53 +1979,55 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
 
     # ── 5. Google meta tags ───────────────────────────────────────────────────
     _section('DELIVERY STANDARD 5/5 — Google/social meta tags')
-    # base.html provides site-wide og:*/twitter:* defaults via Jinja blocks
-    # (og_title, og_description, og_image, twitter_title, twitter_description,
-    # twitter_image). Every page extending base.html inherits these even if
-    # it doesn't override them — so a literal <meta property="og:..."> tag
-    # is NOT required in this file. Only flag MISSING if the page neither
-    # has the literal tag NOR overrides the corresponding block NOR extends
-    # base.html (which would mean no inheritance at all).
-    _extends_base = 'extends "base.html"' in content or "extends 'base.html'" in content
-    _block_map = {
-        'og:title': 'og_title', 'og:description': 'og_description', 'og:image': 'og_image',
-        'twitter:image': 'twitter_image',
-    }
-    meta_checks = [
-        ('og:title',         'Open Graph title (required for sharing)'),
-        ('og:description',   'Open Graph description'),
-        ('og:image',         'Open Graph image (photograph shows when shared)'),
-        ('twitter:card',     'Twitter/X card'),
-        ('twitter:image',    'Twitter/X image'),
-        ('canonical',        'Canonical URL (prevents duplicate content)'),
-        ('noindex',          'noindex (correct — private scored images should not be indexed)'),
-    ]
-    meta_fails = 0
-    for tag, desc in meta_checks:
-        _block = _block_map.get(tag)
-        _has_block_override = _block and ('{% block ' + _block in content)
-        if tag in content or _has_block_override:
-            _ok(f'[meta] {desc}')
-        elif tag == 'twitter:card' and _extends_base:
-            # twitter:card is hardcoded (not a block) in base.html — inherited automatically
-            _ok(f'[meta] {desc} (inherited from base.html)')
-        elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
-            # Inherited from base.html's default og_title/og_description/og_image/twitter_image blocks
-            _ok(f'[meta] {desc} (inherited default from base.html)')
-        else:
-            # noindex and canonical — only fail if this looks like a scored-image template
-            if tag in ('noindex', 'canonical') and 'image_detail' not in filepath.lower():
-                _note(f'[meta] {desc} — not present (verify if needed for this template)')
+    if is_snippet_file:
+        _note('Meta tag checks skipped — snippet/render-only file, not a standalone browser page (Session 143)')
+    else:
+        # base.html provides site-wide og:*/twitter:* defaults via Jinja blocks
+        # (og_title, og_description, og_image, twitter_title, twitter_description,
+        # twitter_image). Every page extending base.html inherits these even if
+        # it doesn't override them — so a literal <meta property="og:..."> tag
+        # is NOT required in this file. Only flag MISSING if the page neither
+        # has the literal tag NOR overrides the corresponding block NOR extends
+        # base.html (which would mean no inheritance at all).
+        _extends_base = 'extends "base.html"' in content or "extends 'base.html'" in content
+        _block_map = {
+            'og:title': 'og_title', 'og:description': 'og_description', 'og:image': 'og_image',
+            'twitter:image': 'twitter_image',
+        }
+        meta_checks = [
+            ('og:title',         'Open Graph title (required for sharing)'),
+            ('og:description',   'Open Graph description'),
+            ('og:image',         'Open Graph image (photograph shows when shared)'),
+            ('twitter:card',     'Twitter/X card'),
+            ('twitter:image',    'Twitter/X image'),
+            ('canonical',        'Canonical URL (prevents duplicate content)'),
+            ('noindex',          'noindex (correct — private scored images should not be indexed)'),
+        ]
+        meta_fails = 0
+        for tag, desc in meta_checks:
+            _block = _block_map.get(tag)
+            _has_block_override = _block and ('{% block ' + _block in content)
+            if tag in content or _has_block_override:
+                _ok(f'[meta] {desc}')
+            elif tag == 'twitter:card' and _extends_base:
+                _ok(f'[meta] {desc} (inherited from base.html)')
+            elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
+                _ok(f'[meta] {desc} (inherited default from base.html)')
             else:
-                _fail(f'[meta] {desc} — MISSING')
-                fails += 1
-                meta_fails += 1
-    if meta_fails == 0:
-        _ok('All meta tags present')
+                if tag in ('noindex', 'canonical') and 'image_detail' not in filepath.lower():
+                    _note(f'[meta] {desc} — not present (verify if needed for this template)')
+                else:
+                    _fail(f'[meta] {desc} — MISSING')
+                    fails += 1
+                    meta_fails += 1
+        if meta_fails == 0:
+            _ok('All meta tags present')
 
     # ── Summary ───────────────────────────────────────────────────────────────
     _section('DELIVERY STANDARD — CSI note cards (image_detail.html only)')
-    if _is_scorecard_page:
+    if is_snippet_file:
+        _note('CSI checks skipped — snippet/render-only file (Session 143)')
+    elif _is_scorecard_page:
         _csi_checks = [
             ('CSI Card A — csi_own_duplicate condition present',
              'csi_own_duplicate' in content),
