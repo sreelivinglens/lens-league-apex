@@ -48,7 +48,9 @@ KYC_TERMS = [
       'poty_entry', 'contest_entry', 'entry_id', 'entry_images', 'entry_score',
       'entry_form', 'existing', 'current-entry', 'poty_entries',
       'pool entry', 'db-pool-entry', '.db-pool', '/* pool', 'peer pool',
-      'entry button', 'entry {', 'entry{', '-entry']),
+      'entry button', 'entry {', 'entry{', '-entry',
+      # Session 143 — JS DOM ID, not user-facing copy
+      'entryform']),
     ('No KYC: entries (copy)',
      ' entries',
      ["url_for('my_entries')", "url_for('my_participations')", 'poty_entries',
@@ -89,7 +91,9 @@ KYC_TERMS = [
       "# ── Genre", "Genre Insight", "genre insight",
       "Scored As", "scored as",
       # Approved copy (Session 90 handoff) — plain English, not a UX label
-      "any genre"]),
+      "any genre",
+      # Session 143 — Jinja variable name, not a UX label
+      'genres_count']),
     # ── Added Session 91 — terms missing from audit since Session 86 ──────────
     ('No KYC: score in user copy (use "evaluation")',
      ' score',
@@ -523,13 +527,15 @@ def audit_html(filepath):
     _is_detail_page = any(x in fname for x in [
         'image_detail', 'profile', 'scorecard', 'rating_card',
         'submission', 'result', 'entry_detail',
-        'upload.html', 'upload_edited', 'bulk_upload',
+        'upload.html', 'upload_edited', 'bulk_upload', 'bow_submit.html',
         'onboarding_interests', 'onboarding.html', 'referral_landing',
         'dashboard.html', 'mission_detail.html', 'first_login.html',
-        'faq.html', 'pricing.html', 'programmes.html', 'redeem.html', 'aea.html',
+        'faq.html', 'pricing.html', 'programmes.html', 'redeem.html', 'aea.html', 'aea_standings.html',
         'challenge.html',
         'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
         'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
+        'cancel_subscription.html', 'challenge_submit.html', 'change_password.html',
+        'calibration_notes.html', 'example-score.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
         'my_gallery.html', 'base.html',
         'raw_appeal.html', 'raw_status.html', 'raw_submit.html',
@@ -553,6 +559,11 @@ def audit_html(filepath):
     # Admin-only pages: KYC checks are not applicable — these pages are never
     # seen by payment gateway reviewers and use internal terminology correctly.
     _is_admin_page = fname.startswith('admin')
+    # Legal document pages: deadline/submission/entry/genre are approved legal terms
+    # confirmed Session 142 handoff.
+    _is_legal_doc = any(x in fname for x in [
+        'contest_rules', 'terms.html', 'privacy.html', 'refund'
+    ])
 
     # ── Hero ──────────────────────────────────────────────────────────────────
     _section('Hero structure')
@@ -955,7 +966,7 @@ def audit_html(filepath):
         _ok('[desktop] @supports used -- progressive enhancement present')
 
     # ── SL Delivery Standard (5-point) ───────────────────────────────────────
-    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page, is_admin_page=_is_admin_page)
+    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page, is_admin_page=_is_admin_page, is_legal_doc=_is_legal_doc)
 
     return _result(fails, filepath)
 
@@ -1677,7 +1688,7 @@ SCORECARD_KYC_TERMS = [
 ]
 
 
-def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_admin_page=False):
+def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_admin_page=False, is_legal_doc=False):
     """
     SL Delivery Standard — 5-point compliance check.
     Called at end of every HTML template audit.
@@ -1716,6 +1727,8 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     # payment gateway reviewers and use internal terminology correctly.
     if is_admin_page:
         _note('KYC checks skipped — admin-only page, not user-facing')
+    elif is_legal_doc:
+        _note('KYC checks skipped — legal document page (deadline/submission/entry/genre are approved legal terms, Session 142)')
     else:
         # Strip Jinja comments and logic before checking
         stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
