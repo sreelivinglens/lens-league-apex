@@ -20,9 +20,10 @@
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
-body {
+body { max-width: 210mm;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 9pt;
+  min-height: 16px;
   color: var(--dark);
   background: var(--cream);
 }
@@ -66,7 +67,7 @@ body {
   bottom: 8pt;
   right: 10pt;
   font-size: 7pt;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.70);
   letter-spacing: 1.5px;
   font-weight: 500;
 }
@@ -93,7 +94,7 @@ body {
   font-size: 6.5pt;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.70);
 }
 
 /* ── Score block ── */
@@ -157,7 +158,7 @@ body {
   font-weight: 700;
   color: var(--white);
   margin-bottom: 2pt;
-  line-height: 1.25;
+  line-height: 1.5;
 }
 
 .score-credit {
@@ -171,7 +172,7 @@ body {
 
 .score-submeta {
   font-size: 7.5pt;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.70);
   line-height: 1.5;
 }
 
@@ -203,8 +204,8 @@ body {
   font-size: 5.5pt;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  line-height: 1.4;
+  color: rgba(255,255,255,0.70);
+  line-height: 1.5;
   margin-bottom: 4pt;
   min-height: 16pt;
 }
@@ -227,6 +228,7 @@ body {
 
 .opening-bold {
   font-size: 9pt;
+  min-height: 16px;
   font-weight: 700;
   color: var(--white);
   line-height: 1.6;
@@ -250,7 +252,7 @@ body {
   font-size: 6.5pt;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.28);
+  color: rgba(255,255,255,0.60);
 }
 
 .p1-footer-score {
@@ -283,7 +285,7 @@ body {
   font-size: 6.5pt;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.70);
 }
 
 /* ── Four columns ── */
@@ -312,13 +314,14 @@ body {
 
 .eval-headline {
   font-size: 9pt;
+  min-height: 16px;
   font-weight: 800;
   color: var(--dark);
-  line-height: 1.3;
+  line-height: 1.5;
   margin-bottom: 6pt;
 }
 
-.eval-body {
+.eval-body { max-width: 210mm;
   font-size: 7.5pt;
   color: #3A3A38;
   line-height: 1.65;
@@ -367,7 +370,7 @@ body {
   margin-bottom: 4pt;
 }
 
-.edit-col-body {
+.edit-col-body { max-width: 210mm;
   font-size: 7.5pt;
   color: #3A3A38;
   line-height: 1.65;
@@ -404,7 +407,7 @@ body {
   margin-bottom: 3pt;
 }
 
-.where-body {
+.where-body { max-width: 210mm;
   font-size: 7.5pt;
   color: rgba(255,255,255,0.82);
   line-height: 1.65;
@@ -460,7 +463,7 @@ body {
   font-size: 5.5pt;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.60);
 }
 
 .p2-footer-score {
@@ -470,13 +473,28 @@ body {
   color: var(--gold);
 }
 
+@media (max-width: 600px) {
+  body { font-size: 10pt; }
+  .page { width: 100%; }
+}
+
+
+@media screen {
+  body { font-size: 16px !important; line-height: 1.6 !important; }
+  .score-number { font-size: 48px !important; }
+  .dim-score { font-size: 18px !important; }
+  .eval-body, .eval-headline, .where-body, .quote-text { font-size: 16px !important; }
+  .p2-footer, .p1-footer, .p2-header, .header-strip { padding: 12px 14px !important; }
+  a { min-height: 44px; display: inline-flex; align-items: center; padding: 12px 16px; }
+}
+
 @page {
   size: A4;
   margin: 0;
 }
 
 @media print {
-  body { background: white; }
+  body { max-width: 210mm; background: white; }
   .page { page-break-after: always; }
 }
 </style>
