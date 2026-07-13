@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Submit Original JPEG — Verification{% endblock %}
+<style>
+@media (max-width: 600px) {
+  div[style*="max-width:680px"] { padding: 0 12px !important; }
+  h1 { text-shadow: none; font-size: 20px; }
+  button[type="submit"] { min-height: 44px; }
+  button[type="button"] { min-height: 44px; }
+}
+</style>
 {% block content %}
 <div style="max-width:680px;margin:40px auto;padding:0 20px;">
 
   <div style="background:#1A2744;padding:20px 28px;border-radius:6px 6px 0 0;">
-    <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:12px;letter-spacing:2px;margin:0 0 6px 0;">EVALUATION VERIFICATION</p>
+    <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size: 13px;letter-spacing:2px;margin:0 0 6px 0;">EVALUATION VERIFICATION</p>
     <h1 style="color:#FFFFFF;font-size:22px;font-weight:700;margin:0;">Submit Your Original JPEG</h1>
   </div>
 
