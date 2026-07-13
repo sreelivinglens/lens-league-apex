@@ -109,6 +109,7 @@ body.page-home {
   position: relative;
   width: 100%;
   height: 100vh;
+  min-height: -webkit-fill-available;
   min-height: 600px;
   overflow: hidden;
 }
@@ -175,7 +176,7 @@ body.page-home {
   font-size: 38px;
   font-weight: 600;
   color: #F6F2E9;
-  line-height: 1.1;
+  line-height: 1.5;
   letter-spacing: -0.5px;
   margin-bottom: 10px;
   text-shadow: 0 2px 16px rgba(0,0,0,0.65), 0 1px 4px rgba(0,0,0,0.5);
@@ -307,21 +308,21 @@ body.page-home {
   pointer-events: none;
 }
 .sl-hero-credit-score {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #D6A428;
 }
 .sl-hero-credit-sep {
-  font-size: 12px;
-  color: rgba(255,255,255,0.2);
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
 }
 .sl-hero-credit-tier {
-  font-size: 12px;
+  font-size: 14px;
   color: rgba(255,255,255,0.5);
 }
 .sl-hero-credit-by {
-  font-size: 12px;
-  color: rgba(255,255,255,0.35);
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
 }
 
 /* Scroll cue */
@@ -383,7 +384,7 @@ body.page-home {
   font-size: 38px;
   font-weight: 500;
   color: #1A1A1A;
-  line-height: 1.2;
+  line-height: 1.5;
   margin-bottom: 16px;
 }
 .sl-belief-sub {
@@ -405,7 +406,7 @@ body.page-home {
   margin-bottom: 16px;
 }
 .sl-gallery-label {
-  font-size: 11px;
+  font-size: 14px;
   color: #9A8A6A;
   font-weight: 600;
   text-transform: uppercase;
@@ -453,7 +454,7 @@ body.page-home {
   left: 6px;
   background: rgba(0,0,0,0.60);
   color: #fff;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 5px;
@@ -483,7 +484,7 @@ body.page-home {
     font-size: 36px;
     font-weight: 700;
     color: #1A1A18;
-    line-height: 1.1;
+    line-height: 1.5;
     letter-spacing: -1px;
     margin-bottom: 12px;
   }
@@ -515,7 +516,7 @@ body.page-home {
     display: block;
   }
   .sl-mob-imgcredit {
-    font-size: 12px;
+    font-size: 14px;
     color: #8A7A5A;
     display: flex;
     justify-content: space-between;
@@ -568,7 +569,7 @@ body.page-home {
     margin-bottom: 12px;
   }
   .sl-mob-gallery-label {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -611,7 +612,7 @@ body.page-home {
     left: 4px;
     background: rgba(0,0,0,0.65);
     color: #fff;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     padding: 1px 5px;
     border-radius: 4px;
@@ -631,6 +632,9 @@ body.page-home {
   .sl-gallery-section { padding: 0 32px 48px; }
   .sl-quote-strip { padding: 48px 32px 36px; }
   .sl-belief { padding: 12px 32px 44px; }
+}
+@media (max-width: 600px) {
+  .sl-hero-h1 { font-size: 28px; }
 }
 </style>
 {% endblock %}
