@@ -11,7 +11,7 @@
                    flex-wrap: wrap; gap: 12px; }
   .ch-banner-title { font-size: 20px; font-weight: 700; color: var(--text-primary);
                      font-family: Georgia, serif; font-style: italic; }
-  .ch-banner-week  { font-family: var(--font-mono); font-size: 12px; color: var(--gold);
+  .ch-banner-week  { font-family: var(--font-mono); font-size: 13px; color: var(--gold);
                      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
   .slots-info    { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
   .slots-info strong { color: var(--gold); }
@@ -37,19 +37,29 @@
   .img-meta      { padding: 8px 10px; }
   .img-name      { font-size: 13px; font-weight: 600; color: var(--text-primary);
                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .img-score     { font-family: var(--font-mono); font-size: 12px; color: var(--gold);
+  .img-score     { font-family: var(--font-mono); font-size: 13px; color: var(--gold);
                    margin-top: 2px; }
-  .img-tier      { font-size: 11px; color: var(--text-muted); }
+  .img-tier      { font-size: 13px; color: var(--text-muted); }
   .selected-check{ position: absolute; top: 8px; right: 8px; width: 22px; height: 22px;
                    background: var(--gold); border-radius: 50%;
                    display: none; align-items: center; justify-content: center;
-                   font-size: 12px; color: #0D0D0B; font-weight: 700; }
+                   font-size: 13px; color: #0D0D0B; font-weight: 700; }
   .image-option input[type=radio]:checked ~ .selected-check { display: flex; }
 
   .submit-actions { display: flex; gap: 12px; align-items: center; }
   .no-images      { padding: 40px; text-align: center; background: var(--surface-2);
                     border: 1px solid var(--border); border-radius: var(--radius-md);
                     color: var(--text-muted); font-size: 16px; }
+
+@media (max-width: 600px) {
+  .submit-wrap { padding: 0 8px; }
+  .page-header h1 { font-size: 22px; text-shadow: none; }
+  .image-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .submit-actions { flex-direction: column; }
+  .submit-actions .btn { width: 100%; text-align: center; min-height: 44px; }
+  .btn.btn-solid { min-height: 44px; }
+  .ch-banner { flex-direction: column; }
+}
 </style>
 {% endblock %}
 
@@ -140,7 +150,7 @@
     </div>
 
     <div class="submit-actions">
-      <button type="submit" class="btn btn-solid" id="submitBtn" disabled>
+      <button type="submit" class="btn btn-solid" id="submitBtn" disabled style="min-height:44px;">
         Submit selected image →
       </button>
       <a href="{{ url_for('weekly_challenge') }}" class="btn">Cancel</a>
