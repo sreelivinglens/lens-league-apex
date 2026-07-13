@@ -39,6 +39,11 @@
     font-size: 16px; color: var(--text-primary); line-height: 1.7;
   }
   .terms-highlight strong { color: #2C3E6B; }
+@media (max-width: 600px) {
+  .terms-wrap { padding: 0 14px; }
+  .btn, a.btn { min-height: 44px; display: inline-flex; align-items: center; }
+  details summary { min-height: 44px; display: flex; align-items: center; }
+}
 </style>
 {% endblock %}
 
