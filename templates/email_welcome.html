@@ -4,40 +4,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welcome to Shutter League</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#F7F5F2;font-family:'Inter',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#1A1A18}
+body{background:#F5F0E8;font-family:Inter,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#1A1A18}
 a{text-decoration:none;color:inherit}
-.outer{background:#F7F5F2;padding:48px 0}
-.wrap{max-width:960px;margin:0 auto;background:#FFFFFF}
+.outer{background:#F5F0E8;padding:48px 0}
+.wrap{max-width:600px;margin:0 auto;background:#FFFFFF}
 
 /* HERO */
-.hero{display:flex;min-height:620px;background:#F7F5F2}
+.hero{display:flex;min-height:620px;background:#F5F0E8}
 .hero-left{width:42%;padding:56px 48px;display:flex;flex-direction:column;justify-content:flex-start;padding-top:56px}
 .hero-logo{margin-bottom:38px}
 .hero-logo img{height:68px;width:auto}
 .hero-h1{font-size:44px;font-weight:800;color:#1A1A18;letter-spacing:-1px;line-height:1.3;margin-bottom:18px}
 .hero-sub{font-size:36px;font-weight:600;color:#1A1A18;letter-spacing:-0.5px;line-height:1.3;margin-bottom:22px}
-.hero-body{font-size:18px;font-weight:400;color:#4A4A4A;line-height:1.65;max-width:360px;margin-bottom:36px}
-.hero-cta{display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#1A1A18;font-size:16px;font-weight:700;height:56px;padding:0 32px;border-radius:16px;width:fit-content}
+.hero-body{font-size:18px;font-weight:400;color:#4A4840;line-height:1.65;max-width:360px;margin-bottom:36px}
+.hero-cta{display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#1A1A18;font-size:16px;font-weight:700;height:56px;padding:0 32px;border-radius:4px;width:fit-content;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase}
 
 /* LIGHT TABLE */
-.hero-right{width:58%;position:relative;overflow:hidden;background:#F0EDE6;padding:20px}
+.hero-right{width:58%;position:relative;overflow:hidden;background:#EDE8DF;padding:20px}
 .light-table{position:relative;width:100%;height:600px}
 .p{position:absolute;border-radius:6px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.08)}
 .p img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* JOURNEY */
 .journey{background:#FFFFFF;padding:80px 60px;text-align:center;border-top:1px solid #F0F0F0}
-.sec-label{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#888888;margin-bottom:48px}
+.sec-label{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#8a8070;margin-bottom:48px}
 .steps{display:flex;align-items:flex-start;justify-content:center}
 .step{display:flex;flex-direction:column;align-items:center;width:148px}
 .step-icon{width:64px;height:64px;border-radius:50%;border:1.5px solid #F5C518;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
 .step-icon svg{width:26px;height:26px;stroke:#F5C518;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.step-n{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px}
-.step-b{font-size:15px;color:#555555;line-height:1.6}
-.arr{color:#CCCCCC;font-size:18px;margin-top:22px;padding:0 4px;flex-shrink:0}
+.step-n{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px}
+.step-b{font-size:15px;color:#4A4840;line-height:1.6}
+.arr{color:#D0C8B8;font-size:18px;margin-top:22px;padding:0 4px;flex-shrink:0}
 
 /* FEATURE TILES */
 .tiles{display:flex;gap:16px;padding:0 40px 80px;background:#FFFFFF}
@@ -46,43 +45,43 @@ a{text-decoration:none;color:inherit}
 .tile-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
 .tile-img:hover{transform:scale(1.03)}
 .tile-body{padding:20px 20px 24px;background:#FFFFFF}
-.tile-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px}
-.tile-text{font-size:15px;color:#555555;line-height:1.6}
+.tile-title{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px}
+.tile-text{font-size:15px;color:#4A4840;line-height:1.6}
 
 /* SCIENCE */
 .sci-wrap{padding:0 40px 80px;background:#FFFFFF}
-.science{background:#F7F5F2;padding:64px 56px;border-radius:24px}
+.science{background:#F5F0E8;padding:64px 56px;border-radius:24px}
 .sci-h{font-size:26px;font-weight:800;color:#1A1A18;letter-spacing:-0.5px;line-height:1.5;margin-bottom:10px}
 .sci-h span{color:#1A1A18}
-.sci-sub{font-size:18px;color:#555555;line-height:1.65;margin-bottom:52px}
+.sci-sub{font-size:18px;color:#4A4840;line-height:1.65;margin-bottom:52px}
 .dims{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:40px}
 .dim{text-align:center;flex:1}
 .dim svg{width:50px;height:50px;stroke:#F5C518;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .dim-n{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:12px 0 6px}
-.dim-d{font-size:13px;color:#555555;line-height:1.5}
+.dim-d{font-size:13px;color:#4A4840;line-height:1.5}
 .sci-cta{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #1A1A18;color:#1A1A18;font-size:14px;font-weight:700;padding:12px 24px;border-radius:8px}
 
 /* MENTORS */
 .mentors-standing{padding:0 40px 80px;background:#FFFFFF}
 .ms-row{display:flex;gap:16px}
-.ms-left{flex:1;background:#F7F5F2;border-radius:16px;padding:24px}
-.ms-right{flex:1;background:#F7F5F2;border-radius:16px;padding:24px}
-.ms-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A1A18;text-align:center;margin-bottom:20px}
+.ms-left{flex:1;background:#F5F0E8;border-radius:16px;padding:24px}
+.ms-right{flex:1;background:#F5F0E8;border-radius:16px;padding:24px}
+.ms-label{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A1A18;text-align:center;margin-bottom:20px}
 .ms-mentors{display:flex;gap:16px;justify-content:center}
 .ms-mentor{text-align:center;flex:1}
 .ms-mentor-img{width:100%;aspect-ratio:1;object-fit:contain;object-position:center center;border-radius:8px;display:block;filter:grayscale(100%);background:#1A1A18;margin-bottom:10px}
 .ms-mentor-name{font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:2px}
-.ms-mentor-role{font-size:12px;color:#555555}
+.ms-mentor-role{font-size:13px;color:#6a6458}
 .ms-badges{display:flex;gap:8px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
 .ms-badge{display:flex;flex-direction:column;align-items:center;gap:4px}
-.ms-badge-name{font-size:13px;color:#555555;text-align:center}
-.ms-bottom{display:flex;gap:0;margin-top:16px;background:#F7F5F2;border-radius:16px}
+.ms-badge-name{font-size:13px;color:#6a6458;text-align:center}
+.ms-bottom{display:flex;gap:0;margin-top:16px;background:#F5F0E8;border-radius:16px}
 .ms-quote{flex:1;padding:28px 32px;border-right:1px solid #E8E8E8}
 .ms-quote p{font-size:18px;font-weight:700;color:#1A1A18;line-height:1.6;margin:0}
 .ms-questions{flex:1;padding:28px 32px;display:flex;gap:14px;align-items:flex-start}
 .ms-q-icon{width:36px;height:36px;flex-shrink:0;margin-top:2px}
 .ms-q-title{font-size:16px;font-weight:700;color:#1A1A18;margin-bottom:4px}
-.ms-q-body{font-size:15px;color:#555555;line-height:1.6}
+.ms-q-body{font-size:15px;color:#4A4840;line-height:1.6}
 
 /* STANDING — merged into mentors-standing block above */
 
@@ -94,15 +93,15 @@ a{text-decoration:none;color:inherit}
 .final-content{position:relative;z-index:2;width:100%;padding:0 60px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
 .final-content h2{font-size:32px;font-weight:700;color:#FFFFFF;letter-spacing:-0.5px}
 .final-content p{font-size:16px;color:rgba(255,255,255,.8)}
-.final-btn{display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#1A1A18;font-size:16px;font-weight:700;height:56px;padding:0 40px;border-radius:16px;white-space:nowrap;margin-top:4px}
+.final-btn{display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#1A1A18;font-size:16px;font-weight:700;height:56px;padding:0 40px;border-radius:4px;white-space:nowrap;margin-top:4px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase}
 .final-small{font-size:13px;color:rgba(255,255,255,.5)}
 
 /* FOOTER */
 .footer{padding:40px 60px;background:#FFFFFF;border-top:1px solid #E8E8E8}
-.footer-reply{font-size:16px;color:#555555;line-height:1.65;margin-bottom:20px}
+.footer-reply{font-size:16px;color:#4A4840;line-height:1.65;margin-bottom:20px}
 .footer-reply a{color:#1A1A18;font-weight:600}
-.footer-legal{font-size:13px;color:#999999;line-height:1.65}
-.footer-legal a{color:#999999}
+.footer-legal{font-size:13px;color:#6a6458;line-height:1.65}
+.footer-legal a{color:#6a6458}
 
 /* ── MOBILE ─────────────────────────────────────────────── */
 @media (max-width:620px){
@@ -148,7 +147,7 @@ a{text-decoration:none;color:inherit}
   .dim{flex:1 1 calc(33% - 12px);min-width:80px}
   .dim svg{width:36px;height:36px}
   .dim-n{font-size:13px}
-  .dim-d{font-size:12px}
+  .dim-d{font-size:13px}
   .sci-cta{width:auto;justify-content:center;margin-top:0}
 
   /* Mentors + Standing — stack vertically */
@@ -197,8 +196,8 @@ a{text-decoration:none;color:inherit}
       <img src="https://shutterleague.com/static/img/shutterleague-logo-cropped.png" alt="Shutter League">
     </div>
     <h1 class="hero-h1">Welcome to<br>Shutter League{% if name %}, {{ name.split()[0] }}{% endif %}.</h1>
-    <p class="hero-sub">The pursuit of better<br>starts here.</p>
-    <p class="hero-body">Honest feedback. Purposeful practice. Meaningful recognition.</p>
+    <p class="hero-sub">Photography has never had<br>an honest improvement loop.</p>
+    <p class="hero-body">Until now. Your first evaluation will tell you more about your photograph than any like ever did.</p>
     <a href="{{ upload_url }}" class="hero-cta">Submit Your First Photograph</a>
   </div>
 
@@ -255,7 +254,7 @@ a{text-decoration:none;color:inherit}
 
 <!-- ═══ JOURNEY ═════════════════════════════════════════════ -->
 <div class="journey">
-  <div class="sec-label">Your Journey With Shutter League</div>
+  <div class="sec-label">How it works</div>
   <div class="steps">
     <div class="step">
       <div class="step-icon" style="position:relative">
@@ -312,7 +311,7 @@ a{text-decoration:none;color:inherit}
     </div>
     <div class="tile-body">
       <div class="tile-title">Detailed Evaluations</div>
-      <div class="tile-text">Understand your photograph like never before.</div>
+      <div class="tile-text">Five dimensions. Specific feedback. No flattery.</div>
     </div>
   </a>
   <a href="{{ dashboard_url }}" class="tile">
@@ -321,7 +320,7 @@ a{text-decoration:none;color:inherit}
     </div>
     <div class="tile-body">
       <div class="tile-title">Daily Assignments</div>
-      <div class="tile-text">A personalised brief every morning. Just for you.</div>
+      <div class="tile-text">One assignment every morning. Built around your eye.</div>
     </div>
   </a>
   <a href="{{ site_url }}/aea" class="tile">
@@ -330,7 +329,7 @@ a{text-decoration:none;color:inherit}
     </div>
     <div class="tile-body">
       <div class="tile-title">Annual Excellence Award</div>
-      <div class="tile-text">Recognising photographers who keep growing.</div>
+      <div class="tile-text">The first recognition in Indian photography built on consistent performance.</div>
     </div>
   </a>
   <a href="{{ bow_url }}" class="tile">
@@ -339,7 +338,7 @@ a{text-decoration:none;color:inherit}
     </div>
     <div class="tile-body">
       <div class="tile-title">Body of Work</div>
-      <div class="tile-text">Build a public portfolio of your best evaluations.</div>
+      <div class="tile-text">Six to ten photographs. One story. Jury-evaluated every December.</div>
     </div>
   </a>
   <a href="{{ site_url }}/rate" class="tile">
@@ -348,7 +347,7 @@ a{text-decoration:none;color:inherit}
     </div>
     <div class="tile-body">
       <div class="tile-title">Peer Evaluation</div>
-      <div class="tile-text">Evaluate another photographer&#39;s work. Match the DDI engine analysis within 10% and earn a bonus.</div>
+      <div class="tile-text">Evaluate another photographer&#39;s work. Train your eye. Earn points.</div>
     </div>
   </a>
 </div>
@@ -356,8 +355,8 @@ a{text-decoration:none;color:inherit}
 <!-- ═══ SCIENCE ══════════════════════════════════════════════ -->
 <div class="sci-wrap">
   <div class="science">
-    <h2 class="sci-h">Photography deserves more than validation.<br><span>It deserves understanding.</span></h2>
-    <p class="sci-sub">Every photograph is evaluated across 5 dimensions.</p>
+    <h2 class="sci-h">Your photograph is evaluated across<br><span>five dimensions of craft.</span></h2>
+    <p class="sci-sub">Not a number. A conversation. Each dimension tells you something specific about your frame — and what to practise next.</p>
     <div class="dims">
       <div class="dim">
         <svg viewBox="0 0 44 44"><polygon points="22,4 40,38 4,38"/><line x1="22" y1="4" x2="22" y2="38"/></svg>
@@ -468,16 +467,16 @@ a{text-decoration:none;color:inherit}
   </div>
   <div class="final-overlay"></div>
   <div class="final-content">
-    <h2>Ready to begin?</h2>
-    <p>Your first photograph could change everything.</p>
+    <h2>Your first photograph is waiting.</h2>
+    <p>Submit it. See what the engine sees. Come back tomorrow better.</p>
     <a href="{{ upload_url }}" class="final-btn">Submit Your First Photograph</a>
-    <span class="final-small">Your first three evaluations are complimentary.</span>
+    <span class="final-small">First three evaluations complimentary. No card required.</span>
   </div>
 </div>
 
 <!-- ═══ FOOTER ═══════════════════════════════════════════════ -->
 <div class="footer">
-  <p class="footer-reply">Questions? Reply directly to this email. A real photographer will answer.</p>
+  <p class="footer-reply">Questions? Reply directly to this email — a real photographer will answer. We read every one.</p>
   <p class="footer-legal">
     Member Agreement &amp; <a href="{{ terms_url }}" style="color:#999999;">Terms &amp; Conditions</a> accepted {{ accepted_date }}. &nbsp;·&nbsp;
     <a href="{{ terms_url }}">Terms</a> &nbsp;·&nbsp;
