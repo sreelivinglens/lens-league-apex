@@ -387,7 +387,7 @@ def send_challenge_notification(challenge):
   }}
 </style>
 </head>
-<body class="sl-email-body" style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<body class="sl-email-body" style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">
 <table class="sl-email-outer" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
   <tr><td align="center">
     <table class="sl-email-wrap" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
@@ -399,7 +399,7 @@ def send_challenge_notification(challenge):
 
       <!-- Challenge banner -->
       <tr><td style="background:#3D5A80;padding:0 32px 28px;" class="sl-email-pad">
-        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;color:#ffffff;text-transform:uppercase;line-height:1.6;opacity:0.7;">Weekly Assignment &middot; {challenge.week_ref}</p>
+        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.75);text-transform:uppercase;line-height:1.6;">Weekly Assignment &middot; {challenge.week_ref}</p>
         <h1 class="sl-email-h1" style="margin:0;font-size:34px;font-style:italic;color:#C8A84B;line-height:1.6;">{challenge.prompt_title}</h1>
       </td></tr>
 
@@ -467,7 +467,7 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
 
  -  Shutter League"""
 
-        if send_email(user.email, f"This week&#39;s assignment: {challenge.prompt_title}", html_body, text_body):
+        if send_email(user.email, f"Your assignment this week — {challenge.prompt_title}", html_body, text_body):
             sent += 1
 
     return sent
@@ -2407,8 +2407,8 @@ def run_points_reset_warning_nov():
                     at_risk = round(balance * 0.10, 1)
                     subject = f'Your {balance} points — upload before 31 Dec to keep them all'
                     html_body = f"""
-    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
-      <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
+    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F5F0E8;">
+      <div style="font-family:Courier New,monospace;font-size:13px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League</div>
       <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">Your points are waiting, {name}.</h2>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{balance} points</strong> in your wallet.</p>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">We haven&#39;t seen a new upload from you in a while. Points only reset for inactive accounts — upload one image before <strong>31 December</strong> and your full balance carries forward into the new year.</p>
@@ -2455,8 +2455,8 @@ def run_points_reset_warning_dec():
                     at_risk = round(balance * 0.10, 1)
                     subject = f'16 days left — protect your {balance} points before 31 Dec'
                     html_body = f"""
-    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
-      <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
+    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F5F0E8;">
+      <div style="font-family:Courier New,monospace;font-size:13px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League</div>
       <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">16 days to protect your points, {name}.</h2>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your balance: <strong>{balance} points.</strong></p>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the date and <strong>{at_risk} points</strong> reset on 1 January.</p>
@@ -2672,7 +2672,7 @@ def run_reengagement_emailer():
                         cta_text = 'Continue on Shutter League'
 
                     html_body = f"""
-    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F5F0E8;">
       <div style="font-family:monospace;font-size:13px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League · Apex DDI Engine</div>
       <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">{subject}</h2>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi {name},</p>
@@ -2838,7 +2838,7 @@ def register():
                             to_addresses=[email],
                             subject='[Shutter League] Verify your email address',
                             html_body=(
-                                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
+                                '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;'
                                 'padding:32px;background:#fffef9;color:#111111;">'
                                 '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;'
                                 'text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
@@ -2898,7 +2898,7 @@ def register():
                 to_addresses=[email],
                 subject='[Shutter League] Verify your email address',
                 html_body=(
-                    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
+                    '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;'
                     'padding:32px;background:#fffef9;color:#111111;">'
                     '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;'
                     'text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
@@ -5722,7 +5722,7 @@ def account_delete():
                 subject='Your Shutter League account has been deleted',
                 html_body=(
                     '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                     '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                     '<tr><td align="center">'
                     '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
@@ -6714,51 +6714,42 @@ def upload():
                                         _gen_display = _hive_generator.replace('_', ' ').title()
                                         send_email(
                                             to_addresses=[_u.email] if _u else [],
-                                            subject='[Shutter League] Image Rejected &#8212; AI Generation Detected',
+                                            subject='[Shutter League] Image not accepted — AI generation detected',
                                             html_body=(
-                                                '<div style="font-family:Georgia,serif;'
-                                                'max-width:560px;margin:0 auto;padding:32px;'
-                                                'background:#fffef9;color:#111111;">'
-                                                '<p style="font-family:Courier New,monospace;'
-                                                'font-size:15px;letter-spacing:2px;'
-                                                'text-transform:uppercase;color:#F5C518;'
-                                                'margin-bottom:24px;">Shutter League</p>'
-                                                '<h2 style="font-size:22px;font-weight:700;'
-                                                'color:#111111;margin-bottom:16px;">'
-                                                'Image Rejected</h2>'
-                                                '<p style="font-size:16px;line-height:1.7;'
-                                                'color:#111111;">Hi ' + _uname + ',</p>'
-                                                '<p style="font-size:16px;line-height:1.7;'
-                                                'color:#111111;">Your image <strong>'
-                                                + (_img.asset_name or 'Untitled') +
-                                                '</strong> has been rejected. Our system '
-                                                'detected it was generated by '
-                                                + _gen_display +
-                                                ' (' + f'{_hive_ai_score:.0%}' + ' confidence).</p>'
-                                                '<p style="font-size:16px;line-height:1.7;'
-                                                'color:#111111;">Shutter League accepts only '
-                                                'original photographs taken by the submitting '
-                                                'photographer.</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">'
-                                                'High-production constructed shoots — allegorical tableaux, '
-                                                'studio work, heavily lit portraits — can occasionally '
-                                                'trigger false positives. If this is an original photograph, '
-                                                'we want to clear it quickly.</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">'
-                                                '<strong>To appeal, email '
-                                                '<a href="mailto:' + CONTACT_EMAIL + '">'
-                                                + CONTACT_EMAIL + '</a> with:</strong></p>'
-                                                '<ul style="font-size:16px;line-height:2;color:#111111;">'
+                                                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                                '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                                                '<style>@media only screen and (max-width:600px){'
+                                                '.sl-ai-pad{padding:20px 16px!important;}'
+                                                '.sl-ai-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}'
+                                                '}</style></head>'
+                                                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                                                '<tr><td align="center">'
+                                                '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                                                '<tr><td style="background:#1a1a18;padding:20px 28px;">'
+                                                '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                                                '</td></tr>'
+                                                '<tr><td class="sl-ai-pad" style="padding:28px 32px;">'
+                                                '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">We couldn&#39;t accept this image.</h2>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + _uname + ',</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Our system flagged <strong>' + (_img.asset_name or 'Untitled') + '</strong> as likely AI-generated (' + _gen_display + ', ' + f'{_hive_ai_score:.0%}' + ' confidence). Shutter League evaluates only original photographs taken by the submitting photographer.</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">High-production constructed shoots — allegorical tableaux, studio work, heavily lit portraits — can occasionally trigger false positives. If this is an original photograph, we want to clear it quickly.</p>'
+                                                '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-left:4px solid #C8A84B;border-radius:4px;padding:16px 20px;margin:0 0 20px;">'
+                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, email us with:</p>'
+                                                '<ul style="font-size:15px;line-height:2;color:#4A4840;margin:0;padding-left:20px;">'
                                                 '<li>Your original RAW or unedited file</li>'
                                                 '<li>Any behind-the-scenes photos or production notes</li>'
                                                 '<li>Camera and lens used</li>'
-                                                '</ul>'
-                                                '<p style="font-size:15px;color:#555555;margin-top:24px;">'
-                                                'We aim to resolve appeals within 48 hours. '
-                                                'Your image will go public immediately if cleared.</p>'
-                                                '<p style="font-size:15px;color:#555555;'
-                                                'margin-top:8px;">&#8212; Shutter League</p>'
-                                                '</div>'
+                                                '</ul></div>'
+                                                '<p style="margin:0 0 20px;text-align:center;">'
+                                                '<a href="mailto:' + CONTACT_EMAIL + '" class="sl-ai-btn" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Appeal This Decision &#8594;</a>'
+                                                '</p>'
+                                                '<p style="font-size:15px;color:#6a6458;margin:0;line-height:1.7;">We aim to resolve appeals within 48 hours. Your image goes live immediately if cleared.</p>'
+                                                '</td></tr>'
+                                                '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                                                '<p style="margin:0;font-size:15px;color:#6a6458;">&#8212; Shutter League</p>'
+                                                '</td></tr>'
+                                                '</table></td></tr></table></body></html>'
                                             ),
                                             text_body=(
                                                 'Hi ' + _uname + ',\n\n'
@@ -7145,7 +7136,7 @@ def upload():
                                     to_addresses=[_u.email] if _u else [],
                                     subject='[Shutter League] Image Flagged — AI Generation Detected',
                                     html_body=(
-                                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                                        '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@media only screen and (max-width:600px){.sl-gm-wrap{padding:20px 16px!important;}.sl-gm-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}}</style></head><body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center"><table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;"><tr><td style="background:#1a1a18;padding:20px 28px;"><p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p></td></tr><tr><td class="sl-gm-wrap" style="padding:32px;">'
                                         '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
                                         '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Image Under Review</h2>'
                                         '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
@@ -7623,7 +7614,7 @@ def submit_upload_dispute(dispute_id):
         html_body = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
   <tr><td align="center">
     <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
@@ -10245,7 +10236,7 @@ def admin_csi_request_raw(image_id_1, image_id_2):
                 to_addresses=[owner.email],
                 subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
                 html_body=(
-                    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                    '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
                     '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
                     '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
                     '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
@@ -13062,8 +13053,8 @@ def admin_approve_review(image_id):
         send_email(
             to_addresses=[_u.email] if _u else [],
             subject='[Shutter League] Your Image Is Now Live',
-            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has passed review and is now live.</p><p>Score: <strong>' + str(img.score) + '</strong> — ' + (img.tier or '') + '</p><p><a href="' + _iurl + '">View your image</a></p><p>The Shutter League Team</p>'),
-            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" is now live.\nScore: ' + str(img.score) + ' — ' + (img.tier or '') + '\nView: ' + _iurl + '\n\nThe Shutter League Team')
+            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has passed review and is now live.</p><p>Evaluation: <strong>' + str(img.score) + '</strong> — ' + (img.tier or '') + '</p><p><a href="' + _iurl + '">View your image</a></p><p>The Shutter League Team</p>'),
+            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" is now live.\nEvaluation: ' + str(img.score) + ' — ' + (img.tier or '') + '\nView: ' + _iurl + '\n\nThe Shutter League Team')
         )
     except Exception as _me:
         app.logger.error(f'[approve review email error] {_me}')
@@ -13137,13 +13128,13 @@ def admin_reject_review(image_id):
                 subject=f'Shutter League — RAW Verification — Resubmission Required for {_ititle}',
                 html_body=(
                     '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                     '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                     '<tr><td align="center">'
                     '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
                     '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
                     '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
-                    '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">RAW Verification</p>'
+                    '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.75);text-transform:uppercase;">RAW Verification</p>'
                     '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.6;">Resubmission Required</h1>'
                     '</td></tr>'
                     '<tr><td style="padding:24px 28px 20px;">'
@@ -13220,12 +13211,18 @@ def admin_dispute_approve(dispute_id):
                 to_addresses=[_u.email],
                 subject='[Shutter League] Your upload has been cleared — please re-upload',
                 html_body=(
-                    f'<p>Hi {_uname},</p>'
-                    f'<p>Good news — we reviewed your disputed upload (<strong>{row.original_filename or "your image"}</strong>) '
-                    f'and our team has determined it was flagged incorrectly.</p>'
-                    f'<p>You are welcome to re-upload this photograph. It will be scored normally.</p>'
-                    f'<p>We apologise for the inconvenience.</p>'
-                    f'<p>The Shutter League Team</p>'
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px;"><p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p></td></tr>'
+                    '<tr><td style="padding:28px 32px;">'
+                    f'<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi {_uname},</p>'
+                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Good news — we reviewed your disputed upload (<strong>{row.original_filename or "your image"}</strong>) and our team has determined it was flagged in error.</p>'
+                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 24px;">Upload it again — we look forward to evaluating it.</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;"><p style="margin:0;font-size:15px;color:#6a6458;">&#8212; Shutter League</p></td></tr>'
+                    '</table></td></tr></table></body></html>'
                 ),
                 text_body=(
                     f'Hi {_uname},\n\nYour disputed upload ({row.original_filename or "your image"}) has been cleared. '
@@ -13274,13 +13271,18 @@ def admin_dispute_reject(dispute_id):
                 to_addresses=[_u.email],
                 subject='[Shutter League] Upload dispute outcome',
                 html_body=(
-                    f'<p>Hi {_uname},</p>'
-                    f'<p>We reviewed your disputed upload (<strong>{row.original_filename or "your image"}</strong>) '
-                    f'and our team has determined that the flag was applied correctly. '
-                    f'This image does not meet Shutter League programme guidelines and cannot be submitted.</p>'
-                    f'<p>If you believe this is still an error, please contact '
-                    f'<a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a>.</p>'
-                    f'<p>The Shutter League Team</p>'
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px;"><p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p></td></tr>'
+                    '<tr><td style="padding:28px 32px;">'
+                    f'<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi {_uname},</p>'
+                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">We reviewed your disputed upload (<strong>{row.original_filename or "your image"}</strong>) and our team has determined that the flag was correctly applied. This image does not meet Shutter League programme guidelines and cannot be submitted.</p>'
+                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0;">If you believe this is an error, email <a href="mailto:{CONTACT_EMAIL}" style="color:#C8A84B;">{CONTACT_EMAIL}</a>.</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;"><p style="margin:0;font-size:15px;color:#6a6458;">&#8212; Shutter League</p></td></tr>'
+                    '</table></td></tr></table></body></html>'
                 ),
                 text_body=(
                     f'Hi {_uname},\n\nWe reviewed your disputed upload and determined the flag was correctly applied. '
@@ -14163,7 +14165,7 @@ def mentor_review_session(session_id):
                     mentor_name = profile['display_name'] if profile else 'Your mentor'
                     html_body = (
                         '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                         '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                         '<tr><td align="center">'
                         '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:560px;width:100%;">'
@@ -14881,7 +14883,7 @@ def contact():
                 '<p style="font-size:14px;color:#888888;margin:0;">If your query is urgent, you can also reach us directly at <a href="mailto:support@shutterleague.com" style="color:#F5C518;">support@shutterleague.com</a>.</p>'
                 '</div>'
                 '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-                '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+                '<p style="color:#888888;font-size:13px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
                 '</div>'
                 '</div>'
             )
@@ -15626,7 +15628,7 @@ def contest_enter_monthly(genre):
                     to_addresses=[current_user.email],
                     subject=f'[Shutter League] RAW File Required — {img.asset_name or "Your Image"}',
                     html_body=(
-                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
+                        '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;'
                         'padding:32px;background:#fffef9;color:#111111;">'
                         '<p style="font-family:Courier New,monospace;font-size:15px;'
                         'letter-spacing:2px;text-transform:uppercase;color:#F5C518;'
@@ -15636,8 +15638,8 @@ def contest_enter_monthly(genre):
                         '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
                         'Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> '
                         'in <strong>' + _genre_label + '</strong> '
-                        'scored <strong>' + str(round(img.score, 2)) + '</strong>. '
-                        'Images in this genre scoring 7.5 and above require RAW verification '
+                        'received an evaluation of <strong>' + str(round(img.score, 2)) + '</strong>. '
+                        'Images in this interest area with an evaluation of 7.5 and above require RAW verification '
                         'to confirm authenticity.</p>'
                         '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
                         'Please submit your original RAW file within <strong>7 days</strong> '
@@ -15655,7 +15657,7 @@ def contest_enter_monthly(genre):
                     ),
                     text_body=(
                         'RAW File Required. Your image ' + (img.asset_name or 'Untitled') +
-                        ' in ' + _genre_label + ' requires RAW verification. '
+                        ' in ' + _genre_label + ' requires RAW verification (evaluation 7.5+). '
                         'Submit within 7 days: ' + _submit_url
                     )
                 )
@@ -15665,8 +15667,8 @@ def contest_enter_monthly(genre):
                     html_body=(
                         '<p>RAW verification triggered at programme participation.</p><ul>'
                         '<li>Image: ' + (img.asset_name or 'Untitled') + '</li>'
-                        '<li>Genre: ' + _genre_label + '</li>'
-                        '<li>Score: ' + str(round(img.score, 2)) + '</li>'
+                        '<li>Interest: ' + _genre_label + '</li>'
+                        '<li>Evaluation: ' + str(round(img.score, 2)) + '</li>'
                         '<li>User: ' + current_user.email + '</li>'
                         '<li>Submit by: ' + _deadline.strftime('%d %B %Y') + '</li></ul>'
                     ),
@@ -15677,7 +15679,7 @@ def contest_enter_monthly(genre):
                     )
                 )
                 flash(
-                    f' Your score qualifies for {_genre_label} programme standings. '
+                    f' Your evaluation qualifies for {_genre_label} programme standings. '
                     f'RAW verification is required — check your email for the upload link. '
                     f'You have 7 days to submit your original RAW file.',
                     'warning'
@@ -17529,7 +17531,7 @@ def submit_rating():
                     send_email(
                         photographer.email,
                         'Your image is under peer review - Shutter League',
-                        f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Shutter League</p>'
                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review Triggered</h2>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> has received peer ratings that diverge significantly from its DDI score. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> is protected and unchanged.</p>'
@@ -17567,7 +17569,7 @@ def submit_rating():
                     send_email(
                         photographer.email,
                         'Peer review in progress on your image - Shutter League',
-                        f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Shutter League</p>'
                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review In Progress</h2>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> is receiving peer ratings that are being reviewed for consistency. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> stands and is unaffected.</p>'
@@ -17643,7 +17645,7 @@ def submit_rating():
 
                     send_email(
                         photographer.email, _subject,
-                        f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
                         f'text-transform:uppercase;color:#B8892A;">Shutter League · Peer Evaluation</p>'
                         f'<h2 style="font-size:22px;font-weight:700;margin:16px 0 8px;color:#1a1a18;">'
@@ -18163,17 +18165,16 @@ def _send_contest_announcement_email(user, ann):
     safe_body  = _html.escape(ann.body)
     safe_name  = _html.escape(name)
     html_body = (
-        '<div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto;'
-        ' background:#000; color:#fff; padding:32px; border-radius:8px;">'
-        '<div style="font-family:monospace; font-size:13px; letter-spacing:3px;'
-        ' color:#F5C518; text-transform:uppercase; margin-bottom:8px;">Shutter League</div>'
+        '<div style="font-family:Inter,Arial,sans-serif; max-width:600px; margin:0 auto;'
+        ' background:#1a1a18; color:#fff; padding:32px; border-radius:8px;">'
+        '<div style="font-family:Courier New,monospace; font-size:15px; letter-spacing:3px;'
+        ' color:#C8A84B; text-transform:uppercase; margin-bottom:8px;">Shutter League</div>'
         '<h2 style="color:#F5C518; margin:0 0 16px 0;">' + safe_title + '</h2>'
-        '<p style="color:#ccc; font-size:15px; line-height:1.6; margin:0 0 16px 0;">Hi ' + safe_name + ',</p>'
+        '<p style="color:#ffffff; font-size:16px; line-height:1.7; margin:0 0 16px 0;">Hi ' + safe_name + ',</p>'
         '<div style="color:#fff; font-size:15px; line-height:1.7; white-space:pre-wrap;">' + safe_body + '</div>'
         + cta_html
-        + '<p style="color:#666; font-size:15px; margin-top:32px;">You are receiving this because you are'
-        ' a member of Shutter League. '
-        '<a href="https://shutterleague.com/dashboard" style="color:#F5C518;">Visit your dashboard</a></p>'
+        + '<p style="color:#8a8070; font-size:15px; line-height:1.7; margin-top:32px;">You are receiving this because you are a member of Shutter League. '
+        '<a href="https://shutterleague.com/dashboard" style="color:#C8A84B;">Visit your dashboard</a></p>'
         '</div>'
     )
     send_email(user.email, ann.title, html_body)
@@ -18702,7 +18703,7 @@ def admin_judge_invite():
     register_url = f"{site_url}/judge/register/{token}"
     html_body = (
         f'<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-        f'<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+        f'<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
         f'<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
         f'<tr><td align="center">'
         f'<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
@@ -19055,7 +19056,7 @@ def admin_judge_approve(judge_id):
     send_email(
         judge.email,
         'Welcome to the Shutter League Jury',
-        (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+        (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
          f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
          f'<h2>Welcome, {judge.name}.</h2>'
          f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your judge profile has been approved. You can now access your judging dashboard.</p>'
@@ -19230,7 +19231,7 @@ def admin_populate_judge_pool():
             send_email(
                 judge.email,
                 f'[Shutter League Jury] {pending_count} image(s) assigned for {contest_ref}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League  --  Jury</p>'
                  f'<h2 style="font-size:20px;">New images assigned</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pending_count} image(s)</strong> for <strong>{contest_ref}</strong>.<br>'
@@ -19335,12 +19336,12 @@ def admin_contest_go_live():
         send_email(
             photographer.email,
             f'🏆 Your result in {contest_ref} — Shutter League',
-            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+            (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
              f'<h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">Congratulations, {photographer.full_name or photographer.username}!</h2>'
-             f'<p style="font-size:18px;color:#4A4840;line-height:1.7;">Your image <strong>&quot;{row.asset_name}&quot;</strong> ({row.genre}) has achieved <strong style="color:#C8A84B;">{ordinals[rank]}</strong> position in <strong>{contest_ref}</strong>.</p>'
+             f'<p style="font-size:18px;color:#4A4840;line-height:1.7;">Your image <strong>&quot;{row.asset_name}&quot;</strong> has achieved <strong style="color:#C8A84B;">{ordinals[rank]}</strong> position in <strong>{contest_ref}</strong>.</p>'
              f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">The results are now live in the programme standings.</p>'
-             f'<a href="{site_url}/leaderboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">View Standings &#8594;</a>'
+             f'<a href="{site_url}/leaderboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">View Programme Standings &#8594;</a>'
              f'</div>')
         )
 
@@ -19552,21 +19553,21 @@ def _send_grandmaster_raw_email(user_email, user_name, asset_name, score, tier, 
             to_addresses=[user_email] if user_email else [],
             subject='Your evaluation is held — and that\'s because it\'s exceptional',
             html_body=(
-                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
                 '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
-                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Your photograph scored ' + str(score) + '. That&#39;s rare.</h2>'
+                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Your photograph received an evaluation of ' + str(score) + '. That&#39;s rare.</h2>'
                 '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + user_name + ',</p>'
-                '<p style="font-size:16px;line-height:1.7;color:#111111;"><strong>' + (asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(score) + '</strong> &#8212; <strong>' + (tier or '') + '</strong>. This is one of the strongest results we&#39;ve seen on Shutter League.</p>'
-                '<p style="font-size:16px;line-height:1.7;color:#111111;">Here&#39;s why your image is currently held from public view: at this level, we ask every photographer &#8212; without exception &#8212; to confirm the result with their original RAW file. It&#39;s not a question about your work. It&#39;s the standard we hold every Grandmaster score to, so that when <em>your</em> image carries that badge, it means something.</p>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;"><strong>' + (asset_name or 'Untitled') + '</strong> received an evaluation of <strong style="color:#F5C518;">' + str(score) + '</strong> &#8212; <strong>' + (tier or '') + '</strong>. This is one of the strongest results we&#39;ve seen on Shutter League.</p>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">Here&#39;s why your image is currently held from public view: at this level, we ask every photographer &#8212; without exception &#8212; to confirm the result with their original RAW file. It&#39;s not a question about your work. It&#39;s the standard we hold every Grandmaster evaluation to, so that when <em>your</em> image carries that badge, it means something.</p>'
                 '<div style="background:#fffbea;border:1px solid #F5C518;border-radius:6px;padding:14px 18px;margin:16px 0;">'
                 '<p style="margin:0 0 6px;font-size:15px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#8a6a00;">Why is this required?</p>'
-                '<p style="margin:0;font-size:15px;line-height:1.7;color:#4A3800;">All Grandmaster scores (9.00 and above) require RAW file verification. This is standard procedure to confirm the result is based on an original camera capture. It applies to every photographer equally. Exposure, colour, cropping, and other editing are fully permitted &#8212; we only verify that your submitted image originates from a real camera file.</p>'
+                '<p style="margin:0;font-size:15px;line-height:1.7;color:#4A3800;">All Grandmaster evaluations (9.00 and above) require RAW file verification. This is standard procedure to confirm the result is based on an original camera capture. It applies to every photographer equally. Exposure, colour, cropping, and other editing are fully permitted &#8212; we only verify that your submitted image originates from a real camera file.</p>'
                 '</div>'
                 '<p style="font-size:16px;line-height:1.7;color:#111111;">Submit within <strong>7 days</strong> and your image goes live with the Grandmaster tier intact.</p>'
                 '<a href="' + submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
                 '<p style="font-size:15px;color:#111111;margin-top:8px;">Or visit: <a href="' + submit_url + '" style="color:#F5C518;">' + submit_url + '</a></p>'
-                '<p style="font-size:15px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
-                '</div>'
+                '<p style="font-size:15px;color:#6a6458;margin-top:24px;">&#8212; Shutter League</p>'
+                '</td></tr></table></td></tr></table></body></html>'
             )
         )
     except Exception as _e:
@@ -19595,14 +19596,13 @@ def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, ass
     """Branded 72-hour JPEG provenance request email."""
     try:
         _html = (
-            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
-            '<div style="background:#1A2744;padding:20px 32px;">'
+            '<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F5F0E8;">'
+            '<div style="background:#1a1a18;padding:20px 32px;">'
             '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
-            '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
             '</div>'
             '<div style="padding:32px;">'
             f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {user_name},</p>'
-            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your image <strong>{asset_name}</strong> scored <strong style="color:#F5C518;font-size:20px;">{score}</strong> — Grandmaster tier. Scores above 9.0 are held for verification before going live in the programme standings.</p>'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your image <strong>{asset_name}</strong> received an evaluation of <strong style="color:#F5C518;font-size:20px;">{score}</strong> — Grandmaster tier. Evaluations above 9.0 are held for verification before going live in the programme standings.</p>'
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">We can see your image was shot on your camera with the original EXIF data intact. You do not need to submit a RAW file — but we need the <strong>original full-size JPEG</strong> exactly as it came off your memory card or camera roll.</p>'
             '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
             '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">What to submit:</p>'
@@ -19614,26 +19614,26 @@ def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, ass
             '</div>'
             '<div style="background:#FFF3CD;border-left:4px solid #F5C518;padding:14px 20px;margin:20px 0;">'
             '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 4px 0;">&#9203; Submit within 72 hours</p>'
-            '<p style="font-size:14px;color:#1A1A18;margin:0;">After 72 hours, unverified Grandmaster scores are automatically hidden from the programme standings.</p>'
+            '<p style="font-size:14px;color:#1A1A18;margin:0;">After 72 hours, unverified Grandmaster evaluations are automatically hidden from the programme standings.</p>'
             '</div>'
             f'<a href="{submit_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit Original JPEG &#8594;</a>'
             f'<p style="font-size:13px;color:#888888;">Or visit: <a href="{submit_url}" style="color:#F5C518;">{submit_url}</a></p>'
             '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;"><strong>Going forward:</strong> Your camera can shoot RAW alongside JPEG simultaneously — enabling RAW+JPEG Fine in your camera settings means every future frame is automatically eligible for programme participation and the Annual Excellence Award without any extra steps.</p>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '<p style="color:#888888;font-size:13px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
             '</div>'
             '</div>'
         )
         _txt = (
             f'Hi {user_name},\n\n'
-            f'Your image {asset_name} scored {score} — Grandmaster tier. Verification required within 72 hours.\n\n'
+            f'Your image {asset_name} received an evaluation of {score} — Grandmaster tier. Verification required within 72 hours.\n\n'
             'Submit the original full-size JPEG (5MB–50MB+) from your camera — no resizing, no editing.\n\n'
             f'Submit here: {submit_url}\n\n'
             'You can also paste a Google Drive or WeTransfer link on that page.\n\n'
             '-- Shutter League'
         )
-        send_email(user_email, f'Verify Your {score} Grandmaster Score — 72 Hours', _html, _txt)
+        send_email(user_email, f'Verify Your {score} Grandmaster Evaluation — 72 Hours', _html, _txt)
         return True
     except Exception as _e:
         import traceback; traceback.print_exc()
@@ -19644,10 +19644,9 @@ def _send_jpeg_provenance_approved_email(user_email, user_name, asset_name, scor
     """Branded approval email when JPEG provenance is verified."""
     try:
         _html = (
-            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
-            '<div style="background:#1A2744;padding:20px 32px;">'
-            '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
-            '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+            '<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F5F0E8;">'
+            '<div style="background:#1a1a18;padding:20px 32px;">'
+            '<p style="color:#C8A84B;font-family:Courier New,monospace;font-weight:700;font-size:15px;letter-spacing:3px;margin:0;text-transform:uppercase;">SHUTTER LEAGUE</p>'
             '</div>'
             '<div style="padding:32px;">'
             f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {user_name},</p>'
@@ -19655,22 +19654,22 @@ def _send_jpeg_provenance_approved_email(user_email, user_name, asset_name, scor
             '<p style="font-size:18px;color:#3B6D11;font-weight:700;margin:0 0 4px 0;">&#10003; Verification Approved</p>'
             f'<p style="font-size:15px;color:#1A1A18;margin:0;">Your image <strong>{asset_name}</strong> has been verified.</p>'
             '</div>'
-            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your <strong style="color:#F5C518;font-size:20px;">{score}</strong> Grandmaster score is now live on your profile and in the programme standings.</p>'
-            f'<a href="{dashboard_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">View Your Score &#8594;</a>'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your <strong style="color:#F5C518;font-size:20px;">{score}</strong> Grandmaster evaluation is now live on your profile and in the programme standings.</p>'
+            f'<a href="{dashboard_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">View Your Evaluation &#8594;</a>'
             '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;">For future submissions, enabling RAW+JPEG Fine on your camera means verification is automatic — no extra steps required.</p>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '<p style="color:#888888;font-size:13px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
             '</div>'
             '</div>'
         )
         _txt = (
             f'Hi {user_name},\n\n'
-            f'Your image {asset_name} has been verified. Your {score} Grandmaster score is now live.\n\n'
+            f'Your image {asset_name} has been verified. Your {score} Grandmaster evaluation is now live.\n\n'
             f'View it here: {dashboard_url}\n\n'
             '-- Shutter League'
         )
-        send_email(user_email, f'Your {score} Score is Now Live — Shutter League', _html, _txt)
+        send_email(user_email, f'Your {score} Evaluation is Now Live — Shutter League', _html, _txt)
         return True
     except Exception as _e:
         import traceback; traceback.print_exc()
@@ -20040,7 +20039,7 @@ def admin_contact_reply(msg_id):
         '</div>'
         '</div>'
         '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+        '<p style="color:#888888;font-size:13px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
         '</div>'
         '</div>'
     )
@@ -20174,25 +20173,25 @@ def _send_raw_approved_email(photographer, img):
             to_addresses=[photographer.email],
             subject=f'[Shutter League] Your image is now live — {img.asset_name or "Untitled"}',
             html_body=(
-                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@media only screen and (max-width:600px){.sl-live-pad{padding:20px 16px!important;}.sl-live-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}}</style></head>'
+                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                 '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                 '<tr><td align="center">'
                 '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
                 '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
                 '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
-                '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Verification approved</p>'
+                '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.75);text-transform:uppercase;">Verification approved</p>'
                 '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.6;">Your image is now live</h1>'
                 '</td></tr>'
                 '<tr><td style="padding:24px 28px 20px;">'
                 '<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 20px;">Hi ' + _uname + ' &#8212; <strong>' + (img.asset_name or 'Untitled') + '</strong> has passed verification and is now public.</p>'
                 '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;padding:16px 18px;margin:0 0 20px;border:1px solid #E0D8C8;">'
                 '<tr><td width="50%">'
-                '<p style="margin:0 0 2px;font-size:15px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Score</p>'
+                '<p style="margin:0 0 2px;font-size:15px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Evaluation</p>'
                 '<p style="margin:0;font-size:22px;font-weight:700;color:#C8A84B;">' + _score + '</p>'
                 '<p style="margin:0;font-size:15px;color:#6a6458;">' + _tier + '</p>'
                 '</td><td width="50%">'
-                '<p style="margin:0 0 2px;font-size:15px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Genre</p>'
+                '<p style="margin:0 0 2px;font-size:15px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Interest</p>'
                 '<p style="margin:0;font-size:16px;font-weight:700;color:#1a1a18;">' + (img.genre or '—') + '</p>'
                 '</td></tr>'
                 '</table>'
@@ -20207,7 +20206,7 @@ def _send_raw_approved_email(photographer, img):
             text_body=(
                 'Hi ' + _uname + ',\n\n'
                 + (img.asset_name or 'Untitled') + ' has passed verification and is now live.\n\n'
-                'Score: ' + _score + ' ' + _tier + '\n'
+                'Evaluation: ' + _score + ' ' + _tier + '\n'
                 'View: ' + _img_url + '\n\n'
                 '-- Shutter League'
             )
@@ -20267,7 +20266,7 @@ def admin_request_raw(image_id):
             to_addresses=[owner.email],
             subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
             html_body=(
-                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
                 '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
                 '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
                 '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
@@ -20321,7 +20320,7 @@ def admin_bulk_request_raw():
                     to_addresses=[owner.email],
                     subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
                     html_body=(
-                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                        '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
                         '<p style="font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
                         '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
                         '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
@@ -20375,7 +20374,7 @@ def admin_raw_send_reminder(image_id):
             args=(
                 [owner.email],
                 '[Shutter League] Reminder: RAW File Required for ' + ititle,
-                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;'
+                '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;'
                 'background:#fffef9;color:#111111;">'
                 '<p style="font-family:\'Courier New\',monospace;font-size:12px;letter-spacing:2px;'
                 'text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
@@ -20471,7 +20470,7 @@ def admin_raw_bulk_remind():
                 args=(
                     [owner.email],
                     '[Shutter League] Reminder: RAW File Required for ' + ititle,
-                    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                    '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
                     '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
                     '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Required &#8212; Action Needed</h2>'
                     '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + uname + ',</p>'
@@ -20574,7 +20573,7 @@ def admin_raw_decide(image_id):
             send_email(
                 photographer.email,
                 'RAW verification failed -- Shutter League',
-                ('<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                ('<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  '<h2 style="color:#C0392B;">RAW Verification Failed</h2>'
                  '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"' + (img.asset_name or 'Untitled') + '"</strong> has been reviewed by our admin team and has not passed RAW verification.</p>'
@@ -20599,7 +20598,7 @@ def admin_raw_decide(image_id):
             send_email(
                 photographer.email,
                 'RAW resubmission required -- Shutter League',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2>RAW Resubmission Required</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Please resubmit the RAW for <strong>"{img.asset_name}"</strong> within 24 hours.</p>'
@@ -20660,7 +20659,7 @@ def admin_resolve_flag(assignment_id):
         send_email(
             assignment.judge_email,
             f'Your flag has been reviewed -- {assignment.asset_name}',
-            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+            (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League -- Jury</p>'
              f'<h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Flag Reviewed</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you for flagging <strong>"{assignment.asset_name}"</strong> ({assignment.genre}).</p>'
@@ -21365,7 +21364,7 @@ def _auto_decide_raw(image_id, submission_id):
                 send_email(
                     photographer.email,
                     'RAW file received — ' + (img.asset_name or 'Untitled'),
-                    ('<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                    ('<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                      '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
                      '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
                      '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, ' + _uname + '.</p>'
@@ -21438,7 +21437,7 @@ def _auto_decide_raw(image_id, submission_id):
                         photographer.email,
                         f'RAW File Received — Manual Verification — {img.asset_name}',
                         (
-                            '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                            '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                             '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
                             '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
                             '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, ' + (photographer.full_name or photographer.username) + '.</p>'
@@ -21485,7 +21484,7 @@ def _auto_decide_raw(image_id, submission_id):
                     send_email(
                         photographer.email,
                         f'RAW Verification Passed — {img.asset_name}',
-                        (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                          f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
                          f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW Verification Passed ✓</h2>'
                          f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
@@ -21539,7 +21538,7 @@ def _auto_decide_raw(image_id, submission_id):
                         photographer.email,
                         f'RAW Verification Failed — {img.asset_name}',
                         (
-                            '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">' +
+                            '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">' +
                             '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>' +
                             '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#C0392B;">RAW Verification Failed</h2>' +
                             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>' +
@@ -21797,7 +21796,7 @@ def admin_raw_appeal_decide(image_id):
             send_email(
                 photographer.email,
                 f'Appeal Decision — Disqualification Confirmed · {img.asset_name}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
                  f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Appeal Decision — Disqualification Confirmed</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
@@ -21826,7 +21825,7 @@ def admin_raw_appeal_decide(image_id):
             send_email(
                 photographer.email,
                 f'Appeal Successful — Image Reinstated · {img.asset_name}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
                  f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Appeal Successful — Image Reinstated</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
@@ -22133,22 +22132,22 @@ def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload
                             to_addresses=_user.email,
                             subject=f'[Shutter League] Your evaluation has been updated — {_title}',
                             html_body=(
-                                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                                '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@media only screen and (max-width:600px){.sl-eu-pad{padding:20px 16px!important;}.sl-eu-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}}</style></head>'
+                                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                                 '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                                 '<tr><td align="center">'
                                 '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
                                 '<tr><td style="background:#1a1a18;padding:24px 32px;">'
-                                '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League</p>'
+                                '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                                 '</td></tr>'
                                 '<tr><td style="padding:28px 32px;">'
                                 '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#1a1a18;">Hi ' + _name + ',</p>'
                                 '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">'
                                 'We have updated the evaluation for your <strong>' + _genre + '</strong> image '
-                                '<strong>&#8220;' + _title + '&#8221;</strong> following a rubric recalibration.'
+                                '<strong>&#8220;' + _title + '&#8221;</strong> following a calibration update.'
                                 '</p>'
                                 '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;padding:16px 20px;margin:20px 0;">'
-                                '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#8a8070;">Updated Score</p>'
+                                '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#8a8070;">Updated Evaluation</p>'
                                 '<p style="margin:0;font-size:28px;font-weight:700;color:#1a1a18;">' + _score_str + ' &nbsp;<span style="font-size:16px;color:#8a8070;">' + _tier_str + '</span></p>'
                                 '<p style="margin:6px 0 0;font-size:15px;color:#8a8070;font-family:Courier New,monospace;">Change: ' + _delta_str + '</p>'
                                 '</div>'
@@ -22166,8 +22165,8 @@ def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload
                             text_body=(
                                 'Hi ' + _name + ',\n\n'
                                 'We have updated the evaluation for your ' + _genre + ' image '
-                                '"' + _title + '" following a rubric recalibration.\n\n'
-                                'Updated score: ' + _score_str + ' (' + _tier_str + ')  Change: ' + _delta_str + '\n\n'
+                                '"' + _title + '" following a calibration update.\n\n'
+                                'Updated evaluation: ' + _score_str + ' (' + _tier_str + ')  Change: ' + _delta_str + '\n\n'
                                 'Your scorecard and full analysis have been updated. No action needed.\n\n'
                                 'View your updated scorecard: ' + _img_url + '\n\n'
                                 '— Shutter League'
@@ -22320,7 +22319,7 @@ def admin_notify_winners():
         send_email(
             photographer.email,
             f'Congratulations — provisional top position in {contest_ref}',
-            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+            (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional top-scoring position in <strong>{contest_ref}</strong>.</p>'
@@ -22367,7 +22366,7 @@ def cron_judge_reminders():
             send_email(
                 row.email,
                 f'[{"Reminder" if hours==48 else "Final Reminder"}] {row.cnt} image(s) due in {label}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League  --  Jury</p>'
                  f'<h2 style="font-size:20px;{"color:#C0392B;" if hours==24 else ""}">'
                  f'{"Reminder" if hours==48 else "Final reminder"}: {row.cnt} image(s) to review</h2>'
@@ -22410,7 +22409,7 @@ def cron_raw_reminders():
             send_email(
                 row.email,
                 f'[{"Reminder" if hours==48 else "FINAL"}] RAW for "{row.asset_name}" due in {label}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2 style="font-size:20px;{"color:#C0392B;" if hours==24 else ""}">RAW file due in {label}</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;"><strong>"{row.asset_name}"</strong><br>'
@@ -22445,7 +22444,7 @@ def cron_raw_reminders():
         send_email(
             row.email,
             f'Your image was not considered for this programme -- RAW file not received',
-            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+            (f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">We are sorry -- your image could not be considered</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We regret to inform you that your image <strong>&quot;{row.asset_name}&quot;</strong> was not considered for this programme because the RAW file was not received within the required timeframe.</p>'
@@ -22503,8 +22502,10 @@ def send_results_announcement(challenge, winners):
     for user in users:
         html_body = (
             '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<style>@media only screen and (max-width:600px){.sl-cr-pad{padding:20px 18px!important;}.sl-cr-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}}</style>'
+            '</head>'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
             '<table width="100%" cellpadding="0" cellspacing="0"'
             ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
             '<table width="560" cellpadding="0" cellspacing="0"'
@@ -22514,7 +22515,7 @@ def send_results_announcement(challenge, winners):
             '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;'
             'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
             'SHUTTER LEAGUE</p></td></tr>'
-            '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+            '<tr><td style="background:#1a1a18;padding:0 32px 28px;" class="sl-cr-pad">'
             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:15px;'
             'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">'
             'Results . ' + challenge.week_ref + '</p>'
@@ -22522,7 +22523,7 @@ def send_results_announcement(challenge, winners):
             + challenge.prompt_title + '</h1></td></tr>'
             '<tr><td style="padding:28px 32px;">'
             '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.6;">'
-            'The results are in. Here are this week&#39;s top photographers:</p>'
+            'The week closed. Here&#39;s where the photographs landed.</p>'
             '<table width="100%" cellpadding="0" cellspacing="0"'
             ' style="border:1px solid #E0D8C8;border-radius:6px;overflow:hidden;margin-bottom:24px;">'
             + winners_html +
@@ -22590,14 +22591,16 @@ def send_winners_email(challenge, winners):
         score_str = str(img.score) if img and img.score else ''
         score_line = (
             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:13px;'
-            'letter-spacing:1px;color:#8a8070;">DDI Score: '
+            'letter-spacing:1px;color:#8a8070;">DDI Evaluation: '
             + score_str + '</p>'
         ) if score_str else ''
 
         html_body = (
             '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<style>@media only screen and (max-width:600px){.sl-win-pad{padding:20px 18px!important;}.sl-win-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}}</style>'
+            '</head>'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
             '<table width="100%" cellpadding="0" cellspacing="0"'
             ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
             '<table width="560" cellpadding="0" cellspacing="0"'
@@ -22631,14 +22634,14 @@ def send_winners_email(challenge, winners):
             'padding:16px 20px;margin-bottom:28px;width:100%;">'
             '<tr><td>'
             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:15px;'
-            'letter-spacing:1px;color:#8a8070;">Challenge: ' + challenge.prompt_title + '</p>'
+            'letter-spacing:1px;color:#8a8070;">Assignment: ' + challenge.prompt_title + '</p>'
             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:15px;'
             'letter-spacing:1px;color:#8a8070;">Week: ' + challenge.week_ref + '</p>'
             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:15px;'
             'letter-spacing:1px;color:#8a8070;">Image: ' + img_title + '</p>'
             + score_line +
             '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;'
-            'font-weight:700;letter-spacing:1px;color:#C8A84B;">Rank: '
+            'font-weight:700;letter-spacing:1px;color:#C8A84B;">Standing: '
             + medal + ' ' + rank_str + '</p>'
             '</td></tr></table>'
 
@@ -22665,7 +22668,7 @@ def send_winners_email(challenge, winners):
             + ' in the ' + challenge.prompt_title + ' challenge (' + challenge.week_ref + ').\n'
         )
         if score_str:
-            text_body += 'DDI Score: ' + score_str + '\n'
+            text_body += 'DDI Evaluation: ' + score_str + '\n'
         text_body += '\nSee full results: ' + results_url + '\n\n -  Shutter League'
 
         if send_email(
@@ -22973,7 +22976,7 @@ def _send_admin_hold_email(challenge, ranked, hold_until):
         html_body = (
             '<!DOCTYPE html><html><head><meta charset="UTF-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
             '<table width="100%" cellpadding="0" cellspacing="0"'
             ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
             '<table width="600" cellpadding="0" cellspacing="0"'
@@ -23210,7 +23213,7 @@ def admin_release_weekly_results(week_ref):
         '<title>Release Results — ' + week_ref + '</title>'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<style>'
-        'body{margin:0;padding:32px 16px;background:#F5F0E8;font-family:Georgia,serif;color:#1a1a18;}'
+        'body{margin:0;padding:32px 16px;background:#F5F0E8;font-family:Inter,Arial,sans-serif;color:#1a1a18;}'
         '.card{max-width:680px;margin:0 auto;background:#fff;border:1px solid #E0D8C8;'
         'border-radius:8px;overflow:hidden;}'
         '.card-head{background:#1a1a18;padding:24px 32px;}'
@@ -23310,10 +23313,9 @@ def admin_subscription_broadcast():
         _name     = u.full_name or u.username or 'Photographer'
         _subscribe_url = f'{_site}/subscribe'
         _html = (
-            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
-            '<div style="background:#1A2744;padding:20px 32px;">'
-            '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
-            '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+            '<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F5F0E8;">'
+            '<div style="background:#1a1a18;padding:20px 32px;">'
+            '<p style="color:#C8A84B;font-family:Courier New,monospace;font-weight:700;font-size:15px;letter-spacing:3px;margin:0;text-transform:uppercase;">SHUTTER LEAGUE</p>'
             '</div>'
             '<div style="padding:32px;">'
             f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {_name},</p>'
@@ -23337,14 +23339,14 @@ def admin_subscription_broadcast():
             f'<a href="{_subscribe_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:4px 0 8px 0;">Subscribe Now &#8594;</a>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '<p style="color:#888888;font-size:13px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
             '</div>'
             '</div>'
         )
         _txt = (
             f'Hi {_name},\n\n'
-            'You have already seen your scores. Now take it further.\n\n'
-            'A Shutter League subscription gives you scored images every month, your standing in the programme, '
+            'You have already seen your evaluations. Now take it further.\n\n'
+            'A Shutter League subscription gives you evaluated images every month, your standing in the programme, '
             'and eligibility for the Annual Excellence Award.\n\n'
             'Camera or Mobile League: ₹200/month (4 photographs evaluated/month) — Founding Member rate, locks in forever\n\n'
             'Payment note: Indian debit card, credit card, UPI, or net banking required.\n\n'
@@ -23441,7 +23443,7 @@ def run_daily_signup_digest():
 
             html_body = (
                 '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                 '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                 '<tr><td align="center">'
                 '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:600px;width:100%;">'
@@ -23562,7 +23564,7 @@ def run_mentor_reminders():
 
                     html_body = (
                         '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
                         '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
                         '<tr><td align="center">'
                         '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:560px;width:100%;">'
@@ -23570,7 +23572,7 @@ def run_mentor_reminders():
                         '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">SHUTTER LEAGUE · MENTOR</p>'
                         '</td></tr>'
                         '<tr><td style="background:#1A2744;padding:0 32px 24px;">'
-                        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase;">Review Deadline Reminder</p>'
+                        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.75);text-transform:uppercase;">Review Deadline Reminder</p>'
                         '<h1 style="margin:0;font-size:22px;color:#FFFFFF;font-weight:700;line-height:1.6;">You have a review due in less than 24 hours.</h1>'
                         '</td></tr>'
                         '<tr><td style="padding:28px 32px;">'
@@ -24082,7 +24084,7 @@ def run_peer_eval_digest():
                 send_email(
                     _owner.email,
                     f'Your {_genre} image received {_count} more evaluation{"s" if _count!=1 else ""} — Shutter League',
-                    f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                    f'<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                     f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
                     f'text-transform:uppercase;color:#B8892A;">Shutter League · Peer Evaluation</p>'
                     f'<h2 style="font-size:22px;font-weight:700;margin:16px 0 8px;">'
