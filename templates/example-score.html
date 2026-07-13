@@ -34,7 +34,7 @@
 
   .ex-headline {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.2;
+    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.5;
     color: var(--text-primary); margin-bottom: 0.75rem;
   }
   .ex-headline em { font-style: italic; color: var(--gold); }
@@ -118,6 +118,22 @@
     border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
   }
   .ex-cta p { font-size: 0.95rem; color: var(--text-primary); margin-bottom: 1rem; }
+
+  /* Session 143 — 70yr + mobile fixes */
+  .ex-wrap { font-size: 16px; line-height: 1.7; }
+  .ex-intro { font-size: 16px; }
+  .ex-cta .btn { min-height: 44px; padding: 13px 32px; font-size: 16px; }
+  @media (max-width: 600px) {
+    .ex-wrap { padding: 1.5rem 16px; }
+    .sc-body { padding: 18px 16px 16px; }
+    .sc-score-num { font-size: 2.5rem; }
+    .sc-top { flex-direction: column; }
+    .sc-score-block { text-align: left; }
+    .dims { gap: 10px; }
+    .dim { flex: 1 1 calc(33% - 8px); min-width: 70px; }
+    .ex-cta { padding: 20px 16px; }
+    .ex-cta .btn { width: 100%; text-align: center; }
+  }
 </style>
 {% endblock %}
 
