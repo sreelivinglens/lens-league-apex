@@ -18,11 +18,11 @@
   .carousel-slide.slide-danger { border-left-color: var(--red); background: rgba(180,30,30,0.04); }
   .carousel-slide.slide-warn   { border-left-color: var(--gold-dark); background: rgba(180,130,0,0.04); }
   .carousel-slide.slide-ok     { border-left-color: var(--green); background: rgba(30,100,60,0.04); }
-  .carousel-msg { font-size: 17px; font-weight: 600; line-height: 1.3; color: var(--text-primary); }
+  .carousel-msg { font-size: 17px; font-weight: 600; line-height: 1.5; color: var(--text-primary); }
   .carousel-slide.slide-danger .carousel-msg { color: #ff6b6b; }
   .carousel-slide.slide-warn   .carousel-msg { color: var(--gold); }
   .carousel-slide.slide-ok     .carousel-msg { color: #3ea06e; }
-  .carousel-sub { font-size: 12px; font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+  .carousel-sub { font-size: 13px; font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
   .carousel-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--gold); border-radius: 0 2px 0 0; transition: width 2.5s linear; }
 
   .modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
@@ -35,7 +35,7 @@
   .modal-body ol { padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
   .modal-body strong { color: var(--text-primary); }
   .modal-footer { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; flex-wrap: wrap; }
-  @media (max-width: 480px) { .modal-footer { flex-direction: column; } .modal-footer .btn { width: 100%; text-align: center; } }
+  @media (max-width: 480px) { .modal-footer { flex-direction: column; } .modal-footer .btn { width: 100%; text-align: center; } .shot-on-grid { grid-template-columns: 1fr; } }
 
   .drop-zone { border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: var(--surface-3); margin-bottom: 8px; }
   .drop-zone:hover, .drop-zone.dragover { border-color: var(--gold); background: var(--surface-4); }
@@ -79,7 +79,7 @@
   .result-row:only-child { border-radius: var(--radius-md); }
   .result-filename { flex: 1; font-size: 14px; color: var(--text-secondary); word-break: break-word; min-width: 0; }
   .result-score { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); flex-shrink: 0; min-width: 48px; text-align: right; }
-  .result-tier { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; min-width: 90px; letter-spacing: 1px; text-transform: uppercase; }
+  .result-tier { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; min-width: 90px; letter-spacing: 1px; text-transform: uppercase; }
   .result-status { font-size: 14px; flex-shrink: 0; min-width: 120px; line-height: 1.5; word-break: break-word; }
   .result-status.ok { color: var(--green); }
   .result-status.err { color: var(--red); }
@@ -88,7 +88,7 @@
   /* ══ SCORING OVERLAY ══ */
   #scoringOverlay { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(10,10,8,.97); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
   #scoringOverlay.active { display: flex; }
-  .overlay-engine-tag { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
+  .overlay-engine-tag { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
   .breath-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px; }
   @keyframes fadeInBreath { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   .breath-ring-hero { width: 140px; height: 140px; border-radius: 50%; border: 3px solid rgba(200,168,75,0.5); background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%); animation: breatheHero 8s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }
@@ -96,12 +96,12 @@
   .breath-inner-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); opacity: 0.7; animation: breatheInner 8s ease-in-out infinite; }
   @keyframes breatheInner { 0% { transform: scale(1.4); opacity: 0.4; } 50% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.4); opacity: 0.4; } }
   .breath-word { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase; text-align: center; min-width: 160px; }
-  .breath-counts { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; color: #FFFFFF; text-transform: uppercase; }
+  .breath-counts { font-family: var(--font-mono); font-size: 13px; letter-spacing: 3px; color: #FFFFFF; text-transform: uppercase; }
   .breath-tagline { font-size: 15px; color: #FFFFFF; font-style: italic; }
   .overlay-copy { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 32px; opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards; }
-  .overlay-phase { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #F5C518; text-transform: uppercase; }
+  .overlay-phase { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #F5C518; text-transform: uppercase; }
   .overlay-status { font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65); text-align: center; max-width: 340px; line-height: 1.5; }
-  .overlay-substatus { font-family: var(--font-mono); font-size: 12px; color: #FFFFFF; text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
+  .overlay-substatus { font-family: var(--font-mono); font-size: 13px; color: #FFFFFF; text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
   .mini-timer { display: flex; flex-direction: column; align-items: center; opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards; }
   .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
   .mini-clock-svg { transform: rotate(-90deg); }
@@ -109,7 +109,7 @@
   .mini-ring-fill { fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset .9s linear; }
   .mini-clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .mini-clock-secs { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: rgba(200,168,75,0.75); line-height: 1; }
-  .mini-clock-unit { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
+  .mini-clock-unit { font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
   .overlay-error { display: none; margin-top: 24px; padding: 16px 24px; background: var(--red-dim); border: 1px solid var(--red); border-radius: var(--radius-md); font-size: 15px; color: #F0A0A0; text-align: center; max-width: 480px; line-height: 1.6; }
   .overlay-error a { color: var(--gold); text-decoration: underline; cursor: pointer; }
 </style>
