@@ -10,7 +10,7 @@
   }
   .reg-section-title {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    letter-spacing: 2px; text-transform: uppercase; color: #2C3E6B;
     margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
   }
   .field-group { margin-bottom: 22px; }
@@ -25,7 +25,7 @@
     font-family: var(--font-body); border-radius: var(--radius-sm);
     outline: none; transition: border-color 0.2s; box-sizing: border-box;
   }
-  .field-input:focus { border-color: var(--gold); }
+  .field-input:focus { border-color: #2C3E6B; }
   .field-input::placeholder { color: var(--text-muted); }
   textarea.field-input { resize: vertical; min-height: 140px; line-height: 1.6; }
   .field-hint {
@@ -40,9 +40,9 @@
     transition: border-color 0.2s;
   }
   .radio-option:has(input:checked) {
-    border-color: var(--gold-dark); background: var(--gold-subtle);
+    border-color: #2C3E6B; background: rgba(44,62,107,0.08);
   }
-  .radio-option input { accent-color: var(--gold); width: 18px; height: 18px; }
+  .radio-option input { accent-color: #2C3E6B; width: 18px; height: 18px; }
   .photo-upload-area {
     border: 2px dashed var(--border); border-radius: var(--radius-md);
     padding: 32px; text-align: center; cursor: pointer;
@@ -68,6 +68,10 @@
     text-align: right; margin-top: 6px;
   }
   .word-count.over { color: var(--red); }
+@media (max-width: 600px) {
+  div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+  .radio-group { flex-direction: column; }
+}
 </style>
 {% endblock %}
 
