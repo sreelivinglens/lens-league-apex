@@ -16346,6 +16346,171 @@ def admin_weekly_challenge():
 # Payment subscription
 # ---------------------------------------------------------------------------
 
+@app.route('/api/create-payment', methods=['POST'])
+@login_required
+def api_create_payment():
+    """
+    AJAX endpoint — creates a Razorpay Order (monthly) or Subscription (halfyearly/annual).
+    Called directly from the pricing page. Returns JSON with order_id or subscription_id.
+    Eliminates the intermediate subscribe page for Camera and Mobile leagues.
+    """
+    import uuid as _uuid
+    data   = request.get_json(silent=True) or {}
+    track  = data.get('track', '')
+    plan   = data.get('plan', 'monthly')
+
+    if track not in ('camera', 'mobile'):
+        return jsonify({'error': 'Invalid track'}), 400
+    if plan not in ('monthly', 'halfyearly', 'annual'):
+        return jsonify({'error': 'Invalid plan'}), 400
+
+    razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
+    razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
+
+    if not razorpay_key or os.getenv('PAYMENT_GATEWAY_LIVE', '0') != '1':
+        return jsonify({'error': 'Payment system not available'}), 503
+
+    display_prices = {
+        'camera': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'mobile': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+    }
+    plan_ids = {
+        'camera': {
+            'halfyearly': os.getenv('RAZORPAY_PLAN_CAMERA_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
+        },
+        'mobile': {
+            'halfyearly': os.getenv('RAZORPAY_PLAN_MOBILE_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
+        },
+    }
+
+    amount  = display_prices[track][plan]
+    plan_id = plan_ids[track].get(plan, '') if plan != 'monthly' else None
+
+    try:
+        import razorpay as _rzp
+        client = _rzp.Client(auth=(razorpay_key, razorpay_secret))
+
+        if plan == 'monthly':
+            _receipt = f'sl_{track[:3]}_{current_user.id}_{_uuid.uuid4().hex[:8]}'
+            order = client.order.create({
+                'amount':   amount * 100,
+                'currency': 'INR',
+                'receipt':  _receipt[:40],
+                'notes':    {'track': track, 'plan': plan, 'user': str(current_user.id)},
+            })
+            app.logger.info(f'[api_create_payment] order={order["id"]} user={current_user.id}')
+            return jsonify({
+                'type':     'order',
+                'order_id': order['id'],
+                'amount':   amount * 100,
+                'track':    track,
+                'plan':     plan,
+                'key':      razorpay_key,
+                'name':     current_user.full_name or current_user.username or '',
+                'email':    current_user.email or '',
+            })
+        elif plan_id:
+            _total = 2 if plan == 'halfyearly' else 1
+            sub = client.subscription.create({
+                'plan_id':         plan_id,
+                'total_count':     _total,
+                'quantity':        1,
+                'customer_notify': 1,
+            })
+            app.logger.info(f'[api_create_payment] sub={sub["id"]} user={current_user.id}')
+            return jsonify({
+                'type':            'subscription',
+                'subscription_id': sub['id'],
+                'track':           track,
+                'plan':            plan,
+                'key':             razorpay_key,
+                'name':            current_user.full_name or current_user.username or '',
+                'email':           current_user.email or '',
+            })
+        else:
+            return jsonify({'error': 'Plan not configured'}), 503
+
+    except Exception as _e:
+        app.logger.error(f'[api_create_payment] failed: {_e}')
+        return jsonify({'error': 'Could not initialise payment. Please try again.'}), 500
+
+
+@app.route('/subscribe/confirm', methods=['POST'])
+@login_required
+def subscribe_confirm():
+    """
+    Payment confirmation endpoint — called after Razorpay checkout succeeds.
+    Handles both Order (monthly) and Subscription (halfyearly/annual) payments.
+    """
+    import hmac as _hmac, hashlib as _hashlib
+
+    payment_id      = request.form.get('razorpay_payment_id', '')
+    subscription_id = request.form.get('razorpay_subscription_id', '')
+    order_id        = request.form.get('razorpay_order_id', '')
+    signature       = request.form.get('razorpay_signature', '')
+    track           = request.form.get('track', '')
+    plan            = request.form.get('plan', '')
+    is_order        = bool(order_id)
+
+    razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
+
+    if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual'):
+        flash('Invalid payment details.', 'error')
+        return redirect(url_for('pricing'))
+
+    try:
+        msg = f'{order_id}|{payment_id}' if is_order else f'{payment_id}|{subscription_id}'
+        expected = _hmac.new(
+            razorpay_secret.encode('utf-8'),
+            msg.encode('utf-8'),
+            _hashlib.sha256
+        ).hexdigest()
+        if not _hmac.compare_digest(expected, signature):
+            raise Exception('Signature mismatch')
+
+        current_user.subscription_track = track
+        current_user.subscription_plan  = plan
+        current_user.subscribed_at       = datetime.utcnow()
+        current_user.is_subscribed       = True
+        current_user.razorpay_sub_id     = order_id if is_order else subscription_id
+        db.session.execute(
+            db.text('UPDATE users SET referred_discount = FALSE WHERE id = :uid'),
+            {'uid': current_user.id}
+        )
+        db.session.commit()
+
+        # Referral conversion points
+        try:
+            _ref = db.session.execute(
+                db.text('SELECT id, referrer_id, points_reward_granted FROM referrals WHERE referred_user_id = :uid'),
+                {'uid': current_user.id}
+            ).fetchone()
+            if _ref and not _ref[2]:
+                _referrer = User.query.get(_ref[1])
+                if _referrer:
+                    award_points(_referrer, 200, 'referral_conversion')
+                db.session.execute(
+                    db.text('UPDATE referrals SET first_payment_at = NOW(), points_reward_granted = TRUE WHERE id = :rid'),
+                    {'rid': _ref[0]}
+                )
+                db.session.commit()
+        except Exception as _rpe:
+            app.logger.error(f'[subscribe_confirm] referral error: {_rpe}')
+
+        _track_labels = {'camera': 'Camera League', 'mobile': 'Mobile League'}
+        _send_subscription_confirmation(current_user, track, plan)
+        session['just_subscribed'] = track
+        flash(f'Welcome to {_track_labels.get(track, track.title())}. Your membership is active.', 'success')
+        return redirect(url_for('dashboard'))
+
+    except Exception as _e:
+        app.logger.error(f'[subscribe_confirm] failed: {_e}')
+        flash('Payment verification failed. Contact support if you were charged.', 'error')
+        return redirect(url_for('pricing'))
+
+
 @app.route('/subscribe/<track>', methods=['GET', 'POST'])
 @login_required
 def subscribe(track):
