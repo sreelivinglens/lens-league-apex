@@ -485,16 +485,61 @@
   </div>
   {% endif %}
 
-  <div class="danger-zone">
-    <span class="danger-zone-label">Cancel Subscription</span>
-    <p>Cancelling will revert your account to the free plan. Your photographs evaluated and history are kept.</p>
-    <form method="POST" action="{{ url_for('cancel_subscription') }}"
-          onsubmit="return confirm('Cancel your subscription? You will revert to the free plan.');">
-      <button type="submit" class="btn btn-danger" style="padding:10px 24px;">
-        Cancel Subscription
+  {% if has_active_sub %}
+  <div class="danger-zone" style="margin-top:16px;">
+    <span class="danger-zone-label">Membership</span>
+
+    {# Billing summary #}
+    <div style="background:var(--surface-1);border-radius:6px;padding:16px 20px;margin-bottom:20px;border:1px solid var(--border);">
+      <div style="font-size:15px;color:var(--text-primary);line-height:1.8;">
+        <strong>Plan:</strong>
+        {{ {'camera':'Camera League','mobile':'Mobile League','learning':'Learning Only','mentor':'Human + AI Mentor'}.get(current_user.subscription_track,'') }}
+        &nbsp;·&nbsp;
+        {{ {'monthly':'Monthly · ₹200','halfyearly':'Six-Month · ₹1,100','annual':'Annual · ₹2,000'}.get(current_user.subscription_plan,'') }}
+      </div>
+      {% if current_user.subscribed_at %}
+      <div style="font-size:15px;color:var(--text-muted);margin-top:4px;">
+        Member since {{ current_user.subscribed_at.strftime('%-d %B %Y') }}
+      </div>
+      {% endif %}
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6;">
+        Your evaluations, standing, and Body of Work are preserved if you cancel.
+        No refund applies to the current cycle.
+      </div>
+    </div>
+
+    <p style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:16px;">
+      To cancel, tell us why — this helps us understand what to improve.
+    </p>
+
+    <form method="POST" action="{{ url_for('cancel_subscription') }}" id="cancel-sub-form">
+      <div style="margin-bottom:16px;">
+        <select name="cancel_reason" required
+          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;
+                 font-family:Inter,Arial,sans-serif;font-size:15px;background:var(--surface-1);
+                 color:var(--text-primary);">
+          <option value="" disabled selected>Why are you cancelling?</option>
+          <option value="too_expensive">Too expensive</option>
+          <option value="not_using_enough">Not using it enough</option>
+          <option value="taking_a_break">Taking a break</option>
+          <option value="evaluations_not_useful">Didn't find the evaluations useful</option>
+          <option value="technical_issues">Technical issues</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div style="margin-bottom:20px;">
+        <textarea name="cancel_comment" placeholder="Any other thoughts? (optional)"
+          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;
+                 font-family:Inter,Arial,sans-serif;font-size:15px;background:var(--surface-1);
+                 color:var(--text-primary);resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+      </div>
+      <button type="submit" class="btn btn-danger" style="padding:10px 24px;"
+        onclick="return confirm('Cancel your membership? You will retain access for the remainder of your current cycle.');">
+        Cancel Membership
       </button>
     </form>
   </div>
+  {% endif %}
   {% endif %}
 
   <div class="danger-zone" style="margin-top:16px;">
