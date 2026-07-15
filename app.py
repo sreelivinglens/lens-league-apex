@@ -16277,14 +16277,14 @@ def subscribe(track):
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 99,   'annual': 999},
-        'camera':   {'monthly': 199,  'annual': 1999},
-        'learning': {'monthly': 100,  'annual': 999},
-        'mentor':   {'monthly': 999,  'annual': 9999},
+        'mobile':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'camera':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'learning': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'mentor':   {'monthly': 999, 'halfyearly': 5500, 'annual': 9999},
     }
 
-    plan_id = plan_ids[track][plan]
-    amount  = display_prices[track][plan]
+    plan_id = plan_ids[track].get(plan, '')
+    amount  = display_prices[track].get(plan, 200)
 
     if request.method == 'POST':
         payment_id      = request.form.get('razorpay_payment_id', '')
