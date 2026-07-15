@@ -16226,7 +16226,7 @@ def subscribe(track):
         return redirect(url_for('pricing'))
 
     plan = request.args.get('plan', 'monthly')
-    if plan not in ('monthly', 'annual'):
+    if plan not in ('monthly', 'halfyearly', 'annual'):
         plan = 'monthly'
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -16234,27 +16234,31 @@ def subscribe(track):
 
     plan_ids = {
         'mobile': {
-            'monthly': os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
+            'monthly':    os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_MOBILE_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
         },
         'camera': {
-            'monthly': os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
+            'monthly':    os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_CAMERA_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
         },
         'learning': {
-            'monthly': os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
+            'monthly':    os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_LEARNING_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
         },
         'mentor': {
-            'monthly': os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
+            'monthly':    os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_MENTOR_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 99,   'annual': 999},
-        'camera':   {'monthly': 199,  'annual': 1999},
-        'learning': {'monthly': 100,  'annual': 999},
-        'mentor':   {'monthly': 999,  'annual': 9999},
+        'mobile':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'camera':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'learning': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'mentor':   {'monthly': 999, 'halfyearly': 5500, 'annual': 9999},
     }
 
     plan_id = plan_ids[track][plan]
@@ -16364,9 +16368,10 @@ def subscribe(track):
         try:
             import razorpay
             client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
+            total_count = 10 if plan == 'annual' else (20 if plan == 'halfyearly' else 120)
             subscription = client.subscription.create({
                 'plan_id':         plan_id,
-                'total_count':     10 if plan == 'annual' else 120,
+                'total_count':     total_count,
                 'quantity':        1,
                 'customer_notify': 1,
             })
@@ -16381,10 +16386,10 @@ def subscribe(track):
         'mentor':   'Human + AI Mentor',
     }
     track_descriptions = {
-        'camera':   '5 scored images/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
-        'mobile':   '8 scored images/month · Annual Excellence Award (POTY) · Programmes',
-        'learning': '12 scored images/month · AI mentor · Improvement paths',
-        'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
+        'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award · Programmes',
+        'mobile':   '4 photographs evaluated/month · Annual Excellence Award · Programmes',
+        'learning': '12 photographs evaluated/month · AI mentor · Improvement paths',
+        'mentor':   '12 photographs evaluated/month · Weekly 1-on-1 · Human + AI',
     }
     return render_template('subscribe.html',
         track=track, plan=plan, amount=amount,
