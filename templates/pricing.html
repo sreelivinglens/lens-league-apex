@@ -504,10 +504,9 @@
       <li>Peer evaluation</li>
     </ul>
 
-    <a href="{{ url_for('subscribe', track='camera') }}?plan={{ current_plan|default('annual') }}"
-       class="league-cta camera" id="cta-camera">
-      <span id="cta-camera-text">Join Camera League</span>
-    </a>
+    <button class="league-cta camera" id="cta-camera" onclick="startDirectPayment('camera')">
+      <span id="cta-camera-text">Pay ₹2,000 — Activate</span>
+    </button>
   </div>
 
   {# Mobile League #}
@@ -556,10 +555,9 @@
       <li>Peer evaluation</li>
     </ul>
 
-    <a href="{{ url_for('subscribe', track='mobile') }}?plan={{ current_plan|default('annual') }}"
-       class="league-cta mobile" id="cta-mobile">
-      <span id="cta-mobile-text">Join Mobile League</span>
-    </a>
+    <button class="league-cta mobile" id="cta-mobile" onclick="startDirectPayment('mobile')">
+      <span id="cta-mobile-text">Pay ₹2,000 — Activate</span>
+    </button>
   </div>
 
 </div>
@@ -747,5 +745,103 @@
 
   // Initialise on load
   setPlan('annual');
+</script>
+
+{# ── Direct payment — Razorpay opens without intermediate page ── #}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+{# Hidden confirm form — submitted after successful Razorpay payment #}
+<form id="confirm-form" method="POST" action="{{ url_for('subscribe_confirm') }}" style="display:none;">
+  <input type="hidden" name="razorpay_payment_id"      id="cf_payment_id">
+  <input type="hidden" name="razorpay_subscription_id" id="cf_subscription_id">
+  <input type="hidden" name="razorpay_order_id"        id="cf_order_id">
+  <input type="hidden" name="razorpay_signature"        id="cf_signature">
+  <input type="hidden" name="track"                     id="cf_track">
+  <input type="hidden" name="plan"                      id="cf_plan">
+</form>
+
+<script>
+var _isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+var _loginUrl   = '{{ url_for("login") }}?next={{ url_for("pricing") }}';
+
+function startDirectPayment(track) {
+  // If not logged in — go to login first
+  if (!_isLoggedIn) {
+    window.location.href = _loginUrl;
+    return;
+  }
+
+  var plan = currentPlan.replace('half_yearly', 'halfyearly');
+  var btn  = document.getElementById('cta-' + track);
+  var txt  = document.getElementById('cta-' + track + '-text');
+
+  btn.disabled   = true;
+  txt.textContent = 'Opening payment…';
+
+  // Create order/subscription server-side
+  fetch('{{ url_for("api_create_payment") }}', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ track: track, plan: plan }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      alert(data.error);
+      btn.disabled   = false;
+      txt.textContent = planData[currentPlan].label;
+      return;
+    }
+
+    var options = {
+      key:   data.key,
+      name:  'Shutter League',
+      image: '/static/logo.png',
+      prefill: { email: data.email, name: data.name },
+      theme:   { color: '#F5C518' },
+      modal: {
+        ondismiss: function() {
+          btn.disabled   = false;
+          txt.textContent = planData[currentPlan].label;
+        }
+      }
+    };
+
+    if (data.type === 'order') {
+      options.order_id    = data.order_id;
+      options.amount      = data.amount;
+      options.currency    = 'INR';
+      options.description = (track === 'camera' ? 'Camera League' : 'Mobile League') + ' — Monthly';
+      options.handler = function(response) {
+        document.getElementById('cf_payment_id').value      = response.razorpay_payment_id;
+        document.getElementById('cf_order_id').value        = response.razorpay_order_id;
+        document.getElementById('cf_signature').value       = response.razorpay_signature;
+        document.getElementById('cf_track').value           = track;
+        document.getElementById('cf_plan').value            = plan;
+        document.getElementById('confirm-form').submit();
+      };
+    } else {
+      options.subscription_id = data.subscription_id;
+      options.description     = (track === 'camera' ? 'Camera League' : 'Mobile League') + ' — ' + (plan === 'halfyearly' ? '6 Months' : 'Annual');
+      options.handler = function(response) {
+        document.getElementById('cf_payment_id').value      = response.razorpay_payment_id;
+        document.getElementById('cf_subscription_id').value = response.razorpay_subscription_id;
+        document.getElementById('cf_signature').value       = response.razorpay_signature;
+        document.getElementById('cf_track').value           = track;
+        document.getElementById('cf_plan').value            = plan;
+        document.getElementById('confirm-form').submit();
+      };
+    }
+
+    var rzp = new Razorpay(options);
+    rzp.open();
+  })
+  .catch(function(err) {
+    console.error(err);
+    alert('Could not initialise payment. Please try again.');
+    btn.disabled   = false;
+    txt.textContent = planData[currentPlan].label;
+  });
+}
 </script>
 {% endblock %}
