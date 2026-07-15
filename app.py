@@ -5522,9 +5522,13 @@ def profile():
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
 
+    _paid_plans = ('monthly', 'halfyearly', 'annual')
+    _has_active_sub = (getattr(current_user, 'is_subscribed', False) and
+                       getattr(current_user, 'subscription_plan', '') in _paid_plans)
     return render_template('profile.html', images_used=images_used, progress_data=progress_data,
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
-                           countries=get_countries(), location_data_json=json.dumps(_loc))
+                           countries=get_countries(), location_data_json=json.dumps(_loc),
+                           has_active_sub=_has_active_sub)
 
 
 # ---------------------------------------------------------------------------
