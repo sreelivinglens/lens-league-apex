@@ -61,6 +61,13 @@
     gap: 28px;
     align-items: start;
   }
+  .acc-sidebar {
+    display: flex;
+    flex-direction: column;
+  }
+  .acc-identity {
+    flex: 1;
+  }
 
   /* ── Sidebar ── */
   .acc-sidebar {
@@ -403,12 +410,8 @@
     {# ── Left sidebar ── #}
     <aside class="acc-sidebar">
       <div class="acc-identity">
-        <div class="acc-avatar">
-          {% if current_user.avatar_url %}
-            <img src="{{ current_user.avatar_url }}" alt="{{ current_user.full_name or current_user.username }}" onerror="this.parentNode.innerHTML='{{ (current_user.full_name or current_user.username or 'S')[0]|upper }}'">
-          {% else %}
-            {{ (current_user.full_name or current_user.username or 'S')[0]|upper }}
-          {% endif %}
+        <div class="acc-avatar" style="margin:0 auto 12px;">
+          {{ (current_user.full_name or current_user.username or 'S')[0]|upper }}
         </div>
         <div class="acc-name">{{ current_user.full_name or current_user.username }}</div>
         <div class="acc-email">{{ current_user.email }}</div>
