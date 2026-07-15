@@ -185,14 +185,15 @@
       </form>
     </div>
 
-    {% elif subscription %}
+    {% elif subscription or order %}
       <button class="sub-btn" id="pay-btn" onclick="startPayment()">
-        Pay ₹{{ amount | int }} — Activate Subscription
+        Pay ₹{{ amount | int }} — Activate
       </button>
 
       <form id="payment-form" action="{{ url_for('subscribe', track=track, plan=plan) }}" method="POST" style="display:none;">
         <input type="hidden" name="razorpay_payment_id"      id="rzp_payment_id">
         <input type="hidden" name="razorpay_subscription_id" id="rzp_subscription_id">
+        <input type="hidden" name="razorpay_order_id"        id="rzp_order_id">
         <input type="hidden" name="razorpay_signature"        id="rzp_signature">
       </form>
 
@@ -221,7 +222,7 @@
 
 </div>
 
-{% if subscription %}
+{% if subscription or order %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 function startPayment() {
@@ -229,11 +230,41 @@ function startPayment() {
   btn.disabled = true;
   btn.textContent = 'Opening payment…';
 
+  {% if order %}
+  // Monthly — Orders API (one-time, no mandate)
+  const options = {
+    key:      '{{ razorpay_key }}',
+    order_id: '{{ order.id }}',
+    amount:   '{{ order.amount }}',
+    currency: 'INR',
+    name:     'Shutter League',
+    description: '{{ track_label }} — Monthly',
+    image:    '/static/logo.png',
+    handler: function(response) {
+      document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+      document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+      document.getElementById('rzp_signature').value  = response.razorpay_signature;
+      document.getElementById('payment-form').submit();
+    },
+    prefill: {
+      email: '{{ current_user.email }}',
+      name:  '{{ current_user.full_name or current_user.username }}',
+    },
+    theme: { color: '#F5C518' },
+    modal: {
+      ondismiss: function() {
+        btn.disabled    = false;
+        btn.textContent = 'Pay ₹{{ amount | int }} — Activate';
+      }
+    }
+  };
+  {% else %}
+  // Half-yearly or Annual — Subscriptions API (recurring)
   const options = {
     key:             '{{ razorpay_key }}',
     subscription_id: '{{ subscription.id }}',
     name:            'Shutter League',
-    description:     '{{ track_label }} — {{ plan | title }}ly',
+    description:     '{{ track_label }} — {{ "6 Months" if plan == "halfyearly" else "Annual" }}',
     image:           '/static/logo.png',
     handler: function(response) {
       document.getElementById('rzp_payment_id').value      = response.razorpay_payment_id;
@@ -249,10 +280,11 @@ function startPayment() {
     modal: {
       ondismiss: function() {
         btn.disabled    = false;
-        btn.textContent = 'Pay ₹{{ amount | int }} — Activate Subscription';
+        btn.textContent = 'Pay ₹{{ amount | int }} — Activate';
       }
     }
   };
+  {% endif %}
 
   const rzp = new Razorpay(options);
   rzp.open();
