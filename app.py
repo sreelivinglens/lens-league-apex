@@ -16252,7 +16252,7 @@ def subscribe(track):
         return redirect(url_for('pricing'))
 
     plan = request.args.get('plan', 'monthly')
-    if plan not in ('monthly', 'annual'):
+    if plan not in ('monthly', 'halfyearly', 'annual'):
         plan = 'monthly'
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -16260,22 +16260,24 @@ def subscribe(track):
 
     plan_ids = {
         'mobile': {
-            'monthly': os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_MOBILE_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
         },
         'camera': {
-            'monthly': os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_CAMERA_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
         },
         'learning': {
-            'monthly': os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_LEARNING_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
         },
         'mentor': {
-            'monthly': os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
-            'annual':  os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
+            'halfyearly': os.getenv('RAZORPAY_PLAN_MENTOR_HALFYEARLY', ''),
+            'annual':     os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
         },
     }
+    # Monthly uses Orders API — no plan_id needed
+    # Half-yearly and Annual use Subscriptions API — plan_id required
     display_prices = {
         'mobile':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
         'camera':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
@@ -16283,13 +16285,15 @@ def subscribe(track):
         'mentor':   {'monthly': 999, 'halfyearly': 5500, 'annual': 9999},
     }
 
-    plan_id = plan_ids[track].get(plan, '')
+    plan_id = plan_ids[track].get(plan, '') if plan != 'monthly' else None
     amount  = display_prices[track].get(plan, 200)
 
     if request.method == 'POST':
         payment_id      = request.form.get('razorpay_payment_id', '')
         subscription_id = request.form.get('razorpay_subscription_id', '')
+        order_id        = request.form.get('razorpay_order_id', '')
         signature       = request.form.get('razorpay_signature', '')
+        is_order        = bool(order_id)  # Monthly uses Orders API
 
         if not razorpay_key:
             flash('Payment system not configured. Contact support.', 'error')
@@ -16297,10 +16301,15 @@ def subscribe(track):
 
         try:
             import hmac as _hmac, hashlib as _hashlib
-            # Subscription signature: HMAC-SHA256 of payment_id|subscription_id
+            if is_order:
+                # Order signature: HMAC-SHA256 of order_id|payment_id
+                msg = f'{order_id}|{payment_id}'
+            else:
+                # Subscription signature: HMAC-SHA256 of payment_id|subscription_id
+                msg = f'{payment_id}|{subscription_id}'
             expected_sig = _hmac.new(
                 razorpay_secret.encode('utf-8'),
-                f'{payment_id}|{subscription_id}'.encode('utf-8'),
+                msg.encode('utf-8'),
                 _hashlib.sha256
             ).hexdigest()
             if not _hmac.compare_digest(expected_sig, signature):
@@ -16310,7 +16319,8 @@ def subscribe(track):
             current_user.subscription_plan   = plan
             current_user.subscribed_at        = datetime.utcnow()
             current_user.is_subscribed        = True
-            current_user.razorpay_sub_id      = subscription_id
+            # For orders (monthly): store order_id. For subscriptions: store sub_id
+            current_user.razorpay_sub_id      = subscription_id if not is_order else order_id
             db.session.execute(
                 db.text('UPDATE users SET referred_discount = FALSE WHERE id = :uid'),
                 {'uid': current_user.id}
@@ -16390,20 +16400,44 @@ def subscribe(track):
             discount_amount=_disc_amount,
         )
 
-    # GET  -  create payment subscription (live when PAYMENT_GATEWAY_LIVE=1)
+    # GET  -  create payment object (live when PAYMENT_GATEWAY_LIVE=1)
+    # Monthly  → Razorpay Orders API (one-time, no mandate, no UPI Autopay SMS)
+    # Halfyearly/Annual → Razorpay Subscriptions API (recurring)
     subscription = None
-    if razorpay_key and plan_id:
+    order        = None
+    if razorpay_key:
         try:
-            import razorpay
-            client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
-            subscription = client.subscription.create({
-                'plan_id':         plan_id,
-                'total_count':     1,
-                'quantity':        1,
-                'customer_notify': 1,
-            })
+            import razorpay as _rzp
+            client = _rzp.Client(auth=(razorpay_key, razorpay_secret))
+            if plan == 'monthly':
+                # One-time order — no mandate created, no scary bank SMS
+                import uuid as _uuid
+                _receipt = f'sl_{track[:3]}_{current_user.id}_{_uuid.uuid4().hex[:8]}'
+                order = client.order.create({
+                    'amount':   amount * 100,  # paise
+                    'currency': 'INR',
+                    'receipt':  _receipt[:40],
+                    'notes': {
+                        'track': track,
+                        'plan':  plan,
+                        'user':  str(current_user.id),
+                    }
+                })
+                app.logger.info(f'[subscribe] order created: {order["id"]} user={current_user.id}')
+            elif plan_id:
+                # Subscription — halfyearly (total_count=2) or annual (total_count=1)
+                _total = 2 if plan == 'halfyearly' else 1
+                subscription = client.subscription.create({
+                    'plan_id':         plan_id,
+                    'total_count':     _total,
+                    'quantity':        1,
+                    'customer_notify': 1,
+                })
+                app.logger.info(f'[subscribe] subscription created: {subscription["id"]} user={current_user.id}')
+            else:
+                flash('Payment plan not configured. Please contact support.', 'error')
         except Exception as e:
-            app.logger.error(f'[subscribe] subscription create failed: {e}')
+            app.logger.error(f'[subscribe] payment init failed: {e}')
             flash('Could not initialise payment. Please try again.', 'error')
 
     track_labels = {
@@ -16427,6 +16461,7 @@ def subscribe(track):
     return render_template('subscribe.html',
         track=track, plan=plan, amount=amount,
         subscription=subscription,
+        order=order,
         razorpay_key=razorpay_key,
         track_label=track_labels.get(track, track.title()),
         track_description=track_descriptions.get(track, ''),
