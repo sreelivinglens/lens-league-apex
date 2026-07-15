@@ -54,6 +54,10 @@
   @media(max-width: 768px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
     .users-table { font-size: 15px; }
+    table[style*="width:100%"] { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  }
+  @media(max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
   }
   @media(max-width: 600px) {
     .users-table th { font-size: 13px; }
@@ -71,6 +75,51 @@
     <h1>User Management</h1>
     <p>Activate UAT access for testers — full platform access, 10 images, no subscription required.</p>
   </div>
+
+  <!-- Paid subscribers panel -->
+  {% if paid_users %}
+  <div style="background:#fff;border:1.5px solid #2C3E6B;border-radius:var(--radius-md);padding:20px 24px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2C3E6B;">
+        Paid Subscribers · {{ paid_count }}
+      </div>
+      <a href="https://dashboard.razorpay.com/app/subscriptions" target="_blank" rel="noopener"
+         style="font-family:var(--font-mono);font-size:13px;color:#2C3E6B;text-decoration:underline;">
+        View in Razorpay ↗
+      </a>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="text-align:left;padding:6px 10px;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Member</th>
+          <th style="text-align:left;padding:6px 10px;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Track · Plan</th>
+          <th style="text-align:left;padding:6px 10px;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Subscribed</th>
+          <th style="text-align:right;padding:6px 10px;font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in paid_users %}
+        <tr style="border-bottom:1px solid var(--border-subtle);">
+          <td style="padding:8px 10px;">
+            <a href="{{ url_for('admin_user_detail', user_id=u.id) }}"
+               style="font-weight:600;color:var(--text-primary);text-decoration:none;">{{ u.full_name or u.username }}</a>
+            <div style="font-size:13px;color:var(--text-muted);">{{ u.email }}</div>
+          </td>
+          <td style="padding:8px 10px;font-family:var(--font-mono);font-size:13px;">
+            {{ u.subscription_track or '—' }} · {{ u.subscription_plan or '—' }}
+          </td>
+          <td style="padding:8px 10px;font-size:13px;color:var(--text-muted);">
+            {{ u.subscribed_at.strftime('%d %b %Y') if u.subscribed_at else '—' }}
+          </td>
+          <td style="padding:8px 10px;text-align:right;font-family:var(--font-mono);font-size:13px;font-weight:700;">
+            ₹{{ {'monthly':'200','halfyearly':'1,100','annual':'2,000'}.get(u.subscription_plan,'—') }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
 
   <!-- UAT flow explainer -->
   <div class="uat-explainer">
@@ -94,9 +143,9 @@
       <div class="stat-val">{{ users|selectattr('subscription_plan', 'equalto', 'uat')|list|length }}</div>
       <div class="stat-lbl">Active UAT</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val">{{ users|selectattr('is_subscribed')|rejectattr('subscription_plan', 'equalto', 'uat')|list|length }}</div>
-      <div class="stat-lbl">Paid Subscribers</div>
+    <div class="stat-card" style="border-top:3px solid #2C3E6B;">
+      <div class="stat-val" style="color:#2C3E6B;">{{ paid_count }}</div>
+      <div class="stat-lbl">Paid</div>
     </div>
     <div class="stat-card">
       <div class="stat-val">{{ users|rejectattr('is_subscribed')|list|length }}</div>
