@@ -342,9 +342,23 @@
     display: inline-flex; align-items: center; gap: 6px;
   }
 
+  /* ── 2×2 grid layout ── */
+  .acc-grid-top,
+  .acc-grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: start;
+  }
+  .acc-grid-top .acc-section,
+  .acc-grid-bottom .acc-section { margin-bottom: 0; }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .acc-layout { grid-template-columns: 1fr; }
+    .acc-grid-top,
+    .acc-grid-bottom { grid-template-columns: 1fr; }
     .acc-sidebar { position: static; }
     .acc-identity { display: flex; align-items: center; gap: 16px; text-align: left; }
     .acc-avatar { margin: 0; width: 56px; height: 56px; font-size: 22px; }
@@ -420,8 +434,9 @@
       </div>
     </aside>
 
-    {# ── Main content ── #}
+    {# ── Main content — 2×2 grid ── #}
     <main>
+      <div class="acc-grid-top">
 
       {# ══ Section 1 — Account Details ══ #}
       <div class="acc-section" id="account-details">
@@ -568,6 +583,7 @@
       {# end section 1 #}
 
       {# ══ Section 2 — Account State ══ #}
+      
       <div class="acc-section" id="account-state">
         <div class="acc-section-header">
           <div class="acc-section-num">2</div>
@@ -673,7 +689,9 @@
 
       </div>
       {# end section 2 #}
+      </div>{# /acc-grid-top #}
 
+      <div class="acc-grid-bottom">
       {# ══ Section 3 — Points Balance ══ #}
       <div class="acc-section" id="points-balance">
         <div class="acc-section-header">
@@ -779,6 +797,7 @@
       </div>
       {% endif %}
       {# end section 4 #}
+      </div>{# /acc-grid-bottom #}
 
       {# ── Delete account ── #}
       <div style="margin-top:8px;padding:16px 20px;border:1px solid rgba(192,57,43,0.20);border-radius:var(--acc-radius);background:#fff;">
