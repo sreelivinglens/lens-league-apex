@@ -1964,13 +1964,15 @@ def _run_startup_tasks():
             except Exception as _exp_e:
                 print(f'[seasonal_cleanup] skipped: {_exp_e}')
 
-            # UAT plan backfill — all subscribed users get 'uat' plan (unlimited uploads).
-            # Covers NULL, 'monthly', or any other value set before UAT default was applied.
+            # UAT plan backfill — only patch users with NULL or unknown plan.
+            # NEVER overwrite real paid plans: monthly, halfyearly, annual.
             try:
                 with db.engine.connect() as _uat_conn:
                     _r = _uat_conn.execute(db.text(
                         "UPDATE users SET subscription_plan = 'uat' "
-                        "WHERE is_subscribed = TRUE AND (subscription_plan IS NULL OR subscription_plan != 'uat')"
+                        "WHERE is_subscribed = TRUE "
+                        "AND (subscription_plan IS NULL "
+                        "OR subscription_plan NOT IN ('uat','beta','monthly','halfyearly','annual'))"
                     ))
                     _uat_conn.commit()
                 print(f'[uat_backfill] OK — patched {_r.rowcount} users to uat plan.')
