@@ -16524,6 +16524,11 @@ def subscribe(track):
                         'user':  str(current_user.id),
                     }
                 })
+                # Extract key fields explicitly for template
+                order = {
+                    'id':     order.get('id', '') if isinstance(order, dict) else str(order),
+                    'amount': amount * 100,
+                }
                 app.logger.info(f'[subscribe] order created: {order["id"]} user={current_user.id}')
             elif plan_id:
                 # Subscription — halfyearly (total_count=2) or annual (total_count=1)
