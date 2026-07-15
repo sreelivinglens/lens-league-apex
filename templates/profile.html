@@ -31,6 +31,7 @@
     margin: 0 auto;
     padding: clamp(32px,5vw,56px) var(--page-pad,24px) 80px;
     font-family: Inter, Arial, sans-serif;
+    overflow-x: hidden;
   }
 
   /* ── Page header ── */
@@ -378,17 +379,22 @@
     .acc-grid-top,
     .acc-grid-bottom { grid-template-columns: 1fr; }
     .acc-sidebar { position: static; }
-    .acc-identity { display: flex; align-items: center; gap: 16px; text-align: left; }
-    .acc-avatar { margin: 0; width: 56px; height: 56px; font-size: 22px; }
+    .acc-identity { text-align: center; padding: 16px 12px; display: block; }
+    .acc-avatar { margin: 0 auto 10px; width: 56px; height: 56px; font-size: 22px; display: flex; }
+    .acc-name  { display: block; text-align: center; }
+    .acc-email { display: block; text-align: center; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .acc-handle { display: block; text-align: center; }
     .acc-nav-border { display: none; }
-    .acc-section { padding: 20px 18px; }
-    .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
+    .acc-section { padding: 16px; width: 100%; box-sizing: border-box; overflow: hidden; }
+    .acc-detail-row { flex-wrap: wrap; }
+    .acc-detail-body { min-width: 0; flex: 1 1 0; }
     .acc-points-actions { flex-direction: column; }
-    .acc-donut-wrap { width: 80px; height: 80px; }
-  }
-  @media (max-width: 600px) {
-    .acc-wrap { padding: 56px 16px 60px; }
-    .acc-ref-stats { grid-template-columns: 1fr 1fr 1fr; }
+    .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
+    .acc-ref-share { flex-wrap: wrap; }
+    .acc-plan-row { flex-direction: column; gap: 8px; }
+    .acc-quota-inner { flex-direction: column; align-items: flex-start; }
+    .acc-league-badge { flex-direction: column; align-items: flex-start; }
+    .acc-wrap { padding: 56px 12px 60px; }
   }
   @media (max-width: 480px) {
     .acc-ref-stats { grid-template-columns: 1fr; }
