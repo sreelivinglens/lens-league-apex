@@ -1934,6 +1934,20 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'advisory_shown_log migration warning: {_asl_mig}')
 
+            # cancellation_reasons table
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS cancellation_reasons ("
+                    "id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, "
+                    "track VARCHAR(20), plan VARCHAR(20), reason VARCHAR(50), "
+                    "comment TEXT, cancelled_at TIMESTAMP DEFAULT NOW())"
+                ))
+                db.session.commit()
+                print('cancellation_reasons table OK.')
+            except Exception as _cr_mig:
+                db.session.rollback()
+                print(f'cancellation_reasons migration warning: {_cr_mig}')
+
             print('Columns migrated OK.')
 
             # Purge expired date-bound seasonal_calendar rows on every startup.
@@ -4453,8 +4467,7 @@ def dashboard():
                            eye_of_judge=_eye_of_judge,
                            peer_ratings_given=_peer_ratings_given,
                            last_eval_result=session.get('last_eval_result'),
-                           dashboard_visit_count=_dash_visit_count,
-                           just_subscribed=session.pop('just_subscribed', None))
+                           dashboard_visit_count=_dash_visit_count)
 
 
 # ---------------------------------------------------------------------------
@@ -5511,8 +5524,7 @@ def profile():
 
     return render_template('profile.html', images_used=images_used, progress_data=progress_data,
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
-                           countries=get_countries(), location_data_json=json.dumps(_loc),
-                           has_active_sub=getattr(current_user, 'is_subscribed', False))
+                           countries=get_countries(), location_data_json=json.dumps(_loc))
 
 
 # ---------------------------------------------------------------------------
@@ -5893,26 +5905,38 @@ def _check_upload_quota(user):
                 'Reactivate your Mobile or Camera subscription to resume.')
 
     if _track in ('mobile', 'camera', 'learning'):
-        # Subscribed tracks — check monthly count
-        month_start = datetime(today.year, today.month, 1)
-        month_count = Image.query.filter(
+        # Billing-cycle based quota — resets every 30/180/360 days from subscribed_at
+        _subscribed_at = getattr(user, 'subscribed_at', None)
+        _sub_plan      = getattr(user, 'subscription_plan', None) or 'monthly'
+
+        if _subscribed_at:
+            _cycle_days   = 180 if _sub_plan == 'halfyearly' else (360 if _sub_plan == 'annual' else 30)
+            _sub_date     = _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at
+            _days_since   = (today - _sub_date).days
+            _cycles_done  = _days_since // _cycle_days
+            _cycle_start  = _sub_date + timedelta(days=_cycles_done * _cycle_days)
+            _cycle_start_dt = datetime.combine(_cycle_start, datetime.min.time())
+            _cycle_end_dt   = _cycle_start_dt + timedelta(days=_cycle_days)
+            _next_date    = (_cycle_start_dt + timedelta(days=_cycle_days)).strftime('%-d %B %Y')
+        else:
+            # Fallback — calendar month
+            _cycle_start_dt = datetime(today.year, today.month, 1)
+            _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
+            _next_date      = '1st of next month'
+
+        _cycle_count = Image.query.filter(
             Image.user_id == user.id,
-            Image.created_at >= month_start,
+            Image.created_at >= _cycle_start_dt,
+            Image.created_at <  _cycle_end_dt,
         ).count()
-        if _track == 'mobile':
-            MOBILE_IMAGE_LIMIT = 8
-            if month_count >= MOBILE_IMAGE_LIMIT:
-                return (f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
-                        'Your quota resets on the 1st of next month.')
-        elif _track == 'camera':
-            CAMERA_IMAGE_LIMIT = 5
-            if month_count >= CAMERA_IMAGE_LIMIT:
-                return (f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
-                        'Your quota resets on the 1st of next month.')
-        elif _track == 'learning':
-            if month_count >= LEARNING_IMAGE_LIMIT:
-                return (f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                        'Upgrade to Mobile or Camera to upload more.')
+
+        # 4 evaluations per cycle for camera and mobile. Learning uses LEARNING_IMAGE_LIMIT.
+        _eval_limit = LEARNING_IMAGE_LIMIT if _track == 'learning' else 4
+
+        if _cycle_count >= _eval_limit:
+            return (f'You have used all {_eval_limit} evaluations in this cycle. '
+                    f'Your next evaluations arrive on {_next_date}.')
+
     # Mentor track — unlimited, no check needed
     return None
 
@@ -16228,7 +16252,7 @@ def subscribe(track):
         return redirect(url_for('pricing'))
 
     plan = request.args.get('plan', 'monthly')
-    if plan not in ('monthly', 'halfyearly', 'annual'):
+    if plan not in ('monthly', 'annual'):
         plan = 'monthly'
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -16236,31 +16260,27 @@ def subscribe(track):
 
     plan_ids = {
         'mobile': {
-            'monthly':    os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
-            'halfyearly': os.getenv('RAZORPAY_PLAN_MOBILE_HALFYEARLY', ''),
-            'annual':     os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_MOBILE_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_MOBILE_ANNUAL', ''),
         },
         'camera': {
-            'monthly':    os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
-            'halfyearly': os.getenv('RAZORPAY_PLAN_CAMERA_HALFYEARLY', ''),
-            'annual':     os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
         },
         'learning': {
-            'monthly':    os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
-            'halfyearly': os.getenv('RAZORPAY_PLAN_LEARNING_HALFYEARLY', ''),
-            'annual':     os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
         },
         'mentor': {
-            'monthly':    os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
-            'halfyearly': os.getenv('RAZORPAY_PLAN_MENTOR_HALFYEARLY', ''),
-            'annual':     os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
+            'monthly': os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'camera':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'learning': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'mentor':   {'monthly': 999, 'halfyearly': 5500, 'annual': 9999},
+        'mobile':   {'monthly': 99,   'annual': 999},
+        'camera':   {'monthly': 199,  'annual': 1999},
+        'learning': {'monthly': 100,  'annual': 999},
+        'mentor':   {'monthly': 999,  'annual': 9999},
     }
 
     plan_id = plan_ids[track][plan]
@@ -16323,8 +16343,6 @@ def subscribe(track):
                 'learning': 'Learning — ₹100/mo',
                 'mentor':   'Human + AI Mentor',
             }
-            _send_subscription_confirmation(current_user, track, plan)
-            session['just_subscribed'] = track
             flash(f'Welcome to {track_names.get(track, track.title())}! Your subscription is active.', 'success')
             return redirect(url_for('learning') if track in ('learning', 'mentor') else url_for('dashboard'))
         except Exception as e:
@@ -16343,11 +16361,17 @@ def subscribe(track):
             'learning': 'Learning Only',
             'mentor':   'Human + AI Mentor',
         }
+        _eval_counts = {
+            'monthly':    {'camera': '4 evaluations', 'mobile': '4 evaluations', 'learning': '12 evaluations', 'mentor': '12 evaluations'},
+            'halfyearly': {'camera': '24 evaluations over 6 months', 'mobile': '24 evaluations over 6 months', 'learning': '72 evaluations over 6 months', 'mentor': '72 evaluations over 6 months'},
+            'annual':     {'camera': '48 evaluations over 12 months', 'mobile': '48 evaluations over 12 months', 'learning': '144 evaluations over 12 months', 'mentor': '144 evaluations over 12 months'},
+        }
+        _eval_str = _eval_counts.get(plan, _eval_counts['monthly']).get(track, '4 evaluations')
         track_descriptions = {
-            'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award (AEA) · Programmes',
-            'mobile':   '4 photographs evaluated/month · Annual Excellence Award (AEA) · Programmes',
-            'learning': '12 photographs evaluated/month · AI mentor · Improvement paths',
-            'mentor':   '12 photographs evaluated/month · Weekly 1-on-1 · Human + AI',
+            'camera':   f'{_eval_str} · RAW eligible · Annual Excellence Award · Programmes',
+            'mobile':   f'{_eval_str} · Annual Excellence Award · Programmes',
+            'learning': f'{_eval_str} · AI mentor · Improvement paths',
+            'mentor':   f'{_eval_str} · Weekly 1-on-1 · Human + AI',
         }
         try:
             _ref_disc = db.session.execute(
@@ -16372,10 +16396,9 @@ def subscribe(track):
         try:
             import razorpay
             client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
-            total_count = 10 if plan == 'annual' else (20 if plan == 'halfyearly' else 120)
             subscription = client.subscription.create({
                 'plan_id':         plan_id,
-                'total_count':     total_count,
+                'total_count':     1,
                 'quantity':        1,
                 'customer_notify': 1,
             })
@@ -16389,11 +16412,17 @@ def subscribe(track):
         'learning': 'Learning Only',
         'mentor':   'Human + AI Mentor',
     }
+    _eval_counts_live = {
+        'monthly':    {'camera': '4 evaluations', 'mobile': '4 evaluations', 'learning': '12 evaluations', 'mentor': '12 evaluations'},
+        'halfyearly': {'camera': '24 evaluations over 6 months', 'mobile': '24 evaluations over 6 months', 'learning': '72 evaluations over 6 months', 'mentor': '72 evaluations over 6 months'},
+        'annual':     {'camera': '48 evaluations over 12 months', 'mobile': '48 evaluations over 12 months', 'learning': '144 evaluations over 12 months', 'mentor': '144 evaluations over 12 months'},
+    }
+    _eval_str_live = _eval_counts_live.get(plan, _eval_counts_live['monthly']).get(track, '4 evaluations')
     track_descriptions = {
-        'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award · Programmes',
-        'mobile':   '4 photographs evaluated/month · Annual Excellence Award · Programmes',
-        'learning': '12 photographs evaluated/month · AI mentor · Improvement paths',
-        'mentor':   '12 photographs evaluated/month · Weekly 1-on-1 · Human + AI',
+        'camera':   f'{_eval_str_live} · RAW eligible · Annual Excellence Award · Programmes',
+        'mobile':   f'{_eval_str_live} · Annual Excellence Award · Programmes',
+        'learning': f'{_eval_str_live} · AI mentor · Improvement paths',
+        'mentor':   f'{_eval_str_live} · Weekly 1-on-1 · Human + AI',
     }
     return render_template('subscribe.html',
         track=track, plan=plan, amount=amount,
@@ -16410,6 +16439,7 @@ def razorpay_webhook():
     webhook_secret = os.getenv('RAZORPAY_WEBHOOK_SECRET', '')
     payload        = request.get_data()
     sig            = request.headers.get('X-Razorpay-Signature', '')
+    event_id       = request.headers.get('X-Razorpay-Event-Id', '')
 
     if webhook_secret:
         expected = _hmac.new(
@@ -16418,30 +16448,207 @@ def razorpay_webhook():
         if not _hmac.compare_digest(expected, sig):
             app.logger.warning('[webhook] invalid signature')
             return jsonify({'status': 'invalid signature'}), 400
+    else:
+        app.logger.warning('[webhook] RAZORPAY_WEBHOOK_SECRET not set')
+
+    if event_id:
+        try:
+            already = db.session.execute(
+                db.text("SELECT 1 FROM admin_sent_emails WHERE subject = :eid LIMIT 1"),
+                {'eid': '__webhook__' + event_id}
+            ).fetchone()
+            if already:
+                app.logger.info('[webhook] duplicate event_id=' + event_id)
+                return jsonify({'status': 'duplicate'}), 200
+            db.session.execute(
+                db.text("INSERT INTO admin_sent_emails (admin_id, recipient_email, subject, body, send_type, success) "
+                        "VALUES (0, 'webhook@razorpay.com', :eid, '', 'webhook', TRUE)"),
+                {'eid': '__webhook__' + event_id}
+            )
+            db.session.commit()
+        except Exception as _ide:
+            app.logger.warning('[webhook] idempotency error: ' + str(_ide))
 
     try:
         event      = _json.loads(payload)
         event_type = event.get('event', '')
-        app.logger.info(f'[webhook] {event_type}')
-        sub_data   = (event.get('payload', {}).get('subscription', {}).get('entity', {}))
+        app.logger.info('[webhook] ' + event_type)
+        sub_data   = event.get('payload', {}).get('subscription', {}).get('entity', {})
         sub_id     = sub_data.get('id', '')
+        site_url   = os.getenv('SITE_URL', 'https://shutterleague.com')
+        admin_email = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
+
+        def _wh_user():
+            return User.query.filter_by(razorpay_sub_id=sub_id).first()
+
+        def _sherpa_email(user, subject, heading, body_html, cta_label=None, cta_url=None):
+            name = user.full_name or user.username or 'Photographer'
+            cta_block = ''
+            if cta_label and cta_url:
+                cta_block = ('<div style="margin:28px 0;">'
+                             '<a href="' + cta_url + '" style="display:inline-block;background:#2C3E6B;'
+                             'color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;'
+                             'font-weight:700;letter-spacing:1.5px;text-transform:uppercase;'
+                             'padding:13px 28px;text-decoration:none;border-radius:4px;">'
+                             + cta_label + ' &#8594;</a></div>')
+            html = ('<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                    '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                    '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                    '<div style="max-width:520px;margin:0 auto;padding:0;">'
+                    '<div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">'
+                    '<span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;'
+                    'color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;'
+                    'text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>'
+                    '<span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;'
+                    'color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>'
+                    '<div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:8px 0 0;">'
+                    'Making Images Matter</div></div>'
+                    '<div style="padding:32px 32px 24px;background:#FEFCF8;">'
+                    '<h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;'
+                    'color:#1A1A18;margin:0 0 20px;">' + heading + '</h2>'
+                    '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                    'color:#2a2a28;margin:0 0 16px;">Hi ' + name + '.</p>'
+                    + body_html + cta_block +
+                    '<p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;'
+                    'color:#8a8070;margin:24px 0 0;">Questions? Write to '
+                    '<a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">'
+                    'support@shutterleague.com</a></p></div>'
+                    '<div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">'
+                    '<div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;'
+                    'margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; '
+                    '<a href="' + site_url + '" style="color:#8a8070;">shutterleague.com</a>'
+                    '</div></div></div></body></html>')
+            try:
+                send_email([user.email], subject, html)
+            except Exception as _se:
+                app.logger.error('[webhook] sherpa email failed: ' + str(_se))
 
         if event_type == 'subscription.activated':
-            user = User.query.filter_by(razorpay_sub_id=sub_id).first()
+            user = _wh_user()
             if user:
                 user.is_subscribed = True
                 db.session.commit()
+                app.logger.info('[webhook] activated user=' + str(user.id))
 
-        elif event_type in ('subscription.cancelled', 'subscription.completed', 'subscription.halted'):
-            user = User.query.filter_by(razorpay_sub_id=sub_id).first()
+        elif event_type == 'subscription.charged':
+            user = _wh_user()
+            if user and user.is_subscribed:
+                user.subscribed_at = datetime.utcnow()
+                db.session.commit()
+                app.logger.info('[webhook] charged — cycle reset user=' + str(user.id))
+
+        elif event_type == 'subscription.pending':
+            user = _wh_user()
             if user:
+                body = ('<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">We were not able to process your renewal today. '
+                        'Razorpay will try again over the next few days automatically.</p>'
+                        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your membership continues uninterrupted. '
+                        'No action needed from you right now.</p>')
+                _sherpa_email(user,
+                    subject='Your Shutter League renewal — a note',
+                    heading="We're retrying your renewal.",
+                    body_html=body)
+
+        elif event_type == 'subscription.halted':
+            user = _wh_user()
+            if user:
+                user.is_subscribed = False
+                db.session.commit()
+                body = ('<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">We tried several times to process your renewal '
+                        'but were not able to. Your membership is now paused.</p>'
+                        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your evaluations, standing, and Body of Work '
+                        'are preserved. Subscribe again when you are ready and pick up from where you left.</p>'
+                        '<p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;'
+                        'color:#8a8070;margin:0;">No refund applies to the current period. '
+                        'You can cancel or update payment details from your account settings. '
+                        '<a href="' + site_url + '/subscription/cancel" style="color:#2C3E6B;">'
+                        'Cancel anytime here.</a></p>')
+                _sherpa_email(user,
+                    subject='Your Shutter League membership is paused',
+                    heading='Your membership is paused.',
+                    body_html=body,
+                    cta_label='Return to Shutter League',
+                    cta_url=site_url + '/pricing')
+                try:
+                    send_email([admin_email],
+                        '[SL Admin] Subscription halted — ' + user.email,
+                        '<p>Subscription halted for user ' + str(user.id) + ' (' + user.email + '). '
+                        'sub_id=' + sub_id + '. All retries failed. Membership paused.</p>')
+                except Exception:
+                    pass
+                app.logger.info('[webhook] halted — paused user=' + str(user.id))
+
+        elif event_type == 'subscription.paused':
+            user = _wh_user()
+            if user:
+                user.is_subscribed = False
+                db.session.commit()
+                body = ('<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your membership is paused. '
+                        'No further charges will be made while it is paused.</p>'
+                        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your evaluations and standing are preserved. '
+                        'Resume from your UPI app whenever you are ready.</p>')
+                _sherpa_email(user,
+                    subject='Your Shutter League membership is paused',
+                    heading='Your membership is paused.',
+                    body_html=body)
+
+        elif event_type == 'subscription.resumed':
+            user = _wh_user()
+            if user:
+                user.is_subscribed = True
+                db.session.commit()
+                body = ('<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your membership is active again. '
+                        'Your evaluations are ready.</p>')
+                _sherpa_email(user,
+                    subject='Your Shutter League membership is active',
+                    heading='Welcome back.',
+                    body_html=body,
+                    cta_label='Upload a photograph',
+                    cta_url=site_url + '/upload')
+
+        elif event_type == 'subscription.cancelled':
+            user = _wh_user()
+            if user:
+                _track = user.subscription_track or ''
+                _plan  = user.subscription_plan or ''
                 user.is_subscribed      = False
                 user.subscription_track = None
                 user.subscription_plan  = None
                 db.session.commit()
+                _send_subscription_cancellation(user, _track, _plan)
+                app.logger.info('[webhook] cancelled — user=' + str(user.id))
+
+        elif event_type == 'subscription.completed':
+            user = _wh_user()
+            if user and user.is_subscribed:
+                _track_label = {'camera': 'Camera League', 'mobile': 'Mobile League'}.get(
+                    user.subscription_track or '', 'membership')
+                body = ('<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your ' + _track_label + ' cycle is complete.</p>'
+                        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;'
+                        'color:#2a2a28;margin:0 0 16px;">Your evaluations, standing, and Body of Work '
+                        'remain exactly where you left them. When you are ready to continue, subscribe '
+                        'again and pick up from where you stopped.</p>'
+                        '<p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;'
+                        'color:#8a8070;margin:0;">There is no automatic renewal. '
+                        'Your account will not be charged again unless you subscribe.</p>')
+                _sherpa_email(user,
+                    subject='Your ' + _track_label + ' cycle is complete',
+                    heading='Your cycle is complete.',
+                    body_html=body,
+                    cta_label='Continue your evolution',
+                    cta_url=site_url + '/pricing')
+                app.logger.info('[webhook] completed — user=' + str(user.id))
 
     except Exception as e:
-        app.logger.error(f'[webhook] error: {e}')
+        app.logger.error('[webhook] error: ' + str(e))
 
     return jsonify({'status': 'ok'}), 200
 
@@ -16450,168 +16657,82 @@ def razorpay_webhook():
 @login_required
 def cancel_subscription():
     """
-    GET   -  confirmation page (user must confirm before cancelling)
-    POST  -  actually cancel: call payment gateway API, clear DB fields, redirect to dashboard
+    POST — cancel subscription. Reason captured, written to DB, admin alerted.
     RBI compliance: user must be able to self-cancel without contacting support.
+    Monthly: access continues to end of 30-day cycle.
+    Half-yearly / Annual: access ends immediately on cancellation.
     """
     if request.method == 'GET':
         return render_template('cancel_subscription.html')
 
-    # POST  -  confirmed cancellation
+    # Capture reason before clearing subscription fields
+    cancel_reason  = request.form.get('cancel_reason', '')
+    cancel_comment = request.form.get('cancel_comment', '')
+    _cancelled_track = current_user.subscription_track or ''
+    _cancelled_plan  = current_user.subscription_plan or ''
+    _track_label = {'camera': 'Camera League', 'mobile': 'Mobile League',
+                    'learning': 'Learning Only', 'mentor': 'Human + AI Mentor'}.get(_cancelled_track, _cancelled_track.title())
+
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
     sub_id          = current_user.razorpay_sub_id
 
-    # Cancel on payment gateway end if we have a live subscription ID
+    # Cancel on Razorpay
     if sub_id and razorpay_key:
         try:
             import razorpay as _rz
             client = _rz.Client(auth=(razorpay_key, razorpay_secret))
-            # cancel_at_cycle_end=1 means access continues until end of paid period
             client.subscription.cancel(sub_id, {'cancel_at_cycle_end': 1})
-            app.logger.info(f'[cancel] Payment subscription {sub_id} cancelled for user {current_user.id}')
+            app.logger.info(f'[cancel] Razorpay subscription {sub_id} cancelled for user {current_user.id}')
         except Exception as e:
-            app.logger.error(f'[cancel] Payment subscription cancel failed for {sub_id}: {e}')
-            # Still cancel locally  -  don't leave user stuck
-            flash('Your subscription has been cancelled. If you continue to be charged, contact '+CONTACT_EMAIL+'.', 'warning')
+            app.logger.error(f'[cancel] Razorpay cancel failed for {sub_id}: {e}')
 
-    # Capture track/plan before clearing — needed for cancellation email
-    _cancelled_track = current_user.subscription_track
-    _cancelled_plan  = current_user.subscription_plan
+    # Write cancellation reason to DB
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO cancellation_reasons (user_id, track, plan, reason, comment, cancelled_at) "
+            "VALUES (:uid, :track, :plan, :reason, :comment, NOW())"
+        ), {
+            'uid': current_user.id, 'track': _cancelled_track,
+            'plan': _cancelled_plan, 'reason': cancel_reason,
+            'comment': cancel_comment
+        })
+        db.session.commit()
+    except Exception as _cre:
+        app.logger.warning(f'[cancel] reason write failed: {_cre}')
 
-    # Clear subscription fields in DB
+    # Admin alert
+    try:
+        _admin_email = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
+        _reason_labels = {
+            'too_expensive': 'Too expensive',
+            'not_using_enough': 'Not using it enough',
+            'taking_a_break': 'Taking a break',
+            'evaluations_not_useful': "Didn't find evaluations useful",
+            'technical_issues': 'Technical issues',
+            'other': 'Other',
+        }
+        send_email([_admin_email],
+            f'[SL] Cancellation — {current_user.email} · {_track_label}',
+            f'<p><strong>User:</strong> {current_user.email} (ID {current_user.id})<br>'
+            f'<strong>Plan:</strong> {_track_label} · {_cancelled_plan}<br>'
+            f'<strong>Reason:</strong> {_reason_labels.get(cancel_reason, cancel_reason)}<br>'
+            f'<strong>Comment:</strong> {cancel_comment or "—"}</p>')
+    except Exception:
+        pass
+
+    # Clear subscription fields
     current_user.is_subscribed      = False
     current_user.subscription_track = None
     current_user.subscription_plan  = None
     current_user.razorpay_sub_id    = None
     db.session.commit()
 
-    _send_subscription_cancellation(current_user, _cancelled_track or '', _cancelled_plan or '')
-    flash('Your subscription has been cancelled. You will retain access until the end of your current billing period.', 'info')
+    # Send Sherpa cancellation email
+    _send_subscription_cancellation(current_user, _cancelled_track, _cancelled_plan)
+
+    flash('Your membership has been cancelled. Your evaluations and standing remain.', 'info')
     return redirect(url_for('dashboard'))
-
-
-def _send_subscription_confirmation(user, track, plan):
-    """1a — Subscription confirmation email. Sent immediately after successful payment."""
-    site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
-    name     = user.full_name or user.username or 'Photographer'
-    track_labels = {
-        'camera':   'Camera League',
-        'mobile':   'Mobile League',
-        'learning': 'Learning Only',
-        'mentor':   'Human + AI Mentor',
-    }
-    plan_labels = {
-        'monthly':    'Monthly — ₹200/month',
-        'halfyearly': 'Six-Month — ₹1,100 every 6 months',
-        'annual':     'Annual — ₹2,000/year',
-    }
-    track_label = track_labels.get(track, track.title())
-    plan_label  = plan_labels.get(plan, plan.title())
-    subject     = f'Welcome to {track_label} — your subscription is active'
-    html_body   = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-</head>
-<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">
-<div style="max-width:520px;margin:0 auto;padding:0;">
-
-  <div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td>
-        <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>
-        <span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>
-      </td>
-    </tr></table>
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:400;color:#8a8070;margin:8px 0 0;letter-spacing:0;">Making Images Matter</div>
-  </div>
-
-  <div style="padding:32px 32px 24px;background:#FEFCF8;">
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;color:rgba(44,62,107,0.7);letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Subscription Active</div>
-    <h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;color:#1A1A18;margin:0 0 20px;">Welcome to {track_label}, {name}.</h2>
-    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">Your subscription is confirmed and active. Here is what you have:</p>
-
-    <div style="background:#F5F0E8;border-radius:6px;padding:20px 24px;margin:0 0 24px;">
-      <p style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#2a2a28;margin:0 0 8px;"><strong>Plan:</strong> {track_label} · {plan_label}</p>
-      <p style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#2a2a28;margin:0 0 8px;"><strong>Evaluations:</strong> 4 photographs every month</p>
-      <p style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#2a2a28;margin:0;">Your next billing date is one month from today. You can cancel anytime from your account settings — no questions asked.</p>
-    </div>
-
-    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 28px;">Upload your first photograph and begin. The evaluation takes under 30 seconds.</p>
-
-    <div style="margin:0 0 32px;">
-      <a href="{site_url}/upload" style="display:inline-block;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 28px;text-decoration:none;border-radius:4px;">Upload Your First Photograph &#8594;</a>
-    </div>
-
-    <p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;color:#8a8070;margin:0;">If you have any questions, write to us at <a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">support@shutterleague.com</a></p>
-  </div>
-
-  <div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; <a href="{site_url}" style="color:#8a8070;">shutterleague.com</a></div>
-  </div>
-
-</div>
-</body></html>"""
-    try:
-        send_email([user.email], subject, html_body)
-        app.logger.info(f'[subscription_email] confirmation sent to user {user.id}')
-    except Exception as _e:
-        app.logger.error(f'[subscription_email] confirmation failed for user {user.id}: {_e}')
-
-
-def _send_subscription_cancellation(user, track, plan):
-    """1d — Subscription cancellation confirmation email."""
-    site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
-    name        = user.full_name or user.username or 'Photographer'
-    track_labels = {
-        'camera':   'Camera League',
-        'mobile':   'Mobile League',
-        'learning': 'Learning Only',
-        'mentor':   'Human + AI Mentor',
-    }
-    track_label = track_labels.get(track, track.title())
-    subject     = f'Your {track_label} subscription has been cancelled'
-    html_body   = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-</head>
-<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">
-<div style="max-width:520px;margin:0 auto;padding:0;">
-
-  <div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td>
-        <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>
-        <span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>
-      </td>
-    </tr></table>
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:400;color:#8a8070;margin:8px 0 0;letter-spacing:0;">Making Images Matter</div>
-  </div>
-
-  <div style="padding:32px 32px 24px;background:#FEFCF8;">
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;color:rgba(44,62,107,0.7);letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Subscription Cancelled</div>
-    <h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;color:#1A1A18;margin:0 0 20px;">Your subscription has been cancelled, {name}.</h2>
-    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">Your {track_label} subscription is cancelled. You will retain full access until the end of your current billing period — no further charges will be made.</p>
-    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 24px;">Your evaluation history, standing, and Body of Work are preserved. If you return, everything will be where you left it.</p>
-
-    <div style="margin:0 0 32px;">
-      <a href="{site_url}/pricing" style="display:inline-block;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 28px;text-decoration:none;border-radius:4px;">Resubscribe anytime &#8594;</a>
-    </div>
-
-    <p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;color:#8a8070;margin:0;">Questions? Write to us at <a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">support@shutterleague.com</a></p>
-  </div>
-
-  <div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; <a href="{site_url}" style="color:#8a8070;">shutterleague.com</a></div>
-  </div>
-
-</div>
-</body></html>"""
-    try:
-        send_email([user.email], subject, html_body)
-        app.logger.info(f'[subscription_email] cancellation sent to user {user.id}')
-    except Exception as _e:
-        app.logger.error(f'[subscription_email] cancellation failed for user {user.id}: {_e}')
 
 
 @app.route('/bulk-upload', methods=['GET', 'POST'])
@@ -18327,12 +18448,17 @@ def admin_subscriptions():
         User.role != 'admin',
         db.or_(User.is_subscribed == False, User.is_subscribed == None)
     ).order_by(User.created_at.desc()).all()
-    total_mrr = sum(200 for u in subscribers if u.subscription_plan == 'monthly')
-    total_hyr = sum(1100 for u in subscribers if u.subscription_plan == 'halfyearly')
-    total_arr = sum(2000 for u in subscribers if u.subscription_plan == 'annual')
+    total_mrr = sum(
+        (99 if u.subscription_track == 'mobile' else 199)
+        for u in subscribers if u.subscription_plan == 'monthly'
+    )
+    total_arr = sum(
+        (999 if u.subscription_track == 'mobile' else 1999)
+        for u in subscribers if u.subscription_plan == 'annual'
+    )
     return render_template('admin_subscriptions.html',
         subscribers=subscribers, free_users=free_users,
-        total_mrr=total_mrr, total_hyr=total_hyr, total_arr=total_arr,
+        total_mrr=total_mrr, total_arr=total_arr,
     )
 
 
@@ -24422,124 +24548,6 @@ if _sched_lock_held:
         name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
         replace_existing = True,
     )
-
-    def _daily_admin_subscription_report():
-        """1f — Daily subscription report to admin. Fires at 8:00 AM IST (2:30 UTC)."""
-        try:
-            with app.app_context():
-                site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
-                admin_email = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
-                today       = datetime.utcnow().date()
-                yesterday   = today - timedelta(days=1)
-
-                # New subscribers in last 24hrs
-                new_subs = db.session.execute(db.text(
-                    "SELECT full_name, email, subscription_track, subscription_plan, subscribed_at "
-                    "FROM users WHERE is_subscribed = TRUE "
-                    "AND subscribed_at >= :since ORDER BY subscribed_at DESC"
-                ), {'since': datetime.combine(yesterday, datetime.min.time())}).fetchall()
-
-                # Total active subscribers
-                total_subs = db.session.execute(db.text(
-                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND role != 'admin'"
-                )).scalar() or 0
-
-                # MRR breakdown
-                mrr = db.session.execute(db.text(
-                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND subscription_plan = 'monthly'"
-                )).scalar() or 0
-                hyr = db.session.execute(db.text(
-                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND subscription_plan = 'halfyearly'"
-                )).scalar() or 0
-                arr = db.session.execute(db.text(
-                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND subscription_plan = 'annual'"
-                )).scalar() or 0
-
-                total_revenue = (mrr * 200) + (hyr * 1100) + (arr * 2000)
-
-                # New subs rows
-                if new_subs:
-                    new_rows = ''.join(
-                        f'<tr><td style="padding:8px 12px;font-size:15px;color:#2a2a28;border-bottom:1px solid #E0D8C8;">{r[0] or r[1]}</td>'
-                        f'<td style="padding:8px 12px;font-size:15px;color:#2a2a28;border-bottom:1px solid #E0D8C8;">{r[1]}</td>'
-                        f'<td style="padding:8px 12px;font-size:15px;color:#2a2a28;border-bottom:1px solid #E0D8C8;">{(r[2] or "").title()} · {(r[3] or "").title()}</td></tr>'
-                        for r in new_subs
-                    )
-                    new_block = f"""
-                    <p style="font-size:16px;font-weight:600;color:#1A1A18;margin:0 0 12px;">New subscribers in the last 24 hours ({len(new_subs)})</p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 28px;">
-                      <tr style="background:#F5F0E8;">
-                        <th style="padding:8px 12px;font-size:12px;text-align:left;color:#8a8070;letter-spacing:1px;text-transform:uppercase;">Name</th>
-                        <th style="padding:8px 12px;font-size:12px;text-align:left;color:#8a8070;letter-spacing:1px;text-transform:uppercase;">Email</th>
-                        <th style="padding:8px 12px;font-size:12px;text-align:left;color:#8a8070;letter-spacing:1px;text-transform:uppercase;">Plan</th>
-                      </tr>
-                      {new_rows}
-                    </table>"""
-                else:
-                    new_block = '<p style="font-size:16px;color:#8a8070;margin:0 0 28px;">No new subscribers in the last 24 hours.</p>'
-
-                subject  = f'[Shutter League] Daily Report — {today.strftime("%d %b %Y")} · {total_subs} active subscribers'
-                html_body = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">
-<div style="max-width:600px;margin:0 auto;padding:0;">
-
-  <div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">
-    <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>
-    <span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League · Daily Report</span>
-    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:8px 0 0;">Making Images Matter</div>
-  </div>
-
-  <div style="padding:32px 32px 24px;background:#FEFCF8;">
-    <div style="font-size:13px;font-weight:700;color:rgba(44,62,107,0.7);letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">{today.strftime("%d %B %Y")}</div>
-    <h2 style="font-size:22px;font-weight:500;color:#1A1A18;margin:0 0 24px;">Subscription overview</h2>
-
-    <div style="display:flex;gap:16px;margin:0 0 28px;">
-      <div style="flex:1;background:#F5F0E8;border-radius:6px;padding:16px 20px;">
-        <div style="font-size:13px;font-weight:700;color:#8a8070;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px;">Active Subscribers</div>
-        <p style="font-size:28px;font-weight:600;color:#1A1A18;margin:0;">{total_subs}</p>
-      </div>
-      <div style="flex:1;background:#F5F0E8;border-radius:6px;padding:16px 20px;">
-        <div style="font-size:13px;font-weight:700;color:#8a8070;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px;">Monthly · 6-Month · Annual</div>
-        <p style="font-size:28px;font-weight:600;color:#1A1A18;margin:0;">{mrr} · {hyr} · {arr}</p>
-      </div>
-      <div style="flex:1;background:#F5F0E8;border-radius:6px;padding:16px 20px;">
-        <div style="font-size:13px;font-weight:700;color:#8a8070;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px;">Period Revenue</div>
-        <p style="font-size:28px;font-weight:600;color:#1A1A18;margin:0;">&#8377;{total_revenue:,}</p>
-      </div>
-    </div>
-
-    {new_block}
-
-    <div style="margin:0 0 24px;">
-      <a href="{site_url}/admin/subscriptions" style="display:inline-block;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 28px;text-decoration:none;border-radius:4px;">View Full Subscriber List &#8594;</a>
-    </div>
-  </div>
-
-  <div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">
-    <div style="font-size:13px;color:#8a8070;margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; <a href="{site_url}" style="color:#8a8070;">shutterleague.com</a></div>
-  </div>
-</div>
-</body></html>"""
-
-                send_email([admin_email], subject, html_body)
-                app.logger.info(f'[daily_admin_report] sent — {total_subs} subs, {len(new_subs)} new')
-        except Exception as _dar_e:
-            app.logger.error(f'[daily_admin_report] failed: {_dar_e}')
-        finally:
-            try:
-                db.session.remove()
-            except Exception:
-                pass
-
-    _scheduler.add_job(
-        func             = _daily_admin_subscription_report,
-        trigger          = CronTrigger(hour=2, minute=30, timezone='UTC'),
-        id               = 'daily_admin_subscription_report',
-        name             = 'Daily admin subscription report — 8:00 AM IST',
-        replace_existing = True,
-    )
-
     _scheduler.start()
     import atexit as _atexit
     _atexit.register(lambda: _scheduler.shutdown(wait=False))
