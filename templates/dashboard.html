@@ -466,6 +466,19 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   ════════════════════════════════════ #}
   <main class="centre">
 
+    {# ── Post-payment welcome banner ── #}
+    {% if just_subscribed %}
+    {% set _track_label = {'camera': 'Camera League', 'mobile': 'Mobile League', 'learning': 'Learning Only', 'mentor': 'Human + AI Mentor'}.get(just_subscribed, just_subscribed|title) %}
+    <div style="background:#2C3E6B;border-radius:8px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:flex-start;gap:16px;">
+      <div style="font-size:24px;line-height:1;">✓</div>
+      <div>
+        <div style="font-family:Inter,Arial,sans-serif;font-size:16px;font-weight:600;color:#F5C518;margin-bottom:6px;">Welcome to {{ _track_label }}.</div>
+        <div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:10px;">Your membership is active. Your evaluations are ready — upload your first photograph and begin.</div>
+        <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">Your bank may show a recurring mandate notification — this is standard for all UPI memberships. You can cancel anytime from <a href="/profile" style="color:#F5C518;">your account settings</a>. No refund applies to the current cycle.</div>
+      </div>
+    </div>
+    {% endif %}
+
     {# ── Greeting + streak ── #}
     <div class="greeting">
       <div>
