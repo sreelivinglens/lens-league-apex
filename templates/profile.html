@@ -427,8 +427,8 @@
           <li><a href="#referral-code">
             <span class="nav-icon">👥</span> Referral Code
           </a></li>
-          <li><a href="mailto:support@shutterleague.com">
-            <span class="nav-icon" style="font-style:normal;">?</span> Help & Support
+          <li><a href="/contact">
+            <span class="nav-icon" style="font-style:normal;">?</span> Help &amp; Support
           </a></li>
         </ul>
       </div>
@@ -439,8 +439,8 @@
       <div class="acc-grid-top">
 
       {# ══ Section 1 — Account Details ══ #}
-      <div class="acc-section" id="account-details">
-        <div class="acc-section-header">
+      <div class="acc-section" id="account-details" style="border-top:3px solid #2C3E6B;">
+        <div class="acc-section-header" style="background:rgba(44,62,107,0.06);margin:-28px -32px 20px;padding:18px 28px 16px;border-radius:var(--acc-radius) var(--acc-radius) 0 0;">
           <div class="acc-section-num">1</div>
           <div>
             <div class="acc-section-title">Account Details</div>
@@ -584,8 +584,8 @@
 
       {# ══ Section 2 — Account State ══ #}
       
-      <div class="acc-section" id="account-state">
-        <div class="acc-section-header">
+      <div class="acc-section" id="account-state" style="border-top:3px solid #F5C518;">
+        <div class="acc-section-header" style="background:rgba(245,197,24,0.10);margin:-28px -32px 20px;padding:18px 28px 16px;border-radius:var(--acc-radius) var(--acc-radius) 0 0;">
           <div class="acc-section-num">2</div>
           <div>
             <div class="acc-section-title">Account State</div>
@@ -700,8 +700,8 @@
 
       <div class="acc-grid-bottom">
       {# ══ Section 3 — Points Balance ══ #}
-      <div class="acc-section" id="points-balance">
-        <div class="acc-section-header">
+      <div class="acc-section" id="points-balance" style="border-top:3px solid #2E7D52;">
+        <div class="acc-section-header" style="background:rgba(46,125,82,0.06);margin:-28px -32px 20px;padding:18px 28px 16px;border-radius:var(--acc-radius) var(--acc-radius) 0 0;">
           <div class="acc-section-num">3</div>
           <div>
             <div class="acc-section-title">Points Balance</div>
@@ -720,7 +720,7 @@
 
         <div class="acc-points-actions">
           <a href="#referral-code" class="acc-points-btn outline" onclick="document.getElementById('referral-code').scrollIntoView({behavior:'smooth'});return false;">☆ How to Earn</a>
-          <a href="#" class="acc-points-btn solid" onclick="alert('Points redemption is coming soon. Stay tuned.');return false;">🎁 Redeem Points</a>
+          <a href="https://shutterleague.com/redeem" class="acc-points-btn solid">🎁 Redeem Points</a>
         </div>
 
         {% if progress_data and progress_data.recent_points %}
@@ -748,8 +748,8 @@
 
       {# ══ Section 4 — Referral Code ══ #}
       {% if referral_code %}
-      <div class="acc-section" id="referral-code">
-        <div class="acc-section-header">
+      <div class="acc-section" id="referral-code" style="border-top:3px solid #E09940;">
+        <div class="acc-section-header" style="background:rgba(224,153,64,0.08);margin:-28px -32px 20px;padding:18px 28px 16px;border-radius:var(--acc-radius) var(--acc-radius) 0 0;">
           <div class="acc-section-num">4</div>
           <div>
             <div class="acc-section-title">Referral Code</div>
