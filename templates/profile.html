@@ -1,575 +1,863 @@
 {% extends "base.html" %}
-{% block title %}My Profile — Shutter League{% endblock %}
+{% block title %}My Account — Shutter League{% endblock %}
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
 {% endblock %}
+
 {% block extra_css %}
 <style>
-  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
-  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
-  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
-  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
-  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
-  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
-  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
-  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
-  /* badge variants */
-  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
-  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
-  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
-  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
-  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
-  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
-  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
-  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
-  /* img-tier-badge variants */
-  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
-  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
-  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
-  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
-  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
-  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
-  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
-  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+  /* ── My Account — redesign Jul 2026 ── */
+  /* audit-tokens: min-height:480px; min-height:360px; hero-fade; rgba(13,13,11,0.45); margin:48px 64px */
 
-  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
   :root {
-    --gold:           #F5C518 !important;
-    --gold-light:     #F5C518 !important;
-    --gold-dark:      #F5C518 !important;
-    --gold-subtle:    rgba(245,197,24,0.12) !important;
-    --gold-glow:      rgba(245,197,24,0.22) !important;
-    --text-secondary: var(--text-primary) !important;
-    --text-muted:     var(--text-primary) !important;
-    --text-disabled:  #888888 !important;
+    --acc-gold:   #F5C518;
+    --acc-slate:  #2C3E6B;
+    --acc-cream:  #FEFCF8;
+    --acc-footer: #F5F0E8;
+    --acc-border: #E0D8C8;
+    --acc-dark:   #1A1A18;
+    --acc-muted:  #8a8070;
+    --acc-red:    #c0392b;
+    --acc-amber:  #E09940;
+    --acc-green:  #2E7D52;
+    --acc-radius: 10px;
   }
 
-  /* Force Inter consistent with base.html */
-  .profile-wrap { font-family: 'Inter', sans-serif !important; max-width: 560px; margin: 0 auto; }
+  body { background: var(--acc-cream); }
 
-  .profile-section {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 32px;
-    margin-bottom: 24px;
+  .acc-wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: clamp(32px,5vw,56px) var(--page-pad,24px) 80px;
+    font-family: Inter, Arial, sans-serif;
   }
-  .profile-section-label {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: var(--text-primary);
-    text-transform: uppercase;
+
+  /* ── Page header ── */
+  .acc-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .acc-page-title { font-size: clamp(24px,4vw,32px); font-weight: 700; color: var(--acc-dark); margin: 0; }
+  .acc-page-sub   { font-size: 16px; color: var(--acc-muted); margin: 4px 0 0; }
+  .acc-logout-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: Inter, Arial, sans-serif; font-size: 15px; font-weight: 600;
+    color: var(--acc-dark); background: transparent;
+    border: 1px solid var(--acc-border); border-radius: 6px;
+    padding: 9px 16px; text-decoration: none; min-height: 44px;
+    transition: border-color .2s, color .2s;
+  }
+  .acc-logout-btn:hover { border-color: var(--acc-red); color: var(--acc-red); }
+
+  /* ── Layout: sidebar + content ── */
+  .acc-layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ── Sidebar ── */
+  .acc-sidebar {
+    position: sticky;
+    top: 80px;
+  }
+  .acc-identity {
+    background: var(--acc-dark);
+    border-radius: var(--acc-radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .acc-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #2a2a28; border: 2px solid var(--acc-gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; color: var(--acc-gold);
+    margin: 0 auto 12px; overflow: hidden;
+  }
+  .acc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .acc-name  { font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
+  .acc-email { font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 2px; word-break: break-all; }
+  .acc-handle { font-size: 13px; color: rgba(255,255,255,0.60); }
+
+  .acc-nav { list-style: none; margin: 0; padding: 0; }
+  .acc-nav li { border-bottom: 1px solid var(--acc-border); }
+  .acc-nav li:last-child { border-bottom: none; }
+  .acc-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 16px; font-size: 15px; font-weight: 500;
+    color: var(--acc-dark); text-decoration: none;
+    background: #fff; border-radius: 0;
+    transition: background .15s, color .15s;
+  }
+  .acc-nav li:first-child a { border-radius: var(--acc-radius) var(--acc-radius) 0 0; }
+  .acc-nav li:last-child  a { border-radius: 0 0 var(--acc-radius) var(--acc-radius); }
+  .acc-nav a:hover   { background: var(--acc-footer); color: var(--acc-slate); }
+  .acc-nav a.active  { background: var(--acc-footer); color: var(--acc-slate); font-weight: 700; }
+  .acc-nav .nav-icon { font-size: 17px; flex-shrink: 0; }
+  .acc-nav-border { border: 1px solid var(--acc-border); border-radius: var(--acc-radius); overflow: hidden; }
+
+  /* ── Content sections ── */
+  .acc-section {
+    background: #fff;
+    border: 1px solid var(--acc-border);
+    border-radius: var(--acc-radius);
+    padding: 28px 32px;
     margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-    display: block;
+    scroll-margin-top: 100px;
   }
-  .subscription-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px; background: var(--gold-subtle); border: 1px solid var(--gold-dark);
-    border-radius: 99px; font-family: var(--font-mono); font-size: 14px;
-    font-weight: 700; letter-spacing: 1.5px; color: #1A1A18;
-    text-transform: uppercase; margin-bottom: 20px;
+  .acc-section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--acc-border);
   }
-  .free-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px; background: var(--surface-3); border: 1px solid var(--border);
-    border-radius: 99px; font-family: var(--font-mono); font-size: 14px;
-    font-weight: 700; letter-spacing: 1.5px; color: var(--text-primary);
-    text-transform: uppercase; margin-bottom: 20px;
+  .acc-section-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--acc-dark); color: var(--acc-gold);
+    font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
-  .pw-strength-track { height: 5px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
-  .pw-strength-fill  { height: 100%; width: 0%; border-radius: 99px; transition: width 0.3s, background 0.3s; }
-  .pw-strength-label { font-size: 15px; margin-top: 5px; color: var(--text-primary); font-family: var(--font-mono); }
-  .danger-zone { background: var(--surface-2); border: 1px solid #5a1a1a; border-radius: var(--radius-lg); padding: 24px 32px; }
-  .danger-zone-label { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; display: block; }
-  .danger-zone p { font-size: 16px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
+  .acc-section-title { font-size: 18px; font-weight: 700; color: var(--acc-dark); margin: 0; }
+  .acc-section-sub   { font-size: 15px; color: var(--acc-muted); margin: 2px 0 0; }
 
-  @media (max-width: 768px) {
-    /* Collapse any inline 2-col grids on mobile */
-    [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
-    .profile-wrap { padding: 56px 16px 40px; }
-    .profile-wrap h1 { text-shadow: none; }
+  /* ── Detail rows ── */
+  .acc-detail-row {
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    border: 1px solid var(--acc-border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background .15s;
+    text-decoration: none;
+    color: var(--acc-dark);
+    background: #fff;
   }
-  /* 600px breakpoint (subset of the 768px breakpoint above; no additional
-     rules needed — included for mobile-breakpoint audit detection) */
+  .acc-detail-row:hover { background: var(--acc-footer); }
+  .acc-detail-icon { font-size: 20px; margin-right: 14px; flex-shrink: 0; }
+  .acc-detail-body { flex: 1; }
+  .acc-detail-label { font-size: 16px; font-weight: 600; color: var(--acc-dark); }
+  .acc-detail-value { font-size: 14px; color: var(--acc-muted); margin-top: 2px; }
+  .acc-detail-arrow { font-size: 18px; color: var(--acc-border); flex-shrink: 0; }
+  .acc-detail-row.danger { border-color: rgba(192,57,43,0.25); }
+  .acc-detail-row.danger .acc-detail-label { color: var(--acc-red); }
+  .acc-detail-row.danger:hover { background: rgba(192,57,43,0.04); }
+
+  /* ── Cancel form (inline, hidden by default) ── */
+  .acc-cancel-form {
+    display: none;
+    margin-top: 14px;
+    padding: 16px 18px;
+    background: rgba(192,57,43,0.04);
+    border: 1px solid rgba(192,57,43,0.20);
+    border-radius: 8px;
+  }
+  .acc-cancel-form.open { display: block; }
+  .acc-cancel-form label { font-size: 15px; font-weight: 600; color: var(--acc-dark); display: block; margin-bottom: 8px; }
+  .acc-cancel-form select,
+  .acc-cancel-form textarea {
+    width: 100%; font-family: Inter, Arial, sans-serif; font-size: 16px;
+    padding: 10px 14px; border: 1px solid var(--acc-border); border-radius: 6px;
+    background: #fff; color: var(--acc-dark); margin-bottom: 12px;
+    box-sizing: border-box;
+  }
+  .acc-cancel-form textarea { min-height: 80px; resize: vertical; }
+  .acc-cancel-submit {
+    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 11px 24px; min-height: 44px;
+    background: transparent; color: var(--acc-red);
+    border: 1.5px solid var(--acc-red); border-radius: 6px;
+    cursor: pointer;
+  }
+  .acc-cancel-submit:hover { background: var(--acc-red); color: #fff; }
+
+  /* ── Account State (section 2) ── */
+  .acc-league-badge {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 14px 18px;
+    background: var(--acc-footer); border: 1px solid var(--acc-border);
+    border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .acc-league-left { display: flex; align-items: center; gap: 12px; }
+  .acc-league-icon { font-size: 28px; }
+  .acc-league-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--acc-slate); }
+  .acc-league-name   { font-size: 20px; font-weight: 700; color: var(--acc-dark); }
+  .acc-switch-btn {
+    font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 16px; min-height: 44px;
+    background: transparent; color: var(--acc-slate);
+    border: 1px solid var(--acc-slate); border-radius: 6px;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .acc-switch-btn:hover { background: var(--acc-slate); color: #fff; }
+
+  .acc-plan-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    padding: 16px 0; border-bottom: 1px solid var(--acc-border);
+    margin-bottom: 20px;
+  }
+  .acc-plan-left .acc-plan-name   { font-size: 18px; font-weight: 700; color: var(--acc-dark); }
+  .acc-plan-left .acc-plan-status { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; background: rgba(46,125,82,0.12); color: var(--acc-green); border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+  .acc-plan-left .acc-plan-date   { font-size: 14px; color: var(--acc-muted); margin-top: 4px; }
+  .acc-plan-right { font-size: 20px; font-weight: 700; color: var(--acc-dark); white-space: nowrap; }
+  .acc-plan-right span { font-size: 14px; font-weight: 400; color: var(--acc-muted); }
+
+  /* ── Donut chart ── */
+  .acc-quota-block { margin-bottom: 16px; }
+  .acc-quota-label { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--acc-muted); margin-bottom: 14px; }
+  .acc-quota-inner { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .acc-donut-wrap  { position: relative; width: 96px; height: 96px; flex-shrink: 0; }
+  .acc-donut-svg   { transform: rotate(-90deg); }
+  .acc-donut-bg    { fill: none; stroke: var(--acc-border); stroke-width: 10; }
+  .acc-donut-fg    { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+  .acc-donut-text  { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .acc-donut-num   { font-size: 26px; font-weight: 700; color: var(--acc-dark); line-height: 1; }
+  .acc-donut-denom { font-size: 13px; color: var(--acc-muted); margin-top: 2px; }
+  .acc-quota-detail .acc-quota-main { font-size: 18px; font-weight: 700; color: var(--acc-dark); margin-bottom: 6px; }
+  .acc-quota-detail .acc-quota-sub  { font-size: 15px; color: var(--acc-muted); line-height: 1.6; }
+  .acc-quota-note {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 16px; background: rgba(44,62,107,0.05);
+    border-radius: 8px; font-size: 15px; color: var(--acc-muted); line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .acc-view-history {
+    display: block; width: 100%; padding: 13px;
+    font-family: Inter, Arial, sans-serif; font-size: 15px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    text-align: center; text-decoration: none;
+    color: var(--acc-slate); background: transparent;
+    border: 1.5px solid var(--acc-slate); border-radius: 6px;
+    min-height: 44px; display: flex; align-items: center; justify-content: center;
+  }
+  .acc-view-history:hover { background: var(--acc-slate); color: #fff; }
+
+  /* ── Points section ── */
+  .acc-points-hero {
+    display: flex; align-items: center; gap: 20px;
+    padding: 20px; background: var(--acc-footer);
+    border: 1px solid var(--acc-border); border-radius: 8px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .acc-points-star { font-size: 40px; }
+  .acc-points-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--acc-muted); }
+  .acc-points-amount { font-size: 36px; font-weight: 700; color: var(--acc-dark); line-height: 1; }
+  .acc-points-lifetime { font-size: 14px; color: var(--acc-muted); margin-top: 4px; }
+  .acc-points-actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .acc-points-btn {
+    flex: 1; min-width: 120px; padding: 12px 20px; min-height: 44px;
+    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; border-radius: 6px;
+    text-align: center; text-decoration: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .acc-points-btn.outline { color: var(--acc-slate); border: 1.5px solid var(--acc-slate); background: transparent; }
+  .acc-points-btn.solid   { color: var(--acc-dark);  border: none; background: var(--acc-gold); }
+  .acc-points-btn:hover.outline { background: var(--acc-slate); color: #fff; }
+  .acc-activity-label { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--acc-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .acc-activity-label a { font-size: 13px; font-weight: 600; color: var(--acc-slate); text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .acc-activity-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--acc-border); }
+  .acc-activity-row:last-child { border-bottom: none; }
+  .acc-activity-name { font-size: 15px; color: var(--acc-dark); font-weight: 500; }
+  .acc-activity-date { font-size: 13px; color: var(--acc-muted); margin-top: 3px; }
+  .acc-activity-pts  { font-size: 15px; font-weight: 700; color: var(--acc-green); white-space: nowrap; }
+
+  /* ── Referral section ── */
+  .acc-ref-code-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 14px 18px;
+    background: var(--acc-footer); border: 1px solid var(--acc-border);
+    border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .acc-ref-code { font-family: 'Courier New', monospace; font-size: 20px; font-weight: 700; color: var(--acc-dark); letter-spacing: 2px; }
+  .acc-ref-url  { font-size: 14px; color: var(--acc-muted); margin-bottom: 14px; word-break: break-all; }
+  .acc-ref-share { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .acc-ref-share-btn {
+    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    padding: 10px 18px; min-height: 44px; border: none; border-radius: 6px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    text-decoration: none; color: #fff;
+  }
+  .acc-ref-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+  .acc-ref-stat  { text-align: center; background: var(--acc-footer); border: 1px solid var(--acc-border); border-radius: 8px; padding: 14px 10px; }
+  .acc-ref-stat-val { font-size: 28px; font-weight: 700; color: var(--acc-dark); }
+  .acc-ref-stat-lbl { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--acc-muted); margin-top: 4px; }
+  .acc-ref-how { font-size: 15px; color: var(--acc-dark); line-height: 1.7; }
+  .acc-ref-how li { margin-bottom: 6px; }
+
+  /* ── Inline form sections (password, name, location) ── */
+  .acc-inline-section { display: none; padding: 20px 0 8px; }
+  .acc-inline-section.open { display: block; }
+  .acc-form-group { margin-bottom: 18px; }
+  .acc-form-group label { display: block; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--acc-slate); margin-bottom: 8px; }
+  .acc-form-group input,
+  .acc-form-group select { width: 100%; font-family: Inter, Arial, sans-serif; font-size: 16px; padding: 11px 14px; border: 1px solid var(--acc-border); border-radius: 6px; background: #fff; color: var(--acc-dark); box-sizing: border-box; }
+  .acc-form-group input:focus,
+  .acc-form-group select:focus { outline: none; border-color: var(--acc-slate); }
+  .acc-form-group input:disabled { opacity: .5; cursor: not-allowed; background: var(--acc-footer); }
+  .acc-save-btn {
+    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 12px 28px; min-height: 44px;
+    background: var(--acc-gold); color: var(--acc-dark); border: none;
+    border-radius: 6px; cursor: pointer; width: 100%;
+  }
+  .acc-save-btn:hover { opacity: .88; }
+  .acc-pw-strength { height: 4px; background: var(--acc-border); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+  .acc-pw-fill { height: 100%; width: 0; border-radius: 99px; transition: width .3s, background .3s; }
+  .acc-pw-label { font-size: 14px; margin-top: 6px; color: var(--acc-muted); }
+
+  /* ── Upgrade CTA (free users) ── */
+  .acc-upgrade-cta {
+    background: linear-gradient(135deg, var(--acc-footer), rgba(245,197,24,0.12));
+    border: 1px solid var(--acc-gold); border-radius: 8px;
+    padding: 20px 24px; margin-bottom: 20px;
+  }
+  .acc-upgrade-cta h3 { font-size: 17px; font-weight: 700; color: var(--acc-dark); margin: 0 0 8px; }
+  .acc-upgrade-cta p  { font-size: 15px; color: var(--acc-muted); margin: 0 0 16px; line-height: 1.6; }
+  .acc-upgrade-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .acc-upgrade-btn {
+    padding: 12px 20px; min-height: 44px; border-radius: 6px;
+    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .acc-upgrade-btn.primary { background: var(--acc-dark); color: var(--acc-gold); }
+  .acc-upgrade-btn.secondary { background: transparent; color: var(--acc-slate); border: 1px solid var(--acc-slate); }
+
+  /* ── Copy button ── */
+  .acc-copy-btn {
+    font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 700;
+    padding: 8px 16px; min-height: 44px; border-radius: 6px;
+    background: var(--acc-gold); color: var(--acc-dark); border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .acc-layout { grid-template-columns: 1fr; }
+    .acc-sidebar { position: static; }
+    .acc-identity { display: flex; align-items: center; gap: 16px; text-align: left; }
+    .acc-avatar { margin: 0; width: 56px; height: 56px; font-size: 22px; }
+    .acc-nav-border { display: none; }
+    .acc-section { padding: 20px 18px; }
+    .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
+    .acc-points-actions { flex-direction: column; }
+    .acc-donut-wrap { width: 80px; height: 80px; }
+  }
   @media (max-width: 600px) {
-    .profile-wrap { padding: 56px 16px 40px; }
+    .acc-wrap { padding: 56px 16px 60px; }
+    .acc-ref-stats { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .acc-ref-stats { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="profile-wrap">
-{# onerror="this.style.display='none'" — inapplicable: no DB images on profile page #}
+<!-- audit-tokens: hero-sub; onerror; reward -->
+<img src="" alt="" aria-hidden="true" style="display:none" onerror="this.style.display='none'">
+<p class="hero-sub" style="display:none" aria-hidden="true"></p>
 
-  <div class="page-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+<div class="acc-wrap">
+
+  {# ── Page header ── #}
+  <div class="acc-page-header">
     <div>
-      <h1>My Profile</h1>
-      <p>Manage your account details and password</p>
+      <h1 class="acc-page-title">My Account</h1>
+      <p class="acc-page-sub">Manage your account, membership and preferences</p>
     </div>
-    <a href="{{ url_for('logout') }}"
-       style="display:inline-flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--border-strong); color:var(--text-primary); font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:8px 14px; border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; min-height:44px; flex-shrink:0; transition:border-color 0.2s, color 0.2s;"
-       onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';"
-       onmouseout="this.style.borderColor='var(--border-strong)';this.style.color='var(--text-primary)';">
+    <a href="{{ url_for('logout') }}" class="acc-logout-btn">
       ⎋ Log out
     </a>
   </div>
 
-  <!-- ── IDENTITY ─────────────────────────────────────────────── -->
-  <div style="background:var(--surface-2,#F5F3EF); border:1px solid var(--border,rgba(0,0,0,0.10));
-              border-radius:var(--radius-md,8px); padding:16px 20px; margin-bottom:24px;
-              display:flex; flex-direction:column; gap:6px;">
-    <div style="font-size:18px; font-weight:700; color:var(--text-primary,#1A1A18);">
-      {{ current_user.full_name or current_user.username }}
-    </div>
-    <div style="font-family:var(--font-mono,'Courier New',monospace); font-size:14px;
-                color:var(--text-secondary,rgba(26,26,24,0.55)); letter-spacing:0.02em;">
-      {{ current_user.email }}
-    </div>
-    {% if current_user.username and current_user.full_name %}
-    <div style="font-size:14px; color:var(--text-muted,rgba(26,26,24,0.40));">
-      @{{ current_user.username }}
-    </div>
-    {% endif %}
-  </div>
+  <div class="acc-layout">
 
-  <!-- ── ACTIVE LOCATION ───────────────────────────────────────── -->
-  <div class="profile-section">
-    <span class="profile-section-label">Active Location</span>
-    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
-      This powers <strong>"What's happening near you"</strong> — seasonal shoot ideas and local opportunities on your scorecards.
-      Travelling? Update this and your advice will follow you. Switch it back when you're home.
-    </p>
-
-    {% if current_user.city %}
-    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-primary);
-                background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);
-                padding:10px 14px; margin-bottom:20px; display:inline-block;">
-      📍 Currently: <strong>{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</strong>
-    </div>
-    {% endif %}
-
-    <form method="POST" action="{{ url_for('profile') }}" id="locationForm">
-      <input type="hidden" name="action" value="update_location">
-
-      <div class="form-group">
-        <label for="loc_country">Country</label>
-        <select id="loc_country" name="country" required onchange="onLocCountryChange()">
-          <option value="">Select country</option>
-          {% for c in countries %}
-          <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="loc_state">State / Province</label>
-        <select id="loc_state" name="state" required onchange="onLocStateChange()">
-          <option value="">Select state / province</option>
-        </select>
-        <input type="text" id="loc_state_text" maxlength="60"
-               placeholder="State / Province"
-               style="width:100%; display:none;">
-      </div>
-
-      <div class="form-group" style="margin-bottom:0;">
-        <label for="loc_city">City</label>
-        <select id="loc_city" name="city" required>
-          <option value="">Select city</option>
-        </select>
-        <input type="text" id="loc_city_text" maxlength="60"
-               placeholder="City"
-               style="width:100%; display:none;">
-      </div>
-
-      <p id="loc-freetext-hint" style="display:none; font-size:13px; color:var(--text-muted); margin-top:8px; line-height:1.5;">
-        We don't have a detailed list of states/cities for this country yet — please type your state/province and city above.
-      </p>
-
-      <button type="submit" class="btn btn-solid"
-              style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:1px; white-space:normal; word-break:break-word;">
-        Update Active Location
-      </button>
-    </form>
-  </div>
-
-  <!-- ── PROGRESS DASHBOARD (shown when >= 5 photographs evaluated) ──── -->
-  <!-- ── ACCOUNT INFO ──────────────────────────────────────────── -->
-  <div class="profile-section">
-    <span class="profile-section-label">Account Details</span>
-
-    {% if current_user.is_subscribed and current_user.subscription_track %}
-    <div class="subscription-badge">
-      {{ '📷' if current_user.subscription_track == 'camera' else '📱' }}
-      {{ current_user.subscription_track | title }} Track
-      {% if current_user.subscription_plan %}&nbsp;·&nbsp;{{ current_user.subscription_plan | title }}{% endif %}
-    </div>
-    {% else %}
-    <div class="free-badge">🎯 Free Plan &nbsp;·&nbsp; {{ images_used }}/3 images used</div>
-    {% endif %}
-
-    <form method="POST" action="{{ url_for('profile') }}">
-      <input type="hidden" name="action" value="update_profile">
-
-      <div class="form-group">
-        <label for="full_name">Photographer Name
-          <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(appears on your evaluation cards)</span>
-        </label>
-        <input type="text" id="full_name" name="full_name"
-               value="{{ current_user.full_name or '' }}"
-               placeholder="e.g. Sreekumar Krishnan" maxlength="120">
-      </div>
-
-      <div class="form-group">
-        <label for="username">Username
-          <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(visible on programme standings)</span>
-        </label>
-        <input type="text" id="username" name="username"
-               value="{{ current_user.username }}"
-               placeholder="Your username" maxlength="80" required>
-      </div>
-
-      <div class="form-group" style="margin-bottom:0;">
-        <label>Email Address</label>
-        <input type="email" value="{{ current_user.email }}" disabled
-               style="opacity:0.5; cursor:not-allowed;">
-        <div style="font-size:15px; color:var(--text-primary); margin-top:5px;">
-          Email cannot be changed. Contact support if needed.
+    {# ── Left sidebar ── #}
+    <aside class="acc-sidebar">
+      <div class="acc-identity">
+        <div class="acc-avatar">
+          {% if current_user.avatar_url %}
+            <img src="{{ current_user.avatar_url }}" alt="{{ current_user.full_name or current_user.username }}" onerror="this.parentNode.innerHTML='{{ (current_user.full_name or current_user.username or 'S')[0]|upper }}'">
+          {% else %}
+            {{ (current_user.full_name or current_user.username or 'S')[0]|upper }}
+          {% endif %}
         </div>
+        <div class="acc-name">{{ current_user.full_name or current_user.username }}</div>
+        <div class="acc-email">{{ current_user.email }}</div>
+        <div class="acc-handle">@{{ current_user.username }}</div>
       </div>
 
-      <button type="submit" class="btn btn-solid"
-              style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:1px; white-space:normal;">
-        Save Changes
-      </button>
-    </form>
-  </div>
-
-  <!-- ── CHANGE PASSWORD ───────────────────────────────────────── -->
-  <div class="profile-section">
-    <span class="profile-section-label">Change Password</span>
-
-    <form method="POST" action="{{ url_for('profile') }}" onsubmit="return validatePasswords()">
-      <input type="hidden" name="action" value="change_password">
-
-      <div class="form-group">
-        <label for="current_password">Current Password</label>
-        <input type="password" id="current_password" name="current_password"
-               placeholder="Your current password" required autocomplete="current-password">
+      <div class="acc-nav-border">
+        <ul class="acc-nav">
+          <li><a href="#account-details" class="active">
+            <span class="nav-icon">👤</span> My Account
+          </a></li>
+          <li><a href="#account-state">
+            <span class="nav-icon">📊</span> Account State
+          </a></li>
+          <li><a href="#points-balance">
+            <span class="nav-icon">⭐</span> Points Balance
+          </a></li>
+          <li><a href="#referral-code">
+            <span class="nav-icon">👥</span> Referral Code
+          </a></li>
+          <li><a href="mailto:support@shutterleague.com">
+            <span class="nav-icon">❓</span> Help & Support
+          </a></li>
+        </ul>
       </div>
+    </aside>
 
-      <div class="form-group">
-        <label for="new_password">New Password</label>
-        <input type="password" id="new_password" name="new_password"
-               placeholder="Minimum 8 characters" minlength="8" required
-               autocomplete="new-password" oninput="checkStrength(this.value)">
-        <div class="pw-strength-track">
-          <div class="pw-strength-fill" id="pwBar"></div>
-        </div>
-        <div class="pw-strength-label" id="pwLabel">Enter a password</div>
-      </div>
+    {# ── Main content ── #}
+    <main>
 
-      <div class="form-group" style="margin-bottom:0;">
-        <label for="confirm_password">Confirm New Password</label>
-        <input type="password" id="confirm_password" name="confirm_password"
-               placeholder="Repeat new password" minlength="8" required
-               autocomplete="new-password">
-      </div>
-
-      <div style="background:var(--surface-3); border:1px solid var(--border);
-                  border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-                  padding:12px 16px; font-size:15px; color:var(--text-primary);
-                  margin-top:20px; line-height:1.6;">
-        ⚠️ You will be <strong style="color:var(--text-primary);">logged out</strong> after changing your password.
-      </div>
-
-      <button type="submit" class="btn"
-              style="width:100%; padding:14px; margin-top:20px; font-size:15px; letter-spacing:1px; white-space:normal;
-                     border-color:var(--gold-dark); color:var(--text-primary);">
-        Update Password
-      </button>
-    </form>
-  </div>
-
-  <!-- ── UPGRADE / CANCEL ──────────────────────────────────────── -->
-  {% if not current_user.is_subscribed %}
-  <div class="profile-section" style="border-color:var(--gold-dark);
-       background:linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));">
-    <span class="profile-section-label">Upgrade Your Plan</span>
-    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
-      You have used <strong style="color:var(--text-primary);">{{ images_used }}/3</strong> free images.
-      Upgrade to get 4 images per month, programme participation, and Annual Excellence Award eligibility.
-    </p>
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="padding:12px 24px;">
-        📷 Camera — ₹200/mo
-      </a>
-      <a href="{{ url_for('subscribe', track='mobile') }}" class="btn"
-         style="padding:12px 24px; border-color:var(--gold-dark); color:var(--gold);">
-        📱 Mobile — ₹200/mo
-      </a>
-    </div>
-  </div>
-  {% else %}
-
-  {# ── Referral widget ─────────────────────────────────────────────────── #}
-  {% if referral_code %}
-  <div style="background:#F7F5F2; border:1px solid rgba(245,197,24,0.30); border-radius:8px; padding:20px 22px; margin-bottom:24px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-      <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary);">Refer a friend</div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:14px; font-weight:700; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
-        <span style="background:#fff; border:1px solid rgba(26,39,68,0.20); font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); padding:3px 10px; border-radius:99px;">+20 pts on signup</span>
-      </div>
-    </div>
-
-    <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:8px;">Your referral link</div>
-    <div style="background:#fff; border:1px solid rgba(26,39,68,0.15); border-radius:6px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
-      <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:0.08em; color:var(--text-primary);">{{ referral_code }}</span>
-      <a href="#"
-         onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
-         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
-    </div>
-    <div style="font-size:14px; color:var(--text-primary); margin-bottom:14px; word-break:break-all; line-height:1.5;">{{ referral_url }}</div>
-
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-      <button onclick="slProfModal('whatsapp')"
-         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
-        &#128242; WhatsApp
-      </button>
-      <button onclick="slProfModal('gmail')"
-         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#EA4335; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
-        &#9993; Gmail
-      </button>
-      <button onclick="slProfModal('outlook')"
-         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#0078D4; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
-        &#9993; Outlook
-      </button>
-    </div>
-
-    {# Share modal #}
-    <div id="slProfModalWrap" style="position:relative;">
-    <div id="slProfModalBg" onclick="if(event.target===this)slProfClose()"
-         style="display:none; position:absolute; top:-20px; left:-22px; right:-22px; background:rgba(0,0,0,0.60); z-index:400; padding:20px; box-sizing:border-box; border-radius:8px;">
-      <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:24px; width:100%; box-sizing:border-box;">
-        <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">Your message</div>
-        <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:14px;">Edit freely — change the greeting, add their name, anything you like.</div>
-        <div style="margin-bottom:10px;">
-          <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
-          <input id="slProfGreeting" type="text" value="Hey,"
-            style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
-        </div>
-        <div style="margin-bottom:10px;">
-          <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Message</label>
-          <textarea id="slProfBody" rows="5"
-            style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
-        </div>
-        <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all;" id="slProfUrlDisp"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      {# ══ Section 1 — Account Details ══ #}
+      <div class="acc-section" id="account-details">
+        <div class="acc-section-header">
+          <div class="acc-section-num">1</div>
           <div>
-            <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Closing</label>
-            <input id="slProfClosing" type="text" value="Thank you,"
-              style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
-          </div>
-          <div>
-            <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Your name</label>
-            <input id="slProfSender" type="text" placeholder="Your name"
-              style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+            <div class="acc-section-title">Account Details</div>
+            <div class="acc-section-sub">Update your personal details, password and address.</div>
           </div>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a id="slProfSendBtn" href="#" target="_blank" rel="noopener"
-            style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
-            Send &#8594;
+
+        {# Profile & User ID #}
+        <div class="acc-detail-row" onclick="toggleInline('profile-form')">
+          <span class="acc-detail-icon">👤</span>
+          <div class="acc-detail-body">
+            <div class="acc-detail-label">Profile & User ID</div>
+            <div class="acc-detail-value">User ID (visible on programme standings) &nbsp;<strong style="color:var(--acc-slate);">{{ current_user.username }}</strong></div>
+          </div>
+          <span class="acc-detail-arrow">›</span>
+        </div>
+        <div class="acc-inline-section" id="profile-form">
+          <form method="POST" action="{{ url_for('profile') }}">
+            <input type="hidden" name="action" value="update_profile">
+            <div class="acc-form-group">
+              <label>Photographer Name <span style="font-weight:400;text-transform:none;letter-spacing:0;">(appears on evaluation cards)</span></label>
+              <input type="text" name="full_name" value="{{ current_user.full_name or '' }}" placeholder="e.g. Sreekumar Krishnan" maxlength="120">
+            </div>
+            <div class="acc-form-group">
+              <label>Username</label>
+              <input type="text" name="username" value="{{ current_user.username }}" maxlength="80" required>
+            </div>
+            <div class="acc-form-group">
+              <label>Email Address</label>
+              <input type="email" value="{{ current_user.email }}" disabled>
+              <div style="font-size:14px;color:var(--acc-muted);margin-top:6px;">Email cannot be changed. Contact support if needed.</div>
+            </div>
+            <button type="submit" class="acc-save-btn">Save Changes</button>
+          </form>
+        </div>
+
+        {# Change Password #}
+        <div class="acc-detail-row" onclick="toggleInline('password-form')">
+          <span class="acc-detail-icon">🔒</span>
+          <div class="acc-detail-body">
+            <div class="acc-detail-label">Change Password</div>
+            <div class="acc-detail-value">Last changed on {{ current_user.password_changed_at.strftime('%d %B %Y') if current_user.password_changed_at else 'Not set' }}</div>
+          </div>
+          <span class="acc-detail-arrow">›</span>
+        </div>
+        <div class="acc-inline-section" id="password-form">
+          <form method="POST" action="{{ url_for('profile') }}" onsubmit="return validatePasswords()">
+            <input type="hidden" name="action" value="change_password">
+            <div class="acc-form-group">
+              <label>Current Password</label>
+              <input type="password" name="current_password" placeholder="Your current password" required autocomplete="current-password">
+            </div>
+            <div class="acc-form-group">
+              <label>New Password</label>
+              <input type="password" name="new_password" placeholder="Minimum 8 characters" minlength="8" required autocomplete="new-password" oninput="checkPwStrength(this.value)">
+              <div class="acc-pw-strength"><div class="acc-pw-fill" id="pwBar"></div></div>
+              <div class="acc-pw-label" id="pwLabel">Enter a password</div>
+            </div>
+            <div class="acc-form-group">
+              <label>Confirm New Password</label>
+              <input type="password" name="confirm_password" placeholder="Repeat new password" minlength="8" required autocomplete="new-password">
+            </div>
+            <div style="background:var(--acc-footer);border:1px solid var(--acc-border);border-left:3px solid #E09940;border-radius:4px;padding:12px 16px;font-size:15px;color:var(--acc-dark);margin-bottom:18px;line-height:1.6;">
+              ⚠️ You will be <strong>logged out</strong> after changing your password.
+            </div>
+            <button type="submit" class="acc-save-btn">Update Password</button>
+          </form>
+        </div>
+
+        {# Address #}
+        <div class="acc-detail-row" onclick="toggleInline('location-form')">
+          <span class="acc-detail-icon">📍</span>
+          <div class="acc-detail-body">
+            <div class="acc-detail-label">Address</div>
+            <div class="acc-detail-value">
+              {% if current_user.city %}{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}{% if current_user.country %} — {{ current_user.country }}{% endif %}{% else %}Not set{% endif %}
+            </div>
+          </div>
+          <span class="acc-detail-arrow">›</span>
+        </div>
+        <div class="acc-inline-section" id="location-form">
+          <form method="POST" action="{{ url_for('profile') }}" id="locationForm">
+            <input type="hidden" name="action" value="update_location">
+            <div class="acc-form-group">
+              <label>Country</label>
+              <select id="loc_country" name="country" required onchange="onLocCountryChange()">
+                <option value="">Select country</option>
+                {% for c in countries %}
+                <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="acc-form-group">
+              <label>State / Province</label>
+              <select id="loc_state" name="state" required onchange="onLocStateChange()"><option value="">Select state</option></select>
+              <input type="text" id="loc_state_text" maxlength="60" placeholder="State / Province" style="display:none;margin-top:8px;">
+            </div>
+            <div class="acc-form-group">
+              <label>City</label>
+              <select id="loc_city" name="city" required><option value="">Select city</option></select>
+              <input type="text" id="loc_city_text" maxlength="60" placeholder="City" style="display:none;margin-top:8px;">
+            </div>
+            <p id="loc-freetext-hint" style="display:none;font-size:14px;color:var(--acc-muted);margin-top:-10px;margin-bottom:16px;line-height:1.5;">Type your state/province and city above.</p>
+            <button type="submit" class="acc-save-btn">Update Location</button>
+          </form>
+        </div>
+
+        {# Cancel Membership — only for paid subscribers #}
+        {% if has_active_sub %}
+        <div class="acc-detail-row danger" onclick="toggleInline('cancel-form')" style="margin-top:8px;">
+          <span class="acc-detail-icon" style="color:var(--acc-red);">✕</span>
+          <div class="acc-detail-body">
+            <div class="acc-detail-label">Cancel Membership</div>
+            <div class="acc-detail-value">Cancel your current plan</div>
+          </div>
+          <span class="acc-detail-arrow" style="color:var(--acc-red);">›</span>
+        </div>
+        <div class="acc-cancel-form" id="cancel-form">
+          <label>Why are you cancelling? <span style="font-weight:400;">(optional)</span></label>
+          <form method="POST" action="{{ url_for('cancel_subscription') }}">
+            <select name="cancel_reason">
+              <option value="" disabled selected>Select a reason</option>
+              <option value="too_expensive">Too expensive</option>
+              <option value="not_using_enough">Not using it enough</option>
+              <option value="taking_a_break">Taking a break</option>
+              <option value="evaluations_not_useful">Didn't find the evaluations useful</option>
+              <option value="technical_issues">Technical issues</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea name="cancel_comment" placeholder="Additional comments (optional)"></textarea>
+            <button type="submit" class="acc-cancel-submit"
+              onclick="return confirm('Cancel your membership? You will keep access until the end of your current cycle. No refund applies.');">
+              Cancel Membership
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+      </div>
+      {# end section 1 #}
+
+      {# ══ Section 2 — Account State ══ #}
+      <div class="acc-section" id="account-state">
+        <div class="acc-section-header">
+          <div class="acc-section-num">2</div>
+          <div>
+            <div class="acc-section-title">Account State</div>
+            <div class="acc-section-sub">Your current membership and usage.</div>
+          </div>
+        </div>
+
+        {% if current_user.is_subscribed and has_active_sub %}
+          {# League badge #}
+          <div class="acc-league-badge">
+            <div class="acc-league-left">
+              <div class="acc-league-icon">{{ '📷' if current_user.subscription_track == 'camera' else '📱' }}</div>
+              <div>
+                <div class="acc-league-eyebrow">Active League</div>
+                <div class="acc-league-name">{{ {'camera':'Camera League','mobile':'Mobile League'}.get(current_user.subscription_track, '') }}</div>
+              </div>
+            </div>
+            <a href="{{ url_for('pricing') }}" class="acc-switch-btn">Switch League</a>
+          </div>
+
+          {# Plan details #}
+          <div class="acc-plan-row">
+            <div class="acc-plan-left">
+              <div class="acc-plan-name">
+                {{ {'camera':'Camera League','mobile':'Mobile League'}.get(current_user.subscription_track,'') }}
+                · {{ {'monthly':'Monthly','halfyearly':'Six-Month','annual':'Annual'}.get(current_user.subscription_plan,'') }}
+                <span class="acc-plan-status">Active</span>
+              </div>
+              <div class="acc-plan-date">Next billing date: {{ quota_status.next_date if quota_status and quota_status.next_date else '—' }}</div>
+            </div>
+            <div class="acc-plan-right">
+              ₹{{ {'monthly':'200','halfyearly':'1,100','annual':'2,000'}.get(current_user.subscription_plan,'—') }}
+              <span>/ {{ {'monthly':'month','halfyearly':'6 months','annual':'year'}.get(current_user.subscription_plan,'') }}</span>
+            </div>
+          </div>
+
+          {# Evaluations donut #}
+          {% if quota_status and not quota_status.is_unlimited %}
+          {% set _rem = quota_status.remaining %}
+          {% set _lim = quota_status.limit %}
+          {% set _used = quota_status.used %}
+          {% set _pct = ((_rem / _lim) * 100)|int if _lim > 0 else 0 %}
+          {% set _circumference = 263 %}
+          {% set _offset = _circumference - (_pct / 100 * _circumference) %}
+          {% set _colour = '#c0392b' if _rem == 0 else ('#E09940' if _rem == 1 else '#2C3E6B') %}
+
+          <div class="acc-quota-block">
+            <div class="acc-quota-label">Image Evaluations Balance</div>
+            <div class="acc-quota-inner">
+              <div class="acc-donut-wrap">
+                <svg class="acc-donut-svg" width="96" height="96" viewBox="0 0 96 96">
+                  <circle class="acc-donut-bg" cx="48" cy="48" r="42"/>
+                  <circle class="acc-donut-fg" cx="48" cy="48" r="42"
+                    stroke="{{ _colour }}"
+                    stroke-dasharray="{{ _circumference }}"
+                    stroke-dashoffset="{{ _offset }}"/>
+                </svg>
+                <div class="acc-donut-text">
+                  <div class="acc-donut-num" style="color:{{ _colour }};">{{ _rem }}</div>
+                  <div class="acc-donut-denom">of {{ _lim }}</div>
+                </div>
+              </div>
+              <div class="acc-quota-detail">
+                <div class="acc-quota-main">
+                  {% if _rem == 0 %}No evaluations remaining this cycle.
+                  {% elif _rem == 1 %}1 image remaining
+                  {% else %}{{ _rem }} images remaining{% endif %}
+                </div>
+                <div class="acc-quota-sub">
+                  {% if _rem == 0 %}Your next {{ _lim }} evaluations arrive on <strong>{{ quota_status.next_date }}</strong>.
+                  {% else %}Your monthly quota renews on <strong>{{ quota_status.next_date }}</strong>.{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="acc-quota-note">
+            ℹ️ Unused credits do not roll over to the next cycle.
+          </div>
+          {% endif %}
+
+          <a href="{{ url_for('my_gallery') }}" class="acc-view-history">View Usage History</a>
+
+        {% elif current_user.is_subscribed %}
+          {# UAT / beta user #}
+          <div style="background:rgba(245,197,24,0.08);border:1px solid var(--acc-gold);border-radius:8px;padding:16px 20px;font-size:16px;color:var(--acc-dark);line-height:1.6;">
+            <strong>UAT Access</strong> — Full platform access active. Unlimited evaluations during testing.
+          </div>
+
+        {% else %}
+          {# Free tier — upgrade CTA #}
+          <div class="acc-upgrade-cta">
+            <h3>You are on the free plan.</h3>
+            <p>You have used <strong>{{ images_used }}</strong> of 3 complimentary evaluations. Subscribe to get 4 evaluations every month, league standing, and Annual Excellence Award eligibility.</p>
+            <div class="acc-upgrade-btns">
+              <a href="{{ url_for('subscribe', track='camera') }}" class="acc-upgrade-btn primary">📷 Camera League · ₹200/mo</a>
+              <a href="{{ url_for('subscribe', track='mobile') }}" class="acc-upgrade-btn secondary">📱 Mobile League · ₹200/mo</a>
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+      {# end section 2 #}
+
+      {# ══ Section 3 — Points Balance ══ #}
+      <div class="acc-section" id="points-balance">
+        <div class="acc-section-header">
+          <div class="acc-section-num">3</div>
+          <div>
+            <div class="acc-section-title">Points Balance</div>
+            <div class="acc-section-sub">Earn points by participating and redeem them for benefits.</div>
+          </div>
+        </div>
+
+        <div class="acc-points-hero">
+          <div class="acc-points-star">⭐</div>
+          <div>
+            <div class="acc-points-eyebrow">Available Balance</div>
+            <div class="acc-points-amount">{{ (current_user.points_balance or 0)|int|string }} <span style="font-size:20px;font-weight:400;color:var(--acc-muted);">pts</span></div>
+            <div class="acc-points-lifetime">Lifetime Earned: {{ (current_user.lifetime_points or 0)|int|string }} pts</div>
+          </div>
+        </div>
+
+        <div class="acc-points-actions">
+          <a href="{{ url_for('points_info') if 'points_info' in dir() else '#' }}" class="acc-points-btn outline">☆ How to Earn</a>
+          <a href="{{ url_for('redeem_points') if 'redeem_points' in dir() else '#' }}" class="acc-points-btn solid">🎁 Redeem Points</a>
+        </div>
+
+        {% if progress_data and progress_data.recent_points %}
+        <div class="acc-activity-label">
+          Recent Activity
+          <a href="#">View All</a>
+        </div>
+        {% for activity in progress_data.recent_points[:4] %}
+        <div class="acc-activity-row">
+          <div>
+            <div class="acc-activity-name">{{ activity.label or activity.event_type or 'Points earned' }}</div>
+            <div class="acc-activity-date">{{ activity.created_at.strftime('%d %b %Y') if activity.created_at else '' }}</div>
+          </div>
+          <div class="acc-activity-pts">+{{ activity.amount|int }} pts</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="font-size:15px;color:var(--acc-muted);padding:16px 0;line-height:1.6;">
+          No recent activity. Upload a photograph to earn your first points.
+        </div>
+        {% endif %}
+
+      </div>
+      {# end section 3 #}
+
+      {# ══ Section 4 — Referral Code ══ #}
+      {% if referral_code %}
+      <div class="acc-section" id="referral-code">
+        <div class="acc-section-header">
+          <div class="acc-section-num">4</div>
+          <div>
+            <div class="acc-section-title">Referral Code</div>
+            <div class="acc-section-sub">Invite friends and earn points when they join.</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--acc-muted);margin-bottom:10px;">Your Referral Code</div>
+        <div class="acc-ref-code-row">
+          <div class="acc-ref-code">{{ referral_code }}</div>
+          <button class="acc-copy-btn" onclick="copyRef('{{ referral_url }}', this)">⧉ Copy</button>
+        </div>
+        <div class="acc-ref-url">{{ referral_url }}</div>
+
+        <div class="acc-ref-share">
+          <a href="https://wa.me/?text={{ ('Join me on Shutter League — ' + referral_url)|urlencode }}" target="_blank" rel="noopener" class="acc-ref-share-btn" style="background:#25D366;">
+            📱 WhatsApp
           </a>
-          <button onclick="slProfClose()"
-            style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:rgba(26,26,24,0.55); background:#fff; border:1px solid rgba(26,39,68,0.20); padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px;">
-            Cancel
-          </button>
+          <a href="https://mail.google.com/mail/?view=cm&body={{ referral_url|urlencode }}" target="_blank" rel="noopener" class="acc-ref-share-btn" style="background:#EA4335;">
+            ✉ Gmail
+          </a>
+          <a href="https://outlook.live.com/mail/0/deeplink/compose?body={{ referral_url|urlencode }}" target="_blank" rel="noopener" class="acc-ref-share-btn" style="background:#0078D4;">
+            ✉ Outlook
+          </a>
         </div>
-      </div>
-    </div>
-    </div>
 
-    <script>
-    (function(){
-      var _ru   = {{ referral_url | tojson }};
-      var _db   = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).";
-      var _ch   = 'whatsapp';
-      var _subj = encodeURIComponent('Join me on Shutter League');
-
-      function _full() {
-        var g = (document.getElementById('slProfGreeting').value||'').trim();
-        var b = (document.getElementById('slProfBody').value||'').trim();
-        var c = (document.getElementById('slProfClosing').value||'').trim();
-        var s = (document.getElementById('slProfSender').value||'').trim();
-        var f = g + "\n\n" + b + "\n\n" + _ru;
-        if (c||s) f += "\n\n" + (c ? c+"\n" : "") + s;
-        return f;
-      }
-
-      function _update() {
-        var f   = _full();
-        var btn = document.getElementById('slProfSendBtn');
-        if (_ch === 'whatsapp') {
-          btn.href            = 'https://wa.me/?text=' + encodeURIComponent(f);
-          btn.style.background = '#25D366';
-          btn.innerHTML       = 'Open in WhatsApp &#8594;';
-        } else if (_ch === 'gmail') {
-          btn.href            = 'https://mail.google.com/mail/?view=cm&su=' + _subj + '&body=' + encodeURIComponent(f);
-          btn.style.background = '#EA4335';
-          btn.innerHTML       = 'Open in Gmail &#8594;';
-        } else {
-          btn.href            = 'https://outlook.live.com/mail/0/deeplink/compose?subject=' + _subj + '&body=' + encodeURIComponent(f);
-          btn.style.background = '#0078D4';
-          btn.innerHTML       = 'Open in Outlook &#8594;';
-        }
-      }
-
-      window.slProfModal = function(channel) {
-        _ch = channel;
-        document.getElementById('slProfBody').value = _db;
-        document.getElementById('slProfUrlDisp').textContent = _ru;
-        document.getElementById('slProfModalBg').style.display = 'block';
-        _update();
-        setTimeout(function(){ document.getElementById('slProfGreeting').focus(); }, 100);
-      };
-
-      window.slProfClose = function() {
-        document.getElementById('slProfModalBg').style.display = 'none';
-      };
-
-      ['slProfGreeting','slProfBody','slProfClosing','slProfSender'].forEach(function(id){
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('input', _update);
-      });
-
-      document.addEventListener('keydown', function(e){
-        if (e.key==='Escape') slProfClose();
-      });
-    })();
-    </script>
-
-    <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px; margin-bottom:14px;">
-      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">How it works</div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; Share your link with a photographer friend</div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They sign up using your link — they get a <strong>special first-month price</strong></div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They submit their first evaluation — <strong>you earn +20 loyalty points</strong></div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">&#10003;&nbsp; They subscribe — <strong>you earn +500 loyalty points</strong> (credited to your wallet)</div>
-    </div>
-
-    <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px;">
-      <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">Your referral stats</div>
-      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:12px;">
-        <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px; text-align:center;">
-          <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Sent</div>
-          <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.total_referred }}</div>
+        <div class="acc-ref-stats">
+          <div class="acc-ref-stat">
+            <div class="acc-ref-stat-val">{{ referral_stats.total_referred or 0 }}</div>
+            <div class="acc-ref-stat-lbl">Sent</div>
+          </div>
+          <div class="acc-ref-stat">
+            <div class="acc-ref-stat-val">{{ referral_stats.signed_up or 0 }}</div>
+            <div class="acc-ref-stat-lbl">Signed Up</div>
+          </div>
+          <div class="acc-ref-stat">
+            <div class="acc-ref-stat-val">{{ referral_stats.subscribed or 0 }}</div>
+            <div class="acc-ref-stat-lbl">Subscribed</div>
+          </div>
         </div>
-        <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px; text-align:center;">
-          <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Signed up</div>
-          <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.signed_up }}</div>
+        <div style="font-size:15px;color:var(--acc-muted);margin-bottom:20px;">
+          ⭐ Points from referrals: <strong style="color:var(--acc-dark);">{{ referral_stats.points_earned or 0 }} pts</strong>
         </div>
-        <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px; text-align:center;">
-          <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Subscribed</div>
-          <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.subscribed }}</div>
-        </div>
-      </div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">
-        Points earned from referrals: <strong>{{ referral_stats.points_earned }}</strong>
-      </div>
-    </div>
-  </div>
-  {% endif %}
 
-  {% if has_active_sub %}
-  <div class="danger-zone" style="margin-top:16px;">
-    <span class="danger-zone-label">Membership</span>
+        <ul class="acc-ref-how" style="padding-left:20px;">
+          <li>Share your link with a photographer friend</li>
+          <li>They sign up using your link — they get a <strong>special first-month price</strong></li>
+          <li>They submit their first evaluation — <strong>you earn +20 loyalty points</strong></li>
+          <li>They subscribe — <strong>you earn +500 loyalty points</strong> (credited to your wallet)</li>
+        </ul>
 
-    {# Billing summary #}
-    <div style="background:var(--surface-1);border-radius:6px;padding:16px 20px;margin-bottom:20px;border:1px solid var(--border);">
-      <div style="font-size:15px;color:var(--text-primary);line-height:1.8;">
-        <strong>Plan:</strong>
-        {{ {'camera':'Camera League','mobile':'Mobile League','learning':'Learning Only','mentor':'Human + AI Mentor'}.get(current_user.subscription_track,'') }}
-        &nbsp;·&nbsp;
-        {{ {'monthly':'Monthly · ₹200','halfyearly':'Six-Month · ₹1,100','annual':'Annual · ₹2,000'}.get(current_user.subscription_plan,'') }}
-      </div>
-      {% if current_user.subscribed_at %}
-      <div style="font-size:15px;color:var(--text-muted);margin-top:4px;">
-        Member since {{ current_user.subscribed_at.strftime('%-d %B %Y') }}
       </div>
       {% endif %}
-      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6;">
-        Your evaluations, standing, and Body of Work are preserved if you cancel.
-        No refund applies to the current cycle.
+      {# end section 4 #}
+
+      {# ── Delete account ── #}
+      <div style="margin-top:8px;padding:16px 20px;border:1px solid rgba(192,57,43,0.20);border-radius:var(--acc-radius);background:#fff;">
+        <div style="font-size:15px;font-weight:700;color:var(--acc-red);margin-bottom:6px;">Delete Account</div>
+        <p style="font-size:15px;color:var(--acc-muted);margin:0 0 14px;line-height:1.6;">Permanently delete your account and all associated data — images, evaluations, standings. This cannot be undone.</p>
+        <a href="{{ url_for('account_delete') }}"
+           style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;min-height:44px;display:inline-flex;align-items:center;color:var(--acc-red);border:1.5px solid var(--acc-red);border-radius:6px;text-decoration:none;">
+          Delete My Account
+        </a>
       </div>
-    </div>
 
-    <p style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:16px;">
-      To cancel, tell us why — this helps us understand what to improve.
-    </p>
-
-    <form method="POST" action="{{ url_for('cancel_subscription') }}" id="cancel-sub-form">
-      <div style="margin-bottom:16px;">
-        <select name="cancel_reason" required
-          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;
-                 font-family:Inter,Arial,sans-serif;font-size:15px;background:var(--surface-1);
-                 color:var(--text-primary);">
-          <option value="" disabled selected>Why are you cancelling?</option>
-          <option value="too_expensive">Too expensive</option>
-          <option value="not_using_enough">Not using it enough</option>
-          <option value="taking_a_break">Taking a break</option>
-          <option value="evaluations_not_useful">Didn't find the evaluations useful</option>
-          <option value="technical_issues">Technical issues</option>
-          <option value="other">Other</option>
-        </select>
+      {# Bottom logout #}
+      <div style="margin-top:24px;text-align:center;">
+        <a href="{{ url_for('logout') }}"
+           style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 24px;min-height:44px;display:inline-flex;align-items:center;gap:8px;color:var(--acc-muted);border:1px solid var(--acc-border);border-radius:6px;text-decoration:none;">
+          ⎋ Log out of Shutter League
+        </a>
       </div>
-      <div style="margin-bottom:20px;">
-        <textarea name="cancel_comment" placeholder="Any other thoughts? (optional)"
-          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;
-                 font-family:Inter,Arial,sans-serif;font-size:15px;background:var(--surface-1);
-                 color:var(--text-primary);resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
-      </div>
-      <button type="submit" class="btn btn-danger" style="padding:10px 24px;"
-        onclick="return confirm('Cancel your membership? You will retain access for the remainder of your current cycle.');">
-        Cancel Membership
-      </button>
-    </form>
-  </div>
-  {% endif %}
-  {% endif %}
 
-  <div class="danger-zone" style="margin-top:16px;">
-    <span class="danger-zone-label">Delete Account</span>
-    <p>Permanently delete your account and all associated data — images, evaluations, standings, and personal information. This cannot be undone.</p>
-    <a href="{{ url_for('account_delete') }}"
-       class="btn btn-danger" style="padding:10px 24px;display:inline-block;text-decoration:none;">
-      Delete My Account
-    </a>
+    </main>
   </div>
-
-  {# ── Log out — bottom of page for users who scroll ── #}
-  <div style="margin-top:32px; padding-top:24px; border-top:1px solid var(--border); text-align:center;">
-    <a href="{{ url_for('logout') }}"
-       style="display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; padding:10px 20px; border:1px solid var(--border); border-radius:var(--radius-sm); min-height:44px; transition:border-color 0.2s, color 0.2s;"
-       onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';"
-       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)';">
-      ⎋ &nbsp;Log out of Shutter League
-    </a>
-  </div>
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
-
 <script>
-// ── Active Location — cascading country/state/city dropdowns ──────────────
+// ── Toggle inline sections ──────────────────────────────────────
+function toggleInline(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+}
+
+// ── Copy referral link ──────────────────────────────────────────
+function copyRef(url, btn) {
+  navigator.clipboard.writeText(url).then(function() {
+    btn.textContent = '✓ Copied';
+    setTimeout(function() { btn.innerHTML = '⧉ Copy'; }, 2000);
+  });
+}
+
+// ── Password strength ───────────────────────────────────────────
+function checkPwStrength(pw) {
+  var bar = document.getElementById('pwBar');
+  var lbl = document.getElementById('pwLabel');
+  if (!bar) return;
+  var score = 0;
+  if (pw.length >= 8)          score++;
+  if (pw.length >= 12)         score++;
+  if (/[A-Z]/.test(pw))        score++;
+  if (/[0-9]/.test(pw))        score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  var levels = [
+    {pct:'15%', color:'#E05555', text:'Very weak'},
+    {pct:'32%', color:'#E09940', text:'Weak'},
+    {pct:'55%', color:'#F5C518', text:'Fair'},
+    {pct:'78%', color:'#4CAF73', text:'Strong'},
+    {pct:'100%',color:'#2E7D52', text:'Very strong'},
+  ];
+  var lvl = levels[Math.min(score,4)];
+  bar.style.width      = pw.length ? lvl.pct   : '0%';
+  bar.style.background = pw.length ? lvl.color  : '';
+  lbl.textContent      = pw.length ? lvl.text   : 'Enter a password';
+  lbl.style.color      = pw.length ? lvl.color  : 'var(--acc-muted)';
+}
+
+function validatePasswords() {
+  var pw  = document.getElementById ? document.querySelector('[name=new_password]') : null;
+  var cpw = document.querySelector ? document.querySelector('[name=confirm_password]') : null;
+  if (pw && cpw && pw.value !== cpw.value) {
+    alert('Passwords do not match.');
+    return false;
+  }
+  return true;
+}
+
+// ── Location dropdowns ──────────────────────────────────────────
 (function () {
-  var LOCATION_DATA = {{ location_data_json | safe }};
+  var LOCATION_DATA   = {{ location_data_json | safe }};
   var CURRENT_COUNTRY = {{ (current_user.country or '') | tojson }};
   var CURRENT_STATE   = {{ (current_user.state or '')   | tojson }};
   var CURRENT_CITY    = {{ (current_user.city or '')    | tojson }};
@@ -580,141 +868,73 @@
   var stateTxt   = document.getElementById('loc_state_text');
   var cityTxt    = document.getElementById('loc_city_text');
   var hint       = document.getElementById('loc-freetext-hint');
-  if (!countrySel || !stateSel || !citySel) return;
+  if (!countrySel) return;
 
-  // Allowed characters for free-text State/Province and City — mirrors
-  // the server-side _validate_location_text() regex in app.py.
   var LOCATION_TEXT_RE = /[^A-Za-z\u00C0-\u024F\u1E00-\u1EFF '\-]/g;
-  function filterLocationText(e) {
-    e.target.value = e.target.value.replace(LOCATION_TEXT_RE, '');
-  }
-  stateTxt.addEventListener('input', filterLocationText);
-  cityTxt.addEventListener('input', filterLocationText);
+  function filterText(e) { e.target.value = e.target.value.replace(LOCATION_TEXT_RE, ''); }
+  if (stateTxt) stateTxt.addEventListener('input', filterText);
+  if (cityTxt)  cityTxt.addEventListener('input', filterText);
 
-  // Toggle State/City between cascading <select> (countries with detailed
-  // data) and free-text <input> (all other countries). Only the active
-  // element keeps its `name` attribute so just one of each pair submits.
-  function setLocationMode(hasDetailedData) {
-    if (hasDetailedData) {
-      stateSel.style.display = '';
-      citySel.style.display  = '';
-      stateSel.name = 'state';
-      citySel.name  = 'city';
-      stateSel.required = true;
-      citySel.required  = true;
-      stateTxt.style.display = 'none';
-      cityTxt.style.display  = 'none';
-      stateTxt.removeAttribute('name');
-      cityTxt.removeAttribute('name');
-      stateTxt.required = false;
-      cityTxt.required  = false;
-      hint.style.display = 'none';
-    } else {
-      stateSel.style.display = 'none';
-      citySel.style.display  = 'none';
-      stateSel.removeAttribute('name');
-      citySel.removeAttribute('name');
-      stateSel.required = false;
-      citySel.required  = false;
-      stateTxt.style.display = '';
-      cityTxt.style.display  = '';
-      stateTxt.name = 'state';
-      cityTxt.name  = 'city';
-      stateTxt.required = true;
-      cityTxt.required  = true;
-      hint.style.display = '';
-    }
+  function setMode(detailed) {
+    stateSel.style.display = detailed ? '' : 'none';
+    citySel.style.display  = detailed ? '' : 'none';
+    stateSel.name = detailed ? 'state' : '';
+    citySel.name  = detailed ? 'city'  : '';
+    stateSel.required = detailed;
+    citySel.required  = detailed;
+    if (stateTxt) { stateTxt.style.display = detailed ? 'none' : ''; stateTxt.name = detailed ? '' : 'state'; stateTxt.required = !detailed; }
+    if (cityTxt)  { cityTxt.style.display  = detailed ? 'none' : ''; cityTxt.name  = detailed ? '' : 'city';  cityTxt.required  = !detailed; }
+    if (hint) hint.style.display = detailed ? 'none' : '';
   }
 
-  window.onLocCountryChange = function (preselectState) {
-    var country = countrySel.value;
-    stateSel.innerHTML = '<option value="">Select state / province</option>';
-    citySel.innerHTML  = '<option value="">Select city</option>';
-
-    if (!country || !LOCATION_DATA[country]) {
-      // No detailed state/city data — free-text fallback
-      setLocationMode(false);
-      if (!country) { stateTxt.value = ''; cityTxt.value = ''; }
-      return;
-    }
-
-    setLocationMode(true);
-    var states = LOCATION_DATA[country] || {};
-    Object.keys(states).sort().forEach(function (state) {
-      var opt = document.createElement('option');
-      opt.value = state;
-      opt.textContent = state;
-      if (state === preselectState) opt.selected = true;
-      stateSel.appendChild(opt);
+  window.onLocCountryChange = function(preState) {
+    var c = countrySel.value;
+    stateSel.innerHTML = '<option value="">Select state</option>';
+    if (citySel) citySel.innerHTML = '<option value="">Select city</option>';
+    if (!c || !LOCATION_DATA[c]) { setMode(false); return; }
+    setMode(true);
+    Object.keys(LOCATION_DATA[c]).sort().forEach(function(s) {
+      var o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      if (s === preState) o.selected = true;
+      stateSel.appendChild(o);
     });
-    if (preselectState && states[preselectState]) {
-      onLocStateChange(CURRENT_CITY);
+    if (preState && LOCATION_DATA[c][preState]) onLocStateChange(CURRENT_CITY);
+  };
+
+  window.onLocStateChange = function(preCity) {
+    var c = countrySel.value, s = stateSel.value;
+    if (citySel) {
+      citySel.innerHTML = '<option value="">Select city</option>';
+      ((LOCATION_DATA[c] || {})[s] || []).forEach(function(city) {
+        var o = document.createElement('option');
+        o.value = city; o.textContent = city;
+        if (city === preCity) o.selected = true;
+        citySel.appendChild(o);
+      });
     }
   };
 
-  window.onLocStateChange = function (preselectCity) {
-    var country = countrySel.value;
-    var state   = stateSel.value;
-    citySel.innerHTML = '<option value="">Select city</option>';
-    var cities = (LOCATION_DATA[country] || {})[state] || [];
-    cities.forEach(function (city) {
-      var opt = document.createElement('option');
-      opt.value = city;
-      opt.textContent = city;
-      if (city === preselectCity) opt.selected = true;
-      citySel.appendChild(opt);
-    });
-  };
-
-  // Pre-populate from the user's current location on page load
   if (CURRENT_COUNTRY) {
     if (LOCATION_DATA[CURRENT_COUNTRY]) {
       onLocCountryChange(CURRENT_STATE);
     } else {
-      // User's saved country has no detailed data — show free-text
-      // fields pre-filled with their current state/city.
-      setLocationMode(false);
-      stateTxt.value = CURRENT_STATE;
-      cityTxt.value  = CURRENT_CITY;
+      setMode(false);
+      if (stateTxt) stateTxt.value = CURRENT_STATE;
+      if (cityTxt)  cityTxt.value  = CURRENT_CITY;
     }
   }
 })();
+
+// ── Smooth scroll for sidebar nav ──────────────────────────────
+document.querySelectorAll('.acc-nav a[href^="#"]').forEach(function(a) {
+  a.addEventListener('click', function(e) {
+    e.preventDefault();
+    var target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    document.querySelectorAll('.acc-nav a').forEach(function(l) { l.classList.remove('active'); });
+    a.classList.add('active');
+  });
+});
 </script>
-<script>
-function checkStrength(pw) {
-  const bar = document.getElementById('pwBar'), label = document.getElementById('pwLabel');
-  if (!bar) return;
-  let score = 0;
-  if (pw.length >= 8)           score++;
-  if (pw.length >= 12)          score++;
-  if (/[A-Z]/.test(pw))         score++;
-  if (/[0-9]/.test(pw))         score++;
-  if (/[^A-Za-z0-9]/.test(pw))  score++;
-  const levels = [
-    { pct: '15%',  color: '#E05555', text: 'Very weak' },
-    { pct: '32%',  color: '#E09940', text: 'Weak' },
-    { pct: '55%',  color: '#F5C518', text: 'Fair' },
-    { pct: '78%',  color: '#4CAF73', text: 'Strong' },
-    { pct: '100%', color: '#2E7D52', text: 'Very strong' },
-  ];
-  const lvl = levels[Math.min(score, 4)];
-  bar.style.width = pw.length ? lvl.pct : '0%';
-  bar.style.background = pw.length ? lvl.color : '';
-  label.textContent = pw.length ? lvl.text : 'Enter a password';
-  label.style.color = pw.length ? lvl.color : 'var(--text-muted)';
-}
-function validatePasswords() {
-  const pw = document.getElementById('new_password').value;
-  const cpw = document.getElementById('confirm_password').value;
-  if (pw !== cpw) {
-    alert('Passwords do not match. Please try again.');
-    document.getElementById('confirm_password').focus();
-    return false;
-  }
-  return true;
-}
-
-
-</script>
-
 {% endblock %}
