@@ -235,7 +235,7 @@ function startPayment() {
   const options = {
     key:      '{{ razorpay_key }}',
     order_id: '{{ order.id }}',
-    amount:   '{{ order.amount }}',
+    amount:   {{ order.amount }},
     currency: 'INR',
     name:     'Shutter League',
     description: '{{ track_label }} — Monthly',
