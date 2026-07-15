@@ -694,8 +694,8 @@
         </div>
 
         <div class="acc-points-actions">
-          <a href="{{ url_for('points_info') if 'points_info' in dir() else '#' }}" class="acc-points-btn outline">☆ How to Earn</a>
-          <a href="{{ url_for('redeem_points') if 'redeem_points' in dir() else '#' }}" class="acc-points-btn solid">🎁 Redeem Points</a>
+          <a href="#" class="acc-points-btn outline">☆ How to Earn</a>
+          <a href="{{ url_for('dashboard') }}" class="acc-points-btn solid">🎁 Redeem Points</a>
         </div>
 
         {% if progress_data and progress_data.recent_points %}
