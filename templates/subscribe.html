@@ -101,11 +101,17 @@
       <div class="plan-opt-price">₹200</div>
       <div class="plan-opt-save">&nbsp;</div>
     </a>
+    <a href="{{ url_for('subscribe', track=track) }}?plan=halfyearly"
+       class="plan-opt {{ 'active' if plan == 'halfyearly' else '' }}">
+      <div class="plan-opt-label">6 Months</div>
+      <div class="plan-opt-price">₹1,100</div>
+      <div class="plan-opt-save">Save 8%</div>
+    </a>
     <a href="{{ url_for('subscribe', track=track) }}?plan=annual"
        class="plan-opt {{ 'active' if plan == 'annual' else '' }}">
       <div class="plan-opt-label">Annual</div>
       <div class="plan-opt-price">₹2,000</div>
-      <div class="plan-opt-save">2 months free</div>
+      <div class="plan-opt-save">Save 17%</div>
     </a>
   </div>
   {% endif %}
@@ -117,14 +123,16 @@
     </div>
     <div class="sub-price-note">
       {% if plan == 'annual' %}
-        Billed annually · renews automatically
+        Billed once annually · no automatic renewal · cancel anytime
+      {% elif plan == 'halfyearly' %}
+        Billed once every 6 months · no automatic renewal · cancel anytime
       {% else %}
-        Billed monthly · renews automatically · cancel anytime
+        Billed once monthly · no automatic renewal · cancel anytime
       {% endif %}
     </div>
-    {% if track in ('camera', 'mobile') and plan == 'monthly' %}
+    {% if track in ('camera', 'mobile') %}
     <div style="font-family:var(--font-mono);font-size:16px;color:var(--text-muted);margin-bottom:16px;">
-      Founding Member rate — locks in at ₹200 forever. New subscribers from 1 Jan 2027 pay ₹299.
+      Founding Member rate — join before January 2027 and your price never increases.
     </div>
     {% endif %}
 
@@ -145,8 +153,8 @@
     <div class="sub-feature"><span class="check">✓</span> AI prepares your brief before every session</div>
     <div class="sub-feature"><span class="check">✓</span> Programme strategy — what to enter and when</div>
     {% else %}
-    <div class="sub-feature"><span class="check">✓</span> <strong>4 shoots per month</strong></div>
-    <div class="sub-feature"><span class="check">✓</span> Full Apex DDI analysis — 5 evaluation dimensions</div>
+    <div class="sub-feature"><span class="check">✓</span> <strong>{% if plan == "halfyearly" %}24 evaluations over 6 months{% elif plan == "annual" %}48 evaluations over 12 months{% else %}4 evaluations this month{% endif %}</strong></div>
+    <div class="sub-feature"><span class="check">✓</span> DDI Engine evaluation — 5 dimensions</div>
     <div class="sub-feature"><span class="check">✓</span> Weekly Assignment &amp; Annual Excellence Award (AEA) qualification</div>
     <div class="sub-feature"><span class="check">✓</span> Peer-to-peer blind rating system</div>
     <div class="sub-feature"><span class="check">✓</span>
@@ -189,9 +197,9 @@
       </form>
 
       <p class="sub-note">
-        By subscribing you agree to our <a href="{{ url_for('terms') }}#subscriptions">Terms &amp; Conditions</a>
-        and authorise recurring {{ plan }} charges. Cancel anytime from your dashboard.
-        {% if plan == 'annual' %}7-day refund available on first annual purchase.{% endif %}
+        By subscribing you agree to our <a href="{{ url_for('terms') }}#subscriptions">Terms &amp; Conditions</a>.
+        Cancel anytime from your profile. No refund on the current cycle.
+        Payments accepted through Indian bank accounts, UPI, and Indian cards only.
       </p>
 
     {% else %}
