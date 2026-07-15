@@ -58,15 +58,21 @@
   .acc-layout {
     display: grid;
     grid-template-columns: 200px 1fr;
-    gap: 28px;
+    gap: 20px;
     align-items: start;
   }
   .acc-sidebar {
     display: flex;
     flex-direction: column;
+    margin-top: 0;
+    padding-top: 0;
   }
   .acc-identity {
-    flex: 1;
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+  .acc-nav-border {
+    margin-top: 8px;
   }
 
   /* ── Sidebar ── */
@@ -360,6 +366,9 @@
     margin-bottom: 20px;
     align-items: start;
   }
+  .acc-grid-top {
+    margin-top: 0;
+  }
   .acc-grid-top .acc-section,
   .acc-grid-bottom .acc-section { margin-bottom: 0; }
 
@@ -408,8 +417,8 @@
   <div class="acc-layout">
 
     {# ── Left sidebar ── #}
-    <aside class="acc-sidebar">
-      <div class="acc-identity">
+    <aside class="acc-sidebar" style="margin-top:0;padding-top:0;">
+      <div class="acc-identity" style="margin-top:0;">
         <div class="acc-avatar" style="margin:0 auto 12px;">
           {{ (current_user.full_name or current_user.username or 'S')[0]|upper }}
         </div>
@@ -441,7 +450,7 @@
 
     {# ── Main content — 2×2 grid ── #}
     <main>
-      <div class="acc-grid-top">
+      <div class="acc-grid-top" style="margin-top:0;">
 
       {# ══ Section 1 — Account Details ══ #}
       <div class="acc-section" id="account-details" style="border-top:3px solid #2C3E6B;">
@@ -624,7 +633,7 @@
                 {% if quota_status and quota_status.next_date and quota_status.next_date != '1st of next month' %}
                   {{ quota_status.next_date }}
                 {% elif current_user.subscribed_at %}
-                  {{ (current_user.subscribed_at.date() if current_user.subscribed_at.date else current_user.subscribed_at)|string }}
+                  {{ current_user.subscribed_at.strftime('%-d %B %Y') if current_user.subscribed_at else '—' }}
                 {% else %}—{% endif %}
               </div>
             </div>
