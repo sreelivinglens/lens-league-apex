@@ -506,7 +506,7 @@
 
     <a href="{{ url_for('subscribe', track='camera') }}?plan={{ current_plan|default('annual') }}"
        class="league-cta camera" id="cta-camera">
-      Join Camera League
+      <span id="cta-camera-text">Join Camera League</span>
     </a>
   </div>
 
@@ -558,7 +558,7 @@
 
     <a href="{{ url_for('subscribe', track='mobile') }}?plan={{ current_plan|default('annual') }}"
        class="league-cta mobile" id="cta-mobile">
-      Join Mobile League
+      <span id="cta-mobile-text">Join Mobile League</span>
     </a>
   </div>
 
@@ -708,9 +708,9 @@
   let currentPlan = 'annual';
 
   const planData = {
-    monthly:     { camera: '200', mobile: '200', note: 'per month', alt: null },
-    half_yearly: { camera: '183', mobile: '183', note: 'per month (billed ₹1,100 every 6 months)', alt: 'or ₹200 billed monthly' },
-    annual:      { camera: '167', mobile: '167', note: 'per month (billed annually)', alt: 'or ₹200 billed monthly' },
+    monthly:     { camera: '200', mobile: '200', note: 'per month', alt: null,           charge: '200',  label: 'Pay ₹200 — Activate',  rzpPlan: 'monthly'    },
+    half_yearly: { camera: '183', mobile: '183', note: 'per month (billed ₹1,100 every 6 months)', alt: 'or ₹200 billed monthly', charge: '1,100', label: 'Pay ₹1,100 — Activate', rzpPlan: 'halfyearly' },
+    annual:      { camera: '167', mobile: '167', note: 'per month (billed annually)', alt: 'or ₹200 billed monthly', charge: '2,000', label: 'Pay ₹2,000 — Activate', rzpPlan: 'annual'     },
   };
 
   function setPlan(plan) {
@@ -738,9 +738,14 @@
       const cta = document.getElementById('cta-' + track);
       if (cta) {
         const base = cta.href.split('?')[0];
-        cta.href = base + '?plan=' + plan;
+        cta.href = base + '?plan=' + data.rzpPlan;
+        const textEl = document.getElementById('cta-' + track + '-text');
+        if (textEl) textEl.textContent = data.label;
       }
     });
   }
+
+  // Initialise on load
+  setPlan('annual');
 </script>
 {% endblock %}
