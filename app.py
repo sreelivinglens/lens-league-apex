@@ -11330,8 +11330,12 @@ def admin_users():
         new_7days  = User.query.filter(User.role != 'admin', User.created_at >= _7days).count()
     except Exception:
         new_today = new_7days = 0
+    _paid_plans = ('monthly', 'halfyearly', 'annual')
+    paid_users  = [u for u in users if u.is_subscribed and u.subscription_plan in _paid_plans]
+    paid_count  = len(paid_users)
     return render_template('admin_users.html', users=users,
-                           new_today=new_today, new_7days=new_7days)
+                           new_today=new_today, new_7days=new_7days,
+                           paid_users=paid_users, paid_count=paid_count)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -11971,12 +11975,24 @@ def admin_user_detail(user_id):
     except Exception:
         genre_interests_display = None
 
+    # Cancellation history for this user
+    try:
+        _cr = db.session.execute(db.text(
+            "SELECT reason, comment, track, plan, cancelled_at "
+            "FROM cancellation_reasons WHERE user_id = :uid ORDER BY cancelled_at DESC"
+        ), {'uid': user_id}).fetchall()
+        cancellation_reasons = [{'reason': r[0], 'comment': r[1], 'track': r[2],
+                                  'plan': r[3], 'cancelled_at': r[4]} for r in _cr]
+    except Exception:
+        cancellation_reasons = []
+
     return render_template('admin_user_detail.html',
         user            = user,
         image_count     = image_count,
         scored_count    = scored_count,
         mentor_sessions = mentor_sessions,
         genre_interests_display = genre_interests_display,
+        cancellation_reasons    = cancellation_reasons,
     )
 
 
@@ -12098,6 +12114,24 @@ def admin_toggle_subscription(user_id):
     status = 'activated' if user.is_subscribed else 'deactivated'
     flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
     return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/user/<int:user_id>/set-plan', methods=['POST'])
+@login_required
+@admin_required
+def admin_set_plan(user_id):
+    """Admin override — set a user's subscription track and plan directly."""
+    user  = User.query.get_or_404(user_id)
+    track = request.form.get('track', 'camera')
+    plan  = request.form.get('plan', 'uat')
+    user.subscription_track = track
+    user.subscription_plan  = plan
+    if plan != 'uat' and not user.is_subscribed:
+        user.is_subscribed = True
+        user.subscribed_at = datetime.utcnow()
+    db.session.commit()
+    flash(f'Plan set to {track} · {plan} for {user.full_name or user.username}.', 'success')
+    return redirect(url_for('admin_user_detail', user_id=user_id))
 
 
 @app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
