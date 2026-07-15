@@ -271,6 +271,12 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
         </span>
       </div>
       <div class="sl-aud-row">
+        <span class="sl-aud-key">Razorpay Sub/Order ID</span>
+        <span class="sl-aud-val" style="font-family:var(--font-mono);font-size:13px;word-break:break-all;">
+          {{ user.razorpay_sub_id or '—' }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
         <span class="sl-aud-key">Monthly uploads used</span>
         <span class="sl-aud-val">{{ user.monthly_uploads_used or 0 }}</span>
       </div>
@@ -280,6 +286,60 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
           {{ user.monthly_reset_date.strftime('%d %b %Y') if user.monthly_reset_date else '—' }}
         </span>
       </div>
+
+      {# ── Admin plan override ── #}
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;
+                    text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">
+          Override Plan
+        </div>
+        <form method="POST" action="{{ url_for('admin_set_plan', user_id=user.id) }}"
+              style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select name="track" style="font-family:var(--font-mono);font-size:14px;padding:8px 10px;
+                  border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;
+                  color:var(--text-primary);min-height:44px;">
+            <option value="camera" {% if user.subscription_track == 'camera' %}selected{% endif %}>Camera</option>
+            <option value="mobile" {% if user.subscription_track == 'mobile' %}selected{% endif %}>Mobile</option>
+          </select>
+          <select name="plan" style="font-family:var(--font-mono);font-size:14px;padding:8px 10px;
+                  border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;
+                  color:var(--text-primary);min-height:44px;">
+            <option value="uat"        {% if user.subscription_plan == 'uat' %}selected{% endif %}>UAT</option>
+            <option value="monthly"    {% if user.subscription_plan == 'monthly' %}selected{% endif %}>Monthly · ₹200</option>
+            <option value="halfyearly" {% if user.subscription_plan == 'halfyearly' %}selected{% endif %}>Half-Yearly · ₹1,100</option>
+            <option value="annual"     {% if user.subscription_plan == 'annual' %}selected{% endif %}>Annual · ₹2,000</option>
+            <option value="beta"       {% if user.subscription_plan == 'beta' %}selected{% endif %}>Beta</option>
+          </select>
+          <button type="submit" style="font-family:var(--font-mono);font-size:13px;font-weight:700;
+                  letter-spacing:1px;text-transform:uppercase;padding:8px 16px;min-height:44px;
+                  background:var(--gold);color:#0D0D0B;border:none;border-radius:var(--radius-sm);
+                  cursor:pointer;">
+            Set Plan
+          </button>
+        </form>
+      </div>
+
+      {# ── Cancellation reasons for this user ── #}
+      {% if cancellation_reasons %}
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;
+                    text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">
+          Cancellation History
+        </div>
+        {% for cr in cancellation_reasons %}
+        <div style="font-size:15px;color:var(--text-primary);line-height:1.6;margin-bottom:8px;
+                    padding:10px 14px;background:var(--surface-3);border-radius:var(--radius-sm);">
+          <strong>{{ cr.reason or '—' }}</strong>
+          {% if cr.comment %} — {{ cr.comment }}{% endif %}
+          <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+            {{ cr.track or '—' }} · {{ cr.plan or '—' }} ·
+            {{ cr.cancelled_at.strftime('%d %b %Y %H:%M') if cr.cancelled_at else '—' }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
     </div>
 
     <!-- MENTOR SESSIONS -->
