@@ -4453,7 +4453,8 @@ def dashboard():
                            eye_of_judge=_eye_of_judge,
                            peer_ratings_given=_peer_ratings_given,
                            last_eval_result=session.get('last_eval_result'),
-                           dashboard_visit_count=_dash_visit_count)
+                           dashboard_visit_count=_dash_visit_count,
+                           just_subscribed=session.pop('just_subscribed', None))
 
 
 # ---------------------------------------------------------------------------
@@ -5510,7 +5511,8 @@ def profile():
 
     return render_template('profile.html', images_used=images_used, progress_data=progress_data,
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
-                           countries=get_countries(), location_data_json=json.dumps(_loc))
+                           countries=get_countries(), location_data_json=json.dumps(_loc),
+                           has_active_sub=getattr(current_user, 'is_subscribed', False))
 
 
 # ---------------------------------------------------------------------------
@@ -16321,6 +16323,8 @@ def subscribe(track):
                 'learning': 'Learning — ₹100/mo',
                 'mentor':   'Human + AI Mentor',
             }
+            _send_subscription_confirmation(current_user, track, plan)
+            session['just_subscribed'] = track
             flash(f'Welcome to {track_names.get(track, track.title())}! Your subscription is active.', 'success')
             return redirect(url_for('learning') if track in ('learning', 'mentor') else url_for('dashboard'))
         except Exception as e:
@@ -16471,6 +16475,10 @@ def cancel_subscription():
             # Still cancel locally  -  don't leave user stuck
             flash('Your subscription has been cancelled. If you continue to be charged, contact '+CONTACT_EMAIL+'.', 'warning')
 
+    # Capture track/plan before clearing — needed for cancellation email
+    _cancelled_track = current_user.subscription_track
+    _cancelled_plan  = current_user.subscription_plan
+
     # Clear subscription fields in DB
     current_user.is_subscribed      = False
     current_user.subscription_track = None
@@ -16478,8 +16486,132 @@ def cancel_subscription():
     current_user.razorpay_sub_id    = None
     db.session.commit()
 
+    _send_subscription_cancellation(current_user, _cancelled_track or '', _cancelled_plan or '')
     flash('Your subscription has been cancelled. You will retain access until the end of your current billing period.', 'info')
     return redirect(url_for('dashboard'))
+
+
+def _send_subscription_confirmation(user, track, plan):
+    """1a — Subscription confirmation email. Sent immediately after successful payment."""
+    site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+    name     = user.full_name or user.username or 'Photographer'
+    track_labels = {
+        'camera':   'Camera League',
+        'mobile':   'Mobile League',
+        'learning': 'Learning Only',
+        'mentor':   'Human + AI Mentor',
+    }
+    plan_labels = {
+        'monthly':    'Monthly — ₹200/month',
+        'halfyearly': 'Six-Month — ₹1,100 every 6 months',
+        'annual':     'Annual — ₹2,000/year',
+    }
+    track_label = track_labels.get(track, track.title())
+    plan_label  = plan_labels.get(plan, plan.title())
+    subject     = f'Welcome to {track_label} — your subscription is active'
+    html_body   = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;padding:0;">
+
+  <div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>
+        <span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>
+      </td>
+    </tr></table>
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:400;color:#8a8070;margin:8px 0 0;letter-spacing:0;">Making Images Matter</div>
+  </div>
+
+  <div style="padding:32px 32px 24px;background:#FEFCF8;">
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;color:rgba(44,62,107,0.7);letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Subscription Active</div>
+    <h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;color:#1A1A18;margin:0 0 20px;">Welcome to {track_label}, {name}.</h2>
+    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">Your subscription is confirmed and active. Here is what you have:</p>
+
+    <div style="background:#F5F0E8;border-radius:6px;padding:20px 24px;margin:0 0 24px;">
+      <p style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#2a2a28;margin:0 0 8px;"><strong>Plan:</strong> {track_label} · {plan_label}</p>
+      <p style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#2a2a28;margin:0 0 8px;"><strong>Evaluations:</strong> 4 photographs every month</p>
+      <p style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#2a2a28;margin:0;">Your next billing date is one month from today. You can cancel anytime from your account settings — no questions asked.</p>
+    </div>
+
+    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 28px;">Upload your first photograph and begin. The evaluation takes under 30 seconds.</p>
+
+    <div style="margin:0 0 32px;">
+      <a href="{site_url}/upload" style="display:inline-block;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 28px;text-decoration:none;border-radius:4px;">Upload Your First Photograph &#8594;</a>
+    </div>
+
+    <p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;color:#8a8070;margin:0;">If you have any questions, write to us at <a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">support@shutterleague.com</a></p>
+  </div>
+
+  <div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; <a href="{site_url}" style="color:#8a8070;">shutterleague.com</a></div>
+  </div>
+
+</div>
+</body></html>"""
+    try:
+        send_email([user.email], subject, html_body)
+        app.logger.info(f'[subscription_email] confirmation sent to user {user.id}')
+    except Exception as _e:
+        app.logger.error(f'[subscription_email] confirmation failed for user {user.id}: {_e}')
+
+
+def _send_subscription_cancellation(user, track, plan):
+    """1d — Subscription cancellation confirmation email."""
+    site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    name        = user.full_name or user.username or 'Photographer'
+    track_labels = {
+        'camera':   'Camera League',
+        'mobile':   'Mobile League',
+        'learning': 'Learning Only',
+        'mentor':   'Human + AI Mentor',
+    }
+    track_label = track_labels.get(track, track.title())
+    subject     = f'Your {track_label} subscription has been cancelled'
+    html_body   = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;padding:0;">
+
+  <div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>
+        <span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>
+      </td>
+    </tr></table>
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:400;color:#8a8070;margin:8px 0 0;letter-spacing:0;">Making Images Matter</div>
+  </div>
+
+  <div style="padding:32px 32px 24px;background:#FEFCF8;">
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;color:rgba(44,62,107,0.7);letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Subscription Cancelled</div>
+    <h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;color:#1A1A18;margin:0 0 20px;">Your subscription has been cancelled, {name}.</h2>
+    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">Your {track_label} subscription is cancelled. You will retain full access until the end of your current billing period — no further charges will be made.</p>
+    <p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 24px;">Your evaluation history, standing, and Body of Work are preserved. If you return, everything will be where you left it.</p>
+
+    <div style="margin:0 0 32px;">
+      <a href="{site_url}/pricing" style="display:inline-block;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 28px;text-decoration:none;border-radius:4px;">Resubscribe anytime &#8594;</a>
+    </div>
+
+    <p style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.7;color:#8a8070;margin:0;">Questions? Write to us at <a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">support@shutterleague.com</a></p>
+  </div>
+
+  <div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; <a href="{site_url}" style="color:#8a8070;">shutterleague.com</a></div>
+  </div>
+
+</div>
+</body></html>"""
+    try:
+        send_email([user.email], subject, html_body)
+        app.logger.info(f'[subscription_email] cancellation sent to user {user.id}')
+    except Exception as _e:
+        app.logger.error(f'[subscription_email] cancellation failed for user {user.id}: {_e}')
 
 
 @app.route('/bulk-upload', methods=['GET', 'POST'])
@@ -18195,17 +18327,12 @@ def admin_subscriptions():
         User.role != 'admin',
         db.or_(User.is_subscribed == False, User.is_subscribed == None)
     ).order_by(User.created_at.desc()).all()
-    total_mrr = sum(
-        (99 if u.subscription_track == 'mobile' else 199)
-        for u in subscribers if u.subscription_plan == 'monthly'
-    )
-    total_arr = sum(
-        (999 if u.subscription_track == 'mobile' else 1999)
-        for u in subscribers if u.subscription_plan == 'annual'
-    )
+    total_mrr = sum(200 for u in subscribers if u.subscription_plan == 'monthly')
+    total_hyr = sum(1100 for u in subscribers if u.subscription_plan == 'halfyearly')
+    total_arr = sum(2000 for u in subscribers if u.subscription_plan == 'annual')
     return render_template('admin_subscriptions.html',
         subscribers=subscribers, free_users=free_users,
-        total_mrr=total_mrr, total_arr=total_arr,
+        total_mrr=total_mrr, total_hyr=total_hyr, total_arr=total_arr,
     )
 
 
@@ -24295,6 +24422,124 @@ if _sched_lock_held:
         name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
         replace_existing = True,
     )
+
+    def _daily_admin_subscription_report():
+        """1f — Daily subscription report to admin. Fires at 8:00 AM IST (2:30 UTC)."""
+        try:
+            with app.app_context():
+                site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+                admin_email = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
+                today       = datetime.utcnow().date()
+                yesterday   = today - timedelta(days=1)
+
+                # New subscribers in last 24hrs
+                new_subs = db.session.execute(db.text(
+                    "SELECT full_name, email, subscription_track, subscription_plan, subscribed_at "
+                    "FROM users WHERE is_subscribed = TRUE "
+                    "AND subscribed_at >= :since ORDER BY subscribed_at DESC"
+                ), {'since': datetime.combine(yesterday, datetime.min.time())}).fetchall()
+
+                # Total active subscribers
+                total_subs = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND role != 'admin'"
+                )).scalar() or 0
+
+                # MRR breakdown
+                mrr = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND subscription_plan = 'monthly'"
+                )).scalar() or 0
+                hyr = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND subscription_plan = 'halfyearly'"
+                )).scalar() or 0
+                arr = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM users WHERE is_subscribed = TRUE AND subscription_plan = 'annual'"
+                )).scalar() or 0
+
+                total_revenue = (mrr * 200) + (hyr * 1100) + (arr * 2000)
+
+                # New subs rows
+                if new_subs:
+                    new_rows = ''.join(
+                        f'<tr><td style="padding:8px 12px;font-size:15px;color:#2a2a28;border-bottom:1px solid #E0D8C8;">{r[0] or r[1]}</td>'
+                        f'<td style="padding:8px 12px;font-size:15px;color:#2a2a28;border-bottom:1px solid #E0D8C8;">{r[1]}</td>'
+                        f'<td style="padding:8px 12px;font-size:15px;color:#2a2a28;border-bottom:1px solid #E0D8C8;">{(r[2] or "").title()} · {(r[3] or "").title()}</td></tr>'
+                        for r in new_subs
+                    )
+                    new_block = f"""
+                    <p style="font-size:16px;font-weight:600;color:#1A1A18;margin:0 0 12px;">New subscribers in the last 24 hours ({len(new_subs)})</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 28px;">
+                      <tr style="background:#F5F0E8;">
+                        <th style="padding:8px 12px;font-size:12px;text-align:left;color:#8a8070;letter-spacing:1px;text-transform:uppercase;">Name</th>
+                        <th style="padding:8px 12px;font-size:12px;text-align:left;color:#8a8070;letter-spacing:1px;text-transform:uppercase;">Email</th>
+                        <th style="padding:8px 12px;font-size:12px;text-align:left;color:#8a8070;letter-spacing:1px;text-transform:uppercase;">Plan</th>
+                      </tr>
+                      {new_rows}
+                    </table>"""
+                else:
+                    new_block = '<p style="font-size:16px;color:#8a8070;margin:0 0 28px;">No new subscribers in the last 24 hours.</p>'
+
+                subject  = f'[Shutter League] Daily Report — {today.strftime("%d %b %Y")} · {total_subs} active subscribers'
+                html_body = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:0;">
+
+  <div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">
+    <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>
+    <span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League · Daily Report</span>
+    <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:#8a8070;margin:8px 0 0;">Making Images Matter</div>
+  </div>
+
+  <div style="padding:32px 32px 24px;background:#FEFCF8;">
+    <div style="font-size:13px;font-weight:700;color:rgba(44,62,107,0.7);letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">{today.strftime("%d %B %Y")}</div>
+    <h2 style="font-size:22px;font-weight:500;color:#1A1A18;margin:0 0 24px;">Subscription overview</h2>
+
+    <div style="display:flex;gap:16px;margin:0 0 28px;">
+      <div style="flex:1;background:#F5F0E8;border-radius:6px;padding:16px 20px;">
+        <div style="font-size:13px;font-weight:700;color:#8a8070;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px;">Active Subscribers</div>
+        <p style="font-size:28px;font-weight:600;color:#1A1A18;margin:0;">{total_subs}</p>
+      </div>
+      <div style="flex:1;background:#F5F0E8;border-radius:6px;padding:16px 20px;">
+        <div style="font-size:13px;font-weight:700;color:#8a8070;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px;">Monthly · 6-Month · Annual</div>
+        <p style="font-size:28px;font-weight:600;color:#1A1A18;margin:0;">{mrr} · {hyr} · {arr}</p>
+      </div>
+      <div style="flex:1;background:#F5F0E8;border-radius:6px;padding:16px 20px;">
+        <div style="font-size:13px;font-weight:700;color:#8a8070;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px;">Period Revenue</div>
+        <p style="font-size:28px;font-weight:600;color:#1A1A18;margin:0;">&#8377;{total_revenue:,}</p>
+      </div>
+    </div>
+
+    {new_block}
+
+    <div style="margin:0 0 24px;">
+      <a href="{site_url}/admin/subscriptions" style="display:inline-block;background:#2C3E6B;color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 28px;text-decoration:none;border-radius:4px;">View Full Subscriber List &#8594;</a>
+    </div>
+  </div>
+
+  <div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">
+    <div style="font-size:13px;color:#8a8070;margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; <a href="{site_url}" style="color:#8a8070;">shutterleague.com</a></div>
+  </div>
+</div>
+</body></html>"""
+
+                send_email([admin_email], subject, html_body)
+                app.logger.info(f'[daily_admin_report] sent — {total_subs} subs, {len(new_subs)} new')
+        except Exception as _dar_e:
+            app.logger.error(f'[daily_admin_report] failed: {_dar_e}')
+        finally:
+            try:
+                db.session.remove()
+            except Exception:
+                pass
+
+    _scheduler.add_job(
+        func             = _daily_admin_subscription_report,
+        trigger          = CronTrigger(hour=2, minute=30, timezone='UTC'),
+        id               = 'daily_admin_subscription_report',
+        name             = 'Daily admin subscription report — 8:00 AM IST',
+        replace_existing = True,
+    )
+
     _scheduler.start()
     import atexit as _atexit
     _atexit.register(lambda: _scheduler.shutdown(wait=False))
