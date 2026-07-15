@@ -1592,8 +1592,8 @@ img {
             More <span class="nav-more-chevron">&#9660;</span>
           </button>
           <div class="nav-more-menu">
+            <a href="{{ url_for('profile') }}"      class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">My Account</a>
             <a href="{{ url_for('portfolio_manager') }}" class="{% if request.endpoint == 'portfolio_manager' %}nav-active{% endif %}">My Portfolio</a>
-            <a href="{{ url_for('profile') }}"      class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
             <a href="{{ url_for('pricing') }}"      class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
             <a href="{{ url_for('science') }}"      class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
             <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
@@ -1719,7 +1719,7 @@ img {
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
         <div class="sl-bottom-more-menu__list">
           <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
-          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
+          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">My Account</a>
           <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
           <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Gallery</a>
           <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
