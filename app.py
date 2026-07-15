@@ -4469,7 +4469,9 @@ def dashboard():
                            eye_of_judge=_eye_of_judge,
                            peer_ratings_given=_peer_ratings_given,
                            last_eval_result=session.get('last_eval_result'),
-                           dashboard_visit_count=_dash_visit_count)
+                           dashboard_visit_count=_dash_visit_count,
+                           just_subscribed=session.pop('just_subscribed', None),
+                           quota_status=_get_quota_status(current_user))
 
 
 # ---------------------------------------------------------------------------
@@ -5945,6 +5947,64 @@ def _check_upload_quota(user):
 
     # Mentor track — unlimited, no check needed
     return None
+
+
+def _get_quota_status(user):
+    # Returns quota info dict for display on upload page and dashboard.
+    _plan   = getattr(user, 'subscription_plan', None) or ''
+    _track  = getattr(user, 'subscription_track', None) or ''
+    _is_sub = getattr(user, 'is_subscribed', False)
+
+    if user.role == 'admin' or _plan in ('beta', 'uat'):
+        return {'limit': 999, 'used': 0, 'remaining': 999,
+                'next_date': None, 'is_unlimited': True, 'is_free': False}
+
+    if not _is_sub:
+        _lifetime = getattr(user, 'total_uploads_ever', None) or 0
+        _bonus    = getattr(user, 'referral_bonus_uploads', 0) or 0
+        _limit    = FREE_IMAGE_LIMIT + _bonus
+        return {'limit': _limit, 'used': _lifetime,
+                'remaining': max(0, _limit - _lifetime),
+                'next_date': None, 'is_unlimited': False, 'is_free': True}
+
+    if _track not in ('mobile', 'camera', 'learning'):
+        return {'limit': 0, 'used': 0, 'remaining': 0,
+                'next_date': None, 'is_unlimited': False, 'is_free': False}
+
+    from datetime import date as _date
+    today          = _date.today()
+    _subscribed_at = getattr(user, 'subscribed_at', None)
+    _sub_plan      = _plan or 'monthly'
+
+    if _subscribed_at:
+        _cycle_days     = 180 if _sub_plan == 'halfyearly' else (360 if _sub_plan == 'annual' else 30)
+        _sub_date       = _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at
+        _days_since     = (today - _sub_date).days
+        _cycles_done    = _days_since // _cycle_days
+        _cycle_start    = _sub_date + timedelta(days=_cycles_done * _cycle_days)
+        _cycle_start_dt = datetime.combine(_cycle_start, datetime.min.time())
+        _cycle_end_dt   = _cycle_start_dt + timedelta(days=_cycle_days)
+        _next_date      = (_cycle_start_dt + timedelta(days=_cycle_days)).strftime('%-d %B %Y')
+    else:
+        _cycle_start_dt = datetime(today.year, today.month, 1)
+        _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
+        _next_date      = '1st of next month'
+
+    _used  = Image.query.filter(
+        Image.user_id == user.id,
+        Image.created_at >= _cycle_start_dt,
+        Image.created_at <  _cycle_end_dt,
+    ).count()
+    _limit = LEARNING_IMAGE_LIMIT if _track == 'learning' else 4
+
+    return {
+        'limit':        _limit,
+        'used':         _used,
+        'remaining':    max(0, _limit - _used),
+        'next_date':    _next_date,
+        'is_unlimited': False,
+        'is_free':      False,
+    }
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -7603,6 +7663,7 @@ def upload():
                            mission_dimension=request.args.get('mission_dimension', ''),
                            curriculum_principle_id=request.args.get('curriculum_principle_id', ''),
                            mission_title=request.args.get('mission_title', ''),
+                           quota_status=_get_quota_status(current_user),
                            next_page=request.args.get('next', ''))
 
 
