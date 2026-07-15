@@ -428,7 +428,7 @@
             <span class="nav-icon">👥</span> Referral Code
           </a></li>
           <li><a href="mailto:support@shutterleague.com">
-            <span class="nav-icon">❓</span> Help & Support
+            <span class="nav-icon" style="font-style:normal;">?</span> Help & Support
           </a></li>
         </ul>
       </div>
@@ -455,7 +455,7 @@
             <div class="acc-detail-label">Profile & User ID</div>
             <div class="acc-detail-value">User ID (visible on programme standings) &nbsp;<strong style="color:var(--acc-slate);">{{ current_user.username }}</strong></div>
           </div>
-          <span class="acc-detail-arrow">›</span>
+          <span class="acc-detail-arrow">↓</span>
         </div>
         <div class="acc-inline-section" id="profile-form">
           <form method="POST" action="{{ url_for('profile') }}">
@@ -484,7 +484,7 @@
             <div class="acc-detail-label">Change Password</div>
             <div class="acc-detail-value">Last changed on {{ current_user.password_changed_at.strftime('%d %B %Y') if current_user.password_changed_at else 'Not set' }}</div>
           </div>
-          <span class="acc-detail-arrow">›</span>
+          <span class="acc-detail-arrow">↓</span>
         </div>
         <div class="acc-inline-section" id="password-form">
           <form method="POST" action="{{ url_for('profile') }}" onsubmit="return validatePasswords()">
@@ -519,7 +519,7 @@
               {% if current_user.city %}{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}{% if current_user.country %} — {{ current_user.country }}{% endif %}{% else %}Not set{% endif %}
             </div>
           </div>
-          <span class="acc-detail-arrow">›</span>
+          <span class="acc-detail-arrow">↓</span>
         </div>
         <div class="acc-inline-section" id="location-form">
           <form method="POST" action="{{ url_for('profile') }}" id="locationForm">
@@ -556,7 +556,7 @@
             <div class="acc-detail-label">Cancel Membership</div>
             <div class="acc-detail-value">Cancel your current plan</div>
           </div>
-          <span class="acc-detail-arrow" style="color:var(--acc-red);">›</span>
+          <span class="acc-detail-arrow" style="color:var(--acc-red);">↓</span>
         </div>
         <div class="acc-cancel-form" id="cancel-form">
           <label>Why are you cancelling? <span style="font-weight:400;">(optional)</span></label>
@@ -614,7 +614,14 @@
                 · {{ {'monthly':'Monthly','halfyearly':'Six-Month','annual':'Annual'}.get(current_user.subscription_plan,'') }}
                 <span class="acc-plan-status">Active</span>
               </div>
-              <div class="acc-plan-date">Next billing date: {{ quota_status.next_date if quota_status and quota_status.next_date else '—' }}</div>
+              <div class="acc-plan-date">
+                Next billing date:
+                {% if quota_status and quota_status.next_date and quota_status.next_date != '1st of next month' %}
+                  {{ quota_status.next_date }}
+                {% elif current_user.subscribed_at %}
+                  {{ (current_user.subscribed_at.date() if current_user.subscribed_at.date else current_user.subscribed_at)|string }}
+                {% else %}—{% endif %}
+              </div>
             </div>
             <div class="acc-plan-right">
               ₹{{ {'monthly':'200','halfyearly':'1,100','annual':'2,000'}.get(current_user.subscription_plan,'—') }}
@@ -667,7 +674,7 @@
           </div>
           {% endif %}
 
-          <a href="{{ url_for('my_gallery') }}" class="acc-view-history">View Usage History</a>
+          <a href="{{ url_for('my_gallery') }}" class="acc-view-history">View My Gallery →</a>
 
         {% elif current_user.is_subscribed %}
           {# UAT / beta user #}
@@ -712,8 +719,8 @@
         </div>
 
         <div class="acc-points-actions">
-          <a href="#" class="acc-points-btn outline">☆ How to Earn</a>
-          <a href="{{ url_for('dashboard') }}" class="acc-points-btn solid">🎁 Redeem Points</a>
+          <a href="#referral-code" class="acc-points-btn outline" onclick="document.getElementById('referral-code').scrollIntoView({behavior:'smooth'});return false;">☆ How to Earn</a>
+          <a href="#" class="acc-points-btn solid" onclick="alert('Points redemption is coming soon. Stay tuned.');return false;">🎁 Redeem Points</a>
         </div>
 
         {% if progress_data and progress_data.recent_points %}
@@ -828,7 +835,23 @@
 function toggleInline(id) {
   var el = document.getElementById(id);
   if (!el) return;
-  el.classList.toggle('open');
+  var isOpen = el.classList.toggle('open');
+  // Update arrow on the parent row
+  var rows = document.querySelectorAll('.acc-detail-row');
+  rows.forEach(function(row) {
+    if (row.getAttribute('onclick') && row.getAttribute('onclick').indexOf(id) !== -1) {
+      var arrow = row.querySelector('.acc-detail-arrow');
+      if (arrow) arrow.textContent = isOpen ? '↑' : '↓';
+    }
+  });
+  // Also handle cancel form toggle
+  if (id === 'cancel-form') {
+    var cancelRow = document.querySelector('.acc-detail-row.danger');
+    if (cancelRow) {
+      var arrow = cancelRow.querySelector('.acc-detail-arrow');
+      if (arrow) arrow.textContent = isOpen ? '↑' : '↓';
+    }
+  }
 }
 
 // ── Copy referral link ──────────────────────────────────────────
