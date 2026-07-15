@@ -417,6 +417,46 @@
   </div>
 
   <div class="card">
+
+    {# ── Evaluation balance banner ── #}
+    {% if quota_status and not quota_status.is_unlimited %}
+    <div style="margin-bottom:20px;padding:14px 18px;border-radius:6px;
+      background:{% if quota_status.remaining == 0 %}rgba(192,57,43,0.08){% elif quota_status.remaining == 1 %}rgba(224,153,64,0.10){% else %}rgba(44,62,107,0.06){% endif %};
+      border-left:3px solid {% if quota_status.remaining == 0 %}#c0392b{% elif quota_status.remaining == 1 %}#E09940{% else %}#2C3E6B{% endif %};">
+      {% if quota_status.is_free %}
+        {% if quota_status.remaining > 0 %}
+        <div style="font-size:16px;font-weight:600;color:var(--text-primary);">{{ quota_status.remaining }} of {{ quota_status.limit }} complimentary evaluations remaining.</div>
+        <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
+          <a href="{{ url_for('pricing') }}" style="color:#2C3E6B;font-weight:600;">Subscribe for 4 evaluations per month →</a>
+        </div>
+        {% else %}
+        <div style="font-size:16px;font-weight:600;color:#c0392b;">No evaluations remaining.</div>
+        <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
+          Your 3 complimentary evaluations have been used.
+          <a href="{{ url_for('pricing') }}" style="color:#2C3E6B;font-weight:600;">Subscribe to continue →</a>
+        </div>
+        {% endif %}
+      {% else %}
+        {% if quota_status.remaining == 0 %}
+        <div style="font-size:16px;font-weight:600;color:#c0392b;">0 evaluations remaining this cycle.</div>
+        <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
+          Your next {{ quota_status.limit }} evaluations arrive on <strong>{{ quota_status.next_date }}</strong>.
+        </div>
+        {% elif quota_status.remaining == 1 %}
+        <div style="font-size:16px;font-weight:600;color:#E09940;">1 evaluation remaining this cycle.</div>
+        <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
+          Your next {{ quota_status.limit }} arrive on <strong>{{ quota_status.next_date }}</strong>. Use this one well.
+        </div>
+        {% else %}
+        <div style="font-size:16px;font-weight:600;color:var(--text-primary);">{{ quota_status.remaining }} of {{ quota_status.limit }} evaluations remaining this cycle.</div>
+        <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
+          Next {{ quota_status.limit }} arrive on <strong>{{ quota_status.next_date }}</strong>.
+        </div>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% endif %}
+
     <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
       {{ csrf_token_field()|safe if csrf_token_field is defined else '' }}
       {# ── Mission tracking — passed from /mission page ── #}
