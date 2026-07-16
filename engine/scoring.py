@@ -2,92 +2,58 @@
 Apex DDI Engine — core scoring module
 Shutter League · May 2026
 
-Genres (10 confirmed):
-  1. Wildlife       — Animals in natural behaviour
-  2. Nature         — Plants, fungi, ecosystems, weather, natural phenomena
-  3. Landscape      — Land, sea, sky as the primary subject
-  4. Street         — Human life in public spaces
-  5. People         — Portraits, faces, human expression
-  6. Wedding        — Ceremonies and celebrations
-  7. Macro          — Extreme close-up — any subject
-  8. Drone          — Aerial photography
-  9. Creative       — Technique-driven, abstract, artistic intent
- 10. Documentary    — Witnessed events, conditions, and stories
+Genres (14 confirmed):
+  1. Architecture    — Built environment: buildings, interiors, structures, urban geometry
+  2. Astrophotography — Night sky: Milky Way, star trails, planets, nebulae, eclipses
+  3. Creative        — Technique-driven, abstract, artistic intent
+  4. Documentary     — Witnessed events, conditions, and stories
+  5. Drone           — Aerial photography
+  6. Fashion         — Editorial, conceptual, studio, and beauty
+  7. Landscape       — Land, sea, sky as the primary subject
+  8. Macro           — Extreme close-up — any subject
+  9. Nature          — Plants, fungi, ecosystems, weather, natural phenomena
+ 10. People          — Portraits, faces, human expression
+ 11. Sports          — Athletic action, competition, and physical performance
+ 12. Street          — Human life in public spaces
+ 13. Wedding         — Ceremonies and celebrations
+ 14. Wildlife        — Animals in natural behaviour
 """
 
 # ── Genre weights ─────────────────────────────────────────────────────────────
 # Keys must match GENRE_LIST ids exactly.
 GENRE_WEIGHTS = {
-    'Wildlife':    {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
-    'Nature':      {'dod': 0.13, 'disruption': 0.11, 'dm': 0.13, 'wonder': 0.37, 'aq': 0.26},
-    'Landscape':   {'dod': 0.13, 'disruption': 0.12, 'dm': 0.11, 'wonder': 0.32, 'aq': 0.32},
-    'Street':      {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
-    'Wedding':     {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
-    'People':      {'dod': 0.07, 'disruption': 0.13, 'dm': 0.12, 'wonder': 0.16, 'aq': 0.52},
-    'Macro':       {'dod': 0.26, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.27, 'aq': 0.19},
-    'Creative':    {'dod': 0.12, 'disruption': 0.18, 'dm': 0.10, 'wonder': 0.30, 'aq': 0.30},
-    'Drone':       {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
-    'Documentary': {'dod': 0.13, 'disruption': 0.09, 'dm': 0.20, 'wonder': 0.33, 'aq': 0.25},
-    'Fashion':     {'dod': 0.10, 'disruption': 0.20, 'dm': 0.16, 'wonder': 0.24, 'aq': 0.30},
-    # Legacy key — kept for backward compat with existing DB rows
-    'Drone & Aerial': {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
+    'Architecture':     {'dod': 0.15, 'disruption': 0.18, 'dm': 0.08, 'wonder': 0.35, 'aq': 0.24},
+    'Astrophotography': {'dod': 0.28, 'disruption': 0.10, 'dm': 0.08, 'wonder': 0.42, 'aq': 0.12},
+    'Creative':         {'dod': 0.12, 'disruption': 0.18, 'dm': 0.10, 'wonder': 0.30, 'aq': 0.30},
+    'Documentary':      {'dod': 0.13, 'disruption': 0.09, 'dm': 0.20, 'wonder': 0.33, 'aq': 0.25},
+    'Drone':            {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
+    'Fashion':          {'dod': 0.10, 'disruption': 0.20, 'dm': 0.16, 'wonder': 0.24, 'aq': 0.30},
+    'Landscape':        {'dod': 0.13, 'disruption': 0.12, 'dm': 0.11, 'wonder': 0.32, 'aq': 0.32},
+    'Macro':            {'dod': 0.26, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.27, 'aq': 0.19},
+    'Nature':           {'dod': 0.13, 'disruption': 0.11, 'dm': 0.13, 'wonder': 0.37, 'aq': 0.26},
+    'People':           {'dod': 0.07, 'disruption': 0.13, 'dm': 0.12, 'wonder': 0.16, 'aq': 0.52},
+    'Sports':           {'dod': 0.18, 'disruption': 0.10, 'dm': 0.32, 'wonder': 0.22, 'aq': 0.18},
+    'Street':           {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
+    'Wedding':          {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
+    'Wildlife':         {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
+    # Legacy keys — kept for backward compat with existing DB rows
+    'Drone & Aerial':   {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
 }
 
 # ── Genre list (canonical — used by forms, DB, and prize logic) ───────────────
+# Alphabetical order — upload form dropdown reflects this order.
 GENRE_LIST = [
     {
-        'id':          'Wildlife',
-        'label':       'Wildlife',
-        'description': 'Animals in natural behaviour — birds, mammals, reptiles, insects, marine life',
-        'aliases':     ['wildlife', 'fauna', 'animals', 'birds', 'marine', 'underwater'],
+        'id':          'Architecture',
+        'label':       'Architecture',
+        'description': 'Built environment — buildings, interiors, structures, bridges, urban geometry, spaces',
+        'aliases':     ['architecture', 'architectural', 'buildings', 'interiors', 'structures', 'urban geometry'],
     },
     {
-        'id':          'Nature',
-        'label':       'Nature',
-        'description': 'Plants, fungi, ecosystems, weather, rivers, night sky, coral — the living natural world',
-        'aliases':     ['nature', 'flora', 'botanical', 'plants', 'fungi', 'weather', 'ecosystem', 'astro'],
-    },
-    {
-        'id':          'Landscape',
-        'label':       'Landscape',
-        'description': 'Land, sea, sky — place as the primary subject. Seascapes, cityscapes, long exposure',
-        'aliases':     ['landscape', 'landscapes', 'seascape', 'cityscape', 'scenery'],
-    },
-    {
-        'id':          'Street',
-        'label':       'Street',
-        'description': 'Life as it happens — public spaces, markets, villages, transit, anywhere people live and move. Not urban-specific.',
-        'aliases':     ['street', 'candid', 'public'],
-    },
-    {
-        'id':          'People',
-        'label':       'People',
-        'description': 'Portraits, faces, human expression — emotional connection is the primary signal',
-        'aliases':     ['people', 'portrait', 'portraits', 'lifestyle', 'editorial', 'cultural'],
-    },
-    {
-        'id':          'Fashion',
-        'label':       'Fashion',
-        'description': 'Editorial, conceptual, studio, and beauty — directed creative work where the image is an art-directed act',
-        'aliases':     ['fashion', 'editorial', 'beauty', 'conceptual portrait'],
-    },
-    {
-        'id':          'Wedding',
-        'label':       'Wedding',
-        'description': 'Ceremonies, receptions, couples, candid moments — genuine emotion scores highest',
-        'aliases':     ['wedding', 'bridal', 'ceremony', 'engagement', 'pre-wedding'],
-    },
-    {
-        'id':          'Macro',
-        'label':       'Macro',
-        'description': 'Extreme close-up — any subject. Pen nibs, fabric, insects, water droplets, crystals',
-        'aliases':     ['macro', 'closeup', 'close-up', 'texture', 'pattern'],
-    },
-    {
-        'id':          'Drone',
-        'label':       'Drone',
-        'description': 'Aerial photography — patterns from altitude, perspectives impossible from ground',
-        'aliases':     ['drone', 'aerial', 'drone & aerial', 'birds eye', "bird's eye", 'uav', 'top view'],
+        'id':          'Astrophotography',
+        'label':       'Astrophotography',
+        'description': 'Night sky — Milky Way, star trails, planets, nebulae, eclipses, aurora',
+        'aliases':     ['astrophotography', 'astro', 'night sky', 'milky way', 'star trails', 'aurora', 'planets', 'nebulae'],
     },
     {
         'id':          'Creative',
@@ -100,6 +66,66 @@ GENRE_LIST = [
         'label':       'Documentary',
         'description': 'Witnessed events and conditions — health, birth, environment, social issues, crisis',
         'aliases':     ['documentary', 'doc', 'photojournalism', 'reportage', 'social'],
+    },
+    {
+        'id':          'Drone',
+        'label':       'Drone',
+        'description': 'Aerial photography — patterns from altitude, perspectives impossible from ground',
+        'aliases':     ['drone', 'aerial', 'drone & aerial', 'birds eye', "bird's eye", 'uav', 'top view'],
+    },
+    {
+        'id':          'Fashion',
+        'label':       'Fashion',
+        'description': 'Editorial, conceptual, studio, and beauty — directed creative work where the image is an art-directed act',
+        'aliases':     ['fashion', 'editorial', 'beauty', 'conceptual portrait'],
+    },
+    {
+        'id':          'Landscape',
+        'label':       'Landscape',
+        'description': 'Land, sea, sky — place as the primary subject. Seascapes, cityscapes, long exposure',
+        'aliases':     ['landscape', 'landscapes', 'seascape', 'cityscape', 'scenery'],
+    },
+    {
+        'id':          'Macro',
+        'label':       'Macro',
+        'description': 'Extreme close-up — any subject. Pen nibs, fabric, insects, water droplets, crystals',
+        'aliases':     ['macro', 'closeup', 'close-up', 'texture', 'pattern'],
+    },
+    {
+        'id':          'Nature',
+        'label':       'Nature',
+        'description': 'Plants, fungi, ecosystems, weather, rivers, night sky, coral — the living natural world',
+        'aliases':     ['nature', 'flora', 'botanical', 'plants', 'fungi', 'weather', 'ecosystem'],
+    },
+    {
+        'id':          'People',
+        'label':       'People',
+        'description': 'Portraits, faces, human expression — emotional connection is the primary signal',
+        'aliases':     ['people', 'portrait', 'portraits', 'lifestyle', 'editorial', 'cultural'],
+    },
+    {
+        'id':          'Sports',
+        'label':       'Sports',
+        'description': 'Athletic action, competition, physical performance — peak moment and physical achievement',
+        'aliases':     ['sports', 'sport', 'athletics', 'action', 'competition', 'racing', 'cricket', 'football'],
+    },
+    {
+        'id':          'Street',
+        'label':       'Street',
+        'description': 'Life as it happens — public spaces, markets, villages, transit, anywhere people live and move. Not urban-specific.',
+        'aliases':     ['street', 'candid', 'public'],
+    },
+    {
+        'id':          'Wedding',
+        'label':       'Wedding',
+        'description': 'Ceremonies, receptions, couples, candid moments — genuine emotion scores highest',
+        'aliases':     ['wedding', 'bridal', 'ceremony', 'engagement', 'pre-wedding'],
+    },
+    {
+        'id':          'Wildlife',
+        'label':       'Wildlife',
+        'description': 'Animals in natural behaviour — birds, mammals, reptiles, insects, marine life',
+        'aliases':     ['wildlife', 'fauna', 'animals', 'birds', 'marine', 'underwater'],
     },
 ]
 
@@ -120,7 +146,26 @@ GENRE_CHOICES = [(g['id'], g['label']) for g in GENRE_LIST]
 # Only genres listed here will show a secondary dropdown on the upload form.
 # sub_types: list of (id, label) tuples — id stored in images.sub_genre column.
 SUBGENRE_MAP = {
-    'Wildlife': [
+    'Architecture': [
+        ('arch_exterior',    'Exterior — Buildings and Facades'),
+        ('arch_interior',    'Interior — Spaces and Details'),
+        ('arch_urban',       'Urban Geometry and Cityscape'),
+        ('arch_heritage',    'Heritage and Historic Structures'),
+        ('arch_industrial',  'Industrial and Infrastructure'),
+        ('arch_minimal',     'Minimalist and Abstract'),
+        ('arch_other',       'Other / Does not fit above'),
+    ],
+    'Astrophotography': [
+        ('astro_milkyway',   'Milky Way'),
+        ('astro_startrails', 'Star Trails'),
+        ('astro_planets',    'Planets and Moon'),
+        ('astro_nebula',     'Nebulae and Deep Sky'),
+        ('astro_aurora',     'Aurora Borealis / Australis'),
+        ('astro_eclipse',    'Eclipse'),
+        ('astro_landscape',  'Nightscape with Foreground'),
+        ('astro_other',      'Other / Does not fit above'),
+    ],
+    'Creative': [
         # ── Birds ──────────────────────────────────────────────────────────────
         ('bird_in_flight',         'Bird – In Flight'),
         ('bird_behaviour',         'Bird – Predation / Behaviour'),
@@ -168,6 +213,16 @@ SUBGENRE_MAP = {
         ('landscape_longexp',  'Long Exposure'),
         ('landscape_minimal',  'Minimalist'),
         ('landscape_other',    'Other / Does not fit above'),
+    ],
+    'Sports': [
+        ('sports_cricket',   'Cricket'),
+        ('sports_football',  'Football / Soccer'),
+        ('sports_athletics', 'Athletics and Track'),
+        ('sports_water',     'Water Sports'),
+        ('sports_martial',   'Combat and Martial Arts'),
+        ('sports_cycling',   'Cycling and Racing'),
+        ('sports_adventure', 'Adventure and Extreme Sports'),
+        ('sports_other',     'Other / Does not fit above'),
     ],
     'Street': [
         ('street_candid',        'Single Candid Subject'),
@@ -224,7 +279,6 @@ SUBGENRE_MAP = {
         ('creative_longexp',     'Long Exposure and Light Trails'),
         ('creative_multiexp',    'Multiple Exposure'),
         ('creative_abstract',    'Abstract and Pattern'),
-        ('creative_astro',       'Astrophotography'),
         ('creative_silhouette',  'Silhouette and Shadow'),
         ('creative_other',       'Other / Does not fit above'),
     ],
@@ -245,6 +299,34 @@ SUBGENRE_MAP = {
         ('doc_crisis',      'Crisis and Emergency'),
         ('doc_other',       'Other / Does not fit above'),
     ],
+    'Wildlife': [
+        # ── Birds ──────────────────────────────────────────────────────────────
+        ('bird_in_flight',         'Bird – In Flight'),
+        ('bird_behaviour',         'Bird – Predation / Behaviour'),
+        ('bird_family',            'Bird – Family / Juvenile'),
+        ('bird_migration',         'Bird – Migration / Murmuration'),
+        # ── Mammals ────────────────────────────────────────────────────────────
+        ('mammal_behaviour',       'Mammal – Behaviour / Conflict'),
+        ('mammal_family',          'Mammal – Family / Juvenile'),
+        ('mammal_migration',       'Mammal – Migration / Herd'),
+        ('primate_behaviour',      'Primate – Social / Behaviour'),
+        ('bat_behaviour',          'Bat – Behaviour / Emergence'),
+        # ── Aquatic / Marine ───────────────────────────────────────────────────
+        ('dolphin_behaviour',      'Dolphin / Cetacean – Behaviour'),
+        ('marine',                 'Marine / Underwater'),
+        ('marine_migration',       'Marine – Migration / Shoaling'),
+        # ── Reptiles & Amphibians ──────────────────────────────────────────────
+        ('reptile_amphibian',      'Reptile / Amphibian – Behaviour'),
+        # ── Invertebrates ──────────────────────────────────────────────────────
+        ('butterfly_behaviour',    'Butterfly / Insect – Behaviour'),
+        ('invertebrate_behaviour', 'Invertebrate – Behaviour'),
+        # ── Environmental / Contextual ─────────────────────────────────────────
+        ('animals_in_environment', 'Animal in Habitat / Environment'),
+        ('urban_wildlife',         'Urban Wildlife'),
+        ('animal_portrait',        'Animal Portrait'),
+        ('macro_wildlife',         'Macro Wildlife'),
+        ('wildlife_other',         'Other / Does not fit above'),
+    ],
 }
 
 # Flat validation set — all valid sub_genre values across all genres.
@@ -255,6 +337,8 @@ VALID_SUBGENRES = {sg_id for sgs in SUBGENRE_MAP.values() for sg_id, _ in sgs}
 # the weights from the HOME genre are used instead of the filed genre's weights.
 # This ensures physical risk scores correctly regardless of how the photographer filed.
 SUBGENRE_HOME_GENRE = {
+    # Astrophotography sub-genre filed under Nature routes to Astrophotography weights
+    'nature_astro':    'Astrophotography',
     # Crisis documentary filed under Street/People still uses Documentary weights
     'doc_crisis':      'Documentary',
     'doc_social':      'Documentary',
@@ -275,7 +359,6 @@ SUBGENRE_HOME_GENRE = {
     'creative_longexp':    'Creative',
     'creative_multiexp':   'Creative',
     'creative_abstract':   'Creative',
-    'creative_astro':      'Creative',
     'creative_silhouette': 'Creative',
 }
 
