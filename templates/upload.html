@@ -391,7 +391,7 @@
 <div class="upload-wrap">
   <div class="page-header">
     <h1>Upload Image</h1>
-    <p>Upload your photograph and get a detailed evaluation with feedback.</p>
+    <p>Your photograph is about to get the most honest feedback it has ever received. Under 2 minutes. No ego. No encouragement for its own sake.</p>
   </div>
 
   <!-- ── UPLOAD CAROUSEL ── -->
@@ -498,7 +498,7 @@
         Highly evaluated images may be selected for RAW verification — you may need to submit the original file from your camera.
       </div>
       <div class="file-size-warning" id="fileSizeWarning">
-        ⚠️ This file is larger than 5 MB. It will still upload fine — the engine resizes automatically. Larger files just take a little longer to transfer.
+        ⚠️ This file is over 5 MB — still fine. The engine will resize it automatically. Just means a few extra seconds of transfer. The evaluation doesn't mind waiting.
       </div>
 
       <!-- Hard error — wrong type etc -->
@@ -633,11 +633,15 @@
 <!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Shutter League · Analysing</div>
+  <div style="text-align:center; margin-top:-32px; margin-bottom:20px; font-size:15px; color:#854F0B; line-height:1.65; max-width:300px; margin-left:auto; margin-right:auto;">
+    Two API calls. One image. Under 2 minutes.<br>
+    <span style="font-size:14px; opacity:0.75;">We're reading your photograph forensically — species, behaviour, light, geometry, moment. It takes as long as it takes.</span>
+  </div>
   <div class="breath-hero">
     <div class="breath-ring-hero"><div class="breath-inner-dot"></div></div>
     <div class="breath-word" id="breathLabel">Inhale</div>
     <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
-    <div class="breath-tagline">Watch your breath while you wait</div>
+    <div class="breath-tagline">Watch your breath. The photograph is in good hands.</div>
   </div>
   <div class="overlay-cards-wrap">
     <div class="overlay-card" id="overlayCard">
@@ -662,11 +666,14 @@
   </div>
   <div id="backToDashboardWrap" style="display:block; margin-top:18px; text-align:center;">
     <a href="/dashboard" id="backToDashboardLink"
-       style="display:inline-block; padding:10px 20px; border:1px solid #854F0B; border-radius:var(--radius-sm);
+       style="display:inline-block; padding:12px 24px; border:1px solid #854F0B; border-radius:var(--radius-sm);
               color:#854F0B; font-family:var(--font-mono); font-size:13px; font-weight:600;
               letter-spacing:1px; text-transform:uppercase; text-decoration:none; background:rgba(133,79,11,0.08);">
-      Skip to Dashboard →
+      Continue to Dashboard →
     </a>
+    <p style="margin:10px auto 0; max-width:280px; font-size:14px; color:#854F0B; opacity:0.75; line-height:1.65; text-align:center;">
+      Your image is being read forensically — light, geometry, moment, species. We'll notify you the moment it's done. Go do something useful.
+    </p>
   </div>
 </div>
 {% endblock %}
@@ -1237,6 +1244,9 @@
       { h: 'You didn\u2019t take this photograph by accident.', b: 'Neither will we read it by accident.' },
       { h: 'The frame is set. The eye has spoken.', b: 'Let\u2019s see what it said.' },
       { h: 'About 90 seconds.', b: 'Then you\u2019ll know something about this photograph you didn\u2019t know before.' },
+      { h: 'We\u2019re reading it carefully.', b: 'Not quickly. Carefully. There\u2019s a difference, and your photograph deserves the distinction.' },
+      { h: 'Two calls to the AI. One honest verdict.', b: 'First we identify what\u2019s in the frame. Then we decide what it\u2019s worth. Breathe.' },
+      { h: 'No panel. No popular vote. No likes.', b: 'Just one engine, your photograph, and a verdict based entirely on what it actually does.' },
     ];
     const opener = openers[Math.floor(Math.random() * openers.length)];
 
@@ -1251,6 +1261,8 @@
       macro:       { h: 'Macro photography finds the world inside the world.', b: 'We look for whether yours reveals something invisible to the naked eye.' },
       drone:       { h: 'Height changes everything.', b: 'We look for whether yours found the geometry that only exists from up there.' },
       creative:    { h: 'Creative work starts where the rule ends.', b: 'We look for whether yours broke the convention with a reason.' },
+      documentary: { h: 'Documentary work is access.', b: 'We look for whether you were close enough, early enough, and honest enough to make this frame.' },
+      fashion:     { h: 'Fashion is a collaboration between photographer and subject.', b: 'We look for whether yours made both of them necessary.' },
     };
     const card2 = genreCopy[genreVal] || { h: 'We don\u2019t count megapixels.', b: 'We look for what your photograph does to the person who sees it. Whether it stops them. Whether it stays with them.' };
 
