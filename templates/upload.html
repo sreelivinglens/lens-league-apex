@@ -633,15 +633,13 @@
 <!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Shutter League · Analysing</div>
-  <div style="text-align:center; margin-top:-32px; margin-bottom:20px; font-size:15px; color:#854F0B; line-height:1.65; max-width:300px; margin-left:auto; margin-right:auto;">
-    Two API calls. One image. Under 2 minutes.<br>
-    <span style="font-size:14px; opacity:0.75;">We're reading your photograph forensically — species, behaviour, light, geometry, moment. It takes as long as it takes.</span>
-  </div>
   <div class="breath-hero">
     <div class="breath-ring-hero"><div class="breath-inner-dot"></div></div>
     <div class="breath-word" id="breathLabel">Inhale</div>
     <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
-    <div class="breath-tagline">Watch your breath. The photograph is in good hands.</div>
+    <div class="breath-tagline" id="breathTagline">
+      Meanwhile, we're identifying your subject. Please hold.
+    </div>
   </div>
   <div class="overlay-cards-wrap">
     <div class="overlay-card" id="overlayCard">
@@ -672,7 +670,7 @@
       Continue to Dashboard →
     </a>
     <p style="margin:10px auto 0; max-width:280px; font-size:14px; color:#854F0B; opacity:0.75; line-height:1.65; text-align:center;">
-      Your image is being read forensically — light, geometry, moment, species. We'll notify you the moment it's done. Go do something useful.
+      Your image is being read forensically — light, geometry, moment, species. We'll notify you the moment it's done.
     </p>
   </div>
 </div>
@@ -1228,6 +1226,37 @@
       applyBreathColor(colorIdx);
     }, 4000);
 
+    // ── LIVE STATUS TICKER — what the engine is actually doing ─────────────────
+    // Updates the breath tagline every ~9 seconds to show real pipeline progress.
+    // Timed roughly against actual scoring phases: vision (~35s), scoring (~55s).
+    const statusLines = [
+      'Identifying your subject. Squinting at pixels.',
+      'Checking if that\'s actually a bird or a very confident insect.',
+      'Measuring the light. Judging the shadows.',
+      'Cross-referencing species. Wikipedia has been consulted.',
+      'Calculating your decisive moment. Down to the millisecond.',
+      'Evaluating disruption. Did you break a convention on purpose?',
+      'Reading the geometry. Every edge. Every void.',
+      'Asking: does this image earn its existence?',
+      'Almost there. The engine is composing its verdict.',
+      'Writing your evaluation now. Should be worth the wait.',
+    ];
+    const taglineEl = document.getElementById('breathTagline');
+    if (taglineEl) taglineEl.style.transition = 'opacity 0.3s ease';
+    let statusIdx = 0;
+    const statusTimer = setInterval(function() {
+      statusIdx = Math.min(statusIdx + 1, statusLines.length - 1);
+      if (taglineEl) {
+        taglineEl.style.opacity = '0';
+        setTimeout(function() {
+          taglineEl.textContent = statusLines[statusIdx];
+          taglineEl.style.opacity = '1';
+        }, 300);
+      }
+      if (statusIdx >= statusLines.length - 1) clearInterval(statusTimer);
+    }, 9000);
+    overlay._statusTimer = statusTimer;
+
     // ── ROTATING CARDS ────────────────────────────────────────────────────────
     const genreVal = (document.getElementById('genre') ? document.getElementById('genre').value : '').toLowerCase();
     const dimParam = (new URLSearchParams(window.location.search)).get('mission_dimension') || '';
@@ -1369,6 +1398,7 @@
       if (overlay._bc)        clearInterval(overlay._bc);
       if (overlay._tick)      clearInterval(overlay._tick);
       if (overlay._cardTimer) clearInterval(overlay._cardTimer);
+      if (overlay._statusTimer) clearInterval(overlay._statusTimer);
     }
   });
   obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
