@@ -5017,8 +5017,9 @@ _DIM_SHORT     = {'dod': 'Technical', 'disruption': 'Disruption',
 
 # Valid mission genres matching platform genres
 _VALID_MISSION_GENRES = [
-    'Wildlife', 'Street', 'Nature', 'Landscape', 'People',
-    'Documentary', 'Macro', 'Creative', 'Drone', 'Wedding', 'Fashion',
+    'Architecture', 'Astrophotography', 'Creative', 'Documentary', 'Drone',
+    'Fashion', 'Landscape', 'Macro', 'Nature', 'People',
+    'Sports', 'Street', 'Wedding', 'Wildlife',
 ]
 
 
