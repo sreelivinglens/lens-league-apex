@@ -1206,8 +1206,8 @@
       .sl-logbook-print,
       .sl-logbook-print * { visibility: visible !important; }
 
-      /* A4 page setup — tight margins to maximise space */
-      @page { margin: 12mm 14mm; size: A4 portrait; }
+      /* A4 tight margins */
+      @page { margin: 10mm 12mm; size: A4 portrait; }
 
       .sl-logbook-print {
         position: absolute !important;
@@ -1218,63 +1218,70 @@
         color: #1a1a18; background: #fff;
       }
 
-      /* Photograph — max 35% of page height */
+      /* Photo — hard cap at 220px, never pushes past top third */
       .sl-logbook-print img {
-        max-height: 240px !important;
+        max-height: 220px !important;
         width: auto !important; max-width: 100% !important;
         object-fit: contain !important;
         display: block !important; margin: 0 auto !important;
       }
 
-      /* Header spacing */
-      .sl-logbook-print > div:first-child {
-        padding-bottom: 10px !important; margin-bottom: 12px !important;
-      }
-
-      /* Narrative cards — 4 lines max, smaller text */
-      .sl-logbook-print .sl-print-card-body {
-        display: -webkit-box !important;
-        -webkit-line-clamp: 4 !important;
-        -webkit-box-orient: vertical !important;
-        overflow: hidden !important;
-        font-size: 13px !important;
-        line-height: 1.55 !important;
-      }
-
-      /* Card container — compact */
-      .sl-logbook-print .sl-print-card {
-        padding: 9px 12px !important;
-        margin-bottom: 7px !important;
-        page-break-inside: avoid !important;
-      }
-
-      /* What stood out — slightly larger but still bounded */
-      .sl-logbook-print .sl-print-wso {
-        font-size: 13px !important;
-        display: -webkit-box !important;
-        -webkit-line-clamp: 5 !important;
-        -webkit-box-orient: vertical !important;
-        overflow: hidden !important;
-        line-height: 1.6 !important;
-        padding: 12px 14px !important;
+      /* Photo container — no extra margin */
+      .sl-logbook-print > div:nth-child(2) {
         margin-bottom: 10px !important;
       }
 
-      /* Dimension scores — compact grid */
-      .sl-print-dim-val { font-size: 20px !important; }
-      .sl-print-dim-lbl { font-size: 13px !important; }
-
-      /* Calibration line — smaller */
-      .sl-logbook-print .sl-print-calib {
+      /* What Stood Out — max-height + overflow, works in Safari print */
+      .sl-logbook-print .sl-print-wso {
+        max-height: 90px !important;
+        overflow: hidden !important;
         font-size: 13px !important;
-        padding: 8px 12px !important;
+        line-height: 1.5 !important;
+        padding: 10px 12px !important;
         margin-bottom: 8px !important;
       }
-
-      /* Footer — minimal */
-      .sl-logbook-print .sl-print-footer {
-        padding-top: 8px !important; margin-top: 4px !important;
+      .sl-logbook-print .sl-print-wso > div:last-child {
         font-size: 13px !important;
+        line-height: 1.5 !important;
+      }
+
+      /* Narrative cards — hard height cap, overflow hidden (Safari-safe) */
+      .sl-logbook-print .sl-print-card {
+        max-height: 80px !important;
+        overflow: hidden !important;
+        padding: 8px 10px !important;
+        margin-bottom: 6px !important;
+        page-break-inside: avoid !important;
+      }
+      .sl-logbook-print .sl-print-card-body {
+        font-size: 13px !important;
+        line-height: 1.5 !important;
+        max-height: 56px !important;
+        overflow: hidden !important;
+      }
+
+      /* Dimension grid — compact */
+      .sl-print-dim-val { font-size: 18px !important; }
+      .sl-print-dim-lbl { font-size: 13px !important; line-height: 1.5 !important; }
+
+      /* EXIF block — compact */
+      .sl-logbook-print .sl-print-calib {
+        font-size: 13px !important;
+        padding: 6px 10px !important;
+        margin-bottom: 6px !important;
+      }
+
+      /* Footer */
+      .sl-logbook-print .sl-print-footer {
+        padding-top: 6px !important;
+        margin-top: 4px !important;
+        font-size: 13px !important;
+      }
+
+      /* Header — tighter */
+      .sl-logbook-print > div:first-child {
+        padding-bottom: 8px !important;
+        margin-bottom: 10px !important;
       }
 
       /* No links styled as links */
