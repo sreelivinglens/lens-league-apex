@@ -4291,11 +4291,33 @@ def dashboard():
                 # before calling check_advisory_follow_up. Without calendar_id
                 # the follow-up check always returns False (city-level logs are
                 # not specific enough for the location match).
+                #
+                # Session 148 — advisory rotation fix.
+                # Query advisory_shown_log for calendar_ids shown to this user
+                # in the past 7 days and pass as excluded_ids so
+                # get_dashboard_advisory skips already-seen locations.
+                # Previously the log was written after the fetch but never read
+                # before it — same row returned on every dashboard visit.
+                # Confirmed: sreelivinglegs saw BR Hills on second login 24h later.
+                _adv_excluded_ids = []
+                try:
+                    _adv_log_rows = db.session.execute(db.text(
+                        "SELECT calendar_id FROM advisory_shown_log "
+                        "WHERE user_id    = :uid "
+                        "  AND calendar_id IS NOT NULL "
+                        "  AND shown_date >= CURRENT_DATE - 7"
+                    ), {'uid': current_user.id}).fetchall()
+                    _adv_excluded_ids = [r[0] for r in _adv_log_rows if r[0]]
+                except Exception as _adv_ex_err:
+                    app.logger.warning(f'[dashboard] advisory exclusion query: {_adv_ex_err}')
+                    _adv_excluded_ids = []
+
                 _base_advisory = get_dashboard_advisory(
                     db.session,
                     current_user.city,
                     _adv_genre or 'Wildlife',
                     datetime.utcnow().month,
+                    excluded_ids=_adv_excluded_ids,
                 )
                 _cal_id = _base_advisory.get('calendar_id') if _base_advisory else None
                 _adv_follow_up = check_advisory_follow_up(
@@ -6097,24 +6119,36 @@ def upload():
                 )
                 break
             elif ex.user_id == current_user.id and sim >= 85.0:
-                # Near-match — this is an edited version of a previously scored image.
-                # Allow upload. Capture previous score + audit for delta scoring.
+                # Near-match — visually similar to a previously scored image.
+                # Allow upload. Capture previous score for delta calibration.
+                #
+                # Session 148 — Deepti narrative bug fix.
+                # Do NOT pass previous_audit here. previous_audit tells the
+                # scoring engine the photographer acted on prior coaching
+                # directions, generating "you followed the edit directions
+                # precisely" in the scorecard narrative. That attribution is
+                # only valid on the explicit Upload Edited Version path
+                # (_score_edit), which passes previous_audit deliberately.
+                #
+                # On this main upload path the photographer may have simply
+                # shot a new frame at the same location (confirmed: Deepti,
+                # IMG_5019 → IMG_5020 — directed by Ashok Kochhar to reframe
+                # left, a fresh capture, not an edit of IMG_5019).
+                #
+                # Fix: audit=None. Engine treats this as a fresh image with a
+                # calibrated baseline score — correct. previous_score is kept
+                # for stability delta only.
                 if ex.status == 'scored' and ex.score:
-                    _prev_audit_json = ex._audit_json or ''
-                    try:
-                        import json as _json
-                        _prev_audit = _json.loads(_prev_audit_json) if _prev_audit_json else {}
-                    except Exception:
-                        _prev_audit = {}
                     _near_match_previous = {
                         'score':      float(ex.score),
-                        'audit':      _prev_audit,
+                        'audit':      None,   # intentionally None — see above
                         'image_id':   ex.id,
                         'similarity': sim,
                     }
                     app.logger.info(
-                        f'[upload] near-match edit detected (sim={sim:.1f}%) — '
-                        f'previous score={ex.score} image={ex.id} — delta scoring enabled'
+                        f'[upload] near-match detected (sim={sim:.1f}%) — '
+                        f'previous score={ex.score} image={ex.id} — '
+                        f'delta calibration only, audit withheld (fresh upload path)'
                     )
                 break
             elif ex.user_id != current_user.id and sim >= 98.0:
