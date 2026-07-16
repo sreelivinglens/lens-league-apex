@@ -1201,29 +1201,86 @@
   <style>
     /* ── Print styles — logbook card ──────────────────────────────── */
     @media print {
-      /* Hide everything, then reveal only the logbook and its ancestors */
+      /* Hide everything except the logbook */
       * { visibility: hidden !important; }
       .sl-logbook-print,
       .sl-logbook-print * { visibility: visible !important; }
 
-      /* Position logbook at top-left so it fills the page */
+      /* A4 page setup — tight margins to maximise space */
+      @page { margin: 12mm 14mm; size: A4 portrait; }
+
       .sl-logbook-print {
         position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        max-width: 800px !important;
-        margin: 0 auto !important;
+        top: 0 !important; left: 0 !important;
+        width: 100% !important; max-width: 100% !important;
+        margin: 0 !important; padding: 0 !important;
         font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
-        color: #1a1a18;
-        background: #fff;
-        padding: 0;
+        color: #1a1a18; background: #fff;
+      }
+
+      /* Photograph — max 35% of page height */
+      .sl-logbook-print img {
+        max-height: 240px !important;
+        width: auto !important; max-width: 100% !important;
+        object-fit: contain !important;
+        display: block !important; margin: 0 auto !important;
+      }
+
+      /* Header spacing */
+      .sl-logbook-print > div:first-child {
+        padding-bottom: 10px !important; margin-bottom: 12px !important;
+      }
+
+      /* Narrative cards — 4 lines max, smaller text */
+      .sl-logbook-print .sl-print-card-body {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 4 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        font-size: 13px !important;
+        line-height: 1.55 !important;
+      }
+
+      /* Card container — compact */
+      .sl-logbook-print .sl-print-card {
+        padding: 9px 12px !important;
+        margin-bottom: 7px !important;
+        page-break-inside: avoid !important;
+      }
+
+      /* What stood out — slightly larger but still bounded */
+      .sl-logbook-print .sl-print-wso {
+        font-size: 13px !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 5 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        line-height: 1.6 !important;
+        padding: 12px 14px !important;
+        margin-bottom: 10px !important;
+      }
+
+      /* Dimension scores — compact grid */
+      .sl-print-dim-val { font-size: 20px !important; }
+      .sl-print-dim-lbl { font-size: 13px !important; }
+
+      /* Calibration line — smaller */
+      .sl-logbook-print .sl-print-calib {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+        margin-bottom: 8px !important;
+      }
+
+      /* Footer — minimal */
+      .sl-logbook-print .sl-print-footer {
+        padding-top: 8px !important; margin-top: 4px !important;
+        font-size: 13px !important;
       }
 
       /* No links styled as links */
       .sl-logbook-print a { color: inherit; text-decoration: none; }
 
-      /* Ensure backgrounds print */
+      /* Ensure colours print */
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
 
@@ -1262,7 +1319,7 @@
     {# ── Opening line ────────────────────────────────────────────── #}
     {% set _lb_wso = audit.what_stood_out if audit.what_stood_out else audit.hard_truth %}
     {% if _lb_wso %}
-    <div style="border-left:4px solid #F5C518; padding:16px 20px; margin-bottom:24px; background:#FFFBF0;">
+    <div class="sl-print-wso" style="border-left:4px solid #F5C518; padding:16px 20px; margin-bottom:24px; background:#FFFBF0;">
       <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#854F0B; margin-bottom:8px;">What Stood Out</div>
       <div style="font-size:18px; font-weight:700; color:#1a1a18; line-height:1.65;">{{ _lb_wso }}</div>
     </div>
@@ -1277,12 +1334,12 @@
     ] %}
     {% for icon, color, bg, label, body in _lb_cards %}
     {% if body and body.strip() %}
-    <div style="background:{{ bg }}; border-radius:10px; padding:18px 20px; margin-bottom:14px; page-break-inside:avoid;">
+    <div class="sl-print-card" style="background:{{ bg }}; border-radius:10px; padding:18px 20px; margin-bottom:14px; page-break-inside:avoid;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
         <span style="font-size:14px; color:{{ color }};">{{ icon }}</span>
         <span style="font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:{{ color }};">{{ label }}</span>
       </div>
-      <div style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body.replace('**', '') }}</div>
+      <div class="sl-print-card-body" style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body.replace('**', '') }}</div>
     </div>
     {% endif %}
     {% endfor %}
@@ -1300,8 +1357,8 @@
           (image.aq_score,         'The Emotion',   'It Creates'),
         ] %}
         <div>
-          <div style="font-size:24px; font-weight:700; color:#1a1a18; font-family:monospace;">{{ val or '—' }}</div>
-          <div style="font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; margin-top:3px;">{{ l1 }}<br>{{ l2 }}</div>
+          <div class="sl-print-dim-val" style="font-size:24px; font-weight:700; color:#1a1a18; font-family:monospace;">{{ val or '—' }}</div>
+          <div class="sl-print-dim-lbl" style="font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; margin-top:3px;">{{ l1 }}<br>{{ l2 }}</div>
         </div>
         {% endfor %}
       </div>
@@ -1320,7 +1377,7 @@
 
     {# ── Calibration line ────────────────────────────────────────── #}
     {% if audit.calibration_line %}
-    <div style="font-size:13px; color:#555; line-height:1.6; padding:12px 16px; background:#F8F8F5; border-radius:8px; margin-bottom:20px;">
+    <div class="sl-print-calib" style="font-size:13px; color:#555; line-height:1.6; padding:12px 16px; background:#F8F8F5; border-radius:8px; margin-bottom:20px;">
       {{ audit.calibration_line }}
       {%- if image.camera_track %}
       <span style="display:inline-block;margin-left:8px;font-size:13px;font-weight:700;padding:1px 7px;border-radius:4px;
@@ -1332,10 +1389,10 @@
     {% endif %}
 
     {# ── Footer ──────────────────────────────────────────────────── #}
-    <div style="border-top:1px solid #E0D5B0; padding-top:16px; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+    <div class="sl-print-footer" style="border-top:1px solid #E0D5B0; padding-top:16px; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
       <div style="font-size:13px; color:#888; font-family:monospace; letter-spacing:1px;">
         {{ image.photographer_name or current_user.full_name or current_user.username }}
-        · Evaluated by Apex DDI Engine
+        · Evaluated by Shutter League DDI Engine
         · {{ image.scored_at.strftime('%d %b %Y') if image.scored_at else '' }}
       </div>
       <div style="font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888;">
