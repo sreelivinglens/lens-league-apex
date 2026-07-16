@@ -1662,12 +1662,12 @@
 
       {# ── Share button #}
       {% if image.share_token %}
-      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
-        ↗ Share this evaluation
+      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px;">
+        ↗ Put this image in the world
       </a>
       {% else %}
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
-        ↗ Share this evaluation
+      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px;">
+        ↗ Put this image in the world
       </a>
       {% endif %}
 
@@ -1774,7 +1774,7 @@
   </div>
   {% endif %}
 
-<a href="{{ url_for('public_card', token=image.share_token) if image.share_token else url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
+<button onclick="navigator.clipboard.writeText('{{ request.host_url }}card/{{ image.share_token }}' || window.location.href).then(function(){this.textContent='Copied ✓';setTimeout(function(){},1500)}.bind(this));" class="btn" style="font-size:14px; cursor:pointer;">Copy Link</button>
     {% endif %}
   </div>
 
