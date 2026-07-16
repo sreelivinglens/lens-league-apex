@@ -741,20 +741,28 @@ def get_location_links(db_session, calendar_ids: list[int]) -> list[dict]:
     return links
 
 
-def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, current_month: int) -> dict | None:
+def get_dashboard_advisory(db_session, user_city: str, primary_genre: str,
+                           current_month: int,
+                           excluded_ids: list | None = None) -> dict | None:
     """
     Lightweight version of build_seasonal_context() for the dashboard's
     "Shooting near you" widget — returns the single nearest match as plain
-    display fields instead of an AI-prompt string. No rotation/dedup logic
-    (unlike build_seasonal_context, which avoids repeating the same advice
-    across uploads) since this is just a glanceable sidebar widget, not the
-    image scorecard, and isn't logged to seasonal_shown_log.
+    display fields instead of an AI-prompt string.
 
     Session 98: uses the same genre fallback plan as build_seasonal_context()
     (Wedding/Fashion -> People, Macro/Nature -> Wildlife/Landscape, Creative
     -> any genre) so the dashboard widget never goes empty for a genre with
     no standalone location concept. Does not widen Wildlife nationwide —
     this widget stays city-local by design.
+
+    Session 148 — rotation fix: accepts excluded_ids (list of calendar_id
+    integers shown to this user recently, queried from advisory_shown_log by
+    the dashboard route before calling here). Picks the first row NOT in
+    excluded_ids, falling back to rows[0] only when every available row has
+    been seen recently (i.e. the user has exhausted all locations — correct
+    behaviour, not a bug). This mirrors the rotation logic in
+    build_seasonal_context() which uses seasonal_shown_log for the same
+    purpose on the scorecard path.
 
     Returns None if no match (city/genre have no calendar rows this month) —
     the dashboard template falls back to its existing generic placeholder.
@@ -770,7 +778,11 @@ def get_dashboard_advisory(db_session, user_city: str, primary_genre: str, curre
             break
     if not rows:
         return None
-    row = rows[0]
+
+    # Session 148 — pick first unseen row; fall back to rows[0] if all seen
+    _excluded = set(excluded_ids or [])
+    _unseen = [r for r in rows if r.id not in _excluded]
+    row = _unseen[0] if _unseen else rows[0]
 
     from urllib.parse import quote_plus
     _q = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
