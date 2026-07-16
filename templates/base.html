@@ -1981,7 +1981,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <script>
 (function(){
-  if (!localStorage.getItem('sl_cookie_ok')) {
+  if (!localStorage.getItem('sl_cookie_ok') && !window.location.pathname.startsWith('/card/')) {
     document.getElementById('cookie-banner').classList.add('cb-visible');
   }
 })();
