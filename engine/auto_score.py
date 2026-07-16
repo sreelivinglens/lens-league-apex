@@ -55,6 +55,8 @@ FORMULA:
 LL-Score = (DoD × weight) + (Disruption × weight) + (DM × weight) + (Wonder × weight) + (AQ × weight)
 
 GENRE WEIGHTS:
+Architecture:     DoD=15% Disruption=18% DM=8%  Wonder=35% AQ=24%
+Astrophotography: DoD=28% Disruption=10% DM=8%  Wonder=42% AQ=12%
 Wildlife:     DoD=20% Disruption=12% DM=27% Wonder=26% AQ=15%
 Nature:       DoD=13% Disruption=11% DM=13% Wonder=37% AQ=26%
 Landscape:    DoD=13% Disruption=12% DM=11% Wonder=32% AQ=32%
@@ -66,6 +68,7 @@ Creative:     DoD=12% Disruption=18% DM=10% Wonder=30% AQ=30%
 Drone:        DoD=23% Disruption=16% DM=12% Wonder=30% AQ=19%
 Documentary:  DoD=13% Disruption=9%  DM=20% Wonder=33% AQ=25%
 Fashion:      DoD=10% Disruption=20% DM=16% Wonder=24% AQ=30%
+Sports:       DoD=18% Disruption=10% DM=32% Wonder=22% AQ=18%
 
 STEP 0 — CREATIVE GENRE OVERRIDE (apply before anything else):
 If genre = 'Creative' OR sub_genre starts with 'creative_' (e.g. creative_minimalist,
@@ -1241,6 +1244,112 @@ GENRE_CONTEXT = {
         "work aestheticises suffering and weakens the message. Penalise heavy post-processing "
         "that removes the rawness of the moment. The best documentary photography is "
         "technically honest."
+    ),
+    'Architecture': (
+        "This is Architecture photography — built environment as subject.\n\n"
+        "DoD: Score the difficulty of access, the technical precision of perspective control "
+        "(converging verticals, corrected distortion, tilt-shift work), and the challenge of "
+        "working within constraints — restricted access, changing light, public spaces. "
+        "Heritage sites with permit requirements, active construction sites, and inaccessible "
+        "interiors raise DoD. Consumer-accessible landmarks in daytime score DoD 6.0–7.5.\n\n"
+        "DM: Architecture has no decisive moment by default — it is a static subject. "
+        "DM scores ONLY when a transient element is present at its compositional peak: "
+        "a person crossing a threshold at exactly the right scale, the moment a shadow "
+        "falls across a surface creating the geometric relationship, light entering at "
+        "a specific angle that will not recur. Without a transient element, DM caps at 7.0. "
+        "Long-exposure light trails through a space are a valid DM element.\n\n"
+        "Wonder — APPLY THE REVELATION TEST: Does this image show a building or space in a way "
+        "that changes how the viewer understands it? "
+        "GENUINE ARCHITECTURAL REVELATION (Wonder 8.5+): an interior geometry that reads as "
+        "pure abstract pattern at this angle; a structural system made visible and beautiful; "
+        "the meeting of human scale and architectural scale that produces awe or insignificance; "
+        "light treating a space as a subject in its own right. "
+        "LOCATION DOING THE WORK (Wonder cap 8.0): famous building photographed from a standard "
+        "viewpoint where the architecture itself is the interest. Being inside the Pantheon is "
+        "not architectural revelation — finding the geometric relationship that explains why the "
+        "Pantheon works is.\n\n"
+        "Disruption: Reward unconventional angle, deliberate abstraction, and frames that refuse "
+        "the expected tourist-brochure composition. Penalise technically correct but compositionally "
+        "predictable frames — the dead-centre symmetric facade, the standard interior overview "
+        "with no compositional decision.\n\n"
+        "AQ: The feeling the space creates — awe, intimacy, unease, transcendence. "
+        "A brutalist housing block and a baroque cathedral can both score high AQ when the "
+        "image carries the specific emotional register of that space rather than simply "
+        "documenting its appearance."
+    ),
+    'Astrophotography': (
+        "This is Astrophotography — the night sky as subject.\n\n"
+        "DoD: Score the technical achievement — tracking mount operation for long exposures "
+        "without star trailing, dark site access (distance from light pollution), stacking "
+        "and processing discipline, accurate focus on infinity in darkness, noise management "
+        "at extreme ISO, and the planning required (moon phase, weather window, season). "
+        "Single-shot Milky Way from a semi-dark site on an entry-level camera scores DoD 6.5–7.5. "
+        "Multi-hour deep sky stacks, planetary imaging with telescope and camera, aurora chasing "
+        "with travel to high latitude, or eclipse photography score DoD 8.0–9.5. "
+        "The technical barrier to well-executed astrophotography is genuinely high — do not "
+        "underweight DoD for clean, well-exposed night sky work.\n\n"
+        "DM: The decisive moment in astrophotography is planning-dependent, not reaction-dependent. "
+        "Milky Way arch at its peak galactic centre alignment over a foreground element: DM 7.5–8.5. "
+        "Eclipse totality at the moment of Baily's Beads or diamond ring: DM 8.5–9.5. "
+        "Aurora at its most active and structured: DM 8.0–9.0. "
+        "Meteor at the precise compositional intersection: DM 8.5–9.5. "
+        "Static star field without transient or peak: DM 6.0–7.0.\n\n"
+        "Wonder: The cosmic scale and the rarity of the astronomical phenomenon are the Wonder signal. "
+        "The Milky Way visible in its full arch is a Wonder 7.5–8.5 subject. "
+        "Total solar eclipse with corona visible: Wonder 9.0–9.5. "
+        "Rare planetary alignment, comet tail, or aurora filling the sky: Wonder 8.5–9.5. "
+        "A well-executed Milky Way with strong foreground integration (reflection, ancient structure, "
+        "human figure) earns Wonder above the base: the juxtaposition of human and cosmic scale. "
+        "Technically correct but compositionally generic star field: Wonder 6.5–7.5.\n\n"
+        "Disruption: Lower weight (10%). A technically correct astrophotograph is inherently unusual "
+        "to most viewers. Reward: star trail circles over an unusual foreground, aurora painted across "
+        "an unexpected environment, galaxy visible above an urban scene. "
+        "Penalise: standard Milky Way arch with standard landscape foreground — technically impressive "
+        "but compositionally expected within the genre.\n\n"
+        "AQ: The emotional register should be specific. Awe and insignificance are the primary AQ "
+        "signals for astrophotography. The feeling that the universe is indifferent and vast. "
+        "When the image also creates connection — the human figure under the stars, the ancient "
+        "building under the rotating sky — AQ rises. Technically clean but emotionally inert "
+        "astrophotography scores AQ 6.0–7.5."
+    ),
+    'Sports': (
+        "This is Sports photography — athletic action, competition, and physical performance.\n\n"
+        "DoD: Score access difficulty (pitch access vs. press gallery vs. public stand), "
+        "technical execution at high speed (shutter priority, AF tracking, burst timing, "
+        "reach of lens), and the conditions (indoor tungsten, floodlit night, harsh noon sun). "
+        "Press photographers at international events with restricted pitch access and technical "
+        "demands (tracking fast subjects, managing stadium light) score DoD 7.5–9.0. "
+        "Public-stand photography at local matches with consumer gear: DoD 5.5–7.0. "
+        "Extreme sports (motor racing, aerial sports, extreme weather events) raise DoD further "
+        "when the photographer's own physical position involves risk or difficulty.\n\n"
+        "DM (DOMINANT DIMENSION — 32%): Score the peak of athletic action — the exact frame "
+        "where the physical achievement is at its maximum and most visually legible. "
+        "The ball leaving the bat at full extension — not just before or just after. "
+        "The peak of the jump at zero velocity. The collision between players at its most "
+        "compressed. The finish-line frame where position is determined. "
+        "These are 1/500th-of-a-second decisions, and the difference between the right frame "
+        "and the frame before or after is the entire score. "
+        "DM in sports is NOT a timing assist — it requires the photographer to have "
+        "anticipated the moment AND pressed the shutter at exactly the right millisecond. "
+        "Reward precise timing severely. Penalise near-misses — the follow-through after "
+        "peak, the wind-up before peak.\n\n"
+        "Wonder: The athletic body at its physical limit is the Wonder signal. "
+        "Score the combination of physical achievement visible in the image AND "
+        "the photographic skill required to capture it. "
+        "A clean peak-action frame of a world-class athlete in competition scores Wonder 8.0–9.0. "
+        "A compositionally revelatory image — the weight of a tackle made visible, the geometry "
+        "of a sprint at maximum acceleration, the isolation of a single athlete against a crowd — "
+        "scores Wonder 8.5–9.5 when the image communicates something about the physical reality "
+        "that slow-motion video cannot.\n\n"
+        "Disruption: Reward unusual angles (low, underwater, through the net), motion blur "
+        "techniques used deliberately (panning on a sprinter to freeze the face and blur the "
+        "background, long-exposure crowd blur around a static athlete), and frames that refuse "
+        "the standard side-on action shot. "
+        "Penalise technically correct but compositionally generic sports frames.\n\n"
+        "AQ: The emotion of athletic performance — determination, pain, triumph, devastation. "
+        "Score the specific emotional state the image captures. A losing face at the finish line "
+        "scores higher AQ than a generic action frame where no emotional state is legible. "
+        "Crowd reaction frames can score high AQ when the collective emotion is specific and readable."
     ),
     'default': (
         "Evaluate using genre-appropriate criteria. Reward artistic intent, "
