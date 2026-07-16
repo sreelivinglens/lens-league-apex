@@ -14,16 +14,17 @@
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
-<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Apex Engine.">
-{% if image.thumb_url %}
-<meta property="og:image" content="{{ image.thumb_url }}">
+<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Shutter League DDI Engine.">
+{% if image.card_url %}<meta property="og:image" content="{{ image.card_url }}">
+{% elif image.thumb_url %}<meta property="og:image" content="{{ image.thumb_url }}">{% endif %}
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-{% endif %}
+<meta property="og:image:type" content="image/jpeg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
 <meta name="twitter:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }}">
-{% if image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
+{% if image.card_url %}<meta name="twitter:image" content="{{ image.card_url }}">
+{% elif image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
 <link rel="canonical" href="{{ request.url }}">
 {% endblock %}
 {% block extra_css %}
