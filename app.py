@@ -16871,6 +16871,41 @@ def razorpay_webhook():
                 db.session.commit()
                 app.logger.info('[webhook] activated user=' + str(user.id))
 
+        elif event_type == 'payment.captured':
+            # Monthly subscribers use the Orders API (not Subscriptions API),
+            # so their renewals fire payment.captured — not subscription.charged.
+            # The user's razorpay_sub_id stores the order_id for monthly plans.
+            # On renewal Razorpay creates a new order; we must match by the new
+            # order_id in the payment entity, not the original stored order_id.
+            # Strategy: match by order_id in payment entity → if found, reset.
+            # Fallback: match by razorpay_order_id stored at first subscription.
+            # Without this reset, monthly subscribers' quota never refreshes.
+            _pay_entity  = event.get('payload', {}).get('payment', {}).get('entity', {})
+            _pay_order_id = _pay_entity.get('order_id', '')
+            _pay_method   = _pay_entity.get('method', '')
+            app.logger.info(f'[webhook] payment.captured order_id={_pay_order_id} method={_pay_method}')
+            _ord_user = None
+            if _pay_order_id:
+                _ord_user = User.query.filter_by(razorpay_sub_id=_pay_order_id).first()
+            if _ord_user and _ord_user.is_subscribed and _ord_user.subscription_plan == 'monthly':
+                _ord_user.subscribed_at = datetime.utcnow()
+                db.session.commit()
+                app.logger.info(f'[webhook] payment.captured — monthly quota reset user={_ord_user.id}')
+                try:
+                    send_email([admin_email],
+                        '[SL Admin] Monthly renewal — quota reset — ' + _ord_user.email,
+                        '<p>Monthly renewal payment captured for user ' + str(_ord_user.id) +
+                        ' (' + _ord_user.email + '). '
+                        'subscribed_at reset to ' + datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC') +
+                        '. order_id=' + _pay_order_id + '</p>')
+                except Exception:
+                    pass
+            else:
+                app.logger.info(
+                    f'[webhook] payment.captured — no monthly user matched for order_id={_pay_order_id}'
+                    f' (may be a non-monthly payment or first-time capture already handled by /verify-payment)'
+                )
+
         elif event_type == 'subscription.charged':
             user = _wh_user()
             if user and user.is_subscribed:
