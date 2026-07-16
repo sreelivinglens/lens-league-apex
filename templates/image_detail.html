@@ -14,17 +14,16 @@
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
-<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Shutter League DDI Engine.">
-{% if image.card_url %}<meta property="og:image" content="{{ image.card_url }}">
-{% elif image.thumb_url %}<meta property="og:image" content="{{ image.thumb_url }}">{% endif %}
+<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Apex Engine.">
+{% if image.thumb_url %}
+<meta property="og:image" content="{{ image.thumb_url }}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:type" content="image/jpeg">
+{% endif %}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
 <meta name="twitter:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }}">
-{% if image.card_url %}<meta name="twitter:image" content="{{ image.card_url }}">
-{% elif image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
+{% if image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
 <link rel="canonical" href="{{ request.url }}">
 {% endblock %}
 {% block extra_css %}
@@ -1664,11 +1663,11 @@
       {# ── Share button #}
       {% if image.share_token %}
       <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px;">
-        ↗ Put this image in the world
+        ↗ Share this
       </a>
       {% else %}
       <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px;">
-        ↗ Put this image in the world
+        ↗ Share this
       </a>
       {% endif %}
 
