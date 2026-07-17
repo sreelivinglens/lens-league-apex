@@ -207,6 +207,47 @@
     <span class="pc-brand-sub">Evaluation Card &nbsp;·&nbsp; Apex DDI Engine</span>
   </div>
 
+  {# ── Polaroid share card — shown if compositor has rendered it ── #}
+  {% if image.card_url %}
+  <div style="text-align:center; margin-bottom:24px;">
+    <img src="{{ image.card_url }}"
+         alt="Shutter League evaluation card for {{ image.asset_name or 'this photograph' }}"
+         style="max-width:100%; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+    <div style="margin-top:14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button onclick="slShareCardPublic()" class="btn btn-solid" style="font-size:15px; padding:12px 24px; cursor:pointer;">
+        ↗ Share this card
+      </button>
+      <a href="{{ url_for('public_card_download', token=share_token) }}"
+         class="btn" style="font-size:15px; padding:12px 24px;">
+        ↓ Save card
+      </a>
+    </div>
+    <script>
+    async function slShareCardPublic() {
+      const cardUrl    = "{{ image.card_url }}";
+      const shareUrl   = window.location.href;
+      const shareTitle = "{{ (image.asset_name or 'My photograph') | e }} — {{ image.tier or '' }} · Shutter League";
+      const shareText  = "Evaluated by the Apex DDI Engine on Shutter League";
+      if (navigator.share && cardUrl) {
+        try {
+          const resp = await fetch(cardUrl);
+          const blob = await resp.blob();
+          const file = new File([blob], 'shutter-league-card.jpg', { type: 'image/jpeg' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: shareTitle, text: shareText });
+            return;
+          }
+        } catch(_) {}
+        navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
+          .catch(() => window.open(cardUrl, '_blank'));
+      } else {
+        window.open(cardUrl, '_blank');
+      }
+    }
+    </script>
+  </div>
+  {% endif %}
+
   {# ── Photo + Score bar — wrapped so bar never overlays photo ── #}
   <div>
 
