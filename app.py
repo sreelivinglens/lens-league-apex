@@ -16803,7 +16803,7 @@ def razorpay_webhook():
                 return jsonify({'status': 'duplicate'}), 200
             db.session.execute(
                 db.text("INSERT INTO admin_sent_emails (admin_id, recipient_email, subject, body, send_type, success) "
-                        "VALUES (0, 'webhook@razorpay.com', :eid, '', 'webhook', TRUE)"),
+                        "VALUES (NULL, 'webhook@razorpay.com', :eid, '', 'webhook', TRUE)"),
                 {'eid': '__webhook__' + event_id}
             )
             db.session.commit()
