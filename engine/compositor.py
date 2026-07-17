@@ -228,7 +228,9 @@ def build_card(thumb_path, audit, out_path):
     score    = str(audit.get('score', ''))
     tier     = str(audit.get('tier', ''))
     name     = str(audit.get('credit', '') or audit.get('photographer_name', ''))
-    genre    = str(audit.get('genre_tag', '') or audit.get('genre', ''))
+    # genre_tag is stored as "WILDLIFE  .  PNG" — take only the genre part before any separator
+    raw_genre = str(audit.get('genre_tag', '') or audit.get('genre', ''))
+    genre = raw_genre.split('·')[0].split('.')[0].split('  ')[0].strip().title()
     labels   = ['DEPTH','DISPLAY','DECISIVE\nMOMENT','WONDER\nFACTOR','AFFECTIVE\nQUOTIENT']
     modules  = audit.get('modules', [])
     dims     = [str(m[1]) for m in modules] if modules else ['','','','','']
