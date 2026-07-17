@@ -486,11 +486,34 @@ function copyLink() {
     document.execCommand('copy'); document.body.removeChild(el); done();
   }
 }
-function shareNative() {
-  if (navigator.share) {
+const cardImageUrl = "{{ image.card_url or '' }}";
+
+async function shareNative() {
+  // Option C — share the polaroid card JPG directly via native share sheet
+  if (navigator.share && cardImageUrl) {
+    // Try to share the card image as a file (iOS Safari 15+, Android Chrome)
+    try {
+      const resp = await fetch(cardImageUrl);
+      const blob = await resp.blob();
+      const file = new File([blob], 'shutter-league-card.jpg', { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: shareTitle,
+          text:  shareText,
+        });
+        return;
+      }
+    } catch (_) {}
+    // Fallback: share URL if file sharing not supported
     navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
       .catch(() => copyLink());
-  } else { copyLink(); }
+  } else if (cardImageUrl) {
+    // No navigator.share — open card image in new tab so user can save/share manually
+    window.open(cardImageUrl, '_blank');
+  } else {
+    copyLink();
+  }
 }
 function shareThis() { shareNative(); }
 function showFeedback() {
