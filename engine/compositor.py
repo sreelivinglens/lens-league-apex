@@ -76,6 +76,11 @@ _CLIP_MASK   = None
 def _load_assets():
     global _BG, _BORDER, _DECORATIONS, _CLIP_MASK
     if _BG is None:
+        if not os.path.exists(BG_PATH):
+            raise RuntimeError(
+                f'Card assets missing — upload engine/assets/ PNGs to Railway. '
+                f'Expected: {BG_PATH}'
+            )
         _BG          = Image.open(BG_PATH).convert('RGBA')
         _BORDER      = Image.open(BORDER_PATH).convert('RGBA')
         _DECORATIONS = Image.open(DECORATIONS_PATH).convert('RGBA')
