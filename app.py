@@ -24934,96 +24934,97 @@ if _sched_lock_held:
 @admin_required
 def admin_backfill_share_cards():
     """
-    One-time backfill: re-render share card JPGs for all scored images
-    using the new Session 149 compositor. Only touches card_url — never
-    touches scores, tiers, dimensions, or analysis text.
-
-    Runs synchronously in batches of 10. Call repeatedly until done.
-    Pass ?batch=N to process batch N (0-indexed). Default batch=0.
+    One-time backfill: re-render all share card JPGs using the new
+    Session 149 compositor. Runs entirely in a background thread —
+    returns immediately so Cloudflare never times out.
+    Progress visible in Railway logs: [backfill] batch N: done=X errors=Y
+    Only touches card_url — never touches scores, tiers, or analysis.
     """
-    import tempfile, uuid as _uuid
-    from engine.compositor import build_card1
+    import threading
 
-    batch_size = 10
-    batch      = int(request.args.get('batch', 0))
-    offset     = batch * batch_size
+    def _run_backfill():
+        with app.app_context():
+            import tempfile, uuid as _uuid
+            from engine.compositor import build_card1
 
-    images = (Image.query
-              .filter(Image.status == 'scored', Image.score.isnot(None))
-              .order_by(Image.id.asc())
-              .offset(offset)
-              .limit(batch_size)
-              .all())
+            batch_size  = 10
+            total_done  = 0
+            total_errors = 0
+            batch       = 0
 
-    if not images:
-        flash(f'Backfill complete — no more images in batch {batch}.', 'success')
-        return redirect(url_for('admin_dashboard'))
+            while True:
+                offset = batch * batch_size
+                images = (Image.query
+                          .filter(Image.status == 'scored', Image.score.isnot(None))
+                          .order_by(Image.id.asc())
+                          .offset(offset)
+                          .limit(batch_size)
+                          .all())
 
-    done = 0; errors = 0
-    for img in images:
-        try:
-            audit = img.get_audit() or {}
+                if not images:
+                    app.logger.info(f'[backfill] complete — total done={total_done} errors={total_errors}')
+                    break
 
-            # Get thumb — disk first, R2 fallback
-            thumb_path = img.thumb_path
-            temp_file  = None
-            if not thumb_path or not os.path.exists(thumb_path):
-                if img.thumb_url:
+                done = 0; errors = 0
+                for img in images:
                     try:
-                        from storage import get_client, BUCKET
-                        tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-                        get_client().download_fileobj(
-                            BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
-                        )
-                        tf.close()
-                        thumb_path = temp_file = tf.name
-                    except Exception as dl_err:
-                        app.logger.warning(f'[backfill] img {img.id} thumb download failed: {dl_err}')
+                        audit      = img.get_audit() or {}
+                        thumb_path = img.thumb_path
+                        temp_file  = None
+
+                        if not thumb_path or not os.path.exists(thumb_path):
+                            if img.thumb_url:
+                                try:
+                                    from storage import get_client, BUCKET
+                                    tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                                    get_client().download_fileobj(
+                                        BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
+                                    )
+                                    tf.close()
+                                    thumb_path = temp_file = tf.name
+                                except Exception as dl_err:
+                                    app.logger.warning(f'[backfill] img {img.id} thumb dl failed: {dl_err}')
+                                    errors += 1; continue
+                            else:
+                                app.logger.warning(f'[backfill] img {img.id} no thumb — skip')
+                                errors += 1; continue
+
+                        card_fname = (f"LL_backfill_{img.id}_"
+                                      f"{secure_filename((img.photographer_name or 'unknown').replace(' ', ''))}.jpg")
+                        card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                        os.makedirs(os.path.dirname(card_path), exist_ok=True)
+
+                        build_card1(thumb_path, audit, card_path)
+
+                        uid      = str(_uuid.uuid4())
+                        card_url = _r2_upload_card(card_path, uid + '_card')
+                        if card_url:
+                            img.card_url  = card_url
+                            img.card_path = card_path
+                            db.session.commit()
+                            done += 1
+                        else:
+                            app.logger.warning(f'[backfill] img {img.id} R2 upload returned None')
+                            errors += 1
+
+                        if temp_file:
+                            try: os.unlink(temp_file)
+                            except: pass
+
+                    except Exception as e:
+                        db.session.rollback()
+                        app.logger.warning(f'[backfill] img {img.id} failed: {e}')
                         errors += 1
-                        continue
-                else:
-                    app.logger.warning(f'[backfill] img {img.id} no thumb available — skip')
-                    errors += 1
-                    continue
 
-            card_fname = (f"LL_backfill_{img.id}_"
-                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ', ''))}.jpg")
-            card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-            os.makedirs(os.path.dirname(card_path), exist_ok=True)
+                total_done   += done
+                total_errors += errors
+                app.logger.info(f'[backfill] batch {batch}: done={done} errors={errors} running_total={total_done}/{Image.query.filter(Image.status=="scored", Image.score.isnot(None)).count()}')
+                batch += 1
 
-            build_card1(thumb_path, audit, card_path)
+    t = threading.Thread(target=_run_backfill, daemon=True)
+    t.start()
 
-            uid      = str(_uuid.uuid4())
-            card_url = _r2_upload_card(card_path, uid + '_card')
-            if card_url:
-                img.card_url  = card_url
-                img.card_path = card_path
-                db.session.commit()
-                done += 1
-            else:
-                app.logger.warning(f'[backfill] img {img.id} R2 upload returned None')
-                errors += 1
-
-            if temp_file:
-                try: os.unlink(temp_file)
-                except: pass
-
-        except Exception as e:
-            db.session.rollback()
-            app.logger.warning(f'[backfill] img {img.id} failed: {e}')
-            errors += 1
-
-    total_scored = Image.query.filter(Image.status == 'scored', Image.score.isnot(None)).count()
-    next_batch   = batch + 1
-    next_offset  = next_batch * batch_size
-    more         = next_offset < total_scored
-
-    app.logger.info(f'[backfill] batch {batch}: done={done} errors={errors} total_scored={total_scored}')
-    flash(
-        f'Batch {batch}: {done} cards rendered, {errors} errors. '
-        f'{"Run batch " + str(next_batch) + " to continue." if more else "All done!"}',
-        'success'
-    )
+    flash('Backfill started in background — watch Railway logs for [backfill] progress. All 208 images will be processed automatically.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
