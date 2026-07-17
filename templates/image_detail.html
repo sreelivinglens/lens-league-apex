@@ -1724,16 +1724,36 @@
     <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
       {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
 
-      {# ── Share button #}
-      {% if image.share_token %}
-      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px;">
+      {# ── Share button — native share sheet with polaroid card JPG #}
+      <button onclick="slShareCard()" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px; cursor:pointer;">
         ↗ Share this
-      </a>
-      {% else %}
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center; letter-spacing:0.5px;">
-        ↗ Share this
-      </a>
-      {% endif %}
+      </button>
+      <script>
+      async function slShareCard() {
+        const cardUrl    = "{{ image.card_url or '' }}";
+        const shareUrl   = "{{ request.host_url }}share/{{ image.share_token or '' }}";
+        const shareTitle = "{{ (image.asset_name or image.original_filename or 'My photograph') | e }} — {{ image.tier or '' }} · Shutter League";
+        const shareText  = "Evaluated by the Apex DDI Engine on Shutter League";
+        if (navigator.share && cardUrl) {
+          try {
+            const resp = await fetch(cardUrl);
+            const blob = await resp.blob();
+            const file = new File([blob], 'shutter-league-card.jpg', { type: 'image/jpeg' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: shareTitle, text: shareText });
+              return;
+            }
+          } catch(_) {}
+          navigator.share({ title: shareTitle, text: shareText, url: shareUrl }).catch(() => {
+            window.open(cardUrl, '_blank');
+          });
+        } else if (cardUrl) {
+          window.open(cardUrl, '_blank');
+        } else if (shareUrl) {
+          window.open(shareUrl, '_blank');
+        }
+      }
+      </script>
 
       {# ── Print / Save as PDF #}
       <button onclick="window.print()" class="btn sc-share-btn" style="font-size:15px; padding:14px; text-align:center; cursor:pointer; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE;">
