@@ -24929,7 +24929,7 @@ if _sched_lock_held:
     _atexit.register(lambda: _scheduler.shutdown(wait=False))
 
 
-@app.route('/admin/backfill-share-cards', methods=['POST'])
+@app.route('/admin/backfill-share-cards', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def admin_backfill_share_cards():
