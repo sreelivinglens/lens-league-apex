@@ -4,488 +4,230 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welcome to Shutter League</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#F5F0E8;font-family:Inter,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#1A1A18}
-a{text-decoration:none;color:inherit}
-.outer{background:#F5F0E8;padding:48px 0}
-.wrap{max-width:600px;margin:0 auto;background:#FFFFFF}
-
-/* HERO */
-.hero{display:flex;min-height:620px;background:#F5F0E8}
-.hero-left{width:42%;padding:56px 48px;display:flex;flex-direction:column;justify-content:flex-start;padding-top:56px}
-.hero-logo{margin-bottom:38px}
-.hero-logo img{height:68px;width:auto}
-.hero-h1{font-size:44px;font-weight:800;color:#1A1A18;letter-spacing:-1px;line-height:1.3;margin-bottom:18px}
-.hero-sub{font-size:36px;font-weight:600;color:#1A1A18;letter-spacing:-0.5px;line-height:1.3;margin-bottom:22px}
-.hero-body{font-size:18px;font-weight:400;color:#4A4840;line-height:1.65;max-width:360px;margin-bottom:36px}
-.hero-cta{display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#1A1A18;font-size:16px;font-weight:700;height:56px;padding:0 32px;border-radius:4px;width:fit-content;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase}
-
-/* LIGHT TABLE */
-.hero-right{width:58%;position:relative;overflow:hidden;background:#EDE8DF;padding:20px}
-.light-table{position:relative;width:100%;height:600px}
-.p{position:absolute;border-radius:6px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-.p img{width:100%;height:100%;object-fit:cover;display:block}
-
-/* JOURNEY */
-.journey{background:#FFFFFF;padding:80px 60px;text-align:center;border-top:1px solid #F0F0F0}
-.sec-label{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#8a8070;margin-bottom:48px}
-.steps{display:flex;align-items:flex-start;justify-content:center}
-.step{display:flex;flex-direction:column;align-items:center;width:148px}
-.step-icon{width:64px;height:64px;border-radius:50%;border:1.5px solid #F5C518;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
-.step-icon svg{width:26px;height:26px;stroke:#F5C518;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.step-n{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px}
-.step-b{font-size:15px;color:#4A4840;line-height:1.6}
-.arr{color:#D0C8B8;font-size:18px;margin-top:22px;padding:0 4px;flex-shrink:0}
-
-/* FEATURE TILES */
-.tiles{display:flex;gap:16px;padding:0 40px 80px;background:#FFFFFF}
-.tile{flex:1;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.06);display:block;color:inherit;text-decoration:none;transition:transform .2s, box-shadow .2s}.tile:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.10)}
-.tile-img-wrap{display:block;width:100%;height:220px;overflow:hidden}
-.tile-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
-.tile-img:hover{transform:scale(1.03)}
-.tile-body{padding:20px 20px 24px;background:#FFFFFF}
-.tile-title{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px}
-.tile-text{font-size:15px;color:#4A4840;line-height:1.6}
-
-/* SCIENCE */
-.sci-wrap{padding:0 40px 80px;background:#FFFFFF}
-.science{background:#F5F0E8;padding:64px 56px;border-radius:24px}
-.sci-h{font-size:26px;font-weight:800;color:#1A1A18;letter-spacing:-0.5px;line-height:1.5;margin-bottom:10px}
-.sci-h span{color:#1A1A18}
-.sci-sub{font-size:18px;color:#4A4840;line-height:1.65;margin-bottom:52px}
-.dims{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:40px}
-.dim{text-align:center;flex:1}
-.dim svg{width:50px;height:50px;stroke:#F5C518;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.dim-n{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:12px 0 6px}
-.dim-d{font-size:13px;color:#4A4840;line-height:1.5}
-.sci-cta{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #1A1A18;color:#1A1A18;font-size:14px;font-weight:700;padding:12px 24px;border-radius:8px}
-
-/* MENTORS */
-.mentors-standing{padding:0 40px 80px;background:#FFFFFF}
-.ms-row{display:flex;gap:16px}
-.ms-left{flex:1;background:#F5F0E8;border-radius:16px;padding:24px}
-.ms-right{flex:1;background:#F5F0E8;border-radius:16px;padding:24px}
-.ms-label{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A1A18;text-align:center;margin-bottom:20px}
-.ms-mentors{display:flex;gap:16px;justify-content:center}
-.ms-mentor{text-align:center;flex:1}
-.ms-mentor-img{width:100%;aspect-ratio:1;object-fit:contain;object-position:center center;border-radius:8px;display:block;filter:grayscale(100%);background:#1A1A18;margin-bottom:10px}
-.ms-mentor-name{font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:2px}
-.ms-mentor-role{font-size:13px;color:#6a6458}
-.ms-badges{display:flex;gap:8px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
-.ms-badge{display:flex;flex-direction:column;align-items:center;gap:4px}
-.ms-badge-name{font-size:13px;color:#6a6458;text-align:center}
-.ms-bottom{display:flex;gap:0;margin-top:16px;background:#F5F0E8;border-radius:16px}
-.ms-quote{flex:1;padding:28px 32px;border-right:1px solid #E8E8E8}
-.ms-quote p{font-size:18px;font-weight:700;color:#1A1A18;line-height:1.6;margin:0}
-.ms-questions{flex:1;padding:28px 32px;display:flex;gap:14px;align-items:flex-start}
-.ms-q-icon{width:36px;height:36px;flex-shrink:0;margin-top:2px}
-.ms-q-title{font-size:16px;font-weight:700;color:#1A1A18;margin-bottom:4px}
-.ms-q-body{font-size:15px;color:#4A4840;line-height:1.6}
-
-/* STANDING — merged into mentors-standing block above */
-
-/* FINAL CTA */
-.final{position:relative;height:280px;overflow:hidden;display:flex;align-items:center}
-.final-bg{position:absolute;inset:0}
-.final-bg img{width:100%;height:100%;object-fit:cover;display:block}
-.final-overlay{position:absolute;inset:0;background:rgba(0,0,0,.50)}
-.final-content{position:relative;z-index:2;width:100%;padding:0 60px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
-.final-content h2{font-size:32px;font-weight:700;color:#FFFFFF;letter-spacing:-0.5px}
-.final-content p{font-size:16px;color:rgba(255,255,255,.8)}
-.final-btn{display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#1A1A18;font-size:16px;font-weight:700;height:56px;padding:0 40px;border-radius:4px;white-space:nowrap;margin-top:4px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase}
-.final-small{font-size:13px;color:rgba(255,255,255,.5)}
-
-/* FOOTER */
-.footer{padding:40px 60px;background:#FFFFFF;border-top:1px solid #E8E8E8}
-.footer-reply{font-size:16px;color:#4A4840;line-height:1.65;margin-bottom:20px}
-.footer-reply a{color:#1A1A18;font-weight:600}
-.footer-legal{font-size:13px;color:#6a6458;line-height:1.65}
-.footer-legal a{color:#6a6458}
-
-/* ── MOBILE ─────────────────────────────────────────────── */
-@media (max-width:620px){
-  .outer{padding:0}
-  .wrap{max-width:100%}
-
-  /* Hero — stack vertically, copy on top, collage below */
-  .hero{flex-direction:column;min-height:auto}
-  .hero-left{width:100%;padding:36px 24px 28px}
-  .hero-logo{text-align:center}
-  .hero-logo img{height:48px}
-  .hero-h1{font-size:32px}
-  .hero-sub{font-size:24px}
-  .hero-body{font-size:16px;max-width:100%}
-  .hero-cta{width:100%;justify-content:center}
-  .hero-right{width:100%;padding:16px;height:320px}
-  .light-table{height:300px}
-
-  /* Scale collage photos down proportionally for 320px container */
-  .p{transform-origin:top left}
-
-  /* Journey — 2 rows on mobile */
-  .journey{padding:40px 20px}
-  .steps{flex-wrap:wrap;justify-content:center;gap:16px 0;overflow-x:visible}
-  .step{width:30%;flex-shrink:0;min-width:100px}
-  .step-b{font-size:15px}
-  .arr{display:none}
-
-  /* Tiles — 2 col grid */
-  .tiles{flex-wrap:wrap;padding:0 16px 48px;gap:12px}
-  .tile{flex:1 1 calc(50% - 6px);min-width:140px}
-  .tile-img-wrap{height:140px}
-  .tile-body{padding:14px 14px 18px}
-  .tile-title{font-size:13px}
-  .tile-text{font-size:15px}
-
-  /* Science — single column */
-  .sci-wrap{padding:0 16px 48px}
-  .science{padding:36px 24px}
-  .sci-h{font-size:20px}
-  .sci-sub{font-size:16px;margin-bottom:32px}
-  .dims{flex-wrap:wrap;gap:16px}
-  .dim{flex:1 1 calc(33% - 12px);min-width:80px}
-  .dim svg{width:36px;height:36px}
-  .dim-n{font-size:13px}
-  .dim-d{font-size:13px}
-  .sci-cta{width:auto;justify-content:center;margin-top:0}
-
-  /* Mentors + Standing — stack vertically */
-  .mentors-standing{padding:0 16px 48px}
-  .ms-row{flex-direction:column}
-  .ms-bottom{flex-direction:column}
-  .ms-quote{border-right:none;border-bottom:1px solid #E8E8E8;padding:24px 20px}
-  .ms-quote p{font-size:16px}
-  .ms-questions{padding:20px}
-  .ms-badges{gap:6px}
-
-  /* Final CTA */
-  .final{height:240px}
-  .final-content{padding:0 24px}
-  .final-content h2{font-size:24px}
-  .final-btn{width:100%;justify-content:center;padding:0 20px}
-
-  /* Footer */
-  .footer{padding:28px 20px}
-  .footer-reply{font-size:15px}
-}
-
-/* ── IPAD ───────────────────────────────────────────────── */
-@media (min-width:621px) and (max-width:900px){
-  .wrap{max-width:100%}
-  .hero-h1{font-size:36px}
-  .hero-sub{font-size:28px}
-  .tiles{padding:0 24px 60px;gap:12px}
-  .tile-img-wrap{height:160px}
-  .sci-wrap{padding:0 24px 60px}
-  .mentors-standing{padding:0 24px 60px}
-  .ms-badges{gap:6px}
-  .journey{padding:60px 32px}
-  .footer{padding:32px 32px}
-}
-</style>
 </head>
-<body>
-<div class="outer">
-<div class="wrap">
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#1A1A18;">
 
-<!-- ═══ HERO ═══════════════════════════════════════════════ -->
-<div class="hero">
-  <div class="hero-left">
-    <div class="hero-logo">
-      <img src="https://shutterleague.com/static/img/shutterleague-logo-cropped.png" alt="Shutter League">
-    </div>
-    <h1 class="hero-h1">Welcome to<br>Shutter League{% if name %}, {{ name.split()[0] }}{% endif %}.</h1>
-    <p class="hero-sub">Photography has never had<br>an honest improvement loop.</p>
-    <p class="hero-body">Until now. Your first evaluation will tell you more about your photograph than any like ever did.</p>
-    <a href="{{ upload_url }}" class="hero-cta">Submit Your First Photograph</a>
-  </div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0E8;">
+<tr><td align="center" style="padding:32px 16px;">
 
-  <div class="hero-right">
-    <div class="light-table">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
 
-      <!-- ROW 1: now i see now i dont · Children-Sree · Landscape1-Ashok -->
-      <div class="p" style="top:8px;left:0;width:196px;height:158px;transform:rotate(-1.5deg)">
-        <img src="https://shutterleague.com/static/email_heroes/now i see now i dont.jpg" alt="" style="object-position:center 20%">
-      </div>
-      <div class="p" style="top:2px;left:204px;width:102px;height:156px;transform:rotate(1deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Children-Sree.jpg" alt="">
-      </div>
-      <div class="p" style="top:4px;left:314px;width:183px;height:128px;transform:rotate(2deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Landscape1 -Ashok.jpg" alt="">
-      </div>
+  <!-- HERO -->
+  <tr><td style="background:#F5F0E8;padding:32px 40px 24px;text-align:center;">
+    <img src="https://shutterleague.com/static/img/shutterleague-logo-cropped.png" height="60" alt="Shutter League" style="display:block;margin:0 auto 24px;">
+    <h1 style="font-size:36px;font-weight:800;color:#1A1A18;line-height:1.25;margin:0 0 14px;font-family:Inter,Helvetica,Arial,sans-serif;">Welcome to<br>Shutter League{% if name %}, {{ name.split()[0] }}{% endif %}.</h1>
+    <p style="font-size:20px;font-weight:600;color:#1A1A18;margin:0 0 14px;line-height:1.35;font-family:Inter,Helvetica,Arial,sans-serif;">Photography has never had<br>an honest improvement loop.</p>
+    <p style="font-size:16px;color:#4A4840;margin:0 0 28px;line-height:1.65;font-family:Inter,Helvetica,Arial,sans-serif;">Until now. Your first evaluation will tell you more about your photograph than any like ever did.</p>
+    <a href="{{ upload_url }}" style="display:block;background:#F5C518;color:#1A1A18;font-family:'Courier New',Courier,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:18px 32px;text-decoration:none;border-radius:4px;">Submit Your First Photograph</a>
+  </td></tr>
 
-      <!-- ROW 2: Flamingos · Street 4 · Fashion 5 -->
-      <div class="p" style="top:148px;left:0;width:148px;height:148px;transform:rotate(1.5deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Flamingos Art-Sree.jpg" alt="">
-      </div>
-      <div class="p" style="top:152px;left:156px;width:188px;height:122px;transform:rotate(-1deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Street 4-Ashok.jpg" alt="">
-      </div>
-      <div class="p" style="top:130px;left:352px;width:108px;height:168px;transform:rotate(-2deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Fashion 5-Ashok.jpg" alt="">
-      </div>
+  <!-- PHOTO GRID -->
+  <tr><td style="background:#F5F0E8;padding:16px 40px 24px;">
+    <table width="100%" cellpadding="3" cellspacing="0" border="0">
+      <tr>
+        <td width="33%" style="padding:3px;"><img src="https://shutterleague.com/static/email_heroes/now i see now i dont.jpg" width="100%" height="130" alt="" style="display:block;object-fit:cover;border-radius:6px;"></td>
+        <td width="33%" style="padding:3px;"><img src="https://shutterleague.com/static/email_heroes/Flamingos Art-Sree.jpg" width="100%" height="130" alt="" style="display:block;object-fit:cover;border-radius:6px;"></td>
+        <td width="33%" style="padding:3px;"><img src="https://shutterleague.com/static/email_heroes/tiger moving-sree.jpg" width="100%" height="130" alt="" style="display:block;object-fit:cover;border-radius:6px;"></td>
+      </tr>
+      <tr>
+        <td width="33%" style="padding:3px;"><img src="https://shutterleague.com/static/email_heroes/Landscape -5-Ashok.jpg" width="100%" height="130" alt="" style="display:block;object-fit:cover;border-radius:6px;"></td>
+        <td width="33%" style="padding:3px;"><img src="https://shutterleague.com/static/email_heroes/Street 4-Ashok.jpg" width="100%" height="130" alt="" style="display:block;object-fit:cover;border-radius:6px;"></td>
+        <td width="33%" style="padding:3px;"><img src="https://shutterleague.com/static/email_heroes/Fashion 5-Ashok.jpg" width="100%" height="130" alt="" style="display:block;object-fit:cover;border-radius:6px;"></td>
+      </tr>
+    </table>
+  </td></tr>
 
-      <!-- ROW 3: Landscape-5 · Pelicans · Still-Ashok -->
-      <div class="p" style="top:300px;left:0;width:214px;height:130px;transform:rotate(-1deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Landscape -5-Ashok.jpg" alt="">
-      </div>
-      <div class="p" style="top:290px;left:222px;width:120px;height:120px;transform:rotate(2deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Pelicans-Ashok.jpg" alt="">
-      </div>
-      <div class="p" style="top:298px;left:350px;width:110px;height:152px;transform:rotate(-1.5deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Still-Ashok.jpg" alt="">
-      </div>
+  <!-- HOW IT WORKS -->
+  <tr><td style="background:#FFFFFF;padding:40px 32px 36px;text-align:center;">
+    <p style="font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#8a8070;margin:0 0 32px;font-family:Inter,Helvetica,Arial,sans-serif;">How it works</p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <!-- Step 1 -->
+        <td width="18%" style="text-align:center;vertical-align:top;padding:0 2px;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+            <tr><td style="text-align:center;">
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;position:relative;">
+                <tr><td style="width:52px;height:52px;border-radius:50%;border:1.5px solid #F5C518;text-align:center;vertical-align:middle;font-size:18px;color:#F5C518;">&#8679;</td></tr>
+              </table>
+              <div style="margin-top:-10px;margin-bottom:10px;text-align:right;padding-right:0;">
+                <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;font-family:Inter,Helvetica,Arial,sans-serif;">1</span>
+              </div>
+            </td></tr>
+          </table>
+          <p style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Submit</p>
+          <p style="font-size:12px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Share your best work.</p>
+        </td>
+        <!-- Arrow -->
+        <td width="4%" style="text-align:center;vertical-align:top;padding-top:14px;color:#D0C8B8;font-size:16px;">&rarr;</td>
+        <!-- Step 2 -->
+        <td width="18%" style="text-align:center;vertical-align:top;padding:0 2px;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+            <tr><td style="width:52px;height:52px;border-radius:50%;border:1.5px solid #F5C518;text-align:center;vertical-align:middle;font-size:18px;color:#F5C518;">&#9783;</td></tr>
+          </table>
+          <div style="margin-top:-10px;margin-bottom:10px;text-align:right;">
+            <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;font-family:Inter,Helvetica,Arial,sans-serif;">2</span>
+          </div>
+          <p style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Understand</p>
+          <p style="font-size:12px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Get a detailed 5-dimension evaluation.</p>
+        </td>
+        <!-- Arrow -->
+        <td width="4%" style="text-align:center;vertical-align:top;padding-top:14px;color:#D0C8B8;font-size:16px;">&rarr;</td>
+        <!-- Step 3 -->
+        <td width="18%" style="text-align:center;vertical-align:top;padding:0 2px;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+            <tr><td style="width:52px;height:52px;border-radius:50%;border:1.5px solid #F5C518;text-align:center;vertical-align:middle;font-size:18px;color:#F5C518;">&#9685;</td></tr>
+          </table>
+          <div style="margin-top:-10px;margin-bottom:10px;text-align:right;">
+            <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;font-family:Inter,Helvetica,Arial,sans-serif;">3</span>
+          </div>
+          <p style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Improve</p>
+          <p style="font-size:12px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Receive daily assignments crafted for you.</p>
+        </td>
+        <!-- Arrow -->
+        <td width="4%" style="text-align:center;vertical-align:top;padding-top:14px;color:#D0C8B8;font-size:16px;">&rarr;</td>
+        <!-- Step 4 -->
+        <td width="18%" style="text-align:center;vertical-align:top;padding:0 2px;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+            <tr><td style="width:52px;height:52px;border-radius:50%;border:1.5px solid #F5C518;text-align:center;vertical-align:middle;font-size:18px;color:#F5C518;">&#8593;</td></tr>
+          </table>
+          <div style="margin-top:-10px;margin-bottom:10px;text-align:right;">
+            <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;font-family:Inter,Helvetica,Arial,sans-serif;">4</span>
+          </div>
+          <p style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Repeat</p>
+          <p style="font-size:12px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Keep learning. Keep getting better.</p>
+        </td>
+        <!-- Arrow -->
+        <td width="4%" style="text-align:center;vertical-align:top;padding-top:14px;color:#D0C8B8;font-size:16px;">&rarr;</td>
+        <!-- Step 5 -->
+        <td width="18%" style="text-align:center;vertical-align:top;padding:0 2px;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+            <tr><td style="width:52px;height:52px;border-radius:50%;border:1.5px solid #F5C518;text-align:center;vertical-align:middle;font-size:18px;color:#F5C518;">&#9733;</td></tr>
+          </table>
+          <div style="margin-top:-10px;margin-bottom:10px;text-align:right;">
+            <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;font-family:Inter,Helvetica,Arial,sans-serif;">5</span>
+          </div>
+          <p style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Recognition</p>
+          <p style="font-size:12px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Build your standing. Earn recognition.</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
 
-      <!-- ROW 4: Tiger (replaces wolf) · Woods-Sree · Nature-Tern -->
-      <div class="p" style="top:436px;left:0;width:196px;height:148px;transform:rotate(1deg)">
-        <img src="https://shutterleague.com/static/email_heroes/tiger moving-sree.jpg" alt="">
-      </div>
-      <div class="p" style="top:430px;left:204px;width:148px;height:144px;transform:rotate(-2deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Woods-Sree.jpg" alt="">
-      </div>
-      <div class="p" style="top:440px;left:360px;width:104px;height:128px;transform:rotate(1.5deg)">
-        <img src="https://shutterleague.com/static/email_heroes/Nature-Tern-Ashok.jpg" alt="">
-      </div>
+  <!-- FEATURE TILES 2x2 + 1 -->
+  <tr><td style="background:#FFFFFF;padding:0 32px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="50%" style="padding:0 8px 16px 0;vertical-align:top;">
+          <img src="https://shutterleague.com/static/email_heroes/Wolf of Bhigwan-2.jpg" width="100%" height="150" alt="Detailed Evaluations" style="display:block;object-fit:cover;border-radius:8px 8px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #F0EDE8;border-top:none;border-radius:0 0 8px 8px;">
+            <tr><td style="padding:14px 16px;">
+              <p style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 6px;font-family:Inter,Helvetica,Arial,sans-serif;">Detailed Evaluations</p>
+              <p style="font-size:13px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Five dimensions. Specific feedback. No flattery.</p>
+            </td></tr>
+          </table>
+        </td>
+        <td width="50%" style="padding:0 0 16px 8px;vertical-align:top;">
+          <img src="https://shutterleague.com/static/email_heroes/Still 2-Ashok.jpg" width="100%" height="150" alt="Daily Assignments" style="display:block;object-fit:cover;border-radius:8px 8px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #F0EDE8;border-top:none;border-radius:0 0 8px 8px;">
+            <tr><td style="padding:14px 16px;">
+              <p style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 6px;font-family:Inter,Helvetica,Arial,sans-serif;">Daily Assignments</p>
+              <p style="font-size:13px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">One assignment every morning. Built around your eye.</p>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td width="50%" style="padding:0 8px 16px 0;vertical-align:top;">
+          <img src="https://shutterleague.com/static/email_heroes/Landscape -5-Ashok.jpg" width="100%" height="150" alt="Annual Excellence Award" style="display:block;object-fit:cover;border-radius:8px 8px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #F0EDE8;border-top:none;border-radius:0 0 8px 8px;">
+            <tr><td style="padding:14px 16px;">
+              <p style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 6px;font-family:Inter,Helvetica,Arial,sans-serif;">Annual Excellence Award</p>
+              <p style="font-size:13px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">The first recognition in Indian photography built on consistent performance.</p>
+            </td></tr>
+          </table>
+        </td>
+        <td width="50%" style="padding:0 0 16px 8px;vertical-align:top;">
+          <img src="https://shutterleague.com/static/email_heroes/Portraits 3- Ashok.jpg" width="100%" height="150" alt="Body of Work" style="display:block;object-fit:cover;border-radius:8px 8px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #F0EDE8;border-top:none;border-radius:0 0 8px 8px;">
+            <tr><td style="padding:14px 16px;">
+              <p style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 6px;font-family:Inter,Helvetica,Arial,sans-serif;">Body of Work</p>
+              <p style="font-size:13px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Six to ten photographs. One story. Jury-evaluated every December.</p>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0;vertical-align:top;">
+          <img src="https://shutterleague.com/static/email_heroes/Street 4-Ashok.jpg" width="100%" height="150" alt="Peer Evaluation" style="display:block;object-fit:cover;border-radius:8px 8px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #F0EDE8;border-top:none;border-radius:0 0 8px 8px;">
+            <tr><td style="padding:14px 16px;">
+              <p style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin:0 0 6px;font-family:Inter,Helvetica,Arial,sans-serif;">Peer Evaluation</p>
+              <p style="font-size:13px;color:#4A4840;line-height:1.5;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Evaluate another photographer's work. Train your eye. Earn points.</p>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
 
-    </div>
-  </div>
-</div>
+  <!-- MENTORS -->
+  <tr><td style="background:#F5F0E8;padding:40px 32px;text-align:center;">
+    <p style="font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#8a8070;margin:0 0 28px;font-family:Inter,Helvetica,Arial,sans-serif;">Learn from mentors</p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="50%" style="text-align:center;padding:0 16px 0 0;">
+          <a href="{{ mentors_url }}" style="text-decoration:none;"><img src="https://shutterleague.com/static/img/mentor_ashok.jpg" width="120" height="120" alt="Ashok Kochhar" style="display:block;margin:0 auto 12px;border-radius:8px;object-fit:cover;object-position:center 20%;"></a>
+          <p style="font-size:15px;font-weight:700;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Ashok Kochhar</p>
+          <p style="font-size:13px;color:#8a8070;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Legend Mentor</p>
+        </td>
+        <td width="50%" style="text-align:center;padding:0 0 0 16px;">
+          <a href="{{ mentors_url }}" style="text-decoration:none;"><img src="https://shutterleague.com/static/img/Sreekumar.png" width="120" height="120" alt="Sreekumar Krishnan" style="display:block;margin:0 auto 12px;border-radius:8px;object-fit:cover;"></a>
+          <p style="font-size:15px;font-weight:700;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Sreekumar Krishnan</p>
+          <p style="font-size:13px;color:#8a8070;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">Master Mentor</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
 
-<!-- ═══ JOURNEY ═════════════════════════════════════════════ -->
-<div class="journey">
-  <div class="sec-label">How it works</div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-icon" style="position:relative;display:block;text-align:center;padding-top:19px;">
-        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:20px">1</span>
-      </div>
-      <div class="step-n">Submit</div>
-      <div class="step-b">Share your best work.</div>
-    </div>
-    <div class="arr">→</div>
-    <div class="step">
-      <div class="step-icon" style="position:relative;display:block;text-align:center;padding-top:19px;">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
-        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:20px">2</span>
-      </div>
-      <div class="step-n">Understand</div>
-      <div class="step-b">Get a detailed 5-dimension evaluation.</div>
-    </div>
-    <div class="arr">→</div>
-    <div class="step">
-      <div class="step-icon" style="position:relative;display:block;text-align:center;padding-top:19px;">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
-        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:20px">3</span>
-      </div>
-      <div class="step-n">Improve</div>
-      <div class="step-b">Receive daily assignments crafted for you.</div>
-    </div>
-    <div class="arr">→</div>
-    <div class="step">
-      <div class="step-icon" style="position:relative;display:block;text-align:center;padding-top:19px;">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="4 8 8 4 12 8"/></svg>
-        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:20px">4</span>
-      </div>
-      <div class="step-n">Repeat</div>
-      <div class="step-b">Keep learning. Keep getting better.</div>
-    </div>
-    <div class="arr">→</div>
-    <div class="step">
-      <div class="step-icon" style="position:relative;display:block;text-align:center;padding-top:19px;">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        <span style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#1A1A18;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:20px">5</span>
-      </div>
-      <div class="step-n">Recognition</div>
-      <div class="step-b">Build your standing. Earn recognition.</div>
-    </div>
-  </div>
-</div>
+  <!-- QUOTE -->
+  <tr><td style="background:#FFFFFF;padding:32px 40px;border-top:1px solid #F0EDE8;">
+    <p style="font-size:18px;font-weight:700;color:#1A1A18;margin:0 0 24px;line-height:1.4;font-family:Inter,Helvetica,Arial,sans-serif;">You don&#39;t measure yourself against others.<br>You measure yourself against yesterday.</p>
+    <table cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding-right:16px;vertical-align:top;">
+          <div style="width:40px;height:40px;border-radius:50%;background:#F0EDE8;text-align:center;line-height:40px;font-size:18px;color:#8a8070;">&#9786;</div>
+        </td>
+        <td style="vertical-align:top;">
+          <p style="font-size:15px;font-weight:700;color:#1A1A18;margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;">Questions?</p>
+          <p style="font-size:14px;color:#4A4840;margin:0;line-height:1.6;font-family:Inter,Helvetica,Arial,sans-serif;">Reply directly to this email.<br>A real photographer will answer.</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
 
-<!-- ═══ FEATURE TILES ════════════════════════════════════════ -->
-<div class="tiles">
-  <a href="{{ sample_card_url or dashboard_url }}" class="tile">
-    <div class="tile-img-wrap">
-      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Wolf of Bhigwan-2.jpg" alt="Detailed Evaluations">
-    </div>
-    <div class="tile-body">
-      <div class="tile-title">Detailed Evaluations</div>
-      <div class="tile-text">Five dimensions. Specific feedback. No flattery.</div>
-    </div>
-  </a>
-  <a href="{{ dashboard_url }}" class="tile">
-    <div class="tile-img-wrap">
-      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Still 2-Ashok.jpg" alt="Daily Assignments">
-    </div>
-    <div class="tile-body">
-      <div class="tile-title">Daily Assignments</div>
-      <div class="tile-text">One assignment every morning. Built around your eye.</div>
-    </div>
-  </a>
-  <a href="{{ site_url }}/aea" class="tile">
-    <div class="tile-img-wrap">
-      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Landscape -5-Ashok.jpg" alt="Annual Excellence Award">
-    </div>
-    <div class="tile-body">
-      <div class="tile-title">Annual Excellence Award</div>
-      <div class="tile-text">The first recognition in Indian photography built on consistent performance.</div>
-    </div>
-  </a>
-  <a href="{{ bow_url }}" class="tile">
-    <div class="tile-img-wrap">
-      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Portraits 3- Ashok.jpg" alt="Body of Work">
-    </div>
-    <div class="tile-body">
-      <div class="tile-title">Body of Work</div>
-      <div class="tile-text">Six to ten photographs. One story. Jury-evaluated every December.</div>
-    </div>
-  </a>
-  <a href="{{ site_url }}/rate" class="tile">
-    <div class="tile-img-wrap">
-      <img class="tile-img" src="https://shutterleague.com/static/email_heroes/Street 4-Ashok.jpg" alt="Peer Evaluation">
-    </div>
-    <div class="tile-body">
-      <div class="tile-title">Peer Evaluation</div>
-      <div class="tile-text">Evaluate another photographer&#39;s work. Train your eye. Earn points.</div>
-    </div>
-  </a>
-</div>
+  <!-- FINAL CTA -->
+  <tr><td style="background:#1A1A18;padding:40px 40px;text-align:center;">
+    <h2 style="font-size:24px;font-weight:700;color:#FFFFFF;margin:0 0 12px;font-family:Inter,Helvetica,Arial,sans-serif;">Your first photograph is waiting.</h2>
+    <p style="font-size:15px;color:#B0A898;margin:0 0 28px;line-height:1.6;font-family:Inter,Helvetica,Arial,sans-serif;">Submit it. See what the engine sees. Come back tomorrow better.</p>
+    <a href="{{ upload_url }}" style="display:block;background:#F5C518;color:#1A1A18;font-family:'Courier New',Courier,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:18px 32px;text-decoration:none;border-radius:4px;">Submit Your First Photograph</a>
+    <p style="font-size:13px;color:#6a6458;margin:16px 0 0;font-family:Inter,Helvetica,Arial,sans-serif;">First three evaluations complimentary. No card required.</p>
+  </td></tr>
 
-<!-- ═══ SCIENCE ══════════════════════════════════════════════ -->
-<div class="sci-wrap">
-  <div class="science">
-    <h2 class="sci-h">Your photograph is evaluated across<br><span>five dimensions of craft.</span></h2>
-    <p class="sci-sub">Not a number. A conversation. Each dimension tells you something specific about your frame — and what to practise next.</p>
-    <div class="dims">
-      <div class="dim">
-        <svg viewBox="0 0 44 44"><polygon points="22,4 40,38 4,38"/><line x1="22" y1="4" x2="22" y2="38"/></svg>
-        <div class="dim-n">Difficulty</div>
-        <div class="dim-d">How hard was it to capture?</div>
-      </div>
-      <div class="dim">
-        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><polyline points="22,12 22,22 28,28"/></svg>
-        <div class="dim-n">Decisive Moment</div>
-        <div class="dim-d">How well was the moment captured?</div>
-      </div>
-      <div class="dim">
-        <svg viewBox="0 0 44 44"><polyline points="4,22 12,10 20,28 28,14 36,22" stroke-width="2"/></svg>
-        <div class="dim-n">Disruption</div>
-        <div class="dim-d">Does it break the ordinary?</div>
-      </div>
-      <div class="dim">
-        <svg viewBox="0 0 44 44"><path d="M22 38C22 38 4 26 4 16a9 9 0 0 1 18-1 9 9 0 0 1 18 1c0 10-18 22-18 22z"/></svg>
-        <div class="dim-n">Wonder</div>
-        <div class="dim-d">Does it create a sense of wonder?</div>
-      </div>
-      <div class="dim">
-        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><path d="M14 22c0-4.4 3.6-8 8-8s8 3.6 8 8"/><circle cx="22" cy="22" r="3" fill="#F5C518" stroke="none"/></svg>
-        <div class="dim-n">Affective Quotient</div>
-        <div class="dim-d">What emotion does it evoke?</div>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:center;margin-top:24px">
-      <a href="{{ site_url }}/science" class="sci-cta">Explore the Science →</a>
-    </div>
-  </div>
-</div>
+  <!-- FOOTER -->
+  <tr><td style="background:#F5F0E8;padding:24px 40px;border-top:1px solid #E0D8C8;text-align:center;">
+    <p style="font-size:13px;color:#8a8070;margin:0 0 8px;font-family:Inter,Helvetica,Arial,sans-serif;">Questions? Reply directly to this email — a real photographer will answer. We read every one.</p>
+    <p style="font-size:12px;color:#aaa;margin:0;font-family:Inter,Helvetica,Arial,sans-serif;">
+      Member Agreement &amp; <a href="{{ terms_url }}" style="color:#999999;">Terms &amp; Conditions</a> accepted {{ accepted_date }}. &nbsp;&middot;&nbsp;
+      <a href="{{ terms_url }}" style="color:#999999;">Terms</a> &nbsp;&middot;&nbsp;
+      <a href="mailto:support@shutterleague.com" style="color:#999999;">support@shutterleague.com</a> &nbsp;&middot;&nbsp;
+      <a href="{{ site_url }}" style="color:#999999;">shutterleague.com</a>
+    </p>
+  </td></tr>
 
-<!-- ═══ MENTORS + STANDING ══════════════════════════════════ -->
-<div class="mentors-standing">
-  <div class="ms-row">
+</table>
 
-    <!-- LEFT: Mentors -->
-    <div class="ms-left">
-      <div class="ms-label">Learn From Mentors</div>
-      <div class="ms-mentors">
-        <a href="{{ mentors_url }}" class="ms-mentor" style="text-decoration:none">
-          <img class="ms-mentor-img" style="object-position:center 20%;" src="https://shutterleague.com/static/img/mentor_ashok.jpg" alt="Ashok Kochhar">
-          <div class="ms-mentor-name">Ashok Kochhar</div>
-          <div class="ms-mentor-role">Legend Mentor</div>
-        </a>
-        <a href="{{ mentors_url }}" class="ms-mentor" style="text-decoration:none">
-          <img class="ms-mentor-img" src="https://shutterleague.com/static/img/Sreekumar.png" alt="Sreekumar Krishnan">
-          <div class="ms-mentor-name">Sreekumar Krishnan</div>
-          <div class="ms-mentor-role">Master Mentor</div>
-        </a>
-      </div>
-    </div>
+</td></tr>
+</table>
 
-    <!-- RIGHT: Standing badges -->
-    <div class="ms-right">
-      <div class="ms-label">Your Standing</div>
-      <div class="ms-badges">
-        <div class="ms-badge">
-          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#E8E6E2" stroke="#C4C0B8" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C4C0B8" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#999994">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C4C0B8"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#D8D4CE" opacity="0.5"/></svg>
-          <span class="ms-badge-name">Newcomer</span>
-        </div>
-        <div class="ms-badge">
-          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#E8C898" stroke="#C89850" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C89850" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#8B6020">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C89850"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#E8A840" opacity="0.5"/></svg>
-          <span class="ms-badge-name">Apprentice</span>
-        </div>
-        <div class="ms-badge">
-          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#D4D8E0" stroke="#9098A8" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#9098A8" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#606870">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#9098A8"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#B8C0CC" opacity="0.5"/></svg>
-          <span class="ms-badge-name">Maverick</span>
-        </div>
-        <div class="ms-badge">
-          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#EAC840" stroke="#C8A000" stroke-width="1.5"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C8A000" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#6B4C00">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C8A000"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#F5C518" opacity="0.5"/></svg>
-          <span class="ms-badge-name">Master</span>
-        </div>
-        <div class="ms-badge">
-          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#EAC840" stroke="#C8A000" stroke-width="2"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C8A000" stroke-width="1.5"/><circle cx="26" cy="24" r="7" fill="none" stroke="#C8A000" stroke-width="1"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#6B4C00">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#1A1A18"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#3A3020" opacity="0.6"/></svg>
-          <span class="ms-badge-name">Grandmaster</span>
-        </div>
-        <div class="ms-badge">
-          <svg width="56" height="68" viewBox="0 0 52 64"><circle cx="26" cy="24" r="20" fill="#1A1A18" stroke="#C89820" stroke-width="2"/><circle cx="26" cy="24" r="13" fill="none" stroke="#C89820" stroke-width="1.5"/><circle cx="26" cy="24" r="7" fill="#C89820"/><text x="26" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#F5C518">★</text><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#1A1A18"/><path d="M20 42 L17 60 L26 55 L35 60 L32 42" fill="#C89820" opacity="0.4"/></svg>
-          <span class="ms-badge-name">Legend</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- BOTTOM: Quote + Questions -->
-  <div class="ms-bottom" style="margin-top:16px">
-    <div class="ms-quote">
-      <p>You don&#39;t measure yourself against others.<br>You measure yourself against yesterday.</p>
-    </div>
-    <div class="ms-questions">
-      <svg class="ms-q-icon" viewBox="0 0 36 36" fill="none"><rect x="2" y="2" width="32" height="26" rx="6" fill="#E8E8E8"/><circle cx="18" cy="15" r="4" fill="#888"/><path d="M10 28c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="#888" stroke-width="1.5" fill="none"/></svg>
-      <div>
-        <div class="ms-q-title">Questions?</div>
-        <div class="ms-q-body">Reply directly to this email.<br>A real photographer will answer.</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ═══ FINAL CTA ════════════════════════════════════════════ -->
-<div class="final">
-  <div class="final-bg">
-    <img src="https://shutterleague.com/static/email_heroes/ICM-Pench-Sree.jpg" alt="">
-  </div>
-  <div class="final-overlay"></div>
-  <div class="final-content">
-    <h2>Your first photograph is waiting.</h2>
-    <p>Submit it. See what the engine sees. Come back tomorrow better.</p>
-    <a href="{{ upload_url }}" class="final-btn">Submit Your First Photograph</a>
-    <span class="final-small">First three evaluations complimentary. No card required.</span>
-  </div>
-</div>
-
-<!-- ═══ FOOTER ═══════════════════════════════════════════════ -->
-<div class="footer">
-  <p class="footer-reply">Questions? Reply directly to this email — a real photographer will answer. We read every one.</p>
-  <p class="footer-legal">
-    Member Agreement &amp; <a href="{{ terms_url }}" style="color:#999999;">Terms &amp; Conditions</a> accepted {{ accepted_date }}. &nbsp;·&nbsp;
-    <a href="{{ terms_url }}">Terms</a> &nbsp;·&nbsp;
-    <a href="mailto:support@shutterleague.com">support@shutterleague.com</a> &nbsp;·&nbsp;
-    <a href="/">shutterleague.com</a>
-  </p>
-</div>
-
-</div>
-</div>
 </body>
 </html>
