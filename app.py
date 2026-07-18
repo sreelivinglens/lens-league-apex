@@ -6862,7 +6862,7 @@ def upload():
                                                 '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Our system flagged <strong>' + (_img.asset_name or 'Untitled') + '</strong> as likely AI-generated (' + _gen_display + ', ' + f'{_hive_ai_score:.0%}' + ' confidence). Shutter League evaluates only original photographs taken by the submitting photographer.</p>'
                                                 '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">High-production constructed shoots — allegorical tableaux, studio work, heavily lit portraits — can occasionally trigger false positives. If this is an original photograph, we want to clear it quickly.</p>'
                                                 '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-left:4px solid #C8A84B;border-radius:4px;padding:16px 20px;margin:0 0 20px;">'
-                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, email us with:</p>'
+                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, email us with:</p>'
                                                 '<ul style="font-size:15px;line-height:2;color:#4A4840;margin:0;padding-left:20px;">'
                                                 '<li>Your original RAW or unedited file</li>'
                                                 '<li>Any behind-the-scenes photos or production notes</li>'
@@ -16470,6 +16470,66 @@ def api_create_payment():
     except Exception as _e:
         app.logger.error(f'[api_create_payment] failed: {_e}')
         return jsonify({'error': 'Could not initialise payment. Please try again.'}), 500
+
+
+def _send_subscription_confirmation(user, track, plan):
+    """
+    Send a welcome/confirmation email after a successful subscription payment.
+    Called from subscribe_confirm() immediately after DB commit.
+    """
+    _site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _track_label = {'camera': 'Camera League', 'mobile': 'Mobile League'}.get(track, track.title())
+    _plan_label  = {'monthly': 'Monthly', 'halfyearly': 'Half-Yearly', 'annual': 'Annual'}.get(plan, plan.title())
+    _name        = user.full_name or user.username or 'Photographer'
+    _body = (
+        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        'Hi ' + _name + '.</p>'
+        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        'Your <strong>' + _plan_label + '</strong> membership in '
+        '<strong>' + _track_label + '</strong> is now active. '
+        'You can upload your first photograph and have it evaluated by the DDI Engine.</p>'
+        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        'Questions? Write to '
+        '<a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">support@shutterleague.com</a> '
+        'and we will get back to you.</p>'
+    )
+    _cta_block = (
+        '<div style="margin:28px 0;">'
+        '<a href="' + _site_url + '/upload" style="display:inline-block;background:#2C3E6B;'
+        'color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;'
+        'font-weight:700;letter-spacing:1.5px;text-transform:uppercase;'
+        'padding:13px 28px;text-decoration:none;border-radius:4px;">'
+        'Upload a Photograph &#8594;</a></div>'
+    )
+    _html = (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+        '<div style="max-width:520px;margin:0 auto;padding:0;">'
+        '<div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">'
+        '<span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;'
+        'color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;'
+        'text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>'
+        '<span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;'
+        'color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>'
+        '<div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#8a8070;margin:8px 0 0;">'
+        'Making Images Matter</div></div>'
+        '<div style="padding:32px 32px 24px;background:#FEFCF8;">'
+        '<h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;'
+        'color:#1A1A18;margin:0 0 20px;">Your membership is active.</h2>'
+        + _body + _cta_block +
+        '</div>'
+        '<div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">'
+        '<div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#8a8070;'
+        'margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; '
+        '<a href="' + _site_url + '" style="color:#8a8070;">shutterleague.com</a>'
+        '</div></div></div></body></html>'
+    )
+    try:
+        send_email([user.email], 'Welcome to ' + _track_label + ' — your membership is active', _html)
+        app.logger.info(f'[subscribe_confirm] confirmation email sent to {user.email}')
+    except Exception as _se:
+        app.logger.error(f'[subscribe_confirm] confirmation email failed: {_se}')
 
 
 @app.route('/subscribe/confirm', methods=['POST'])
