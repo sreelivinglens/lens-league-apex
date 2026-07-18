@@ -958,7 +958,7 @@
     // Show species field for Wildlife and Nature only
     var speciesRow = document.getElementById('species-hint-row');
     if (speciesRow) {
-      speciesRow.style.display = (this.value === 'Wildlife' || this.value === 'Nature') ? 'block' : 'none';
+      speciesRow.style.display = (this.value === 'Wildlife') ? 'block' : 'none';
     }
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r =>
