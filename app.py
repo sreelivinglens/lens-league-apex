@@ -16565,6 +16565,37 @@ def subscribe_confirm():
         if not _hmac.compare_digest(expected, signature):
             raise Exception('Signature mismatch')
 
+        # ── Track safeguard: cross-check subscription plan_id against known env vars ──
+        # Guards against pricing page JS posting wrong track (e.g. camera when mobile was
+        # selected). For subscription payments (not orders), look up which track the
+        # plan_id belongs to and override the posted track if they disagree.
+        if not is_order and subscription_id:
+            _plan_id_to_track = {}
+            for _t in ('camera', 'mobile'):
+                for _p in ('halfyearly', 'annual'):
+                    _env_key = f'RAZORPAY_PLAN_{_t.upper()}_{_p.upper()}'
+                    _pid = os.getenv(_env_key, '')
+                    if _pid:
+                        _plan_id_to_track[_pid] = _t
+            # Fetch subscription from Razorpay to get its plan_id
+            try:
+                import razorpay as _rzp
+                _rzp_client = _rzp.Client(auth=(os.getenv('RAZORPAY_KEY_ID', ''), razorpay_secret))
+                _sub_obj = _rzp_client.subscription.fetch(subscription_id)
+                _sub_plan_id = _sub_obj.get('plan_id', '')
+                if _sub_plan_id and _sub_plan_id in _plan_id_to_track:
+                    _correct_track = _plan_id_to_track[_sub_plan_id]
+                    if _correct_track != track:
+                        app.logger.warning(
+                            f'[subscribe_confirm] track mismatch — posted={track!r} '
+                            f'but plan_id={_sub_plan_id!r} maps to {_correct_track!r}. '
+                            f'Correcting to {_correct_track!r}.'
+                        )
+                        track = _correct_track
+            except Exception as _tce:
+                app.logger.warning(f'[subscribe_confirm] track cross-check failed (non-fatal): {_tce}')
+                # Non-fatal — proceed with posted track
+
         current_user.subscription_track = track
         current_user.subscription_plan  = plan
         current_user.subscribed_at       = datetime.utcnow()
