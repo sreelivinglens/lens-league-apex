@@ -440,17 +440,17 @@
         {% if quota_status.remaining == 0 %}
         <div style="font-size:16px;font-weight:600;color:#c0392b;">0 evaluations remaining this cycle.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Your next {{ quota_status.limit }} evaluations arrive on <strong>{{ quota_status.next_date }}</strong>.
+          Your cycle resets on <strong>{{ quota_status.next_date }}</strong>.
         </div>
         {% elif quota_status.remaining == 1 %}
         <div style="font-size:16px;font-weight:600;color:#E09940;">1 evaluation remaining this cycle.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Your next {{ quota_status.limit }} arrive on <strong>{{ quota_status.next_date }}</strong>. Use this one well.
+          Cycle resets <strong>{{ quota_status.next_date }}</strong>. Use this one well.
         </div>
         {% else %}
-        <div style="font-size:16px;font-weight:600;color:var(--text-primary);">{{ quota_status.remaining }} of {{ quota_status.limit }} evaluations remaining this cycle.</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text-primary);">{{ quota_status.remaining }} of {{ quota_status.limit }} evaluations remaining.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Next {{ quota_status.limit }} arrive on <strong>{{ quota_status.next_date }}</strong>.
+          Cycle resets <strong>{{ quota_status.next_date }}</strong>.
         </div>
         {% endif %}
       {% endif %}
