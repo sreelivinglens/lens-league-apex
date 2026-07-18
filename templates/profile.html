@@ -687,9 +687,18 @@
                   {% else %}{{ _rem }} images remaining{% endif %}
                 </div>
                 <div class="acc-quota-sub">
-                  {% if _rem == 0 %}Cycle resets <strong>{{ quota_status.next_date }}</strong>.
+                  {% if quota_status.is_pool %}Plan renews <strong>{{ quota_status.next_date }}</strong>.
                   {% else %}Cycle resets <strong>{{ quota_status.next_date }}</strong>.{% endif %}
                 </div>
+                {% if quota_status.aea_months_remaining is defined and quota_status.aea_months_remaining > 0 %}
+                <div style="font-size:15px;color:#2C3E6B;margin-top:10px;padding:10px 14px;background:rgba(44,62,107,0.06);border-left:3px solid #2C3E6B;border-radius:4px;line-height:1.6;">
+                  🏆 <strong>AEA {{ quota_status.aea_year }}:</strong> Upload in <strong>{{ quota_status.aea_months_remaining }}</strong> more month{{ 's' if quota_status.aea_months_remaining != 1 else '' }} to qualify ({{ quota_status.aea_months_done }}/{{ quota_status.aea_months_needed }} done).
+                </div>
+                {% elif quota_status.aea_months_remaining is defined and quota_status.aea_months_remaining == 0 %}
+                <div style="font-size:15px;color:#2E7D52;margin-top:10px;padding:10px 14px;background:rgba(46,125,82,0.08);border-left:3px solid #2E7D52;border-radius:4px;line-height:1.6;">
+                  🏆 <strong>AEA {{ quota_status.aea_year }}:</strong> Upload requirement met. Keep shooting.
+                </div>
+                {% endif %}
               </div>
             </div>
           </div>
