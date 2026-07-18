@@ -5936,37 +5936,52 @@ def _check_upload_quota(user):
                 'Reactivate your Mobile or Camera subscription to resume.')
 
     if _track in ('mobile', 'camera', 'learning'):
-        # Billing-cycle based quota — resets every 30/180/360 days from subscribed_at
         _subscribed_at = getattr(user, 'subscribed_at', None)
         _sub_plan      = getattr(user, 'subscription_plan', None) or 'monthly'
 
-        if _subscribed_at:
-            _cycle_days   = 180 if _sub_plan == 'halfyearly' else (360 if _sub_plan == 'annual' else 30)
-            _sub_date     = _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at
-            _days_since   = (today - _sub_date).days
-            _cycles_done  = _days_since // _cycle_days
-            _cycle_start  = _sub_date + timedelta(days=_cycles_done * _cycle_days)
-            _cycle_start_dt = datetime.combine(_cycle_start, datetime.min.time())
-            _cycle_end_dt   = _cycle_start_dt + timedelta(days=_cycle_days)
-            _next_date    = (_cycle_start_dt + timedelta(days=_cycle_days)).strftime('%-d %B %Y')
+        if _sub_plan in ('annual', 'halfyearly'):
+            # ── Pool-based quota: total evals since subscribed_at, carries forward ──
+            # Annual: 48 total per year (usable anytime, not monthly-gated)
+            # Halfyearly: 24 total per 6 months
+            # Unused evals carry forward on renewal.
+            _pool_total = 48 if _sub_plan == 'annual' else 24
+            _cycle_days = 365 if _sub_plan == 'annual' else 180
+            _sub_start_dt = datetime.combine(
+                _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at,
+                datetime.min.time()
+            ) if _subscribed_at else datetime(today.year, 1, 1)
+            _renew_date = (_sub_start_dt + timedelta(days=_cycle_days)).strftime('%-d %B %Y')
+            # Count all images since subscription started (pool is cumulative)
+            _total_used = Image.query.filter(
+                Image.user_id == user.id,
+                Image.created_at >= _sub_start_dt,
+            ).count()
+            if _total_used >= _pool_total:
+                return (f'You have used all {_pool_total} evaluations in your {_sub_plan} plan. '
+                        f'Your plan renews {_renew_date}.')
         else:
-            # Fallback — calendar month
-            _cycle_start_dt = datetime(today.year, today.month, 1)
-            _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
-            _next_date      = '1st of next month'
-
-        _cycle_count = Image.query.filter(
-            Image.user_id == user.id,
-            Image.created_at >= _cycle_start_dt,
-            Image.created_at <  _cycle_end_dt,
-        ).count()
-
-        # 4 evaluations per cycle for camera and mobile. Learning uses LEARNING_IMAGE_LIMIT.
-        _eval_limit = LEARNING_IMAGE_LIMIT if _track == 'learning' else 4
-
-        if _cycle_count >= _eval_limit:
-            return (f'You have used all {_eval_limit} evaluations in this cycle. '
-                    f'Your next evaluations arrive on {_next_date}.')
+            # ── Monthly: 4 per 30-day rolling window from subscribed_at ──
+            if _subscribed_at:
+                _sub_date       = _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at
+                _days_since     = (today - _sub_date).days
+                _cycles_done    = _days_since // 30
+                _cycle_start    = _sub_date + timedelta(days=_cycles_done * 30)
+                _cycle_start_dt = datetime.combine(_cycle_start, datetime.min.time())
+                _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
+                _next_date      = (_cycle_start_dt + timedelta(days=30)).strftime('%-d %B %Y')
+            else:
+                _cycle_start_dt = datetime(today.year, today.month, 1)
+                _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
+                _next_date      = '1st of next month'
+            _eval_limit  = LEARNING_IMAGE_LIMIT if _track == 'learning' else 4
+            _cycle_count = Image.query.filter(
+                Image.user_id == user.id,
+                Image.created_at >= _cycle_start_dt,
+                Image.created_at <  _cycle_end_dt,
+            ).count()
+            if _cycle_count >= _eval_limit:
+                return (f'You have used all {_eval_limit} evaluations this month. '
+                        f'Cycle resets {_next_date}.')
 
     # Mentor track — unlimited, no check needed
     return None
@@ -5999,35 +6014,93 @@ def _get_quota_status(user):
     _subscribed_at = getattr(user, 'subscribed_at', None)
     _sub_plan      = _plan or 'monthly'
 
-    if _subscribed_at:
-        _cycle_days     = 180 if _sub_plan == 'halfyearly' else (360 if _sub_plan == 'annual' else 30)
-        _sub_date       = _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at
-        _days_since     = (today - _sub_date).days
-        _cycles_done    = _days_since // _cycle_days
-        _cycle_start    = _sub_date + timedelta(days=_cycles_done * _cycle_days)
-        _cycle_start_dt = datetime.combine(_cycle_start, datetime.min.time())
-        _cycle_end_dt   = _cycle_start_dt + timedelta(days=_cycle_days)
-        _next_date      = (_cycle_start_dt + timedelta(days=_cycle_days)).strftime('%-d %B %Y')
+    if _sub_plan in ('annual', 'halfyearly'):
+        # ── Pool-based: count all images since subscribed_at ──
+        _pool_total   = 48 if _sub_plan == 'annual' else 24
+        _cycle_days   = 365 if _sub_plan == 'annual' else 180
+        _sub_start_dt = datetime.combine(
+            _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at,
+            datetime.min.time()
+        ) if _subscribed_at else datetime(today.year, 1, 1)
+        _renew_date   = (_sub_start_dt + timedelta(days=_cycle_days)).strftime('%-d %B %Y')
+        _used         = Image.query.filter(
+            Image.user_id == user.id,
+            Image.created_at >= _sub_start_dt,
+        ).count()
+        # AEA eligibility — calendar months with at least 1 upload
+        _aea_year     = today.year
+        _aea_target   = 4 if _aea_year == 2026 else 6
+        _aea_months_required = 4 if _aea_year == 2026 else 6
+        # Count distinct calendar months with uploads this year
+        from sqlalchemy import extract as _extract, func as _func
+        _aea_months_done = db.session.query(
+            _func.count(_func.distinct(
+                _func.date_trunc('month', Image.created_at)
+            ))
+        ).filter(
+            Image.user_id == user.id,
+            _extract('year', Image.created_at) == _aea_year,
+        ).scalar() or 0
+        _aea_remaining = max(0, _aea_months_required - _aea_months_done)
+        return {
+            'limit':              _pool_total,
+            'used':               _used,
+            'remaining':          max(0, _pool_total - _used),
+            'next_date':          _renew_date,
+            'is_unlimited':       False,
+            'is_free':            False,
+            'is_pool':            True,
+            'aea_months_done':    _aea_months_done,
+            'aea_months_needed':  _aea_months_required,
+            'aea_months_remaining': _aea_remaining,
+            'aea_year':           _aea_year,
+        }
     else:
-        _cycle_start_dt = datetime(today.year, today.month, 1)
-        _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
-        _next_date      = '1st of next month'
-
-    _used  = Image.query.filter(
-        Image.user_id == user.id,
-        Image.created_at >= _cycle_start_dt,
-        Image.created_at <  _cycle_end_dt,
-    ).count()
-    _limit = LEARNING_IMAGE_LIMIT if _track == 'learning' else 4
-
-    return {
-        'limit':        _limit,
-        'used':         _used,
-        'remaining':    max(0, _limit - _used),
-        'next_date':    _next_date,
-        'is_unlimited': False,
-        'is_free':      False,
-    }
+        # ── Monthly: 30-day rolling window ──
+        if _subscribed_at:
+            _sub_date       = _subscribed_at.date() if hasattr(_subscribed_at, 'date') else _subscribed_at
+            _days_since     = (today - _sub_date).days
+            _cycles_done    = _days_since // 30
+            _cycle_start    = _sub_date + timedelta(days=_cycles_done * 30)
+            _cycle_start_dt = datetime.combine(_cycle_start, datetime.min.time())
+            _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
+            _next_date      = (_cycle_start_dt + timedelta(days=30)).strftime('%-d %B %Y')
+        else:
+            _cycle_start_dt = datetime(today.year, today.month, 1)
+            _cycle_end_dt   = _cycle_start_dt + timedelta(days=30)
+            _next_date      = '1st of next month'
+        _eval_limit = LEARNING_IMAGE_LIMIT if _track == 'learning' else 4
+        _used = Image.query.filter(
+            Image.user_id == user.id,
+            Image.created_at >= _cycle_start_dt,
+            Image.created_at <  _cycle_end_dt,
+        ).count()
+        # AEA eligibility for monthly subscribers too
+        _aea_year     = today.year
+        _aea_months_required = 4 if _aea_year == 2026 else 6
+        from sqlalchemy import extract as _extract, func as _func
+        _aea_months_done = db.session.query(
+            _func.count(_func.distinct(
+                _func.date_trunc('month', Image.created_at)
+            ))
+        ).filter(
+            Image.user_id == user.id,
+            _extract('year', Image.created_at) == _aea_year,
+        ).scalar() or 0
+        _aea_remaining = max(0, _aea_months_required - _aea_months_done)
+        return {
+            'limit':              _eval_limit,
+            'used':               _used,
+            'remaining':          max(0, _eval_limit - _used),
+            'next_date':          _next_date,
+            'is_unlimited':       False,
+            'is_free':            False,
+            'is_pool':            False,
+            'aea_months_done':    _aea_months_done,
+            'aea_months_needed':  _aea_months_required,
+            'aea_months_remaining': _aea_remaining,
+            'aea_year':           _aea_year,
+        }
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -16472,66 +16545,6 @@ def api_create_payment():
         return jsonify({'error': 'Could not initialise payment. Please try again.'}), 500
 
 
-def _send_subscription_confirmation(user, track, plan):
-    """
-    Send a welcome/confirmation email after a successful subscription payment.
-    Called from subscribe_confirm() immediately after DB commit.
-    """
-    _site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
-    _track_label = {'camera': 'Camera League', 'mobile': 'Mobile League'}.get(track, track.title())
-    _plan_label  = {'monthly': 'Monthly', 'halfyearly': 'Half-Yearly', 'annual': 'Annual'}.get(plan, plan.title())
-    _name        = user.full_name or user.username or 'Photographer'
-    _body = (
-        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
-        'Hi ' + _name + '.</p>'
-        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
-        'Your <strong>' + _plan_label + '</strong> membership in '
-        '<strong>' + _track_label + '</strong> is now active. '
-        'You can upload your first photograph and have it evaluated by the DDI Engine.</p>'
-        '<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
-        'Questions? Write to '
-        '<a href="mailto:support@shutterleague.com" style="color:#2C3E6B;">support@shutterleague.com</a> '
-        'and we will get back to you.</p>'
-    )
-    _cta_block = (
-        '<div style="margin:28px 0;">'
-        '<a href="' + _site_url + '/upload" style="display:inline-block;background:#2C3E6B;'
-        'color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;'
-        'font-weight:700;letter-spacing:1.5px;text-transform:uppercase;'
-        'padding:13px 28px;text-decoration:none;border-radius:4px;">'
-        'Upload a Photograph &#8594;</a></div>'
-    )
-    _html = (
-        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-        '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
-        '<div style="max-width:520px;margin:0 auto;padding:0;">'
-        '<div style="padding:24px 32px 20px;border-bottom:1.5px solid #2C3E6B;background:#FEFCF8;">'
-        '<span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#2C3E6B;'
-        'color:#F5C518;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;'
-        'text-align:center;line-height:36px;letter-spacing:1px;vertical-align:middle;">SL</span>'
-        '<span style="font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:600;'
-        'color:#2C3E6B;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">Shutter League</span>'
-        '<div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#8a8070;margin:8px 0 0;">'
-        'Making Images Matter</div></div>'
-        '<div style="padding:32px 32px 24px;background:#FEFCF8;">'
-        '<h2 style="font-family:Inter,Arial,sans-serif;font-size:22px;font-weight:500;'
-        'color:#1A1A18;margin:0 0 20px;">Your membership is active.</h2>'
-        + _body + _cta_block +
-        '</div>'
-        '<div style="padding:20px 32px;background:#F5F0E8;border-top:1px solid #E0D8C8;">'
-        '<div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#8a8070;'
-        'margin:0;line-height:1.6;">Shutter League &middot; Making Images Matter &middot; '
-        '<a href="' + _site_url + '" style="color:#8a8070;">shutterleague.com</a>'
-        '</div></div></div></body></html>'
-    )
-    try:
-        send_email([user.email], 'Welcome to ' + _track_label + ' — your membership is active', _html)
-        app.logger.info(f'[subscribe_confirm] confirmation email sent to {user.email}')
-    except Exception as _se:
-        app.logger.error(f'[subscribe_confirm] confirmation email failed: {_se}')
-
-
 @app.route('/subscribe/confirm', methods=['POST'])
 @login_required
 def subscribe_confirm():
@@ -16564,37 +16577,6 @@ def subscribe_confirm():
         ).hexdigest()
         if not _hmac.compare_digest(expected, signature):
             raise Exception('Signature mismatch')
-
-        # ── Track safeguard: cross-check subscription plan_id against known env vars ──
-        # Guards against pricing page JS posting wrong track (e.g. camera when mobile was
-        # selected). For subscription payments (not orders), look up which track the
-        # plan_id belongs to and override the posted track if they disagree.
-        if not is_order and subscription_id:
-            _plan_id_to_track = {}
-            for _t in ('camera', 'mobile'):
-                for _p in ('halfyearly', 'annual'):
-                    _env_key = f'RAZORPAY_PLAN_{_t.upper()}_{_p.upper()}'
-                    _pid = os.getenv(_env_key, '')
-                    if _pid:
-                        _plan_id_to_track[_pid] = _t
-            # Fetch subscription from Razorpay to get its plan_id
-            try:
-                import razorpay as _rzp
-                _rzp_client = _rzp.Client(auth=(os.getenv('RAZORPAY_KEY_ID', ''), razorpay_secret))
-                _sub_obj = _rzp_client.subscription.fetch(subscription_id)
-                _sub_plan_id = _sub_obj.get('plan_id', '')
-                if _sub_plan_id and _sub_plan_id in _plan_id_to_track:
-                    _correct_track = _plan_id_to_track[_sub_plan_id]
-                    if _correct_track != track:
-                        app.logger.warning(
-                            f'[subscribe_confirm] track mismatch — posted={track!r} '
-                            f'but plan_id={_sub_plan_id!r} maps to {_correct_track!r}. '
-                            f'Correcting to {_correct_track!r}.'
-                        )
-                        track = _correct_track
-            except Exception as _tce:
-                app.logger.warning(f'[subscribe_confirm] track cross-check failed (non-fatal): {_tce}')
-                # Non-fatal — proceed with posted track
 
         current_user.subscription_track = track
         current_user.subscription_plan  = plan
