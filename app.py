@@ -9373,6 +9373,13 @@ def image_detail(image_id):
     except Exception as _hpe:
         app.logger.warning(f'[image_detail] pending eval check: {_hpe}')
 
+    # Strip [Species: X] prefix from subject for display — it is an internal
+    # scoring tag written at upload time (Wildlife genre hint) and must not
+    # appear raw on the detail page. We reassign on the local object only;
+    # the DB record is not touched.
+    import re as _re_subj
+    img.subject = _re_subj.sub(r'^\[Species:[^\]]*\]\s*', '', img.subject or '').strip() or None
+
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
                            percentile=percentile_data,
                            image_versions=_versions,
