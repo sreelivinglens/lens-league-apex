@@ -639,12 +639,13 @@
                 <span class="acc-plan-status">Active</span>
               </div>
               <div class="acc-plan-date">
-                Next billing date:
-                {% if quota_status and quota_status.next_date and quota_status.next_date != '1st of next month' %}
-                  {{ quota_status.next_date }}
-                {% elif current_user.subscribed_at %}
-                  {{ current_user.subscribed_at.strftime('%-d %B %Y') if current_user.subscribed_at else '—' }}
-                {% else %}—{% endif %}
+                {% if current_user.subscription_plan == 'annual' %}
+                  Renews {{ (current_user.subscribed_at + timedelta(days=365)).strftime('%-d %B %Y') if current_user.subscribed_at else '—' }}
+                {% elif current_user.subscription_plan == 'halfyearly' %}
+                  Renews {{ (current_user.subscribed_at + timedelta(days=180)).strftime('%-d %B %Y') if current_user.subscribed_at else '—' }}
+                {% else %}
+                  Next billing: {{ quota_status.next_date if (quota_status and quota_status.next_date) else ((current_user.subscribed_at + timedelta(days=30)).strftime('%-d %B %Y') if current_user.subscribed_at else '—') }}
+                {% endif %}
               </div>
             </div>
             <div class="acc-plan-right">
@@ -686,8 +687,8 @@
                   {% else %}{{ _rem }} images remaining{% endif %}
                 </div>
                 <div class="acc-quota-sub">
-                  {% if _rem == 0 %}Your next {{ _lim }} evaluations arrive on <strong>{{ quota_status.next_date }}</strong>.
-                  {% else %}Your monthly quota renews on <strong>{{ quota_status.next_date }}</strong>.{% endif %}
+                  {% if _rem == 0 %}Cycle resets <strong>{{ quota_status.next_date }}</strong>.
+                  {% else %}Cycle resets <strong>{{ quota_status.next_date }}</strong>.{% endif %}
                 </div>
               </div>
             </div>
