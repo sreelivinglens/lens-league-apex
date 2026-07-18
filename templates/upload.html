@@ -438,19 +438,32 @@
         {% endif %}
       {% else %}
         {% if quota_status.remaining == 0 %}
-        <div style="font-size:16px;font-weight:600;color:#c0392b;">0 evaluations remaining this cycle.</div>
+        <div style="font-size:16px;font-weight:600;color:#c0392b;">0 evaluations remaining.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Your cycle resets on <strong>{{ quota_status.next_date }}</strong>.
+          Plan renews <strong>{{ quota_status.next_date }}</strong>.
         </div>
         {% elif quota_status.remaining == 1 %}
-        <div style="font-size:16px;font-weight:600;color:#E09940;">1 evaluation remaining this cycle.</div>
+        <div style="font-size:16px;font-weight:600;color:#E09940;">1 evaluation remaining.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Cycle resets <strong>{{ quota_status.next_date }}</strong>. Use this one well.
+          {% if quota_status.is_pool %}Plan renews <strong>{{ quota_status.next_date }}</strong>. Use this one well.
+          {% else %}Cycle resets <strong>{{ quota_status.next_date }}</strong>. Use this one well.{% endif %}
         </div>
         {% else %}
         <div style="font-size:16px;font-weight:600;color:var(--text-primary);">{{ quota_status.remaining }} of {{ quota_status.limit }} evaluations remaining.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Cycle resets <strong>{{ quota_status.next_date }}</strong>.
+          {% if quota_status.is_pool %}Plan renews <strong>{{ quota_status.next_date }}</strong>.
+          {% else %}Cycle resets <strong>{{ quota_status.next_date }}</strong>.{% endif %}
+        </div>
+        {% endif %}
+        {% if quota_status.aea_months_remaining is defined and quota_status.aea_months_remaining > 0 %}
+        <div style="font-size:15px;color:#2C3E6B;margin-top:8px;padding:10px 14px;background:rgba(44,62,107,0.06);border-left:3px solid #2C3E6B;border-radius:4px;line-height:1.6;">
+          🏆 <strong>Annual Excellence Award {{ quota_status.aea_year }}:</strong>
+          Upload in <strong>{{ quota_status.aea_months_remaining }}</strong> more calendar month{{ 's' if quota_status.aea_months_remaining != 1 else '' }} to qualify
+          ({{ quota_status.aea_months_done }} of {{ quota_status.aea_months_needed }} months done).
+        </div>
+        {% elif quota_status.aea_months_remaining is defined and quota_status.aea_months_remaining == 0 %}
+        <div style="font-size:15px;color:#2E7D52;margin-top:8px;padding:10px 14px;background:rgba(46,125,82,0.08);border-left:3px solid #2E7D52;border-radius:4px;line-height:1.6;">
+          🏆 <strong>Annual Excellence Award {{ quota_status.aea_year }}:</strong> You have met the upload requirement. Keep shooting.
         </div>
         {% endif %}
       {% endif %}
