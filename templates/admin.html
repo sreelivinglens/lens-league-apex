@@ -293,6 +293,7 @@
       ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
     </a>
     <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
+    <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
   </div>
 
   {# ── Action Required Banner ── #}
