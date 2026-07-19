@@ -10650,6 +10650,116 @@ def admin_export_csi_full():
     from flask import Response
     return Response(output.getvalue(), mimetype='text/csv',
                     headers={'Content-Disposition': 'attachment;filename=csi_full_audit.csv'})
+
+
+# ── MIM SESSION EXPORT — /admin/mim-export ───────────────────────────────────
+# Read-only admin route. No DB writes. No user-facing copy.
+# Returns all scored images for a given IST date with full DDI audit narrative.
+# Reusable for every MIM / workshop session — change ?date=YYYY-MM-DD each time.
+#
+# Usage:
+#   /admin/mim-export                          → defaults to today (IST)
+#   /admin/mim-export?date=2026-07-19          → specific session date
+#   /admin/mim-export?date=2026-07-26&usernames=swami_iyer,udaya_joisa,...
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/admin/mim-export')
+@login_required
+@admin_required
+def admin_mim_export():
+    _ist_offset = timedelta(hours=5, minutes=30)
+
+    # ── Parse date param — default today IST ─────────────────────────────────
+    date_str = request.args.get('date', '').strip()
+    try:
+        session_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else (datetime.utcnow() + _ist_offset).date()
+    except ValueError:
+        return jsonify({'error': f'Invalid date format: {date_str!r}. Use YYYY-MM-DD.'}), 400
+
+    # Convert IST day to UTC range for DB query
+    day_start_utc = datetime.combine(session_date, datetime.min.time()) - _ist_offset
+    day_end_utc   = day_start_utc + timedelta(days=1)
+
+    # ── Optional username filter ──────────────────────────────────────────────
+    usernames_param = request.args.get('usernames', '').strip()
+    username_list   = [u.strip() for u in usernames_param.split(',') if u.strip()] if usernames_param else []
+
+    # ── Query scored images for the session date ──────────────────────────────
+    img_q = (Image.query
+             .join(User, User.id == Image.user_id)
+             .filter(
+                 Image.status == 'scored',
+                 Image.created_at >= day_start_utc,
+                 Image.created_at <  day_end_utc,
+             )
+             .order_by(Image.created_at.asc()))
+
+    if username_list:
+        img_q = img_q.filter(User.username.in_(username_list))
+
+    images = img_q.all()
+
+    # ── Build user map ────────────────────────────────────────────────────────
+    user_ids = list({img.user_id for img in images if img.user_id})
+    user_map = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+
+    # ── Assemble export records ───────────────────────────────────────────────
+    records = []
+    for img in images:
+        u     = user_map.get(img.user_id)
+        audit = img.get_audit() or {}
+
+        # First name only — Sherpa convention
+        _full  = (u.full_name or u.username or '') if u else ''
+        _fname = _full.split()[0] if _full else (u.username if u else 'Unknown')
+
+        # Narrative fields — mirrors card_public.html resolution logic exactly
+        _wso  = (audit.get('what_stood_out') or audit.get('hard_truth') or '').strip()
+        _rows = audit.get('rows') or []
+        _tech = next((r[1] for r in _rows if r and len(r) >= 2 and r[0] == 'Technical'), '')
+        _mom  = next((r[1] for r in _rows if r and len(r) >= 2 and r[0] == 'Moment'),    '')
+        _nxt  = next((r[1] for r in _rows if r and len(r) >= 2 and r[0] == 'Next'),       '')
+
+        _c1 = (audit.get('transferable_advice') or _tech or '').strip()
+        _c2 = (_tech or _mom or '').strip() if (audit.get('transferable_advice') or '').strip() else (_mom or '').strip()
+        _c3 = (audit.get('background_check') or audit.get('byline_1') or _nxt or '').strip()
+        _c4 = (audit.get('byline_2_body') or audit.get('byline_2') or '').strip()
+
+        _created_ist = (img.created_at + _ist_offset).strftime('%-I:%M %p IST') if img.created_at else '—'
+
+        records.append({
+            'image_id':        img.id,
+            'username':        u.username if u else '—',
+            'first_name':      _fname,
+            'title':           img.asset_name or '—',
+            'created_at_ist':  _created_ist,
+            'genre':           img.genre or '—',
+            'track':           img.camera_track or '—',
+            'ddi_score':       round(img.score, 2) if img.score is not None else None,
+            'tier':            img.tier or '—',
+            'dod_score':       img.dod_score,
+            'disruption_score':img.disruption_score,
+            'dm_score':        img.dm_score,
+            'wonder_score':    img.wonder_score,
+            'aq_score':        img.aq_score,
+            'what_stood_out':  _wso,
+            'card_1':          _c1,
+            'card_2':          _c2,
+            'card_3':          _c3,
+            'card_4':          _c4,
+            'edit_base':       (audit.get('edit_base') or '').strip(),
+            'edit_creative':   (audit.get('edit_creative') or '').strip(),
+            'share_token':     img.share_token or '',
+        })
+
+    return render_template(
+        'admin_mim_export.html',
+        records      = records,
+        session_date = session_date.strftime('%-d %B %Y'),
+        date_str     = session_date.strftime('%Y-%m-%d'),
+        total        = len(records),
+    )
+
+
 @app.route('/admin/seasonal-discovery')
 @login_required
 @admin_required
