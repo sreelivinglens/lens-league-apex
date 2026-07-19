@@ -10702,6 +10702,19 @@ def admin_mim_export():
     user_ids = list({img.user_id for img in images if img.user_id})
     user_map = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
 
+    # ── Fetch share tokens via raw SQL (column not on SQLAlchemy model) ──────
+    _img_ids  = [img.id for img in images]
+    token_map = {}
+    if _img_ids:
+        try:
+            _tok_rows = db.session.execute(
+                db.text("SELECT id, share_token FROM images WHERE id = ANY(:ids)"),
+                {"ids": _img_ids}
+            ).fetchall()
+            token_map = {r.id: (r.share_token or "") for r in _tok_rows}
+        except Exception:
+            token_map = {}
+
     # ── Assemble export records ───────────────────────────────────────────────
     records = []
     for img in images:
@@ -10748,7 +10761,7 @@ def admin_mim_export():
             'card_4':          _c4,
             'edit_base':       (audit.get('edit_base') or '').strip(),
             'edit_creative':   (audit.get('edit_creative') or '').strip(),
-            'share_token':     img.share_token or '',
+            'share_token':     token_map.get(img.id, ''),
         })
 
     return render_template(
