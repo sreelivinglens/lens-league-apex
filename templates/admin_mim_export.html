@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:title" content="MIM Session Export — Shutter League Admin">
+  <meta property="og:description" content="Admin-only MIM session DDI vs human evaluation export.">
+  <meta property="og:image" content="/static/og_default.jpg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:image" content="/static/og_default.jpg">
+  <title>MIM Session Export — {{ session_date }} — Shutter League Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #1A1A18;
+      background: #FEFCF8;
+      padding: 32px 20px 80px;
+      max-width: 960px;
+      margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2C3E6B;
+      margin-bottom: 6px;
+    }
+
+    .meta {
+      font-size: 15px;
+      color: #444;
+      margin-bottom: 32px;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .summary-pill {
+      background: #2C3E6B;
+      color: #FEFCF8;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: default;
+    }
+
+    /* Per-image card */
+    .image-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 36px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: #2C3E6B;
+      color: #FEFCF8;
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .card-header .img-num {
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .card-header .photographer {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .card-header .title {
+      font-size: 16px;
+      opacity: 0.85;
+      font-style: italic;
+    }
+
+    .card-header .upload-time {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-left: auto;
+    }
+
+    .card-body {
+      padding: 24px 20px;
+    }
+
+    /* Score grid */
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .score-box {
+      background: #F5F5F0;
+      border-radius: 8px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .score-box .label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .score-box .value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #2C3E6B;
+    }
+
+    .score-box.ddi-main {
+      background: #2C3E6B;
+    }
+
+    .score-box.ddi-main .label {
+      color: #FEFCF8;
+    }
+
+    .score-box.ddi-main .value {
+      font-size: 28px;
+      /* Gold score text is safe here — sits on #2C3E6B dark background */
+      color: #F5C518;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #2C3E6B;
+      border: 2px solid #2C3E6B;
+      border-radius: 4px;
+      padding: 3px 8px;
+      margin-top: 6px;
+    }
+    /* Gold only used inside dark .ddi-main background */
+    .score-box.ddi-main .tier-badge {
+      color: #F5C518;
+      border-color: #F5C518;
+    }
+
+    /* Section label */
+    .section-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #666;
+      margin-bottom: 10px;
+      margin-top: 24px;
+      border-top: 1px solid #eee;
+      padding-top: 18px;
+    }
+
+    /* Compare table */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .compare-table th {
+      text-align: left;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #666;
+      padding: 8px 12px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .compare-table td {
+      padding: 12px;
+      vertical-align: top;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 15px;
+      line-height: 1.55;
+      color: #1A1A18;
+    }
+
+    .compare-table tr:last-child td { border-bottom: none; }
+
+    .compare-table .col-label {
+      font-weight: 700;
+      color: #2C3E6B;
+      width: 170px;
+    }
+
+    .gap-positive { color: #2E7D32; font-weight: 700; }
+    .gap-negative { color: #C62828; font-weight: 700; }
+    .gap-neutral  { color: #444;    font-weight: 700; }
+
+    .human-placeholder {
+      background: #FFFBEA;
+      border: 1px dashed #F5C518;
+      border-radius: 8px;
+      padding: 4px 0;
+      margin-top: 8px;
+    }
+
+    .human-fill-note {
+      font-size: 14px;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Narrative blocks */
+    .narrative-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #666;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+
+    .narrative-block {
+      background: #F9F8F4;
+      border-left: 4px solid #F5C518;
+      padding: 14px 16px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #1A1A18;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .narrative-block.wso    { border-left-color: #C62828; background: #FFF8F8; }
+    .narrative-block.card-1 { border-left-color: #2C3E6B; }
+    .narrative-block.card-2 { border-left-color: #4A90A4; }
+    .narrative-block.card-3 { border-left-color: #8B6914; }
+    .narrative-block.card-4 { border-left-color: #8B4513; }
+
+    .share-link {
+      font-size: 14px;
+      color: #2C3E6B;
+      word-break: break-all;
+      cursor: pointer;
+    }
+
+    .share-link:focus { outline: 2px solid #2C3E6B; outline-offset: 2px; }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      font-size: 18px;
+    }
+
+    @media print {
+      body { padding: 0; background: #fff; }
+      .image-card { page-break-inside: avoid; }
+    }
+
+    /* Mobile — max-width 600px */
+    @media (max-width: 600px) {
+      body {
+        padding: 56px 14px 64px;
+        font-size: 16px;
+      }
+      h1 { font-size: 20px; text-shadow: none; }
+      /* Single column stack on mobile */
+      .score-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .score-box .value { font-size: 18px; }
+      .score-box.ddi-main .value { font-size: 22px; }
+      .score-box .label { font-size: 14px; }
+      .compare-table .col-label { width: 110px; }
+      .compare-table td { font-size: 15px; padding: 10px 8px; }
+      .compare-table th { font-size: 14px; padding: 8px; }
+      .card-header { padding: 14px; }
+      .card-body { padding: 14px; }
+      .card-header .photographer { font-size: 18px; }
+      .card-header .title { font-size: 15px; }
+      .card-header .upload-time { font-size: 14px; width: 100%; margin-left: 0; }
+      .summary-pill { font-size: 14px; padding: 10px 16px; min-height: 44px; display: flex; align-items: center; }
+      .narrative-label { font-size: 14px; }
+      .section-label { font-size: 14px; }
+    }
+
+    /* iPad — 768px to 1024px — 4-col collapses to 2-col */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      body { padding: 32px 28px 64px; }
+      .score-grid { grid-template-columns: repeat(2, 1fr); }
+      .compare-table td { font-size: 16px; }
+    }
+
+    /* Focus rings for keyboard / elderly users */
+    a:focus, button:focus { outline: 2px solid #2C3E6B; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+
+  <h1>MIM Session Export</h1>
+  <p class="meta">{{ session_date }} &nbsp;·&nbsp; {{ total }} image{{ 's' if total != 1 else '' }} scored &nbsp;·&nbsp; Admin only</p>
+
+  <div class="summary">
+    <span class="summary-pill">{{ total }} photographers</span>
+    <span class="summary-pill">Theme: SILENCE</span>
+    <span class="summary-pill">Human scores: fill from Google Form</span>
+  </div>
+
+  {% if not records %}
+  <div class="no-results">
+    No scored images found for {{ session_date }}.<br>
+    Confirm date matches IST upload times and images have status = scored.
+  </div>
+  {% endif %}
+
+  {% for r in records %}
+  <div class="image-card">
+
+    <div class="card-header">
+      <span class="img-num">Image {{ loop.index }}</span>
+      <span class="photographer">{{ r.first_name }}</span>
+      <span class="title">{{ r.title }}</span>
+      <span class="upload-time">{{ r.uploaded_at_ist }}</span>
+    </div>
+
+    <div class="card-body">
+
+      <div class="score-grid">
+        <div class="score-box ddi-main">
+          <div class="label">DDI Score</div>
+          <div class="value">{{ r.ddi_score if r.ddi_score is not none else '—' }}</div>
+          <div class="tier-badge">{{ r.tier }}</div>
+        </div>
+        <div class="score-box">
+          <div class="label">Depth of Difficulty</div>
+          <div class="value">{{ '%.2f'|format(r.dod_score) if r.dod_score is not none else '—' }}</div>
+        </div>
+        <div class="score-box">
+          <div class="label">Disruption</div>
+          <div class="value">{{ '%.2f'|format(r.disruption_score) if r.disruption_score is not none else '—' }}</div>
+        </div>
+        <div class="score-box">
+          <div class="label">Decisive Moment</div>
+          <div class="value">{{ '%.2f'|format(r.dm_score) if r.dm_score is not none else '—' }}</div>
+        </div>
+        <div class="score-box">
+          <div class="label">Wonder</div>
+          <div class="value">{{ '%.2f'|format(r.wonder_score) if r.wonder_score is not none else '—' }}</div>
+        </div>
+        <div class="score-box">
+          <div class="label">Affective Quotient</div>
+          <div class="value">{{ '%.2f'|format(r.aq_score) if r.aq_score is not none else '—' }}</div>
+        </div>
+      </div>
+
+      <div class="section-label">Human Evaluation vs DDI</div>
+      <div class="human-placeholder">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th class="col-label">Metric</th>
+              <th>Human (Google Form)</th>
+              <th>DDI Engine</th>
+              <th>Gap</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-label">Overall Score</td>
+              <td><span class="human-fill-note">Fill from form</span></td>
+              <td><strong>{{ r.ddi_score if r.ddi_score is not none else '—' }}</strong></td>
+              <td class="gap-neutral">—</td>
+            </tr>
+            <tr>
+              <td class="col-label">First noticed</td>
+              <td><span class="human-fill-note">Fill from form</span></td>
+              <td>{{ r.what_stood_out or '—' }}</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td class="col-label">What to change</td>
+              <td><span class="human-fill-note">Fill from form</span></td>
+              <td>{{ r.card_3 or r.edit_base or '—' }}</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-label">DDI Narrative</div>
+
+      {% if r.what_stood_out %}
+      <div class="narrative-label">What stood out</div>
+      <div class="narrative-block wso">{{ r.what_stood_out }}</div>
+      {% endif %}
+
+      {% if r.card_1 %}
+      <div class="narrative-label">Photographer's advice</div>
+      <div class="narrative-block card-1">{{ r.card_1 }}</div>
+      {% endif %}
+
+      {% if r.card_2 %}
+      <div class="narrative-label">What you controlled</div>
+      <div class="narrative-block card-2">{{ r.card_2 }}</div>
+      {% endif %}
+
+      {% if r.card_3 %}
+      <div class="narrative-label">What to watch next</div>
+      <div class="narrative-block card-3">{{ r.card_3 }}</div>
+      {% endif %}
+
+      {% if r.card_4 %}
+      <div class="narrative-label">Keep this in mind</div>
+      <div class="narrative-block card-4">{{ r.card_4 }}</div>
+      {% endif %}
+
+      {% if r.edit_base or r.edit_creative %}
+      <div class="narrative-label">Edit guidance</div>
+      <div class="narrative-block">
+        {% if r.edit_base %}<strong>Base:</strong> {{ r.edit_base }}<br>{% endif %}
+        {% if r.edit_creative %}<strong>Creative:</strong> {{ r.edit_creative }}{% endif %}
+      </div>
+      {% endif %}
+
+      {% if r.share_token %}
+      <div class="section-label">Share card</div>
+      <a class="share-link" href="/card/{{ r.share_token }}" target="_blank" rel="noopener">
+        shutterleague.com/card/{{ r.share_token }}
+      </a>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endfor %}
+
+</body>
+</html>
