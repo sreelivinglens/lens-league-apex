@@ -10654,18 +10654,20 @@ def admin_export_csi_full():
 
 # ── MIM SESSION EXPORT — /admin/mim-export ───────────────────────────────────
 # Read-only admin route. No DB writes. No user-facing copy.
-# Returns all scored images for a given IST date with full DDI audit narrative.
-# Reusable for every MIM / workshop session — change ?date=YYYY-MM-DD each time.
+# Returns first scored image per user for a given IST date as a CSV download.
+# One row per photographer — earliest upload wins (excludes self-exploration
+# images uploaded after the session reveal, e.g. Raja's tiger shot).
+# Reusable for every MIM / workshop session — change ?date=YYYY-MM-DD.
 #
 # Usage:
-#   /admin/mim-export                          → defaults to today (IST)
-#   /admin/mim-export?date=2026-07-19          → specific session date
+#   /admin/mim-export?date=2026-07-19
 #   /admin/mim-export?date=2026-07-26&usernames=swami_iyer,udaya_joisa,...
 # ─────────────────────────────────────────────────────────────────────────────
 @app.route('/admin/mim-export')
 @login_required
 @admin_required
 def admin_mim_export():
+    import csv, io
     _ist_offset = timedelta(hours=5, minutes=30)
 
     # ── Parse date param — default today IST ─────────────────────────────────
@@ -10683,7 +10685,7 @@ def admin_mim_export():
     usernames_param = request.args.get('usernames', '').strip()
     username_list   = [u.strip() for u in usernames_param.split(',') if u.strip()] if usernames_param else []
 
-    # ── Query scored images for the session date ──────────────────────────────
+    # ── Query all scored images for the session date, earliest first ──────────
     img_q = (Image.query
              .join(User, User.id == Image.user_id)
              .filter(
@@ -10696,7 +10698,15 @@ def admin_mim_export():
     if username_list:
         img_q = img_q.filter(User.username.in_(username_list))
 
-    images = img_q.all()
+    all_images = img_q.all()
+
+    # ── One image per user — keep earliest upload only ────────────────────────
+    seen_users = set()
+    images     = []
+    for img in all_images:
+        if img.user_id not in seen_users:
+            seen_users.add(img.user_id)
+            images.append(img)
 
     # ── Build user map ────────────────────────────────────────────────────────
     user_ids = list({img.user_id for img in images if img.user_id})
@@ -10715,17 +10725,34 @@ def admin_mim_export():
         except Exception:
             token_map = {}
 
-    # ── Assemble export records ───────────────────────────────────────────────
-    records = []
-    for img in images:
+    # ── Assemble CSV ──────────────────────────────────────────────────────────
+    output = io.StringIO()
+    w = csv.writer(output)
+
+    # Header row
+    w.writerow([
+        'image_num', 'username', 'full_name', 'image_title', 'time_ist',
+        'genre', 'track',
+        'ddi_score', 'tier',
+        'dod', 'disruption', 'dm', 'wonder', 'aq',
+        'human_avg', 'human_first_noticed', 'human_change',
+        'gap', 'verdict',
+        'what_stood_out',
+        'card_1_photographers_advice',
+        'card_2_what_you_controlled',
+        'card_3_what_to_watch',
+        'card_4_keep_in_mind',
+        'edit_base', 'edit_creative',
+        'share_url',
+    ])
+
+    for idx, img in enumerate(images, 1):
         u     = user_map.get(img.user_id)
         audit = img.get_audit() or {}
 
-        # First name only — Sherpa convention
         _full  = (u.full_name or u.username or '') if u else ''
-        _fname = _full.split()[0] if _full else (u.username if u else 'Unknown')
 
-        # Narrative fields — mirrors card_public.html resolution logic exactly
+        # Narrative fields
         _wso  = (audit.get('what_stood_out') or audit.get('hard_truth') or '').strip()
         _rows = audit.get('rows') or []
         _tech = next((r[1] for r in _rows if r and len(r) >= 2 and r[0] == 'Technical'), '')
@@ -10737,39 +10764,43 @@ def admin_mim_export():
         _c3 = (audit.get('background_check') or audit.get('byline_1') or _nxt or '').strip()
         _c4 = (audit.get('byline_2_body') or audit.get('byline_2') or '').strip()
 
-        _created_ist = (img.created_at + _ist_offset).strftime('%-I:%M %p IST') if img.created_at else '—'
+        _time_ist = (img.created_at + _ist_offset).strftime('%H:%M') if img.created_at else ''
+        _token    = token_map.get(img.id, '')
+        _share    = f'shutterleague.com/card/{_token}' if _token else ''
 
-        records.append({
-            'image_id':        img.id,
-            'username':        u.username if u else '—',
-            'first_name':      _fname,
-            'title':           img.asset_name or '—',
-            'created_at_ist':  _created_ist,
-            'genre':           img.genre or '—',
-            'track':           img.camera_track or '—',
-            'ddi_score':       round(img.score, 2) if img.score is not None else None,
-            'tier':            img.tier or '—',
-            'dod_score':       img.dod_score,
-            'disruption_score':img.disruption_score,
-            'dm_score':        img.dm_score,
-            'wonder_score':    img.wonder_score,
-            'aq_score':        img.aq_score,
-            'what_stood_out':  _wso,
-            'card_1':          _c1,
-            'card_2':          _c2,
-            'card_3':          _c3,
-            'card_4':          _c4,
-            'edit_base':       (audit.get('edit_base') or '').strip(),
-            'edit_creative':   (audit.get('edit_creative') or '').strip(),
-            'share_token':     token_map.get(img.id, ''),
-        })
+        w.writerow([
+            idx,
+            u.username if u else '',
+            _full,
+            img.asset_name or '',
+            _time_ist,
+            img.genre or '',
+            img.camera_track or '',
+            round(img.score, 2) if img.score is not None else '',
+            img.tier or '',
+            round(img.dod_score, 2) if img.dod_score is not None else '',
+            round(img.disruption_score, 2) if img.disruption_score is not None else '',
+            round(img.dm_score, 2) if img.dm_score is not None else '',
+            round(img.wonder_score, 2) if img.wonder_score is not None else '',
+            round(img.aq_score, 2) if img.aq_score is not None else '',
+            '',  # human_avg — fill from Google Form
+            '',  # human_first_noticed — fill from Google Form
+            '',  # human_change — fill from Google Form
+            '',  # gap — calculated once human_avg filled
+            '',  # verdict
+            _wso, _c1, _c2, _c3, _c4,
+            (audit.get('edit_base') or '').strip(),
+            (audit.get('edit_creative') or '').strip(),
+            _share,
+        ])
 
-    return render_template(
-        'admin_mim_export.html',
-        records      = records,
-        session_date = session_date.strftime('%-d %B %Y'),
-        date_str     = session_date.strftime('%Y-%m-%d'),
-        total        = len(records),
+    output.seek(0)
+    filename = f'MIM_{session_date.strftime("%Y%m%d")}_export.csv'
+    from flask import Response
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment;filename={filename}'}
     )
 
 
