@@ -114,6 +114,19 @@ class User(db.Model, UserMixin):
     tier_jump_last_checked_at = db.Column(db.DateTime, nullable=True)
     # v35 — re-engagement email tracking
     reengagement_sent_at      = db.Column(db.DateTime, nullable=True)
+    onboarding_email_sent     = db.Column(db.Integer,  default=0, nullable=True)   # S152 drip bitmask E1-E7
+    # Ranking & portfolio columns (migration-added, mapped S152)
+    ranking_public            = db.Column(db.Boolean,  default=False, nullable=True)
+    ranking_last_active       = db.Column(db.Date,     nullable=True)
+    ranking_season_images     = db.Column(db.Integer,  default=0, nullable=True)
+    ranking_season_months     = db.Column(db.JSON,     nullable=True)
+    referral_bonus_uploads    = db.Column(db.Integer,  default=0, nullable=True)
+    referred_discount         = db.Column(db.Boolean,  default=False, nullable=True)
+    portfolio_public          = db.Column(db.Boolean,  default=False, nullable=True)
+    portfolio_bio             = db.Column(db.Text,     nullable=True)
+    portfolio_genres          = db.Column(db.String(255), nullable=True)
+    portfolio_photo_url       = db.Column(db.String(512), nullable=True)
+    portfolio_banner_dismissed = db.Column(db.Boolean, default=False, nullable=True)
     # Session 54 — lifetime upload counter (never decremented on delete)
     total_uploads_ever        = db.Column(db.Integer, default=0, nullable=False)
     # Session 68 — upload credits balance (carry-forward model, replaces monthly hard reset)
@@ -197,6 +210,9 @@ class Image(db.Model):
     card_path           = db.Column(db.String(512), nullable=True)
     card_url            = db.Column(db.String(512), nullable=True)
     share_token         = db.Column(db.String(64),  nullable=True, unique=True, index=True)  # Session 152 — public share URL token
+    parent_image_id     = db.Column(db.Integer,     nullable=True)   # upload-edited version chain
+    version_number      = db.Column(db.Integer,     default=1, nullable=True)   # 1 = original
+    poty_used_year      = db.Column(db.Integer,     nullable=True)   # year image was used in AEA programme
     file_size_kb        = db.Column(db.Integer,  nullable=True)
     width               = db.Column(db.Integer,  nullable=True)
     height              = db.Column(db.Integer,  nullable=True)
