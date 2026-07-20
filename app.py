@@ -19817,9 +19817,8 @@ def share_image(image_id):
     if img.status != 'scored':
         abort(404)
     # Session 152 — redirect legacy /share/<id> URLs to the polaroid card page.
-    # All 227 images now have share_tokens from the S152 backfill.
-    # 302 (not 301) to avoid browser/CDN caching during migration.
-    if getattr(img, 'share_token', None):
+    # share_token now mapped on Image ORM model (models.py Session 152).
+    if img.share_token:
         return redirect(url_for('public_card', token=img.share_token), 302)
     audit = img.get_audit()
     show_score = (
