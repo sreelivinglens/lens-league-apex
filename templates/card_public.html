@@ -207,47 +207,6 @@
     <span class="pc-brand-sub">Evaluation Card &nbsp;·&nbsp; Apex DDI Engine</span>
   </div>
 
-  {# ── Polaroid share card — shown if compositor has rendered it ── #}
-  {% if image.card_url %}
-  <div style="text-align:center; margin-bottom:24px;">
-    <img src="{{ image.card_url }}"
-         alt="Shutter League evaluation card for {{ image.asset_name or 'this photograph' }}"
-         style="max-width:100%; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
-    <div style="margin-top:14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-      <button onclick="slShareCardPublic()" class="btn btn-solid" style="font-size:15px; padding:12px 24px; cursor:pointer;">
-        ↗ Share this card
-      </button>
-      <a href="{{ url_for('public_card_download', token=share_token) }}"
-         class="btn" style="font-size:15px; padding:12px 24px;">
-        ↓ Save card
-      </a>
-    </div>
-    <script>
-    async function slShareCardPublic() {
-      const cardUrl    = "{{ image.card_url }}";
-      const shareUrl   = window.location.href;
-      const shareTitle = "{{ (image.asset_name or 'My photograph') | e }} — {{ image.tier or '' }} · Shutter League";
-      const shareText  = "Evaluated by the Apex DDI Engine on Shutter League";
-      if (navigator.share && cardUrl) {
-        try {
-          const resp = await fetch(cardUrl);
-          const blob = await resp.blob();
-          const file = new File([blob], 'shutter-league-card.jpg', { type: 'image/jpeg' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: shareTitle, text: shareText });
-            return;
-          }
-        } catch(_) {}
-        navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
-          .catch(() => window.open(cardUrl, '_blank'));
-      } else {
-        window.open(cardUrl, '_blank');
-      }
-    }
-    </script>
-  </div>
-  {% endif %}
-
   {# ── Photo + Score bar — wrapped so bar never overlays photo ── #}
   <div>
 
@@ -279,176 +238,19 @@
 
   </div>{# ── end photo+score wrapper ── #}
 
-  {# ── No inline download button — Save Rating Card (PDF) is the CTA on this page ── #}
-
-  {# ══════════════════════════════════════════════════════════════════
-     FULL EVALUATION — all values pre-computed in Python route.
-     Template uses plain variables only — no dict access, no namespace().
-     ══════════════════════════════════════════════════════════════════ #}
-
-  {# ── What Stood Out ── #}
-  {% if wso %}
-  <div style="margin-bottom:20px;">
-    <p style="margin:0 0 8px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;line-height:1.5;">&#9733; What Stood Out</p>
-    <p style="margin:0;font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.6;">{{ wso }}</p>
+  {# ── See full evaluation — links to image_detail (login required) — Session 152 #}
+  {% if current_user and current_user.is_authenticated and current_user.id == image.user_id %}
+  <div style="margin:0 0 20px;text-align:center;">
+    <a href="{{ url_for('image_detail', image_id=image.id) }}"
+       style="display:inline-block;background:transparent;color:var(--text-muted);
+              font-family:var(--font-mono);font-size:13px;font-weight:700;
+              letter-spacing:1px;text-transform:uppercase;
+              border:1px solid var(--border);border-radius:4px;
+              padding:10px 20px;text-decoration:none;min-height:44px;line-height:1.5;">
+      View Full Evaluation →
+    </a>
   </div>
   {% endif %}
-
-  {# ── Card 1 — The Photographer's Advice (full width, blue) ── #}
-  {% if c1_body %}
-  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0);border-radius:14px;padding:22px 26px;margin-bottom:12px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.55);display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:16px;color:#0C447C;">&#128247;</span>
-      </div>
-      <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#0C447C;text-transform:uppercase;line-height:1.5;">The Photographer's Advice</span>
-    </div>
-    <p style="margin:0;font-size:16px;color:#042C53;line-height:1.85;text-align:justify;">{{ c1_body }}</p>
-  </div>
-  {% endif %}
-
-  {# ── Cards 2–4 — 3-column supporting row ── #}
-  {% if c2_body or c3_body or c4_body %}
-  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;" class="sc-support-cards-grid">
-
-    {% if c2_body %}
-    <div style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-        <span style="font-size:15px;color:#27500A;">&#9650;</span>
-        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;color:#27500A;text-transform:uppercase;line-height:1.5;">What you controlled</span>
-      </div>
-      <p style="margin:0;font-size:15px;color:#173404;line-height:1.75;flex:1;">{{ c2_body }}</p>
-    </div>
-    {% endif %}
-
-    {% if c3_body %}
-    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-        <span style="font-size:15px;color:#72243E;">&#9678;</span>
-        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;color:#72243E;text-transform:uppercase;line-height:1.5;">What to watch next</span>
-      </div>
-      <p style="margin:0;font-size:15px;color:#4B1528;line-height:1.75;flex:1;">{{ c3_body }}</p>
-    </div>
-    {% endif %}
-
-    {% if c4_body %}
-    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-        <span style="font-size:15px;color:#854F0B;">&#128161;</span>
-        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;color:#854F0B;text-transform:uppercase;line-height:1.5;">Keep this in mind</span>
-      </div>
-      <p style="margin:0;font-size:15px;color:#412402;line-height:1.75;flex:1;">{{ c4_body }}</p>
-    </div>
-    {% endif %}
-
-  </div>
-  {% endif %}
-
-  {# ── Edit Guide — Standard + Creative ── #}
-  {% if edit_base or edit_creative %}
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;" class="sc-two-grid">
-    {% if edit_base %}
-    <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="width:34px;height:34px;border-radius:8px;background:#EAF0FA;display:flex;align-items:center;justify-content:center;">
-          <span style="font-size:15px;color:#185FA5;">&#9881;</span>
-        </div>
-        <div>
-          <p style="margin:0;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#185FA5;text-transform:uppercase;line-height:1.5;">Standard edit</p>
-          <p style="margin:0;font-size:13px;color:var(--text-muted);font-family:var(--font-mono);line-height:1.5;">Balanced &middot; Light editing</p>
-        </div>
-      </div>
-      <p style="margin:0;font-size:16px;color:var(--text-secondary);line-height:1.85;">{{ edit_base }}</p>
-    </div>
-    {% endif %}
-    {% if edit_creative %}
-    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="width:34px;height:34px;border-radius:8px;background:#FDF3E3;display:flex;align-items:center;justify-content:center;">
-          <span style="font-size:15px;color:#854F0B;">&#127912;</span>
-        </div>
-        <div>
-          <p style="margin:0;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#854F0B;text-transform:uppercase;line-height:1.5;">Creative edit</p>
-          <p style="margin:0;font-size:13px;color:var(--text-muted);font-family:var(--font-mono);line-height:1.5;">Artistic &middot; Heavy editing</p>
-        </div>
-      </div>
-      <p style="margin:0;font-size:16px;color:var(--text-secondary);line-height:1.85;">{{ edit_creative }}</p>
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  {# ── Dimension breakdown ── #}
-  <div class="pc-dims">
-    {% for dim in dim_breakdown %}
-    <div class="pc-dim">
-      <div class="pc-dim-score">{{ "%.1f"|format(dim.score) }}</div>
-      <div class="pc-dim-label">{{ dim.l1 }}<br>{{ dim.l2 }}</div>
-    </div>
-    {% endfor %}
-  </div>
-
-  {# ── Trends + Stats ── #}
-  <div class="pc-trends-grid">
-
-    {% if portfolio_data and portfolio_data.has_trends %}
-    <div class="pc-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;line-height:1.5;">How you're developing</span>
-        <span style="margin-left:auto;font-family:var(--font-mono);font-size:14px;color:var(--text-muted);line-height:1.5;">Score</span>
-      </div>
-      <p style="margin:0 0 16px;font-size:14px;color:var(--text-muted);line-height:1.6;">Last {{ portfolio_data.plotted_count }} photographs evaluated</p>
-
-      {% for dim in portfolio_data.dimensions %}
-      <div style="margin-bottom:18px;">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-          <div>
-            <p style="margin:0;font-size:15px;color:var(--text-primary);line-height:1.6;">{{ dim.label }}</p>
-            {% if dim.pill %}
-            <span style="font-size:13px;font-family:var(--font-mono);font-weight:700;color:{{ dim.pill_color }};display:inline-block;background:{{ dim.pill_bg }};padding:2px 8px;border-radius:4px;margin-top:3px;line-height:1.5;">{{ dim.pill }}</span>
-            {% endif %}
-          </div>
-          <span style="font-size:26px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);flex-shrink:0;margin-left:10px;line-height:1.5;">{{ "%.1f"|format(dim.current) }}</span>
-        </div>
-        <svg viewBox="0 0 300 32" width="100%" height="32" preserveAspectRatio="none">
-          <polyline points="{{ dim.sparkline }}" fill="none" stroke="{{ dim.color }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" {% if dim.flat %}stroke-dasharray="7,4"{% endif %}/>
-          {% for pt in dim.points %}
-          <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{{ '5' if loop.last else '3.5' }}" fill="{{ dim.color }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
-          {% endfor %}
-        </svg>
-        <div style="position:relative;height:18px;margin-top:4px;">
-          {% for lp in dim.label_points %}
-          <span style="position:absolute;left:{{ lp.x_pct }}%;transform:translateX(-50%);font-size:13px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;line-height:1.5;">{{ lp.value }}</span>
-          {% endfor %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-
-    {% else %}
-    <div class="pc-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;">
-      <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;line-height:1.5;">How you're developing</span>
-      <p style="margin:0;font-size:15px;color:var(--text-muted);line-height:1.7;">Trend lines unlock after 5 photographs evaluated.</p>
-      {% if portfolio_data %}<div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--gold);line-height:1.5;">{{ portfolio_data.count }}/5</div>{% endif %}
-    </div>
-    {% endif %}
-
-    {# Your Stats #}
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <p style="margin:0 0 2px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:var(--text-primary);text-transform:uppercase;line-height:1.5;">Your Stats</p>
-      <div style="background:linear-gradient(135deg,#FDF3E3,#F0D9A8);border:0.5px solid rgba(186,117,23,0.3);border-radius:12px;padding:16px 18px;text-align:center;flex:1;">
-        <p style="margin:0 0 4px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#854F0B;text-transform:uppercase;line-height:1.5;">Best This Year</p>
-        <p style="margin:0;font-size:34px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1.5;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '&mdash;' }}</p>
-        {% if stats and stats.best_genre %}<p style="margin:4px 0 0;font-size:14px;color:#4A3010;line-height:1.5;">{{ stats.best_title or stats.best_genre }}</p>{% endif %}
-      </div>
-      <div style="background:linear-gradient(135deg,#EAF5EE,#C8E6D0);border:0.5px solid rgba(39,80,10,0.2);border-radius:12px;padding:16px 18px;text-align:center;flex:1;">
-        <p style="margin:0 0 4px;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:#27500A;text-transform:uppercase;line-height:1.5;">This Month</p>
-        <p style="margin:0;font-size:34px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1.5;">{{ "%.2f"|format(stats.month_avg) if stats and stats.month_avg else '&mdash;' }}</p>
-        {% if stats and stats.month_count %}<p style="margin:4px 0 0;font-size:14px;color:#27500A;line-height:1.5;">{{ stats.month_count }} photograph{{ 's' if stats.month_count != 1 else '' }} evaluated</p>{% endif %}
-      </div>
-    </div>
-
-  </div>
 
   {# ── Share buttons — Session 148 ── #}
   <div style="margin-bottom:28px; padding:24px; background:var(--surface-1); border:1px solid var(--border); border-radius:14px;">
