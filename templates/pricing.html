@@ -398,6 +398,30 @@
   .compare-table { font-size: 14px; }
   .compare-table th, .compare-table td { padding: 9px 6px; }
 }
+
+  /* Make non-active period cards visually recede — active card drives the CTA */
+  .period-card:not(.active) {
+    opacity: 0.55;
+    transform: scale(0.97);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .period-card:not(.active):hover {
+    opacity: 0.85;
+    transform: scale(0.99);
+    cursor: pointer;
+  }
+  .period-card.active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  /* Arrow pointing from active period card down to CTA */
+  .period-selects-cta-note {
+    text-align: center;
+    font-size: 13px;
+    color: #8a8070;
+    margin: 12px 0 20px;
+    letter-spacing: 0.03em;
+  }
+
 </style>
 
 {# ── Hero ── #}
@@ -455,6 +479,8 @@
 </div>
 
 {# ── League cards ── #}
+<p class="period-selects-cta-note">↑ Select a billing period above — your choice sets the price below</p>
+
 <div class="league-grid">
 
   {# Camera League #}
@@ -504,6 +530,7 @@
       <li>Peer evaluation</li>
     </ul>
 
+    <div id="cta-camera-plan-label" style="font-size:13px;color:#8a8070;text-align:center;margin-bottom:8px;letter-spacing:0.04em;">Annual plan selected</div>
     <button class="league-cta camera" id="cta-camera" onclick="startDirectPayment('camera')">
       <span id="cta-camera-text">Pay ₹2,000 — Activate</span>
     </button>
@@ -555,6 +582,7 @@
       <li>Peer evaluation</li>
     </ul>
 
+    <div id="cta-mobile-plan-label" style="font-size:13px;color:#8a8070;text-align:center;margin-bottom:8px;letter-spacing:0.04em;">Annual plan selected</div>
     <button class="league-cta mobile" id="cta-mobile" onclick="startDirectPayment('mobile')">
       <span id="cta-mobile-text">Pay ₹2,000 — Activate</span>
     </button>
@@ -711,12 +739,25 @@
     annual:      { camera: '167', mobile: '167', note: 'per month (billed annually)', alt: 'or ₹200 billed monthly', charge: '2,000', label: 'Pay ₹2,000 — Activate', rzpPlan: 'annual'     },
   };
 
+  const planLabels = {
+    monthly:     'Monthly plan selected',
+    half_yearly: '6-month plan selected',
+    annual:      'Annual plan selected',
+  };
+
   function setPlan(plan) {
     currentPlan = plan;
 
     ['monthly', 'half_yearly', 'annual'].forEach(p => {
       const card = document.getElementById('period-' + p);
       if (card) card.classList.toggle('active', p === plan);
+    });
+
+    // Update plan label above CTAs
+    const label = planLabels[plan] || '';
+    ['cta-camera-plan-label', 'cta-mobile-plan-label'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = label;
     });
 
     const data = planData[plan];
@@ -733,12 +774,12 @@
     });
 
     ['camera', 'mobile'].forEach(track => {
+      const textEl = document.getElementById('cta-' + track + '-text');
+      if (textEl) textEl.textContent = data.label;
       const cta = document.getElementById('cta-' + track);
-      if (cta) {
+      if (cta && cta.href) {
         const base = cta.href.split('?')[0];
         cta.href = base + '?plan=' + data.rzpPlan;
-        const textEl = document.getElementById('cta-' + track + '-text');
-        if (textEl) textEl.textContent = data.label;
       }
     });
   }
