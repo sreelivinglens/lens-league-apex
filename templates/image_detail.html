@@ -1201,17 +1201,23 @@
   <style>
     /* ── Print styles — logbook card ──────────────────────────────── */
     @media print {
-      /* S151 fix: 8-page blank bug.
-         display:none cannot be overridden by visibility:visible — Chrome renders
-         blank pages for every hidden element. Fix: collapse everything with
-         display:none explicitly, then force logbook to display:block. */
-      body > *, header, nav, footer, .nav, .footer, .site-footer,
-      .detail-wrap > *:not(.sl-logbook-print) {
-        display: none !important;
-      }
+      /* S152 fix: blank PDF bug.
+         .sl-logbook-print lives inside .detail-wrap which is a direct body child.
+         Hiding body > * hides detail-wrap and everything in it including the logbook.
+         Correct approach: hide body-level chrome (nav/footer) directly,
+         hide detail-wrap children individually, then show only the logbook. */
+
+      /* 1. Hide body-level navigation and chrome */
+      body > *:not(.detail-wrap) { display: none !important; }
+
+      /* 2. Hide everything inside detail-wrap except the logbook */
+      .detail-wrap > *:not(.sl-logbook-print) { display: none !important; }
+
+      /* 3. Force logbook visible and block-level */
       .sl-logbook-print {
         display: block !important;
         position: static !important;
+        visibility: visible !important;
         width: 100% !important;
         max-width: 800px !important;
         margin: 0 auto !important;
@@ -1220,7 +1226,10 @@
         background: #fff;
         padding: 0;
       }
-      .sl-logbook-print * { visibility: visible !important; }
+      .sl-logbook-print * {
+        display: revert !important;
+        visibility: visible !important;
+      }
       .sl-logbook-print a { color: inherit; text-decoration: none; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
