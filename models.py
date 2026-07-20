@@ -196,6 +196,7 @@ class Image(db.Model):
     thumb_url           = db.Column(db.String(512), nullable=True)
     card_path           = db.Column(db.String(512), nullable=True)
     card_url            = db.Column(db.String(512), nullable=True)
+    share_token         = db.Column(db.String(64),  nullable=True, unique=True, index=True)  # Session 152 — public share URL token
     file_size_kb        = db.Column(db.Integer,  nullable=True)
     width               = db.Column(db.Integer,  nullable=True)
     height              = db.Column(db.Integer,  nullable=True)
