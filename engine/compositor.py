@@ -139,15 +139,51 @@ def build_card_share(
     CY   = int((rmin + rmax) // 2)
     PH_W = int(cmax - cmin)
 
-    # ── Photo — fit to width, top-aligned, rotate to match frame ─────────────
+    # ── Photo — fit to frame, blurred background fill for portrait images ──────
+    # Session 152: portrait white bar fix.
+    # Landscape: scale to width (original behaviour — fills frame cleanly).
+    # Portrait:  scale to HEIGHT so the full photo is visible, then fill the
+    #            side gaps with a heavily blurred + darkened version of the
+    #            same photo. No white bars, no black bars, looks intentional.
     photo = Image.open(photo_path).convert('RGBA')
     pw, ph_ = photo.size
-    cscale  = PH_W / pw
-    nw, nh  = int(pw * cscale), int(ph_ * cscale)
-    photo   = photo.resize((nw, nh), Image.LANCZOS)
+    PH_H    = int(rmax - rmin)          # frame height from clip mask
+    is_portrait = ph_ > pw              # portrait = taller than wide
 
-    photo_full = Image.new('RGBA', (1080, 1080), (0, 0, 0, 0))
-    photo_full.paste(photo, (CX - nw // 2, rmin + 4))
+    if is_portrait:
+        # Scale photo so its height fills the frame height
+        cscale = PH_H / ph_
+        nw, nh = int(pw * cscale), int(ph_ * cscale)
+        photo_scaled = photo.resize((nw, nh), Image.LANCZOS)
+
+        # Build blurred background: scale photo to fill full frame WIDTH
+        bg_scale = PH_W / pw
+        bg_w, bg_h = int(pw * bg_scale), int(ph_ * bg_scale)
+        bg = photo.resize((bg_w, bg_h), Image.LANCZOS).convert('RGB')
+        # Heavy blur + darken so it reads as a neutral backdrop
+        bg = bg.filter(ImageFilter.GaussianBlur(radius=24))
+        bg_darken = Image.new('RGB', bg.size, (0, 0, 0))
+        bg = Image.blend(bg, bg_darken, alpha=0.45)
+        bg = bg.convert('RGBA')
+
+        # Place background centred in frame zone
+        bg_full = Image.new('RGBA', (1080, 1080), (0, 0, 0, 0))
+        bg_paste_x = CX - bg_w // 2
+        bg_paste_y = rmin + 4
+        bg_full.paste(bg, (bg_paste_x, bg_paste_y))
+
+        # Place scaled portrait centred over blurred background
+        photo_full = bg_full.copy()
+        paste_x = CX - nw // 2
+        paste_y = rmin + 4
+        photo_full.paste(photo_scaled, (paste_x, paste_y), photo_scaled)
+    else:
+        # Landscape: original behaviour — scale to width, top-aligned
+        cscale = PH_W / pw
+        nw, nh = int(pw * cscale), int(ph_ * cscale)
+        photo_scaled = photo.resize((nw, nh), Image.LANCZOS)
+        photo_full = Image.new('RGBA', (1080, 1080), (0, 0, 0, 0))
+        photo_full.paste(photo_scaled, (CX - nw // 2, rmin + 4))
     photo_full = photo_full.rotate(FRAME_ANGLE, center=(CX, CY),
                                     resample=Image.BICUBIC, expand=False)
     photo_arr = np.array(photo_full)
