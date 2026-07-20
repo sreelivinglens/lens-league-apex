@@ -1731,12 +1731,12 @@
       <script>
       async function slShareCard() {
         const cardUrl    = "{{ image.card_url or '' }}";
-        const shareUrl   = "{{ request.host_url }}share/{{ image.share_token or '' }}";
+        const shareUrl   = "{{ request.host_url }}card/{{ image.share_token or '' }}";
         const shareTitle = "{{ (image.asset_name or image.original_filename or 'My photograph') | e }} — {{ image.tier or '' }} · Shutter League";
         const shareText  = "Evaluated by the Apex DDI Engine on Shutter League";
         if (navigator.share && cardUrl) {
           try {
-            const resp = await fetch(cardUrl);
+            const resp = await fetch(cardUrl, { mode: 'cors' });
             const blob = await resp.blob();
             const file = new File([blob], 'shutter-league-card.jpg', { type: 'image/jpeg' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1745,12 +1745,12 @@
             }
           } catch(_) {}
           navigator.share({ title: shareTitle, text: shareText, url: shareUrl }).catch(() => {
-            window.open(cardUrl, '_blank');
+            window.open(shareUrl, '_blank');
           });
-        } else if (cardUrl) {
-          window.open(cardUrl, '_blank');
         } else if (shareUrl) {
           window.open(shareUrl, '_blank');
+        } else if (cardUrl) {
+          window.open(cardUrl, '_blank');
         }
       }
       </script>
