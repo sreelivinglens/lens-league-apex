@@ -1295,6 +1295,22 @@
     @media screen {
       .sl-logbook-print { display: none; }
     }
+    /* Print: force display block so visibility overrides work correctly */
+    @media print {
+      .sl-logbook-print { display: block !important; }
+      /* Collapse all non-logbook elements to zero size so they don't create blank pages */
+      body > *:not(.sl-logbook-print),
+      nav, header, footer, .navbar, .sl-nav,
+      [class*="dashboard"], [class*="sidebar"],
+      [class*="modal"], [class*="overlay"],
+      [class*="drawer"], [id*="drawer"],
+      .sl-share-panel, .sl-actions, .sl-peers,
+      .sl-weekly, .sl-trend, .sl-scores {
+        display: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+    }
   </style>
 
   <div class="sl-logbook-print">
