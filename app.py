@@ -870,6 +870,8 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS shooting_frequency VARCHAR(30)",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_motivation VARCHAR(40)",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS interests_complete BOOLEAN DEFAULT FALSE",
+                    # Session 152 — onboarding email drip bitmask
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_email_sent INTEGER DEFAULT 0",
                     # v52  -  legal consent tracking
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
@@ -2619,6 +2621,267 @@ def run_seasonal_discovery_job():
             app.logger.info(f'[seasonal_discovery] Weekly run complete: {summary}')
         except Exception as e:
             app.logger.error(f'[seasonal_discovery] Weekly run error: {e}')
+
+
+
+# ── Onboarding Email Sequence E1–E7 — Session 152 ────────────────────────────
+
+def _sl_member_email(header_text, body_html, footer_note=''):
+    """
+    Standard member-facing email table wrapper.
+    Inter, #FEFCF8, Slate Blue #2C3E6B header, Gold #F5C518, min 16px body.
+    Responsive — sl-ob-btn goes full-width on mobile. 70yr compliant.
+    """
+    return (
+        '<!DOCTYPE html><html><head>'
+        '<meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<style>'
+        '@media only screen and (max-width:600px){'
+        '.sl-ob-wrap{padding:16px 12px!important;}'
+        '.sl-ob-inner{padding:20px 16px!important;}'
+        '.sl-ob-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}'
+        '}'
+        '</style>'
+        '</head>'
+        '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:32px 16px;">'
+        '<tr><td align="center">'
+        '<table width="560" cellpadding="0" cellspacing="0" class="sl-ob-wrap" '
+        'style="background:#ffffff;border:1px solid #E0D8C8;max-width:560px;width:100%;">'
+        '<tr><td style="background:#2C3E6B;padding:20px 28px;">'
+        '<div style="margin:0;font-size:14px;font-weight:700;letter-spacing:3px;'
+        'color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">'
+        + header_text + '</div>'
+        '</td></tr>'
+        '<tr><td class="sl-ob-inner" style="padding:28px 28px 24px;">'
+        + body_html
+        + '</td></tr>'
+        '<tr><td style="border-top:1px solid #E0D8C8;padding:16px 28px;">'
+        '<p style="margin:0;font-size:14px;color:#8a8070;line-height:1.6;">'
+        + (footer_note or 'You&#39;re receiving this as a new Shutter League member.')
+        + '<br><a href="https://shutterleague.com/profile" '
+        'style="color:#8a8070;">Manage email preferences</a></p>'
+        '</td></tr>'
+        '</table></td></tr></table></body></html>'
+    )
+
+
+def _ob_paras(paragraphs, cta_url=None, cta_label=None):
+    """Build body HTML for onboarding emails from a list of paragraph strings."""
+    html = ''
+    for p in paragraphs:
+        html += f'<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">{p}</p>'
+    if cta_url and cta_label:
+        html += (
+            '<div style="margin:24px 0 8px;">'
+            f'<a href="{cta_url}" class="sl-ob-btn" '
+            'style="display:inline-block;background:#2C3E6B;color:#ffffff;'
+            'font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;'
+            'padding:14px 28px;text-decoration:none;border-radius:4px;'
+            'font-family:Inter,Arial,sans-serif;">'
+            f'{cta_label} &#8594;</a>'
+            '</div>'
+        )
+    return html
+
+
+def run_onboarding_email_sequence():
+    """
+    Onboarding email drip E1–E7. Session 152.
+    Runs every 6 hours (00:20, 06:20, 12:20, 18:20 UTC).
+    Free-tier members only (is_subscribed = FALSE / NULL).
+
+    Gate per email:
+    - onboarding_complete = TRUE, email not NULL
+    - is_subscribed = FALSE or NULL (subscribers get welcome sequence)
+    - (onboarding_email_sent >> bit) & 1 == 0 (not yet sent)
+    - days since agreed_at >= trigger days
+    - last_upload_at < now-48hr OR NULL (don't interrupt active users)
+
+    KYC: no score/rank/prize/winner/contest/reward.
+    Sherpa voice: honest, specific, no hedging, no exclamation marks.
+    """
+    with app.app_context():
+        try:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            now   = datetime.utcnow()
+
+            # (bit, days_trigger, subject, paragraphs, cta_url, cta_label)
+            SEQUENCE = [
+                (
+                    0, 1,
+                    'Your first upload \u2014 what to expect',
+                    [
+                        'Hi {name},',
+                        'Your account is ready. The next step is uploading your first photograph.',
+                        'When you upload, the DDI engine evaluates the image across eight dimensions: '
+                        'Composition, Light, Clarity, Depth, Subject, Colour, Impact, and Context. '
+                        'It takes under two minutes.',
+                        'You will receive a Sherpa note with the evaluation \u2014 a specific, honest '
+                        'reading of what the image is doing and where attention could go next.',
+                        'No hedging. No encouragement for its own sake. Just what the photograph shows.',
+                    ],
+                    f'{_site}/upload', 'Upload Your First Photograph',
+                ),
+                (
+                    1, 3,
+                    'What the Sherpa is actually telling you',
+                    [
+                        'Hi {name},',
+                        'The Sherpa note at the bottom of your evaluation is the part most photographers '
+                        'read once and move past. It is worth reading twice.',
+                        'Each Sherpa block names the specific visual decision that would change the '
+                        'photograph most \u2014 not a general direction, but this image, this frame.',
+                        'If it mentions a master photographer, that reference is intentional. '
+                        'It points to a body of work where that decision was resolved differently.',
+                        'The next time you read your Sherpa note, ask: what is the one thing it is '
+                        'asking me to see?',
+                    ],
+                    f'{_site}/dashboard', 'Go to Your Dashboard',
+                ),
+                (
+                    2, 7,
+                    'Why blind evaluation works',
+                    [
+                        'Hi {name},',
+                        'Peer evaluation on Shutter League is blind. You see the photograph. '
+                        'You do not see who took it.',
+                        'This matters because most photography feedback is social. '
+                        'You respond to the person first, the photograph second.',
+                        'When you do not know whose work you are looking at, you read the frame differently. '
+                        'Photographers who have done fifty evaluations on this platform describe a shift '
+                        'in how they look at their own work.',
+                        'Rate three photographs when you next log in. It takes four minutes.',
+                    ],
+                    f'{_site}/rate', 'Evaluate Photographs',
+                ),
+                (
+                    3, 14,
+                    'Your standing is building',
+                    [
+                        'Hi {name},',
+                        'Shutter League standing is not decided by a single image on a single day. '
+                        'It accumulates across a full year of uploads.',
+                        'The photographers who build strong standing are consistent, not brilliant on demand. '
+                        'They upload once or twice a week, across different conditions and subjects.',
+                        'Your evaluation history is building a picture of your range and consistency. '
+                        'That picture compounds over time in ways a single strong image cannot.',
+                        'If you have not uploaded this week, now is a good time.',
+                    ],
+                    f'{_site}/upload', 'Upload a Photograph',
+                ),
+                (
+                    4, 21,
+                    'What genre does to your evaluation',
+                    [
+                        'Hi {name},',
+                        'Genre on Shutter League is not a category. It is a frame of reference.',
+                        'When you upload a Street photograph, the DDI engine reads it against '
+                        'the specific decisions that define strong Street work: compression, '
+                        'decisive moment, light as a structural element, human presence without direction.',
+                        'A Wildlife photograph is evaluated differently \u2014 patience, '
+                        'environmental context, animal behaviour at the moment of exposure.',
+                        'Uploading across genres builds a richer picture of where your eye is strong.',
+                    ],
+                    f'{_site}/learning', 'Explore the Learning Section',
+                ),
+                (
+                    5, 30,
+                    'One month in \u2014 where photographers stall',
+                    [
+                        'Hi {name},',
+                        'One month in, most photographers have uploaded between two and eight images. '
+                        'A smaller group has uploaded twenty or more.',
+                        'The gap is not talent. It is the decision to treat evaluation as feedback '
+                        'rather than judgement.',
+                        'The photographers who stall are waiting for the image they are proud of '
+                        'before uploading. The ones who keep going upload the image they took today, '
+                        'read what the engine says, and adjust before the next session.',
+                        'The Sherpa note is most useful on an image you are uncertain about. '
+                        'That is the one worth uploading next.',
+                    ],
+                    f'{_site}/upload', 'Upload a Photograph',
+                ),
+                (
+                    6, 45,
+                    'The photographers who improve fastest',
+                    [
+                        'Hi {name},',
+                        'Looking at evaluation histories on this platform, the photographers who '
+                        'show the sharpest improvement share one habit: they re-read their Sherpa '
+                        'notes before a shoot, not after.',
+                        'They are not looking for what went wrong with the last image. They are '
+                        'looking for the one decision the engine keeps returning to, and they '
+                        'make that decision consciously on the next shoot.',
+                        'It is a different relationship with feedback \u2014 anticipatory rather '
+                        'than retrospective.',
+                        'Your evaluation history is in your dashboard. It is worth reading as a '
+                        'sequence, not as individual reports.',
+                    ],
+                    f'{_site}/dashboard', 'Read Your Evaluation History',
+                ),
+            ]
+
+            try:
+                users = db.session.execute(db.text(
+                    "SELECT id, email, full_name, agreed_at, onboarding_email_sent, last_upload_at "
+                    "FROM users "
+                    "WHERE onboarding_complete = TRUE "
+                    "  AND (is_subscribed = FALSE OR is_subscribed IS NULL) "
+                    "  AND email IS NOT NULL "
+                    "  AND agreed_at IS NOT NULL"
+                )).fetchall()
+            except Exception as _qe:
+                app.logger.error(f'[onboarding_email] query failed: {_qe}')
+                return
+
+            sent_total = 0
+            for u in users:
+                uid         = u[0]
+                email       = u[1]
+                name        = (u[2] or 'Photographer').split()[0]
+                agreed_at   = u[3]
+                sent_mask   = u[4] or 0
+                last_upload = u[5]
+
+                # Don't interrupt active users
+                if last_upload and (now - last_upload).total_seconds() < 172800:
+                    continue
+
+                days_since = (now - agreed_at).days
+
+                for bit, days_trigger, subject, paragraphs, cta_url, cta_label in SEQUENCE:
+                    if days_since < days_trigger:
+                        continue
+                    if (sent_mask >> bit) & 1:
+                        continue  # Already sent
+
+                    filled = [p.replace('{name}', name) for p in paragraphs]
+                    body   = _ob_paras(filled, cta_url, cta_label)
+                    html   = _sl_member_email('SHUTTER LEAGUE', body)
+
+                    if send_email(email, subject, html):
+                        new_mask = sent_mask | (1 << bit)
+                        try:
+                            db.session.execute(db.text(
+                                "UPDATE users SET onboarding_email_sent = :mask WHERE id = :uid"
+                            ), {'mask': new_mask, 'uid': uid})
+                            db.session.commit()
+                            sent_mask = new_mask
+                        except Exception as _me:
+                            db.session.rollback()
+                            app.logger.error(f'[onboarding_email] mask save failed user={uid}: {_me}')
+                        sent_total += 1
+                        app.logger.info(f'[onboarding_email] E{bit + 1} sent to user={uid}')
+                    break  # One email per user per run
+
+            app.logger.info(f'[onboarding_email] Run complete. {sent_total} sent.')
+        except Exception as _e:
+            app.logger.error(f'[onboarding_email] Job failed: {_e}')
+        finally:
+            db.session.remove()
+
 
 
 # ── Re-engagement Emailer ─────────────────────────────────────────────────────
@@ -5812,13 +6075,23 @@ def account_delete():
                 to_addresses=[ADMIN_EMAIL],
                 subject=f'[Admin] Account self-deleted — {user_email}',
                 html_body=(
-                    '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-                    '<p style="color:#C8A84B;font-weight:700;">ACCOUNT SELF-DELETED</p>'
-                    '<p>User: ' + user_name + ' (' + user_email + ')<br>'
-                    'User ID: ' + str(user_id) + '<br>'
-                    'Track: ' + (user_track or 'none') + '</p>'
-                    '<p style="color:#8a8070;">All data permanently deleted per DPDP Act 2023 right to erasure.</p>'
-                    '</div>'
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                    '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                    '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                    '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                    '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                    '</td></tr>'
+                    '<tr><td style="padding:24px;">'
+                    '<p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">Account Self-Deleted</p>'
+                    '<p style="margin:0 0 6px;font-size:16px;color:#4A4840;line-height:1.7;">User: <strong>' + user_name + '</strong> (' + user_email + ')</p>'
+                    '<p style="margin:0 0 6px;font-size:16px;color:#4A4840;line-height:1.7;">User ID: ' + str(user_id) + '</p>'
+                    '<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">Track: ' + (user_track or 'none') + '</p>'
+                    '<p style="margin:0;font-size:15px;color:#8a8070;line-height:1.6;">All data permanently deleted per DPDP Act 2023 right to erasure.</p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
                 )
             )
         except Exception:
@@ -7294,22 +7567,24 @@ def upload():
                                         _bf_admin_emails,
                                         f'[Content Review] Breastfeeding Image — {_img.asset_name or "Untitled"} (ID: {_img.id})',
                                         (
-                                            '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-                                            '<p style="color:#C8A84B;font-weight:700;font-size:15px;">CONTENT REVIEW REQUIRED — BREASTFEEDING IMAGE</p>'
-                                            f'<p>Image: <strong>{_img.asset_name or "Untitled"}</strong> (ID: {_img.id})<br>'
-                                            f'Photographer: {(_bf_u.username if _bf_u else "unknown")} ({(_bf_u.email if _bf_u else "unknown")})<br>'
-                                            f'Genre: {_img.genre or "—"}<br>'
-                                            f'Sub-genre: <strong>{_effective_subgenre or "undetected"}</strong></p>'
-                                            '<p>This image has been held from public view pending your review. '
-                                            'Breastfeeding photography requires admin approval when sub-genre is not '
-                                            '<em>lifestyle_intimate</em>.</p>'
-                                            f'<a href="{_bf_site}/admin/image/{_img.id}" '
-                                            'style="display:inline-block;background:#C8A84B;color:#1a1a18;'
-                                            'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
-                                            'letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
-                                            'text-decoration:none;border-radius:4px;margin:16px 0;">'
-                                            'Review &amp; Approve &#8594;</a>'
-                                            '</div>'
+                                            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                                            '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                                            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;"><tr><td align="center">'
+                                            '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                                            '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                                            '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                                            '</td></tr><tr><td style="padding:24px;">'
+                                            '<p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">Content Review Required — Breastfeeding Image</p>'
+                                            f'<table style="margin:12px 0;border-collapse:collapse;width:100%;">'
+                                            f'<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;white-space:nowrap;vertical-align:top;">Image</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">{_img.asset_name or "Untitled"} (ID: {_img.id})</td></tr>'
+                                            f'<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Photographer</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">{(_bf_u.username if _bf_u else "unknown")} ({(_bf_u.email if _bf_u else "unknown")})</td></tr>'
+                                            f'<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Genre</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">{_img.genre or "—"}</td></tr>'
+                                            f'<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Sub-genre</td><td style="padding:6px 0;font-size:15px;font-weight:700;color:#1a1a18;">{_effective_subgenre or "undetected"}</td></tr>'
+                                            '</table>'
+                                            '<p style="margin:0 0 16px;font-size:15px;color:#4A4840;line-height:1.7;">This image has been held from public view pending your review. Breastfeeding photography requires admin approval when sub-genre is not <em>lifestyle_intimate</em>.</p>'
+                                            f'<a href="{_bf_site}/admin/image/{_img.id}" style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;font-family:Inter,Arial,sans-serif;">Review &amp; Approve &#8594;</a>'
+                                            '</td></tr></table></td></tr></table></body></html>'
                                         )
                                     )
                                     app.logger.info(
@@ -7379,7 +7654,24 @@ def upload():
                                 send_email(
                                     to_addresses=[ADMIN_EMAIL],
                                     subject='[Admin] AI Flag — ' + (_img.asset_name or 'Untitled'),
-                                    html_body=('<p>Auto-flagged AI image.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>AI Suspicion: ' + str(round(ai_suspicion, 2)) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                                    html_body=(
+                                        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                                        '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;"><tr><td align="center">'
+                                        '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                                        '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                                        '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                                        '</td></tr><tr><td style="padding:24px;">'
+                                        '<p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">AI Image Auto-Flagged</p>'
+                                        '<table style="margin:12px 0;border-collapse:collapse;width:100%;">'
+                                        '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;white-space:nowrap;vertical-align:top;">Image</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.asset_name or 'Untitled') + '</td></tr>'
+                                        '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">AI Suspicion</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + str(round(ai_suspicion, 2)) + '</td></tr>'
+                                        '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">User</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_u.email if _u else 'unknown') + '</td></tr>'
+                                        '</table>'
+                                        '<a href="' + _iurl + '" style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;font-family:Inter,Arial,sans-serif;">Review Image &#8594;</a>'
+                                        '</td></tr></table></td></tr></table></body></html>'
+                                    ),
                                     text_body=('AI Flag\nImage: ' + (_img.asset_name or 'Untitled') + '\nSuspicion: ' + str(round(ai_suspicion, 2)) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
                                 )
                             except Exception as _me:
@@ -7691,14 +7983,52 @@ def upload():
                                         send_email(
                                             to_addresses=[ADMIN_EMAIL],
                                             subject='[Admin] Grandmaster RAW Required — ' + (_img.asset_name or 'Untitled') + ' (' + str(_img.score) + ')',
-                                            html_body=('<p>Grandmaster image auto-flagged for RAW verification. Submission record created. User notified with direct submit link.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>Score: ' + str(_img.score) + ' — ' + (_img.tier or '') + '</li><li>Photographer: ' + (_img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li><li>Deadline: 7 days</li></ul><p><a href="' + _site_url + '/admin/raw-verification/' + str(_img.id) + '">View in RAW Queue</a></p>'),
-                                            text_body=('Grandmaster RAW auto-flagged\nImage: ' + (_img.asset_name or 'Untitled') + '\nScore: ' + str(_img.score) + '\nUser: ' + (_u.email if _u else 'unknown'))
+                                            html_body=(
+                                                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                                '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                                                '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;"><tr><td align="center">'
+                                                '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                                                '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                                                '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                                                '</td></tr><tr><td style="padding:24px;">'
+                                                '<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">Grandmaster RAW Required</p>'
+                                                '<p style="margin:0 0 12px;font-size:15px;color:#4A4840;line-height:1.7;">Image auto-flagged for RAW verification. Submission record created. Photographer notified with direct submit link.</p>'
+                                                '<table style="margin:12px 0;border-collapse:collapse;width:100%;">'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;white-space:nowrap;vertical-align:top;">Image</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.asset_name or 'Untitled') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Evaluation</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + str(_img.score) + ' — ' + (_img.tier or '') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Photographer</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.photographer_name or _uname) + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">User</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_u.email if _u else 'unknown') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Deadline</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">7 days</td></tr>'
+                                                '</table>'
+                                                '<a href="' + _site_url + '/admin/raw-verification/' + str(_img.id) + '" style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;font-family:Inter,Arial,sans-serif;">View in RAW Queue &#8594;</a>'
+                                                '</td></tr></table></td></tr></table></body></html>'
+                                            ),
+                                            text_body=('Grandmaster RAW auto-flagged\nImage: ' + (_img.asset_name or 'Untitled') + '\nEvaluation: ' + str(_img.score) + '\nUser: ' + (_u.email if _u else 'unknown'))
                                         )
                                     else:
                                         send_email(
                                             to_addresses=[ADMIN_EMAIL],
                                             subject='[Admin] Image Flagged for Review — ' + (_img.asset_name or 'Untitled'),
-                                            html_body=('<p>Image flagged for review.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>Score: ' + str(_img.score) + ' — ' + (_img.tier or '') + '</li><li>Reason: ' + (_img.flagged_reason or '') + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                                            html_body=(
+                                                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                                '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                                                '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;"><tr><td align="center">'
+                                                '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                                                '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                                                '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                                                '</td></tr><tr><td style="padding:24px;">'
+                                                '<p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">Image Flagged for Review</p>'
+                                                '<table style="margin:12px 0;border-collapse:collapse;width:100%;">'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;white-space:nowrap;vertical-align:top;">Image</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.asset_name or 'Untitled') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Evaluation</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + str(_img.score) + ' — ' + (_img.tier or '') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Reason</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.flagged_reason or 'System flag') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">User</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_u.email if _u else 'unknown') + '</td></tr>'
+                                                '</table>'
+                                                '<a href="' + _iurl + '" style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;font-family:Inter,Arial,sans-serif;">Review Image &#8594;</a>'
+                                                '</td></tr></table></td></tr></table></body></html>'
+                                            ),
                                             text_body=('Flagged for review.\nImage: ' + (_img.asset_name or 'Untitled') + '\nReason: ' + (_img.flagged_reason or '') + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
                                         )
                                 except Exception as _me:
@@ -15091,18 +15421,23 @@ def sitemap():
     from datetime import date
     today = date.today().strftime('%Y-%m-%d')
     pages = [
-        ('/', '1.0', 'weekly'),
-        ('/about', '0.9', 'monthly'),
-        ('/how-it-works', '0.9', 'monthly'),
-        ('/pricing', '0.9', 'weekly'),
-        ('/terms', '0.8', 'monthly'),
-        ('/privacy', '0.8', 'monthly'),
-        ('/refund-policy', '0.8', 'monthly'),
+        ('/',               '1.0', 'weekly'),
+        ('/about',          '0.9', 'monthly'),
+        ('/how-it-works',   '0.9', 'monthly'),
+        ('/pricing',        '0.9', 'weekly'),
+        ('/terms',          '0.8', 'monthly'),
+        ('/privacy',        '0.8', 'monthly'),
+        ('/refund-policy',  '0.8', 'monthly'),
         # /shipping-policy removed — 301 redirects to /refund-policy (no physical goods)
-        ('/contact', '0.7', 'monthly'),
-        ('/mentors', '0.8', 'weekly'),
-        ('/science', '0.7', 'monthly'),
-        ('/learning', '0.7', 'weekly'),
+        ('/contact',        '0.7', 'monthly'),
+        ('/mentors',        '0.8', 'weekly'),
+        ('/science',        '0.7', 'monthly'),
+        ('/learning',       '0.7', 'weekly'),
+        ('/faq',            '0.7', 'monthly'),       # Session 152
+        ('/leaderboard',    '0.7', 'daily'),         # Session 152
+        ('/challenge',      '0.8', 'weekly'),        # Session 152
+        ('/poty',           '0.7', 'monthly'),       # Annual Excellence Award — Session 152
+        ('/stats',          '0.6', 'weekly'),        # Session 152
     ]
     base = 'https://shutterleague.com'
     urls = ''
@@ -19516,7 +19851,16 @@ def server_error(e):
 
 @app.route('/health')
 def health():
-    return jsonify({'status': 'ok', 'app': 'Shutter League'}), 200
+    """
+    Health check — Railway, Cloudflare, Razorpay.
+    Returns 503 if DB unavailable. Session 152.
+    """
+    try:
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({'status': 'ok', 'app': 'Shutter League', 'db': 'ok'}), 200
+    except Exception as _he:
+        app.logger.error(f'[health] DB check failed: {_he}')
+        return jsonify({'status': 'degraded', 'app': 'Shutter League', 'db': 'unavailable'}), 503
 
 
 # ===========================================================================
@@ -25077,6 +25421,14 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute=15, timezone='UTC'),
         id               = 'reengagement_emailer',
         name             = '24hr re-engagement email trigger',
+        replace_existing = True,
+    )
+    # Session 152 — onboarding email drip E1–E7, every 6 hours
+    _scheduler.add_job(
+        func             = run_onboarding_email_sequence,
+        trigger          = CronTrigger(hour='0,6,12,18', minute=20, timezone='UTC'),
+        id               = 'onboarding_email_sequence',
+        name             = 'Onboarding drip E1–E7 — free tier new members',
         replace_existing = True,
     )
     # Daily signup digest — 09:00 IST = 03:30 UTC
