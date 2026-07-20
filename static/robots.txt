@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /admin
+Disallow: /sree-admin
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /upload
+Disallow: /bulk-upload
+Disallow: /rate
+Disallow: /raw
+Disallow: /judge
+
+Sitemap: https://shutterleague.com/sitemap-index.xml
+
+# Automated scraping, bulk harvesting, and data extraction are
+# strictly prohibited. See /terms for full legal restrictions.
