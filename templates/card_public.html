@@ -207,7 +207,19 @@
     <span class="pc-brand-sub">Evaluation Card &nbsp;·&nbsp; Apex DDI Engine</span>
   </div>
 
-  {# ── Photo + Score bar — wrapped so bar never overlays photo ── #}
+  {# ── Polaroid compositor card — shown when card_url exists (Session 149+) ── #}
+  {# This is the JPG built by the compositor — polaroid frame, score, name.    #}
+  {# Falls back to the raw thumbnail + score bar if no card has been rendered. #}
+  {% if image.card_url %}
+  <div style="text-align:center; margin-bottom:20px;">
+    <img src="{{ image.card_url }}"
+         alt="Shutter League evaluation card — {{ image.asset_name or 'photograph' }}"
+         style="max-width:100%; width:auto; max-height:90vh; display:block; margin:0 auto; border-radius:4px; box-shadow:0 4px 24px rgba(0,0,0,0.12);"
+         onerror="this.style.display='none'">
+  </div>
+  {% else %}
+
+  {# ── Photo + Score bar — fallback when no compositor card yet ── #}
   <div>
 
   <div class="pc-photo-wrap">
@@ -237,6 +249,7 @@
   </div>
 
   </div>{# ── end photo+score wrapper ── #}
+  {% endif %}{# ── end card_url else ── #}
 
   {# ── See full evaluation — links to image_detail (login required) — Session 152 #}
   {% if current_user and current_user.is_authenticated and current_user.id == image.user_id %}
