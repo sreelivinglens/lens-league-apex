@@ -1201,36 +1201,51 @@
   <style>
     /* ── Print styles — logbook card ──────────────────────────────── */
     @media print {
-      /* S152 fix: blank PDF bug.
-         .sl-logbook-print lives inside .detail-wrap which is a direct body child.
-         Hiding body > * hides detail-wrap and everything in it including the logbook.
-         Correct approach: hide body-level chrome (nav/footer) directly,
-         hide detail-wrap children individually, then show only the logbook. */
+      /* S152 final fix: blank PDF.
+         Three-layer approach — body chrome, detail-wrap children, logbook itself.
+         Do NOT use display:revert on children — it breaks img display:block.
+         Do NOT use visibility:hidden on body — Chrome still allocates page space.
+         Use display:none on everything, then display:block the logbook tree. */
 
-      /* 1. Hide body-level navigation and chrome */
+      /* 1. Hide body-level chrome */
       body > *:not(.detail-wrap) { display: none !important; }
 
-      /* 2. Hide everything inside detail-wrap except the logbook */
+      /* 2. Keep detail-wrap visible (it wraps logbook) but hide its siblings */
+      .detail-wrap { display: block !important; padding: 0 !important; margin: 0 !important; }
       .detail-wrap > *:not(.sl-logbook-print) { display: none !important; }
 
-      /* 3. Force logbook visible and block-level */
+      /* 3. Force logbook block — no position tricks */
       .sl-logbook-print {
         display: block !important;
-        position: static !important;
         visibility: visible !important;
         width: 100% !important;
         max-width: 800px !important;
         margin: 0 auto !important;
         font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
         color: #1a1a18;
-        background: #fff;
-        padding: 0;
+        background: #fff !important;
+        padding: 0 !important;
       }
-      .sl-logbook-print * {
-        display: revert !important;
+
+      /* 4. Make all logbook descendants visible — explicit, no revert */
+      .sl-logbook-print div,
+      .sl-logbook-print p,
+      .sl-logbook-print span,
+      .sl-logbook-print h1,
+      .sl-logbook-print h2,
+      .sl-logbook-print h3 { display: block !important; visibility: visible !important; }
+
+      .sl-logbook-print img {
+        display: block !important;
         visibility: visible !important;
+        max-width: 100% !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
-      .sl-logbook-print a { color: inherit; text-decoration: none; }
+
+      .sl-logbook-print a { color: inherit !important; text-decoration: none !important; }
+
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
 
