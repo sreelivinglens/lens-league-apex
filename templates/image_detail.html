@@ -1249,9 +1249,20 @@
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
 
-    /* Screen: hidden entirely */
+    /* Screen: visually hidden but in render tree — Safari print fix S152.
+       display:none prevents Safari's print engine from accessing the content.
+       Use off-screen positioning instead so Safari can render it for print. */
     @media screen {
-      .sl-logbook-print { display: none; }
+      .sl-logbook-print {
+        position: absolute !important;
+        left: -9999px !important;
+        top: 0 !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(0,0,0,0) !important;
+        pointer-events: none !important;
+      }
     }
   </style>
 
