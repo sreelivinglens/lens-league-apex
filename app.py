@@ -6212,6 +6212,13 @@ def upload():
                 # Fix: audit=None. Engine treats this as a fresh image with a
                 # calibrated baseline score — correct. previous_score is kept
                 # for stability delta only.
+                # If similarity >= 98% it's effectively the same image — block with friendly message
+                if sim >= 98.0:
+                    if os.path.exists(thumb_path): os.remove(thumb_path)
+                    return jsonify({'error': True, 'message':
+                        'This image has already been evaluated. '
+                        'Head to your dashboard to see your scorecard and coaching.'
+                    }), 409
                 if ex.status == 'scored' and ex.score:
                     _near_match_previous = {
                         'score':      float(ex.score),
@@ -6325,8 +6332,12 @@ def upload():
                                 'studio logo, social media handle (@username), copyright text, or any branding '
                                 'embedded into the image by the photographer? '
                                 'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
-                                'platform watermarks, or natural scene text. '
-                                'Only flag overlays added on top of the photograph after capture. '
+                                'platform watermarks, natural scene text, '
+                                'or phone/camera app overlays (device name, date/time stamps, '
+                                'GPS coordinates, camera model text burned in by the phone — e.g. Galaxy S25, iPhone, '
+                                'date/time overlays added automatically by camera apps). '
+                                'ONLY flag if the photographer deliberately added their own branding, studio logo, '
+                                'social handle, or copyright text as a post-processing overlay. '
                                 'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
                             )}
                         ]
@@ -17580,8 +17591,12 @@ def bulk_upload_one():
                             'studio logo, social media handle (@username), copyright text, or any branding '
                             'embedded into the image by the photographer? '
                             'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
-                            'platform watermarks, or natural scene text. '
-                            'Only flag overlays added on top of the photograph after capture. '
+                            'platform watermarks, natural scene text, '
+                            'or phone/camera app overlays (device name, date/time stamps, '
+                            'GPS coordinates, camera model text burned in by the phone — e.g. Galaxy S25, iPhone, '
+                            'date/time overlays added automatically by camera apps). '
+                            'ONLY flag if the photographer deliberately added their own branding, studio logo, '
+                            'social handle, or copyright text as a post-processing overlay. '
                             'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
                         )}
                     ]}]
