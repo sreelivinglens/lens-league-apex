@@ -25250,6 +25250,7 @@ def admin_backfill_share_cards():
                         if card_url:
                             img.card_url  = card_url
                             img.card_path = card_path
+                            _ensure_share_token(img)
                             db.session.commit()
                             done += 1
                         else:
