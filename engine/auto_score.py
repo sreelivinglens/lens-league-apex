@@ -657,24 +657,15 @@ Here is what that frame would have looked like: [specific, visual, concrete desc
 MASTER PHOTOGRAPHER REFERENCES:
 - Every card 1 (transferable_advice) MUST name one master.
 - Reference a SPECIFIC IMAGE or SPECIFIC BODY OF WORK, not just the name.
-- Format: "Search: [Photographer name] [specific image/series]" — give a search term
-  the photographer can use to find it.
-- Or if URL is known and stable: provide the URL.
 - ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
-  ONCE across the entire scorecard. If transferable_advice names Paul Nicklen,
-  then background_check and mentor_technical must NOT name Paul Nicklen again.
-  Check all four cards before finalising. A master who appears twice shows no effort.
+  ONCE across the entire scorecard. Check all four cards before finalising.
 - VARIETY RULE: If portfolio_context shows recent scorecards, do not repeat a master
   already used in the last 3 evaluations for this photographer.
-- Pool: Cartier-Bresson, Raghu Rai, Vivian Maier, Ernst Haas, Daido Moriyama,
-  Helen Levitt, Garry Winogrand, Fan Ho, Elliott Erwitt, Trent Parke, Salgado,
-  Nachtwey, Dorothea Lange, W. Eugene Smith, Mary Ellen Mark, Don McCullin,
-  Larry Burrows, Ansel Adams, Michael Kenna, Yann Arthus-Bertrand, Charlie Waite,
-  Joe Cornish, Art Wolfe, Frans Lanting, Nick Nichols, Paul Nicklen, Tim Laman,
-  Yousuf Karsh, Annie Leibovitz, Richard Avedon, Irving Penn, Helmut Newton,
-  Arnold Newman, Platon, Nadav Kander, Steve McCurry, Edward Weston, Man Ray,
-  Duane Michals, Ralph Gibson, Bill Brandt, Dimpy Bhalotia, Raghu Rai,
-  T.S. Satyan, Pablo Bartholomew, Swapan Parekh, Dayanita Singh.
+- PLATFORM MENTOR PRIORITY: If Ashok Kochhar is in the pool, reference him first
+  when the photographer is overthinking technique or working cross-genre.
+- Indian photographers in the pool are weighted equally to international.
+  Do not default to international names when an Indian master fits better.
+- {masters_pool_block}
 
 AWARD-WINNING GUIDANCE — every scorecard:
 End background_check with one specific answer to: "What would this image need to
@@ -4138,7 +4129,7 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     return "\n" + "\n".join(lines) + "\n"
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1, previous_score=None, previous_audit=None, same_image_rescore=False):
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1, previous_score=None, previous_audit=None, same_image_rescore=False, masters_by_genre=None):
     """
     Score an image using the Apex DDI Engine.
 
@@ -4335,6 +4326,40 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     else:
         effective_system = SYSTEM_BRIEF
 
+    # ── Masters pool — genre-filtered from DB (Session 153) ─────────────────
+    # masters_by_genre is a list of dicts passed from app.py at score time.
+    # Falls back to a compact genre-appropriate subset if not provided.
+    _FALLBACK_MASTERS = {
+        'Street':      'Henri Cartier-Bresson, Fan Ho, Daido Moriyama, Elliott Erwitt, Vivian Maier, Trent Parke, Raghu Rai, Vineet Vohra, Saul Leiter, Alex Webb',
+        'Wildlife':    'Nick Brandt, Frans Lanting, Art Wolfe, Paul Nicklen, Sudhir Shivaram, Kalyan Varma, Aishwarya Sridhar, Bence Mate, Vincent Munier',
+        'Portrait':    'Yousuf Karsh, Platon, Richard Avedon, Diane Arbus, Annie Leibovitz, Steve McCurry, Dabboo Ratnani, Dayanita Singh, Prabuddha Dasgupta',
+        'Maternity':   'Anne Geddes, Rineke Dijkstra, Sally Mann, Ana Brandt, Barkha Agarwal',
+        'Family':      'Sally Mann, Larry Towell, Carrie Mae Weems, Nan Goldin',
+        'Fashion':     'Helmut Newton, Peter Lindbergh, Irving Penn, Tim Walker, Nick Knight, Dabboo Ratnani, Tapu Javeri',
+        'Landscape':   'Ansel Adams, Michael Kenna, Hiroshi Sugimoto, Yann Arthus-Bertrand, Charlie Waite, Ashok Dilwali, Sebastiao Salgado',
+        'Documentary': 'James Nachtwey, Sebastiao Salgado, Dorothea Lange, W. Eugene Smith, Raghu Rai, Pablo Bartholomew, GMB Akash, Prashant Panjiar',
+        'Mobile':      'Dimpy Bhalotia, Reuben Wu, Simone Bramante, Daniel Arnold, Richard Koci Hernandez',
+        'Nature':      'Frans Lanting, Art Wolfe, Paul Nicklen, Michael Kenna, Sebastiao Salgado',
+        'People':      'Steve McCurry, Dorothea Lange, Mary Ellen Mark, Yousuf Karsh, Dayanita Singh, Sooni Taraporevala',
+    }
+    if masters_by_genre:
+        _pool_names = [m.get('name', '') for m in masters_by_genre if m.get('name')]
+        # Platform mentor always first if present
+        _mentors = [m for m in masters_by_genre if m.get('is_platform_mentor')]
+        _others  = [m for m in masters_by_genre if not m.get('is_platform_mentor')]
+        _ordered = _mentors + _others
+        _pool_names = [m.get('name', '') for m in _ordered if m.get('name')]
+        masters_pool_block = (
+            f"Pool for {genre} (genre-specific, admin-curated, 101-entry DB): "
+            + ', '.join(_pool_names[:20])
+            + (f" (+ {len(_pool_names)-20} more)" if len(_pool_names) > 20 else "")
+            + ". Tier 1 = Grandmasters (canonical). Tier 2 = Working Masters Indian + global. "
+            + "Platform Mentor = Ashok Kochhar (reference first when genre matches or photographer is overthinking technique)."
+        )
+    else:
+        _fallback = _FALLBACK_MASTERS.get(genre, _FALLBACK_MASTERS.get('Street', ''))
+        masters_pool_block = f"Pool for {genre}: {_fallback}."
+
     prompt = SCORE_PROMPT.format(
         genre                = genre,
         photographer         = photographer,
@@ -4349,7 +4374,45 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         exif_context         = exif_context or '',
         seasonal_context     = seasonal_context or '',
         portfolio_context    = _build_portfolio_context(portfolio_summary, image_number),
+        masters_pool_block   = masters_pool_block,
     )
+
+    # ── Cross-genre Sherpa bridge (Session 153) ─────────────────────────────
+    # When the user's primary genre (from login preference) differs from the
+    # genre of the image being scored, inject a personalised bridging note.
+    # Three tiers by score: below 6 (foundational), 6-8 (technique bridge),
+    # above 8 (crossover achievement). Decision confirmed S150 investor doc 31c.
+    _pg = (primary_genre or '').strip()
+    _sg = (genre or '').strip()
+    _cross_genre_block = ''
+    if _pg and _sg and _pg.lower() != _sg.lower():
+        # Determine tier — use previous_score if final not yet computed, else use 0
+        # (block is injected pre-scoring, score not available yet)
+        # Use calibration pool average as proxy if available, else neutral
+        _bridge_tier = 'foundational'  # default — engine will adapt to actual score
+
+        _cross_genre_block = (
+            "\n\nCROSS-GENRE SHERPA BRIDGE — MANDATORY BLOCK:\n"
+            f"This photographer's primary genre is {_pg}. They are being scored today in {_sg}.\n"
+            "These are different genres. After the standard scorecard, add a CROSS-GENRE NOTE "
+            "as a separate block in the byline_2 (Your Assignment Tomorrow) field.\n\n"
+            "The cross-genre note structure is score-dependent:\n"
+            f"- If score < 6.0 (foundational): Name what {_pg} training gives them that most "
+            f"{_sg} photographers lack. Name what {_sg} demands that {_pg} did not prepare them for. "
+            "One concrete step to bridge the gap.\n"
+            f"- If score 6.0-8.0 (technique bridge): Name the specific {_pg} skills that transferred "
+            "in THIS image and are visible in the score. Name the precise "
+            f"{_sg} technique gap that is holding the score below 8. Name the one drill that closes it.\n"
+            f"- If score > 8.0 (crossover achievement): Celebrate what it means when a {_pg} "
+            f"photographer makes a Master-tier {_sg} image. Name what {_pg} discipline gave them "
+            f"that a native {_sg} photographer often lacks. Name where to take this crossover next.\n\n"
+            "TONE: Sherpa voice — honest, specific, warm. Never generic. "
+            "This is the most personalised thing the platform can say to this photographer today.\n"
+            "FORMAT: Add after the standard assignment tomorrow content, separated by a blank line. "
+            f"Open with: 'A note on your {_pg} eye in a {_sg} frame:'\n"
+        )
+        prompt += _cross_genre_block
+        print(f"[auto_score] Cross-genre bridge injected: primary={_pg} scored={_sg}")
 
     # ── Delta context — near-match resubmission (Session 111) ────────────────
     # When a photographer uploads an edited version of a previously scored image
