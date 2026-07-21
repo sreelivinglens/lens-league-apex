@@ -668,7 +668,15 @@
         <span style="font-size:16px; color:#854F0B;">💡</span>
         <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
       </div>
-      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _pub_c4 | replace('**', '') }}</div>
+      {% set _c4_clean = _pub_c4 | replace('**', '') | replace('═', '') %}
+    {% if 'A note on your' in _c4_clean %}
+      {% set _c4_split = _c4_clean.split('A note on your', 1) %}
+      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_split[0] | trim }}</div>
+      <hr style="border:none; border-top:1px solid rgba(65,36,2,0.2); margin:16px 0;">
+      <div style="font-size:15px; color:#6B4A1A; line-height:1.8; white-space:pre-line; font-style:italic;">A note on your{{ _c4_split[1] }}</div>
+    {% else %}
+      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_clean }}</div>
+    {% endif %}
     </div>
     {% endif %}
   </div>
@@ -1315,7 +1323,7 @@
       ('📷', '#0C447C', '#EAF0FA', 'What You Did That Others Didn\'t', audit.transferable_advice or ''),
       ('▲',  '#27500A', '#EAF5EE', 'What Your Eye Read',              (audit.rows|selectattr(0, 'eq', 'Technical')|map(attribute=1)|first) if audit.rows else (audit.mentor_technical or '')),
       ('◎',  '#72243E', '#F5EAF0', 'What the Score Means',            audit.background_check or audit.byline_1 or ''),
-      ('💡', '#854F0B', '#FDF3E3', 'Your Assignment Tomorrow',         audit.byline_2_body or audit.byline_2 or ''),
+      ('💡', '#854F0B', '#FDF3E3', 'Your Assignment Tomorrow',         (audit.byline_2_body or audit.byline_2 or '').replace('═', '')),
     ] %}
     {% for icon, color, bg, label, body in _lb_cards %}
     {% if body and body.strip() %}
@@ -1324,7 +1332,7 @@
         <span style="font-size:14px; color:{{ color }};">{{ icon }}</span>
         <span style="font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:{{ color }};">{{ label }}</span>
       </div>
-      <div style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body.replace('**', '') }}</div>
+      <div style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body.replace('**', '').replace('═', '') }}</div>
     </div>
     {% endif %}
     {% endfor %}
@@ -1735,10 +1743,20 @@
       </a>
       {% endif %}
 
-      {# ── Save Scorecard — Session 152 (renamed from Print / Save as PDF) #}
-      <button onclick="window.print()" class="btn sc-share-btn" style="font-size:15px; padding:14px; text-align:center; cursor:pointer; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE;">
-        💾 Save Scorecard
-      </button>
+      {# ── Save Evaluation — downloads polaroid card JPG. Session 153. KYC fix. #}
+      {% if image.card_url and image.share_token %}
+      <a href="{{ url_for('public_card_download', token=image.share_token) }}"
+         download class="btn sc-share-btn"
+         style="font-size:15px; padding:14px; text-align:center; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE; text-decoration:none;">
+        ↓ Save Evaluation
+      </a>
+      {% elif image.share_token %}
+      <a href="{{ url_for('public_card', token=image.share_token) }}"
+         class="btn sc-share-btn"
+         style="font-size:15px; padding:14px; text-align:center; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE; text-decoration:none;">
+        ↓ Save Evaluation
+      </a>
+      {% endif %}
     </div>
   </div>
   {% endif %}
