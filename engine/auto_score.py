@@ -657,7 +657,9 @@ Here is what that frame would have looked like: [specific, visual, concrete desc
 MASTER PHOTOGRAPHER REFERENCES:
 - Every card 1 (transferable_advice) MUST name one master.
 - Reference a SPECIFIC IMAGE or SPECIFIC BODY OF WORK, not just the name.
-- ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
+- NO SEPARATOR LINES — ABSOLUTE RULE: Do NOT use ════, ====, ----, or any repeated character as a visual separator anywhere in any field. The cross-genre note in byline_2 starts with a blank line then the text directly. No dividers, no borders, no horizontal rules.
+
+ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
   ONCE across the entire scorecard. Check all four cards before finalising.
 - VARIETY RULE: If portfolio_context shows recent scorecards, do not repeat a master
   already used in the last 3 evaluations for this photographer.
@@ -888,7 +890,7 @@ FORMAT:
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
   "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max. No positional corrections.>",
   "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs.\n\n▪ [What this score level means for this photographer in plain English — one sentence.]\n\n▪ [What 9+ looks like for this specific image — concrete visual description, two sentences max.]\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 2 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 3 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ [FOUR-FRAME STORY PROMPT — Session 153. Every scorecard must include this: Suggest one subject or scene the photographer could return to with the specific intent of making 4 images that build a narrative sequence — a beginning, a middle, a turn, and a conclusion. Name the subject. Name the 4 frames specifically. This is the Body of Work habit. One sentence opening: 'Your next Body of Work sequence:' then the 4 frames as a brief list.]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
@@ -5086,7 +5088,7 @@ def build_audit_data(result, image_obj):
             ("Next",       result.get("mentor_next", "")),
         ],
         "byline_1":      result.get("byline_1", ""),
-        "byline_2_body": result.get("byline_2", ""),
+        "byline_2_body": result.get("byline_2", "").replace("═", "").replace("=====", "").strip() if result.get("byline_2") else "",
         "badges_g":          result.get("badges_g", []),
         "badges_w":          result.get("badges_w", []),
         # ── Sprint 2 — scorecard redesign fields ─────────────────────────────
