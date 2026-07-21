@@ -25789,6 +25789,108 @@ def admin_backfill_share_cards():
     return redirect(url_for('admin_dashboard'))
 
 
+
+# ── MIM DDI API ───────────────────────────────────────────────────────────────
+# Called by makingimagesmatter.com after a photographer self-uploads an image.
+# MIM passes the original_filename; SL looks it up and returns the DDI score
+# and Sherpa narrative so MIM can display it on the reveal screen.
+# Auth: MIM_SL_API_KEY env var — must match on both platforms.
+# Railway variable: MIM_SL_API_KEY (set same value in both SL and MIM Railway vars)
+
+@app.route('/api/mim-ddi')
+def api_mim_ddi():
+    """
+    GET /api/mim-ddi?filename=<original_filename>&api_key=<MIM_SL_API_KEY>
+
+    Returns DDI evaluation for a scored image by original_filename.
+    Used by makingimagesmatter.com to pull scores into the MIM reveal screen.
+
+    Response:
+      {"found": true, "ddi_score": 7.64, "ddi_craft": 7.64, "tier": "Maverick",
+       "genre": "Street", "ddi_narrative": "Sherpa block...", "dimensions": {...}}
+    or
+      {"found": false}
+    """
+    # ── Auth ──────────────────────────────────────────────────────────────────
+    expected_key = os.environ.get('MIM_SL_API_KEY', '')
+    if not expected_key:
+        app.logger.warning('[mim-ddi] MIM_SL_API_KEY not set on SL — endpoint disabled')
+        return jsonify({'error': 'endpoint not configured'}), 503
+
+    provided_key = request.args.get('api_key', '')
+    if not provided_key or provided_key != expected_key:
+        app.logger.warning(f'[mim-ddi] invalid api_key attempt from {request.remote_addr}')
+        return jsonify({'error': 'unauthorized'}), 401
+
+    # ── Lookup ────────────────────────────────────────────────────────────────
+    filename = request.args.get('filename', '').strip()
+    if not filename:
+        return jsonify({'error': 'filename required'}), 400
+
+    try:
+        row = db.session.execute(
+            db.text(
+                "SELECT id, score, tier, genre, dod_score, disruption_score, "
+                "dm_score, wonder_score, aq_score, audit_json "
+                "FROM images "
+                "WHERE original_filename = :fn AND status = 'scored' "
+                "ORDER BY scored_at DESC LIMIT 1"
+            ),
+            {'fn': filename}
+        ).fetchone()
+    except Exception as e:
+        app.logger.error(f'[mim-ddi] DB error: {e}')
+        return jsonify({'error': 'db error'}), 500
+
+    if not row:
+        app.logger.warning(f'[mim-ddi] not found: {filename}')
+        return jsonify({'found': False})
+
+    # ── Extract narrative from audit_json ─────────────────────────────────────
+    import json as _json
+    narrative = ''
+    try:
+        if row.audit_json:
+            _audit = _json.loads(row.audit_json)
+            # byline_1 = "What you did that others didn't" card
+            # byline_2_body = Assignment card
+            # background_check / hard_truth = core coaching
+            _b1 = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
+            _b2 = (_audit.get('byline_2_body') or _audit.get('byline_2') or '').strip()
+            narrative = '\n\n'.join(filter(None, [_b1, _b2]))
+    except Exception:
+        pass
+
+    # ── Dimensions ────────────────────────────────────────────────────────────
+    dimensions = {}
+    try:
+        dimensions = {
+            'DoD':       float(row.dod_score)         if row.dod_score         is not None else None,
+            'Disruption':float(row.disruption_score)  if row.disruption_score  is not None else None,
+            'DM':        float(row.dm_score)           if row.dm_score          is not None else None,
+            'Wonder':    float(row.wonder_score)       if row.wonder_score      is not None else None,
+            'AQ':        float(row.aq_score)           if row.aq_score          is not None else None,
+        }
+    except Exception:
+        pass
+
+    app.logger.warning(
+        f'[mim-ddi] ✅ filename={filename} score={row.score} tier={row.tier}'
+    )
+
+    return jsonify({
+        'found':         True,
+        'image_id':      row.id,
+        'ddi_score':     float(row.score)  if row.score is not None else None,
+        'ddi_craft':     float(row.score)  if row.score is not None else None,
+        'ddi_theme':     None,             # MIM human eval handles theme score
+        'tier':          row.tier or '',
+        'genre':         row.genre or '',
+        'ddi_narrative': narrative,
+        'dimensions':    dimensions,
+    })
+
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == 'migrate':
