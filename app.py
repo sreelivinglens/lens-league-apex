@@ -874,6 +874,8 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS interests_complete BOOLEAN DEFAULT FALSE",
                     # Session 152 — onboarding email drip bitmask
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_email_sent INTEGER DEFAULT 0",
+                    # Session 153 — master reference pool
+                    """CREATE TABLE IF NOT EXISTS master_references (id SERIAL PRIMARY KEY, name VARCHAR(200) NOT NULL, genre_tags VARCHAR(500) NOT NULL, region VARCHAR(200), tier VARCHAR(50) NOT NULL DEFAULT 'Tier 2', known_for TEXT, reference_when TEXT, do_not_reference TEXT, is_platform_mentor BOOLEAN DEFAULT FALSE, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT NOW())""",
                     # v52  -  legal consent tracking
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
@@ -2887,6 +2889,154 @@ def run_onboarding_email_sequence():
 
 
 # ── Re-engagement Emailer ─────────────────────────────────────────────────────
+
+def get_masters_for_genre(genre, exclude_names=None, limit=20):
+    """Query master_references for genre-appropriate photographers. Session 153."""
+    try:
+        exclude = [n.lower() for n in (exclude_names or [])]
+        rows = db.session.execute(db.text(
+            "SELECT name, tier, known_for, reference_when, is_platform_mentor "
+            "FROM master_references WHERE is_active = TRUE AND genre_tags ILIKE :pat "
+            "ORDER BY is_platform_mentor DESC, "
+            "CASE tier WHEN 'Platform Mentor' THEN 0 WHEN 'Tier 1' THEN 1 WHEN 'Tier 2' THEN 2 ELSE 3 END, "
+            "RANDOM() LIMIT :lim"
+        ), {'pat': f'%{genre}%', 'lim': limit * 3}).fetchall()
+        result = []
+        for row in rows:
+            if row.name.lower() not in exclude:
+                result.append({'name': row.name, 'tier': row.tier, 'known_for': row.known_for or '',
+                               'reference_when': row.reference_when or '', 'is_platform_mentor': bool(row.is_platform_mentor)})
+            if len(result) >= limit:
+                break
+        return result
+    except Exception as _me:
+        app.logger.warning(f'[get_masters_for_genre] failed: {_me}')
+        return []
+
+
+def seed_master_references():
+    """Seed master_references table on first startup. Session 153. 113 entries."""
+    try:
+        count = db.session.execute(db.text("SELECT COUNT(*) FROM master_references")).scalar()
+        if count and count > 0:
+            return
+        MSEED = [
+            ('Henri Cartier-Bresson','Street,Documentary','France','Tier 1','The decisive moment — perfect geometric alignment at a single instant.','Compositional timing, geometry in street, decisive moment theory','Wildlife,Fashion,Landscape',False),
+            ('Fan Ho','Street,Minimalist','Hong Kong','Tier 1','Empty streets, single figures as geometric punctuation, 1950s-60s Hong Kong.','Minimalist street, emptiness as subject, one figure in architectural space','Wildlife,Fashion',False),
+            ('Daido Moriyama','Street,Documentary','Japan','Tier 1','High grain, extreme contrast, raw urban energy, Tokyo street life.','Gritty urban, high-contrast B&W, proximity to subject','Landscape,Wildlife,Fashion',False),
+            ('Elliott Erwitt','Street,Humour','USA','Tier 1','Visual puns and ironic juxtapositions, dogs and humans, deadpan observation.','Visual irony, unexpected alignment, humour in frame','Wildlife,Landscape',False),
+            ('Vivian Maier','Street,Candid','USA','Tier 1','Eye-level with children and strangers, unguarded candid, Chicago and New York.','Candid portraits, children in public, quiet observation','Wildlife,Landscape,Fashion',False),
+            ('Helen Levitt','Street,Children','USA','Tier 1','Children playing in New York streets, gesture and geometry, colour street pioneer.','Children in public space, gesture and geometry alignment','Wildlife,Landscape,Fashion',False),
+            ('Trent Parke','Street,Dramatic','Australia','Tier 1','Slow shutter motion blur, dramatic chiaroscuro, empty streets with single figures.','Motion blur street, dramatic contrast, human stillness vs urban motion','Wildlife,Fashion',False),
+            ('Brassai','Street,Night','France','Tier 1','Paris at night, gaslit streets, night street photography pioneer, 1930s.','Night street, artificial light, urban atmosphere after dark','Wildlife,Daytime landscape,Fashion',False),
+            ('Andre Kertesz','Street,Poetic','Hungary / USA','Tier 1','Poetic realism, rooftop views, shadow play, Paris streets.','Unusual vantage points, shadow and light as subject, poetic framing','Wildlife,Fashion',False),
+            ('Joel Meyerowitz','Street,Colour','USA','Tier 1','Colour street pioneer, Cape Cod landscapes, Ground Zero documentation.','Colour thinking in street, warm colour, open shade light','Wildlife,Fashion',False),
+            ('Vineet Vohra','Street','India — New Delhi','Tier 2','Poetic urban India, light and shadow in Delhi.','Indian urban street, poetic light and shadow','Wildlife,Fashion',False),
+            ('Rohit Vohra','Street','India — New Delhi','Tier 2','Travel street photography, human connection across cultures.','Travel street, human connection, documentary street','Wildlife,Fashion',False),
+            ('Mouhamed Moustapha','Street,Documentary','India — Puducherry','Tier 2','Pondicherry daily life, Tamil cultural documentary.','South Indian street, cultural documentary, everyday life','Wildlife,Fashion',False),
+            ('Alex Webb','Street,Colour','USA','Tier 2','Complex colour layering, Latin America, doorways as compositional frames.','Layered colour compositions, complex multi-plane street','Wildlife,B&W minimalist',False),
+            ('Gueorgui Pinkhassov','Street','Russia / France','Tier 2','Abstract light and reflection, Magnum photographer, impressionist street.','Abstract light in street, reflections as subject','Wildlife,Fashion',False),
+            ('Saul Leiter','Street,Painterly','USA','Tier 2','Painterly colour street, shot through glass and reflections, 1950s New York.','Painterly colour, looking through glass, layered abstraction','Wildlife,Fashion',False),
+            ('Martin Parr','Street,Social','UK','Tier 2','British social documentary, consumer culture, saturated colour flash.','Social observation, British subjects, irony in everyday life','Wildlife,Minimalist',False),
+            ('GMB Akash','Street,Documentary','Bangladesh','Tier 2','Poverty and resilience in South Asia, emotional human narrative, WPP winner.','Human resilience, South Asian documentary, emotional depth','Wildlife,Fashion,Minimalist',False),
+            ('Raghu Rai','Street,Documentary','India — Delhi','Tier 2','Indian political and social life, Indira Gandhi, Bhopal, five decades of Indian documentary.','Indian documentary, political moment, human dignity in India','Fashion,Wildlife,Minimalist',False),
+            ('T.S. Satyan','Street,Documentary','India','Tier 2','India in the 1950s-70s, political portraits, independent India documentation.','Historical India, independence era, Indian political portrait','Wildlife,Fashion',False),
+            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India','Platform Mentor','Multi-genre mastery. Think East and Capture philosophy — inner expression over technique. soulfulphotographer.com.','Any genre where photographer is overthinking technique. Cross-genre work. Indian context.','None',True),
+            ('Nick Brandt','Wildlife,Conservation','UK / Africa','Tier 1','Large format B&W Africa wildlife, animal dignity, extinction themes.','Wildlife B&W, animal dignity, conservation framing, Africa','Street,Fashion,Colour landscape',False),
+            ('Frans Lanting','Wildlife,Nature','Netherlands','Tier 1','Intimate animal behaviour, Africa and Amazon, colour and mood.','Animal behaviour, intimate wildlife, colour mood, environmental storytelling','Street,Fashion,Studio',False),
+            ('Art Wolfe','Wildlife,Nature,Landscape','USA','Tier 1','Patterns in nature, aerial wildlife, camouflage. Migrations series.','Patterns in wildlife, geometric animal groupings, aerial perspective','Street,Fashion,Portrait',False),
+            ('Paul Nicklen','Wildlife,Ocean,Conservation','Canada','Tier 1','Polar bears, underwater wildlife, ice and ocean. Patience in Arctic conditions.','Patience with wild animals, eye contact with animal, ocean and polar subjects','Street,Fashion,Studio',False),
+            ('Steve Winter','Wildlife','USA','Tier 1','Tigers and leopards, camera traps, big cat conservation, National Geographic.','Big cats, camera trap wildlife, nocturnal animals, endangered species','Street,Fashion,Portrait',False),
+            ('Vincent Munier','Wildlife,Minimalist','France','Tier 1','Arctic and mountain wildlife, minimalist white landscapes, snow leopard quest.','Minimalist wildlife, snow and ice backgrounds, patience and stillness','Street,Fashion,Urban',False),
+            ('Bence Mate','Wildlife,Behaviour','Hungary','Tier 1','Wildlife hides, European wildlife, WPOTY multiple winner.','Wildlife behaviour from hides, European birds and mammals, technical patience','Street,Fashion,Portrait',False),
+            ('Nick Nichols','Wildlife,Conservation','USA','Tier 1','Big cats with National Geographic, camera trap innovation, lions of the Serengeti.','Big cat behaviour, remote camera traps, storytelling through wildlife series','Street,Fashion,Portrait',False),
+            ('Tim Flach','Wildlife,Studio','UK','Tier 1','Studio portraits of animals, Endangered series, animal emotion.','Animals with portrait discipline, studio wildlife, animal emotion','Street,Action,Landscape',False),
+            ('David Yarrow','Wildlife,Fine Art','UK','Tier 1','Ultra-wide angle wildlife, B&W fine art prints, cinematic animal frames.','Ultra-wide wildlife, dramatic composition, fine art printing','Street,Fashion,Portrait',False),
+            ('Sudhir Shivaram','Wildlife','India — Bengaluru','Tier 2','Indian wildlife, tigers and elephants, Karnataka forest expertise.','Indian wildlife, Karnataka and South India subjects, tiger behaviour','Street,Fashion,Urban',False),
+            ('Kalyan Varma','Wildlife,Conservation','India — Bengaluru','Tier 2','Wildlife documentary, BBC and NatGeo, conservation storytelling, BBC WPOTY 2013.','Conservation angle, Karnataka wildlife, documentary wildlife','Street,Fashion,Urban',False),
+            ('Aishwarya Sridhar','Wildlife','India','Tier 2','BBC WPOTY 2020 — first Indian woman. Indian birds and mammals.','Indian wildlife, first Indian woman WPOTY, conservation narrative','Street,Fashion,Urban',False),
+            ('Amit Vitale','Wildlife,Documentary','USA','Tier 2','National Geographic wildlife, India and Africa, human-wildlife coexistence.','Human-wildlife coexistence, conservation documentary, Asian wildlife','Fashion,Studio',False),
+            ('Cristina Mittermeier','Wildlife,Ocean,Conservation','Mexico / USA','Tier 2','SeaLegacy co-founder, ocean and marine conservation.','Ocean wildlife, marine conservation, intimate underwater subjects','Street,Fashion,Studio',False),
+            ('Andy Rouse','Wildlife,Behaviour','UK','Tier 2','European and African wildlife, polar bear expertise, behaviour and moment focus.','Wildlife behaviour moments, European mammals, polar subjects','Street,Fashion,Portrait',False),
+            ('August Sander','Portrait,Documentary','Germany','Tier 1','Systematic typological portraiture of German citizens. Direct gaze, frontal, natural light.','Occupational portrait, typological series, direct gaze, documentary portrait','Wildlife,Landscape,Fashion',False),
+            ('Richard Avedon','Portrait,Fashion','USA','Tier 1','White background portraiture, confrontational directness. In the American West series.','Clean background portrait, subject confronting camera, power and presence','Wildlife,Landscape,Candid',False),
+            ('Yousuf Karsh','Portrait','Canada','Tier 1','Dramatic studio lighting, Churchill, Hemingway, Einstein. Sculptural portrait.','Dramatic directional light, powerful subject presence, studio control','Wildlife,Street,Landscape',False),
+            ('Platon','Portrait,Editorial','UK / USA','Tier 1','Tight crop on face, direct eye contact, world leaders, simple backgrounds.','Tight portrait crop, eye contact as primary subject, editorial portrait','Wildlife,Landscape',False),
+            ('Dorothea Lange','Portrait,Documentary','USA','Tier 1','Migrant Mother, Depression-era documentary, human dignity under suffering.','Documentary portrait with social context, dignity in difficult subjects','Wildlife,Fashion,Studio',False),
+            ('Diane Arbus','Portrait,Documentary','USA','Tier 1','Outsiders and subcultures, direct camera confrontation.','Confrontational portrait, subjects who challenge the camera, outsider identity','Wildlife,Landscape,Fashion',False),
+            ('Annie Leibovitz','Portrait,Fashion','USA','Tier 1','Celebrity environmental portrait, Rolling Stone era, constructed narrative portraiture.','Celebrity portrait with context, environmental narrative','Wildlife,Minimalist',False),
+            ('Mary Ellen Mark','Portrait,Documentary','USA','Tier 1','Street kids, Falkland Road, institutional documentary, compassion in portraiture.','Intimate documentary portrait, vulnerable subjects, long-term relationship','Wildlife,Fashion,Minimalist',False),
+            ('Steve McCurry','Portrait,Documentary,People','USA','Tier 1','Afghan Girl, travel portrait, South and Southeast Asia, saturated colour, direct eye contact.','Travel portrait, direct eye contact across cultures, rich colour','Wildlife,Minimalist,Studio',False),
+            ('Rineke Dijkstra','Portrait,Maternity,Fine Art','Netherlands','Tier 1','Beach portraits, new mothers, soldiers, awkward transition moments, large format.','Vulnerable transitional moments, frontal portrait, new mothers','Wildlife,Fashion',False),
+            ('Dabboo Ratnani','Portrait,Fashion','India','Tier 2','Indian celebrity portrait, annual calendar, Bollywood portrait, studio lighting mastery.','Indian celebrity portrait, Bollywood subjects, glamour and personality','Wildlife,Landscape,Candid',False),
+            ('Prabuddha Dasgupta','Portrait,Fine Art','India','Tier 2','Indian fine art portrait, women and landscape, minimalist aesthetic.','Indian fine art portrait, women in landscape, minimalist B&W','Wildlife,Urban',False),
+            ('Dayanita Singh','Portrait,Documentary','India','Tier 2','Indian domestic life, long-term portrait series, women in private spaces.','Long-term portrait documentation, Indian domestic life, quiet intimate','Wildlife,Fashion,Action',False),
+            ('Sooni Taraporevala','Portrait,Documentary','India','Tier 2','Parsi community documentary, Salaam Bombay stills, Indian cultural portrait.','Indian cultural documentary portrait, community photography','Wildlife,Fashion,Minimalist',False),
+            ('Anne Geddes','Maternity,Family,Children','Australia / USA','Tier 1','Newborns in natural elements, studio fantasy portrait, defining the genre internationally.','Newborn photography, babies in constructed environments, gentle fantasy portrait','Wildlife,Street,Documentary',False),
+            ('Sally Mann','Maternity,Family,Fine Art','USA','Tier 1','Immediate Family series, children in Southern landscapes, intimate childhood.','Family documentary, childhood in nature, intimate family photography','Wildlife,Fashion,Urban',False),
+            ('Larry Towell','Maternity,Family,Documentary','Canada','Tier 1','Mennonite family documentary, decade-long family project, intimate community life.','Long-term family project, community documentary, intimate daily life','Fashion,Wildlife,Urban',False),
+            ('Carrie Mae Weems','Maternity,Family,Fine Art','USA','Tier 1','Kitchen Table series, family narrative as art, Black American domestic life.','Family narrative photography, kitchen and domestic space, identity','Wildlife,Fashion,Urban',False),
+            ('Nan Goldin','Maternity,Family,Documentary','USA','Tier 1','The Ballad of Sexual Dependency, intimate circle, family of choice, raw personal documentary.','Intimate personal documentary, chosen family, raw domestic moments','Wildlife,Landscape,Minimalist',False),
+            ('Ana Brandt','Maternity','USA','Tier 2','Maternity fine art, fabric and light, belly painting, creative maternity photography.','Creative maternity, fabric and light, artistic approach to pregnancy','Wildlife,Street',False),
+            # ── 5 Indian Maternity Photographers — Session 153 ──────────────────
+            ('Barkha Agarwal','Maternity','India — Delhi-NCR / Gurugram','Tier 2','Canon Maestro. Winner WPE (Europe), Rise International (Australia), AFNS (USA). First Indian to teach at global Belly Baby Summit. Glamorous fine-art maternity with exquisite gowns. memoriesbybarkha.com','Indian maternity fine art, Canon Maestro, first Indian at Belly Baby Summit globally, glamorous maternity, Delhi-NCR','Wildlife,Street,Documentary',False),
+            ('Arpna Photography','Maternity,Family','India — Bengaluru','Tier 2','International awards and features for dedicated maternity portfolio. Dreamy, soft, emotional storytelling capturing the vulnerability and strength of the bump-to-baby phase. arpna.photography','Indian maternity emotional storytelling, Bengaluru maternity, bump-to-baby narrative, dreamy soft light','Wildlife,Street,Documentary',False),
+            ('Ambica Photography','Maternity,Family','India — Pan India','Tier 2','Widely published for conceptual and traditional Indian maternity imagery. Known for Raja Ravi Varma and Devi/Navratri inspired goddess shoots — fusion of Indian culture with fine art maternity. ambicaphotography.in','Indian cultural maternity, Raja Ravi Varma inspired, Devi goddess maternity concepts, traditional Indian imagery','Wildlife,Street,Documentary',False),
+            ('Dnyaneshwari Joyography','Maternity,Family','India — Pune','Tier 2','Awarded and internationally published for fine art and expressive maternity portraits. Elegant lighting, rich fabrics, majestic bump-hugging silhouettes. Joyography by DNG on Instagram.','Fine art maternity India, Pune maternity photographer, elegant fabric and lighting, expressive silhouette','Wildlife,Street,Documentary',False),
+            ('Amrita Samant','Maternity,Family,Children','India — Chennai & Bengaluru','Tier 2','Mommy Shots by Amrita. Globally published with shoots across 10 countries. Joyful, expressive, vibrant, natural lighting for modern mothers.','Indian maternity natural light, globally published maternity, shoots across 10 countries, joyful modern motherhood','Wildlife,Street,Documentary',False),
+            ('Helmut Newton','Fashion,Fine Art','Germany / France','Tier 1','Power and sexuality, SUMO, Vogue, dominant women in architectural spaces.','Fashion with power and tension, architectural environment, statement clothing','Wildlife,Documentary,Landscape',False),
+            ('Peter Lindbergh','Fashion,Portrait','Germany','Tier 1','Natural beauty, supermodel era, black and white fashion portrait, emotional depth.','Natural fashion portrait, B&W fashion, emotional authenticity in fashion','Wildlife,Documentary,Landscape',False),
+            ('Irving Penn','Fashion,Still Life,Portrait','USA','Tier 1','Neutral corner backgrounds, still life mastery, cigarette series, Vogue.','Clean neutral backgrounds, geometric composition, formal portrait with fashion','Wildlife,Street,Documentary',False),
+            ('Nick Knight','Fashion,Digital','UK','Tier 1','SHOWstudio, digital experimentation, pushing fashion into art.','Conceptual fashion, digital manipulation as art','Wildlife,Street,Documentary',False),
+            ('Tim Walker','Fashion,Fantasy','UK','Tier 1','Fantasy and fairy tale, elaborate constructed sets, Vogue, dreamlike excess.','Fantasy constructed set, dreamlike fashion, narrative fashion photography','Wildlife,Documentary,Candid',False),
+            ('Mario Testino','Fashion,Celebrity','Peru','Tier 1','Accessible glamour, Diana portraits, Vogue, warmth in celebrity fashion.','Warmth and accessibility in fashion, celebrity portrait with fashion context','Wildlife,Documentary,Minimalist',False),
+            ('Ellen von Unwerth','Fashion','Germany','Tier 1','Playful sexuality, Guess campaigns, fun and irreverence in fashion photography.','Playful fashion, irreverence, fun energy in fashion portrait','Wildlife,Documentary,Landscape',False),
+            ('Patrick Demarchelier','Fashion,Portrait','France','Tier 1','Princess Diana, clean elegant fashion, simplicity in fashion.','Elegant simplicity in fashion, clean fashion portrait, timeless editorial','Wildlife,Documentary,Landscape',False),
+            ('Tapu Javeri','Fashion,Portrait','Pakistan','Tier 2','South Asian fashion and celebrity portrait, editorial across the subcontinent.','South Asian fashion, subcontinent editorial, fashion with cultural context','Wildlife,Landscape,Documentary',False),
+            ('Errikos Andreou','Fashion','Greece','Tier 2','Award-winning fashion photographer, strong lighting, editorial depth.','Strong directional lighting in fashion, award-winning editorial','Wildlife,Street,Documentary',False),
+            ('Ansel Adams','Landscape,Nature','USA','Tier 1','Zone system, Yosemite, pre-visualisation doctrine, American wilderness B&W.','Pre-visualisation, zone system exposure, American wilderness, tonal range mastery','Street,Fashion,Studio',False),
+            ('Michael Kenna','Landscape,Minimalist','UK','Tier 1','Long exposure minimalism, Japanese and French landscapes, pre-dawn stillness.','Minimalist landscape, long exposure, stillness and simplicity, pre-dawn light','Street,Fashion,Studio',False),
+            ('Hiroshi Sugimoto','Landscape,Fine Art,Minimalist','Japan','Tier 1','Seascape series, theatres, time and light as subject, ultra long exposure.','Time as subject in landscape, ultra minimalism, sea and horizon','Street,Fashion,Wildlife',False),
+            ('Yann Arthus-Bertrand','Landscape,Aerial','France','Tier 1','Earth From Above, aerial landscape, environmental message.','Aerial landscape, pattern from above, environmental perspective, scale as subject','Street,Fashion,Portrait',False),
+            ('Edward Weston','Landscape,Fine Art','USA','Tier 1','Pepper No. 30, tonal mastery, pure form.','Pure form and tonal mastery, object as landscape, sculptural photography','Street,Fashion,Wildlife',False),
+            ('Charlie Waite','Landscape','UK','Tier 1','English landscape, light and atmosphere, dawn and dusk, quiet pastoral beauty.','English pastoral landscape, morning and evening light, atmospheric landscape','Street,Fashion,Wildlife',False),
+            ('Sebastiao Salgado','Landscape,Documentary,Wildlife','Brazil','Tier 1','Genesis series, pristine wilderness, black and white landscapes at epic scale.','Epic wilderness, B&W landscape with documentary intent, environment at human scale','Fashion,Studio,Urban',False),
+            ('Reuben Wu','Landscape,Mobile,Aerial','UK','Tier 2','Drone landscape, light painting in landscape, other-worldly environments.','Drone perspective in landscape, light painting, futuristic landscape approach','Street,Fashion,Portrait',False),
+            ('Marc Adamus','Landscape','USA','Tier 2','Adventure landscape, extreme conditions, technical mastery in harsh environments.','Extreme weather landscape, adventure and risk in landscape, technical exposure','Street,Fashion,Portrait',False),
+            ('Ashok Dilwali','Landscape','India','Tier 2','Indian landscape, Himalayan photography, Indian wilderness.','Indian landscape, Himalayan subjects, Indian wilderness','Street,Fashion,Portrait',False),
+            ('Robert Capa','Documentary,War','Hungary / USA','Tier 1','D-Day landing, Spanish Civil War. If your pictures are not good enough you are not close enough.','War and conflict documentary, physical proximity, risk and closeness','Fashion,Studio,Minimalist',False),
+            ('James Nachtwey','Documentary,War','USA','Tier 1','War photography, famine, Rwanda, Kosovo. Inferno. Working in the worst human conditions.','War and humanitarian crisis, bearing witness, extreme human conditions','Fashion,Studio,Minimalist',False),
+            ('W. Eugene Smith','Documentary','USA','Tier 1','Minamata, Country Doctor, Spanish Village. Long-form photographic essay pioneer.','Long-form documentary essay, human cost of industrial damage','Fashion,Studio,Minimalist',False),
+            ('Don McCullin','Documentary,War','UK','Tier 1','Vietnam, Biafra, Shell-shocked US Marine. Direct witness documentary.','War documentary, shell shock of war, direct witness photography','Fashion,Studio,Landscape',False),
+            ('Eugene Richards','Documentary','USA','Tier 1','Cocaine True Cocaine Blue, addiction and poverty, unflinching documentary.','Addiction and poverty documentary, close proximity to marginalised subjects','Fashion,Studio,Minimalist',False),
+            ('Pablo Bartholomew','Documentary','India','Tier 1','Bhopal gas tragedy, World Press Photo winner, Indian documentary at international standard.','Indian social documentary, disaster documentation, WPP winner','Fashion,Wildlife,Minimalist',False),
+            ('Prashant Panjiar','Documentary','India','Tier 2','Indian social documentary, conflict zones, Northeast India, marginalised communities.','Indian social documentary, Indian conflict zones, social justice','Wildlife,Fashion,Minimalist',False),
+            ('Dimpy Bhalotia','Mobile,Street','India / UK','Tier 1','IPPA 2020 winner, kids and joy, iPhone street photography, Indian subjects on mobile.','Mobile street photography, joy and children, Indian subjects, IPPA winner','Studio,Landscape minimalist',False),
+            ('Simone Bramante','Mobile,Street,Travel','Italy','Tier 1','Brahmino — global iPhone street and travel, strong graphic compositions.','iPhone travel photography, graphic mobile compositions, global street on mobile','Wildlife,Studio',False),
+            ('Daniel Arnold','Mobile,Street','USA','Tier 1','New York iPhone street, raw and immediate, daily documentation of New York life.','Raw iPhone street, immediate documentation, New York daily life on mobile','Wildlife,Landscape,Studio',False),
+            ('Richard Koci Hernandez','Mobile,Documentary','USA','Tier 1','iPhone documentary, emotional mobile photography, teaching mobile as serious tool.','Emotional mobile documentary, iPhone as serious camera','Wildlife,Studio portrait',False),
+            ('Brandon Stanton','Mobile,Portrait,Street','USA','Tier 1','Humans of New York, iPhone portrait street, personal story through image.','iPhone portrait documentary, street portrait with story','Wildlife,Landscape',False),
+            ('Oded Wagenstein','Mobile,Street,Portrait','Israel','Tier 1','Elderly subjects, emotional mobile portrait, global iPhone street.','Emotional iPhone portrait, elderly subjects, warmth and connection','Wildlife,Landscape',False),
+            ('Shane Gross','Wildlife,Ocean','Canada','Contest Winner','American Crocodile nursery, underwater wildlife. WPOTY 2024 overall winner.','Underwater wildlife, WPOTY 2024 overall winner citation','Street,Fashion',False),
+            ('Laurent Ballesta','Wildlife,Ocean','France','Contest Winner','Camouflage cuttlefish spawning, underwater. WPOTY 2023 overall winner.','Underwater spawning behaviour, marine life, WPOTY 2023 winner','Street,Fashion',False),
+            ('Aishwarya Sridhar WPOTY 2020','Wildlife','India','Contest Winner','First Indian woman BBC Wildlife Photographer of the Year 2020.','First Indian woman WPOTY winner, BBC WPOTY 2020','Street,Fashion,Urban',False),
+            ('Kalyan Varma WPOTY 2013','Wildlife','India','Contest Winner','BBC Wildlife Photographer of the Year 2013 Plants. First Indian in BBC WPOTY.','BBC WPOTY 2013 plants, Indian wildlife at international standard','Street,Fashion,Urban',False),
+            ('GMB Akash WPP 2006','Documentary,Street','Bangladesh','Contest Winner','World Press Photo 2006. First Bangladeshi at WPP Masterclass.','WPP 2006 winner, human resilience, South Asian documentary','Wildlife,Fashion,Minimalist',False),
+            ('Pablo Bartholomew WPP','Documentary','India','Contest Winner','World Press Photo winner, Bhopal. Indian at international standard.','Indian WPP winner, Bhopal documentation','Fashion,Wildlife,Minimalist',False),
+            ('Dimpy Bhalotia IPPA 2020','Mobile,Street','India / UK','Contest Winner','IPPA 2020 iPhone Photography Award winner.','IPPA winner, iPhone award, Indian mobile street photography','Studio,Landscape',False),
+            ('Juliette Pavy SWPA 2024','Street','France','Contest Winner','Street Photography Awards 2024 Photographer of the Year.','SWPA 2024 Photographer of the Year citation','Wildlife,Fashion,Studio',False),
+        ]
+        for row in MSEED:
+            db.session.execute(db.text(
+                "INSERT INTO master_references (name,genre_tags,region,tier,known_for,reference_when,do_not_reference,is_platform_mentor) "
+                "VALUES (:n,:gt,:r,:t,:kf,:rw,:dnr,:pm) ON CONFLICT DO NOTHING"
+            ), {'n':row[0],'gt':row[1],'r':row[2],'t':row[3],'kf':row[4],'rw':row[5],'dnr':row[6],'pm':row[7]})
+        db.session.commit()
+        app.logger.info(f'[seed_master_references] Seeded {len(MSEED)} entries.')
+    except Exception as _se:
+        app.logger.error(f'[seed_master_references] Seed failed: {_se}')
+        db.session.rollback()
+
 
 def run_reengagement_emailer():
     """
@@ -7474,6 +7624,8 @@ def upload():
                         except Exception:
                             _csi_boost_ctx = ''
 
+                        _recent_masters = (_sc_portfolio or {}).get('recent_masters', [])
+                        _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters)
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
@@ -7498,6 +7650,7 @@ def upload():
                             image_number      = _sc_image_number,
                             previous_score    = _near_match_previous['score'] if _near_match_previous else None,
                             previous_audit    = _near_match_previous['audit'] if _near_match_previous else None,
+                            masters_by_genre  = _masters_for_score,
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
