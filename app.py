@@ -738,6 +738,7 @@ def _run_startup_tasks():
     with app.app_context():
         try:
             db.create_all()
+            seed_master_references()  # Session 153 — load 101-entry master pool
             with db.engine.connect() as conn:
                 _migrations = [
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(120)",
@@ -3521,7 +3522,7 @@ def onboarding_interests():
         return redirect(post_next or url_for('dashboard'))
 
     STANDARD_GENRES = ['Wildlife', 'Street', 'Landscape', 'People', 'Wedding',
-                       'Macro', 'Drone & Aerial', 'Creative']
+                       'Macro', 'Drone & Aerial', 'Creative', 'Maternity']
 
     if request.method == 'POST':
         import json as _json
@@ -5282,7 +5283,7 @@ _DIM_SHORT     = {'dod': 'Technical', 'disruption': 'Disruption',
 # Valid mission genres matching platform genres
 _VALID_MISSION_GENRES = [
     'Architecture', 'Astrophotography', 'Creative', 'Documentary', 'Drone',
-    'Fashion', 'Landscape', 'Macro', 'Nature', 'People',
+    'Fashion', 'Landscape', 'Macro', 'Maternity', 'Nature', 'People',
     'Sports', 'Street', 'Wedding', 'Wildlife',
 ]
 
