@@ -668,14 +668,16 @@
         <span style="font-size:16px; color:#854F0B;">💡</span>
         <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
       </div>
-      {% set _c4_clean = _pub_c4 | replace('**', '') | replace('═', '') %}
+      {# Convert **text** to <strong>text</strong> before rendering — Session 153 #}
+    {% set _c4_raw = _pub_c4 | replace('═', '') %}
+    {% set _c4_clean = _c4_raw %}
     {% if 'A note on your' in _c4_clean %}
       {% set _c4_split = _c4_clean.split('A note on your', 1) %}
-      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_split[0] | trim }}</div>
+      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_split[0] | trim | replace("**", "") }}</div>
       <hr style="border:none; border-top:1px solid rgba(65,36,2,0.2); margin:16px 0;">
-      <div style="font-size:15px; color:#6B4A1A; line-height:1.8; white-space:pre-line; font-style:italic;">A note on your{{ _c4_split[1] }}</div>
+      <div style="font-size:15px; color:#6B4A1A; line-height:1.8; white-space:pre-line; font-style:italic;">A note on your{{ _c4_split[1] | replace("**", "") }}</div>
     {% else %}
-      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_clean }}</div>
+      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_clean | replace("**", "") }}</div>
     {% endif %}
     </div>
     {% endif %}
