@@ -486,6 +486,7 @@
 
       <div class="form-group shot-on-group">
         <span class="field-label">Shot On <span style="color:var(--red);font-size:16px;">*</span></span>
+        <p style="font-size:15px;color:var(--text-muted);margin:6px 0 12px;line-height:1.6;">Select the device you shot this image on. Camera and Mobile have different evaluation weightages — selecting the wrong device affects your evaluation accuracy.</p>
         <div class="shot-on-options">
           <div class="shot-on-option">
             <input type="radio" id="track_camera" name="camera_track" value="camera"{% if subscription_track == 'camera' %} checked{% endif %}>
@@ -547,6 +548,7 @@
 
       <div class="form-group">
         <label for="genre">What did you photograph?</label>
+        <p style="font-size:15px;color:var(--text-muted);margin:4px 0 10px;line-height:1.6;">Select the interest area that best matches your image. If the image has been heavily edited or is conceptual, select <strong style="color:var(--text-primary);">Creative</strong>.</p>
         <select id="genre" name="genre">
           <option value="" selected hidden>Select an interest…</option>
           {% if genre_choices %}
