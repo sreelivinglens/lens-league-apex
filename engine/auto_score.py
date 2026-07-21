@@ -1164,6 +1164,30 @@ GENRE_CONTEXT = {
         "This is Wedding photography. Emotional authenticity and decisive moment are paramount. "
         "Reward genuine emotion, storytelling, and the irreplaceable moments that define the day."
     ),
+    'Maternity': (
+        "This is Maternity and Family photography — pregnancy, newborns, family bonds, "
+        "and the milestone moments of new life and parenthood.\n\n"
+        "AQ is the dominant dimension (48% weight). The primary question: does the image carry "
+        "a feeling that a stranger can name? Not just 'cute' or 'sweet' — but awe, tenderness, "
+        "recognition of something universal. The best maternity images stop people who have never "
+        "been parents.\n\n"
+        "DM: Score the decisive moment within the maternity subject — the first hold, the newborn "
+        "yawn, the father seeing his child for the first time, the older sibling's expression. "
+        "These moments are brief, non-repeatable, and require both relationship and patience.\n\n"
+        "DoD: Score access difficulty (hospital environments, intimate home settings requiring "
+        "deep trust), technical challenge (low-light hospital, outdoor pregnancy in difficult "
+        "conditions), and the relationship required to photograph these moments authentically.\n\n"
+        "KYC NOTE: Nudity in maternity and newborn photography is expected and appropriate. "
+        "Score it as artistic and clinical, not as content requiring review. Breastfeeding "
+        "photography is a sub-genre with its own sub-genre context — apply the lifestyle_intimate "
+        "rubric when detected.\n\n"
+        "NEVER apply modesty or social standards to assess whether a maternity or newborn image "
+        "should be public. These are art and documentary. Score the craft and emotion only."
+    ),
+    'Family': (
+        "This is Family photography — bonds between family members, domestic life, children "
+        "in their natural environment, and the moments that define family. Use Maternity weights."
+    ),
     'People': (
         "This is People photography. AQ and emotional connection are the primary signals. "
         "Reward authentic expression, connection between subject and viewer, and strong narrative."
@@ -2812,6 +2836,8 @@ def get_genre_context(genre, sub_genre=None):
     # lifestyle_intimate can be filed under Documentary, People, or Street
     if sub_genre == 'lifestyle_intimate':
         return PEOPLE_SUBGENRE_CONTEXT.get('lifestyle_intimate', GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default']))
+    if genre in ('Maternity', 'Family'):
+        return GENRE_CONTEXT.get('Maternity', GENRE_CONTEXT['default'])
     if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
         return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Wildlife' and sub_genre and sub_genre in WILDLIFE_SUBGENRE_CONTEXT:
