@@ -664,7 +664,7 @@
     {% endif %}
     {% if _pub_c4 %}
     {# ── Card 4 — three premium sections, amber family, Session 153 ── #}
-    {% set _c4_raw = _pub_c4 | replace('═', '').replace('====', '') %}
+    {% set _c4_raw = _pub_c4 | replace('═', '') | replace('====', '') %}
     {# Split into BOW section and cross-genre section #}
     {% if 'YOUR NEXT BODY OF WORK SEQUENCE:' in _c4_raw %}
       {% set _c4_parts = _c4_raw.split('YOUR NEXT BODY OF WORK SEQUENCE:', 1) %}
@@ -1018,7 +1018,7 @@
     {# Card 4 — Your assignment tomorrow #}
     {% if _c4_resolved.strip() %}
     {# ── Card 4 owner view — three premium sections, amber family, Session 153 ── #}
-    {% set _o4_raw = _c4_resolved.strip().replace('═', '') %}
+    {% set _o4_raw = _c4_resolved | trim | replace('═', '') %}
     {% if 'YOUR NEXT BODY OF WORK SEQUENCE:' in _o4_raw %}
       {% set _o4_parts = _o4_raw.split('YOUR NEXT BODY OF WORK SEQUENCE:', 1) %}
       {% set _o4_s1 = _o4_parts[0] %}
@@ -1455,7 +1455,7 @@
       ('📷', '#0C447C', '#EAF0FA', 'What You Did That Others Didn\'t', audit.transferable_advice or ''),
       ('▲',  '#27500A', '#EAF5EE', 'What Your Eye Read',              (audit.rows|selectattr(0, 'eq', 'Technical')|map(attribute=1)|first) if audit.rows else (audit.mentor_technical or '')),
       ('◎',  '#72243E', '#F5EAF0', 'What the Score Means',            audit.background_check or audit.byline_1 or ''),
-      ('💡', '#854F0B', '#FDF3E3', 'Your Assignment Tomorrow',         (audit.byline_2_body or audit.byline_2 or '').replace('═', '')),
+      ('💡', '#854F0B', '#FDF3E3', 'Your Assignment Tomorrow',         (audit.byline_2_body or audit.byline_2 or '') | replace('═', '')),
     ] %}
     {% for icon, color, bg, label, body in _lb_cards %}
     {% if body and body.strip() %}
@@ -1464,7 +1464,7 @@
         <span style="font-size:14px; color:{{ color }};">{{ icon }}</span>
         <span style="font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:{{ color }};">{{ label }}</span>
       </div>
-      <div style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body.replace('**', '').replace('═', '') }}</div>
+      <div style="font-size:14px; color:#1a1a18; line-height:1.8; white-space:pre-line;">{{ body | replace('**', '') | replace('═', '') }}</div>
     </div>
     {% endif %}
     {% endfor %}
