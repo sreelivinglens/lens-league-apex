@@ -663,22 +663,87 @@
     </div>
     {% endif %}
     {% if _pub_c4 %}
-    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:20px 24px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-        <span style="font-size:16px; color:#854F0B;">💡</span>
-        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
-      </div>
-      {# Convert **text** to <strong>text</strong> before rendering — Session 153 #}
-    {% set _c4_raw = _pub_c4 | replace('═', '') %}
-    {% set _c4_clean = _c4_raw %}
-    {% if 'A note on your' in _c4_clean %}
-      {% set _c4_split = _c4_clean.split('A note on your', 1) %}
-      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_split[0] | trim | replace("**", "") }}</div>
-      <hr style="border:none; border-top:1px solid rgba(65,36,2,0.2); margin:16px 0;">
-      <div style="font-size:15px; color:#6B4A1A; line-height:1.8; white-space:pre-line; font-style:italic;">A note on your{{ _c4_split[1] | replace("**", "") }}</div>
+    {# ── Card 4 — three premium sections, amber family, Session 153 ── #}
+    {% set _c4_raw = _pub_c4 | replace('═', '').replace('====', '') %}
+    {# Split into BOW section and cross-genre section #}
+    {% if 'YOUR NEXT BODY OF WORK SEQUENCE:' in _c4_raw %}
+      {% set _c4_parts = _c4_raw.split('YOUR NEXT BODY OF WORK SEQUENCE:', 1) %}
+      {% set _c4_s1_raw = _c4_parts[0] %}
+      {% set _c4_s2plus = _c4_parts[1] %}
     {% else %}
-      <div style="font-size:16px; color:#412402; line-height:1.85; white-space:pre-line;">{{ _c4_clean | replace("**", "") }}</div>
+      {% set _c4_s1_raw = _c4_raw %}
+      {% set _c4_s2plus = '' %}
     {% endif %}
+    {% if 'A note on your' in _c4_s2plus %}
+      {% set _c4_bow_cross = _c4_s2plus.split('A note on your', 1) %}
+      {% set _c4_bow_raw = _c4_bow_cross[0] %}
+      {% set _c4_cross_raw = _c4_bow_cross[1] %}
+    {% elif _c4_s2plus %}
+      {% set _c4_bow_raw = _c4_s2plus %}
+      {% set _c4_cross_raw = '' %}
+    {% else %}
+      {% set _c4_bow_raw = '' %}
+      {% set _c4_cross_raw = '' %}
+    {% endif %}
+
+    {# Convert Frame 1/2/3/4 bullets in BOW section #}
+    {% set _c4_bow = _c4_bow_raw | replace('Frame 1:', '
+▸ Frame 1:') | replace('Frame 2:', '
+▸ Frame 2:') | replace('Frame 3:', '
+▸ Frame 3:') | replace('Frame 4:', '
+▸ Frame 4:') | replace('**', '') | trim %}
+
+    <div style="border-radius:14px; overflow:hidden; margin-bottom:0;">
+
+      {# ── Section 1 — Assignment exercise ── #}
+      <div style="background:linear-gradient(135deg,#FDF6ED,#F5E6C8); padding:22px 24px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:15px; color:#854F0B;">💡</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
+        </div>
+        <div style="font-size:16px; color:#3D2000; line-height:1.85; white-space:pre-line;">{{ _c4_s1_raw | replace('**', '') | trim }}</div>
+      </div>
+
+      {% if _c4_bow %}
+      {# ── Thin rule ── #}
+      <div style="height:1px; background:linear-gradient(90deg, rgba(133,79,11,0.15), rgba(133,79,11,0.35), rgba(133,79,11,0.15));"></div>
+
+      {# ── Section 2 — Body of Work sequence ── #}
+      <div style="background:linear-gradient(135deg,#F5EAD0,#E8C878); padding:22px 24px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:15px; color:#6B4500;">📖</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#6B4500; text-transform:uppercase;">Your next Body of Work sequence</span>
+        </div>
+        {# Render as paragraphs with Frame bullets left-aligned #}
+        {% for _line in _c4_bow.split('
+') %}
+          {% set _l = _line | trim %}
+          {% if _l.startswith('▸') %}
+            <div style="display:flex; gap:10px; margin:10px 0; align-items:flex-start;">
+              <span style="color:#6B4500; font-weight:700; flex-shrink:0; margin-top:2px;">▸</span>
+              <span style="font-size:15px; color:#3D2200; line-height:1.75;">{{ _l[1:] | trim }}</span>
+            </div>
+          {% elif _l %}
+            <div style="font-size:16px; color:#3D2200; line-height:1.85; margin-bottom:10px;">{{ _l }}</div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if _c4_cross_raw %}
+      {# ── Thin rule ── #}
+      <div style="height:1px; background:linear-gradient(90deg, rgba(107,67,17,0.15), rgba(107,67,17,0.3), rgba(107,67,17,0.15));"></div>
+
+      {# ── Section 3 — Cross-genre note ── #}
+      <div style="background:linear-gradient(135deg,#EDE5D5,#DCCC9A); padding:22px 24px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:15px; color:#5C4010;">🔭</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#5C4010; text-transform:uppercase;">A note on your eye</span>
+        </div>
+        <div style="font-size:15px; color:#3A2800; line-height:1.85; white-space:pre-line;">{{ _c4_cross_raw | replace('**', '') | trim }}</div>
+      </div>
+      {% endif %}
+
     </div>
     {% endif %}
   </div>
@@ -952,12 +1017,77 @@
 
     {# Card 4 — Your assignment tomorrow #}
     {% if _c4_resolved.strip() %}
-    <div style="background:linear-gradient(90deg,#FDF3E3,#F0D9A8); border-radius:14px; padding:22px 26px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-        <span style="font-size:16px; color:#854F0B;">💡</span>
-        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
+    {# ── Card 4 owner view — three premium sections, amber family, Session 153 ── #}
+    {% set _o4_raw = _c4_resolved.strip().replace('═', '') %}
+    {% if 'YOUR NEXT BODY OF WORK SEQUENCE:' in _o4_raw %}
+      {% set _o4_parts = _o4_raw.split('YOUR NEXT BODY OF WORK SEQUENCE:', 1) %}
+      {% set _o4_s1 = _o4_parts[0] %}
+      {% set _o4_s2plus = _o4_parts[1] %}
+    {% else %}
+      {% set _o4_s1 = _o4_raw %}
+      {% set _o4_s2plus = '' %}
+    {% endif %}
+    {% if 'A note on your' in _o4_s2plus %}
+      {% set _o4_bc = _o4_s2plus.split('A note on your', 1) %}
+      {% set _o4_bow = _o4_bc[0] %}
+      {% set _o4_cross = _o4_bc[1] %}
+    {% elif _o4_s2plus %}
+      {% set _o4_bow = _o4_s2plus %}
+      {% set _o4_cross = '' %}
+    {% else %}
+      {% set _o4_bow = '' %}
+      {% set _o4_cross = '' %}
+    {% endif %}
+    {% set _o4_bow_fmt = _o4_bow | replace('Frame 1:', '
+▸ Frame 1:') | replace('Frame 2:', '
+▸ Frame 2:') | replace('Frame 3:', '
+▸ Frame 3:') | replace('Frame 4:', '
+▸ Frame 4:') | trim %}
+
+    <div style="border-radius:14px; overflow:hidden;">
+
+      {# Section 1 — exercise #}
+      <div style="background:linear-gradient(135deg,#FDF6ED,#F5E6C8); padding:22px 26px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:15px; color:#854F0B;">💡</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
+        </div>
+        {{ master_render(_o4_s1 | trim, '#3D2000') }}
       </div>
-      {{ master_render(_c4_resolved.strip(), '#412402') }}
+
+      {% if _o4_bow %}
+      <div style="height:1px; background:linear-gradient(90deg,rgba(133,79,11,0.15),rgba(133,79,11,0.35),rgba(133,79,11,0.15));"></div>
+      <div style="background:linear-gradient(135deg,#F5EAD0,#E8C878); padding:22px 26px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:15px; color:#6B4500;">📖</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#6B4500; text-transform:uppercase;">Your next Body of Work sequence</span>
+        </div>
+        {% for _ol in _o4_bow_fmt.split('
+') %}
+          {% set _olt = _ol | trim %}
+          {% if _olt.startswith('▸') %}
+            <div style="display:flex; gap:10px; margin:10px 0; align-items:flex-start;">
+              <span style="color:#6B4500; font-weight:700; flex-shrink:0; margin-top:2px;">▸</span>
+              <span style="font-size:15px; color:#3D2200; line-height:1.75;">{{ _olt[1:] | trim }}</span>
+            </div>
+          {% elif _olt %}
+            <div style="font-size:16px; color:#3D2200; line-height:1.85; margin-bottom:10px;">{{ _olt }}</div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if _o4_cross %}
+      <div style="height:1px; background:linear-gradient(90deg,rgba(107,67,17,0.15),rgba(107,67,17,0.3),rgba(107,67,17,0.15));"></div>
+      <div style="background:linear-gradient(135deg,#EDE5D5,#DCCC9A); padding:22px 26px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:15px; color:#5C4010;">🔭</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#5C4010; text-transform:uppercase;">A note on your eye</span>
+        </div>
+        {{ master_render(_o4_cross | trim, '#3A2800') }}
+      </div>
+      {% endif %}
+
     </div>
     {% endif %}
 
