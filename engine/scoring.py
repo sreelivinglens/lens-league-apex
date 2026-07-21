@@ -36,6 +36,9 @@ GENRE_WEIGHTS = {
     'Street':           {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
     'Wedding':          {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
     'Wildlife':         {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
+    # Session 153 — Maternity/Family as standalone genre (S150 decision)
+    'Maternity':        {'dod': 0.06, 'disruption': 0.10, 'dm': 0.22, 'wonder': 0.14, 'aq': 0.48},
+    'Family':           {'dod': 0.06, 'disruption': 0.10, 'dm': 0.22, 'wonder': 0.14, 'aq': 0.48},
     # Legacy keys — kept for backward compat with existing DB rows
     'Drone & Aerial':   {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
 }
@@ -92,6 +95,12 @@ GENRE_LIST = [
         'aliases':     ['macro', 'closeup', 'close-up', 'texture', 'pattern'],
     },
     {
+        'id':          'Maternity',
+        'label':       'Maternity & Family',
+        'description': 'Pregnancy, newborns, family bonds — emotional connection and the milestone of new life',
+        'aliases':     ['maternity', 'pregnancy', 'newborn', 'family', 'motherhood', 'parenthood', 'baby', 'children'],
+    },
+    {
         'id':          'Nature',
         'label':       'Nature',
         'description': 'Plants, fungi, ecosystems, weather, rivers, night sky, coral — the living natural world',
@@ -137,6 +146,7 @@ GENRE_LABELS = {g['id']: g['label'] for g in GENRE_LIST}
 # Legacy label compat
 GENRE_LABELS['Drone & Aerial'] = 'Drone'
 GENRE_LABELS['Landscapes']     = 'Landscape'
+GENRE_LABELS['Family']         = 'Maternity & Family'
 
 # List of (id, label) tuples — use for <select> dropdowns that need both
 GENRE_CHOICES = [(g['id'], g['label']) for g in GENRE_LIST]
