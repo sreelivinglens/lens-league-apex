@@ -295,7 +295,11 @@
       <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Shutter League Evaluation</p>
     </div>
     <div class="detail-actions">
-      <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
+      {%- set _back_url = url_for('leaderboard') if request.args.get('from') == 'gallery' else url_for('dashboard') -%}
+      {%- set _back_label = '← Programme Gallery' if request.args.get('from') == 'gallery' else '← Back' -%}
+      <a href="{{ _back_url }}"
+         class="btn"
+         style="color:#1A1A18; border-color:#1A1A18; font-weight:700;">{{ _back_label }}</a>
       {% if image.status not in ['scored', 'processing'] %}
         <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}" style="display:inline;">
           <button type="submit" class="btn btn-solid">Score Now</button>
@@ -2158,13 +2162,15 @@ function pollRescoreStatus(imgId) {
 
 {# ── Bottom back button — user doesn't have to scroll up ── #}
 <div style="padding:24px 0 8px; text-align:center;">
-  <a href="{{ url_for('dashboard') }}"
+  {%- set _back_url2 = url_for('leaderboard') if request.args.get('from') == 'gallery' else url_for('dashboard') -%}
+  {%- set _back_label2 = '← Programme Gallery' if request.args.get('from') == 'gallery' else '← Back to Dashboard' -%}
+  <a href="{{ _back_url2 }}"
      style="display:inline-flex; align-items:center; gap:6px;
-            font-size:15px; font-weight:700; color:var(--text-secondary);
+            font-size:15px; font-weight:700; color:#1A1A18;
             text-decoration:none; padding:12px 20px;
-            border:1px solid var(--border); border-radius:10px;
+            border:2px solid #1A1A18; border-radius:10px;
             background:var(--surface-1);">
-    ← Back to Dashboard
+    {{ _back_label2 }}
   </a>
 </div>
 
