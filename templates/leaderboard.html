@@ -336,10 +336,10 @@
 .lb-cta p { font-size: 16px; color: var(--text-primary); margin: 0; line-height: 1.6; max-width: 480px; }
 .lb-cta a { min-height: 44px; display: inline-flex; align-items: center; padding: 12px 24px; cursor: pointer; }
 .uq-tag {
-  display: inline-block; font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-  letter-spacing: 0.4px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
-  background: rgba(0,0,0,0.05); color: #888888; border: 1px solid rgba(0,0,0,0.10);
-  white-space: nowrap; line-height: 1.5;
+  display: inline-block; font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  letter-spacing: 0; text-transform: none; padding: 4px 9px; border-radius: 4px;
+  background: rgba(0,0,0,0.04); color: #5a5850; border: 1px solid rgba(0,0,0,0.12);
+  white-space: nowrap; line-height: 1.5; cursor: help;
 }
 
 /* ════════════════════════════════════════
@@ -631,6 +631,10 @@ body { overflow-x: hidden; }
        PHOTOGRAPHERS
   ═══════════════════════ -->
   {% elif tab == 'photographers' %}
+  <p style="font-size:15px; color:var(--text-secondary); margin:0 0 16px; line-height:1.6;">
+    Ordered by average DDI evaluation across all images.
+    Standing is confirmed once a photographer has 3 or more evaluations.
+  </p>
   {% if photographer_stats %}
   <div class="lb-pg-grid">
     {% for p in photographer_stats %}
@@ -679,7 +683,17 @@ body { overflow-x: hidden; }
         {% endif %}
       </div>
       {% if p.under_qualification %}
-      <div style="margin-top:-6px;"><span class="uq-tag">Pending Standings</span></div>
+      <div style="margin-top:2px;">
+        {% if p.image_count < 3 %}
+        <span class="uq-tag" title="Standings are confirmed once a photographer has 3 or more evaluations">
+          {{ 3 - p.image_count }} more evaluation{{ 's' if (3 - p.image_count) != 1 else '' }} needed to confirm standing
+        </span>
+        {% else %}
+        <span class="uq-tag" title="Standings are confirmed after 6 months of membership">
+          Standing confirms month {{ 7 - p.joined_months if p.joined_months < 7 else 1 }}
+        </span>
+        {% endif %}
+      </div>
       {% endif %}
     </div>
     {% endfor %}
