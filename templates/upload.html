@@ -1129,7 +1129,14 @@
       showDispute(resp && resp.dispute_id);
     };
 
-    xhr.onerror   = function () { showError('Network error — check your connection and try again.'); };
+    xhr.onerror   = function () {
+      // S156-P2: site may be in maintenance — image may still be processing
+      showError(
+        'Network error — your image may still be uploading or evaluating. ' +
+        'Check your profile before trying again. ' +
+        'If it does not appear within 5 minutes, contact support@shutterleague.com.'
+      );
+    };
     xhr.ontimeout = function () { showError('Request timed out. Check your dashboard — your image may have been saved.'); };
 
     var fd = new FormData(form);
@@ -1139,7 +1146,10 @@
   });
 
   // ── Score polling — checks /score-status every 2s after upload ──────────
+  // S156-P1: Cancel/Retry button appears after 30s — Unni 300s hang fix.
+  // S156-P2: XHR onerror (maintenance page / 503) now shows upload-still-processing warning.
   function _startPolling(imageId, nextPage) {
+    var _pollErrCount = 0;
     var _pollInterval = setInterval(function() {
       var pollXhr = new XMLHttpRequest();
       var url = '/score-status/' + imageId + (nextPage ? '?next=' + encodeURIComponent(nextPage) : '');
@@ -1152,6 +1162,7 @@
         if (!r || r.status === 'processing') return; // still going — keep polling
 
         clearInterval(_pollInterval);
+        _clearCancelTimer();
 
         if (r.status === 'ok') {
           notifyComplete();
@@ -1198,9 +1209,88 @@
           return;
         }
       };
-      pollXhr.onerror = function() { /* network blip — keep polling */ };
+      pollXhr.onerror = function() {
+        // S156-P2: if site goes to maintenance mid-poll, stop silently and warn
+        // Most network blips recover in the next 2s poll — only warn after 3 consecutive fails
+        _pollErrCount = (_pollErrCount || 0) + 1;
+        if (_pollErrCount >= 3) {
+          clearInterval(_pollInterval);
+          _clearCancelTimer();
+          document.getElementById('scoringOverlay').classList.remove('active');
+          showError(
+            'Your image may still be uploading. ' +
+            'Check your profile before trying again.'
+          );
+        }
+      };
       pollXhr.send();
     }, 2000);
+
+    // ── S156-P1: Cancel / Try Again after 30s ─────────────────────────────
+    // After 30s with no result, show an escape button so the user is not
+    // trapped waiting. Tapping it stops polling and shows a safe message.
+    var _cancelTimer = setTimeout(function() {
+      var overlay = document.getElementById('scoringOverlay');
+      if (!overlay || !overlay.classList.contains('active')) return;
+
+      // Inject cancel button into overlay if not already present
+      if (!document.getElementById('slCancelBtn')) {
+        var cancelWrap = document.createElement('div');
+        cancelWrap.id = 'slCancelWrap';
+        cancelWrap.style.cssText = [
+          'position:absolute',
+          'bottom:28px',
+          'left:0',
+          'right:0',
+          'text-align:center',
+          'padding:0 24px',
+          'z-index:10',
+        ].join(';');
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.id = 'slCancelBtn';
+        cancelBtn.type = 'button';
+        cancelBtn.textContent = 'Taking longer than usual — go to dashboard';
+        cancelBtn.style.cssText = [
+          'background:#2C3E6B',
+          'color:#F5C518',
+          'border:none',
+          'border-radius:6px',
+          'font-family:Inter,Arial,sans-serif',
+          'font-size:15px',
+          'font-weight:600',
+          'letter-spacing:0.5px',
+          'padding:14px 22px',
+          'cursor:pointer',
+          'width:100%',
+          'max-width:340px',
+          'line-height:1.7',
+        ].join(';');
+
+        cancelBtn.onclick = function() {
+          clearInterval(_pollInterval);
+          _clearCancelTimer();
+          overlay.classList.remove('active');
+          showError(
+            'Your image is still being evaluated — this can take up to 90 seconds. ' +
+            'Check your dashboard. Your result will appear there when ready.'
+          );
+        };
+
+        cancelWrap.appendChild(cancelBtn);
+        overlay.appendChild(cancelWrap);
+      }
+    }, 30000);
+
+    function _clearCancelTimer() {
+      clearTimeout(_cancelTimer);
+      var w = document.getElementById('slCancelWrap');
+      if (w) w.parentNode && w.parentNode.removeChild(w);
+    }
+
+    // Store so overlay teardown can clear it
+    var overlay = document.getElementById('scoringOverlay');
+    if (overlay) overlay._cancelTimer = _cancelTimer;
   }
 
   // ── Overlay ticker ───────────────────────────────────────────────────────
