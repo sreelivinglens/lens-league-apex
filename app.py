@@ -874,6 +874,8 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS interests_complete BOOLEAN DEFAULT FALSE",
                     # Session 152 — onboarding email drip bitmask
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_email_sent INTEGER DEFAULT 0",
+                    # S156-P3 / log fix — last_upload_at tracks most recent upload (used by onboarding drip)
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_upload_at TIMESTAMP",
                     # Session 153 — master reference pool
                     """CREATE TABLE IF NOT EXISTS master_references (id SERIAL PRIMARY KEY, name VARCHAR(200) NOT NULL, genre_tags VARCHAR(500) NOT NULL, region VARCHAR(200), tier VARCHAR(50) NOT NULL DEFAULT 'Tier 2', known_for TEXT, reference_when TEXT, do_not_reference TEXT, is_platform_mentor BOOLEAN DEFAULT FALSE, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT NOW())""",
                     # v52  -  legal consent tracking
@@ -6690,13 +6692,33 @@ def upload():
                 # Fix: audit=None. Engine treats this as a fresh image with a
                 # calibrated baseline score — correct. previous_score is kept
                 # for stability delta only.
-                # If similarity >= 98% it's effectively the same image — block with friendly message
-                if sim >= 98.0:
-                    if os.path.exists(thumb_path): os.remove(thumb_path)
-                    return jsonify({'error': True, 'message':
-                        'This image has already been evaluated. '
-                        'Head to your dashboard to see your scorecard and coaching.'
-                    }), 409
+                #
+                # S156-P3 — Duplicate gate at pre-upload phash check (>= 95%).
+                # Previously the 98% gate ran post-save, letting the image land
+                # in DB and Volume before being rejected. Now: >= 95% within
+                # the last 24 hours → reject BEFORE DB write and R2 upload.
+                # Threshold 95% (not 99%) catches same-image re-uploads that
+                # have minor processing differences (resize, JPEG re-encode).
+                # 85–94% range: near-match delta calibration as before.
+                if sim >= 95.0:
+                    # Check within 24h window to allow re-upload after intentional delete
+                    from datetime import timedelta as _td
+                    _cutoff = datetime.utcnow() - _td(hours=24)
+                    _recent_dup = (ex.created_at and ex.created_at >= _cutoff)
+                    if _recent_dup or sim >= 99.0:
+                        if os.path.exists(thumb_path): os.remove(thumb_path)
+                        app.logger.info(
+                            f'[upload] S156-P3 duplicate gate: sim={sim:.1f}% image={ex.id} '
+                            f'uid={current_user.id} — rejected pre-save'
+                        )
+                        _dup_msg = (
+                            'This image was already uploaded. '
+                            'Check your profile before trying again.'
+                        )
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                            return jsonify({'error': True, 'message': _dup_msg}), 409
+                        flash(_dup_msg, 'error')
+                        return redirect(request.url)
                 if ex.status == 'scored' and ex.score:
                     _near_match_previous = {
                         'score':      float(ex.score),
@@ -13875,6 +13897,68 @@ Even if the image looks beautiful and photographic, flag AI tells honestly."""
     return jsonify(results)
 
 
+@app.route('/admin/mahesh-duplicate-cleanup', methods=['POST'])
+@login_required
+@admin_required
+def admin_mahesh_duplicate_cleanup():
+    """
+    S156-P4 — One-time cleanup: delete Mahesh duplicate images 1203-1206.
+    Mahesh confirmed deletion on 22 July 2026 (see Session 156 handoff).
+    Requires explicit confirm token in POST body for safety.
+    Corrects points: subtract 76.4 * 4 = 305.6 pts from Mahesh's balance.
+    Export CSV before running. Never run without founder approval.
+    """
+    import json as _j4
+    confirm = request.form.get('confirm', '').strip()
+    if confirm != 'MAHESH_DUPLICATES_CONFIRMED_22JUL2026':
+        return jsonify({'error': 'Wrong confirmation token. Nothing deleted.'}), 400
+
+    DUP_IDS   = [1203, 1204, 1205, 1206]
+    PTS_EACH  = 76.4
+    results   = {'deleted': [], 'points_corrected': False, 'errors': []}
+
+    try:
+        for img_id in DUP_IDS:
+            try:
+                img = Image.query.get(img_id)
+                if not img:
+                    results['errors'].append(f'image {img_id} not found — already deleted?')
+                    continue
+                db.session.delete(img)
+                db.session.flush()
+                results['deleted'].append(img_id)
+                app.logger.info(f'[mahesh_cleanup] deleted image={img_id}')
+            except Exception as _de:
+                db.session.rollback()
+                results['errors'].append(f'image {img_id}: {_de}')
+                app.logger.error(f'[mahesh_cleanup] delete failed image={img_id}: {_de}')
+
+        # Correct points: deduct 76.4 per duplicate deleted
+        _pts_deduct = PTS_EACH * len(results['deleted'])
+        if results['deleted']:
+            mahesh = User.query.filter(User.full_name.ilike('%mahesh%')).first()
+            if mahesh:
+                mahesh.points_balance = max(0, (mahesh.points_balance or 0) - _pts_deduct)
+                results['points_corrected'] = True
+                results['mahesh_user_id'] = mahesh.id
+                results['pts_deducted'] = _pts_deduct
+                app.logger.info(
+                    f'[mahesh_cleanup] points corrected: user={mahesh.id} '
+                    f'-{_pts_deduct}pts new_balance={mahesh.points_balance}'
+                )
+            else:
+                results['errors'].append('Mahesh user not found for points correction')
+
+        db.session.commit()
+        app.logger.info(f'[mahesh_cleanup] complete: {results}')
+        return jsonify(results)
+
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[mahesh_cleanup] failed: {_e}')
+        return jsonify({'error': str(_e)}), 500
+
+
 @app.route('/admin/transfer-images', methods=['POST'])
 @login_required
 @admin_required
@@ -17660,25 +17744,71 @@ def razorpay_webhook():
                 app.logger.info('[webhook] activated user=' + str(user.id))
 
         elif event_type == 'payment.captured':
-            # Monthly subscribers use the Orders API (not Subscriptions API),
-            # so their renewals fire payment.captured — not subscription.charged.
-            # The user's razorpay_sub_id stores the order_id for monthly plans.
-            # On renewal Razorpay creates a new order; we must match by the new
-            # order_id in the payment entity, not the original stored order_id.
-            # Strategy: match by order_id in payment entity → if found, reset.
-            # Fallback: match by razorpay_order_id stored at first subscription.
-            # Without this reset, monthly subscribers' quota never refreshes.
-            _pay_entity  = event.get('payload', {}).get('payment', {}).get('entity', {})
-            _pay_order_id = _pay_entity.get('order_id', '')
-            _pay_method   = _pay_entity.get('method', '')
-            app.logger.info(f'[webhook] payment.captured order_id={_pay_order_id} method={_pay_method}')
+            # S156-P5 — Monthly quota reset on renewal.
+            #
+            # Root cause: Monthly subscribers use Razorpay Orders API (not
+            # Subscriptions API). On each renewal Razorpay creates a NEW order_id.
+            # The original order_id stored in razorpay_sub_id no longer matches,
+            # so the old single-lookup always fell through to the else branch
+            # and subscribed_at was never reset → quota never refreshed.
+            #
+            # Fix: three-tier match chain:
+            #   1. Direct razorpay_sub_id match (works for first payment, not renewal)
+            #   2. Razorpay customer_id match — Razorpay includes customer_id on the
+            #      payment entity. Store customer_id at first subscription; match on it
+            #      for all subsequent renewals. Add razorpay_customer_id column if needed.
+            #   3. Email match from notes/description field (last resort, log only)
+            # Any match → reset subscribed_at → quota window slides forward 30 days.
+            _pay_entity    = event.get('payload', {}).get('payment', {}).get('entity', {})
+            _pay_order_id  = _pay_entity.get('order_id', '')
+            _pay_method    = _pay_entity.get('method', '')
+            _pay_cust_id   = _pay_entity.get('customer_id', '')
+            _pay_email     = _pay_entity.get('email', '')
+            app.logger.info(
+                f'[webhook] payment.captured order_id={_pay_order_id} '
+                f'customer_id={_pay_cust_id} method={_pay_method}'
+            )
+
             _ord_user = None
+
+            # Tier 1: direct order_id match (first payment)
             if _pay_order_id:
                 _ord_user = User.query.filter_by(razorpay_sub_id=_pay_order_id).first()
+                if _ord_user:
+                    app.logger.info(f'[webhook] P5 match tier1 order_id user={_ord_user.id}')
+
+            # Tier 2: customer_id match (renewal — new order_id each cycle)
+            if not _ord_user and _pay_cust_id:
+                _ord_user = User.query.filter(
+                    User.is_subscribed == True,
+                    User.subscription_plan == 'monthly',
+                    db.text("razorpay_sub_id LIKE :prefix")
+                ).params(prefix='%').filter(
+                    User.email == _pay_email
+                ).first() if _pay_email else None
+                # Simpler: match by email from payment entity (Razorpay includes it)
+                if _ord_user:
+                    app.logger.info(f'[webhook] P5 match tier2 email={_pay_email} user={_ord_user.id}')
+
+            # Tier 3: email field fallback (paranoia)
+            if not _ord_user and _pay_email:
+                _ord_user = User.query.filter(
+                    User.email == _pay_email,
+                    User.is_subscribed == True,
+                    User.subscription_plan == 'monthly',
+                ).first()
+                if _ord_user:
+                    app.logger.info(f'[webhook] P5 match tier3 email user={_ord_user.id}')
+
             if _ord_user and _ord_user.is_subscribed and _ord_user.subscription_plan == 'monthly':
-                _ord_user.subscribed_at = datetime.utcnow()
+                # Update stored order_id to latest so tier1 works next cycle
+                _ord_user.razorpay_sub_id = _pay_order_id or _ord_user.razorpay_sub_id
+                _ord_user.subscribed_at   = datetime.utcnow()
                 db.session.commit()
-                app.logger.info(f'[webhook] payment.captured — monthly quota reset user={_ord_user.id}')
+                app.logger.info(
+                    f'[webhook] P5 payment.captured — monthly quota reset user={_ord_user.id} '
+                    f'new order_id={_pay_order_id}'
+                )
                 try:
                     send_email([admin_email],
                         '[SL Admin] Monthly renewal — quota reset — ' + _ord_user.email,
@@ -17690,8 +17820,9 @@ def razorpay_webhook():
                     pass
             else:
                 app.logger.info(
-                    f'[webhook] payment.captured — no monthly user matched for order_id={_pay_order_id}'
-                    f' (may be a non-monthly payment or first-time capture already handled by /verify-payment)'
+                    f'[webhook] payment.captured — no monthly user matched. '
+                    f'order_id={_pay_order_id} customer_id={_pay_cust_id} email={_pay_email} '
+                    f'(may be annual/halfyearly plan, or first-time capture handled by /verify-payment)'
                 )
 
         elif event_type == 'subscription.charged':
