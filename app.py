@@ -10376,7 +10376,21 @@ def leaderboard():
     pg_base = apply_filters(pg_base, user_already_joined=True)
     pg_page     = request.args.get('pg_page', 1, type=int)
     pg_per_page = 25
-    pg_all      = (
+
+    # Helper — whole calendar months since a datetime
+    def _months_since(dt):
+        if not dt:
+            return 99  # unknown join date → treat as qualified
+        _n = datetime.utcnow()
+        return (_n.year - dt.year) * 12 + (_n.month - dt.month)
+
+    # S156 — Minimum 3 scored images to qualify for standings.
+    # Sort qualified (>=3 images, >=6 months) by avg_score desc FIRST,
+    # then under-qualified to the bottom — across ALL rows before pagination
+    # so under-qualified entries never appear in top positions on page 1.
+    PG_MIN_IMAGES = 3
+
+    _pg_raw = (
         pg_base
         .group_by(
             Image.user_id, User.username, User.full_name,
@@ -10386,37 +10400,12 @@ def leaderboard():
         .order_by(desc('avg_score'))
         .all()
     )
-    pg_total    = len(pg_all)
-    pg_pages    = min(25, max(1, (pg_total + pg_per_page - 1) // pg_per_page))
-    pg_page     = max(1, min(pg_page, pg_pages))
-    pg_rows     = pg_all[(pg_page - 1) * pg_per_page : pg_page * pg_per_page]
 
-    # Find current user's photographer rank
-    user_pg_rank = None
-    if _cu.is_authenticated:
-        for _i, _row in enumerate(pg_all):
-            if _row.user_id == _cu.id:
-                user_pg_rank = _i + 1
-                break
-    # Helper — whole calendar months since a datetime
-    def _months_since(dt):
-        if not dt:
-            return 99  # unknown join date → treat as qualified
-        _n = datetime.utcnow()
-        return (_n.year - dt.year) * 12 + (_n.month - dt.month)
-
-    # S156 — Photographer ranking: minimum 3 scored images to qualify for standings.
-    # 1-image photographers ranked #2 by avg gives a false signal to viewers.
-    # under_qualification = True when: joined < 6 months OR image_count < 3.
-    # Under-qualified photographers are sorted to the bottom within their page
-    # so real standing reflects consistent contribution, not one lucky frame.
-    PG_MIN_IMAGES = 3
-
-    photographer_stats = []
-    for row in pg_rows:
-        _jm = _months_since(row.user_created_at)
-        _img_cnt = row.image_count or 0
-        photographer_stats.append({
+    # Build full list with qualification flag, then sort globally
+    def _build_pg_entry(row):
+        _jm  = _months_since(row.user_created_at)
+        _cnt = row.image_count or 0
+        return {
             'user_id':            row.user_id,
             'username':           row.username,
             'display_name':       row.full_name or row.username,
@@ -10424,16 +10413,31 @@ def leaderboard():
             'state':              row.state,
             'avg_score':          round(float(row.avg_score), 2) if row.avg_score else 0,
             'best_score':         float(row.best_score) if row.best_score else 0,
-            'image_count':        _img_cnt,
+            'image_count':        _cnt,
             'total_peer_ratings': int(row.total_peer_ratings or 0),
             'joined_months':      _jm,
-            'under_qualification': _jm < 6 or _img_cnt < PG_MIN_IMAGES,
-            # Session 132 — Mobile DDI: subscription_track for league badge
+            'under_qualification': _jm < 6 or _cnt < PG_MIN_IMAGES,
             'subscription_track': row.subscription_track or None,
-        })
+        }
 
-    # Sort: qualified first (by avg_score desc, already from DB), under-qualified last
-    photographer_stats.sort(key=lambda p: (1 if p['under_qualification'] else 0, -p['avg_score']))
+    pg_all_built = [_build_pg_entry(r) for r in _pg_raw]
+    # Global sort: qualified first by avg desc, under-qualified last by avg desc
+    pg_all_built.sort(key=lambda p: (1 if p['under_qualification'] else 0, -p['avg_score']))
+
+    pg_total = len(pg_all_built)
+    pg_pages = min(25, max(1, (pg_total + pg_per_page - 1) // pg_per_page))
+    pg_page  = max(1, min(pg_page, pg_pages))
+    pg_rows  = pg_all_built[(pg_page - 1) * pg_per_page : pg_page * pg_per_page]
+
+    # Find current user's photographer rank (in globally sorted list)
+    user_pg_rank = None
+    if _cu.is_authenticated:
+        for _i, _p in enumerate(pg_all_built):
+            if _p['user_id'] == _cu.id:
+                user_pg_rank = _i + 1
+                break
+
+    photographer_stats = pg_rows
 
     all_tiers = ['Rookie', 'Shooter', 'Contender', 'Craftsman', 'Maverick', 'Master', 'Grandmaster', 'Legend']
 
