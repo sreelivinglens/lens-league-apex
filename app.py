@@ -6528,6 +6528,59 @@ def _get_quota_status(user):
         }
 
 
+def _auto_score_with_timeout(timeout_secs=90, retry_wait=10, **kwargs):
+    """
+    Wraps auto_score() with a hard timeout and one automatic retry.
+
+    Why: The main Claude API scoring call averages 60-78s and has no timeout
+    guard. Without this, a slow or hung API call keeps the background thread
+    alive indefinitely — the image stays 'processing' forever and the user
+    never sees a result or an error.
+
+    Behaviour:
+      1. Run auto_score(**kwargs) in a ThreadPoolExecutor with timeout_secs ceiling.
+      2. If it completes in time, return the result normally.
+      3. If it times out on the first attempt, wait retry_wait seconds and try once more.
+      4. If the retry also times out, raise TimeoutError so the caller can set
+         img.status = 'error' and log a [auto_score_timeout] entry.
+
+    Called from: _score_in_background (upload), _force_rescore_in_background,
+                 _retry_score_in_background, and the upload_edit scoring path.
+
+    Option B (prompt trimming) will be applied here after the 26 July event.
+    """
+    import concurrent.futures as _cf
+    from engine.auto_score import auto_score as _auto_score
+
+    def _run():
+        return _auto_score(**kwargs)
+
+    for attempt in (1, 2):
+        with _cf.ThreadPoolExecutor(max_workers=1) as _ex:
+            _fut = _ex.submit(_run)
+            try:
+                return _fut.result(timeout=timeout_secs)
+            except _cf.TimeoutError:
+                _fut.cancel()
+                if attempt == 1:
+                    import time as _time
+                    current_app.logger.warning(
+                        f'[auto_score_timeout] attempt 1 exceeded {timeout_secs}s — '
+                        f'waiting {retry_wait}s then retrying. '
+                        f'image_path={kwargs.get("image_path", "?")} genre={kwargs.get("genre", "?")}'
+                    )
+                    _time.sleep(retry_wait)
+                else:
+                    current_app.logger.error(
+                        f'[auto_score_timeout] attempt 2 also exceeded {timeout_secs}s — '
+                        f'giving up. image_path={kwargs.get("image_path", "?")} '
+                        f'genre={kwargs.get("genre", "?")}'
+                    )
+                    raise TimeoutError(
+                        f'auto_score did not complete within {timeout_secs}s on either attempt'
+                    )
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -7626,7 +7679,7 @@ def upload():
 
                         _recent_masters = (_sc_portfolio or {}).get('recent_masters', [])
                         _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters)
-                        result = auto_score(
+                        result = _auto_score_with_timeout(
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
@@ -8602,7 +8655,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                         except Exception as _var_err2:
                             app.logger.debug(f'[retry_score] variety history extraction failed: {_var_err2}')
 
-            result = auto_score(
+            result = _auto_score_with_timeout(
                 image_path        = thumb_path,
                 genre             = img.genre,
                 sub_genre         = img.sub_genre,
@@ -8829,7 +8882,7 @@ def _retry_score_in_background(image_id, old_status):
                 genre=img.genre or '',
             ) if (img.camera_track == 'mobile' or img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
 
-            result = auto_score(
+            result = _auto_score_with_timeout(
                 image_path   = thumb_path,
                 genre        = img.genre,
                 sub_genre    = img.sub_genre,
@@ -9206,7 +9259,7 @@ def upload_edited_version(image_id):
                             app.logger.warning(f'[upload_edit scoring] seasonal context error: {_es_err}')
                             _edit_seasonal_ctx = ''
 
-                        result = auto_score(
+                        result = _auto_score_with_timeout(
                             image_path=_img.thumb_path, genre=_img.genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
                             subject=_img.subject, location=_img.location,
