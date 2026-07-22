@@ -205,6 +205,8 @@ ALL_MASTERS = {
     'Goldin':                 'Nan+Goldin+photography',
     'Harold Edgerton':        'Harold+Edgerton+photography',
     'Edgerton':               'Harold+Edgerton+photography',
+    # Platform mentor — pinned query avoids wrong-person Google results
+    'Ashok Kochhar':          'Ashok+Kochhar+soulfulphotographer+street+portrait+photography',
 }
 
 # ---------------------------------------------------------------------------
@@ -739,6 +741,18 @@ def _run_startup_tasks():
         try:
             db.create_all()
             seed_master_references()  # Session 153 — load 101-entry master pool
+            # S156 — patch Ashok Kochhar do_not_reference in live DB (wrong wedding link fix)
+            try:
+                db.session.execute(db.text(
+                    "UPDATE master_references "
+                    "SET do_not_reference = 'Wedding,Fashion' "
+                    "WHERE name = 'Ashok Kochhar' "
+                    "AND (do_not_reference IS NULL OR do_not_reference = 'None' OR do_not_reference NOT LIKE '%Wedding%')"
+                ))
+                db.session.commit()
+            except Exception as _ak_patch:
+                db.session.rollback()
+                print(f'[ashok_kochhar_patch] non-fatal: {_ak_patch}')
             with db.engine.connect() as conn:
                 _migrations = [
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(120)",
@@ -2943,7 +2957,7 @@ def seed_master_references():
             ('GMB Akash','Street,Documentary','Bangladesh','Tier 2','Poverty and resilience in South Asia, emotional human narrative, WPP winner.','Human resilience, South Asian documentary, emotional depth','Wildlife,Fashion,Minimalist',False),
             ('Raghu Rai','Street,Documentary','India — Delhi','Tier 2','Indian political and social life, Indira Gandhi, Bhopal, five decades of Indian documentary.','Indian documentary, political moment, human dignity in India','Fashion,Wildlife,Minimalist',False),
             ('T.S. Satyan','Street,Documentary','India','Tier 2','India in the 1950s-70s, political portraits, independent India documentation.','Historical India, independence era, Indian political portrait','Wildlife,Fashion',False),
-            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India','Platform Mentor','Multi-genre mastery. Think East and Capture philosophy — inner expression over technique. soulfulphotographer.com.','Any genre where photographer is overthinking technique. Cross-genre work. Indian context.','None',True),
+            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India','Platform Mentor','Multi-genre mastery. Think East and Capture philosophy — inner expression over technique. soulfulphotographer.com.','Any genre where photographer is overthinking technique. Cross-genre work. Indian context.','Wedding,Fashion',True),
             ('Nick Brandt','Wildlife,Conservation','UK / Africa','Tier 1','Large format B&W Africa wildlife, animal dignity, extinction themes.','Wildlife B&W, animal dignity, conservation framing, Africa','Street,Fashion,Colour landscape',False),
             ('Frans Lanting','Wildlife,Nature','Netherlands','Tier 1','Intimate animal behaviour, Africa and Amazon, colour and mood.','Animal behaviour, intimate wildlife, colour mood, environmental storytelling','Street,Fashion,Studio',False),
             ('Art Wolfe','Wildlife,Nature,Landscape','USA','Tier 1','Patterns in nature, aerial wildlife, camouflage. Migrations series.','Patterns in wildlife, geometric animal groupings, aerial perspective','Street,Fashion,Portrait',False),
