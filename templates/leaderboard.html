@@ -545,7 +545,7 @@ body { overflow-x: hidden; }
     <div class="lb-tile-grid">
       {% for image in visible %}
       {%- set tk = (image.tier or 'rookie') | lower | replace(' ','-') -%}
-      <a href="{{ url_for('image_detail', image_id=image.id) }}" class="lb-tile">
+      <a href="{{ url_for('image_detail', image_id=image.id) }}?from=gallery" class="lb-tile">
 
         <div class="tile-photo">
           {% if image.thumb_url %}
