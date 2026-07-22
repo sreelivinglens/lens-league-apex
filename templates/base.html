@@ -1725,6 +1725,7 @@ img {
           <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentor Review</a>
           <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
           <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Gallery</a>
+          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
           <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
           <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Annual Excellence</a>
           <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
