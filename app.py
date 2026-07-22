@@ -10405,9 +10405,17 @@ def leaderboard():
         _n = datetime.utcnow()
         return (_n.year - dt.year) * 12 + (_n.month - dt.month)
 
+    # S156 — Photographer ranking: minimum 3 scored images to qualify for standings.
+    # 1-image photographers ranked #2 by avg gives a false signal to viewers.
+    # under_qualification = True when: joined < 6 months OR image_count < 3.
+    # Under-qualified photographers are sorted to the bottom within their page
+    # so real standing reflects consistent contribution, not one lucky frame.
+    PG_MIN_IMAGES = 3
+
     photographer_stats = []
     for row in pg_rows:
         _jm = _months_since(row.user_created_at)
+        _img_cnt = row.image_count or 0
         photographer_stats.append({
             'user_id':            row.user_id,
             'username':           row.username,
@@ -10416,13 +10424,16 @@ def leaderboard():
             'state':              row.state,
             'avg_score':          round(float(row.avg_score), 2) if row.avg_score else 0,
             'best_score':         float(row.best_score) if row.best_score else 0,
-            'image_count':        row.image_count,
+            'image_count':        _img_cnt,
             'total_peer_ratings': int(row.total_peer_ratings or 0),
             'joined_months':      _jm,
-            'under_qualification': _jm < 6,
+            'under_qualification': _jm < 6 or _img_cnt < PG_MIN_IMAGES,
             # Session 132 — Mobile DDI: subscription_track for league badge
             'subscription_track': row.subscription_track or None,
         })
+
+    # Sort: qualified first (by avg_score desc, already from DB), under-qualified last
+    photographer_stats.sort(key=lambda p: (1 if p['under_qualification'] else 0, -p['avg_score']))
 
     all_tiers = ['Rookie', 'Shooter', 'Contender', 'Craftsman', 'Maverick', 'Master', 'Grandmaster', 'Legend']
 
