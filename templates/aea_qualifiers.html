@@ -1,0 +1,546 @@
+{% extends "base.html" %}
+{% block title %}AEA 2026 Qualifiers · Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ─────────────────────────────────────────
+   AEA QUALIFIERS PAGE
+   CSS vars mirror dashboard / aea.html
+───────────────────────────────────────── */
+:root {
+  --q-gold:    #D6A428;
+  --q-gold-dk: #A37B2C;
+  --q-navy:    #13254B;
+  --q-cream:   #F6F2E9;
+  --q-dark:    #0F2A22;
+  --q-card:    #FFFFFF;
+  --q-border:  #E8E4DA;
+  --q-text:    #1A1A18;
+  --q-muted:   #6B6B6B;
+  --q-green:   #2A7A3A;
+  --q-r:       14px;
+}
+
+body.page-aea-qualifiers main {
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.aq-wrap {
+  background: var(--q-cream);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding-bottom: 48px;
+}
+
+/* ── Header ── */
+.aq-header {
+  background: var(--q-navy);
+  padding: 28px 24px 24px;
+}
+.aq-header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.aq-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+.aq-back:hover { color: var(--q-gold); }
+.aq-back svg { width: 14px; height: 14px; }
+.aq-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.aq-badge-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  flex-shrink: 0;
+}
+.aq-heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: #F6F2E9;
+  line-height: 1.5;
+  margin: 0;
+}
+.aq-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 6px;
+  line-height: 1.6;
+}
+.aq-counts {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.aq-count-item {
+  text-align: center;
+}
+.aq-count-num {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--q-gold);
+  line-height: 1.5;
+}
+.aq-count-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-top: 3px;
+}
+
+/* ── Tabs ── */
+.aq-tabs {
+  background: var(--q-navy);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 0 24px;
+}
+.aq-tabs-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0;
+}
+.aq-tab {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: color 0.15s;
+  white-space: nowrap;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.aq-tab.active {
+  color: var(--q-gold);
+  border-bottom-color: var(--q-gold);
+}
+.aq-tab:hover { color: rgba(255,255,255,0.85); }
+
+/* ── Content ── */
+.aq-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 20px 0;
+}
+
+/* ── Qualifier card ── */
+.aq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.aq-card {
+  background: var(--q-card);
+  border-radius: var(--q-r);
+  border: 1px solid var(--q-border);
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.aq-rank {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--q-muted);
+  min-width: 28px;
+  text-align: center;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+.aq-rank.top1 { color: #C8A84B; }
+.aq-rank.top2 { color: #9E9E9E; }
+.aq-rank.top3 { color: #A0714A; }
+
+.aq-info {
+  flex: 1;
+  min-width: 0;
+}
+.aq-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--q-dark);
+  margin-bottom: 3px;
+}
+.aq-meta {
+  font-size: 13px;
+  color: var(--q-muted);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.aq-track-pill {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-right: 6px;
+}
+.aq-track-pill.camera { background: #E0E8F5; color: #1A2744; }
+.aq-track-pill.mobile { background: #EAF3DE; color: #1A5A28; }
+
+.aq-thumbs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.aq-thumb-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  overflow: hidden;
+  display: block;
+  flex-shrink: 0;
+  border: 1.5px solid var(--q-border);
+  background: var(--q-border);
+}
+.aq-thumb-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.aq-score-col {
+  text-align: right;
+  flex-shrink: 0;
+}
+.aq-avg {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--q-dark);
+  line-height: 1.5;
+}
+.aq-avg-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--q-muted);
+  margin-top: 3px;
+}
+.aq-months {
+  font-size: 13px;
+  color: var(--q-green);
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* ── Empty state ── */
+.aq-empty {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--q-card);
+  border-radius: var(--q-r);
+  border: 1px solid var(--q-border);
+}
+.aq-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--q-dark);
+  margin-bottom: 8px;
+}
+.aq-empty-body {
+  font-size: 15px;
+  color: var(--q-muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.aq-empty-cta {
+  display: inline-block;
+  background: var(--q-navy);
+  color: #F6F2E9;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Section label ── */
+.aq-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--q-muted);
+  margin: 20px 0 10px;
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .aq-header { padding: 20px 16px 18px; }
+  .aq-content { padding: 14px 14px 0; }
+  .aq-tabs { padding: 0 14px; }
+  .aq-heading { font-size: 20px; }
+  .aq-card { padding: 14px 14px; gap: 10px; flex-direction: column !important; }
+  .aq-score-col { width: 100%; text-align: left; display: flex; align-items: center; gap: 10px; }
+  .aq-avg { font-size: 22px; }
+  .aq-avg-label { margin-top: 0; }
+  .aq-counts { gap: 16px; }
+  .aq-count-num { font-size: 22px; }
+  .aq-thumbs { gap: 3px; }
+  .aq-thumb-link { width: 36px; height: 36px; }
+  .aq-list { display: flex; flex-direction: column; }
+}
+
+/* ── iPad 768px ── */
+@media (max-width: 768px) {
+  .aq-card { flex-wrap: wrap; }
+  .aq-score-col { min-width: 80px; }
+  .aq-list { grid-template-columns: 1fr !important; }
+}
+
+/* ── iPad range ── */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .aq-header { padding: 24px 20px 20px; }
+  .aq-content { padding: 18px 20px 0; }
+  .aq-card { gap: 12px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="aq-wrap">
+
+  <!-- Header -->
+  <div class="aq-header">
+    <div class="aq-header-inner">
+      <a href="{{ url_for('leaderboard') }}" class="aq-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Programme Gallery
+      </a>
+      <div class="aq-badge-row">
+        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+             class="aq-badge-img" alt="AEA badge"
+             onerror="this.style.display='none'">
+        <h1 class="aq-heading">Annual Excellence Award {{ year }}<br>Qualifiers</h1>
+      </div>
+      <p class="aq-sub">
+        Photographers who have met the {{ year }} qualification threshold —
+        {{ req_months }} months of evaluated uploads and {{ req_images }} or more images.
+        Listed by standing — average evaluation across their top 6 images, across all interests.
+      </p>
+      <div class="aq-counts">
+        <div class="aq-count-item">
+          <div class="aq-count-num">{{ qualifier_count }}</div>
+          <div class="aq-count-label">Qualified</div>
+        </div>
+        <div class="aq-count-item">
+          <div class="aq-count-num">{{ camera_qualifiers|length }}</div>
+          <div class="aq-count-label">Camera League</div>
+        </div>
+        <div class="aq-count-item">
+          <div class="aq-count-num">{{ mobile_qualifiers|length }}</div>
+          <div class="aq-count-label">Mobile League</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="aq-tabs">
+    <div class="aq-tabs-inner">
+      <a href="#all" class="aq-tab active" onclick="switchTab(event,'all')">All</a>
+      <a href="#camera" class="aq-tab" onclick="switchTab(event,'camera')">Camera League</a>
+      <a href="#mobile" class="aq-tab" onclick="switchTab(event,'mobile')">Mobile League</a>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="aq-content">
+
+    <!-- ALL TAB -->
+    <div id="tab-all" class="aq-tab-panel">
+      {% if qualifiers %}
+        <p class="aq-section-label">{{ qualifier_count }} qualifier{{ 's' if qualifier_count != 1 else '' }} · by standing · top 6 average evaluation</p>
+        <div class="aq-list">
+          {% for q in qualifiers %}
+          <div class="aq-card">
+            <div class="aq-rank {% if q.standing == 1 %}top1{% elif q.standing == 2 %}top2{% elif q.standing == 3 %}top3{% endif %}">
+              #{{ q.standing }}
+            </div>
+            <div class="aq-info">
+              <div class="aq-name">{{ q.display_name }}</div>
+              <div class="aq-meta">
+                <span class="aq-track-pill {{ q.track }}">{{ 'Camera' if q.track == 'camera' else 'Mobile' }}</span>
+                {{ q.image_count }} image{{ 's' if q.image_count != 1 else '' }} evaluated
+              </div>
+              {% if q.top6_images %}
+              <div class="aq-thumbs">
+                {% for img in q.top6_images %}
+                <a href="{{ url_for('image_detail', image_id=img.id) }}"
+                   class="aq-thumb-link"
+                   title="{{ img.name or 'Image' }} — {{ '%.2f'|format(img.score) }}">
+                  {% if img.thumb_url %}
+                  <img src="{{ img.thumb_url }}"
+                       loading="lazy"
+                       onerror="this.style.background='#E8E4DA';this.removeAttribute('src')"
+                       alt="{{ img.name or '' }}">
+                  {% else %}
+                  <div style="width:100%;height:100%;background:var(--q-border);"></div>
+                  {% endif %}
+                </a>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="aq-score-col">
+              <div class="aq-avg">{{ '%.2f'|format(q.top6_avg) }}</div>
+              <div class="aq-avg-label">AEA average</div>
+              <div class="aq-months">{{ q.qualifying_months }} month{{ 's' if q.qualifying_months != 1 else '' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="aq-empty">
+          <div class="aq-empty-title">No qualifiers yet</div>
+          <div class="aq-empty-body">
+            Photographers who upload consistently across {{ req_months }} months
+            and build an evaluated body of {{ req_images }}+ images will appear here.
+          </div>
+          <a href="{{ url_for('upload') }}" class="aq-empty-cta">Upload an image</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- CAMERA TAB -->
+    <div id="tab-camera" class="aq-tab-panel" style="display:none;">
+      {% if camera_qualifiers %}
+        <p class="aq-section-label">{{ camera_qualifiers|length }} Camera League qualifier{{ 's' if camera_qualifiers|length != 1 else '' }}</p>
+        <div class="aq-list">
+          {% for q in camera_qualifiers %}
+          <div class="aq-card">
+            <div class="aq-rank {% if loop.index == 1 %}top1{% elif loop.index == 2 %}top2{% elif loop.index == 3 %}top3{% endif %}">
+              #{{ loop.index }}
+            </div>
+            <div class="aq-info">
+              <div class="aq-name">{{ q.display_name }}</div>
+              <div class="aq-meta">
+                <span class="aq-track-pill camera">Camera</span>
+                {{ q.image_count }} image{{ 's' if q.image_count != 1 else '' }} evaluated
+              </div>
+              {% if q.top6_images %}
+              <div class="aq-thumbs">
+                {% for img in q.top6_images %}
+                <a href="{{ url_for('image_detail', image_id=img.id) }}"
+                   class="aq-thumb-link"
+                   title="{{ img.name or 'Image' }} — {{ '%.2f'|format(img.score) }}">
+                  {% if img.thumb_url %}
+                  <img src="{{ img.thumb_url }}"
+                       loading="lazy"
+                       onerror="this.style.background='#E8E4DA';this.removeAttribute('src')"
+                       alt="{{ img.name or '' }}">
+                  {% else %}
+                  <div style="width:100%;height:100%;background:var(--q-border);"></div>
+                  {% endif %}
+                </a>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="aq-score-col">
+              <div class="aq-avg">{{ '%.2f'|format(q.top6_avg) }}</div>
+              <div class="aq-avg-label">AEA average</div>
+              <div class="aq-months">{{ q.qualifying_months }} month{{ 's' if q.qualifying_months != 1 else '' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="aq-empty">
+          <div class="aq-empty-title">No Camera League qualifiers yet</div>
+          <div class="aq-empty-body">Camera League photographers who meet the threshold will appear here.</div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- MOBILE TAB -->
+    <div id="tab-mobile" class="aq-tab-panel" style="display:none;">
+      {% if mobile_qualifiers %}
+        <p class="aq-section-label">{{ mobile_qualifiers|length }} Mobile League qualifier{{ 's' if mobile_qualifiers|length != 1 else '' }}</p>
+        <div class="aq-list">
+          {% for q in mobile_qualifiers %}
+          <div class="aq-card">
+            <div class="aq-rank {% if loop.index == 1 %}top1{% elif loop.index == 2 %}top2{% elif loop.index == 3 %}top3{% endif %}">
+              #{{ loop.index }}
+            </div>
+            <div class="aq-info">
+              <div class="aq-name">{{ q.display_name }}</div>
+              <div class="aq-meta">
+                <span class="aq-track-pill mobile">Mobile</span>
+                {{ q.image_count }} image{{ 's' if q.image_count != 1 else '' }} evaluated
+              </div>
+              {% if q.top6_images %}
+              <div class="aq-thumbs">
+                {% for img in q.top6_images %}
+                <a href="{{ url_for('image_detail', image_id=img.id) }}"
+                   class="aq-thumb-link"
+                   title="{{ img.name or 'Image' }} — {{ '%.2f'|format(img.score) }}">
+                  {% if img.thumb_url %}
+                  <img src="{{ img.thumb_url }}"
+                       loading="lazy"
+                       onerror="this.style.background='#E8E4DA';this.removeAttribute('src')"
+                       alt="{{ img.name or '' }}">
+                  {% else %}
+                  <div style="width:100%;height:100%;background:var(--q-border);"></div>
+                  {% endif %}
+                </a>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="aq-score-col">
+              <div class="aq-avg">{{ '%.2f'|format(q.top6_avg) }}</div>
+              <div class="aq-avg-label">AEA average</div>
+              <div class="aq-months">{{ q.qualifying_months }} month{{ 's' if q.qualifying_months != 1 else '' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="aq-empty">
+          <div class="aq-empty-title">No Mobile League qualifiers yet</div>
+          <div class="aq-empty-body">Mobile League photographers who meet the threshold will appear here.</div>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>{# /aq-content #}
+</div>{# /aq-wrap #}
+
+<script>
+function switchTab(e, tab) {
+  e.preventDefault();
+  document.querySelectorAll('.aq-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.aq-tab-panel').forEach(function(p){ p.style.display = 'none'; });
+  e.currentTarget.classList.add('active');
+  document.getElementById('tab-' + tab).style.display = 'block';
+}
+</script>
+{% endblock %}
