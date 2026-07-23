@@ -487,7 +487,7 @@
 
     <div class="mg-grid">
       {% for img in images.items %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="mg-img-card">
+      <a href="{{ url_for('image_detail', image_id=img.id) }}?from=gallery" class="mg-img-card">
         <div class="mg-img-card__photo">
           {% if img.thumb_url %}
           <img src="{{ img.thumb_url }}"
