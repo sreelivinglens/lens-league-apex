@@ -25813,6 +25813,101 @@ def aea_enrol():
     return redirect(url_for('aea'))
 
 
+@app.route('/aea-qualifiers')
+@login_required
+def aea_qualifiers():
+    """
+    Public leaderboard of AEA 2026 qualifiers — all subscribed photographers
+    who have met the 3-month + 6-image threshold. Ranked by top-6 average
+    evaluation (cross-interest). No personal data beyond display name, track,
+    qualifying months, and top-6 avg.
+    """
+    _year = date.today().year
+    _req_months = 3 if _year == 2026 else 6
+    _req_images = 6
+    _qs = date(_year, 1, 1)          # qualifying start: Jan 1 for 2026
+    _se = date(_year + 1, 1, 1)      # season end (exclusive)
+
+    try:
+        _rows = db.session.execute(db.text("""
+            SELECT u.id, u.full_name, u.username, u.subscription_track,
+                   COUNT(DISTINCT DATE_TRUNC('month', i.created_at)) AS qualifying_months,
+                   COUNT(i.id) AS image_count
+            FROM users u
+            JOIN images i ON i.user_id = u.id
+            WHERE u.is_subscribed = TRUE
+              AND u.subscription_track IN ('mobile', 'camera')
+              AND i.is_public = TRUE
+              AND i.score IS NOT NULL
+              AND i.score > 0
+              AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+              AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+              AND i.created_at >= :qs
+              AND i.created_at < :se
+            GROUP BY u.id, u.full_name, u.username, u.subscription_track
+            HAVING COUNT(DISTINCT DATE_TRUNC('month', i.created_at)) >= :req_months
+              AND COUNT(i.id) >= :req_images
+            ORDER BY qualifying_months DESC
+        """), {
+            'qs': _qs, 'se': _se,
+            'req_months': _req_months, 'req_images': _req_images,
+        }).fetchall()
+
+        qualifiers = []
+        for _r in _rows:
+            _top6 = db.session.execute(db.text("""
+                SELECT i.id, i.score, i.thumb_url, i.asset_name
+                FROM images i
+                WHERE i.user_id = :uid
+                  AND i.is_public = TRUE
+                  AND i.score IS NOT NULL AND i.score > 0
+                  AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+                  AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+                ORDER BY i.score DESC
+                LIMIT 6
+            """), {'uid': _r[0]}).fetchall()
+
+            if not _top6:
+                continue
+
+            _avg = round(sum(row[1] for row in _top6) / len(_top6), 2)
+            qualifiers.append({
+                'user_id':          _r[0],
+                'display_name':     (_r[1] or _r[2] or 'Photographer').strip(),
+                'username':         _r[2],
+                'track':            _r[3],
+                'qualifying_months': int(_r[4]),
+                'image_count':      int(_r[5]),
+                'top6_avg':         _avg,
+                'top6_images':      [
+                    {'id': row[0], 'score': float(row[1]),
+                     'thumb_url': row[2], 'name': row[3] or ''}
+                    for row in _top6
+                ],
+            })
+
+        qualifiers.sort(key=lambda q: -q['top6_avg'])
+        for i, q in enumerate(qualifiers):
+            q['standing'] = i + 1
+
+    except Exception as _err:
+        app.logger.warning(f'[aea_qualifiers] query failed: {_err}')
+        qualifiers = []
+
+    camera_qualifiers = [q for q in qualifiers if q['track'] == 'camera']
+    mobile_qualifiers = [q for q in qualifiers if q['track'] == 'mobile']
+
+    return render_template('aea_qualifiers.html',
+        qualifiers=qualifiers,
+        camera_qualifiers=camera_qualifiers,
+        mobile_qualifiers=mobile_qualifiers,
+        qualifier_count=len(qualifiers),
+        year=_year,
+        req_months=_req_months,
+        req_images=_req_images,
+    )
+
+
 # ---------------------------------------------------------------------------
 # We use a lock file in /tmp — first worker to create it wins; others skip.
 import fcntl as _fcntl
