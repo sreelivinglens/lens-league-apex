@@ -1420,7 +1420,7 @@
     (function() {
       var bar = document.getElementById('ddiProgressBar');
       var pct = document.getElementById('ddiPct');
-      if (bar) bar.style.width = '2%';
+      if (bar) { bar.style.transition = 'none'; bar.style.width = '2%'; }
       if (pct) pct.textContent = '2%';
     })();
     var phaseLabels = [
@@ -1460,8 +1460,12 @@
       if (pct) pct.textContent = p + '%';
     }
 
-    // Activate first step immediately
-    ddiActivateStep(0);
+    // Delay step 0 activation so user sees bar start from 2% before jumping to 18%
+    setTimeout(function() {
+      var bar = document.getElementById('ddiProgressBar');
+      if (bar) bar.style.transition = 'width 1.2s ease';
+      ddiActivateStep(0);
+    }, 1000);
 
     // Schedule remaining steps based on expected timing
     var stepTimers = [];
