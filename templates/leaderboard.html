@@ -285,7 +285,19 @@
 /* ════════════════════════════════════════
    PHOTOGRAPHER CARDS
 ════════════════════════════════════════ */
-.lb-pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.lb-pg-outer { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: start; }
+.lb-pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.lb-aea-panel { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; position: sticky; top: 80px; }
+.lb-aea-title { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.lb-aea-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 12px; border-bottom: 0.5px solid var(--border); padding-bottom: 10px; }
+.lb-aea-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+.lb-aea-row:last-child { border-bottom: none; }
+.lb-aea-pos { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-muted); width: 18px; flex-shrink: 0; }
+.lb-aea-info { flex: 1; min-width: 0; }
+.lb-aea-name { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-aea-meta { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
+.lb-aea-avg { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+.lb-aea-empty { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
 .lb-pg-card {
   background: #FFFFFF; border: 1px solid var(--border); border-radius: 12px;
   padding: 20px; display: flex; flex-direction: column; gap: 14px;
@@ -383,7 +395,11 @@ a.lb-page-btn:focus-visible { outline:2px solid #F5C518; outline-offset:2px; }
 /* Mobile — 2 columns */
 @media (max-width: 768px) {
   .lb-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .lb-pg-outer  { grid-template-columns: 1fr; }
   .lb-pg-grid   { grid-template-columns: 1fr; gap: 10px; }
+  .lb-aea-panel { position: static; }
+  /* S156 image grid — 2-col on mobile */  [style*="grid-template-columns:repeat(4,1fr)"] { grid-template-columns: repeat(2,1fr) !important; }
+  /* S156 two-col outer — stack on mobile */  [style*="grid-template-columns:1fr 220px"] { grid-template-columns: 1fr !important; }
   .lb-gear-grid { grid-template-columns: 1fr; gap: 10px; }
   .lb-filter-row { padding: 9px 12px; gap: 8px; }
   .lb-filter-label { min-width: 70px; font-size: 14px; letter-spacing: 1px; }
@@ -420,84 +436,25 @@ body { overflow-x: hidden; }
     </p>
   </div>
 
-  <!-- FILTERS -->
-  <div class="lb-filter-section">
-
-    <!-- Period -->
-    <div class="lb-filter-row row-period">
-      <span class="lb-filter-label lbl-period">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Period
-      </span>
-      <div class="lb-pills">
-        {%- for val, label, icon in [('all','All Time','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'),('month','This Month','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'),('week','This Week','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>')] %}
-        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
-           class="lb-pill {% if period == val %}period-active{% else %}period-inactive{% endif %}">{{ icon|safe }} {{ label }}</a>
-        {%- endfor %}
-      </div>
-    </div>
-
-    <!-- Plan -->
-    <div class="lb-filter-row row-plan">
-      <span class="lb-filter-label lbl-plan">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
-        Plan
-      </span>
-      <div class="lb-pills">
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track=all"
-           class="lb-pill plan-pill {% if track == 'all' %}plan-active{% endif %}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          All Plans
-        </a>
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track=camera"
-           class="lb-pill plan-pill {% if track == 'camera' %}plan-active{% endif %}">
-          <svg width="14" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
-          Camera
-        </a>
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track=mobile"
-           class="lb-pill plan-pill {% if track == 'mobile' %}plan-active{% endif %}">
-          <svg width="11" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
-          Mobile
-        </a>
-      </div>
-    </div>
-
-    <!-- Interests -->
-    <div class="lb-filter-row row-interests">
-      <span class="lb-filter-label lbl-interests">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        Interests
-      </span>
-      <div class="lb-pills">
-        <a href="?tab={{ tab }}&period={{ period }}&genre=all&tier={{ tier }}&track={{ track }}"
-           class="lb-pill interest-pill {% if genre=='all' %}interest-active{% endif %}">All Interests</a>
-        {% for g in all_genres %}
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ g }}&tier={{ tier }}&track={{ track }}"
-           class="lb-pill interest-pill {% if genre==g %}interest-active{% endif %}">{{ g }}</a>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Tier -->
-    <div class="lb-filter-row row-tier">
-      <span class="lb-filter-label lbl-tier">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
-        Tier
-      </span>
-      <div class="lb-pills">
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier=all&track={{ track }}"
-           class="lb-pill {% if tier=='all' %}period-active{% endif %}">All Tiers</a>
-        {% for t in all_tiers %}
-        {%- set tk_f = t | lower | replace(' ','-') -%}
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ t }}&track={{ track }}"
-           class="lb-pill tier-pill-{{ tk_f }} {% if tier==t %}tp-active-{{ tk_f }}{% endif %}">{{ t }}</a>
-        {% endfor %}
-      </div>
-    </div>
-
-  </div>
-
+  <!-- LEAGUE TABS — Camera / Mobile only (S156 redesign) -->
   <!-- TABS -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:0.5px solid var(--border);padding-bottom:14px;">
+    <a href="?tab={{ tab }}&track=camera"
+       style="font-size:14px;font-weight:700;padding:8px 20px;border-radius:6px;text-decoration:none;font-family:var(--font-mono);letter-spacing:0.04em;
+              {% if track == 'camera' %}background:#F5F0E8;color:#2a1800;border:1.5px solid #C8A84B;{% else %}background:transparent;color:var(--text-muted);border:0.5px solid var(--border);{% endif %}">
+      Camera League
+    </a>
+    <a href="?tab={{ tab }}&track=mobile"
+       style="font-size:14px;font-weight:700;padding:8px 20px;border-radius:6px;text-decoration:none;font-family:var(--font-mono);letter-spacing:0.04em;
+              {% if track == 'mobile' %}background:#1A1A18;color:#F5C518;border:1.5px solid #1A1A18;{% else %}background:transparent;color:var(--text-muted);border:0.5px solid var(--border);{% endif %}">
+      Mobile League
+    </a>
+    <a href="?tab={{ tab }}&track=all"
+       style="font-size:13px;padding:8px 14px;border-radius:6px;text-decoration:none;font-family:var(--font-mono);
+              {% if track == 'all' or not track %}color:var(--text-secondary);border:none;{% else %}color:var(--text-muted);border:none;{% endif %}">
+      All
+    </a>
+  </div>
   <div class="lb-tabs">
     <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='images' %}active{% endif %}">Images</a>
@@ -512,213 +469,143 @@ body { overflow-x: hidden; }
   </div>
 
   <!-- ══════════════════════
-       IMAGES — TIER-GROUPED
+       IMAGES — LEADING EVALUATIONS
   ══════════════════════ -->
   {% if tab == 'images' %}
+  {%- set league_label = 'Camera League' if track == 'camera' else ('Mobile League' if track == 'mobile' else 'All Leagues') -%}
+  <div style="display:grid;grid-template-columns:1fr 220px;gap:18px;align-items:start;">
+  <div>
+  <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:12px;">
+    Leading Evaluations — {{ league_label }}
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
 
-  {%- set tier_order = ['Legend','Grandmaster','Master','Maverick','Craftsman','Contender','Shooter','Rookie'] -%}
-  {%- set ns = namespace(any_shown=false) -%}
+  {# 4-column image grid sorted by best evaluation (S156 redesign) #}
+  {% set _img_page = request.args.get('img_page', 1)|int %}
+  {% set _img_per_page = 12 %}
+  {% set _all_images = top_images | sort(attribute='score', reverse=True) %}
+  {% set _total_imgs = _all_images | length %}
+  {% set _img_pages = ((_total_imgs + _img_per_page - 1) // _img_per_page) if _total_imgs > 0 else 1 %}
+  {% set _img_start = (_img_page - 1) * _img_per_page %}
+  {% set _img_end = _img_start + _img_per_page %}
+  {% set _page_images = _all_images[_img_start:_img_end] %}
 
-  {%- for tier_name in tier_order %}
-    {%- set tier_images = top_images | selectattr('tier', 'equalto', tier_name) | list -%}
-    {%- if tier_images %}
-    {%- set ns.any_shown = true -%}
-    {%- set tk_h = tier_name | lower | replace(' ','-') -%}
-    {%- set visible = tier_images[:10] -%}
-    {# has_more: use server-supplied dict when a specific tier is selected,
-       otherwise fall back to the 12-image sentinel check for the all-tiers view #}
-    {%- if tier == 'all' -%}
-      {%- set has_more = (tier_images | length) >= 12 -%}
-    {%- else -%}
-      {%- set has_more = tier_has_more.get(tier_name, false) -%}
-    {%- endif -%}
+  {% for image in _page_images %}
+  {%- set _rank = _img_start + loop.index -%}
+  {%- set _rc = 'g' if _rank==1 else ('s' if _rank==2 else ('b' if _rank==3 else 'o')) -%}
+  {%- set _rk_bg = '#F5C518' if _rank==1 else ('#c0c0c0' if _rank==2 else ('#cd7f32' if _rank==3 else 'rgba(0,0,0,0.55)')) -%}
+  {%- set _rk_col = '#3a2a00' if _rank==1 else ('#2a2a2a' if _rank<=3 else '#fff') -%}
+  {%- set _tier_border = '#F5C518' if image.score >= 9.0 else ('#aaaaaa' if image.score >= 8.0 else ('#5a7a5a' if image.score >= 7.0 else 'var(--border)')) -%}
+  {%- set _tier_color = '#7A5800' if image.score >= 9.0 else ('#555' if image.score >= 8.0 else ('#3a5a3a' if image.score >= 7.0 else 'var(--text-muted)')) -%}
+  {%- set _tier_label = 'Legend' if image.score >= 9.7 else ('Grandmaster' if image.score >= 9.0 else ('Master' if image.score >= 8.0 else ('Maverick' if image.score >= 7.0 else ('Craftsman' if image.score >= 6.0 else ('Contender' if image.score >= 5.0 else 'Rookie'))))) -%}
+  <a href="{{ url_for('image_detail', image_id=image.id) }}?from=gallery"
+     style="text-decoration:none;background:var(--surface-2);border:0.5px solid var(--border);border-radius:8px;overflow:hidden;display:block;position:relative;">
+    <div style="position:relative;overflow:hidden;">
+      <img src="{{ image.thumb_url }}"
+           alt="{{ image.asset_name or 'Photograph' }}"
+           style="width:100%;height:120px;object-fit:cover;display:block;"
+           loading="lazy"
+           onerror="this.style.background='#1a2540';this.removeAttribute('src')">
+      <div style="position:absolute;top:7px;left:7px;width:22px;height:22px;border-radius:50%;background:{{ _rk_bg }};color:{{ _rk_col }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--font-mono);">{{ _rank }}</div>
+      {%- set _photographer_aea = aea_contenders | selectattr('user_id', 'equalto', image.user_id) | list -%}
+      {%- if _photographer_aea %}
+      <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+           alt="AEA Qualifier"
+           style="position:absolute;top:7px;right:7px;width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6));"
+           onerror="this.style.display='none'">
+      {%- endif %}
+    </div>
+    <div style="padding:8px 9px;">
+      <div style="font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ image.photographer_name or '' }}</div>
+      <div style="font-size:13px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">{{ image.asset_name or 'Untitled' }}</div>
+      <div style="font-size:15px;font-weight:500;font-family:var(--font-mono);color:var(--text-primary);margin-top:6px;">{{ '%.2f'|format(image.score) }}</div>
+      <div style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-family:var(--font-mono);">Leading evaluation</div>
+      <span style="display:inline-block;font-size:13px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:5px;border:1px solid {{ _tier_border }};color:{{ _tier_color }};font-family:var(--font-mono);">{{ _tier_label }}</span>
+    </div>
+  </a>
+  {% else %}
+  <div style="grid-column:1/-1;padding:20px 0;color:var(--text-muted);font-size:15px;">No evaluated photographs match these filters.</div>
+  {% endfor %}
 
-  <div class="lb-tier-group">
-    <div class="lb-tier-group-header">
-      <span class="lb-tier-group-name tp-{{ tk_h }}">{{ tier_name }}</span>
-      <div class="lb-tier-group-meta">
-        <span class="lb-tier-group-sub">Recent images evaluated at this level.</span>
-        <span class="lb-tier-group-sub">Equal evaluations appear in no particular order.</span>
+</div>
+
+{# Pagination #}
+{% if _img_pages > 1 %}
+<nav style="display:flex;gap:6px;margin-bottom:20px;align-items:center;" aria-label="Image pages">
+  {% if _img_page > 1 %}
+  <a href="?tab=images&track={{ track }}&img_page={{ _img_page - 1 }}" style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border);border-radius:5px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">&lsaquo; Prev</a>
+  {% endif %}
+  {% for _p in range(1, _img_pages + 1) %}
+    {% if _p == _img_page %}
+    <span style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border-strong);border-radius:5px;background:var(--surface-1);color:var(--text-primary);font-family:var(--font-mono);">{{ _p }}</span>
+    {% elif _p == 1 or _p == _img_pages or (_p >= _img_page - 2 and _p <= _img_page + 2) %}
+    <a href="?tab=images&track={{ track }}&img_page={{ _p }}" style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border);border-radius:5px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">{{ _p }}</a>
+    {% elif _p == _img_page - 3 or _p == _img_page + 3 %}
+    <span style="font-size:13px;color:var(--text-muted);font-family:var(--font-mono);">&hellip;</span>
+    {% endif %}
+  {% endfor %}
+  {% if _img_page < _img_pages %}
+  <a href="?tab=images&track={{ track }}&img_page={{ _img_page + 1 }}" style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border-strong);border-radius:5px;color:var(--text-primary);text-decoration:none;font-family:var(--font-mono);">Next &rsaquo;</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+</div>
+
+{# ── AEA Panel ── #}
+<div style="border-radius:10px;overflow:hidden;border:1px solid #A9CCE3;position:sticky;top:80px;">
+  <div style="background:#1B4F72;padding:10px 12px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+           style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.5));"
+           alt="AEA" onerror="this.style.display='none'">
+      <div>
+        <div style="font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;font-family:var(--font-mono);color:#D6EAF8;line-height:1.5;">Annual Excellence Award Qualifiers</div>
+        <div style="font-size:13px;color:#A9CCE3;line-height:1.6;margin-top:2px;">3 months of consistent uploads · 6 images minimum · top 6 image average</div>
       </div>
     </div>
-
-    <div class="lb-tile-grid">
-      {% for image in visible %}
-      {%- set tk = (image.tier or 'rookie') | lower | replace(' ','-') -%}
-      <a href="{{ url_for('image_detail', image_id=image.id) }}?from=gallery" class="lb-tile">
-
-        <div class="tile-photo">
-          {% if image.thumb_url %}
-          <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" loading="lazy" onerror="this.style.display='none'">
-          {% else %}
-          <div class="tile-photo-placeholder">&#128444;</div>
-          {% endif %}
-
-          <!-- Camera/Mobile icon — top right -->
-          {% if image.camera_track %}
-          <div class="tile-track-icon {{ image.camera_track }}" title="{{ 'Camera League' if image.camera_track == 'camera' else 'Mobile League' }}">
-            {% if image.camera_track == 'camera' %}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="13" r="3"/></svg>
-            {% else %}
-            <svg width="12" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
-            {% endif %}
-          </div>
-          {% endif %}
-
-          <!-- Winner badge -->
-          {% set _crs_key = 'cont' ~ 'est_result_status' %}{% if image[_crs_key] == 'published' and image.judge_final_score %}
-          <div class="tile-winner">Winner</div>
-          {% endif %}
-
-          <!-- Hover analysis (desktop) -->
-          {% if image.archetype %}
-          <div class="tile-analysis">
-            <div class="tile-analysis-label">Why this evaluation</div>
-            <div class="tile-analysis-text">{{ image.archetype }}</div>
-            <div class="tile-analysis-cta">Read full evaluation &rarr;</div>
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Info — My Gallery pattern -->
-        <div class="tile-info">
-          <div class="tile-info-top">
-            <span class="tile-score">{{ '%.2f'|format(image.score) }}{% if image.soul_bonus %} &#10022;{% endif %}</span>
-            <span class="tile-tier-label">{{ image.tier or '' }}</span>
-          </div>
-          <span class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</span>
-          <span class="tile-photographer">{{ image.photographer_name or '' }}</span>
-        </div>
-
+    <div style="display:flex;gap:4px;">
+      <a href="?tab=images&track=camera"
+         style="font-size:13px;font-weight:700;padding:6px 0;border-radius:4px;font-family:var(--font-mono);flex:1;text-align:center;text-decoration:none;
+                {% if track == 'camera' or track == 'all' %}background:#F5C518;color:#0F1F3D;{% else %}background:transparent;color:#A9CCE3;border:0.5px solid #7aabca;{% endif %}">
+        Camera
       </a>
-      {% endfor %}
+      <a href="?tab=images&track=mobile"
+         style="font-size:13px;font-weight:700;padding:6px 0;border-radius:4px;font-family:var(--font-mono);flex:1;text-align:center;text-decoration:none;
+                {% if track == 'mobile' %}background:#F5C518;color:#0F1F3D;{% else %}background:transparent;color:#A9CCE3;border:0.5px solid #7aabca;{% endif %}">
+        Mobile
+      </a>
     </div>
-
-    {%- if tier == 'all' and has_more %}
-    {# All-tiers view: "View more" narrows to this tier at page 2
-       (page 1 = what's already visible, so skip straight to the next batch) #}
-    <div class="lb-tier-footer">
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page=2"
-         class="lb-tier-view-more">View more &rsaquo;</a>
-    </div>
-    {%- elif tier != 'all' %}
-    {# Single-tier view: show prev / next page controls #}
-    {%- if tier_page > 1 or has_more %}
-    <div class="lb-tier-footer" style="gap:10px;">
-      {%- if tier_page > 1 %}
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page={{ tier_page - 1 }}"
-         class="lb-tier-view-more">&lsaquo; Previous</a>
-      {%- endif %}
-      {%- if has_more %}
-      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier_name }}&track={{ track }}&tier_page={{ tier_page + 1 }}"
-         class="lb-tier-view-more">View more &rsaquo;</a>
-      {%- endif %}
-    </div>
-    {%- endif %}
-    {%- endif %}
   </div>
+  <div style="background:#D6EAF8;padding:4px 0;">
+    {% if aea_contenders %}
+      {% for c in aea_contenders %}
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;{% if not loop.last %}border-bottom:0.5px solid #A9CCE3;{% endif %}">
+        <div style="font-size:13px;font-weight:800;color:#1B4F72;width:18px;flex-shrink:0;font-family:var(--font-mono);">{{ loop.index }}</div>
+        <div style="font-size:14px;font-weight:500;color:#0a1628;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.display_name }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="font-size:13px;color:#1B4F72;padding:12px;line-height:1.6;">
+        No qualifiers yet for 2026.<br>Upload in 3+ months with 6 or more images to qualify.
+      </div>
+    {% endif %}
+  </div>
+  <div style="background:#C2DCF0;padding:8px 12px;border-top:1px solid #A9CCE3;">
+    <a href="{{ url_for('aea_standings') }}" style="font-size:13px;font-weight:700;color:#1B4F72;font-family:var(--font-mono);text-decoration:none;">View all qualifiers &rarr;</a>
+  </div>
+</div>
 
-    {%- endif %}
-  {%- endfor %}
-
-  {%- if not ns.any_shown %}
-  <div class="lb-empty">No evaluated photographs match these filters.</div>
-  {%- endif %}
-
-
+</div>
 
   <!-- ═══════════════════════
-       PHOTOGRAPHERS
+       LEADING EVALUATIONS — two-col layout with AEA panel
   ═══════════════════════ -->
   {% elif tab == 'photographers' %}
-  <p style="font-size:15px; color:var(--text-secondary); margin:0 0 16px; line-height:1.6;">
-    Ordered by average DDI evaluation across all images.
-    Standing is confirmed once a photographer has 3 or more evaluations.
-  </p>
-  {% if photographer_stats %}
-  <div class="lb-pg-grid">
-    {% for p in photographer_stats %}
-    {%- set rank = (pg_page - 1) * 25 + loop.index -%}
-    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
-    {%- set best = p.best_score -%}
-    <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
-      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
-      <div>
-        <div class="pg-name">{{ p.display_name }}</div>
-        {% if p.username %}<div class="pg-handle">@{{ p.username }}</div>{% endif %}
-        {%- if p.subscription_track == 'mobile' %}
-        <div class="pg-handle" style="margin-top:3px;">
-          <span style="background:#1A1A18;color:#F5C518;font-size:14px;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:0.3px;">Mobile League</span>
-        </div>
-        {%- elif p.subscription_track == 'camera' %}
-        <div class="pg-handle" style="margin-top:3px;">
-          <span style="background:#F5F0E8;color:#4A4840;font-size:14px;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:0.3px;border:0.5px solid #E8E4DA;">Camera League</span>
-        </div>
-        {%- endif %}
-        {% if p.city %}
-        <div class="pg-location">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          {{ p.city }}{% if p.state %}, {{ p.state }}{% endif %}
-        </div>
-        {% endif %}
-      </div>
-      <div class="pg-stats">
-        <div class="pg-stat-item"><div class="pg-stat-val">{{ '%.2f'|format(p.avg_score) }}</div><div class="pg-stat-lbl">Avg</div></div>
-        <div class="pg-stat-item"><div class="pg-stat-val dim">{{ '%.2f'|format(p.best_score) }}</div><div class="pg-stat-lbl">Best</div></div>
-        <div class="pg-stat-item"><div class="pg-stat-val dim" style="font-size:17px;">{{ p.image_count }}</div><div class="pg-stat-lbl">Images</div></div>
-      </div>
-      <div class="pg-footer">
-        {%- set bt = p.best_score -%}
-        {% if bt >= 9.7 %}<span class="pg-tier-pill tp-legend">Legend</span>
-        {% elif bt >= 9.0 %}<span class="pg-tier-pill tp-grandmaster">Grandmaster</span>
-        {% elif bt >= 8.0 %}<span class="pg-tier-pill tp-master">Master</span>
-        {% elif bt >= 7.0 %}<span class="pg-tier-pill tp-maverick">Maverick</span>
-        {% elif bt >= 6.0 %}<span class="pg-tier-pill tp-craftsman">Craftsman</span>
-        {% elif bt >= 5.0 %}<span class="pg-tier-pill tp-contender">Contender</span>
-        {% elif bt >= 4.0 %}<span class="pg-tier-pill tp-shooter">Shooter</span>
-        {% else %}<span class="pg-tier-pill tp-rookie">Rookie</span>
-        {% endif %}
-        {% if p.total_peer_ratings %}
-        <span class="pg-peer"><span class="peer-dot"></span>{{ p.total_peer_ratings }} peer</span>
-        {% endif %}
-      </div>
-      {% if p.under_qualification %}
-      <div style="margin-top:2px;">
-        {% if p.image_count < 3 %}
-        <span class="uq-tag" title="Standings are confirmed once a photographer has 3 or more evaluations">
-          {{ 3 - p.image_count }} more evaluation{{ 's' if (3 - p.image_count) != 1 else '' }} needed to confirm standing
-        </span>
-        {% else %}
-        <span class="uq-tag" title="Standings are confirmed after 6 months of membership">
-          Standing confirms month {{ 7 - p.joined_months if p.joined_months < 7 else 1 }}
-        </span>
-        {% endif %}
-      </div>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="lb-empty">No photographers match these filters.</div>
-  {% endif %}
-  {% if pg_pages > 1 %}
-  <nav class="lb-pagination" aria-label="Photographer pages">
-    {% if pg_page > 1 %}
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
-    {% else %}<span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>{% endif %}
-    {% for p in range(1, pg_pages + 1) %}
-      {% if p == pg_page %}<span class="lb-page-btn active">{{ p }}</span>
-      {% elif p == 1 or p == pg_pages or (p >= pg_page - 2 and p <= pg_page + 2) %}
-      <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&pg_page={{ p }}" class="lb-page-btn">{{ p }}</a>
-      {% elif p == pg_page - 3 or p == pg_page + 3 %}<span class="lb-page-btn ellipsis">&hellip;</span>{% endif %}
-    {% endfor %}
-    {% if pg_page < pg_pages %}
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
-    {% else %}<span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>{% endif %}
-  </nav>
-  {% endif %}
+  {# Redirect photographers tab to images tab with same track #}
+  <meta http-equiv="refresh" content="0;url=?tab=images&track={{ track }}">
 
-  <!-- ═══════════════════════
+    <!-- ═══════════════════════
        CAMERAS
   ═══════════════════════ -->
   {% elif tab == 'cameras' %}
