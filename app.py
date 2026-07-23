@@ -6608,8 +6608,8 @@ def _get_quota_status(user):
         ).count()
         # AEA eligibility — calendar months with at least 1 upload
         _aea_year     = today.year
-        _aea_target   = 4 if _aea_year == 2026 else 6
-        _aea_months_required = 4 if _aea_year == 2026 else 6
+        _aea_target   = 3 if _aea_year == 2026 else 6  # S156: 3 months for 2026
+        _aea_months_required = 3 if _aea_year == 2026 else 6  # S156: 3 months for 2026
         # Count distinct calendar months with uploads this year
         from sqlalchemy import extract as _extract, func as _func
         _aea_months_done = db.session.query(
