@@ -365,25 +365,26 @@
 .lb-pagination {
   width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap;
   justify-content: center; align-items: center;
-  gap: 6px; margin: 32px 0 28px; padding: 18px 24px;
-  background: #1A1A18; border-radius: 10px; min-height: 80px;
+  gap: 6px; margin: 24px 0 20px; padding: 14px 20px;
+  background: var(--surface-1); border: 0.5px solid var(--border);
+  border-radius: 10px; min-height: 68px;
   box-sizing: border-box;
 }
 .lb-page-btn {
   box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
   flex-shrink: 0; height: 44px; min-width: 44px; min-height: 44px; padding: 0 10px;
   font-family: var(--font-mono); font-size: 16px; font-weight: 600; line-height: 1;
-  border: 1px solid #4A4A4A; border-radius: 6px; color: #FFFFFF;
-  text-decoration: none; background: rgba(255,255,255,0.06); cursor: pointer;
+  border: 0.5px solid var(--border); border-radius: 6px; color: var(--text-secondary);
+  text-decoration: none; background: var(--surface-2); cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s; white-space: nowrap;
 }
 .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 14px; }
-a.lb-page-btn, a.lb-page-btn:visited, a.lb-page-btn:link { color:#FFFFFF; border-color:#4A4A4A; background:rgba(255,255,255,0.06); }
-a.lb-page-btn:hover { border-color:#F5C518; color:#1A1A18; background:rgba(245,197,24,0.10); }
-a.lb-page-btn:focus-visible { outline:2px solid #F5C518; outline-offset:2px; }
-.lb-page-btn.active { border-color:#F5C518; background:#F5C518; color:#1A1A18; cursor:default; font-weight:700; }
-.lb-page-btn.disabled { opacity:0.22; cursor:default; pointer-events:none; }
-.lb-page-btn.ellipsis { border-color:transparent; background:transparent; cursor:default; pointer-events:none; min-width:20px; padding:0 4px; color:#FFFFFF; }
+a.lb-page-btn, a.lb-page-btn:visited, a.lb-page-btn:link { color:var(--text-secondary); border-color:var(--border); background:var(--surface-2); }
+a.lb-page-btn:hover { border-color:#C8A84B; color:#7A5800; background:#FDF8EE; }
+a.lb-page-btn:focus-visible { outline:2px solid #C8A84B; outline-offset:2px; }
+.lb-page-btn.active { border-color:#C8A84B; background:#C8A84B; color:#0E0E0C; cursor:default; font-weight:700; }
+.lb-page-btn.disabled { opacity:0.35; cursor:default; pointer-events:none; }
+.lb-page-btn.ellipsis { border-color:transparent; background:transparent; cursor:default; pointer-events:none; min-width:20px; padding:0 4px; color:var(--text-muted); }
 
 /* ════════════════════════════════════════
    RESPONSIVE
@@ -413,8 +414,8 @@ a.lb-page-btn:focus-visible { outline:2px solid #F5C518; outline-offset:2px; }
   .lb-tier-group-sub { font-size: 14px; }
   .lb-tier-view-more { font-size: 14px; padding: 5px 14px; }
   .tile-analysis { display: none; }
-  .lb-pagination { padding: 14px 10px; gap: 4px; min-height: 68px; border-radius: 8px; }
-  .lb-page-btn { height: 44px; min-height: 44px; min-width: 44px; font-size: 16px; padding: 0 8px; }
+  .lb-pagination { padding: 10px 8px; gap: 4px; min-height: 60px; border-radius: 8px; background: var(--surface-1); border: 0.5px solid var(--border); }
+  .lb-page-btn { height: 44px; min-height: 44px; min-width: 44px; font-size: 16px; padding: 0 8px; color: var(--text-secondary); }
   .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 10px; }
 }
 @media (max-width: 280px) { .lb-tile-grid { grid-template-columns: 1fr !important; } }
@@ -429,9 +430,8 @@ body { overflow-x: hidden; }
   <!-- PAGE HEADER -->
   <div class="lb-header">
     <h1>Programme Gallery</h1>
-    <p class="lb-header-desc">
-      Browse every photograph evaluated by {{ glink("DDI")|safe }}.<br>
-      Grouped by tier. Not ordered by position within each tier.<br>
+    <p class="lb-header-desc" style="max-width:none;">
+      Browse every photograph evaluated by {{ glink("DDI")|safe }}.
       Tap any image to read the complete evaluation.
     </p>
   </div>
@@ -455,18 +455,7 @@ body { overflow-x: hidden; }
       All
     </a>
   </div>
-  <div class="lb-tabs">
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
-       class="lb-tab {% if tab=='images' %}active{% endif %}">Images</a>
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
-       class="lb-tab {% if tab=='photographers' %}active{% endif %}">Photographers</a>
-    <a href="?tab=cameras&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
-       class="lb-tab {% if tab=='cameras' %}active{% endif %}">Cameras</a>
-    {%- if show_lenses_tab %}
-    <a href="?tab=lenses&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
-       class="lb-tab {% if tab=='lenses' %}active{% endif %}">Lenses</a>
-    {%- endif %}
-  </div>
+
 
   <!-- ══════════════════════
        IMAGES — LEADING EVALUATIONS
@@ -475,6 +464,20 @@ body { overflow-x: hidden; }
   {%- set league_label = 'Camera League' if track == 'camera' else ('Mobile League' if track == 'mobile' else 'All Leagues') -%}
   <div style="display:grid;grid-template-columns:1fr 220px;gap:18px;align-items:start;">
   <div>
+
+  {# ── Search bar ── #}
+  <div style="margin-bottom:14px;position:relative;">
+    <input type="text" id="lbSearch" placeholder="Search by photographer, title or interest…"
+           style="width:100%;padding:10px 16px 10px 40px;font-size:15px;border:0.5px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary);font-family:var(--font-sans);outline:none;"
+           oninput="lbFilter(this.value)"
+           onfocus="this.style.borderColor='#C8A84B'" onblur="this.style.borderColor='var(--border)'">
+    <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"
+         width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  </div>
+
   <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:12px;">
     Leading Evaluations — {{ league_label }}
   </div>
@@ -499,6 +502,7 @@ body { overflow-x: hidden; }
   {%- set _tier_color = '#7A5800' if image.score >= 9.0 else ('#555' if image.score >= 8.0 else ('#3a5a3a' if image.score >= 7.0 else 'var(--text-muted)')) -%}
   {%- set _tier_label = 'Legend' if image.score >= 9.7 else ('Grandmaster' if image.score >= 9.0 else ('Master' if image.score >= 8.0 else ('Maverick' if image.score >= 7.0 else ('Craftsman' if image.score >= 6.0 else ('Contender' if image.score >= 5.0 else 'Rookie'))))) -%}
   <a href="{{ url_for('image_detail', image_id=image.id) }}?from=gallery"
+     data-search="{{ (image.photographer_name or '') | lower }} {{ (image.asset_name or '') | lower }} {{ (image.genre or '') | lower }} {{ (image.tier or '') | lower }}"
      style="text-decoration:none;background:var(--surface-2);border:0.5px solid var(--border);border-radius:8px;overflow:hidden;display:block;position:relative;">
     <div style="position:relative;overflow:hidden;">
       <img src="{{ image.thumb_url }}"
@@ -558,7 +562,8 @@ body { overflow-x: hidden; }
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
            style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.5));"
-           alt="AEA" onerror="this.style.display='none'">
+           alt="AEA"
+           onerror="this.outerHTML='<svg width=&quot;38&quot; height=&quot;44&quot; viewBox=&quot;0 0 36 40&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; style=&quot;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5))&quot;><path d=&quot;M18 2 L34 8 L34 22 Q34 34 18 38 Q2 34 2 22 L2 8 Z&quot; fill=&quot;#C8A84B&quot; stroke=&quot;#8a6a1a&quot; stroke-width=&quot;1.5&quot;/><path d=&quot;M18 5 L31 10 L31 22 Q31 32 18 35 Q5 32 5 22 L5 10 Z&quot; fill=&quot;none&quot; stroke=&quot;#0F1F3D&quot; stroke-width=&quot;0.8&quot; opacity=&quot;0.4&quot;/><text x=&quot;18&quot; y=&quot;15&quot; text-anchor=&quot;middle&quot; fill=&quot;#0F1F3D&quot; font-size=&quot;9&quot; font-weight=&quot;800&quot; font-family=&quot;monospace&quot;>&#10022;</text><text x=&quot;18&quot; y=&quot;23&quot; text-anchor=&quot;middle&quot; fill=&quot;#0F1F3D&quot; font-size=&quot;7&quot; font-weight=&quot;800&quot; font-family=&quot;monospace&quot;>AEA</text><text x=&quot;18&quot; y=&quot;30&quot; text-anchor=&quot;middle&quot; fill=&quot;#0F1F3D&quot; font-size=&quot;6&quot; font-weight=&quot;700&quot; font-family=&quot;monospace&quot;>2026</text></svg>'">
       <div>
         <div style="font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;font-family:var(--font-mono);color:#D6EAF8;line-height:1.5;">Annual Excellence Award Qualifiers</div>
         <div style="font-size:13px;color:#A9CCE3;line-height:1.6;margin-top:2px;">3 months of consistent uploads · 6 images minimum · top 6 image average</div>
@@ -674,6 +679,15 @@ function applyFilter(key, value) {
   const params = new URLSearchParams(window.location.search);
   params.set(key, value);
   window.location.search = params.toString();
+}
+
+function lbFilter(q) {
+  q = q.toLowerCase().trim();
+  const cards = document.querySelectorAll('[data-search]');
+  cards.forEach(function(card) {
+    const hay = card.getAttribute('data-search').toLowerCase();
+    card.style.display = (!q || hay.includes(q)) ? '' : 'none';
+  });
 }
 </script>
 {% endblock %}
