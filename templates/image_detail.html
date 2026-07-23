@@ -1153,12 +1153,18 @@
 
       {% if _o4_cross %}
       <div style="height:1px; background:linear-gradient(90deg,rgba(107,67,17,0.15),rgba(107,67,17,0.3),rgba(107,67,17,0.15));"></div>
-      <div style="background:linear-gradient(135deg,#EDE5D5,#DCCC9A); padding:22px 26px 20px;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-          <span style="font-size:15px; color:#5C4010;">🔭</span>
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#5C4010; text-transform:uppercase;">A note on your eye</span>
+      <div style="background:linear-gradient(135deg,#EDE5D5,#DCCC9A); overflow:hidden;">
+        <button class="sc-collapse-btn" onclick="scToggle('eye')" aria-expanded="false" aria-controls="sc-body-eye"
+                style="padding:16px 22px;width:100%;text-align:left;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:15px; color:#5C4010;">🔭</span>
+            <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#5C4010; text-transform:uppercase;">A note on your eye</span>
+          </div>
+          <span class="sc-collapse-chevron" id="sc-chev-eye" style="color:#5C4010;">&#8964;</span>
+        </button>
+        <div class="sc-collapse-body" id="sc-body-eye">
+          <div style="padding:0 22px 20px;">{{ master_render(_o4_cross | trim, '#3A2800') }}</div>
         </div>
-        {{ master_render(_o4_cross | trim, '#3A2800') }}
       </div>
       {% endif %}
 
@@ -1170,7 +1176,7 @@
 
   {# ── THIS WEEK'S CHALLENGE ─────────────────────────────────────── #}
   {% if weekly_challenge %}
-  <div style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:16px 20px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:16px 20px; margin-bottom:14px; max-width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
     <div>
       <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
       <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
@@ -2224,7 +2230,7 @@ function scToggle(id) {
 // WSO and others start closed
 document.addEventListener('DOMContentLoaded', function() {
   // All sections start collapsed except DDI
-  ['wso','c1','c2','c3','c4','hyd','meta','loc','bow'].forEach(function(id) {
+  ['wso','c1','c2','c3','c4','hyd','meta','loc','bow','eye'].forEach(function(id) {
     var body = document.getElementById('sc-body-' + id);
     var prev = document.getElementById('sc-prev-' + id);
     if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
