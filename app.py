@@ -6718,14 +6718,14 @@ def _auto_score_with_timeout(timeout_secs=90, retry_wait=10, **kwargs):
                 _fut.cancel()
                 if attempt == 1:
                     import time as _time
-                    current_app.logger.warning(
+                    app.logger.warning(  # S156: use app.logger not current_app.logger — no app context in thread
                         f'[auto_score_timeout] attempt 1 exceeded {timeout_secs}s — '
                         f'waiting {retry_wait}s then retrying. '
                         f'image_path={kwargs.get("image_path", "?")} genre={kwargs.get("genre", "?")}'
                     )
                     _time.sleep(retry_wait)
                 else:
-                    current_app.logger.error(
+                    app.logger.error(  # S156: use app.logger not current_app.logger — no app context in thread
                         f'[auto_score_timeout] attempt 2 also exceeded {timeout_secs}s — '
                         f'giving up. image_path={kwargs.get("image_path", "?")} '
                         f'genre={kwargs.get("genre", "?")}'
