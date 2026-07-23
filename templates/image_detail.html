@@ -1018,41 +1018,59 @@
     {%- endfor -%}
   {%- endmacro %}
 
-  {# ── Card 1 — lead card, full width ───────────────────────────────── #}
+  {# ── Card 1 — What you did that others didn't — collapsible ── #}
   {% if _c1_resolved.strip() %}
-  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:24px 28px; margin-bottom:14px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-      <div style="width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:16px; color:#0C447C;">📷</span>
+  <div style="background:linear-gradient(90deg,#EAF0FA,#C8D8F0); border-radius:14px; padding:20px 24px; margin-bottom:14px;">
+    <button class="sc-collapse-btn" onclick="scToggle('c1')" aria-expanded="false" aria-controls="sc-body-c1">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <span style="font-size:14px; color:#0C447C;">📷</span>
+        </div>
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">What you did that others didn't</span>
       </div>
-      <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1.5px; color:#0C447C; text-transform:uppercase;">What you did that others didn't</span>
+      <span class="sc-collapse-chevron" id="sc-chev-c1" style="color:#0C447C;">&#8964;</span>
+    </button>
+    <div id="sc-prev-c1" class="sc-collapse-preview" style="color:#042C53;">{{ _c1_resolved.strip() | truncate(110, True, '…') }}</div>
+    <div class="sc-collapse-body" id="sc-body-c1">
+      <div style="padding-top:14px;">{{ master_render(_c1_resolved.strip(), '#042C53') }}</div>
     </div>
-    {{ master_render(_c1_resolved.strip(), '#042C53') }}
   </div>
   {% endif %}
 
   {# ── Cards 2-4 — full-width stacked rows (Item C — 3-col → rows) ──── #}
   <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:14px;">
 
-    {# Card 2 — What your eye read #}
+    {# Card 2 — What your eye read — collapsible #}
     {% if _c2_resolved.strip() %}
-    <div id="sc-what-eye-read" style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:22px 26px; scroll-margin-top: 80px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-        <span style="font-size:16px; color:#27500A;">▲</span>
-        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What your eye read</span>
+    <div id="sc-what-eye-read" style="background:linear-gradient(90deg,#EAF5EE,#C8E8D4); border-radius:14px; padding:20px 24px; scroll-margin-top:80px;">
+      <button class="sc-collapse-btn" onclick="scToggle('c2')" aria-expanded="false" aria-controls="sc-body-c2">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:15px; color:#27500A;">▲</span>
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#27500A; text-transform:uppercase;">What your eye read</span>
+        </div>
+        <span class="sc-collapse-chevron" id="sc-chev-c2" style="color:#27500A;">&#8964;</span>
+      </button>
+      <div id="sc-prev-c2" class="sc-collapse-preview" style="color:#173404;">{{ _c2_resolved.strip() | truncate(110, True, '…') }}</div>
+      <div class="sc-collapse-body" id="sc-body-c2">
+        <div style="padding-top:14px;">{{ master_render(_c2_resolved.strip(), '#173404') }}</div>
       </div>
-      {{ master_render(_c2_resolved.strip(), '#173404') }}
     </div>
     {% endif %}
 
-    {# Card 3 — What your evaluation means #}
+    {# Card 3 — What your evaluation means — collapsible #}
     {% if _c3_resolved.strip() %}
-    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:22px 26px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-        <span style="font-size:16px; color:#72243E;">◎</span>
-        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What your evaluation means</span>
+    <div style="background:linear-gradient(90deg,#F5EAF0,#E0B8CE); border-radius:14px; padding:20px 24px;">
+      <button class="sc-collapse-btn" onclick="scToggle('c3')" aria-expanded="false" aria-controls="sc-body-c3">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:15px; color:#72243E;">◎</span>
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#72243E; text-transform:uppercase;">What your evaluation means</span>
+        </div>
+        <span class="sc-collapse-chevron" id="sc-chev-c3" style="color:#72243E;">&#8964;</span>
+      </button>
+      <div id="sc-prev-c3" class="sc-collapse-preview" style="color:#4B1528;">{{ _c3_resolved.strip() | truncate(110, True, '…') }}</div>
+      <div class="sc-collapse-body" id="sc-body-c3">
+        <div style="padding-top:14px;">{{ master_render(_c3_resolved.strip(), '#4B1528') }}</div>
       </div>
-      {{ master_render(_c3_resolved.strip(), '#4B1528') }}
     </div>
     {% endif %}
 
@@ -1087,15 +1105,21 @@
 
     <div style="border-radius:14px; overflow:hidden;">
 
-      {# Section 1 — exercise #}
-      <div style="background:linear-gradient(135deg,#FDF6ED,#F5E6C8); padding:22px 26px 20px;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-          <span style="font-size:15px; color:#854F0B;">💡</span>
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
-        </div>
-        {{ master_render(_o4_s1 | trim, '#3D2000') }}
+      {# Section 1 — exercise — collapsible header #}
+      <div style="background:linear-gradient(135deg,#FDF6ED,#F5E6C8); padding:20px 24px;">
+        <button class="sc-collapse-btn" onclick="scToggle('c4')" aria-expanded="false" aria-controls="sc-body-c4">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:15px; color:#854F0B;">💡</span>
+            <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Your assignment tomorrow</span>
+          </div>
+          <span class="sc-collapse-chevron" id="sc-chev-c4" style="color:#854F0B;">&#8964;</span>
+        </button>
+        <div id="sc-prev-c4" class="sc-collapse-preview" style="color:#3D2000;">{{ _o4_s1 | trim | truncate(110, True, '…') }}</div>
+        <div class="sc-collapse-body" id="sc-body-c4">
+        <div style="padding-top:14px;">{{ master_render(_o4_s1 | trim, '#3D2000') }}</div>
       </div>
 
+      </div>{# /sc-body-c4 #}
       {% if _o4_bow %}
       <div style="height:1px; background:linear-gradient(90deg,rgba(133,79,11,0.15),rgba(133,79,11,0.35),rgba(133,79,11,0.15));"></div>
       <div style="background:linear-gradient(135deg,#F5EAD0,#E8C878); padding:22px 26px 20px;">
@@ -2239,17 +2263,22 @@ function scToggle(id) {
 // S156: DDI always starts open (owner needs to see dimensions immediately)
 // WSO and others start closed
 document.addEventListener('DOMContentLoaded', function() {
-  ['wso','peer','c1','c2','c3','c4'].forEach(function(id) {
+  // All sections start collapsed except DDI
+  ['wso','c1','c2','c3','c4'].forEach(function(id) {
     var body = document.getElementById('sc-body-' + id);
+    var prev = document.getElementById('sc-prev-' + id);
     if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
+    if (prev) prev.style.display = 'block';
   });
-  // DDI starts open — expand it
+  // DDI starts open
   var ddiBody = document.getElementById('sc-body-ddi');
   var ddiChev = document.getElementById('sc-chev-ddi');
   var ddiPrev = document.getElementById('sc-prev-ddi');
   if (ddiBody) {
     ddiBody.style.overflow = 'hidden';
-    ddiBody.style.maxHeight = ddiBody.scrollHeight + 200 + 'px';
+    setTimeout(function() {
+      ddiBody.style.maxHeight = ddiBody.scrollHeight + 300 + 'px';
+    }, 100);
     if (ddiChev) ddiChev.classList.add('open');
     if (ddiPrev) ddiPrev.style.display = 'none';
   }
