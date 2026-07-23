@@ -1306,6 +1306,16 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       {% set _max = _scores|max %}
       {% set _range = [(_max - _min), 0.5]|max %}
       {% set _n = _t|length %}
+      {%- set _ymax = (_max)|round(1) -%}
+      {%- set _ymid = ((_max + _min) / 2)|round(1) -%}
+      {%- set _ymin = (_min)|round(1) -%}
+      <div style="display:flex;gap:4px;align-items:stretch;">
+      <div style="display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;min-width:28px;text-align:right;">
+        <span style="font-size:13px;color:var(--d-muted);line-height:1;">{{ _ymax }}</span>
+        <span style="font-size:13px;color:var(--d-muted);line-height:1;">{{ _ymid }}</span>
+        <span style="font-size:13px;color:var(--d-muted);line-height:1;">{{ _ymin }}</span>
+      </div>
+      <div style="flex:1;min-width:0;">
       <svg viewBox="0 0 320 56" width="100%" height="56" preserveAspectRatio="none" style="display:block;margin-bottom:4px;">
         <line x1="0" y1="14" x2="320" y2="14" stroke="var(--d-border)" stroke-width="0.5"/>
         <line x1="0" y1="28" x2="320" y2="28" stroke="var(--d-border)" stroke-width="0.5"/>
@@ -1326,10 +1336,11 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '3.5' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.5' }}"/>
         {% endfor %}
       </svg>
+      </div></div>
     </div>
     {% endif %}
 
-    <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last 10 images</div>
+    <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last {{ progress_data.dim_window or 10 }} image{{ 's' if (progress_data.dim_window or 10) != 1 else '' }}</div>
     {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     {% if progress_data.dim_sparklines %}
