@@ -1614,37 +1614,49 @@
   {# ── END LOGBOOK PRINT VIEW ──────────────────────────────────── #}
 
   {# ── QUOTE — rotates per image, not the same one every time ────────── #}
-  {% set _master_quotes = [
-    ("To photograph is to hold one's breath when all faculties converge to capture fleeting reality.", "Henri Cartier-Bresson"),
-    ("Photography is an austere and blazing poetry of the real.", "Sebastiao Salgado"),
-    ("There are always two people in every picture: the photographer and the viewer.", "Ansel Adams"),
-    ("The camera is an instrument that teaches people how to see without a camera.", "Dorothea Lange"),
-    ("Photography is the only language that can be understood anywhere in the world.", "Bruno Barbey"),
-    ("It's not what you look at that matters, it's what you see.", "Henry David Thoreau"),
-    ("A photograph is a secret about a secret. The more it tells you, the less you know.", "Diane Arbus"),
-    ("The whole point of taking pictures is so that you don't have to explain things with words.", "Elliott Erwitt"),
-    ("Wherever there is light, one can photograph.", "Alfred Stieglitz"),
-    ("Photography takes an instant out of time, altering life by holding it still.", "Dorothea Lange"),
-    ("The light defines what I will and will not photograph.", "Vivian Maier"),
-    ("You don't take a photograph, you make it.", "Ansel Adams"),
-    ("If your pictures aren't good enough, you're not close enough.", "Robert Capa"),
-    ("Twelve significant photographs in any one year is a good crop.", "Ansel Adams"),
-    ("Photography is an art of observation. It has little to do with the things you see and everything to do with the way you see them.", "Elliott Erwitt"),
-    ("To me, photography is an art of observation, about finding something interesting in an ordinary place.", "Elliott Erwitt"),
-    ("Maximum sharpness is achieved not just through the lens, but through the eye.", "Eliot Porter"),
-    ("The best thing about a picture is that it never changes, even when the people in it do.", "Andy Warhol"),
-    ("A picture is the expression of an impression.", "Edward Steichen"),
-    ("Photography is a way of feeling, of touching, of loving.", "Aaron Siskind")
-  ] %}
-  {% set _quote_idx = (image.id or 0) % (_master_quotes|length) %}
-  {% set _quote_text, _quote_author = _master_quotes[_quote_idx] %}
-  <div style="border-left:4px solid var(--gold); padding:18px 22px 16px 26px; margin-bottom:14px; position:relative;">
-    <span style="position:absolute; top:8px; left:30px; font-family:Georgia, serif; font-size:42px; line-height:1; color:var(--gold); opacity:0.45; user-select:none;">"</span>
-    <p style="margin:0 0 12px; padding-left:24px; font-size:17px; color:var(--text-primary); line-height:1.85;">{{ _quote_text }}</p>
-    <div style="width:28px; height:2px; background:var(--gold); margin:0 0 10px 24px;"></div>
-    <p style="margin:0; padding-left:24px; font-size:13px; color:var(--text-muted); font-family:var(--font-mono); letter-spacing:1px;">{{ _quote_author }}</p>
+
+
+  {# ── CSI Note Cards — same-user near-duplicate + cross-user saturation ── #}
+  {% if audit %}
+
+  {# Card A — same-user near-duplicate (own portfolio, 85%+) #}
+  {% if audit.csi_own_duplicate %}
+  <div style="margin-bottom:28px; padding:20px 24px; background:#2D1F00; border:1px solid #8B6914; border-radius:var(--radius-md);">
+    <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#F5C518; margin-bottom:10px;">A SIMILAR IMAGE IS ALREADY IN YOUR PORTFOLIO</div>
+    <p style="margin:0; font-size:15px; color:#E8D5A3; line-height:1.75;">
+      When two frames from the same scene are submitted, the engine evaluates each on its own terms —
+      but it has already seen this composition. The craft of photography includes the edit:
+      choosing your single strongest frame before submitting is itself a skill.
+      Magnum photographers call this the contact sheet decision — the choosing is half the work.
+    </p>
+  </div>
+  {% endif %}
+
+  {# Card B — cross-user CSI match (95%+ similarity, different user) #}
+  {% if audit.csi_threshold_hit and audit.csi_threshold_hit >= 95 %}
+  <div style="margin-bottom:28px; padding:20px 24px; background:#1A1A2E; border:1px solid #4A4A7A; border-radius:var(--radius-md);">
+    <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#A0A8D4; margin-bottom:10px;">THIS SUBJECT HAS BEEN SEEN IN THE SHUTTER LEAGUE POOL</div>
+    <p style="margin:0 0 12px; font-size:15px; color:#C8CCE8; line-height:1.75;">
+      A closely similar image exists in the Shutter League community — another photographer has submitted
+      a frame with a near-identical composition and subject. This is not a penalty. It is information
+      the platform is uniquely positioned to give you, because it sees the entire pool.
+    </p>
+    <p style="margin:0; font-size:15px; color:#C8CCE8; line-height:1.75;">
+      When a subject or scene appears repeatedly, the bar for originality rises. The frame that separates
+      now is the one that shows something the previous versions did not — different light, a moment no one
+      has caught before, or a compositional choice that makes a familiar subject feel seen for the first
+      time. That is what makes a strong evaluation here worth more than it would be anywhere else.
+    </p>
+  </div>
+  {% endif %}
+
+  {% endif %}{# end audit CSI cards #}
+
+
+  {# ── Metadata grid ───────────────────────────────────────────────── #}
   </div>
 
+  {# ── S156: Moved — evaluation context note at bottom ── #}
   {# ── DDI qualifier note ───────────────────────────────────────── #}
   <div style="font-size:13px; color:var(--text-muted); line-height:1.6; padding:10px 14px; margin-bottom:14px; border-left:3px solid var(--border); font-family:var(--font-mono);">
     Your evaluation is consistent and science-based. Your tier reflects performance across multiple photographs, not any single result. <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">How evaluation works →</a>
@@ -1663,29 +1675,27 @@
   {% endif %}{# end owner/admin gate #}
   {% endif %}{# end if scored #}
 
-  {# ── Mentor CTA ──────────────────────────────────────────────────── #}
-  {% if image.score %}
-  <div style="margin-bottom:28px; padding:24px 28px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
-    <div>
-      <div style="font-size:16px; font-weight:600; color:var(--text-primary); line-height:1.7; margin-bottom:4px;">Book Mentor Review</div>
-      <div style="font-size:14px; color:var(--text-muted); line-height:1.5;">Get your image reviewed as well by our month's mentors</div>
-    </div>
-    <a href="{{ url_for('mentors') }}" class="btn btn-solid" style="white-space:nowrap; padding:11px 18px; font-size:13px; letter-spacing:0.04em; max-width:100%; box-sizing:border-box;">Book Mentor Review →</a>
-  </div>
-  {% endif %}
+
 
   {# ── MENTOR LOCATION INTELLIGENCE — owner/admin only ──────────────
      Location advisory is personal to the photographer (city-based,
      personalised directions). Not appropriate to show to other visitors. #}
   {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   {% if audit and audit.mentor_location_1 %}
-  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-      <div style="width:34px; height:34px; border-radius:8px; background:rgba(126,200,160,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; margin-bottom:14px; overflow:hidden;">
+    <button class="sc-collapse-btn" onclick="scToggle('loc')" aria-expanded="false" aria-controls="sc-body-loc"
+            style="padding:14px 20px;width:100%;text-align:left;">
+      <div style="display:flex; align-items:center; gap:10px;">
         <span style="font-size:15px;">📍</span>
+        <div>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.8); text-transform:uppercase;">Your next frame is waiting</p>
+          <p style="margin:2px 0 0; font-size:14px; color:rgba(255,255,255,0.55); line-height:1.6;">Where to shoot and what to look for — based on this image</p>
+        </div>
       </div>
-      <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(126,200,160,0.6); text-transform:uppercase;">What's happening near you — {{ image.genre }}</p>
-    </div>
+      <span class="sc-collapse-chevron" id="sc-chev-loc" style="color:rgba(126,200,160,0.6);">&#8964;</span>
+    </button>
+    <div class="sc-collapse-body" id="sc-body-loc">
+    <div style="padding:0 22px 22px;">
     <p style="margin:0 0 16px; font-size:18px; color:#fff; line-height:1.85; font-weight:700;">{{ audit.mentor_location_1 | sentence_truncate }}</p>
     {% if not audit.mentor_location_2 and location_links and location_links|length > 0 %}
     <a href="{{ location_links[0].url }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; margin-top:-6px; margin-bottom:8px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:#7EC8A0; text-decoration:none; text-transform:uppercase;">Get directions →</a>
@@ -1741,49 +1751,14 @@
     </div>
     {% endif %}
   </div>
+  </div>{# /loc padding #}
+    </div>{# /sc-collapse-body loc #}
+  </div>{# /loc card #}
   {% endif %}
   {% endif %}{# end owner/admin location advisory gate #}
 
 
-  {# ── CSI Note Cards — same-user near-duplicate + cross-user saturation ── #}
-  {% if audit %}
 
-  {# Card A — same-user near-duplicate (own portfolio, 85%+) #}
-  {% if audit.csi_own_duplicate %}
-  <div style="margin-bottom:28px; padding:20px 24px; background:#2D1F00; border:1px solid #8B6914; border-radius:var(--radius-md);">
-    <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#F5C518; margin-bottom:10px;">A SIMILAR IMAGE IS ALREADY IN YOUR PORTFOLIO</div>
-    <p style="margin:0; font-size:15px; color:#E8D5A3; line-height:1.75;">
-      When two frames from the same scene are submitted, the engine evaluates each on its own terms —
-      but it has already seen this composition. The craft of photography includes the edit:
-      choosing your single strongest frame before submitting is itself a skill.
-      Magnum photographers call this the contact sheet decision — the choosing is half the work.
-    </p>
-  </div>
-  {% endif %}
-
-  {# Card B — cross-user CSI match (95%+ similarity, different user) #}
-  {% if audit.csi_threshold_hit and audit.csi_threshold_hit >= 95 %}
-  <div style="margin-bottom:28px; padding:20px 24px; background:#1A1A2E; border:1px solid #4A4A7A; border-radius:var(--radius-md);">
-    <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#A0A8D4; margin-bottom:10px;">THIS SUBJECT HAS BEEN SEEN IN THE SHUTTER LEAGUE POOL</div>
-    <p style="margin:0 0 12px; font-size:15px; color:#C8CCE8; line-height:1.75;">
-      A closely similar image exists in the Shutter League community — another photographer has submitted
-      a frame with a near-identical composition and subject. This is not a penalty. It is information
-      the platform is uniquely positioned to give you, because it sees the entire pool.
-    </p>
-    <p style="margin:0; font-size:15px; color:#C8CCE8; line-height:1.75;">
-      When a subject or scene appears repeatedly, the bar for originality rises. The frame that separates
-      now is the one that shows something the previous versions did not — different light, a moment no one
-      has caught before, or a compositional choice that makes a familiar subject feel seen for the first
-      time. That is what makes a strong evaluation here worth more than it would be anywhere else.
-    </p>
-  </div>
-  {% endif %}
-
-  {% endif %}{# end audit CSI cards #}
-
-
-  {# ── Metadata grid ───────────────────────────────────────────────── #}
-  </div>
   {# ── S156: Species / EXIF / File details — single collapsible block ── #}
   <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;">
     <button class="sc-collapse-btn" onclick="scToggle('meta')" aria-expanded="false" aria-controls="sc-body-meta" style="padding:12px 16px;">
@@ -1944,6 +1919,13 @@
           .then(r => r.json()).then(function() { window.location.reload(); });
       });
       </script>
+      {% endif %}
+      {# Mentor Review CTA — sky blue, alongside Share/Save/Hide #}
+      {% if image.status == 'scored' and current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
+      <a href="{{ url_for('mentors') }}"
+         style="font-size:15px;padding:12px 18px;min-height:44px;background:#D6EAF8;color:#1B4F72;border:1px solid #A9CCE3;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+        👁 Mentor Review
+      </a>
       {% endif %}
     </div>
     {# Private image warning #}
@@ -2255,7 +2237,7 @@ function scToggle(id) {
 // WSO and others start closed
 document.addEventListener('DOMContentLoaded', function() {
   // All sections start collapsed except DDI
-  ['wso','c1','c2','c3','c4','hyd','meta'].forEach(function(id) {
+  ['wso','c1','c2','c3','c4','hyd','meta','loc'].forEach(function(id) {
     var body = document.getElementById('sc-body-' + id);
     var prev = document.getElementById('sc-prev-' + id);
     if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
