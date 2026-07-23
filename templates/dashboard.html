@@ -819,12 +819,117 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
 
     {# Annual Excellence Award #}
+    {% if aea_dash %}
+    {# ── AEA card: 4 states ── #}
+    {% if aea_dash.qualified %}
+    {# State 1: Fully qualified #}
+    <div class="aea-card" style="background:#1B4F72;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+             style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));"
+             alt="AEA" onerror="this.style.display='none'">
+        <div>
+          <div class="aea-label" style="margin-bottom:1px;">Annual Excellence Award</div>
+          <div style="font-size:13px;font-weight:700;color:#FFFFFF;">Qualified &middot; {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.12);margin-bottom:6px;">
+        <div style="font-size:32px;font-weight:500;color:#F5C518;font-family:var(--font-mono,monospace);line-height:1;">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">AEA average evaluation<br>top 6 images · all interests</div>
+      </div>
+      {% if aea_dash.league_rank %}<div style="font-size:13px;color:#7DCEA0;font-weight:600;">#{{ aea_dash.league_rank }} in {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>{% endif %}
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">Top {{ aea_dash.percentile }}% &middot; {{ aea_dash.qualifying_months }} months active</div>
+      {% if aea_dash.top6_list %}
+      <div style="display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;">
+        {% for img in aea_dash.top6_list %}
+        <a href="{{ url_for('image_detail', image_id=img.id) }}"
+           style="width:42px;height:42px;border-radius:4px;overflow:hidden;display:block;border:1.5px solid rgba(245,197,24,0.4);"
+           title="{{ img.name or 'Image' }} — {{ '%.2f'|format(img.score) }}">
+          <img src="{{ img.thumb_url }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"
+               onerror="this.style.background='#1a2540';this.removeAttribute('src')" alt="{{ img.name or '' }}">
+        </a>
+        {% endfor %}
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:5px;">Your top 6 images — tap to view</div>
+      {% endif %}
+    </div>
+
+    {% elif aea_dash.qualifying_months >= aea_dash.required_months and aea_dash.total_images < aea_dash.required_images %}
+    {# State 2: Months met, images short #}
+    <div class="aea-card" style="background:#D6EAF8;border:1px solid #A9CCE3;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+             style="width:34px;height:34px;object-fit:contain;filter:grayscale(1) opacity(0.4);"
+             alt="AEA" onerror="this.style.display='none'">
+        <div>
+          <div class="aea-label" style="color:#1B4F72;margin-bottom:1px;">Annual Excellence Award</div>
+          <div style="font-size:13px;font-weight:700;color:#0a1628;">Not yet qualified</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed to qualify.</div>
+      {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+    </div>
+
+    {% elif aea_dash.total_images >= aea_dash.required_images and aea_dash.qualifying_months < aea_dash.required_months %}
+    {# State 3: Images met, months short #}
+    <div class="aea-card" style="background:#D6EAF8;border:1px solid #A9CCE3;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+             style="width:34px;height:34px;object-fit:contain;filter:grayscale(1) opacity(0.4);"
+             alt="AEA" onerror="this.style.display='none'">
+        <div>
+          <div class="aea-label" style="color:#1B4F72;margin-bottom:1px;">Annual Excellence Award</div>
+          <div style="font-size:13px;font-weight:700;color:#0a1628;">Not yet qualified</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:8px;">
+        {% for m in range(aea_dash.required_months) %}
+        <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+        {% endfor %}
+      </div>
+      <div style="font-size:13px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.</div>
+      {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+    </div>
+
+    {% else %}
+    {# State 4: Both short #}
+    <div class="aea-card" style="background:#D6EAF8;border:1px solid #A9CCE3;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
+             style="width:34px;height:34px;object-fit:contain;filter:grayscale(1) opacity(0.4);"
+             alt="AEA" onerror="this.style.display='none'">
+        <div>
+          <div class="aea-label" style="color:#1B4F72;margin-bottom:1px;">Annual Excellence Award</div>
+          <div style="font-size:13px;font-weight:700;color:#0a1628;">Not yet qualified</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:8px;">
+        {% for m in range(aea_dash.required_months) %}
+        <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+        {% endfor %}
+      </div>
+      <div style="font-size:13px;color:#0B7A78;font-weight:500;line-height:1.6;">
+        {% if aea_dash.months_needed > 0 and aea_dash.images_needed > 0 %}
+        {{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} &middot; {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
+        {% elif aea_dash.months_needed > 0 %}
+        {{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.
+        {% else %}
+        {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
+        {% endif %}
+      </div>
+      {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    {# Not subscribed or no data — static fallback #}
     <div class="aea-card">
       <div class="aea-label">Annual Excellence Award</div>
       <div class="aea-title">AEA 2026</div>
-      <div class="aea-sub">Opens September 2026 — keep shooting, your standing builds now.</div>
+      <div class="aea-sub">Upload consistently and build your standing for the Annual Excellence Award.</div>
       <a href="{{ url_for('poty') }}" class="aea-link">Learn more →</a>
     </div>
+    {% endif %}
 
   </aside>
 
