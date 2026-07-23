@@ -656,14 +656,34 @@
       Meanwhile, we're identifying your subject. Please hold.
     </div>
   </div>
-  <div class="overlay-cards-wrap">
-    <div class="overlay-card" id="overlayCard">
-      <div class="overlay-card-accent" id="overlayCardAccent"></div>
-      <div class="overlay-card-headline" id="overlayCardHeadline">You saw something worth capturing.</div>
-      <div class="overlay-card-body" id="overlayCardBody">In a few seconds, we&#8217;ll tell you exactly what your eye found &#8212; and what to do with it next.</div>
-      <div class="overlay-card-attr" id="overlayCardAttr" style="display:none;"></div>
+  <div id="ddiProgressWrap" style="width:100%;max-width:360px;margin:0 auto 20px;">
+    <div id="ddiPhaseLabel" style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#854F0B;text-align:center;margin-bottom:10px;min-height:20px;">Reading your photograph</div>
+    <div style="background:rgba(133,79,11,0.12);border-radius:8px;height:6px;width:100%;overflow:hidden;margin-bottom:8px;">
+      <div id="ddiProgressBar" style="height:100%;width:0%;background:#854F0B;border-radius:8px;transition:width 1.2s ease;"></div>
     </div>
-    <div class="overlay-pips" id="overlayPips"></div>
+    <div id="ddiPct" style="font-family:var(--font-mono);font-size:14px;color:#854F0B;text-align:center;margin-bottom:16px;">0%</div>
+    <div id="ddiSteps" style="display:flex;flex-direction:column;gap:6px;">
+      <div class="ddi-step" id="dstep0" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(133,79,11,0.06);">
+        <div class="ddi-step-dot" style="width:8px;height:8px;border-radius:50%;background:#C8A84B;flex-shrink:0;"></div>
+        <div style="font-size:14px;color:var(--text-primary);">Reading the light, geometry and subject</div>
+        <div class="ddi-step-check" style="margin-left:auto;font-size:14px;color:#854F0B;display:none;">✓</div>
+      </div>
+      <div class="ddi-step" id="dstep1" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;opacity:0.4;">
+        <div class="ddi-step-dot" style="width:8px;height:8px;border-radius:50%;background:#C8A84B;flex-shrink:0;"></div>
+        <div style="font-size:14px;color:var(--text-primary);">Identifying species and subject context</div>
+        <div class="ddi-step-check" style="margin-left:auto;font-size:14px;color:#854F0B;display:none;">✓</div>
+      </div>
+      <div class="ddi-step" id="dstep2" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;opacity:0.4;">
+        <div class="ddi-step-dot" style="width:8px;height:8px;border-radius:50%;background:#C8A84B;flex-shrink:0;"></div>
+        <div style="font-size:14px;color:var(--text-primary);">Measuring the 5 craft dimensions</div>
+        <div class="ddi-step-check" style="margin-left:auto;font-size:14px;color:#854F0B;display:none;">✓</div>
+      </div>
+      <div class="ddi-step" id="dstep3" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;opacity:0.4;">
+        <div class="ddi-step-dot" style="width:8px;height:8px;border-radius:50%;background:#C8A84B;flex-shrink:0;"></div>
+        <div style="font-size:14px;color:var(--text-primary);">Writing your evaluation</div>
+        <div class="ddi-step-check" style="margin-left:auto;font-size:14px;color:#854F0B;display:none;">✓</div>
+      </div>
+    </div>
   </div>
   <div class="mini-timer">
     <div class="mini-clock-wrap">
@@ -1238,13 +1258,9 @@
         var cancelWrap = document.createElement('div');
         cancelWrap.id = 'slCancelWrap';
         cancelWrap.style.cssText = [
-          'position:absolute',
-          'bottom:28px',
-          'left:0',
-          'right:0',
           'text-align:center',
-          'padding:0 24px',
-          'z-index:10',
+          'padding:24px 24px 0',
+          'width:100%',
         ].join(';');
 
         var cancelBtn = document.createElement('button');
@@ -1278,9 +1294,18 @@
         };
 
         cancelWrap.appendChild(cancelBtn);
-        overlay.appendChild(cancelWrap);
+        // Insert after the seconds counter, not at overlay root
+        var timerEl = overlay.querySelector('.overlay-timer, #overlayTimer, [id*="timer"], [class*="timer"]');
+        var continueBtn = overlay.querySelector('[href*="dashboard"], a[href]');
+        if (continueBtn && continueBtn.parentNode) {
+          continueBtn.parentNode.insertBefore(cancelWrap, continueBtn.nextSibling);
+        } else if (timerEl && timerEl.parentNode) {
+          timerEl.parentNode.insertBefore(cancelWrap, timerEl.nextSibling);
+        } else {
+          overlay.appendChild(cancelWrap);
+        }
       }
-    }, 30000);
+    }, 60000);
 
     function _clearCancelTimer() {
       clearTimeout(_cancelTimer);
@@ -1384,100 +1409,81 @@
     ];
     const opener = openers[Math.floor(Math.random() * openers.length)];
 
-    // Card 2 — genre-specific copy
-    const genreCopy = {
-      wildlife:    { h: 'Wild subjects don\u2019t wait.', b: 'We look for the moment you were ready before they moved.' },
-      nature:      { h: 'Nature rewards patience.', b: 'We look for the light, the stillness, and the one moment that earned the frame.' },
-      street:      { h: 'The street doesn\u2019t repeat itself.', b: 'We look for whether you caught the unrepeatable instant.' },
-      landscape:   { h: 'A landscape is never just a place.', b: 'We look for whether yours makes someone want to be there.' },
-      people:      { h: 'A portrait is a negotiation.', b: 'We look for whether yours lets the person breathe.' },
-      wedding:     { h: 'Wedding moments are gone before they land.', b: 'We look for whether yours stopped time at exactly the right instant.' },
-      macro:       { h: 'Macro photography finds the world inside the world.', b: 'We look for whether yours reveals something invisible to the naked eye.' },
-      drone:       { h: 'Height changes everything.', b: 'We look for whether yours found the geometry that only exists from up there.' },
-      creative:    { h: 'Creative work starts where the rule ends.', b: 'We look for whether yours broke the convention with a reason.' },
-      documentary: { h: 'Documentary work is access.', b: 'We look for whether you were close enough, early enough, and honest enough to make this frame.' },
-      fashion:     { h: 'Fashion is a collaboration between photographer and subject.', b: 'We look for whether yours made both of them necessary.' },
-    };
-    const card2 = genreCopy[genreVal] || { h: 'We don\u2019t count megapixels.', b: 'We look for what your photograph does to the person who sees it. Whether it stops them. Whether it stays with them.' };
-
-    // Card 3 — mission / curriculum copy
-    var card3;
-    if (dimPlain) {
-      card3 = { h: 'You\u2019ve been working on your ' + dimPlain + '.', b: 'This is the photograph where we find out if it\u2019s moving.\n\nKeep breathing.' };
-    } else {
-      card3 = { h: 'Every photographer has one thing holding them back.', b: 'After this, you\u2019ll know exactly what yours is \u2014 and what to shoot next.' };
-    }
-
-    // Card 4 — master quotes pool
-    const quotes = [
-      { q: 'Your first 10,000 photographs are your worst.', a: '\u2014 HENRI CARTIER-BRESSON' },
-      { q: 'Photography is not about the thing photographed. It is about how that thing looks photographed.', a: '\u2014 GARRY WINOGRAND' },
-      { q: 'I don\u2019t trust words. I trust pictures.', a: '\u2014 GILLES PERESS' },
-      { q: 'The camera is an instrument that teaches people how to see without a camera.', a: '\u2014 DOROTHEA LANGE' },
-      { q: 'To photograph is to hold one\u2019s breath.', a: '\u2014 HENRI CARTIER-BRESSON' },
-      { q: 'Light makes photography. Embrace light. Admire it. Love it. But above all, know light.', a: '\u2014 GEORGE EASTMAN' },
-      { q: 'Photography is a way of feeling, of touching, of loving.', a: '\u2014 AARON SISKIND' },
-      { q: 'The best thing about a picture is that it never changes, even when the people in it do.', a: '\u2014 ANDY WARHOL' },
+    // ── S156: DDI progress steps — replace rotating cards ─────────────────
+    var ddiSteps = [
+      { label: 'Reading the light, geometry and subject',  pct: 18,  secs: 0  },
+      { label: 'Identifying species and subject context',  pct: 36,  secs: 14 },
+      { label: 'Measuring the 5 craft dimensions',         pct: 62,  secs: 30 },
+      { label: 'Writing your evaluation',                  pct: 88,  secs: 50 },
     ];
-    const quote = quotes[Math.floor(Math.random() * quotes.length)];
-
-    // Build card sequence
-    const cards = [
-      { type: 'standard', h: opener.h, b: opener.b },
-      { type: 'standard', h: card2.h,  b: card2.b },
-      { type: 'standard', h: card3.h,  b: card3.b },
-      { type: 'quote',    h: quote.q,  b: '',       a: quote.a },
+    var phaseLabels = [
+      'Reading your photograph',
+      'Cross-referencing species and context',
+      'Calculating your decisive moment, down to the millisecond',
+      'Writing your evaluation now',
     ];
+    var ddiActiveStep = 0;
 
-    // Build pips
-    const pipsEl = document.getElementById('overlayPips');
-    pipsEl.innerHTML = '';
-    cards.forEach(function(_, i) {
-      var p = document.createElement('div');
-      p.className = 'overlay-pip' + (i === 0 ? ' active' : '');
-      p.id = 'opip' + i;
-      pipsEl.appendChild(p);
-    });
-
-    var cardEl      = document.getElementById('overlayCard');
-    var headlineEl  = document.getElementById('overlayCardHeadline');
-    var bodyEl      = document.getElementById('overlayCardBody');
-    var accentEl    = document.getElementById('overlayCardAccent');
-    var attrEl      = document.getElementById('overlayCardAttr');
-
-    function showCard(idx) {
-      var c = cards[idx];
-      cardEl.style.opacity = '0';
-      setTimeout(function() {
-        if (c.type === 'quote') {
-          cardEl.className = 'overlay-card card-quote';
-          headlineEl.style.display = 'none';
-          bodyEl.textContent = c.h;
-          attrEl.textContent = c.a;
-          attrEl.style.display = '';
-        } else {
-          cardEl.className = 'overlay-card';
-          headlineEl.style.display = '';
-          headlineEl.textContent = c.h;
-          bodyEl.textContent = c.b;
-          attrEl.style.display = 'none';
+    function ddiActivateStep(idx) {
+      // Mark previous steps done
+      for (var i = 0; i < idx; i++) {
+        var s = document.getElementById('dstep' + i);
+        if (s) {
+          s.style.opacity = '1';
+          s.style.background = 'rgba(133,79,11,0.04)';
+          var chk = s.querySelector('.ddi-step-check');
+          if (chk) chk.style.display = 'block';
         }
-        // Update pips
-        cards.forEach(function(_, j) {
-          var p = document.getElementById('opip' + j);
-          if (p) p.className = 'overlay-pip' + (j === idx ? ' active' : '');
-        });
-        cardEl.style.opacity = '1';
-      }, 300);
+      }
+      // Highlight current step
+      var cur = document.getElementById('dstep' + idx);
+      if (cur) {
+        cur.style.opacity = '1';
+        cur.style.background = 'rgba(133,79,11,0.10)';
+        cur.style.borderLeft = '2px solid #854F0B';
+      }
+      // Update phase label
+      var pl = document.getElementById('ddiPhaseLabel');
+      if (pl && phaseLabels[idx]) pl.textContent = phaseLabels[idx];
+      // Update progress bar
+      var bar = document.getElementById('ddiProgressBar');
+      var pct = document.getElementById('ddiPct');
+      var p = ddiSteps[idx] ? ddiSteps[idx].pct : 90;
+      if (bar) bar.style.width = p + '%';
+      if (pct) pct.textContent = p + '%';
     }
 
-    // Show first card immediately
-    showCard(0);
-    var cardIdx = 0;
-    var cardTimer = setInterval(function() {
-      cardIdx = (cardIdx + 1) % cards.length;
-      showCard(cardIdx);
-    }, 9000);
+    // Activate first step immediately
+    ddiActivateStep(0);
+
+    // Schedule remaining steps based on expected timing
+    var stepTimers = [];
+    ddiSteps.forEach(function(step, i) {
+      if (i === 0) return;
+      var t = setTimeout(function(idx) {
+        ddiActivateStep(idx);
+        ddiActiveStep = idx;
+        // S156 Option A: when writing phase starts (step 3), slowly crawl bar 88→95%
+        if (idx === 3) {
+          var _crawlPct = 88;
+          var _crawlTarget = 95;
+          var _crawlInterval = setInterval(function() {
+            _crawlPct += 0.18; // ~0.18% per second = 95% reached in ~39s
+            if (_crawlPct >= _crawlTarget) {
+              _crawlPct = _crawlTarget;
+              clearInterval(_crawlInterval);
+            }
+            var bar = document.getElementById('ddiProgressBar');
+            var pct = document.getElementById('ddiPct');
+            if (bar) bar.style.width = _crawlPct.toFixed(0) + '%';
+            if (pct) pct.textContent = _crawlPct.toFixed(0) + '%';
+          }, 1000);
+          stepTimers.push({ _crawlInterval: _crawlInterval });
+        }
+      }.bind(null, i), step.secs * 1000);
+      stepTimers.push(t);
+    });
+    var cardTimer = { _stepTimers: stepTimers }; // kept for cleanup compatibility
 
     // ── Clock counts up ───────────────────────────────────────────────────────
     overlay.classList.add('active');
@@ -1502,7 +1508,12 @@
     if (!overlay.classList.contains('active')) {
       if (overlay._bc)        clearInterval(overlay._bc);
       if (overlay._tick)      clearInterval(overlay._tick);
-      if (overlay._cardTimer) clearInterval(overlay._cardTimer);
+      if (overlay._cardTimer && overlay._cardTimer._stepTimers) {
+        overlay._cardTimer._stepTimers.forEach(function(t) {
+          if (t && t._crawlInterval) clearInterval(t._crawlInterval);
+          else clearTimeout(t);
+        });
+      } else if (overlay._cardTimer) { clearInterval(overlay._cardTimer); }
       if (overlay._statusTimer) clearInterval(overlay._statusTimer);
     }
   });
