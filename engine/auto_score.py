@@ -3040,7 +3040,11 @@ def get_calibration_notes(genre, limit=5):
     try:
         from models import CalibrationNote
         from flask import current_app
-        with current_app.app_context():
+        try:
+            ctx = current_app.app_context()
+        except RuntimeError:
+            from app import app as _fa; ctx = _fa.app_context()
+        with ctx:
             notes = (
                 CalibrationNote.query
                 .filter_by(genre=genre, is_active=True)
@@ -3073,7 +3077,11 @@ def get_calibration_examples(genre, limit=3):
     try:
         from models import Image as ImageModel
         from flask import current_app
-        with current_app.app_context():
+        try:
+            ctx = current_app.app_context()
+        except RuntimeError:
+            from app import app as _fa; ctx = _fa.app_context()
+        with ctx:
             examples = (
                 ImageModel.query
                 .filter_by(genre=genre, is_calibration_example=True, status='scored')
