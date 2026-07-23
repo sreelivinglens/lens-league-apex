@@ -384,6 +384,19 @@
                 {{ elig.qualifying_months }} / {{ elig.required_months }} qualifying months
             </span>
         </div>
+        {# S156: Image count progress bar #}
+        {% set _img_total = elig.total_images if elig.total_images is defined else 0 %}
+        {% set _img_req   = elig.required_images if elig.required_images is defined else 6 %}
+        <div class="aea-progress-row" style="margin-top:10px;">
+            <div class="aea-progress-bar">
+                <div class="aea-progress-fill {% if _img_total < _img_req %}partial{% endif %}"
+                     style="width: {{ [_img_total / _img_req * 100, 100] | min }}%">
+                </div>
+            </div>
+            <span class="aea-progress-lbl">
+                {{ _img_total }} / {{ _img_req }} evaluated images
+            </span>
+        </div>
     </div>
 
     <!-- Window closed notice -->
