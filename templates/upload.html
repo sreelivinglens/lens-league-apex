@@ -1416,6 +1416,13 @@
       { label: 'Measuring the 5 craft dimensions',         pct: 62,  secs: 30 },
       { label: 'Writing your evaluation',                  pct: 88,  secs: 50 },
     ];
+    // Start bar at 2% immediately so it's visibly not at zero
+    (function() {
+      var bar = document.getElementById('ddiProgressBar');
+      var pct = document.getElementById('ddiPct');
+      if (bar) bar.style.width = '2%';
+      if (pct) pct.textContent = '2%';
+    })();
     var phaseLabels = [
       'Reading your photograph',
       'Cross-referencing species and context',
