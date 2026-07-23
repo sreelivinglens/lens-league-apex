@@ -2653,10 +2653,13 @@ def _sl_member_email(header_text, body_html, footer_note=''):
     Responsive — sl-ob-btn goes full-width on mobile. 70yr compliant.
     """
     return (
-        '<!DOCTYPE html><html><head>'
+        '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head>'
         '<meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<meta name="color-scheme" content="light">'
+        '<meta name="supported-color-schemes" content="light">'
         '<style>'
+        ':root { color-scheme: light; supported-color-schemes: light; }'
         '@media only screen and (max-width:600px){'
         '.sl-ob-wrap{padding:16px 12px!important;}'
         '.sl-ob-inner{padding:20px 16px!important;}'
@@ -2731,32 +2734,31 @@ def run_onboarding_email_sequence():
             SEQUENCE = [
                 (
                     0, 1,
-                    'Your first upload \u2014 what to expect',
+                    'Your first upload \u2014 what happens next',
                     [
                         'Hi {name},',
-                        'Your account is ready. The next step is uploading your first photograph.',
-                        'When you upload, the DDI engine evaluates the image across eight dimensions: '
-                        'Composition, Light, Clarity, Depth, Subject, Colour, Impact, and Context. '
-                        'It takes under two minutes.',
-                        'You will receive a Sherpa note with the evaluation \u2014 a specific, honest '
-                        'reading of what the image is doing and where attention could go next.',
-                        'No hedging. No encouragement for its own sake. Just what the photograph shows.',
+                        'Upload your first photograph and Shutter League will evaluate it '
+                        'and return a specific written reading of what the image is doing '
+                        'and where your attention could go next.',
+                        'It is not a rating out of ten. It is a reading \u2014 honest, '
+                        'specific to your image, with no hedging and no empty encouragement.',
+                        'Most photographers find the first evaluation the most useful one '
+                        'they have received. Upload one photograph and see what comes back.',
                     ],
                     f'{_site}/upload', 'Upload Your First Photograph',
                 ),
                 (
                     1, 3,
-                    'What the Sherpa is actually telling you',
+                    'Your written evaluation \u2014 how to read it',
                     [
                         'Hi {name},',
-                        'The Sherpa note at the bottom of your evaluation is the part most photographers '
+                        'The written evaluation at the bottom of your image is the part most photographers '
                         'read once and move past. It is worth reading twice.',
-                        'Each Sherpa block names the specific visual decision that would change the '
+                        'Each section names a specific visual decision that would change the '
                         'photograph most \u2014 not a general direction, but this image, this frame.',
-                        'If it mentions a master photographer, that reference is intentional. '
-                        'It points to a body of work where that decision was resolved differently.',
-                        'The next time you read your Sherpa note, ask: what is the one thing it is '
-                        'asking me to see?',
+                        'If it mentions a photographer by name, that reference is intentional. '
+                        'It points to a body of work where that decision was handled differently.',
+                        'Read it again and ask: what is the one thing it is asking me to see?',
                     ],
                     f'{_site}/dashboard', 'Go to Your Dashboard',
                 ),
@@ -10439,6 +10441,77 @@ def leaderboard():
 
     photographer_stats = pg_rows
 
+    # ── AEA 2026 Contenders panel ─────────────────────────────────────────────
+    # Shown on right side of Photographers tab. A contender is a subscribed
+    # photographer (mobile or camera) who has at least 1 evaluated public image
+    # in each of 3+ distinct calendar months in 2026 (qualifying_start = Jan 1).
+    # Ranked by their top-3 image average — the actual AEA metric.
+    # Required months matches _aea_eligibility: 3 for 2026, 6 from 2027.
+    aea_contenders = []
+    if tab == 'photographers':
+        try:
+            _aea_year = datetime.utcnow().year
+            _aea_required = 3 if _aea_year == 2026 else 6
+            _aea_qualifying_start = date(_aea_year, 1, 1)  # pre-season months count in 2026
+            _aea_season_end_excl  = date(_aea_year + 1, 1, 1)
+
+            # Get all subscribed camera/mobile users with scored public images this year
+            _aea_users = db.session.execute(db.text("""
+                SELECT u.id, u.full_name, u.username, u.subscription_track,
+                       COUNT(DISTINCT DATE_TRUNC('month', i.created_at)) AS qualifying_months,
+                       COUNT(i.id) AS image_count
+                FROM users u
+                JOIN images i ON i.user_id = u.id
+                WHERE u.is_subscribed = TRUE
+                  AND u.subscription_track IN ('mobile', 'camera')
+                  AND i.is_public = TRUE
+                  AND i.score IS NOT NULL
+                  AND i.score > 0
+                  AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+                  AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+                  AND i.created_at >= :qs
+                  AND i.created_at < :se
+                GROUP BY u.id, u.full_name, u.username, u.subscription_track
+                HAVING COUNT(DISTINCT DATE_TRUNC('month', i.created_at)) >= :req
+                ORDER BY qualifying_months DESC
+            """), {
+                'qs': _aea_qualifying_start,
+                'se': _aea_season_end_excl,
+                'req': _aea_required,
+            }).fetchall()
+
+            # For each contender, compute top-3 image average (the AEA ranking metric)
+            for _au in _aea_users:
+                _top3 = db.session.execute(db.text("""
+                    SELECT score FROM images
+                    WHERE user_id = :uid
+                      AND is_public = TRUE
+                      AND score IS NOT NULL AND score > 0
+                      AND (is_flagged = FALSE OR is_flagged IS NULL)
+                      AND (needs_review = FALSE OR needs_review IS NULL)
+                    ORDER BY score DESC
+                    LIMIT 3
+                """), {'uid': _au[0]}).fetchall()
+                if _top3:
+                    _top3_avg = round(sum(r[0] for r in _top3) / len(_top3), 2)
+                    aea_contenders.append({
+                        'user_id':          _au[0],
+                        'display_name':     _au[1] or _au[2] or 'Photographer',
+                        'username':         _au[2],
+                        'subscription_track': _au[3],
+                        'qualifying_months': int(_au[4]),
+                        'image_count':      int(_au[5]),
+                        'top3_avg':         _top3_avg,
+                    })
+
+            # Rank by top-3 avg descending, cap at 10
+            aea_contenders.sort(key=lambda c: -c['top3_avg'])
+            aea_contenders = aea_contenders[:10]
+
+        except Exception as _aea_err:
+            app.logger.warning(f'[leaderboard] AEA contenders query failed: {_aea_err}')
+            aea_contenders = []
+
     all_tiers = ['Rookie', 'Shooter', 'Contender', 'Craftsman', 'Maverick', 'Master', 'Grandmaster', 'Legend']
 
     # -- Camera rankings (lazy  -  only computed for Cameras tab) ---------------
@@ -10561,6 +10634,8 @@ def leaderboard():
         user_img_rank      = user_img_rank,
         user_pg_rank       = user_pg_rank,
         user_join_map      = user_join_map,
+        aea_contenders     = aea_contenders,
+        aea_required_months = (3 if datetime.utcnow().year == 2026 else 6),
         # Session 132 — Mobile DDI
         # Lenses tab is camera-only — hide it when Mobile plan filter is active
         show_lenses_tab    = (track != 'mobile'),
@@ -12046,8 +12121,9 @@ def delete_image(image_id):
                     pass
         threading.Thread(target=_cleanup, args=(r2_keys,), daemon=True).start()
 
-    flash('Image deleted. Your scores and standing have been updated accordingly.', 'warning')
-    return redirect(url_for('dashboard'))
+    flash('Image deleted. Your evaluation history has been updated.', 'warning')
+    _from = request.form.get('from', '')
+    return redirect(url_for('my_gallery') if _from == 'gallery' else url_for('dashboard'))
 
 
 @app.route('/admin/image/<int:image_id>/delete', methods=['POST'])
