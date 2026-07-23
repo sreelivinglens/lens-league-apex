@@ -1122,11 +1122,17 @@
       </div>{# /sc-body-c4 #}
       {% if _o4_bow %}
       <div style="height:1px; background:linear-gradient(90deg,rgba(133,79,11,0.15),rgba(133,79,11,0.35),rgba(133,79,11,0.15));"></div>
-      <div style="background:linear-gradient(135deg,#F5EAD0,#E8C878); padding:22px 26px 20px;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-          <span style="font-size:15px; color:#6B4500;">📖</span>
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#6B4500; text-transform:uppercase;">Your next Body of Work sequence</span>
-        </div>
+      <div style="background:linear-gradient(135deg,#F5EAD0,#E8C878); overflow:hidden;">
+        <button class="sc-collapse-btn" onclick="scToggle('bow')" aria-expanded="false" aria-controls="sc-body-bow"
+                style="padding:16px 22px;width:100%;text-align:left;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:15px; color:#6B4500;">📖</span>
+            <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#6B4500; text-transform:uppercase;">Your next Body of Work sequence</span>
+          </div>
+          <span class="sc-collapse-chevron" id="sc-chev-bow" style="color:#6B4500;">&#8964;</span>
+        </button>
+        <div class="sc-collapse-body" id="sc-body-bow">
+        <div style="padding:0 22px 20px;">
         {% for _ol in _o4_bow_fmt.split('
 ') %}
           {% set _olt = _ol | trim %}
@@ -1140,6 +1146,9 @@
           {% endif %}
         {% endfor %}
       </div>
+        </div>{# /bow padding #}
+        </div>{# /sc-body-bow #}
+      </div>{# /bow card #}
       {% endif %}
 
       {% if _o4_cross %}
@@ -1870,10 +1879,17 @@
   {% if image.scored_at %}
   {% set _days = ((now - image.scored_at).days) if now else 0 %}
   <div style="margin-bottom:14px;">
-    {# Days since line — kept but condensed #}
-    <div style="font-size:14px;color:var(--text-muted);margin-bottom:10px;">
-      {{ _days }} day{{ 's' if _days != 1 else '' }} since this was evaluated.
+    {# Days since line + visibility status inline #}
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span>{{ _days }} day{{ 's' if _days != 1 else '' }} since this was evaluated.</span>
       {% if _days <= 3 %}<span style="color:var(--text-secondary);font-style:italic;">Your eye is still sharp from this.</span>{% endif %}
+      <span style="font-size:13px;">
+        Visibility:
+        {% if image.is_flagged %}<strong style="color:var(--red);">Hidden (flagged)</strong>
+        {% elif image.needs_review %}<strong style="color:var(--amber);">Under review</strong>
+        {% elif image.is_public %}<strong style="color:var(--green);">Public</strong>
+        {% else %}<strong style="color:var(--text-muted);">Private</strong>{% endif %}
+      </span>
     </div>
     {# CTA buttons in order: Share · Save · Show/Hide · Peer Evaluation #}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1937,35 +1953,6 @@
   </div>
   {% endif %}
 
-  {# ── Visibility status ───────────────────────────────────────────── #}
-  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:32px; padding:14px 18px; background:var(--surface-3); border-radius:var(--radius-md); border:1px solid var(--border);">
-    <div style="font-size:14px; color:var(--text-muted);">
-      Visibility:
-      {% if image.is_flagged %}
-        <strong style="color:var(--red);">Hidden (flagged)</strong>
-      {% elif image.needs_review %}
-        <strong style="color:var(--amber);">Hidden (under review)</strong>
-      {% elif image.is_public %}
-        <strong style="color:var(--green);">Public</strong>
-      {% else %}
-        <strong style="color:var(--text-muted);">Private</strong>
-      {% endif %}
-      {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and not image.is_flagged and not image.needs_review %}
-      &nbsp;·&nbsp;
-      <form method="POST" action="{{ url_for('owner_toggle_visibility', image_id=image.id) }}" style="display:inline;" id="vis-toggle-form">
-        <button type="submit" class="btn" style="font-size:13px;padding:4px 12px;min-height:32px;">
-          {{ '🔒 Make Private' if image.is_public else '🌐 Make Public' }}
-        </button>
-      </form>
-      <script>
-      document.getElementById('vis-toggle-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        fetch(this.action, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
-          .then(r => r.json()).then(d => { window.location.reload(); });
-      });
-      </script>
-      {% endif %}
-    </div>
     {% if image.status == 'scored' and not image.is_flagged and not image.needs_review %}
       {# ── Version compare panel ───────────────────────────────────── #}
   {% if image_versions and image_versions|length > 1 and current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
@@ -2032,7 +2019,7 @@
   </div>
   {% endif %}
 
-<a href="{{ url_for('public_card', token=image.share_token) if image.share_token else url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
+
     {% endif %}
   </div>
 
@@ -2237,7 +2224,7 @@ function scToggle(id) {
 // WSO and others start closed
 document.addEventListener('DOMContentLoaded', function() {
   // All sections start collapsed except DDI
-  ['wso','c1','c2','c3','c4','hyd','meta','loc'].forEach(function(id) {
+  ['wso','c1','c2','c3','c4','hyd','meta','loc','bow'].forEach(function(id) {
     var body = document.getElementById('sc-body-' + id);
     var prev = document.getElementById('sc-prev-' + id);
     if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
