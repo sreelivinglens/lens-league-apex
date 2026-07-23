@@ -31,13 +31,13 @@
   .detail-wrap { max-width: 900px; margin: 0 auto; }
 
   .detail-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 32px; gap: 16px; flex-wrap: wrap;
+    display: flex; flex-direction: column; align-items: flex-start;
+    margin-bottom: 24px; gap: 12px;
   }
-  .detail-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
-  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; flex-shrink: 0; }
+  .detail-header .page-header { margin-bottom: 0; }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
   @media (max-width: 520px) {
-    .detail-header { flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .detail-header { gap: 10px; margin-bottom: 16px; }
     .detail-header .page-header { width: 100%; }
     .detail-header .page-header p { font-size: 13px; margin:0; word-break: break-word; }
     /* Buttons: Back alone on first row, action buttons wrap below */
@@ -2236,12 +2236,23 @@ function scToggle(id) {
     if (prev) prev.style.display = 'none';
   }
 }
-// Start all collapsible sections closed
+// S156: DDI always starts open (owner needs to see dimensions immediately)
+// WSO and others start closed
 document.addEventListener('DOMContentLoaded', function() {
-  ['wso','ddi','peer','c1','c2','c3','c4'].forEach(function(id) {
+  ['wso','peer','c1','c2','c3','c4'].forEach(function(id) {
     var body = document.getElementById('sc-body-' + id);
     if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
   });
+  // DDI starts open — expand it
+  var ddiBody = document.getElementById('sc-body-ddi');
+  var ddiChev = document.getElementById('sc-chev-ddi');
+  var ddiPrev = document.getElementById('sc-prev-ddi');
+  if (ddiBody) {
+    ddiBody.style.overflow = 'hidden';
+    ddiBody.style.maxHeight = ddiBody.scrollHeight + 200 + 'px';
+    if (ddiChev) ddiChev.classList.add('open');
+    if (ddiPrev) ddiPrev.style.display = 'none';
+  }
 });
 </script>
 {% endblock %}
