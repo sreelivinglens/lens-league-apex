@@ -2083,6 +2083,7 @@
       {% else %}
       <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="flex:2; min-width:180px;">
       {% endif %}
+        <input type="hidden" name="from" value="{{ request.args.get('from', '') }}">
         <button type="submit" class="btn btn-danger" style="width:100%;" id="deleteConfirmBtn"
                 onclick="var b=this; b.textContent='Deleting\u2026'; document.getElementById('deleteWaitMsg').style.display='block'; setTimeout(function(){b.disabled=true;},50); return true;">
           Yes, Delete Permanently
