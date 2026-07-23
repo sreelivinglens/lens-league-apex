@@ -1703,7 +1703,7 @@ img {
     </a>
     <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
       <span class="sl-nav-item__icon">📋</span>
-      <span>Evaluations</span>
+      <span>My Gallery</span>
     </a>
     <a href="{{ url_for('upload') }}" class="sl-nav-fab">
       <div class="sl-nav-fab__circle">↑</div>
@@ -1721,11 +1721,11 @@ img {
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
         <div class="sl-bottom-more-menu__list">
           <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">My Account</a>
-          <a href="{{ url_for('portfolio_manager') }}" onclick="closeBottomMore()">My Portfolio</a>
-          <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentor Review</a>
+          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
           <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
           <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Gallery</a>
-          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
+          <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentor Review</a>
+          <a href="{{ url_for('portfolio_manager') }}" onclick="closeBottomMore()">My Portfolio</a>
           <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
           <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Annual Excellence</a>
           <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
