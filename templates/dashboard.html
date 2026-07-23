@@ -759,22 +759,26 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# My Standing — compact card, full detail in modal #}
     {% if progress_data %}
-    <div class="rp-card" style="cursor:pointer;border-left-color:#1A2744;" onclick="document.getElementById('standing-modal').style.display='flex'">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+    <div class="rp-card" style="cursor:pointer;border-left-color:#1A2744;padding-bottom:14px;" onclick="document.getElementById('standing-modal').style.display='flex'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <div class="rp-label" style="margin-bottom:0;">My Standing</div>
         <span style="font-size:13px;color:var(--d-muted);">▲ full view</span>
       </div>
-      <div class="standing-row">
-        <span class="standing-val">{{ progress_data.avg_tier }}</span>
-        <span class="standing-avg">avg {{ '%.2f'|format(progress_data.avg_score) }}</span>
-      </div>
+      {# Tier — the proud moment #}
+      <div style="font-size:28px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ progress_data.avg_tier }}</div>
+      {# AEA or lifetime avg #}
+      {% if aea_dash and aea_dash.top6_avg %}
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:6px;">AEA {{ '%.2f'|format(aea_dash.top6_avg) }} &middot; avg {{ '%.2f'|format(progress_data.avg_score) }}</div>
+      {% else %}
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:6px;">avg {{ '%.2f'|format(progress_data.avg_score) }}</div>
+      {% endif %}
       {%- if current_user.subscription_track == 'mobile' %}
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:4px;">
-        <span style="background:#1A1A18;color:#F5C518;padding:1px 6px;border-radius:3px;">📱 Mobile League</span>
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:6px;">
+        <span style="background:#1A1A18;color:#F5C518;padding:2px 8px;border-radius:4px;">📱 Mobile League</span>
       </div>
       {%- elif current_user.subscription_track == 'camera' %}
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:4px;">
-        <span style="background:#F5F0E8;color:#4A4840;padding:1px 6px;border-radius:3px;border:0.5px solid #E8E4DA;">📷 Camera League</span>
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:6px;">
+        <span style="background:#F5F0E8;color:#4A4840;padding:2px 8px;border-radius:4px;border:0.5px solid #E8E4DA;">📷 Camera League</span>
       </div>
       {%- endif %}
       {% if progress_data.overall_pct %}<div class="standing-pct">Top {{ progress_data.overall_pct }}% this month</div>{% endif %}
