@@ -2772,7 +2772,7 @@ def run_onboarding_email_sequence():
                         'This matters because most photography feedback is social. '
                         'You respond to the person first, the photograph second.',
                         'When you do not know whose work you are looking at, you read the frame differently. '
-                        'Photographers who have done fifty evaluations on this platform describe a shift '
+                        'Photographers who have worked through evaluations on this platform describe a shift '
                         'in how they look at their own work.',
                         'Rate three photographs when you next log in. It takes four minutes.',
                     ],
@@ -2819,8 +2819,8 @@ def run_onboarding_email_sequence():
                         'rather than judgement.',
                         'The photographers who stall are waiting for the image they are proud of '
                         'before uploading. The ones who keep going upload the image they took today, '
-                        'read what the engine says, and adjust before the next session.',
-                        'The Sherpa note is most useful on an image you are uncertain about. '
+                        'read what comes back, and adjust before the next session.',
+                        'The written evaluation is most useful on an image you are uncertain about. '
                         'That is the one worth uploading next.',
                     ],
                     f'{_site}/upload', 'Upload a Photograph',
@@ -2831,10 +2831,10 @@ def run_onboarding_email_sequence():
                     [
                         'Hi {name},',
                         'Looking at evaluation histories on this platform, the photographers who '
-                        'show the sharpest improvement share one habit: they re-read their Sherpa '
-                        'notes before a shoot, not after.',
+                        'show the sharpest improvement share one habit: they re-read their written '
+                        'evaluations before a shoot, not after.',
                         'They are not looking for what went wrong with the last image. They are '
-                        'looking for the one decision the engine keeps returning to, and they '
+                        'looking for the one decision the evaluation keeps returning to, and they '
                         'make that decision consciously on the next shoot.',
                         'It is a different relationship with feedback \u2014 anticipatory rather '
                         'than retrospective.',
@@ -2869,6 +2869,16 @@ def run_onboarding_email_sequence():
 
                 # Don't interrupt active users
                 if last_upload and (now - last_upload).total_seconds() < 172800:
+                    continue
+
+                # S156: skip founder/test accounts — their agreed_at is old
+                # and they receive all emails in one burst when the job runs.
+                _FOUNDER_EMAILS = {
+                    'sreeks@gmail.com', 'sreelivinglens@gmail.com',
+                    'sree@shutterleague.com', 'sree@thelivinglens.org',
+                    'test@shutterleague.com', 'test@makingimagesmatter.com',
+                }
+                if email.lower().strip() in _FOUNDER_EMAILS:
                     continue
 
                 days_since = (now - agreed_at).days
