@@ -4367,6 +4367,129 @@ def dashboard():
             'min_images':     POTY_MIN_IMAGES,
         }
 
+    # ── AEA cross-genre top-6 tracker (S156) ─────────────────────────────────
+    # Computes the user's AEA standing: top-6 evaluated images across ALL genres,
+    # qualifying months (distinct calendar months with scored images in 2026),
+    # and league rank among qualifiers. Shown on dashboard AEA card.
+    aea_dash = None
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False) and        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera'):
+        try:
+            _aea_year = datetime.utcnow().year
+            _aea_qual_start = date(_aea_year, 1, 1)
+            _aea_season_end = date(_aea_year + 1, 1, 1)
+
+            # Qualifying months — distinct calendar months with scored public images
+            _aea_qm = db.session.execute(db.text("""
+                SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at))
+                FROM images
+                WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
+                  AND score > 0 AND status = 'scored'
+                  AND (is_flagged = FALSE OR is_flagged IS NULL)
+                  AND (needs_review = FALSE OR needs_review IS NULL)
+                  AND created_at >= :qs AND created_at < :se
+            """), {'uid': current_user.id, 'qs': _aea_qual_start, 'se': _aea_season_end}).scalar() or 0
+
+            # Top-6 images cross-genre (best evaluated, any genre)
+            _aea_top6_rows = db.session.execute(db.text("""
+                SELECT id, asset_name, score, genre, thumb_url, tier
+                FROM images
+                WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
+                  AND score > 0 AND status = 'scored'
+                  AND (is_flagged = FALSE OR is_flagged IS NULL)
+                  AND (needs_review = FALSE OR needs_review IS NULL)
+                ORDER BY score DESC LIMIT 6
+            """), {'uid': current_user.id}).fetchall()
+
+            _aea_total = db.session.execute(db.text("""
+                SELECT COUNT(*) FROM images
+                WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
+                  AND score > 0 AND status = 'scored'
+                  AND (is_flagged = FALSE OR is_flagged IS NULL)
+                  AND (needs_review = FALSE OR needs_review IS NULL)
+            """), {'uid': current_user.id}).scalar() or 0
+
+            _aea_req_months = 3 if _aea_year == 2026 else 6
+            _aea_req_images = 6
+            _aea_qualified  = int(_aea_qm) >= _aea_req_months and _aea_total >= _aea_req_images
+
+            _aea_top6_avg = None
+            _aea_top6_list = []
+            if _aea_top6_rows:
+                from decimal import Decimal, ROUND_HALF_UP
+                _scores = [float(r[2]) if float(r[2]) <= 10 else float(r[2])/10 for r in _aea_top6_rows]
+                if len(_scores) >= 6:
+                    _raw = sum(_scores) / len(_scores)
+                    _aea_top6_avg = float(Decimal(str(_raw)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                _aea_top6_list = [
+                    {'id': r[0], 'name': r[1], 'score': round(float(r[2]) if float(r[2]) <= 10 else float(r[2])/10, 2),
+                     'genre': r[3], 'thumb_url': r[4], 'tier': r[5]}
+                    for r in _aea_top6_rows
+                ]
+
+            # League rank among qualifiers (camera or mobile)
+            _aea_track = current_user.subscription_track
+            _aea_rank_row = db.session.execute(db.text("""
+                SELECT COUNT(*) FROM (
+                    SELECT i.user_id,
+                           AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg
+                    FROM (
+                        SELECT user_id, score,
+                               ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY score DESC) AS rn
+                        FROM images
+                        WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
+                          AND status = 'scored'
+                          AND (is_flagged = FALSE OR is_flagged IS NULL)
+                          AND (needs_review = FALSE OR needs_review IS NULL)
+                    ) i
+                    JOIN users u ON u.id = i.user_id
+                    WHERE u.is_subscribed = TRUE
+                      AND u.subscription_track = :track
+                    GROUP BY i.user_id
+                    HAVING COUNT(*) >= :min_imgs
+                       AND COUNT(DISTINCT DATE_TRUNC('month',
+                           (SELECT MIN(created_at) FROM images WHERE user_id = i.user_id))) >= 1
+                ) qualified
+                WHERE top6_avg > :my_avg
+            """), {
+                'track': _aea_track,
+                'min_imgs': _aea_req_images,
+                'my_avg': _aea_top6_avg or 0,
+            }).scalar() or 0
+            _aea_league_rank = int(_aea_rank_row) + 1 if _aea_qualified and _aea_top6_avg else None
+
+            # Percentile among all subscribed photographers same track
+            _aea_total_photographers = db.session.execute(db.text("""
+                SELECT COUNT(DISTINCT user_id) FROM images i
+                JOIN users u ON u.id = i.user_id
+                WHERE u.is_subscribed = TRUE AND u.subscription_track = :track
+                  AND i.score IS NOT NULL AND i.score > 0
+            """), {'track': _aea_track}).scalar() or 1
+            _aea_better_count = db.session.execute(db.text("""
+                SELECT COUNT(DISTINCT i.user_id)
+                FROM images i JOIN users u ON u.id = i.user_id
+                WHERE u.is_subscribed = TRUE AND u.subscription_track = :track
+                  AND i.score > :my_best AND i.score IS NOT NULL
+            """), {'track': _aea_track, 'my_best': _aea_top6_avg or 0}).scalar() or 0
+            _aea_percentile = max(1, round((_aea_better_count / max(_aea_total_photographers, 1)) * 100))
+
+            aea_dash = {
+                'qualifying_months':  int(_aea_qm),
+                'required_months':    _aea_req_months,
+                'total_images':       _aea_total,
+                'required_images':    _aea_req_images,
+                'qualified':          _aea_qualified,
+                'top6_avg':           _aea_top6_avg,
+                'top6_list':          _aea_top6_list,
+                'league_rank':        _aea_league_rank,
+                'percentile':         _aea_percentile,
+                'track':              _aea_track,
+                'months_needed':      max(0, _aea_req_months - int(_aea_qm)),
+                'images_needed':      max(0, _aea_req_images - _aea_total),
+            }
+        except Exception as _aea_dash_err:
+            app.logger.warning(f'[dashboard] aea_dash failed: {_aea_dash_err}')
+            aea_dash = None
+
     # Weekly challenge banner — track-aware (Session 132 Mobile DDI)
     _dash_user_track = getattr(current_user, 'subscription_track', None) or None
     active_challenge = _get_active_challenge(user_track=_dash_user_track)
@@ -4451,8 +4574,8 @@ def dashboard():
         _pts_bal  = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
         _pts_life = round(getattr(current_user, 'points_lifetime_earned', 0.0) or 0.0, 1)
         _res_mo   = getattr(current_user, 'residency_months', 0) or 0
-        # 6-6-12: need 6 subscribed months + 6 scored images in a genre to appear on standings
-        # need 24 scored images in a genre to qualify for prizes
+        # S156: AEA qualification — 3 qualifying months + 6 total scored images (any genre)
+        # Legacy 6-6-12 rule superseded by new AEA rules in _aea_eligibility()
         _total_scored = Image.query.filter_by(
             user_id=current_user.id, status='scored'
         ).filter(Image.score.isnot(None)).count()
@@ -4464,7 +4587,7 @@ def dashboard():
             _best_genre_count = max((r['count'] for r in poty_tracker['genre_rows']), default=0)
         _imgs_to_gate = max(0, 6 - _best_genre_count)
         # Official rank status
-        _officially_ranked = (_res_mo >= 6 and _best_genre_count >= 6)
+        _officially_ranked = (_res_mo >= 3 and _total_scored >= 6)  # S156: 3 months + 6 images
         # Tier jump progress — next bonus threshold
         _last_tier = getattr(current_user, 'tier_jump_last_tier', None)
         _tier_order = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
@@ -4935,6 +5058,7 @@ def dashboard():
                            peer_ratings_given=_peer_ratings_given,
                            last_eval_result=session.get('last_eval_result'),
                            dashboard_visit_count=_dash_visit_count,
+                           aea_dash=aea_dash,
                            just_subscribed=session.pop('just_subscribed', None),
                            quota_status=_get_quota_status(current_user))
 
@@ -10409,14 +10533,48 @@ def leaderboard():
             User.city, User.state, User.created_at,
             User.subscription_track,
         )
-        .order_by(desc('avg_score'))
+        .order_by(desc('best_score'))
         .all()
     )
 
-    # Build full list with qualification flag, then sort globally
+    # Build full list with AEA qualification, then sort globally by best_score
+    # AEA qualification: 3+ qualifying months AND 6+ images (S156 redesign)
+    AEA_MIN_MONTHS = 3
+    AEA_MIN_IMAGES = 6
+
     def _build_pg_entry(row):
         _jm  = _months_since(row.user_created_at)
         _cnt = row.image_count or 0
+        _best = float(row.best_score) if row.best_score else 0
+        # Count qualifying months for this user (distinct calendar months with scored images)
+        try:
+            _qual_months = db.session.execute(db.text("""
+                SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at))
+                FROM images
+                WHERE user_id = :uid AND score IS NOT NULL AND score > 0
+                  AND is_public = TRUE AND status = 'scored'
+                  AND (is_flagged = FALSE OR is_flagged IS NULL)
+                  AND (needs_review = FALSE OR needs_review IS NULL)
+            """), {'uid': row.user_id}).scalar() or 0
+        except Exception:
+            _qual_months = 0
+        _aea_qualified = int(_qual_months) >= AEA_MIN_MONTHS and _cnt >= AEA_MIN_IMAGES
+        # Top-6 average for AEA standing
+        _aea_avg = 0.0
+        if _aea_qualified:
+            try:
+                _top6 = db.session.execute(db.text("""
+                    SELECT score FROM images
+                    WHERE user_id = :uid AND score IS NOT NULL AND score > 0
+                      AND is_public = TRUE AND status = 'scored'
+                      AND (is_flagged = FALSE OR is_flagged IS NULL)
+                      AND (needs_review = FALSE OR needs_review IS NULL)
+                    ORDER BY score DESC LIMIT 6
+                """), {'uid': row.user_id}).fetchall()
+                if _top6:
+                    _aea_avg = round(sum(r[0] for r in _top6) / len(_top6), 2)
+            except Exception:
+                pass
         return {
             'user_id':            row.user_id,
             'username':           row.username,
@@ -10424,17 +10582,26 @@ def leaderboard():
             'city':               row.city,
             'state':              row.state,
             'avg_score':          round(float(row.avg_score), 2) if row.avg_score else 0,
-            'best_score':         float(row.best_score) if row.best_score else 0,
+            'best_score':         _best,
             'image_count':        _cnt,
+            'qualifying_months':  int(_qual_months),
             'total_peer_ratings': int(row.total_peer_ratings or 0),
             'joined_months':      _jm,
             'under_qualification': _jm < 6 or _cnt < PG_MIN_IMAGES,
+            'aea_qualified':      _aea_qualified,
+            'aea_avg':            _aea_avg,
             'subscription_track': row.subscription_track or None,
         }
 
     pg_all_built = [_build_pg_entry(r) for r in _pg_raw]
-    # Global sort: qualified first by avg desc, under-qualified last by avg desc
-    pg_all_built.sort(key=lambda p: (1 if p['under_qualification'] else 0, -p['avg_score']))
+    # Global sort: by best_score desc
+    pg_all_built.sort(key=lambda p: -p['best_score'])
+
+    # Compute percentile for each photographer
+    _total_pg = len(pg_all_built)
+    for _pi, _pe in enumerate(pg_all_built):
+        # percentile = top X% — position 1 = top, higher position = lower percentile
+        _pe['percentile'] = max(1, round((_pi / max(_total_pg, 1)) * 100)) if _total_pg > 1 else 1
 
     pg_total = len(pg_all_built)
     pg_pages = min(25, max(1, (pg_total + pg_per_page - 1) // pg_per_page))
@@ -10483,6 +10650,7 @@ def leaderboard():
                   AND i.created_at < :se
                 GROUP BY u.id, u.full_name, u.username, u.subscription_track
                 HAVING COUNT(DISTINCT DATE_TRUNC('month', i.created_at)) >= :req
+                  AND COUNT(i.id) >= 6
                 ORDER BY qualifying_months DESC
             """), {
                 'qs': _aea_qualifying_start,
@@ -10500,7 +10668,7 @@ def leaderboard():
                       AND (is_flagged = FALSE OR is_flagged IS NULL)
                       AND (needs_review = FALSE OR needs_review IS NULL)
                     ORDER BY score DESC
-                    LIMIT 3
+                    LIMIT 6
                 """), {'uid': _au[0]}).fetchall()
                 if _top3:
                     _top3_avg = round(sum(r[0] for r in _top3) / len(_top3), 2)
@@ -25393,10 +25561,21 @@ def _aea_eligibility(user_id, year):
         for r in pool_rows
     ]
 
-    eligible = active_plan and qualifying_months >= required_months
+    # S156: 6-image minimum added to AEA eligibility gate
+    required_images = 6
+    total_images    = len(image_pool)
+    eligible = active_plan and qualifying_months >= required_months and total_images >= required_images
 
     if not active_plan:
         reason = 'An active Mobile or Camera plan is required to participate.'
+    elif qualifying_months < required_months and total_images < required_images:
+        months_needed = required_months - qualifying_months
+        imgs_needed   = required_images - total_images
+        reason = (
+            f'You need {months_needed} more qualifying month{"s" if months_needed != 1 else ""} '
+            f'and {imgs_needed} more evaluated image{"s" if imgs_needed != 1 else ""} '
+            f'to qualify ({required_months} months and {required_images} images required).'
+        )
     elif qualifying_months < required_months:
         months_needed = required_months - qualifying_months
         reason = (
@@ -25405,15 +25584,23 @@ def _aea_eligibility(user_id, year):
             f'({required_months} required). '
             f'{months_needed} more month{"s" if months_needed != 1 else ""} needed.'
         )
+    elif total_images < required_images:
+        imgs_needed = required_images - total_images
+        reason = (
+            f'You need {imgs_needed} more evaluated image{"s" if imgs_needed != 1 else ""} '
+            f'to qualify ({required_images} required across any genre).'
+        )
     else:
         reason = ''
 
     return {
-        'eligible': eligible,
-        'qualifying_months': qualifying_months,
-        'required_months': required_months,
-        'active_plan': active_plan,
-        'reason': reason,
+        'eligible':           eligible,
+        'qualifying_months':  qualifying_months,
+        'required_months':    required_months,
+        'required_images':    required_images,
+        'total_images':       total_images,
+        'active_plan':        active_plan,
+        'reason':             reason,
         'season_start': season_start.strftime('%d %b %Y').lstrip('0'),
         'season_end': season_end.strftime('%d %b %Y').lstrip('0'),
         'image_pool': image_pool,
