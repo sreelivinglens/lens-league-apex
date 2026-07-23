@@ -1170,6 +1170,13 @@
   </div>
   {% endif %}
 
+  {# ── HOW YOU'RE DEVELOPING + YOUR STATS — S156 collapsible ── #}
+  <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;">
+    <button class="sc-collapse-btn" onclick="scToggle('hyd')" aria-expanded="false" aria-controls="sc-body-hyd" style="padding:14px 16px;">
+      <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);">How you're developing</span>
+      <span class="sc-collapse-chevron" id="sc-chev-hyd">&#8964;</span>
+    </button>
+    <div class="sc-collapse-body" id="sc-body-hyd">
   {# ── HOW YOU'RE DEVELOPING + YOUR STATS ───────────────────────── #}
   {# Trend lines — only shown when user has 5+ photographs evaluated #}
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-two-grid">
@@ -1265,7 +1272,7 @@
           <span style="font-size:15px; color:#185FA5;">⚙</span>
         </div>
         <div>
-          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Standard edit</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Edit suggestions</p>
           <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Balanced · Light editing</p>
         </div>
       </div>
@@ -1281,7 +1288,7 @@
           <span style="font-size:15px; color:#854F0B;">🎨</span>
         </div>
         <div>
-          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Creative edit</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Creative direction</p>
           <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Artistic · Heavy editing</p>
         </div>
       </div>
@@ -1364,8 +1371,14 @@
     </div>
     </div>{# /sc-collapse-body ddi #}
 
-  {# ── PEER VALIDATION ───────────────────────────────────────────── #}
-  {% if image.peer_rating_count and image.peer_rating_count > 0 %}
+    </div>
+  </div>
+
+  {# ── S156: Peer Evaluation CTA — moved after Share/Save/Hide ── #}
+  {# Peer validation button is injected by JS after the CTA row renders #}
+  {% if current_user.is_authenticated and (image.user_id != current_user.id) and image.status == 'scored' and image.is_public %}
+  <div style="margin-bottom:14px;">
+{% if image.peer_rating_count and image.peer_rating_count > 0 %}
   <div class="peer-block" style="margin-bottom:14px;">
     <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
     <div class="peer-strip">
@@ -1769,7 +1782,16 @@
 
 
   {# ── Metadata grid ───────────────────────────────────────────────── #}
-  <div class="meta-grid">
+  </div>
+  {# ── S156: Species / EXIF / File details — single collapsible block ── #}
+  <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;">
+    <button class="sc-collapse-btn" onclick="scToggle('meta')" aria-expanded="false" aria-controls="sc-body-meta" style="padding:12px 16px;">
+      <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);">Species · EXIF · File details</span>
+      <span class="sc-collapse-chevron" id="sc-chev-meta">&#8964;</span>
+    </button>
+    <div class="sc-collapse-body" id="sc-body-meta">
+      <div style="padding:0 0 8px;">
+  <div class="meta-grid" style="margin:0 16px 14px;">
     {% set audit_meta = image.get_audit() %}
     {% if audit_meta and audit_meta.species_display %}
     <div class="meta-card">
@@ -1855,6 +1877,9 @@
   </div>
   {% endif %}
   {% endif %}{# end owner/admin file details gate #}
+      </div>
+    </div>
+  </div>
 
   {# ── Judge/contest info ──────────────────────────────────────────── #}
   {% if image.contest_result_status == 'published' and image.judge_final_score %}
@@ -1865,102 +1890,67 @@
   </div>
   {% endif %}
 
-  {# ── DAYS SINCE + SHARE ────────────────────────────────────────── #}
+  {# ── S156: CTA row — Share · Save · Show/Hide · Peer Evaluation ── #}
   {% if image.scored_at %}
   {% set _days = ((now - image.scored_at).days) if now else 0 %}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-days-share-grid">
-    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
-      <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
-      <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
-      {# 3-mode motivational nudge #}
-      {% if _days <= 3 %}
-        <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">Your eye is still sharp from this. What did you see today?</p>
-      {% elif _days <= 14 %}
-        {% if audit and audit.days_since_language %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ audit.days_since_language }}</p>
-        {% else %}
-          {% if image.genre in ('Wildlife', 'Nature') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The behaviour you were watching for doesn&#39;t wait for a convenient morning.</p>
-          {% elif image.genre == 'Street' %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The pre-dawn market light you needed is happening right now without you.</p>
-          {% elif image.genre in ('Documentary', 'Photojournalism') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The story doesn&#39;t pause while you decide whether to go back.</p>
-          {% elif image.genre in ('Landscape', 'Landscapes') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The light on that valley is different every morning. Most mornings it&#39;s extraordinary.</p>
-          {% elif image.genre in ('People', 'Wedding') %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The face that let you this close won&#39;t always be available.</p>
-          {% else %}
-            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The eye you trained on this image needs a new frame to work on.</p>
-          {% endif %}
-        {% endif %}
-      {% else %}
-        {% if image.genre in ('Wildlife', 'Nature') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The season that made this possible doesn&#39;t stay open. It&#39;s been {{ _days }} days.</p>
-        {% elif image.genre == 'Street' %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since this. The street has changed. So have you. Go find out how.</p>
-        {% elif image.genre in ('Documentary', 'Photojournalism') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The window on this story narrows every week you don&#39;t return.</p>
-        {% elif image.genre in ('Landscape', 'Landscapes') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The season that lit this valley is already shifting.</p>
-        {% elif image.genre in ('People', 'Wedding') %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The people who made this possible are still there. Are you?</p>
-        {% else %}
-          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since your last photograph was evaluated. The eye goes quiet when it isn&#39;t used.</p>
-        {% endif %}
-      {% endif %}
+  <div style="margin-bottom:14px;">
+    {# Days since line — kept but condensed #}
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:10px;">
+      {{ _days }} day{{ 's' if _days != 1 else '' }} since this was evaluated.
+      {% if _days <= 3 %}<span style="color:var(--text-secondary);font-style:italic;">Your eye is still sharp from this.</span>{% endif %}
     </div>
-    <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
-      {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
-
-      {# ── Make public notice — Session 152 #}
-      {# Private images return 404 on /card/<token> — warn before share tap #}
-      {% if not image.is_public and not image.is_flagged and not image.needs_review %}
-      <div style="background:#FFF8E6; border:1px solid #E8C96B; border-radius:8px; padding:14px 16px; font-size:15px; color:#5a4a00; line-height:1.7;">
-        <strong>This photograph is private.</strong><br>
-        Make it public first so the link works for anyone you share it with.
-        {% if current_user.is_authenticated and image.user_id == current_user.id and image.status == 'scored' %}
-        <form method="POST" action="{{ url_for('owner_toggle_visibility', image_id=image.id) }}" style="margin:10px 0 0;" id="share-make-public-form">
-          <button type="submit" style="background:#2C3E6B; color:#ffffff; border:none; font-size:15px; font-weight:700; padding:12px 22px; border-radius:4px; cursor:pointer; font-family:inherit; min-height:44px;">
-            🌐 Make Public &amp; Share
-          </button>
-        </form>
-        <script>
-        document.getElementById('share-make-public-form').addEventListener('submit', function(e) {
-          e.preventDefault();
-          fetch(this.action, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
-            .then(r => r.json()).then(function() { window.location.reload(); });
-        });
-        </script>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {# ── Share button #}
+    {# CTA buttons in order: Share · Save · Show/Hide · Peer Evaluation #}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      {# Share #}
       {% if image.share_token %}
-      <a href="{{ url_for('public_card', token=image.share_token) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
-        ↗ Share this evaluation
+      <a href="{{ url_for('public_card', token=image.share_token) }}"
+         class="btn btn-solid"
+         style="font-size:15px;padding:12px 18px;text-align:center;min-height:44px;">
+        ↗ Share
       </a>
       {% else %}
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid sc-share-btn" style="font-size:15px; padding:14px; text-align:center;">
-        ↗ Share this evaluation
+      <a href="{{ url_for('share_image', image_id=image.id) }}"
+         class="btn btn-solid"
+         style="font-size:15px;padding:12px 18px;text-align:center;min-height:44px;">
+        ↗ Share
       </a>
       {% endif %}
-
-      {# ── Save Evaluation — downloads polaroid card JPG. Session 153. KYC fix. #}
+      {# Save #}
       {% if image.card_url and image.share_token %}
       <a href="{{ url_for('public_card_download', token=image.share_token) }}"
-         download class="btn sc-share-btn"
-         style="font-size:15px; padding:14px; text-align:center; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE; text-decoration:none;">
-        ↓ Save Evaluation
+         download class="btn"
+         style="font-size:15px;padding:12px 18px;min-height:44px;background:#E8F4FD;color:#185FA5;border:1px solid #B3D4EE;text-decoration:none;">
+        ↓ Save
       </a>
       {% elif image.share_token %}
       <a href="{{ url_for('public_card', token=image.share_token) }}"
-         class="btn sc-share-btn"
-         style="font-size:15px; padding:14px; text-align:center; background:#E8F4FD; color:#185FA5; border:1px solid #B3D4EE; text-decoration:none;">
-        ↓ Save Evaluation
+         class="btn"
+         style="font-size:15px;padding:12px 18px;min-height:44px;background:#E8F4FD;color:#185FA5;border:1px solid #B3D4EE;text-decoration:none;">
+        ↓ Save
       </a>
       {% endif %}
+      {# Show / Hide toggle — always shows "Show" first as instructed #}
+      {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and not image.is_flagged and not image.needs_review %}
+      <form method="POST" action="{{ url_for('owner_toggle_visibility', image_id=image.id) }}" style="display:inline;" id="cta-vis-toggle">
+        <button type="submit" class="btn" style="font-size:15px;padding:12px 18px;min-height:44px;">
+          {{ '🔒 Hide' if image.is_public else '🌐 Show' }}
+        </button>
+      </form>
+      <script>
+      document.getElementById('cta-vis-toggle').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch(this.action, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+          .then(r => r.json()).then(function() { window.location.reload(); });
+      });
+      </script>
+      {% endif %}
     </div>
+    {# Private image warning #}
+    {% if not image.is_public and not image.is_flagged and not image.needs_review %}
+    <div style="background:#FFF8E6;border:1px solid #E8C96B;border-radius:8px;padding:10px 14px;font-size:14px;color:#5a4a00;line-height:1.7;margin-top:10px;">
+      This photograph is private — make it public so shared links work.
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -2264,7 +2254,7 @@ function scToggle(id) {
 // WSO and others start closed
 document.addEventListener('DOMContentLoaded', function() {
   // All sections start collapsed except DDI
-  ['wso','c1','c2','c3','c4'].forEach(function(id) {
+  ['wso','c1','c2','c3','c4','hyd','meta'].forEach(function(id) {
     var body = document.getElementById('sc-body-' + id);
     var prev = document.getElementById('sc-prev-' + id);
     if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
