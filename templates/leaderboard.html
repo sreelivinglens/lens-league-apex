@@ -535,23 +535,23 @@ body { overflow-x: hidden; }
 
 {# Pagination #}
 {% if _img_pages > 1 %}
-<nav style="display:flex;gap:6px;margin-bottom:20px;align-items:center;" aria-label="Image pages">
+<div style="display:flex;gap:4px;margin-bottom:20px;align-items:center;" role="navigation" aria-label="Image pages">
   {% if _img_page > 1 %}
-  <a href="?tab=images&track={{ track }}&img_page={{ _img_page - 1 }}" style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border);border-radius:5px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">&lsaquo; Prev</a>
+  <a href="?tab=images&track={{ track }}&img_page={{ _img_page - 1 }}" style="font-size:15px;padding:6px 10px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">&lsaquo; Prev</a>
   {% endif %}
   {% for _p in range(1, _img_pages + 1) %}
     {% if _p == _img_page %}
-    <span style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border-strong);border-radius:5px;background:var(--surface-1);color:var(--text-primary);font-family:var(--font-mono);">{{ _p }}</span>
+    <span style="font-size:15px;padding:6px 10px;color:var(--text-primary);font-weight:700;font-family:var(--font-mono);border-bottom:2px solid #C8A84B;">{{ _p }}</span>
     {% elif _p == 1 or _p == _img_pages or (_p >= _img_page - 2 and _p <= _img_page + 2) %}
-    <a href="?tab=images&track={{ track }}&img_page={{ _p }}" style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border);border-radius:5px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">{{ _p }}</a>
+    <a href="?tab=images&track={{ track }}&img_page={{ _p }}" style="font-size:15px;padding:6px 10px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">{{ _p }}</a>
     {% elif _p == _img_page - 3 or _p == _img_page + 3 %}
-    <span style="font-size:13px;color:var(--text-muted);font-family:var(--font-mono);">&hellip;</span>
+    <span style="font-size:15px;padding:6px 4px;color:var(--text-muted);font-family:var(--font-mono);">&hellip;</span>
     {% endif %}
   {% endfor %}
   {% if _img_page < _img_pages %}
-  <a href="?tab=images&track={{ track }}&img_page={{ _img_page + 1 }}" style="font-size:13px;padding:6px 12px;border:0.5px solid var(--border-strong);border-radius:5px;color:var(--text-primary);text-decoration:none;font-family:var(--font-mono);">Next &rsaquo;</a>
+  <a href="?tab=images&track={{ track }}&img_page={{ _img_page + 1 }}" style="font-size:15px;padding:6px 10px;color:var(--text-muted);text-decoration:none;font-family:var(--font-mono);">Next &rsaquo;</a>
   {% endif %}
-</nav>
+</div>
 {% endif %}
 
 </div>
