@@ -5382,7 +5382,8 @@ def _build_progress_data(user):
 
     # Per-dimension trend + pill — last 8 images, for dashboard sparkline charts
     # Pill logic: first-half vs second-half average (matches scorecard _trend_pill)
-    dim_trend_imgs = scored[-8:]
+    _dim_window = min(10, len(scored))  # S156: use up to 10, show actual count
+    dim_trend_imgs = scored[-_dim_window:]
     dim_trends = {}
     dim_pills  = {}
 
@@ -5394,9 +5395,9 @@ def _build_progress_data(user):
         first  = sum(clean[:mid]) / mid
         second = sum(clean[mid:]) / (len(clean) - mid)
         diff   = second - first
-        if diff > 0.3:
+        if diff > 0.15:   # S156: lowered from 0.3 — 0.3 suppressed genuine improvement signals
             return 'up'
-        if diff < -0.3:
+        if diff < -0.15:
             return 'down'
         return 'steady'
 
@@ -5551,6 +5552,7 @@ def _build_progress_data(user):
         'dim_trends':     dim_trends,
         'dim_pills':      dim_pills,
         'dim_sparklines':      dim_sparklines,
+        'dim_window':         len(dim_trend_imgs),  # actual count used (up to 10)
         'dim_mission_indices':  dim_mission_indices,
         'practise_feedback':    practise_feedback,
         'strongest':      strongest,
