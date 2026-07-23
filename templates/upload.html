@@ -685,7 +685,7 @@
       Continue to Dashboard →
     </a>
     <p style="margin:10px auto 0; max-width:280px; font-size:14px; color:#854F0B; opacity:0.75; line-height:1.65; text-align:center;">
-      Your image is being read forensically — light, geometry, moment, species. We'll notify you the moment it's done.
+      We'll notify you the moment it's ready.
     </p>
   </div>
 </div>
@@ -1146,7 +1146,7 @@
   });
 
   // ── Score polling — checks /score-status every 2s after upload ──────────
-  // S156-P1: Cancel/Retry button appears after 30s — Unni 300s hang fix.
+  // S156-P1: Cancel/Retry button appears after 60s — scoring normally takes 60-90s.
   // S156-P2: XHR onerror (maintenance page / 503) now shows upload-still-processing warning.
   function _startPolling(imageId, nextPage) {
     var _pollErrCount = 0;
@@ -1250,7 +1250,7 @@
         var cancelBtn = document.createElement('button');
         cancelBtn.id = 'slCancelBtn';
         cancelBtn.type = 'button';
-        cancelBtn.textContent = 'Taking longer than usual — go to dashboard';
+        cancelBtn.textContent = 'Still working — you can go to dashboard and we\'ll notify you when done';
         cancelBtn.style.cssText = [
           'background:#2C3E6B',
           'color:#F5C518',
