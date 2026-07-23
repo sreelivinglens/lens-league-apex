@@ -1245,12 +1245,46 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% if progress_data %}
     <div style="margin-bottom:16px;">
       <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">My Standing</div>
+
+      {# ── AEA Standing — primary number if qualified ── #}
+      {% if aea_dash and aea_dash.qualified and aea_dash.top6_avg %}
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
+        <span style="font-size:40px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
+        <span style="font-size:14px;color:var(--d-muted);">AEA standing · top 6 evaluations</span>
+      </div>
+      <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:2px;">Top {{ aea_dash.percentile }}%</div>
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:10px;">{{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League{% if aea_dash.league_rank %} &middot; #{{ aea_dash.league_rank }} qualifier{% endif %}</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px;padding:8px 12px;background:var(--d-cream);border-radius:6px;">
+        <span style="font-size:18px;font-weight:700;color:var(--d-muted);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
+        <span style="font-size:13px;color:var(--d-muted);">Lifetime average evaluation · {{ progress_data.count }} images</span>
+      </div>
+      {% else %}
+      {# Not yet qualified — lifetime average as primary #}
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
         <span style="font-size:32px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
         <span style="font-size:14px;color:var(--d-muted);">Average evaluation</span>
       </div>
       <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
       <div style="font-size:14px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
+      {% if aea_dash %}
+      {# Show AEA progress in modal for non-qualified users #}
+      <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1B4F72;margin-bottom:6px;">Annual Excellence Award</div>
+        <div style="display:flex;gap:5px;margin-bottom:6px;">
+          {% for m in range(aea_dash.required_months) %}
+          <div style="flex:1;height:5px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+          {% endfor %}
+        </div>
+        <div style="font-size:13px;color:#0B7A78;font-weight:500;">
+          {% if aea_dash.months_needed > 0 and aea_dash.images_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} · {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
+          {% elif aea_dash.months_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} needed.
+          {% else %}{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.{% endif %}
+        </div>
+        {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:4px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+      </div>
+      {% endif %}
+      {% endif %}
+
       <div style="height:5px;background:var(--d-border);border-radius:3px;margin-bottom:16px;">
         <div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--d-gold);border-radius:3px;"></div>
       </div>
