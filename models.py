@@ -328,6 +328,13 @@ class Image(db.Model):
 
     _audit_json         = db.Column('audit_json', db.Text, nullable=True)
 
+    # Session 160 — Theme-aware DDI
+    # Populated when image is scored in context of a MIM session or Weekly Challenge.
+    # mim_theme_score:     DDI engine's 1–10 assessment of theme relevance
+    # mim_theme_paragraph: one coaching sentence on what the image does / misses thematically
+    mim_theme_score     = db.Column(db.Float, nullable=True)
+    mim_theme_paragraph = db.Column(db.Text,  nullable=True)
+
     def set_audit(self, data: dict):
         self._audit_json = json.dumps(data)
 
