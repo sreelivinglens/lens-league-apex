@@ -1,4 +1,4 @@
-<!-- Version: Session 159b · 2026-07-24 06:59 -->
+<!-- Version: Session 159c · 2026-07-24 07:14 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
 #   Days-since + share block moved to bottom of page (below metadata grid, above visibility row);
@@ -1685,12 +1685,15 @@
   </div>
 
   {% else %}
-  {# ── Free tier CTA ─────────────────────────────────────────────── #}
+  {# ── Free tier CTA — only shown to the image owner, never to other visitors ── #}
+  {# Subscribed users viewing someone else's image see the public scorecard only  #}
+  {% if current_user.is_authenticated and image.user_id == current_user.id %}
   <div style="padding:20px 24px; background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius-md) var(--radius-md) 0; margin-bottom:14px;">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">What to do next</div>
     <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full evaluation card — the mentor's advice, the creative direction, and the edit guide.</div>
     <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px; font-size:15px;">Unlock →</a>
   </div>
+  {% endif %}
   {% endif %}{# end subscriber gate #}
 
   {% endif %}{# end owner/admin gate #}
