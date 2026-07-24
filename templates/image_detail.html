@@ -1355,6 +1355,8 @@
   </div>
   {% endif %}
   {% endif %}
+    </div>{# /sc-body-hyd #}
+  </div>{# /hyd card #}
 
   {# ── DDI DIMENSIONS — collapsible (S156) ──────────────────────── #}
   {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
@@ -1385,7 +1387,6 @@
     </div>
     </div>{# /sc-collapse-body ddi #}
     </div>
-  </div>
   {% endif %}{# end if dod_score gate #}
 
   {# ── S156: Peer Evaluation CTA — moved after Share/Save/Hide ── #}
@@ -1763,7 +1764,6 @@
       <p style="margin:0; font-size:16px; color:#F5C518; font-style:italic;">{{ audit.days_since_language }}</p>
     </div>
     {% endif %}
-  </div>
   </div>{# /loc padding #}
     </div>{# /sc-collapse-body loc #}
   </div>{# /loc card #}
