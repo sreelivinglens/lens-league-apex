@@ -1176,7 +1176,7 @@
 
   {# ── THIS WEEK'S CHALLENGE ─────────────────────────────────────── #}
   {% if weekly_challenge %}
-  <div style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:16px 20px; margin-bottom:14px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:16px 20px; margin-bottom:14px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; max-width:640px;">
     <div>
       <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
       <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
@@ -1186,7 +1186,7 @@
   {% endif %}
 
   {# ── HOW YOU'RE DEVELOPING + YOUR STATS — S156 collapsible ── #}
-  <div style="background:var(--surface-2);border:1px solid var(--border-strong);border-radius:12px;margin-bottom:14px;overflow:hidden;">
+  <div style="background:var(--surface-2);border:1px solid var(--border-strong);border-radius:12px;margin-bottom:14px;overflow:hidden;max-width:640px;">
     <button class="sc-collapse-btn" onclick="scToggle('hyd')" aria-expanded="false" aria-controls="sc-body-hyd" style="padding:14px 16px;">
       <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);">How you're developing</span>
       <span class="sc-collapse-chevron" id="sc-chev-hyd">&#8964;</span>
@@ -1697,7 +1697,7 @@
      personalised directions). Not appropriate to show to other visitors. #}
   {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   {% if audit and audit.mentor_location_1 %}
-  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; margin-bottom:14px; overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; margin-bottom:14px; overflow:hidden; max-width:640px;">
     <button class="sc-collapse-btn" onclick="scToggle('loc')" aria-expanded="false" aria-controls="sc-body-loc"
             style="padding:14px 20px;width:100%;text-align:left;">
       <div style="display:flex; align-items:center; gap:10px;">
@@ -1775,7 +1775,7 @@
 
 
   {# ── S156: Species / EXIF / File details — single collapsible block ── #}
-  <div style="background:var(--surface-2);border:1px solid var(--border-strong);border-radius:12px;overflow:hidden;margin-bottom:14px;">
+  <div style="background:var(--surface-2);border:1px solid var(--border-strong);border-radius:12px;overflow:hidden;margin-bottom:14px;max-width:640px;">
     <button class="sc-collapse-btn" onclick="scToggle('meta')" aria-expanded="false" aria-controls="sc-body-meta" style="padding:12px 16px;">
       <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);">Species · EXIF · File details</span>
       <span class="sc-collapse-chevron" id="sc-chev-meta">&#8964;</span>
