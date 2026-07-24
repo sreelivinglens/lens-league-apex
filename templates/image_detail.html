@@ -1,4 +1,4 @@
-<!-- Version: Session 159c · 2026-07-24 07:14 -->
+<!-- Version: Session 159d · 2026-07-24 07:37 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
 #   Days-since + share block moved to bottom of page (below metadata grid, above visibility row);
@@ -1684,17 +1684,7 @@
     <span style="display:block; margin-top:5px; opacity:0.65;">Evaluation run by {{ image.photographer_name or current_user.full_name or current_user.username }} · Evaluated by Apex DDI Engine · {{ image.scored_at.strftime('%d %b %Y') if image.scored_at else image.created_at.strftime('%d %b %Y') if image.created_at else '' }}</span>
   </div>
 
-  {% else %}
-  {# ── Free tier CTA — only shown to the image owner, never to other visitors ── #}
-  {# Subscribed users viewing someone else's image see the public scorecard only  #}
-  {% if current_user.is_authenticated and image.user_id == current_user.id %}
-  <div style="padding:20px 24px; background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius-md) var(--radius-md) 0; margin-bottom:14px;">
-    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">What to do next</div>
-    <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full evaluation card — the mentor's advice, the creative direction, and the edit guide.</div>
-    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px; font-size:15px;">Unlock →</a>
-  </div>
-  {% endif %}
-  {% endif %}{# end subscriber gate #}
+  {% endif %}{# end subscriber gate — no free-tier CTA needed: owner always subscribed or UAT #}
 
   {% endif %}{# end owner/admin gate #}
   {% endif %}{# end if scored #}
