@@ -1,3 +1,7 @@
+# SL-VERSION: 160.0 (Session 160 — Theme-aware DDI: /api/mim-ddi accepts ?theme= param,
+#   scores theme relevance separately (mim_theme_score 1–10 + mim_theme_paragraph coaching line),
+#   persists to images table. Weekly Challenge upload + retry_score paths inject challenge
+#   prompt_title as theme context. DB migration: mim_theme_score + mim_theme_paragraph columns.)
 # SL-VERSION: 152.0 (Session 152 — sitemap additions, health DB check, admin emails Inter fix, onboarding E1-E7 drip, /share/ redirect, portrait compositor fix)
 # SL-VERSION: 139.0 (Session 139 — city_event_scan: live event advisory, tier pagination fix)
 # SL-VERSION: 115.1 (Session 115 — CSI (Cultural Saturation Intelligence): cross-user 95% phash note,
@@ -1864,6 +1868,24 @@ def _run_startup_tasks():
             except Exception as _ac_mig:
                 db.session.rollback()
                 print(f'Admin curation columns migration warning: {_ac_mig}')
+
+            # ── Session 160: Theme-aware DDI columns ──────────────────────────
+            # mim_theme_score:     DDI engine's 1–10 theme relevance score
+            # mim_theme_paragraph: one coaching sentence on theme response
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS "
+                    "mim_theme_score FLOAT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS "
+                    "mim_theme_paragraph TEXT DEFAULT NULL"
+                ))
+                db.session.commit()
+                print('Session 160: mim_theme columns OK.')
+            except Exception as _mim_mig:
+                db.session.rollback()
+                print(f'Session 160: mim_theme migration warning: {_mim_mig}')
 
             # ── CSI (Cultural Saturation Intelligence) tables ─────────────────
             try:
@@ -7881,6 +7903,37 @@ def upload():
 
                         _recent_masters = (_sc_portfolio or {}).get('recent_masters', [])
                         _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters)
+
+                        # ── Session 160: Weekly Challenge theme injection ──────────────
+                        # If this image is submitted to an active weekly challenge,
+                        # pull the challenge prompt_title and inject a theme context
+                        # block so the engine scores theme relevance alongside craft.
+                        _weekly_theme_ctx = ''
+                        try:
+                            _ws_row = db.session.execute(db.text(
+                                "SELECT wc.prompt_title FROM weekly_submissions ws "
+                                "JOIN weekly_challenges wc ON ws.challenge_id = wc.id "
+                                "WHERE ws.image_id = :iid ORDER BY ws.submitted_at DESC LIMIT 1"
+                            ), {'iid': _img.id}).fetchone()
+                            if _ws_row and _ws_row.prompt_title:
+                                _wt = _ws_row.prompt_title.strip().upper()
+                                _weekly_theme_ctx = (
+                                    f"\n\nWEEKLY CHALLENGE THEME: {_wt}\n"
+                                    f"This image was submitted to the Weekly Challenge on the theme of "
+                                    f"{_ws_row.prompt_title.strip().title()}. In addition to your standard "
+                                    f"DDI evaluation, assess theme relevance:\n"
+                                    f"1. Add a field 'mim_theme_score' (float 1.0–10.0): how directly and "
+                                    f"compellingly does this image respond to the theme of "
+                                    f"{_ws_row.prompt_title.strip().title()}? "
+                                    f"10 = the theme is the image's core idea, unmissable. "
+                                    f"1 = the theme is absent or accidental.\n"
+                                    f"2. Add a field 'mim_theme_paragraph' (one sentence, max 40 words): "
+                                    f"a specific coaching observation about what this image does or misses "
+                                    f"thematically. Name what you see. Be direct."
+                                )
+                        except Exception as _wte:
+                            app.logger.debug(f'[auto_score] weekly theme lookup failed: {_wte}')
+
                         result = _auto_score_with_timeout(
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
@@ -7898,7 +7951,7 @@ def upload():
                                 camera_track=_img.camera_track,
                                 genre=_img.genre or '',
                             ) if _img.camera_track == 'mobile' or _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
-                            seasonal_context  = _sc_seasonal_ctx + _csi_boost_ctx,
+                            seasonal_context  = _sc_seasonal_ctx + _csi_boost_ctx + _weekly_theme_ctx,
                             portfolio_summary = _sc_portfolio,
                             user_city         = _sc_user_city,
                             primary_genre     = _sc_primary_genre,
@@ -7907,6 +7960,19 @@ def upload():
                             previous_audit    = _near_match_previous['audit'] if _near_match_previous else None,
                             masters_by_genre  = _masters_for_score,
                         )
+
+                        # ── Persist weekly theme score if engine returned it ────────────
+                        try:
+                            _wts = result.get('mim_theme_score')
+                            _wtp = (result.get('mim_theme_paragraph') or '').strip() or None
+                            if _wts is not None and _weekly_theme_ctx:
+                                _img.mim_theme_score     = float(_wts)
+                                _img.mim_theme_paragraph = _wtp
+                                app.logger.warning(
+                                    f'[auto_score] weekly theme_score={_wts} image={_img.id}'
+                                )
+                        except Exception as _wtp_err:
+                            app.logger.debug(f'[auto_score] weekly theme persist failed: {_wtp_err}')
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
                         _img.ai_suspicion        = ai_suspicion
@@ -8857,6 +8923,33 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                         except Exception as _var_err2:
                             app.logger.debug(f'[retry_score] variety history extraction failed: {_var_err2}')
 
+            # ── Session 160: Weekly Challenge theme injection (retry path) ───
+            _retry_weekly_theme_ctx = ''
+            try:
+                _retry_ws = db.session.execute(db.text(
+                    "SELECT wc.prompt_title FROM weekly_submissions ws "
+                    "JOIN weekly_challenges wc ON ws.challenge_id = wc.id "
+                    "WHERE ws.image_id = :iid ORDER BY ws.submitted_at DESC LIMIT 1"
+                ), {'iid': img.id}).fetchone()
+                if _retry_ws and _retry_ws.prompt_title:
+                    _rwt = _retry_ws.prompt_title.strip().upper()
+                    _retry_weekly_theme_ctx = (
+                        f"\n\nWEEKLY CHALLENGE THEME: {_rwt}\n"
+                        f"This image was submitted to the Weekly Challenge on the theme of "
+                        f"{_retry_ws.prompt_title.strip().title()}. In addition to your standard "
+                        f"DDI evaluation, assess theme relevance:\n"
+                        f"1. Add a field 'mim_theme_score' (float 1.0–10.0): how directly and "
+                        f"compellingly does this image respond to the theme of "
+                        f"{_retry_ws.prompt_title.strip().title()}? "
+                        f"10 = the theme is the image's core idea, unmissable. "
+                        f"1 = the theme is absent or accidental.\n"
+                        f"2. Add a field 'mim_theme_paragraph' (one sentence, max 40 words): "
+                        f"a specific coaching observation about what this image does or misses "
+                        f"thematically. Name what you see. Be direct."
+                    )
+            except Exception as _rwte:
+                app.logger.debug(f'[retry_score] weekly theme lookup failed: {_rwte}')
+
             result = _auto_score_with_timeout(
                 image_path        = thumb_path,
                 genre             = img.genre,
@@ -8866,7 +8959,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 subject           = img.subject,
                 location          = img.location,
                 exif_context      = _exif_ctx,
-                seasonal_context  = _seasonal_ctx,
+                seasonal_context  = _seasonal_ctx + _retry_weekly_theme_ctx,
                 portfolio_summary = _portfolio_summary,
                 user_city         = _user_city,
                 primary_genre     = _primary_genre or img.genre or '',
@@ -8875,6 +8968,19 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 same_image_rescore = bool(old_score is not None and _prior_audit_for_stability),
                 image_number      = _image_number,
             )
+
+            # ── Persist weekly theme score if engine returned it ───────────────
+            try:
+                _rts = result.get('mim_theme_score')
+                _rtp = (result.get('mim_theme_paragraph') or '').strip() or None
+                if _rts is not None and _retry_weekly_theme_ctx:
+                    img.mim_theme_score     = float(_rts)
+                    img.mim_theme_paragraph = _rtp
+                    app.logger.warning(
+                        f'[retry_score] weekly theme_score={_rts} image={img.id}'
+                    )
+            except Exception as _rtp_err:
+                app.logger.debug(f'[retry_score] weekly theme persist failed: {_rtp_err}')
 
             img.dod_score        = float(result.get('dod', 0))
             img.disruption_score = float(result.get('disruption', 0))
@@ -26438,11 +26544,20 @@ def api_mim_ddi():
     if not filename:
         return jsonify({'error': 'filename required'}), 400
 
+    # ── Optional theme param (Session 160) ────────────────────────────────────
+    # MIM passes the session theme (e.g. "REFLECTION") so DDI can score
+    # theme relevance separately from craft.
+    mim_theme = request.args.get('theme', '').strip().upper() or None
+
     try:
         row = db.session.execute(
             db.text(
                 "SELECT id, score, tier, genre, dod_score, disruption_score, "
-                "dm_score, wonder_score, aq_score, audit_json "
+                "dm_score, wonder_score, aq_score, audit_json, "
+                "thumb_path, thumb_url, asset_name, photographer_name, "
+                "subject, location, exif_make, exif_model, exif_focal_length_35mm, "
+                "exif_lens, exif_software, exif_has_gps, camera_track, "
+                "mim_theme_score, mim_theme_paragraph "
                 "FROM images "
                 "WHERE original_filename = :fn AND status = 'scored' "
                 "ORDER BY scored_at DESC LIMIT 1"
@@ -26463,9 +26578,6 @@ def api_mim_ddi():
     try:
         if row.audit_json:
             _audit = _json.loads(row.audit_json)
-            # byline_1 = "What you did that others didn't" card
-            # byline_2_body = Assignment card
-            # background_check / hard_truth = core coaching
             _b1 = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
             _b2 = (_audit.get('byline_2_body') or _audit.get('byline_2') or '').strip()
             narrative = '\n\n'.join(filter(None, [_b1, _b2]))
@@ -26476,29 +26588,119 @@ def api_mim_ddi():
     dimensions = {}
     try:
         dimensions = {
-            'DoD':       float(row.dod_score)         if row.dod_score         is not None else None,
-            'Disruption':float(row.disruption_score)  if row.disruption_score  is not None else None,
-            'DM':        float(row.dm_score)           if row.dm_score          is not None else None,
-            'Wonder':    float(row.wonder_score)       if row.wonder_score      is not None else None,
-            'AQ':        float(row.aq_score)           if row.aq_score          is not None else None,
+            'DoD':        float(row.dod_score)        if row.dod_score        is not None else None,
+            'Disruption': float(row.disruption_score) if row.disruption_score is not None else None,
+            'DM':         float(row.dm_score)          if row.dm_score         is not None else None,
+            'Wonder':     float(row.wonder_score)      if row.wonder_score     is not None else None,
+            'AQ':         float(row.aq_score)          if row.aq_score         is not None else None,
         }
     except Exception:
         pass
 
+    # ── Theme scoring (Session 160) ───────────────────────────────────────────
+    # If MIM passes a theme AND we don't already have a theme score for this
+    # image+theme combination, run a focused re-score with theme context injected.
+    # Result is stored on the image row so repeat calls are instant (no re-score).
+    ddi_theme_score     = row.mim_theme_score     if row.mim_theme_score     is not None else None
+    ddi_theme_paragraph = row.mim_theme_paragraph if row.mim_theme_paragraph is not None else None
+
+    if mim_theme and ddi_theme_score is None:
+        try:
+            import tempfile, os as _os
+            from engine.auto_score import auto_score as _auto_score_fn, build_exif_context as _bec
+            import urllib.request as _ureq
+
+            # Resolve thumb — prefer local path, fall back to R2 download
+            _thumb = row.thumb_path
+            _tmp   = None
+            if not _thumb or not _os.path.exists(_thumb):
+                if row.thumb_url:
+                    _tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    _ureq.urlretrieve(row.thumb_url, _tf.name)
+                    _tf.close()
+                    _thumb = _tmp = _tf.name
+
+            if _thumb and _os.path.exists(_thumb):
+                # Build theme context block — injected into seasonal_context
+                _theme_ctx = (
+                    f"\n\nMIM SESSION THEME: {mim_theme}\n"
+                    f"This image was shot for a structured group session on the theme of "
+                    f"{mim_theme.title()}. In addition to your standard DDI evaluation, "
+                    f"you must also assess theme relevance:\n"
+                    f"1. Add a field 'mim_theme_score' (float 1.0–10.0): how directly and "
+                    f"compellingly does this image respond to the theme of {mim_theme.title()}? "
+                    f"10 = the theme is the image's core idea, unmissable. "
+                    f"1 = the theme is absent or accidental.\n"
+                    f"2. Add a field 'mim_theme_paragraph' (one sentence, max 40 words): "
+                    f"a specific coaching observation about what this image does or misses "
+                    f"thematically. Name what you see. Be direct."
+                )
+
+                _exif_ctx = ''
+                try:
+                    _exif_ctx = _bec(
+                        {'make': row.exif_make, 'model': row.exif_model,
+                         'focal_length_35mm': row.exif_focal_length_35mm,
+                         'lens': row.exif_lens, 'software': row.exif_software,
+                         'has_gps': row.exif_has_gps},
+                        camera_track=row.camera_track or '',
+                        genre=row.genre or '',
+                    ) if (row.camera_track == 'mobile' or row.exif_make or row.exif_model) else ''
+                except Exception:
+                    pass
+
+                _theme_result = _auto_score_fn(
+                    image_path       = _thumb,
+                    genre            = row.genre,
+                    title            = row.asset_name,
+                    photographer     = row.photographer_name,
+                    subject          = row.subject,
+                    location         = row.location,
+                    exif_context     = _exif_ctx,
+                    seasonal_context = _theme_ctx,
+                )
+
+                _ts  = _theme_result.get('mim_theme_score')
+                _tp  = _theme_result.get('mim_theme_paragraph', '').strip()
+
+                if _ts is not None:
+                    ddi_theme_score     = float(_ts)
+                    ddi_theme_paragraph = _tp or None
+                    # Persist so repeat API calls are instant
+                    db.session.execute(db.text(
+                        "UPDATE images SET mim_theme_score=:ts, mim_theme_paragraph=:tp "
+                        "WHERE id=:iid"
+                    ), {'ts': ddi_theme_score, 'tp': ddi_theme_paragraph, 'iid': row.id})
+                    db.session.commit()
+                    app.logger.warning(
+                        f'[mim-ddi] theme={mim_theme} image={row.id} '
+                        f'theme_score={ddi_theme_score}'
+                    )
+
+            if _tmp:
+                try: _os.unlink(_tmp)
+                except: pass
+
+        except Exception as _te:
+            app.logger.error(f'[mim-ddi] theme scoring failed image={row.id}: {_te}')
+            # Non-fatal — craft DDI still returned below
+
     app.logger.warning(
-        f'[mim-ddi] ✅ filename={filename} score={row.score} tier={row.tier}'
+        f'[mim-ddi] ✅ filename={filename} score={row.score} tier={row.tier} '
+        f'theme={mim_theme} theme_score={ddi_theme_score}'
     )
 
     return jsonify({
-        'found':         True,
-        'image_id':      row.id,
-        'ddi_score':     float(row.score)  if row.score is not None else None,
-        'ddi_craft':     float(row.score)  if row.score is not None else None,
-        'ddi_theme':     None,             # MIM human eval handles theme score
-        'tier':          row.tier or '',
-        'genre':         row.genre or '',
-        'ddi_narrative': narrative,
-        'dimensions':    dimensions,
+        'found':                True,
+        'image_id':             row.id,
+        'ddi_score':            float(row.score) if row.score is not None else None,
+        'ddi_craft':            float(row.score) if row.score is not None else None,
+        'ddi_theme':            ddi_theme_score,
+        'ddi_theme_paragraph':  ddi_theme_paragraph,
+        'tier':                 row.tier or '',
+        'genre':                row.genre or '',
+        'ddi_narrative':        narrative,
+        'dimensions':           dimensions,
     })
 
 
