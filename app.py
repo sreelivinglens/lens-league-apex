@@ -1,3 +1,6 @@
+# SL-VERSION: 160.1 (Session 160 — MIM webhook push: after scoring, SL POSTs DDI scores
+#   to MIM /api/sl-ddi-push if original_filename matches a MIM image. Non-fatal.
+#   Requires MIM_API_URL env var on SL Railway (set to https://makingimagesmatter.com).)
 # SL-VERSION: 160.0 (Session 160 — Theme-aware DDI: /api/mim-ddi accepts ?theme= param,
 #   scores theme relevance separately (mim_theme_score 1–10 + mim_theme_paragraph coaching line),
 #   persists to images table. Weekly Challenge upload + retry_score paths inject challenge
@@ -8526,6 +8529,52 @@ def upload():
                                 db.session.commit()
                             except Exception:
                                 app.logger.error(f'[upload card build error] {traceback.format_exc()}')
+
+                            # ── Session 160: Push DDI to MIM if original_filename matches ──
+                            # Non-fatal — scoring is already complete. Push fires async.
+                            try:
+                                if _img.original_filename and not _img.is_flagged:
+                                    _mim_api_key = os.environ.get('MIM_SL_API_KEY', '')
+                                    _mim_url     = os.environ.get('MIM_API_URL', 'https://makingimagesmatter.com')
+                                    if _mim_api_key and _mim_url:
+                                        import urllib.request as _mim_req
+                                        import json as _mim_json
+                                        _dims = {
+                                            'DoD':        float(_img.dod_score)        if _img.dod_score        is not None else None,
+                                            'Disruption': float(_img.disruption_score) if _img.disruption_score is not None else None,
+                                            'DM':         float(_img.dm_score)          if _img.dm_score         is not None else None,
+                                            'Wonder':     float(_img.wonder_score)      if _img.wonder_score     is not None else None,
+                                            'AQ':         float(_img.aq_score)          if _img.aq_score         is not None else None,
+                                        }
+                                        _audit_for_push = _img.get_audit() or {}
+                                        _b1 = (_audit_for_push.get('background_check') or _audit_for_push.get('byline_1') or '').strip()
+                                        _b2 = (_audit_for_push.get('byline_2_body') or _audit_for_push.get('byline_2') or '').strip()
+                                        _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
+                                        _payload = _mim_json.dumps({
+                                            'api_key':             _mim_api_key,
+                                            'filename':            _img.original_filename,
+                                            'ddi_score':           float(_img.score) if _img.score else None,
+                                            'ddi_craft':           float(_img.score) if _img.score else None,
+                                            'ddi_theme':           float(_img.mim_theme_score) if _img.mim_theme_score is not None else None,
+                                            'ddi_theme_paragraph': _img.mim_theme_paragraph or '',
+                                            'ddi_narrative':       _narrative,
+                                            'dimensions':          _dims,
+                                        }).encode('utf-8')
+                                        _push_req = _mim_req.Request(
+                                            f'{_mim_url}/api/sl-ddi-push',
+                                            data=_payload,
+                                            headers={'Content-Type': 'application/json',
+                                                     'User-Agent': 'ShutterLeague/1.0'},
+                                            method='POST'
+                                        )
+                                        with _mim_req.urlopen(_push_req, timeout=10) as _pr:
+                                            _pr_data = _mim_json.loads(_pr.read())
+                                            app.logger.warning(
+                                                f'[mim-push] ✅ filename={_img.original_filename} '
+                                                f'image={_img.id} mim_response={_pr_data}'
+                                            )
+                            except Exception as _push_err:
+                                app.logger.warning(f'[mim-push] failed (non-fatal): {_push_err}')
 
                     except Exception as e:
                         app.logger.error(f'[background scoring error] {traceback.format_exc()}')
