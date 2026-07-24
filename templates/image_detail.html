@@ -1,4 +1,4 @@
-<!-- Version: Session 159d · 2026-07-24 07:37 -->
+<!-- Version: Session 160 · 2026-07-25 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
 #   Days-since + share block moved to bottom of page (below metadata grid, above visibility row);
@@ -1217,6 +1217,43 @@
       <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
     </div>
     <a href="{{ url_for('weekly_challenge') }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
+  </div>
+  {% endif %}
+
+
+  {# ── Session 160: Theme Card — MIM / Weekly Challenge only ──────────── #}
+  {% if image.mim_theme_score is not none %}
+  {% set _theme_label = (weekly_challenge.prompt_title if weekly_challenge else 'Making Images Matter') %}
+  {% set _theme_score = image.mim_theme_score | round(1) %}
+  {% set _theme_para  = image.mim_theme_paragraph or '' %}
+  <div style="background:linear-gradient(90deg,#FDF8ED,#F5E9C0); border-radius:14px; padding:20px 24px; margin-bottom:14px; border-left:4px solid #C8A84B;">
+    <button class="sc-collapse-btn" onclick="scToggle('theme_card')" aria-expanded="false" aria-controls="sc-body-theme_card">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:30px; height:30px; border-radius:8px; background:rgba(200,168,75,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <span style="font-size:14px;">🎯</span>
+        </div>
+        <div>
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1.5px; color:#7A5C00; text-transform:uppercase;">Theme Evaluation</span>
+          <span style="display:block; font-size:14px; color:#9B7A20; margin-top:2px; letter-spacing:0.05em;">{{ _theme_label }}</span>
+        </div>
+      </div>
+      <span class="sc-collapse-chevron" id="sc-chev-theme_card" style="color:#7A5C00;">&#8964;</span>
+    </button>
+    <div id="sc-prev-theme_card" class="sc-collapse-preview" style="color:#4A3800;">
+      Theme evaluation — {{ _theme_score }} / 10{% if _theme_para %} · {{ _theme_para | truncate(80, True, '…') }}{% endif %}
+    </div>
+    <div class="sc-collapse-body" id="sc-body-theme_card">
+      <div style="padding-top:16px;">
+        <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:14px;">
+          <span style="font-family:var(--font-mono); font-size:36px; font-weight:700; color:#C8A84B; letter-spacing:-1px;">{{ _theme_score }}</span>
+          <span style="font-size:16px; color:#9B7A20; font-weight:600;">/ 10</span>
+          <span style="font-size:13px; color:#7A5C00; margin-left:8px; font-style:italic;">Theme Relevance</span>
+        </div>
+        {% if _theme_para %}
+        <p style="font-size:16px; color:#3D2800; line-height:1.8; margin:0; border-top:1px solid rgba(200,168,75,0.25); padding-top:14px;">{{ _theme_para }}</p>
+        {% endif %}
+      </div>
+    </div>
   </div>
   {% endif %}
 
