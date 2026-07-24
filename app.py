@@ -58,7 +58,8 @@ from location_data import (
 load_dotenv()
 
 def _dash_loc():
-    """Build the {country: {state: [cities...]}} structure used by
+    """
+# Version: Session 159 · 2026-07-24 07:18Build the {country: {state: [cities...]}} structure used by
     onboarding/profile/dashboard Active Location dropdowns."""
     _loc = {}
     for _s, _c in INDIA_STATES_CITIES.items():
@@ -3086,8 +3087,8 @@ def run_reengagement_emailer():
                 SELECT DISTINCT u.id, u.email, u.full_name, u.username,
                                 u.is_subscribed, u.subscription_track,
                                 u.reengagement_sent_at,
-                                i.score, i.tier, i.genre, i.asset_name,
-                                i.scored_at,
+                                i.id AS image_id, i.score, i.tier, i.genre, i.asset_name,
+                                i.scored_at, i.thumb_url,
                                 u.points_balance
                 FROM users u
                 JOIN images i ON i.user_id = u.id
@@ -3121,28 +3122,55 @@ def run_reengagement_emailer():
                     is_sub    = row.is_subscribed
                     site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
 
-                    if is_sub:
-                        subject  = f'Your {genre} photo scored {score:.2f} — ready for round two?'
-                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pts} points</strong> in your wallet. Upload another image and earn more.</p>'
-                        cta_text = 'Upload Your Next Image'
-                    else:
-                        subject  = f'Your {genre} photo scored {score:.2f} — keep building'
-                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your standing.</p>'
-                        cta_text = 'Continue on Shutter League'
+                    image_id  = row.image_id
+                    thumb_url = row.thumb_url or ''
+                    scorecard_url = f'{site_url}/image/{image_id}'
+
+                    # KYC-compliant subject — no "scored", no "points"
+                    subject = f'Your {genre} image has been evaluated — {score:.2f} · {tier}'
+
+                    # Thumbnail block — only if thumb_url exists
+                    thumb_block = f'''
+      <div style="margin:20px 0;text-align:center;">
+        <a href="{scorecard_url}" style="display:block;">
+          <img src="{thumb_url}" alt="{img_name}"
+               style="max-width:100%;max-height:320px;object-fit:contain;border-radius:8px;display:block;margin:0 auto;">
+        </a>
+      </div>''' if thumb_url else ''
 
                     html_body = f"""
-    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F5F0E8;">
-      <div style="font-family:monospace;font-size:13px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League · Apex DDI Engine</div>
-      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">{subject}</h2>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi {name},</p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your <strong>{genre}</strong> image &#39;{img_name}&#39; scored <strong>{score:.2f}</strong> — that&#39;s a <strong>{tier}</strong> rating. Solid foundation.</p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Upload your next shot and see how you compare.</p>
-      {pts_line}
-      <div style="margin:28px 0;">
-        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text} &#8594;</a>
+    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;background:#F5F0E8;">
+      <div style="background:#0F1F3D;padding:24px 28px;">
+        <div style="border:1.5px solid #C8A84B;display:inline-block;padding:5px 10px;margin-bottom:12px;">
+          <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#C8A84B;display:block;">THE</span>
+          <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#FEFCF8;font-weight:600;display:block;">LIVING LENS</span>
+        </div>
+        <div style="font-family:monospace;font-size:13px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League · Apex DDI Engine</div>
       </div>
-      <p style="font-size:15px;color:#8a8070;line-height:1.6;">You received this because you have an account on Shutter League.<br>
-      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+      <div style="padding:28px 28px 24px;">
+        <p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 8px;">Hi {name},</p>
+        <p style="font-size:17px;font-weight:700;color:#1A1A18;margin:0 0 20px;">Your <strong>{genre}</strong> image has been evaluated.</p>
+        {thumb_block}
+        <div style="background:#1A1A18;border-radius:10px;padding:20px 24px;margin:20px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+          <div>
+            <div style="font-family:monospace;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">Evaluation</div>
+            <div style="font-family:monospace;font-size:40px;font-weight:700;color:#F5C518;line-height:1;">{score:.2f}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:monospace;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">Standing</div>
+            <div style="font-family:monospace;font-size:18px;font-weight:700;color:#fff;">{tier}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">{genre}</div>
+          </div>
+        </div>
+        <div style="margin:24px 0;">
+          <a href="{scorecard_url}" style="display:block;background:#C8A84B;color:#1A1A18;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 28px;text-decoration:none;border-radius:4px;text-align:center;">View Your Full Evaluation &#8594;</a>
+        </div>
+        <p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 8px;">Read what the engine observed — what your eye caught, what to build on, and your next assignment.</p>
+      </div>
+      <div style="background:#0F1F3D;padding:16px 28px;text-align:center;">
+        <p style="font-size:13px;color:rgba(255,255,255,0.4);margin:0;">You received this because you have an account on Shutter League.<br>
+        <a href="{site_url}/profile" style="color:rgba(255,255,255,0.4);">Manage email preferences</a></p>
+      </div>
     </div>"""
 
                     ok = send_email(row.email, subject, html_body)
