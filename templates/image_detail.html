@@ -1,4 +1,4 @@
-<!-- Version: Session 159 · 2026-07-24 06:37 -->
+<!-- Version: Session 159b · 2026-07-24 06:59 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
 #   Days-since + share block moved to bottom of page (below metadata grid, above visibility row);
@@ -811,6 +811,41 @@
 
   {# ── Owner / admin gate — all scorecard detail below ──────────── #}
   {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
+
+  {# ── DDI at top — owner view mirrors public view (UAT Deepti requirement) ── #}
+  {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
+    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Depth Dimension Index (DDI) breakdown</p>
+    {% set _ddi_audit_o = image.get_audit() or {} %}
+    {% set _drawer_on_o = drawer_active and (
+        _ddi_audit_o.get('dod_reasoning') or _ddi_audit_o.get('disruption_reasoning') or
+        _ddi_audit_o.get('dm_reasoning')  or _ddi_audit_o.get('wonder_reasoning')      or
+        _ddi_audit_o.get('aq_reasoning')
+    ) %}
+    <div class="ddi-grid">
+      {% set _owner_dims = [
+        (image.dod_score,        'HOW DIFFICULT', 'IT WAS',     'dod'),
+        (image.disruption_score, 'VISUAL',        'DISRUPTION', 'disruption'),
+        (image.dm_score,         'THE MOMENT',    'CHOSEN',     'dm'),
+        (image.wonder_score,     'THE WOW',       'FACTOR',     'wonder'),
+        (image.aq_score,         'THE EMOTION',   'IT CREATES', 'aq'),
+      ] %}
+      {% for val, line1, line2, dim_key in _owner_dims %}
+      <div class="ddi-dim"{% if _drawer_on_o %} onclick="slOpenDimDrawer('{{ dim_key }}')" style="cursor:pointer;"{% endif %}>
+        <div class="ddi-val">{{ val or '—' }}</div>
+        <div class="ddi-lbl" id="sc-ddi-lbl-o-{{ dim_key }}">{{ line1 }}<br>{{ line2 }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="text-align:right; margin-top:12px;">
+      {% if _drawer_on_o %}
+      <span style="font-size:13px; color:var(--text-muted); font-style:italic; margin-right:12px;">Tap a dimension to see the engine's reasoning</span>
+      {% endif %}
+      <a href="/science#dimensions" class="glink-inline" style="font-size:13px; font-weight:600; letter-spacing:0.04em;">Understanding dimensions →</a>
+    </div>
+  </div>
+  {% endif %}
+
   {% if audit and audit.subgenre_overridden and audit.effective_subgenre %}
   <div style="margin-bottom:14px; padding:12px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</span>
@@ -1359,36 +1394,7 @@
     </div>{# /sc-body-hyd #}
   </div>{# /hyd card #}
 
-  {# ── DDI DIMENSIONS — collapsible (S156) ──────────────────────── #}
-  {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
-  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
-    <button class="sc-collapse-btn" onclick="scToggle('ddi')" aria-expanded="false" aria-controls="sc-body-ddi">
-      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Dimension breakdown</span>
-      <span class="sc-collapse-chevron" id="sc-chev-ddi">&#8964;</span>
-    </button>
-    <div id="sc-prev-ddi" class="sc-collapse-preview">How the 5 craft dimensions performed for this image</div>
-    <div class="sc-collapse-body" id="sc-body-ddi">
-    <div class="ddi-grid" style="margin-top:14px;">
-      {% set dims = [
-        ('dod',        image.dod_score,        'How difficult it was',  'HOW DIFFICULT', 'IT WAS'),
-        ('Disruption', image.disruption_score,  'Visual Disruption',    'VISUAL',        'DISRUPTION'),
-        ('DM',         image.dm_score,          'The Moment Chosen',    'THE MOMENT',    'CHOSEN'),
-        ('Wonder',     image.wonder_score,      'The WOW Factor',       'THE WOW',       'FACTOR'),
-        ('AQ',         image.aq_score,          'The Emotion It Creates','THE EMOTION',  'IT CREATES'),
-      ] %}
-      {% for lbl, val, title, line1, line2 in dims %}
-      <div class="ddi-dim">
-        <div class="ddi-val">{{ val or '—' }}</div>
-        <div class="ddi-lbl">{{ line1 }}<br>{{ line2 }}</div>
-      </div>
-      {% endfor %}
-    </div>
-    <div style="text-align:right; margin-top:12px;">
-      <a href="/science#dimensions" class="glink-inline" style="font-size:13px; font-weight:600; letter-spacing:0.04em;">Understanding dimensions →</a>
-    </div>
-    </div>{# /sc-collapse-body ddi #}
-    </div>
-  {% endif %}{# end if dod_score gate #}
+  {# DDI bottom section removed — DDI now shows at top of owner view (UAT Deepti requirement) #}
 
   {# ── S156: Peer Evaluation CTA — moved after Share/Save/Hide ── #}
   {# Peer validation button is injected by JS after the CTA row renders #}
