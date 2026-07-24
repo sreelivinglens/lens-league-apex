@@ -65,7 +65,7 @@
   flex-shrink: 0; margin-left: 12px; line-height: 1;
 }
 .sc-collapse-chevron.open { transform: rotate(180deg); }
-.sc-collapse-body { overflow: hidden; transition: max-height 0.3s ease; }
+.sc-collapse-body { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
 .sc-collapse-preview {
   font-size: 15px; color: var(--text-muted); line-height: 1.6;
   margin-top: 4px; white-space: nowrap; overflow: hidden;
@@ -2226,25 +2226,14 @@ function scToggle(id) {
     if (prev) prev.style.display = 'none';
   }
 }
-// S156: DDI always starts open (owner needs to see dimensions immediately)
-// WSO and others start closed
+// CSS collapses all sc-collapse-body sections by default (max-height:0)
+// JS only needs to open DDI on load
 document.addEventListener('DOMContentLoaded', function() {
-  // All sections start collapsed except DDI
-  ['wso','c1','c2','c3','c4','hyd','meta','loc','bow','eye'].forEach(function(id) {
-    var body = document.getElementById('sc-body-' + id);
-    var prev = document.getElementById('sc-prev-' + id);
-    if (body) { body.style.maxHeight = '0px'; body.style.overflow = 'hidden'; }
-    if (prev) prev.style.display = 'block';
-  });
-  // DDI starts open
   var ddiBody = document.getElementById('sc-body-ddi');
   var ddiChev = document.getElementById('sc-chev-ddi');
   var ddiPrev = document.getElementById('sc-prev-ddi');
   if (ddiBody) {
-    ddiBody.style.overflow = 'hidden';
-    setTimeout(function() {
-      ddiBody.style.maxHeight = ddiBody.scrollHeight + 300 + 'px';
-    }, 100);
+    ddiBody.style.maxHeight = ddiBody.scrollHeight + 300 + 'px';
     if (ddiChev) ddiChev.classList.add('open');
     if (ddiPrev) ddiPrev.style.display = 'none';
   }
