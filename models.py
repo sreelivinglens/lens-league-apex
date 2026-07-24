@@ -1,5 +1,6 @@
 """
 models.py — Lens League Apex
+# Session 160 — mim_theme_score (Float) + mim_theme_paragraph (Text) added to Image model
 v30: Added jury system + RAW verification models
   - Image: 9 new columns for jury scoring and RAW verification
   - New: Judge, JudgeCategoryAssignment, ContestJudgeConfig,
