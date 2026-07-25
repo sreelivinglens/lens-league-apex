@@ -1,3 +1,4 @@
+# SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
 # SL-VERSION: 160.2 (Session 160.2 — Filename normalisation: spaces↔underscores, special chars, leading underscores all handled in mim-ddi lookup + MIM pull)
@@ -26643,11 +26644,10 @@ def api_mim_ddi():
             {'fn': filename}
         ).fetchone()
 
-        # ── Normalised fallback ───────────────────────────────────────────────
-        if not row and _fn_norm != _normalise_fn(filename):
-            # Extract core stem (strip trailing underscores/dots before extension)
-            # e.g. 'greater_flamingos_...storm.jpg' matches 'greater_flamingos_...storm_.jpg'
+        # ── Normalised fallback — always try if exact match fails ─────────────
+        if not row:
             _stem_core = _fn_norm.rsplit('.', 1)[0].rstrip('_') if '.' in _fn_norm else _fn_norm.rstrip('_')
+            app.logger.warning(f'[mim-ddi] exact not found — trying fuzzy stem: {_stem_core}%')
             row = db.session.execute(
                 db.text(
                     "SELECT id, score, tier, genre, dod_score, disruption_score, "
