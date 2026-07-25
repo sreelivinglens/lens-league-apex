@@ -5171,6 +5171,7 @@ def journey():
                            total_count=len(all_images))
 
 
+@app.route('/dashboard/skip-mission', methods=['POST'])
 @login_required
 def skip_mission():
     """Suppress the daily mission card for the rest of today (IST).
