@@ -1,3 +1,4 @@
+# SL-VERSION: 160.0 (Session 160 — mim_theme_score + mim_theme_paragraph columns added to Image model)
 """
 models.py — Lens League Apex
 # Session 160 — mim_theme_score (Float) + mim_theme_paragraph (Text) added to Image model
