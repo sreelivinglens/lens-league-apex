@@ -1,3 +1,4 @@
+# SL-VERSION: 160.2 (Session 160.2 — Filename normalisation: spaces↔underscores, special chars, leading underscores all handled in mim-ddi lookup + MIM pull)
 # SL-VERSION: 160.1 (Session 160 — MIM webhook push: after scoring, SL POSTs DDI scores
 #   to MIM /api/sl-ddi-push if original_filename matches a MIM image. Non-fatal.
 #   Requires MIM_API_URL env var on SL Railway (set to https://makingimagesmatter.com).)
@@ -26593,12 +26594,42 @@ def api_mim_ddi():
     if not filename:
         return jsonify({'error': 'filename required'}), 400
 
+    # ── Session 160.2: Filename normalisation ────────────────────────────────
+    # Browsers, OS and cameras handle filenames differently:
+    #   - Spaces → underscores (Chrome on macOS)
+    #   - Leading underscores added/stripped (macOS Finder)
+    #   - Special chars: *&%^{]<!@# → underscore or stripped
+    # We normalise both the incoming filename AND the DB query to maximise match rate.
+    import re as _re
+
+    def _normalise_fn(fn):
+        """Normalise filename for fuzzy matching — strip path, lowercase stem for compare."""
+        fn = fn.strip()
+        # Strip directory path if any
+        fn = fn.split('/')[-1].split('\\')[-1]
+        # Separate stem and extension
+        if '.' in fn:
+            stem, ext = fn.rsplit('.', 1)
+            ext = ext.lower()
+        else:
+            stem, ext = fn, ''
+        # Replace any non-alphanumeric (except hyphen) with underscore
+        stem_norm = _re.sub(r'[^A-Za-z0-9\-]', '_', stem)
+        # Collapse multiple underscores
+        stem_norm = _re.sub(r'_+', '_', stem_norm)
+        # Strip leading/trailing underscores
+        stem_norm = stem_norm.strip('_').lower()
+        return f'{stem_norm}.{ext}' if ext else stem_norm
+
+    _fn_norm = _normalise_fn(filename)
+
     # ── Optional theme param (Session 160) ────────────────────────────────────
     # MIM passes the session theme (e.g. "REFLECTION") so DDI can score
     # theme relevance separately from craft.
     mim_theme = request.args.get('theme', '').strip().upper() or None
 
     try:
+        # Try exact match first, then normalised match
         row = db.session.execute(
             db.text(
                 "SELECT id, score, tier, genre, dod_score, disruption_score, "
@@ -26613,6 +26644,26 @@ def api_mim_ddi():
             ),
             {'fn': filename}
         ).fetchone()
+
+        # ── Normalised fallback ───────────────────────────────────────────────
+        if not row and _fn_norm != _normalise_fn(filename):
+            row = db.session.execute(
+                db.text(
+                    "SELECT id, score, tier, genre, dod_score, disruption_score, "
+                    "dm_score, wonder_score, aq_score, audit_json, "
+                    "thumb_path, thumb_url, asset_name, photographer_name, "
+                    "subject, location, exif_make, exif_model, exif_focal_length_35mm, "
+                    "exif_lens, exif_software, exif_has_gps, camera_track, "
+                    "mim_theme_score, mim_theme_paragraph "
+                    "FROM images "
+                    "WHERE LOWER(REGEXP_REPLACE(original_filename, '[^A-Za-z0-9\\-]', '_', 'g')) "
+                    "LIKE :fn_norm AND status = 'scored' "
+                    "ORDER BY scored_at DESC LIMIT 1"
+                ),
+                {'fn_norm': f'%{_fn_norm}%'}
+            ).fetchone()
+            if row:
+                app.logger.warning(f'[mim-ddi] fuzzy match: {filename} → id={row.id}')
     except Exception as e:
         app.logger.error(f'[mim-ddi] DB error: {e}')
         return jsonify({'error': 'db error'}), 500
