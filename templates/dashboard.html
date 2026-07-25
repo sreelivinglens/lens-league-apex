@@ -16,7 +16,15 @@
    Built from SL_Dashboard_Mock.html — single source of truth
    Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
    Font: Avenir Next (inherits from base)
-   SL-DASHBOARD: 161.4 | Session 161 | 2026-07-26
+   SL-DASHBOARD: 161.5 | Session 161 | 2026-07-26
+   Changes: Hero image full-bleed at 100% opacity, left-to-right gradient text zone,
+            iPad 769-1024px explicit 2-col layout (centre + right panel, no sidenav),
+            rp-label letter-spacing reduced to 0.5px to fix wrapping,
+            This Week's Challenge label letter-spacing fixed,
+            centre-gap padding-top 20px breathing room after hero,
+            backdrop-filter -webkit- prefix added for Safari,
+            View all evaluations → points to my_gallery not journey,
+            Excellence Award label in right column
    Changes: Score Reveal → full-bleed image hero with overlay,
             Latest card removed from right column (replaced by hero),
             Standing card now open by default in right column,
@@ -185,7 +193,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   padding: 9px 11px;
 }
 .rp-label {
-  font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
   text-transform: uppercase; color: var(--d-muted); margin-bottom: 8px; display: block;
 }
 .latest-eval { display: flex; gap: 10px; align-items: flex-start; }
@@ -228,6 +236,37 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 .dash-quote-sig { font-size: 13px; color: var(--d-gold); font-weight: 600; }
 
 /* ═══════════════════════════════════════
+   IPAD 769px–1024px — 2-column layout
+   No sidenav, centre + right panel
+═══════════════════════════════════════ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dash-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    align-items: start;
+  }
+  .sidenav { display: none !important; }
+  .rpanel {
+    border-left: 1px solid var(--d-border);
+    padding: 16px 12px;
+    gap: 10px;
+    align-self: start;
+    position: sticky;
+    top: 64px;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .rpanel::-webkit-scrollbar { display: none; }
+  .centre { padding: 0; gap: 0; min-width: 0; }
+  .centre-gap { padding: 16px 16px 24px; gap: 14px; }
+  .practice-card { grid-template-columns: 1fr 180px; min-height: 180px; }
+  .practice-content { padding: 16px 18px; }
+  .practice-title { font-size: 18px; }
+  .dash-quote-strip { display: none; }
+}
+
+/* ═══════════════════════════════════════
    DESKTOP ≥ 1025px — 3-column layout
 ═══════════════════════════════════════ */
 @media (min-width: 1025px) {
@@ -250,7 +289,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   }
   .sidenav::-webkit-scrollbar { display: none; }
   .sidenav-item {
-    display: flex; align-items: center; gap: 9px;
+    display: flex; align-items: flex-start; gap: 9px;
     padding: 9px 11px; border-radius: 9px;
     text-decoration: none; transition: background 0.1s;
     min-height: 40px; color: var(--d-text);
@@ -260,11 +299,11 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   .sidenav-item.si-dim { opacity: 0.65; }
   .sidenav-item.si-dim:hover { opacity: 1; }
   .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
-  .si-ico { font-size: 15px; flex-shrink: 0; line-height: 1; }
-  .si-label { font-size: 13px; font-weight: 600; color: var(--d-text); display: block; line-height: 1.3; }
+  .si-ico { font-size: 15px; flex-shrink: 0; line-height: 1; padding-top: 2px; }
+  .si-label { font-size: 13px; font-weight: 600; color: var(--d-text); display: block; line-height: 1.3; white-space: nowrap; }
   .sidenav-item.si-active .si-label { color: #7A5800; font-weight: 700; }
-  .sidenav-item.si-dim .si-label { font-weight: 400; }
-  .si-sub { font-size: 13px; color: var(--d-muted); display: block; margin-top: 2px; line-height: 1.3; }
+  .sidenav-item.si-dim .si-label { font-weight: 400; color: var(--d-muted); }
+  .si-sub { font-size: 13px; color: var(--d-muted); display: block; margin-top: 1px; line-height: 1.3; white-space: nowrap; }
   .sidenav-divider {
     font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; color: #AAAAAA;
@@ -278,7 +317,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   }
   /* Individual centre sections get their own padding */
   .centre-pad { padding: 16px 20px; }
-  .centre-gap { display: flex; flex-direction: column; gap: 14px; padding: 0 20px 20px; }
+  .centre-gap { display: flex; flex-direction: column; gap: 16px; padding: 20px 20px 28px; }
 
   /* Practise card wider image column on desktop */
   .practice-card { grid-template-columns: 1fr 260px; min-height: 200px; }
@@ -512,52 +551,54 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ══ SCORE REVEAL — SL 161 — full image hero, score overlaid ══ #}
+    {# ══ SCORE REVEAL — SL 161 — image hero, score overlaid left ══ #}
     {% if _last and _last.score %}
     {% set _prev = progress_data.trend[-2] if progress_data and progress_data.trend and progress_data.trend|length >= 2 else none %}
     {% set _delta = (_last.score - _prev.score)|round(1) if _prev else none %}
-    <div style="position:relative;min-height:240px;background:#0F2A22;overflow:hidden;width:100%;">
-      {# Background image — full bleed #}
+    <div style="position:relative;min-height:260px;background:#0F2A22;overflow:hidden;width:100%;">
+      {# Background image — full bleed, full brightness, image is the hero #}
       {% if _last.thumb_url %}
       <img src="{{ _last.thumb_url }}" alt="Latest evaluation"
-           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:0.5;"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;"
            onerror="this.style.display='none'">
       {% endif %}
-      {# Gradient overlay — left heavy for legibility #}
-      <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,22,15,0.95) 0%,rgba(10,22,15,0.80) 45%,rgba(10,22,15,0.35) 100%);"></div>
-      {# Content overlaid #}
-      <div style="position:relative;z-index:2;padding:28px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;min-height:240px;gap:20px;">
+      {# Gradient — left heavy covering text zone, right side image fully visible #}
+      <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,22,15,0.90) 0%,rgba(10,22,15,0.80) 30%,rgba(10,22,15,0.45) 55%,rgba(10,22,15,0.10) 75%,transparent 100%);"></div>
+      {# Bottom vignette so score text always pops #}
+      <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,rgba(10,22,15,0.50),transparent);"></div>
+      {# Content — text sits left, image breathes right #}
+      <div style="position:relative;z-index:2;padding:28px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;min-height:260px;gap:20px;">
         {# Left — score + tier + link #}
-        <div>
-          <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.85);margin-bottom:10px;">Your latest evaluation</div>
-          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
-            <div style="font-size:72px;font-weight:800;color:#F6F2E9;line-height:1;letter-spacing:-3px;text-shadow:0 2px 16px rgba(0,0,0,0.6);">{{ '%.1f'|format(_last.score) }}</div>
-            <div style="font-size:22px;font-weight:400;color:rgba(246,242,233,0.45);align-self:flex-end;padding-bottom:8px;">/10</div>
+        <div style="max-width:55%;">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(214,164,40,0.85);margin-bottom:10px;">Your latest evaluation</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px;">
+            <div style="font-size:72px;font-weight:800;color:#F6F2E9;line-height:1;letter-spacing:-3px;text-shadow:0 2px 20px rgba(0,0,0,0.7);">{{ '%.1f'|format(_last.score) }}</div>
+            <div style="font-size:20px;font-weight:400;color:rgba(246,242,233,0.40);align-self:flex-end;padding-bottom:9px;">/10</div>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <span style="font-size:18px;font-weight:700;color:#D6A428;">{{ _last.tier or '' }}</span>
-            <span style="font-size:14px;color:rgba(246,242,233,0.55);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</span>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <span style="font-size:17px;font-weight:700;color:#D6A428;text-shadow:0 1px 6px rgba(0,0,0,0.5);">{{ _last.tier or '' }}</span>
+            <span style="font-size:14px;color:rgba(246,242,233,0.60);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</span>
           </div>
-          <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:14px;font-weight:600;color:rgba(214,164,40,0.9);text-decoration:none;">View full evaluation report →</a>
+          <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:14px;font-weight:600;color:rgba(214,164,40,0.90);text-decoration:none;text-shadow:0 1px 4px rgba(0,0,0,0.5);">View full evaluation report →</a>
         </div>
-        {# Right — previous + delta + photo count #}
+        {# Right — previous score + delta + photo count — sits in the gradient transition zone #}
         <div style="text-align:right;flex-shrink:0;">
           {% if _prev %}
-          <span style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(246,242,233,0.45);display:block;margin-bottom:5px;">Previous</span>
-          <div style="font-size:28px;font-weight:700;color:rgba(246,242,233,0.5);line-height:1;margin-bottom:6px;">{{ '%.1f'|format(_prev.score) }}</div>
+          <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(246,242,233,0.55);display:block;margin-bottom:4px;">Previous</span>
+          <div style="font-size:26px;font-weight:700;color:rgba(246,242,233,0.60);line-height:1;margin-bottom:6px;">{{ '%.1f'|format(_prev.score) }}</div>
           {% if _delta is not none %}
-          <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.3){% elif _delta < 0 %}rgba(192,57,43,0.3){% else %}rgba(107,107,107,0.3){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.5){% elif _delta < 0 %}rgba(192,57,43,0.5){% else %}rgba(107,107,107,0.5){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:14px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:16px;">
+          <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.35){% elif _delta < 0 %}rgba(192,57,43,0.35){% else %}rgba(107,107,107,0.35){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.6){% elif _delta < 0 %}rgba(192,57,43,0.6){% else %}rgba(107,107,107,0.6){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:14px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
             <span>{% if _delta > 0 %}↑{% elif _delta < 0 %}↓{% else %}—{% endif %}</span>
             <span>{% if _delta > 0 %}+{% endif %}{{ '%.1f'|format(_delta) }} {% if _delta > 0 %}improving{% elif _delta < 0 %}dropped{% else %}steady{% endif %}</span>
           </div>
           {% endif %}
           {% endif %}
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:4px;">
-            <span style="font-size:18px;">📷</span>
-            <span style="font-size:22px;font-weight:800;color:rgba(246,242,233,0.7);">{{ progress_data.count if progress_data else stats.total or 0 }}</span>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:4px;">
+            <span style="font-size:16px;">📷</span>
+            <span style="font-size:20px;font-weight:800;color:rgba(246,242,233,0.80);">{{ progress_data.count if progress_data else stats.total or 0 }}</span>
           </div>
-          <span style="font-size:14px;color:rgba(246,242,233,0.5);display:block;margin-top:3px;">Photographs evaluated</span>
-          <a href="{{ url_for('my_gallery') }}" style="font-size:14px;color:rgba(214,164,40,0.8);font-weight:600;display:block;margin-top:4px;text-decoration:none;">View all →</a>
+          <span style="font-size:14px;color:rgba(246,242,233,0.55);display:block;margin-top:3px;">Photographs evaluated</span>
+          <a href="{{ url_for('my_gallery') }}" style="font-size:14px;color:rgba(214,164,40,0.85);font-weight:600;display:block;margin-top:4px;text-decoration:none;">View all →</a>
         </div>
       </div>
     </div>
@@ -873,7 +914,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         {% endfor %}
       </div>
       {% endif %}
-      <a href="/journey" style="display:block;font-size:14px;font-weight:600;color:var(--d-dark);text-align:center;padding-top:12px;border-top:1px solid var(--d-border);text-decoration:none;">View all evaluations →</a>
+      <a href="{{ url_for('my_gallery') }}" style="display:block;font-size:14px;font-weight:600;color:var(--d-dark);text-align:center;padding-top:12px;border-top:1px solid var(--d-border);text-decoration:none;">View all evaluations →</a>
     </div>
     {% endif %}
 
@@ -960,7 +1001,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   {% if aea_dash %}
   <div class="rp-acc rp-card" style="border-left-color:#C8A020;padding:0;">
     <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:9px 11px;" onclick="rpToggle('rp-aea')">
-      <div class="rp-label" style="margin-bottom:0;">Award</div>
+      <div class="rp-label" style="margin-bottom:0;">Excellence Award</div>
       <div style="display:flex;align-items:center;gap:8px;">
         {% if aea_dash.qualified %}<span style="font-size:14px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(aea_dash.top6_avg) }}</span><span style="font-size:13px;color:var(--d-green);font-weight:600;">#{{ aea_dash.league_rank }} {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }}</span>
         {% else %}<span style="font-size:13px;color:var(--d-muted);">Not yet qualified</span>{% endif %}
@@ -1012,7 +1053,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   {% else %}
   <div class="rp-acc rp-card" style="border-left-color:#C8A020;padding:9px 11px;">
     <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="rpToggle('rp-aea-static')">
-      <div class="rp-label" style="margin-bottom:0;">Award</div>
+      <div class="rp-label" style="margin-bottom:0;">Excellence Award</div>
       <span class="rp-chev" style="font-size:13px;color:var(--d-muted);">▾</span>
     </div>
     <div id="rp-aea-static" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--d-border);">
@@ -1046,7 +1087,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   {% if active_challenge %}
   <div class="rp-acc rp-card" style="border-left-color:#27500A;">
     <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="rpToggle('rp-challenge')">
-      <div class="rp-label" style="margin-bottom:0;color:#27500A;">This Week's Challenge</div>
+      <div class="rp-label" style="margin-bottom:0;color:#27500A;letter-spacing:0.5px;">This Week's Challenge</div>
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:13px;color:var(--d-muted);">{{ 'Closes ' ~ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</span>
         <span class="rp-chev" style="font-size:13px;color:var(--d-muted);">▾</span>
