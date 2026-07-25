@@ -16,6 +16,11 @@
    Built from SL_Dashboard_Mock.html — single source of truth
    Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
    Font: Avenir Next (inherits from base)
+   SL-DASHBOARD: 161.3 | Session 161 | 2026-07-26
+   Changes: sidenav rebuilt (10 items, subtitles, hidden scrollbar),
+            Score Reveal block added above greeting,
+            greeting rewritten (period, dimension insight, no photo count),
+            Points & Redemptions removed from right panel
 ═══════════════════════════════════════════════════════ */
 body.page-dashboard { padding-top: 0 !important; }
 body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
@@ -229,40 +234,38 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     align-items: start;
   }
 
-  /* ── Left sidenav ── */
+  /* ── Left sidenav — SL 161 ── */
   .sidenav {
     display: flex; flex-direction: column;
     background: var(--d-cream); border-right: 1px solid var(--d-border);
-    padding: 16px 12px; position: sticky; top: 64px;
-    height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
-    justify-content: space-between;
+    padding: 16px 8px 24px; position: sticky; top: 64px;
+    height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px);
+    overflow-y: auto;
+    scrollbar-width: none;
+    gap: 1px;
   }
+  .sidenav::-webkit-scrollbar { display: none; }
   .sidenav-item {
-    display: flex; align-items: center; gap: 9px;
-    padding: 8px 11px; font-size: 13px; font-weight: 600;
-    text-decoration: none; border-radius: 8px;
-    border-left-width: 3px; border-left-style: solid;
-    border-top: 1px solid transparent;
-    border-right: 1px solid transparent;
-    border-bottom: 1px solid transparent;
-    transition: opacity 0.15s;
-    min-height: 40px;
+    display: flex; align-items: flex-start; gap: 9px;
+    padding: 9px 11px; border-radius: 9px;
+    text-decoration: none; transition: background 0.1s;
+    min-height: 40px; color: var(--d-text);
   }
-  .sidenav-item:hover { opacity: 0.82; }
-  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-  .sidenav-item.nav-mission  { background:#FDF6DC; border-left-color:#C8960A; color:#7A5500; }
-  .sidenav-item.nav-portfolio{ background:#F5EDE0; border-left-color:#7A5A3A; color:#5A3A1A; }
-  .sidenav-item.nav-mentor   { background:#EAF3DE; border-left-color:#2A7A3A; color:#1A5A28; }
-  .sidenav-item.nav-challenges{ background:#E0F0F0; border-left-color:#1A6B6B; color:#0A4A4A; }
-  .sidenav-item.nav-bow      { background:#E0E8F5; border-left-color:#1A2744; color:#0A1A3A; }
-  .sidenav-item.nav-awards   { background:#F5E0E8; border-left-color:#7A2040; color:#5A1030; }
-  .sidenav-item.nav-learning { background:#E4EAF5; border-left-color:#2C4A7A; color:#1A2A5A; }
-  .sidenav-item.nav-settings { background:#F0EFED; border-left-color:#8A8A88; color:#6B6B6B; }
-
-  .sidenav-divider { display: none; }
-  .sidenav-bottom  { margin-top: auto; padding-top: 8px; }
+  .sidenav-item:hover { background: rgba(0,0,0,0.04); }
+  .sidenav-item.si-active { background: #FDF6DC; }
+  .sidenav-item.si-dim { opacity: 0.65; }
+  .sidenav-item.si-dim:hover { opacity: 1; }
+  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
+  .si-ico { font-size: 15px; flex-shrink: 0; margin-top: 1px; line-height: 1; }
+  .si-label { font-size: 13px; font-weight: 600; color: var(--d-text); display: block; line-height: 1.3; }
+  .sidenav-item.si-active .si-label { color: #7A5800; font-weight: 700; }
+  .sidenav-item.si-dim .si-label { font-weight: 400; }
+  .si-sub { font-size: 13px; color: var(--d-muted); display: block; margin-top: 2px; line-height: 1.3; }
+  .sidenav-divider {
+    font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #AAAAAA;
+    padding: 12px 11px 4px; display: block;
+  }
 
   /* ── Centre column ── */
   .centre {
@@ -428,34 +431,51 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   {# ════════════════════════════════════
      LEFT SIDENAV (desktop only)
   ════════════════════════════════════ #}
-  <nav class="sidenav" aria-label="Dashboard navigation" style="gap:0; justify-content:space-between;">
+  {# ── SL 161 sidenav — 6 main + 4 MORE ── #}
+  <nav class="sidenav" aria-label="Dashboard navigation">
 
-    <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;">
-      <a href="{{ url_for('mission') }}" class="sidenav-item nav-mission">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Mission
-      </a>
-      <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item nav-portfolio">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>My Portfolio
-      </a>
-      <a href="{{ url_for('mentors') }}" class="sidenav-item nav-mentor">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
-      </a>
-      <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item nav-challenges">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
-      </a>
-      <a href="{{ url_for('bow_info') }}" class="sidenav-item nav-bow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
-      </a>
-      <a href="{{ url_for('poty') }}" class="sidenav-item nav-awards">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Awards &amp; Recognition
-      </a>
-      <a href="{{ url_for('learning') }}" class="sidenav-item nav-learning">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
-      </a>
-    </div>
+    <a href="{{ url_for('dashboard') }}" class="sidenav-item si-active">
+      <span class="si-ico">🏠</span>
+      <span><span class="si-label">Dashboard</span></span>
+    </a>
+    <a href="{{ url_for('upload') }}" class="sidenav-item">
+      <span class="si-ico">⬆</span>
+      <span><span class="si-label">Upload</span></span>
+    </a>
+    <a href="/journey" class="sidenav-item">
+      <span class="si-ico">📈</span>
+      <span><span class="si-label">Journey</span><span class="si-sub">See your progress</span></span>
+    </a>
+    <a href="{{ url_for('mentors') }}" class="sidenav-item">
+      <span class="si-ico">⭐</span>
+      <span><span class="si-label">Get Reviewed</span><span class="si-sub">Mentor feedback</span></span>
+    </a>
+    <a href="{{ url_for('leaderboard') }}" class="sidenav-item">
+      <span class="si-ico">🏛</span>
+      <span><span class="si-label">Community Gallery</span><span class="si-sub">See others' work</span></span>
+    </a>
+    <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item">
+      <span class="si-ico">🖼</span>
+      <span><span class="si-label">My Portfolio</span><span class="si-sub">Your best work</span></span>
+    </a>
 
-    <a href="{{ url_for('profile') }}" class="sidenav-item nav-settings" style="margin-top:auto;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings
+    <span class="sidenav-divider">More</span>
+
+    <a href="{{ url_for('contests') }}" class="sidenav-item si-dim">
+      <span class="si-ico">🏆</span>
+      <span><span class="si-label">Programmes</span><span class="si-sub">AEA · Open · Body of Work</span></span>
+    </a>
+    <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item si-dim">
+      <span class="si-ico">📅</span>
+      <span><span class="si-label">Weekly Challenge</span></span>
+    </a>
+    <a href="{{ url_for('profile') }}" class="sidenav-item si-dim">
+      <span class="si-ico">⚙</span>
+      <span><span class="si-label">Settings</span></span>
+    </a>
+    <a href="/contact" class="sidenav-item si-dim">
+      <span class="si-ico">❓</span>
+      <span><span class="si-label">Help &amp; Support</span></span>
     </a>
 
   </nav>
@@ -478,17 +498,62 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── Greeting + streak ── #}
-    <div class="greeting">
+    {# ══ SCORE REVEAL — SL 161 — emotional centrepiece ══
+       Shows above the greeting. This is what photographers came for. #}
+    {% if _last and _last.score %}
+    {% set _prev = progress_data.trend[-2] if progress_data and progress_data.trend and progress_data.trend|length >= 2 else none %}
+    {% set _delta = (_last.score - _prev.score)|round(1) if _prev else none %}
+    <div style="background:#0F2A22;padding:22px 24px 20px;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr auto;gap:0 20px;align-items:start;">
+      {# Left — score + tier + Sherpa insight #}
       <div>
-        <div class="greeting-name">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}!</div>
+        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.7);margin-bottom:10px;">Your latest evaluation</div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">
+          <div style="font-size:72px;font-weight:800;color:#F6F2E9;line-height:1;letter-spacing:-3px;">{{ '%.1f'|format(_last.score) }}</div>
+          <div style="font-size:22px;font-weight:400;color:rgba(246,242,233,0.4);padding-bottom:8px;">/10</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span style="font-size:18px;font-weight:700;color:#D6A428;">{{ _last.tier or '' }}</span>
+          <span style="font-size:14px;color:rgba(246,242,233,0.55);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</span>
+        </div>
+        <div style="width:32px;height:2px;background:rgba(214,164,40,0.35);margin-bottom:14px;"></div>
+        {% if _last.sherpa_insight %}
+        <div style="font-size:14px;color:rgba(246,242,233,0.65);line-height:1.7;font-style:italic;border-left:2px solid rgba(214,164,40,0.3);padding-left:12px;margin-bottom:14px;max-width:480px;">{{ _last.sherpa_insight }}</div>
+        {% elif _last.get_audit and _last.get_audit().get('overall_note') %}
+        <div style="font-size:14px;color:rgba(246,242,233,0.65);line-height:1.7;font-style:italic;border-left:2px solid rgba(214,164,40,0.3);padding-left:12px;margin-bottom:14px;max-width:480px;">{{ _last.get_audit().get('overall_note','')[:200] }}</div>
+        {% endif %}
+        <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:13px;font-weight:600;color:#D6A428;text-decoration:none;">View full evaluation report →</a>
+      </div>
+      {# Right — previous score + delta + photo count #}
+      <div style="text-align:right;padding-top:4px;flex-shrink:0;">
+        {% if _prev %}
+        <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(246,242,233,0.55);display:block;margin-bottom:6px;">Previous</span>
+        <div style="font-size:28px;font-weight:700;color:rgba(246,242,233,0.55);line-height:1;margin-bottom:3px;">{{ '%.1f'|format(_prev.score) }}</div>
+        <span style="font-size:14px;color:rgba(246,242,233,0.55);display:block;margin-bottom:14px;">{{ _prev.scored_at.strftime('%d %b %Y') if _prev.scored_at else '' }}</span>
+        {% if _delta is not none %}
+        <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.2){% elif _delta < 0 %}rgba(192,57,43,0.2){% else %}rgba(107,107,107,0.2){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.3){% elif _delta < 0 %}rgba(192,57,43,0.3){% else %}rgba(107,107,107,0.3){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:13px;font-weight:700;padding:5px 11px;border-radius:20px;">
+          <span>{% if _delta > 0 %}↑{% elif _delta < 0 %}↓{% else %}—{% endif %}</span>
+          <span>{% if _delta > 0 %}+{% endif %}{{ '%.1f'|format(_delta) }} {% if _delta > 0 %}improving{% elif _delta < 0 %}dropped{% else %}steady{% endif %}</span>
+        </div>
+        {% endif %}
+        {% endif %}
+        <div style="margin-top:16px;">
+          <div style="font-size:20px;font-weight:800;color:rgba(246,242,233,0.5);display:flex;align-items:center;justify-content:flex-end;gap:5px;">
+            <span>📷</span><span>{{ progress_data.count if progress_data else stats.total or 0 }}</span>
+          </div>
+          <span style="font-size:14px;color:rgba(246,242,233,0.55);display:block;margin-top:2px;">Photographs evaluated</span>
+          <a href="{{ url_for('my_gallery') }}" style="font-size:14px;color:rgba(214,164,40,0.75);font-weight:600;display:block;margin-top:3px;text-decoration:none;">View all →</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Greeting — secondary, below Score Reveal ── #}
+    <div class="greeting" style="border-left:none;padding-left:0;padding:16px 0 4px;">
+      <div>
+        <div class="greeting-name">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
         <div class="greeting-sub">
-          {% if progress_data and progress_data.count > 0 %}
-            {% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}. {% endif %}
-            From your {{ progress_data.count }} photographs, you've improved most in
-            <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong>
-            — keep building on
-            <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.weakest, progress_data.weakest|title) }}</strong>.
+          {% if progress_data and progress_data.count > 0 and progress_data.strongest %}
+            You've improved your <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong> more than any other dimension this month. Today's mission continues that journey.
           {% elif dash_advisory and dash_advisory.get('light_note') %}
             {{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}
           {% else %}
@@ -496,12 +561,6 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           {% endif %}
         </div>
       </div>
-      <a href="{{ url_for('my_gallery') }}" class="streak" style="text-decoration:none;">
-        <span style="font-size:20px;">📷</span>
-        <span class="streak-count">{{ stats.total or 0 }}</span>
-        <div class="streak-txt">Photographs<br><span style="font-size:13px;">View all →</span></div>
-        <span style="color:var(--d-muted); font-size:13px; margin-left:4px;">›</span>
-      </a>
     </div>
 
     {# ── FIRST VISIT WELCOME CARD ── #}
@@ -785,13 +844,6 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-        {# Points & Redemptions #}
-    <div class="rp-card" style="border-left-color:#1A6B6B;">
-      <div class="rp-label">Points &amp; Redemptions</div>
-      <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:8px;">{{ (current_user.points_balance or 0)|int }}</div>
-      <a href="{{ url_for('redeem') }}" style="font-size:13px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
-    </div>
-
     {# Weekly Assignment #}
     {% if active_challenge %}
     <div class="rp-card" style="border-left-color:#27500A;">
@@ -931,6 +983,21 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div class="aea-title">AEA 2026</div>
       <div class="aea-sub">Upload consistently and build your standing for the Annual Excellence Award.</div>
       <a href="{{ url_for('poty') }}" class="aea-link">Learn more →</a>
+    </div>
+    {% endif %}
+
+    {# Points & Redemptions — collapsed by default ── SL 161 #}
+    {% if current_user.points_balance and current_user.points_balance > 0 %}
+    <div class="rp-card" style="border-left-color:#1A6B6B;cursor:pointer;" onclick="this.querySelector('.pts-body').style.display=this.querySelector('.pts-body').style.display==='none'?'block':'none';this.querySelector('.pts-chev').textContent=this.querySelector('.pts-body').style.display==='none'?'▾':'▴'">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="rp-label" style="margin-bottom:0;">Points &amp; Redemptions</div>
+        <span class="pts-chev" style="font-size:13px;color:var(--d-muted);">▾</span>
+      </div>
+      <div class="pts-body" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--d-border);">
+        <div style="font-size:26px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ (current_user.points_balance or 0)|int }}</div>
+        <div style="font-size:14px;color:var(--d-muted);margin-bottom:10px;">points available</div>
+        <a href="{{ url_for('redeem') }}" style="font-size:14px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
+      </div>
     </div>
     {% endif %}
 
