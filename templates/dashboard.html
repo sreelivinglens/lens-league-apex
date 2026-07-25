@@ -14,7 +14,7 @@
 /* ═══════════════════════════════════════════════════════
    SHUTTER LEAGUE DASHBOARD v1.0
    Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
-   SL-DASHBOARD: 161.6 | Session 161 | 2026-07-26
+   SL-DASHBOARD: 161.7 | Session 161 | 2026-07-26
    Changes since 161.5:
    - Hero margin-top removed, aligns flush with right panel top
    - Right panel padding-top set to 12px to match hero start
@@ -24,6 +24,9 @@
    - Hero right content: overflow:hidden, white-space:nowrap on delta pill
    - Gradient reduced to 0.70/0.60/0.30/0.05/transparent
    - backdrop-filter with -webkit- prefix on delta pill
+   - Sidenav icons removed, single-line labels, no subtitles
+   - Hero margin-top 16px gap from nav
+   - Image extends edge to edge (left:-1px, width:calc(100%+2px))
 ═══════════════════════════════════════════════════════ */
 body.page-dashboard { padding-top: 0 !important; }
 body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
@@ -479,46 +482,36 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   <nav class="sidenav" aria-label="Dashboard navigation">
 
     <a href="{{ url_for('dashboard') }}" class="sidenav-item si-active">
-      <span class="si-ico">🏠</span>
       <span class="si-text"><span class="si-label">Dashboard</span></span>
     </a>
     <a href="{{ url_for('upload') }}" class="sidenav-item">
-      <span class="si-ico">⬆</span>
       <span class="si-text"><span class="si-label">Upload</span></span>
     </a>
     <a href="/journey" class="sidenav-item">
-      <span class="si-ico">📈</span>
-      <span class="si-text"><span class="si-label">Journey</span><span class="si-sub">See your progress</span></span>
+      <span class="si-text"><span class="si-label">Journey</span></span>
     </a>
     <a href="{{ url_for('mentors') }}" class="sidenav-item">
-      <span class="si-ico">⭐</span>
-      <span class="si-text"><span class="si-label">Get Reviewed</span><span class="si-sub">Mentor feedback</span></span>
+      <span class="si-text"><span class="si-label">Get Reviewed</span></span>
     </a>
     <a href="{{ url_for('leaderboard') }}" class="sidenav-item">
-      <span class="si-ico">🏛</span>
-      <span class="si-text"><span class="si-label">Community Gallery</span><span class="si-sub">See others' work</span></span>
+      <span class="si-text"><span class="si-label">Community Gallery</span></span>
     </a>
     <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item">
-      <span class="si-ico">🖼</span>
-      <span class="si-text"><span class="si-label">My Portfolio</span><span class="si-sub">Your best work</span></span>
+      <span class="si-text"><span class="si-label">My Portfolio</span></span>
     </a>
 
     <span class="sidenav-divider">More</span>
 
     <a href="{{ url_for('contests') }}" class="sidenav-item si-dim">
-      <span class="si-ico">🏆</span>
-      <span class="si-text"><span class="si-label">Programmes</span><span class="si-sub">AEA · Open · Body of Work</span></span>
+      <span class="si-text"><span class="si-label">Programmes</span></span>
     </a>
     <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item si-dim">
-      <span class="si-ico">📅</span>
       <span class="si-text"><span class="si-label">Weekly Challenge</span></span>
     </a>
     <a href="{{ url_for('profile') }}" class="sidenav-item si-dim">
-      <span class="si-ico">⚙</span>
       <span class="si-text"><span class="si-label">Settings</span></span>
     </a>
     <a href="/contact" class="sidenav-item si-dim">
-      <span class="si-ico">❓</span>
       <span class="si-text"><span class="si-label">Help &amp; Support</span></span>
     </a>
 
@@ -546,11 +539,11 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% if _last and _last.score %}
     {% set _prev = progress_data.trend[-2] if progress_data and progress_data.trend and progress_data.trend|length >= 2 else none %}
     {% set _delta = (_last.score - _prev.score)|round(1) if _prev else none %}
-    <div style="position:relative;min-height:260px;background:#0F2A22;overflow:hidden;width:100%;margin-top:0;">
+    <div style="position:relative;min-height:260px;background:#0F2A22;width:100%;margin-top:16px;">
       {# Background image — full bleed, full brightness #}
       {% if _last.thumb_url %}
       <img src="{{ _last.thumb_url }}" alt="Latest evaluation"
-           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;"
+           style="position:absolute;top:0;left:-1px;right:-1px;width:calc(100% + 2px);height:100%;object-fit:cover;object-position:center;display:block;"
            onerror="this.style.display='none'">
       {% endif %}
       {# Gradient — left zone dark for text, right zone image visible #}
