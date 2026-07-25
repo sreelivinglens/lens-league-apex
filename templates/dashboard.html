@@ -16,11 +16,15 @@
    Built from SL_Dashboard_Mock.html — single source of truth
    Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
    Font: Avenir Next (inherits from base)
-   SL-DASHBOARD: 161.3 | Session 161 | 2026-07-26
-   Changes: sidenav rebuilt (10 items, subtitles, hidden scrollbar),
-            Score Reveal block added above greeting,
-            greeting rewritten (period, dimension insight, no photo count),
-            Points & Redemptions removed from right panel
+   SL-DASHBOARD: 161.4 | Session 161 | 2026-07-26
+   Changes: Score Reveal → full-bleed image hero with overlay,
+            Latest card removed from right column (replaced by hero),
+            Standing card now open by default in right column,
+            Mission card adds Why this mission? section,
+            Advisory redesigned as card matching Sharpen panel height,
+            Advisory text truncates at 160 chars with Read more,
+            Sharpen Your Eye → 1 big image + carousel dots + next arrow,
+            Your Journey sparkline + 5 thumbnails added
 ═══════════════════════════════════════════════════════ */
 body.page-dashboard { padding-top: 0 !important; }
 body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
@@ -91,7 +95,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 130px;
-  min-height: 155px;
+  min-height: 200px;
 }
 .practice-content {
   padding: 18px 20px;
@@ -269,13 +273,17 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
   /* ── Centre column ── */
   .centre {
-    padding: 12px 20px 20px; gap: 10px;
+    padding: 0; gap: 0;
+    min-width: 0;
   }
+  /* Individual centre sections get their own padding */
+  .centre-pad { padding: 16px 20px; }
+  .centre-gap { display: flex; flex-direction: column; gap: 14px; padding: 0 20px 20px; }
 
   /* Practise card wider image column on desktop */
-  .practice-card { grid-template-columns: 1fr 260px; }
-  .practice-content { padding: 16px 20px; }
-  .practice-title { font-size: 20px; }
+  .practice-card { grid-template-columns: 1fr 260px; min-height: 200px; }
+  .practice-content { padding: 20px 24px; }
+  .practice-title { font-size: 22px; }
 
   /* Evolution grid: score | trend | dimensions side by side */
   .today-grid {
@@ -288,13 +296,19 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   /* Recent work 5-col */
   .recent-grid { grid-template-columns: repeat(5, 1fr); }
 
-  /* ── Right panel ── */
+  /* ── Right panel — sticky, scrollable, max viewport height ── */
   .rpanel {
     border-left: 1px solid var(--d-border);
-    padding: 16px 16px; gap: 14px;
+    padding: 16px 14px;
+    gap: 10px;
     align-self: start;
-    position: sticky; top: 64px;
+    position: sticky;
+    top: 64px;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    scrollbar-width: none;
   }
+  .rpanel::-webkit-scrollbar { display: none; }
 
   /* Hide mobile-only quote strip */
   .dash-quote-strip { display: none; }
@@ -498,74 +512,71 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ══ SCORE REVEAL — SL 161 — emotional centrepiece ══
-       Shows above the greeting. This is what photographers came for. #}
+    {# ══ SCORE REVEAL — SL 161 — full image hero, score overlaid ══ #}
     {% if _last and _last.score %}
     {% set _prev = progress_data.trend[-2] if progress_data and progress_data.trend and progress_data.trend|length >= 2 else none %}
     {% set _delta = (_last.score - _prev.score)|round(1) if _prev else none %}
-    <div style="background:#0F2A22;padding:22px 24px 20px;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr auto 120px;gap:0 20px;align-items:start;">
-      {# Left — score + tier + Sherpa insight #}
-      <div>
-        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.7);margin-bottom:10px;">Your latest evaluation</div>
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">
-          <div style="font-size:72px;font-weight:800;color:#F6F2E9;line-height:1;letter-spacing:-3px;">{{ '%.1f'|format(_last.score) }}</div>
-          <div style="font-size:22px;font-weight:400;color:rgba(246,242,233,0.4);padding-bottom:8px;">/10</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-          <span style="font-size:18px;font-weight:700;color:#D6A428;">{{ _last.tier or '' }}</span>
-          <span style="font-size:14px;color:rgba(246,242,233,0.55);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</span>
-        </div>
-        <div style="width:32px;height:2px;background:rgba(214,164,40,0.35);margin-bottom:14px;"></div>
-        {% if _last.sherpa_insight %}
-        <div style="font-size:14px;color:rgba(246,242,233,0.65);line-height:1.7;font-style:italic;border-left:2px solid rgba(214,164,40,0.3);padding-left:12px;margin-bottom:14px;max-width:480px;">{{ _last.sherpa_insight }}</div>
-        {% elif _last.get_audit and _last.get_audit().get('overall_note') %}
-        <div style="font-size:14px;color:rgba(246,242,233,0.65);line-height:1.7;font-style:italic;border-left:2px solid rgba(214,164,40,0.3);padding-left:12px;margin-bottom:14px;max-width:480px;">{{ _last.get_audit().get('overall_note','')[:200] }}</div>
-        {% endif %}
-        <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:13px;font-weight:600;color:#D6A428;text-decoration:none;">View full evaluation report →</a>
-      </div>
-      {# Right — previous score + delta + photo count #}
-      <div style="text-align:right;padding-top:4px;flex-shrink:0;">
-        {% if _prev %}
-        <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(246,242,233,0.55);display:block;margin-bottom:6px;">Previous</span>
-        <div style="font-size:28px;font-weight:700;color:rgba(246,242,233,0.55);line-height:1;margin-bottom:3px;">{{ '%.1f'|format(_prev.score) }}</div>
-        <span style="font-size:14px;color:rgba(246,242,233,0.55);display:block;margin-bottom:14px;">{{ _prev.scored_at.strftime('%d %b %Y') if _prev.scored_at else '' }}</span>
-        {% if _delta is not none %}
-        <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.2){% elif _delta < 0 %}rgba(192,57,43,0.2){% else %}rgba(107,107,107,0.2){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.3){% elif _delta < 0 %}rgba(192,57,43,0.3){% else %}rgba(107,107,107,0.3){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:13px;font-weight:700;padding:5px 11px;border-radius:20px;">
-          <span>{% if _delta > 0 %}↑{% elif _delta < 0 %}↓{% else %}—{% endif %}</span>
-          <span>{% if _delta > 0 %}+{% endif %}{{ '%.1f'|format(_delta) }} {% if _delta > 0 %}improving{% elif _delta < 0 %}dropped{% else %}steady{% endif %}</span>
-        </div>
-        {% endif %}
-        {% endif %}
-        <div style="margin-top:16px;">
-          <div style="font-size:20px;font-weight:800;color:rgba(246,242,233,0.5);display:flex;align-items:center;justify-content:flex-end;gap:5px;">
-            <span>📷</span><span>{{ progress_data.count if progress_data else stats.total or 0 }}</span>
-          </div>
-          <span style="font-size:14px;color:rgba(246,242,233,0.55);display:block;margin-top:2px;">Photographs evaluated</span>
-          <a href="{{ url_for('my_gallery') }}" style="font-size:14px;color:rgba(214,164,40,0.75);font-weight:600;display:block;margin-top:3px;text-decoration:none;">View all →</a>
-        </div>
-      </div>
-      {# Right — latest image thumbnail #}
-      {% if _last and _last.thumb_url %}
-      <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="display:block;width:120px;height:120px;border-radius:10px;overflow:hidden;flex-shrink:0;border:2px solid rgba(214,164,40,0.25);text-decoration:none;">
-        <img src="{{ _last.thumb_url }}" alt="Latest evaluation" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentNode.style.background='#1A3A2A';this.remove()">
-      </a>
+    <div style="position:relative;min-height:240px;background:#0F2A22;overflow:hidden;width:100%;">
+      {# Background image — full bleed #}
+      {% if _last.thumb_url %}
+      <img src="{{ _last.thumb_url }}" alt="Latest evaluation"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:0.5;"
+           onerror="this.style.display='none'">
       {% endif %}
+      {# Gradient overlay — left heavy for legibility #}
+      <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,22,15,0.95) 0%,rgba(10,22,15,0.80) 45%,rgba(10,22,15,0.35) 100%);"></div>
+      {# Content overlaid #}
+      <div style="position:relative;z-index:2;padding:28px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;min-height:240px;gap:20px;">
+        {# Left — score + tier + link #}
+        <div>
+          <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.85);margin-bottom:10px;">Your latest evaluation</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+            <div style="font-size:72px;font-weight:800;color:#F6F2E9;line-height:1;letter-spacing:-3px;text-shadow:0 2px 16px rgba(0,0,0,0.6);">{{ '%.1f'|format(_last.score) }}</div>
+            <div style="font-size:22px;font-weight:400;color:rgba(246,242,233,0.45);align-self:flex-end;padding-bottom:8px;">/10</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:18px;font-weight:700;color:#D6A428;">{{ _last.tier or '' }}</span>
+            <span style="font-size:14px;color:rgba(246,242,233,0.55);">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</span>
+          </div>
+          <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:14px;font-weight:600;color:rgba(214,164,40,0.9);text-decoration:none;">View full evaluation report →</a>
+        </div>
+        {# Right — previous + delta + photo count #}
+        <div style="text-align:right;flex-shrink:0;">
+          {% if _prev %}
+          <span style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(246,242,233,0.45);display:block;margin-bottom:5px;">Previous</span>
+          <div style="font-size:28px;font-weight:700;color:rgba(246,242,233,0.5);line-height:1;margin-bottom:6px;">{{ '%.1f'|format(_prev.score) }}</div>
+          {% if _delta is not none %}
+          <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.3){% elif _delta < 0 %}rgba(192,57,43,0.3){% else %}rgba(107,107,107,0.3){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.5){% elif _delta < 0 %}rgba(192,57,43,0.5){% else %}rgba(107,107,107,0.5){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:14px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:16px;">
+            <span>{% if _delta > 0 %}↑{% elif _delta < 0 %}↓{% else %}—{% endif %}</span>
+            <span>{% if _delta > 0 %}+{% endif %}{{ '%.1f'|format(_delta) }} {% if _delta > 0 %}improving{% elif _delta < 0 %}dropped{% else %}steady{% endif %}</span>
+          </div>
+          {% endif %}
+          {% endif %}
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:4px;">
+            <span style="font-size:18px;">📷</span>
+            <span style="font-size:22px;font-weight:800;color:rgba(246,242,233,0.7);">{{ progress_data.count if progress_data else stats.total or 0 }}</span>
+          </div>
+          <span style="font-size:14px;color:rgba(246,242,233,0.5);display:block;margin-top:3px;">Photographs evaluated</span>
+          <a href="{{ url_for('my_gallery') }}" style="font-size:14px;color:rgba(214,164,40,0.8);font-weight:600;display:block;margin-top:4px;text-decoration:none;">View all →</a>
+        </div>
+      </div>
     </div>
     {% endif %}
 
-    {# ── Greeting — secondary, below Score Reveal ── #}
-    <div class="greeting" style="border-left:none;padding-left:0;padding:16px 0 4px;text-decoration:none;">
-      <div>
-        <div class="greeting-name" style="text-decoration:none;">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
-        <div class="greeting-sub">
-          {% if progress_data and progress_data.count > 0 and progress_data.strongest %}
-            You've improved your <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong> more than any other dimension this month. Today's mission continues that journey.
-          {% elif dash_advisory and dash_advisory.get('light_note') %}
-            {{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}
-          {% else %}
-            Today's practice begins here.
-          {% endif %}
-        </div>
+    {# ── All remaining centre content gets consistent padding ── #}
+    <div class="centre-gap">
+
+    {# ── Greeting ── #}
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1.2;margin-bottom:5px;">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
+      <div style="font-size:14px;color:var(--d-muted);line-height:1.6;">
+        {% if progress_data and progress_data.count > 0 and progress_data.strongest %}
+          You've improved your <strong style="color:var(--d-dark);font-weight:700;">{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong> more than any other dimension this month. Today's mission continues that journey.
+        {% elif dash_advisory and dash_advisory.get('light_note') %}
+          {{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}
+        {% else %}
+          Today's practice begins here.
+        {% endif %}
       </div>
     </div>
 
@@ -594,22 +605,31 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# ── TODAY'S MISSION (practice card) ── #}
     {% if show_mission %}
+    {% set _dim_why = {'dod':'Technical Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW Factor','disruption':'Disruption'} %}
+    {% set _weakest_label = _dim_why.get(progress_data.weakest, 'this dimension') if progress_data and progress_data.weakest else 'your weakest dimension' %}
     <div class="practice-card">
       <div class="practice-content">
         <div>
           <div class="practice-eyebrow">Today's Mission</div>
           <div class="practice-title">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
+          {% if progress_data and progress_data.weakest %}
+          <div style="margin-bottom:10px;">
+            <div style="font-size:14px;font-weight:700;color:#D6A428;margin-bottom:4px;">Why this mission?</div>
+            <div style="font-size:14px;color:rgba(246,242,233,0.65);line-height:1.55;">Your recent photographs show <strong style="color:rgba(246,242,233,0.85);">{{ _weakest_label }}</strong> as your weakest dimension. Strengthening it will raise your overall evaluation.</div>
+          </div>
+          {% else %}
           <div class="practice-meta">
             <div>
               <div class="practice-meta-label">Focus</div>
               <div class="practice-meta-val">{{ lesson.dim_short if lesson else 'Timing' }}</div>
             </div>
           </div>
+          {% endif %}
         </div>
         <div class="practice-actions">
           <a href="{{ url_for('mission') }}" class="practice-cta">Begin Today's Practice →</a>
           <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline;">
-            <button type="submit" class="practice-skip" style="background:none;border:none;padding:0;cursor:pointer;">or Skip for now</button>
+            <button type="submit" class="practice-skip" style="background:none;border:none;padding:0;cursor:pointer;">Skip for now</button>
           </form>
         </div>
       </div>
@@ -687,91 +707,174 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     {# ── LOCATION ADVISORY — desktop ── #}
     {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
-    <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:12px;overflow:hidden;">
+    <div style="background:var(--d-card);border:1px solid var(--d-border);border-radius:var(--d-r);overflow:hidden;display:flex;flex-direction:column;">
+      {# Header bar #}
+      <div style="padding:12px 16px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);">Today's Opportunity</span>
+        </div>
+        {% if dash_advisory.get('genre') %}
+        <span style="background:#F0F8F2;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:12px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>
+        {% endif %}
+      </div>
       {# Body #}
-      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-              <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2A7A3A;">Nearby Opportunity &middot; Now</span>
-            </div>
-            {% if dash_advisory.get('genre') %}
-            <span style="background:#fff;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>
-            {% endif %}
-          </div>
-          <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">
-            {{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}
-          </div>
-          {% if dash_advisory.get('subject') %}
-          <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:6px;">{{ dash_advisory.subject }}</div>
-          {% endif %}
-          {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-          <div id="adv-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {% if _adv_full|length > 220 %}{{ _adv_full[:220].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('adv-body-short').style.display='none';document.getElementById('adv-body-full').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _adv_full }}{% endif %}
-          </div>
-          <div id="adv-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ _adv_full }}
-            <button onclick="document.getElementById('adv-body-short').style.display='block';document.getElementById('adv-body-full').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
-          </div>
-          {% if weather and weather.state == 'red' %}
-          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
-            ⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }} Skip the outdoor session today.
-          </div>
-          {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
-            ⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}
-          </div>
-          {% endif %}
-          {% if progress_data and progress_data.weakest %}
-          {% set _dim_map = {'dod':'Difficulty','dm':'Timing','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          <div style="font-size:14px;color:var(--d-green);font-weight:700;margin-top:4px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
-          {% endif %}
-          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:#2A7A3A;font-weight:600;display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:14px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+      <div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;">
+          <span style="font-size:16px;flex-shrink:0;margin-top:1px;">📍</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--d-dark);line-height:1.25;">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}<span style="font-size:14px;font-weight:400;color:var(--d-muted);">, {{ dash_advisory.state_country }}</span>{% endif %}</div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:10px;flex-shrink:0;">
-          <div style="width:56px;height:56px;border-radius:10px;background:rgba(42,122,58,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
+        {% if dash_advisory.get('subject') %}
+        <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:8px;">{{ dash_advisory.subject }}</div>
+        {% endif %}
+        {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
+        <div style="font-size:14px;color:var(--d-text);line-height:1.65;margin-bottom:8px;">
+          {% if _adv_full|length > 160 %}
+          <span id="adv-short">{{ _adv_full[:160].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('adv-short').style.display='none';document.getElementById('adv-long').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>
+          <span id="adv-long" style="display:none;">{{ _adv_full }} <button onclick="document.getElementById('adv-short').style.display='inline';document.getElementById('adv-long').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;">Show less</button></span>
+          {% else %}{{ _adv_full }}{% endif %}
+        </div>
+        {% if progress_data and progress_data.weakest %}
+        {% set _dim_map = {'dod':'Difficulty','dm':'Timing','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
+        <div style="font-size:14px;color:#2A7A3A;font-weight:700;margin-bottom:6px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
+        {% endif %}
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+          {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:#2A7A3A;font-weight:600;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+          {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+          {% if weather and weather.condition %}<span style="font-size:14px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+        </div>
+        {% if weather and weather.state == 'red' %}
+        <div style="font-size:14px;font-weight:600;line-height:1.5;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;margin-bottom:10px;">⚠ {{ weather.message or 'Poor conditions — check before heading out.' }}</div>
+        {% elif weather and weather.state == 'amber' %}
+        <div style="font-size:14px;font-weight:600;line-height:1.5;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;margin-bottom:10px;">⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}</div>
+        {% endif %}
+        <div style="display:flex;gap:10px;margin-top:auto;padding-top:4px;">
           <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-             style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:5px 12px;border-radius:8px;">Get directions →</a>
+             style="display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--d-cream);background:var(--d-dark);padding:10px 16px;border-radius:10px;text-decoration:none;min-height:44px;">Get directions →</a>
           <a href="{{ url_for('profile') }}#location"
-             style="font-size:14px;color:#2A7A3A;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
+             style="font-size:14px;color:var(--d-muted);text-decoration:underline;display:flex;align-items:center;">Change location →</a>
         </div>
       </div>
     </div>
     {% endif %}
 
-    {# ── PEER EVALUATE — subtle 1-row strip, desktop only ── #}
+    {# ── PEER EVALUATE — 1 big image, carousel, equal height to advisory ── #}
     {% if peer_queue %}
-    <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:18px 20px;">
-      <div style="margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);">Sharpen Your Eye</div>
-        <div style="font-size:13px;color:var(--d-muted);margin-top:3px;">Evaluate others' work &middot; 2 points per evaluation &middot; +2 bonus when you match DDI</div>
+    <div style="background:var(--d-card);border-radius:var(--d-r);border:1px solid var(--d-border);padding:16px 18px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Sharpen Your Eye</div>
+        <span style="background:#FDF6DC;color:#7A5800;font-size:13px;font-weight:700;padding:2px 9px;border-radius:12px;border:1px solid #E8D890;">+2 points</span>
       </div>
-      <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:12px;">Evaluate this image and train your eye.</div>
+      {# Big image — first in queue #}
+      {% set _pq0 = peer_queue[0] %}
+      {% set _pimg0 = _pq0.image %}
+      <div id="sharpen-img-wrap" style="border-radius:10px;overflow:hidden;margin-bottom:12px;aspect-ratio:4/3;background:var(--d-border);position:relative;flex:1;">
+        {% if _pimg0 and _pimg0.thumb_url %}
+        <img id="sharpen-img" src="{{ _pimg0.thumb_url }}" alt="{{ _pimg0.genre or 'Photo' }}"
+             style="width:100%;height:100%;object-fit:cover;display:block;"
+             onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
+        {% endif %}
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--d-dark);margin-bottom:3px;">Can you spot the {{ {'dod':'Difficulty','dm':'Decisive Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.weakest, 'story') if progress_data and progress_data.weakest else 'story' }} in this frame?</div>
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:12px;">2 minutes · +2 points</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <a href="{{ url_for('rate') }}?assignment={{ _pq0.id }}" style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--d-dark);color:#F6F2E9;font-size:14px;font-weight:700;padding:12px 16px;border-radius:10px;text-decoration:none;min-height:44px;">Evaluate this image →</a>
+        {% if peer_queue|length > 1 %}
+        <button onclick="sharpenNext()" style="width:44px;height:44px;border-radius:50%;border:1px solid var(--d-border);background:var(--d-card);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">›</button>
+        {% endif %}
+      </div>
+      {# Carousel dots #}
+      <div style="display:flex;gap:6px;justify-content:center;">
         {% for _pq in peer_queue %}
-        <a href="{{ url_for('rate') }}?assignment={{ _pq.id }}"
-           style="display:block; border-radius:10px; overflow:hidden; text-decoration:none; position:relative; aspect-ratio:1; background:var(--d-border);">
-          {% set _pimg = _pq.image %}
-          {% if _pimg and _pimg.thumb_url %}
-          <img src="{{ _pimg.thumb_url }}" alt="{{ _pimg.genre or 'Photo' }}"
-               style="width:100%;height:100%;object-fit:cover;display:block;"
-               onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
-          {% endif %}
-          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
-            <span style="font-size:13px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
-          </div>
-        </a>
+        <span class="sharpen-dot" data-idx="{{ loop.index0 }}" style="width:8px;height:8px;border-radius:50%;background:{% if loop.first %}var(--d-gold){% else %}var(--d-border){% endif %};cursor:pointer;transition:background 0.2s;" onclick="sharpenGo({{ loop.index0 }})"></span>
         {% endfor %}
       </div>
+      <script>
+      var _sq = [{% for _pq in peer_queue %}{"url":"{{ _pq.image.thumb_url if _pq.image and _pq.image.thumb_url else '' }}","href":"{{ url_for('rate') }}?assignment={{ _pq.id }}"}{% if not loop.last %},{% endif %}{% endfor %}];
+      var _si = 0;
+      function sharpenGo(i) {
+        _si = i;
+        var img = document.getElementById('sharpen-img');
+        if (img && _sq[i] && _sq[i].url) { img.src = _sq[i].url; }
+        document.querySelectorAll('.sharpen-dot').forEach(function(d,j){ d.style.background = j===i?'var(--d-gold)':'var(--d-border)'; });
+        var btn = document.querySelector('#sharpen-img-wrap + * + * + * a');
+        if (btn && _sq[i]) btn.href = _sq[i].href;
+      }
+      function sharpenNext() { sharpenGo((_si + 1) % _sq.length); }
+      </script>
     </div>
     {% endif %}
 
     </div>{# /2-col panel #}
+    {% endif %}
+
+    {# ══ YOUR JOURNEY — sparkline + latest 5 thumbnails ══ #}
+    {% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
+    <div style="background:var(--d-card);border-radius:var(--d-r);border:1px solid var(--d-border);padding:16px 18px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">
+        <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);">Your Journey</div>
+        <a href="/journey" style="font-size:14px;font-weight:600;color:var(--d-dark);text-decoration:none;">View full journey →</a>
+      </div>
+      <div style="font-size:14px;color:var(--d-muted);margin-bottom:14px;">See how you are evolving.</div>
+      {# Sparkline SVG — inline, data from progress_data.trend #}
+      {% set _t = progress_data.trend %}
+      {% set _scores = _t|map(attribute='score')|list %}
+      {% set _min = _scores|min %}
+      {% set _max = _scores|max %}
+      {% set _range = [(_max - _min), 0.5]|max %}
+      {% set _n = _t|length %}
+      <svg viewBox="0 0 560 82" width="100%" height="82" preserveAspectRatio="none" style="display:block;margin-bottom:14px;overflow:visible;">
+        {# Grid lines #}
+        <line x1="36" y1="64" x2="548" y2="64" stroke="var(--d-border)" stroke-width="0.8"/>
+        <line x1="36" y1="44" x2="548" y2="44" stroke="var(--d-border)" stroke-width="0.8"/>
+        <line x1="36" y1="24" x2="548" y2="24" stroke="var(--d-border)" stroke-width="0.8"/>
+        {# Build polyline points #}
+        {% set _pts = namespace(val='') %}
+        {% for _item in _t %}
+          {% set _xi = (loop.index0 / (_n - 1) * 500 + 36)|round(1) %}
+          {% set _yi = (54 - ((_item.score - _min) / _range) * 34)|round(1) %}
+          {% set _pts.val = _pts.val ~ _xi ~ ',' ~ _yi ~ ' ' %}
+        {% endfor %}
+        {# Line #}
+        <polyline fill="none" stroke="#2A7A3A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="{{ _pts.val }}"/>
+        {# Dots #}
+        {% for _item in _t %}
+          {% set _xi = (loop.index0 / (_n - 1) * 500 + 36)|round(1) %}
+          {% set _yi = (54 - ((_item.score - _min) / _range) * 34)|round(1) %}
+          <circle cx="{{ _xi }}" cy="{{ _yi }}" r="{{ '6' if loop.last else '4' }}" fill="{{ '#2A7A3A' if loop.last else '#D6A428' }}"/>
+          {# Score label above dot #}
+          <text x="{{ _xi }}" y="{{ (_yi - 10)|round(1) }}" text-anchor="middle" font-size="13" fill="var(--d-muted)" font-family="inherit" font-weight="{{ '700' if loop.last else '400' }}">{{ '%.1f'|format(_item.score) }}</text>
+          {# Date below baseline #}
+          <text x="{{ _xi }}" y="79" text-anchor="middle" font-size="11" fill="var(--d-muted)" font-family="inherit">
+            {% if loop.last %}Today{% elif _item.scored_at is defined %}{{ _item.scored_at.strftime('%d %b') if _item.scored_at else '' }}{% endif %}
+          </text>
+        {% endfor %}
+        {# Today callout box on last dot #}
+        {% set _lx = 536 %}
+        {% set _ly = (54 - ((_t[-1].score - _min) / _range) * 34 - 26)|round(1) %}
+        <rect x="{{ (_lx - 22)|round(1) }}" y="{{ _ly }}" width="44" height="18" rx="4" fill="#2A7A3A"/>
+        <text x="{{ _lx }}" y="{{ (_ly + 13)|round(1) }}" text-anchor="middle" font-size="12" fill="#fff" font-family="inherit" font-weight="700">{{ '%.1f'|format(_t[-1].score) }}</text>
+      </svg>
+      {# Latest 5 thumbnails #}
+      {% set _scored5 = images.items|selectattr('score')|selectattr('thumb_url')|list if images and images.items else [] %}
+      {% if _scored5 %}
+      <div style="font-size:14px;font-weight:700;color:var(--d-dark);margin-bottom:10px;">Latest 5 evaluations</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px;">
+        {% for img in _scored5[:5] %}
+        <a href="{{ url_for('image_detail', image_id=img.id) }}" style="text-decoration:none;text-align:center;">
+          <div style="border-radius:9px;overflow:hidden;aspect-ratio:1;background:var(--d-border);margin-bottom:5px;">
+            <img src="{{ img.thumb_url }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
+          </div>
+          <span style="font-size:15px;font-weight:800;color:var(--d-dark);display:block;line-height:1.2;">{{ '%.1f'|format(img.score) }}</span>
+          <span style="font-size:13px;color:var(--d-muted);display:block;">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <a href="/journey" style="display:block;font-size:14px;font-weight:600;color:var(--d-dark);text-align:center;padding-top:12px;border-top:1px solid var(--d-border);text-decoration:none;">View all evaluations →</a>
+    </div>
     {% endif %}
 
     {# ── MY GALLERY ── #}
@@ -801,6 +904,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
     {% endif %}
 
+    </div>{# end centre-gap #}
+
   </main>
 
   {# ════════════════════════════════════
@@ -821,36 +926,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   }
   </script>
 
-  {# ── 1. Latest Evaluation — open by default ── #}
-  <div class="rp-acc rp-card" style="border-left-color:#C87820;">
-    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0;" onclick="rpToggle('rp-latest')">
-      <div class="rp-label" style="margin-bottom:0;">Latest</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        {% if _last and _last.score %}<span style="font-size:15px;font-weight:800;color:var(--d-dark);">{{ '%.1f'|format(_last.score) }}</span><span style="font-size:13px;color:var(--d-green);font-weight:600;">{{ _last.tier or '' }}</span>{% endif %}
-        <span class="rp-chev" style="font-size:13px;color:var(--d-muted);">▴</span>
-      </div>
-    </div>
-    <div id="rp-latest" style="display:block;margin-top:10px;padding-top:10px;border-top:1px solid var(--d-border);">
-      {% if _last %}
-      <div class="latest-eval">
-        <div class="latest-thumb">
-          {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" alt="" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">{% endif %}
-        </div>
-        <div>
-          <div class="latest-title">{{ _last.asset_name or (_last.genre or 'Photograph') }}</div>
-          <div class="latest-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<span style="font-size:13px;font-weight:400;color:var(--d-muted)">/10</span></div>
-          <div class="latest-tier">{{ _last.tier or '' }}</div>
-          <div class="latest-date">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
-        </div>
-      </div>
-      <a href="{{ url_for('image_detail', image_id=_last.id) }}" class="latest-link">View Assessment Report →</a>
-      {% else %}
-      <div style="font-size:13px;color:var(--d-muted);padding:4px 0;">Upload your first photograph to see your evaluation here.</div>
-      {% endif %}
-    </div>
-  </div>
-
-  {# ── 2. My Standing — collapsed ── #}
+  {# ── 1. My Standing — first card, open by default ── #}
   {% if progress_data %}
   <div class="rp-acc rp-card" style="border-left-color:#1A2744;">
     <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="rpToggle('rp-standing')">
@@ -858,10 +934,10 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:14px;font-weight:700;color:var(--d-dark);">{{ progress_data.avg_tier }}</span>
         {% if progress_data.overall_pct %}<span style="font-size:13px;color:var(--d-muted);">Top {{ progress_data.overall_pct }}%</span>{% endif %}
-        <span class="rp-chev" style="font-size:13px;color:var(--d-muted);">▾</span>
+        <span class="rp-chev" style="font-size:13px;color:var(--d-muted);">▴</span>
       </div>
     </div>
-    <div id="rp-standing" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--d-border);" onclick="document.getElementById('standing-modal').style.display='flex'">
+    <div id="rp-standing" style="display:block;margin-top:10px;padding-top:10px;border-top:1px solid var(--d-border);" onclick="document.getElementById('standing-modal').style.display='flex'">
       <div style="font-size:24px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;cursor:pointer;">{{ progress_data.avg_tier }}</div>
       {% if aea_dash and aea_dash.top6_avg %}
       <div style="font-size:14px;color:var(--d-muted);margin-bottom:6px;">AEA {{ '%.2f'|format(aea_dash.top6_avg) }} &middot; avg {{ '%.2f'|format(progress_data.avg_score) }}</div>
