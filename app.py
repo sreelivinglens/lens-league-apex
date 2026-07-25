@@ -1,4 +1,3 @@
-# SL-VERSION: 161.1 (Session 161 — /journey route added: full evaluation trend, dimension averages, image timeline. Insert after skip_mission route, line ~5145. No existing routes modified.)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -5122,54 +5121,8 @@ def dashboard():
 
 
 # ---------------------------------------------------------------------------
-# Journey — photographer's full evaluation history and progress
-# SL-DASHBOARD: 161.5 | Session 161 | 2026-07-26
+# My Gallery — user's full image history with search/filter
 # ---------------------------------------------------------------------------
-
-@app.route('/journey')
-@login_required
-def journey():
-    """Full evaluation trend, dimension progress, and image timeline."""
-    # All images with scores — newest first
-    all_images = (Image.query
-                  .filter_by(user_id=current_user.id)
-                  .filter(Image.score.isnot(None))
-                  .order_by(Image.scored_at.desc())
-                  .all())
-
-    # Build trend data — all scored images chronologically
-    trend = []
-    for img in reversed(all_images):
-        if img.score and img.scored_at:
-            trend.append({
-                'score': img.score,
-                'tier': img.tier or '',
-                'scored_at': img.scored_at,
-                'id': img.id,
-                'thumb_url': img.thumb_url or '',
-                'genre': img.genre or '',
-            })
-
-    # Dimension averages across all images
-    _dim_keys = ['dod', 'dm', 'aq', 'wonder', 'disruption']
-    _dim_labels = {'dod': 'Technical Difficulty', 'dm': 'Decisive Moment',
-                   'aq': 'Visual Impact', 'wonder': 'WOW Factor', 'disruption': 'Disruption'}
-    dim_avgs = {}
-    for dk in _dim_keys:
-        vals = [getattr(img, dk) for img in all_images
-                if getattr(img, dk, None) is not None]
-        dim_avgs[dk] = round(sum(vals) / len(vals), 1) if vals else None
-
-    # Latest 20 for display
-    recent_images = all_images[:20]
-
-    return render_template('journey.html',
-                           trend=trend,
-                           dim_avgs=dim_avgs,
-                           dim_labels=_dim_labels,
-                           recent_images=recent_images,
-                           total_count=len(all_images))
-
 
 @app.route('/dashboard/skip-mission', methods=['POST'])
 @login_required
