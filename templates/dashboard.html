@@ -13,26 +13,17 @@
 <style>
 /* ═══════════════════════════════════════════════════════
    SHUTTER LEAGUE DASHBOARD v1.0
-   Built from SL_Dashboard_Mock.html — single source of truth
    Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
-   Font: Avenir Next (inherits from base)
-   SL-DASHBOARD: 161.5 | Session 161 | 2026-07-26
-   Changes: Hero image full-bleed at 100% opacity, left-to-right gradient text zone,
-            iPad 769-1024px explicit 2-col layout (centre + right panel, no sidenav),
-            rp-label letter-spacing reduced to 0.5px to fix wrapping,
-            This Week's Challenge label letter-spacing fixed,
-            centre-gap padding-top 20px breathing room after hero,
-            backdrop-filter -webkit- prefix added for Safari,
-            View all evaluations → points to my_gallery not journey,
-            Excellence Award label in right column
-   Changes: Score Reveal → full-bleed image hero with overlay,
-            Latest card removed from right column (replaced by hero),
-            Standing card now open by default in right column,
-            Mission card adds Why this mission? section,
-            Advisory redesigned as card matching Sharpen panel height,
-            Advisory text truncates at 160 chars with Read more,
-            Sharpen Your Eye → 1 big image + carousel dots + next arrow,
-            Your Journey sparkline + 5 thumbnails added
+   SL-DASHBOARD: 161.6 | Session 161 | 2026-07-26
+   Changes since 161.5:
+   - Hero margin-top removed, aligns flush with right panel top
+   - Right panel padding-top set to 12px to match hero start
+   - Sidenav: si-text wrapper with flex-col align-items:flex-start
+   - Sidenav HTML: all items use si-text class correctly
+   - Hero breathing: 12px space now via right panel alignment not margin
+   - Hero right content: overflow:hidden, white-space:nowrap on delta pill
+   - Gradient reduced to 0.70/0.60/0.30/0.05/transparent
+   - backdrop-filter with -webkit- prefix on delta pill
 ═══════════════════════════════════════════════════════ */
 body.page-dashboard { padding-top: 0 !important; }
 body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
@@ -289,21 +280,21 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   }
   .sidenav::-webkit-scrollbar { display: none; }
   .sidenav-item {
-    display: flex; align-items: flex-start; gap: 9px;
-    padding: 9px 11px; border-radius: 9px;
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 11px; border-radius: 9px;
     text-decoration: none; transition: background 0.1s;
-    min-height: 40px; color: var(--d-text);
+    min-height: 36px; color: var(--d-text);
   }
   .sidenav-item:hover { background: rgba(0,0,0,0.04); }
   .sidenav-item.si-active { background: #FDF6DC; }
   .sidenav-item.si-dim { opacity: 0.65; }
   .sidenav-item.si-dim:hover { opacity: 1; }
-  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
-  .si-ico { font-size: 15px; flex-shrink: 0; line-height: 1; padding-top: 2px; }
-  .si-label { font-size: 13px; font-weight: 600; color: var(--d-text); display: block; line-height: 1.3; white-space: nowrap; }
+  .si-ico { font-size: 15px; flex-shrink: 0; line-height: 1; margin-top: 1px; }
+  .si-text { display: flex; flex-direction: column; align-items: flex-start; }
+  .si-label { font-size: 13px; font-weight: 600; color: var(--d-text); line-height: 1.4; white-space: nowrap; }
   .sidenav-item.si-active .si-label { color: #7A5800; font-weight: 700; }
   .sidenav-item.si-dim .si-label { font-weight: 400; color: var(--d-muted); }
-  .si-sub { font-size: 13px; color: var(--d-muted); display: block; margin-top: 1px; line-height: 1.3; white-space: nowrap; }
+  .si-sub { font-size: 12px; color: var(--d-muted); line-height: 1.3; white-space: nowrap; margin-top: 1px; }
   .sidenav-divider {
     font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; color: #AAAAAA;
@@ -338,7 +329,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   /* ── Right panel — sticky, scrollable, max viewport height ── */
   .rpanel {
     border-left: 1px solid var(--d-border);
-    padding: 16px 14px;
+    padding: 12px 14px 16px;
     gap: 10px;
     align-self: start;
     position: sticky;
@@ -489,46 +480,46 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
     <a href="{{ url_for('dashboard') }}" class="sidenav-item si-active">
       <span class="si-ico">🏠</span>
-      <span><span class="si-label">Dashboard</span></span>
+      <span class="si-text"><span class="si-label">Dashboard</span></span>
     </a>
     <a href="{{ url_for('upload') }}" class="sidenav-item">
       <span class="si-ico">⬆</span>
-      <span><span class="si-label">Upload</span></span>
+      <span class="si-text"><span class="si-label">Upload</span></span>
     </a>
     <a href="/journey" class="sidenav-item">
       <span class="si-ico">📈</span>
-      <span><span class="si-label">Journey</span><span class="si-sub">See your progress</span></span>
+      <span class="si-text"><span class="si-label">Journey</span><span class="si-sub">See your progress</span></span>
     </a>
     <a href="{{ url_for('mentors') }}" class="sidenav-item">
       <span class="si-ico">⭐</span>
-      <span><span class="si-label">Get Reviewed</span><span class="si-sub">Mentor feedback</span></span>
+      <span class="si-text"><span class="si-label">Get Reviewed</span><span class="si-sub">Mentor feedback</span></span>
     </a>
     <a href="{{ url_for('leaderboard') }}" class="sidenav-item">
       <span class="si-ico">🏛</span>
-      <span><span class="si-label">Community Gallery</span><span class="si-sub">See others' work</span></span>
+      <span class="si-text"><span class="si-label">Community Gallery</span><span class="si-sub">See others' work</span></span>
     </a>
     <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item">
       <span class="si-ico">🖼</span>
-      <span><span class="si-label">My Portfolio</span><span class="si-sub">Your best work</span></span>
+      <span class="si-text"><span class="si-label">My Portfolio</span><span class="si-sub">Your best work</span></span>
     </a>
 
     <span class="sidenav-divider">More</span>
 
     <a href="{{ url_for('contests') }}" class="sidenav-item si-dim">
       <span class="si-ico">🏆</span>
-      <span><span class="si-label">Programmes</span><span class="si-sub">AEA · Open · Body of Work</span></span>
+      <span class="si-text"><span class="si-label">Programmes</span><span class="si-sub">AEA · Open · Body of Work</span></span>
     </a>
     <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item si-dim">
       <span class="si-ico">📅</span>
-      <span><span class="si-label">Weekly Challenge</span></span>
+      <span class="si-text"><span class="si-label">Weekly Challenge</span></span>
     </a>
     <a href="{{ url_for('profile') }}" class="sidenav-item si-dim">
       <span class="si-ico">⚙</span>
-      <span><span class="si-label">Settings</span></span>
+      <span class="si-text"><span class="si-label">Settings</span></span>
     </a>
     <a href="/contact" class="sidenav-item si-dim">
       <span class="si-ico">❓</span>
-      <span><span class="si-label">Help &amp; Support</span></span>
+      <span class="si-text"><span class="si-label">Help &amp; Support</span></span>
     </a>
 
   </nav>
@@ -555,21 +546,21 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% if _last and _last.score %}
     {% set _prev = progress_data.trend[-2] if progress_data and progress_data.trend and progress_data.trend|length >= 2 else none %}
     {% set _delta = (_last.score - _prev.score)|round(1) if _prev else none %}
-    <div style="position:relative;min-height:260px;background:#0F2A22;overflow:hidden;width:100%;">
-      {# Background image — full bleed, full brightness, image is the hero #}
+    <div style="position:relative;min-height:260px;background:#0F2A22;overflow:hidden;width:100%;margin-top:0;">
+      {# Background image — full bleed, full brightness #}
       {% if _last.thumb_url %}
       <img src="{{ _last.thumb_url }}" alt="Latest evaluation"
            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;"
            onerror="this.style.display='none'">
       {% endif %}
-      {# Gradient — left heavy covering text zone, right side image fully visible #}
-      <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,22,15,0.90) 0%,rgba(10,22,15,0.80) 30%,rgba(10,22,15,0.45) 55%,rgba(10,22,15,0.10) 75%,transparent 100%);"></div>
-      {# Bottom vignette so score text always pops #}
+      {# Gradient — left zone dark for text, right zone image visible #}
+      <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,22,15,0.70) 0%,rgba(10,22,15,0.60) 30%,rgba(10,22,15,0.30) 55%,rgba(10,22,15,0.05) 75%,transparent 100%);"></div>
+      {# Bottom vignette #}
       <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,rgba(10,22,15,0.50),transparent);"></div>
-      {# Content — text sits left, image breathes right #}
-      <div style="position:relative;z-index:2;padding:28px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;min-height:260px;gap:20px;">
+      {# Content — two columns inside the hero, both contained #}
+      <div style="position:relative;z-index:2;padding:28px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;min-height:260px;gap:16px;box-sizing:border-box;width:100%;overflow:hidden;">
         {# Left — score + tier + link #}
-        <div style="max-width:55%;">
+        <div style="flex:0 0 auto;max-width:55%;">
           <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(214,164,40,0.85);margin-bottom:10px;">Your latest evaluation</div>
           <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px;">
             <div style="font-size:72px;font-weight:800;color:#F6F2E9;line-height:1;letter-spacing:-3px;text-shadow:0 2px 20px rgba(0,0,0,0.7);">{{ '%.1f'|format(_last.score) }}</div>
@@ -581,13 +572,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           </div>
           <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:14px;font-weight:600;color:rgba(214,164,40,0.90);text-decoration:none;text-shadow:0 1px 4px rgba(0,0,0,0.5);">View full evaluation report →</a>
         </div>
-        {# Right — previous score + delta + photo count — sits in the gradient transition zone #}
-        <div style="text-align:right;flex-shrink:0;">
+        {# Right — previous + delta + photo count — contained within box #}
+        <div style="flex:0 0 auto;text-align:right;min-width:0;overflow:hidden;">
           {% if _prev %}
           <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(246,242,233,0.55);display:block;margin-bottom:4px;">Previous</span>
           <div style="font-size:26px;font-weight:700;color:rgba(246,242,233,0.60);line-height:1;margin-bottom:6px;">{{ '%.1f'|format(_prev.score) }}</div>
           {% if _delta is not none %}
-          <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.35){% elif _delta < 0 %}rgba(192,57,43,0.35){% else %}rgba(107,107,107,0.35){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.6){% elif _delta < 0 %}rgba(192,57,43,0.6){% else %}rgba(107,107,107,0.6){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:14px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
+          <div style="display:inline-flex;align-items:center;gap:5px;background:{% if _delta > 0 %}rgba(42,122,58,0.35){% elif _delta < 0 %}rgba(192,57,43,0.35){% else %}rgba(107,107,107,0.35){% endif %};border:1px solid {% if _delta > 0 %}rgba(42,122,58,0.6){% elif _delta < 0 %}rgba(192,57,43,0.6){% else %}rgba(107,107,107,0.6){% endif %};color:{% if _delta > 0 %}#6ED88E{% elif _delta < 0 %}#F08080{% else %}#AAAAAA{% endif %};font-size:14px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);white-space:nowrap;">
             <span>{% if _delta > 0 %}↑{% elif _delta < 0 %}↓{% else %}—{% endif %}</span>
             <span>{% if _delta > 0 %}+{% endif %}{{ '%.1f'|format(_delta) }} {% if _delta > 0 %}improving{% elif _delta < 0 %}dropped{% else %}steady{% endif %}</span>
           </div>
