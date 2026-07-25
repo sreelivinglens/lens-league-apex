@@ -1581,7 +1581,7 @@ img {
         {# ── SL 161 — 5-item nav · links pushed right · bell + avatar ── #}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}" style="margin-left:auto;">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
-        <a href="{{ url_for('journey') }}" class="{% if request.endpoint == 'journey' %}nav-active{% endif %}">Journey</a>
+        <a href="/journey" class="{% if request.endpoint == 'journey' %}nav-active{% endif %}">Journey</a>
         <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Get Reviewed</a>
         <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         {# Bell notification icon #}
@@ -1706,7 +1706,7 @@ img {
       <span class="sl-nav-item__icon">⌂</span>
       <span>Home</span>
     </a>
-    <a href="{{ url_for('journey') }}" class="sl-nav-item {% if request.endpoint == 'journey' %}active{% endif %}">
+    <a href="/journey" class="sl-nav-item {% if request.endpoint == 'journey' %}active{% endif %}">
       <span class="sl-nav-item__icon">📈</span>
       <span>Journey</span>
     </a>
