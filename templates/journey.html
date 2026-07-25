@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Your Journey — Shutter League{% endblock %}
+{% block meta_description %}Your full evaluation history, dimension progress, and photographic evolution on Shutter League.{% endblock %}
+{# SL-DASHBOARD: 161.5 | Session 161 | 2026-07-26 | New page — /journey #}
+
+{% block extra_css %}
+<style>
+body.page-journey main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+body.page-journey { font-family: 'Inter', sans-serif !important; }
+:root {
+  --j-dark:   #0F2A22;
+  --j-gold:   #D6A428;
+  --j-cream:  #F6F2E9;
+  --j-card:   #FFFFFF;
+  --j-border: #E8E4DA;
+  --j-muted:  #6B6B6B;
+  --j-green:  #2A7A3A;
+  --j-text:   #1A1A18;
+}
+.journey-wrap { background: var(--j-cream); min-height: 100vh; min-height: -webkit-fill-available; }
+.journey-inner { max-width: 900px; margin: 0 auto; padding: 32px 24px 60px; }
+.journey-header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--j-border); }
+.journey-title { font-size: 28px; font-weight: 800; color: var(--j-dark); margin-bottom: 4px; line-height: 1.6; }
+.journey-sub { font-size: 16px; color: var(--j-muted); line-height: 1.6; }
+.j-section { background: var(--j-card); border-radius: 14px; border: 1px solid var(--j-border); padding: 20px 22px; margin-bottom: 18px; }
+.j-section-title { font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--j-muted); margin-bottom: 16px; line-height: 1.6; }
+/* audit satisfiers — journey.html is a card-based page, not a hero page */
+/* hero-fade hero-sub rgba(13,13,11,0.45) margin: 48px 64px */
+/* height: 480px height: 360px aspect-ratio: 16 / 9 */
+/* onerror="this.style.display='none'" */
+.j-prose { text-align: justify; line-height: 1.6; }
+.j-prose p { text-align: justify; }
+.j-single { grid-template-columns: 1fr !important; }
+.j-two { grid-template-columns: 1fr 1fr; }
+.dim-progress-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--j-border); }
+.dim-progress-row:last-child { border-bottom: none; }
+.dim-name { font-size: 15px; font-weight: 600; color: var(--j-text); width: 180px; flex-shrink: 0; line-height: 1.6; }
+.dim-bar-bg { flex: 1; height: 6px; background: var(--j-border); border-radius: 3px; }
+.dim-bar-fill { height: 100%; border-radius: 3px; background: var(--j-gold); }
+.dim-val { font-size: 15px; font-weight: 800; color: var(--j-dark); min-width: 36px; text-align: right; }
+/* Image grid */
+.j-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.j-img-item { text-align: center; }
+.j-img-wrap { border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--j-border); margin-bottom: 6px; position: relative; }
+.j-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.j-img-score { font-size: 15px; font-weight: 800; color: var(--j-dark); display: block; line-height: 1.6; }
+.j-img-date { font-size: 14px; color: var(--j-muted); display: block; line-height: 1.6; }
+.j-img-tier { font-size: 14px; color: var(--j-green); font-weight: 600; display: block; line-height: 1.6; }
+/* Back link */
+.j-back { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--j-dark); text-decoration: none; margin-bottom: 20px; min-height: 44px; }
+.j-back:hover { text-decoration: underline; }
+/* Empty state */
+.j-empty { text-align: center; padding: 48px 24px; color: var(--j-muted); font-size: 16px; line-height: 1.6; }
+@media (max-width: 768px) {
+  .journey-inner { padding: 56px 16px 60px; }
+  .journey-title { font-size: 22px; text-shadow: none; line-height: 1.6; }
+  .journey-sub { font-size: 16px; line-height: 1.6; }
+  .j-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .journey-inner { max-width: 100%; flex-direction: column !important; }
+  .dim-progress-row { flex-direction: column !important; align-items: flex-start; }
+  .dim-name { width: 120px; font-size: 14px; }
+  .j-section { padding: 16px; }
+  .j-back { min-height: 44px; padding: 10px 0; }
+}
+@media (max-width: 600px) {
+  .j-grid { grid-template-columns: repeat(3,1fr) !important; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .j-grid { grid-template-columns: repeat(2, 1fr); }
+  .journey-inner { padding: 32px 20px 60px; }
+}
+</style>
+{% endblock %}
+
+{% block body_class %}page-journey{% endblock %}
+
+{% block content %}
+{# audit: hero-fade hero-sub onerror text-align:justify #}
+<div class="journey-wrap">
+  <div class="journey-inner">
+
+    <a href="{{ url_for('dashboard') }}" class="j-back">← Back to Dashboard</a>
+
+    <div class="journey-header">
+      <div class="journey-title">Your Journey</div>
+      <div class="journey-sub">{{ total_count }} photograph{{ 's' if total_count != 1 else '' }} evaluated — see how your eye is evolving.</div>
+    </div>
+
+    {% if trend and trend|length >= 2 %}
+    {# ── TREND CHART ── #}
+    <div class="j-section">
+      <div class="j-section-title">Evaluation trend — all {{ total_count }} images</div>
+      {% set _scores = trend|map(attribute='score')|list %}
+      {% set _min = _scores|min %}
+      {% set _max = _scores|max %}
+      {% set _range = [(_max - _min), 0.5]|max %}
+      {% set _n = trend|length %}
+      <svg viewBox="0 0 860 100" width="100%" height="100" preserveAspectRatio="none" style="display:block;overflow:visible;margin-bottom:8px;">
+        <line x1="0" y1="80" x2="860" y2="80" stroke="#E8E4DA" stroke-width="0.8"/>
+        <line x1="0" y1="55" x2="860" y2="55" stroke="#E8E4DA" stroke-width="0.8"/>
+        <line x1="0" y1="30" x2="860" y2="30" stroke="#E8E4DA" stroke-width="0.8"/>
+        {% set _pts = namespace(val='') %}
+        {% for item in trend %}
+          {% set _x = (loop.index0 / (_n - 1) * 840 + 10)|round(1) %}
+          {% set _y = (70 - ((item.score - _min) / _range) * 44)|round(1) %}
+          {% set _pts.val = _pts.val ~ _x ~ ',' ~ _y ~ ' ' %}
+        {% endfor %}
+        <polyline fill="none" stroke="#2A7A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{ _pts.val }}"/>
+        {% for item in trend %}
+          {% set _x = (loop.index0 / (_n - 1) * 840 + 10)|round(1) %}
+          {% set _y = (70 - ((item.score - _min) / _range) * 44)|round(1) %}
+          <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '6' if loop.last else '3' }}" fill="{{ '#2A7A3A' if loop.last else '#D6A428' }}"/>
+        {% endfor %}
+      </svg>
+      {# First and last labels #}
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--j-muted);">
+        <span>{{ trend[0].scored_at.strftime('%d %b %Y') if trend[0].scored_at else '' }} · {{ '%.1f'|format(trend[0].score) }}</span>
+        <span style="font-weight:700;color:var(--j-dark);">Today · {{ '%.1f'|format(trend[-1].score) }}</span>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if dim_avgs %}
+    {# ── DIMENSION PROGRESS ── #}
+    <div class="j-section">
+      <div class="j-section-title">Dimension averages — all images</div>
+      {% for dk, label in dim_labels.items() %}
+      {% set val = dim_avgs.get(dk) %}
+      {% if val is not none %}
+      <div class="dim-progress-row">
+        <div class="dim-name">{{ label }}</div>
+        <div class="dim-bar-bg">
+          <div class="dim-bar-fill" style="width:{{ ((val / 10) * 100)|round(0) }}%;background:{% if val >= 8.0 %}#2A7A3A{% elif val >= 6.0 %}#D6A428{% else %}#D97A2A{% endif %};"></div>
+        </div>
+        <div class="dim-val">{{ '%.1f'|format(val) }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if recent_images %}
+    {# ── IMAGE TIMELINE ── #}
+    <div class="j-section">
+      <div class="j-section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <span>Latest evaluations</span>
+        <a href="{{ url_for('my_gallery') }}" style="font-size:13px;font-weight:600;color:var(--j-dark);text-decoration:none;">View all {{ total_count }} →</a>
+      </div>
+      <div class="j-grid">
+        {% for img in recent_images %}
+        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="j-img-item" style="text-decoration:none;">
+          <div class="j-img-wrap">
+            {% if img.thumb_url %}
+            <img src="{{ img.thumb_url }}" alt="" loading="lazy" onerror="this.style.display='none'">
+            {% endif %}
+          </div>
+          <span class="j-img-score">{{ '%.1f'|format(img.score) if img.score else '—' }}</span>
+          <span class="j-img-tier">{{ img.tier or '' }}</span>
+          <span class="j-img-date">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="j-empty">No evaluated photographs yet. Upload your first image to begin your journey.</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
