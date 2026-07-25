@@ -1,3 +1,4 @@
+# SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
 # SL-VERSION: 160.2 (Session 160.2 — Filename normalisation: spaces↔underscores, special chars, leading underscores all handled in mim-ddi lookup + MIM pull)
 # SL-VERSION: 160.1 (Session 160 — MIM webhook push: after scoring, SL POSTs DDI scores
 #   to MIM /api/sl-ddi-push if original_filename matches a MIM image. Non-fatal.
@@ -26605,19 +26606,15 @@ def api_mim_ddi():
     def _normalise_fn(fn):
         """Normalise filename for fuzzy matching — strip path, lowercase stem for compare."""
         fn = fn.strip()
-        # Strip directory path if any
         fn = fn.split('/')[-1].split('\\')[-1]
-        # Separate stem and extension
         if '.' in fn:
             stem, ext = fn.rsplit('.', 1)
             ext = ext.lower()
         else:
             stem, ext = fn, ''
-        # Replace any non-alphanumeric (except hyphen) with underscore
+        stem = stem.strip()  # strip trailing/leading spaces from stem
         stem_norm = _re.sub(r'[^A-Za-z0-9\-]', '_', stem)
-        # Collapse multiple underscores
         stem_norm = _re.sub(r'_+', '_', stem_norm)
-        # Strip leading/trailing underscores
         stem_norm = stem_norm.strip('_').lower()
         return f'{stem_norm}.{ext}' if ext else stem_norm
 
