@@ -1578,31 +1578,36 @@ img {
         <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% else %}
-        <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
+        {# ── SL 161 — 5-item nav · links pushed right · bell + avatar ── #}
+        <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}" style="margin-left:auto;">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
-        <a href="{{ url_for('my_gallery') }}" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
-        <a href="{{ url_for('recent_work') }}" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
-        <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Programme Gallery</a>
-        <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint in ['weekly_challenge', 'challenge_submit', 'challenge_withdraw', 'challenge_topup'] %}nav-active{% endif %}">Weekly Assignment</a>
-        <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentor Review</a>
-        <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">My Account</a>
-        <a href="{{ url_for('portfolio_manager') }}" class="{% if request.endpoint == 'portfolio_manager' %}nav-active{% endif %}">My Portfolio</a>
-        <div class="nav-more" id="navMore">
-          <button class="nav-more-btn {% if request.endpoint in ['contests','contests_redirect','poty','pricing','science','how_it_works','learning','bow_info','bulk_upload'] %}nav-more-active{% endif %}" onclick="toggleNavMore()" aria-haspopup="true" aria-label="More navigation">
-            More <span class="nav-more-chevron">&#9660;</span>
+        <a href="{{ url_for('journey') }}" class="{% if request.endpoint == 'journey' %}nav-active{% endif %}">Journey</a>
+        <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Get Reviewed</a>
+        <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+        {# Bell notification icon #}
+        <a href="{{ url_for('dashboard') }}" title="Notifications" aria-label="Notifications" style="display:flex;align-items:center;padding:6px 8px;position:relative;text-decoration:none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </a>
+        {# Avatar + name dropdown #}
+        <div class="nav-more" id="navMore" style="margin-left:4px;">
+          <button class="nav-more-btn" onclick="toggleNavMore()" aria-haspopup="true" aria-label="Account menu" style="display:flex;align-items:center;gap:7px;padding:5px 10px;">
+            <span style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#8A9AB0,#5A6A80);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">{{ current_user.first_name[0]|upper if current_user.first_name else 'S' }}</span>
+            <span style="font-size:14px;color:rgba(255,255,255,.85);font-weight:500;">{{ current_user.first_name or 'Sri' }}</span>
+            <span class="nav-more-chevron">&#9660;</span>
           </button>
           <div class="nav-more-menu">
-            <a href="{{ url_for('contests') }}"      class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
-            <a href="{{ url_for('poty') }}"          class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Excellence Award</a>
-            <a href="{{ url_for('pricing') }}"       class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
-            <a href="{{ url_for('science') }}"       class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
-            <a href="{{ url_for('how_it_works') }}"  class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
-            <a href="{{ url_for('learning') }}"      class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
-            <a href="{{ url_for('bow_info') }}"      class="{% if request.endpoint == 'bow_info' %}nav-active{% endif %}">Body of Work</a>
-            {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>{% endif %}
+            <a href="{{ url_for('dashboard') }}"        class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('my_gallery') }}"       class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
+            <a href="{{ url_for('portfolio_manager') }}" class="{% if request.endpoint == 'portfolio_manager' %}nav-active{% endif %}">My Portfolio</a>
+            <a href="{{ url_for('leaderboard') }}"      class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Community Gallery</a>
+            <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint in ['weekly_challenge','challenge_submit','challenge_withdraw','challenge_topup'] %}nav-active{% endif %}">Weekly Challenge</a>
+            <a href="{{ url_for('contests') }}"         class="{% if request.endpoint in ['contests','contests_redirect'] %}nav-active{% endif %}">Programmes</a>
+            <a href="{{ url_for('profile') }}"          class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Settings</a>
+            <a href="/contact">Help &amp; Support</a>
+            <a href="{{ url_for('logout') }}" style="color:var(--gold);">Log out</a>
+            {% if current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>{% endif %}
           </div>
         </div>
-        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% endif %}
     {% else %}
       <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How it works</a>
@@ -1694,24 +1699,24 @@ img {
   {% block content %}{% endblock %}
 </main>
 
-{# ── Mobile tab nav — fixed to top on mobile ── #}
+{# ── Mobile tab nav — SL 161 · 5 tabs matching desktop nav ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
       <span class="sl-nav-item__icon">⌂</span>
       <span>Home</span>
     </a>
-    <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
-      <span class="sl-nav-item__icon">📋</span>
-      <span>My Gallery</span>
+    <a href="{{ url_for('journey') }}" class="sl-nav-item {% if request.endpoint == 'journey' %}active{% endif %}">
+      <span class="sl-nav-item__icon">📈</span>
+      <span>Journey</span>
     </a>
     <a href="{{ url_for('upload') }}" class="sl-nav-fab">
       <div class="sl-nav-fab__circle">↑</div>
       <span>Upload</span>
     </a>
-    <a href="{{ url_for('learning') }}" class="sl-nav-item {% if request.endpoint == 'learning' %}active{% endif %}">
-      <span class="sl-nav-item__icon">📖</span>
-      <span>Learn</span>
+    <a href="{{ url_for('mentors') }}" class="sl-nav-item {% if request.endpoint == 'mentors' %}active{% endif %}">
+      <span class="sl-nav-item__icon">⭐</span>
+      <span>Reviewed</span>
     </a>
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
       <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
@@ -1720,19 +1725,12 @@ img {
       </button>
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
         <div class="sl-bottom-more-menu__list">
-          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">My Account</a>
-          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
-          <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
-          <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Gallery</a>
-          <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentor Review</a>
-          <a href="{{ url_for('portfolio_manager') }}" onclick="closeBottomMore()">My Portfolio</a>
-          <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
-          <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Annual Excellence</a>
-          <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-          <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
-          <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
-          <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-          <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
+          <a href="{{ url_for('portfolio_manager') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'portfolio_manager' %}nav-active{% endif %}">My Portfolio</a>
+          <a href="{{ url_for('my_gallery') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
+          <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Community Gallery</a>
+          <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()" class="{% if request.endpoint in ['weekly_challenge','challenge_submit','challenge_withdraw','challenge_topup'] %}nav-active{% endif %}">Weekly Challenge</a>
+          <a href="{{ url_for('contests') }}" onclick="closeBottomMore()" class="{% if request.endpoint in ['contests','contests_redirect'] %}nav-active{% endif %}">Programmes</a>
+          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Settings</a>
           <a href="/contact" onclick="closeBottomMore()">Help &amp; Support</a>
           <div class="sl-bottom-more-menu__fade"></div>
         </div>
@@ -1783,9 +1781,11 @@ img {
 
 <footer>
   <div class="footer-top">
+    {# ── SL 161 — footer: MIM tagline + Understanding column ── #}
     <div class="footer-brand-col">
       <div class="footer-brand-name">SHUTTER LEAGUE</div>
       <div class="footer-brand-tag">Photography Assessment<br>&amp; Evolution Platform</div>
+      <div style="color:#D6A428;font-weight:700;font-size:14px;margin-top:8px;">Making Images Matter</div>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Company</div>
@@ -1804,16 +1804,16 @@ img {
     <div class="footer-col">
       <div class="footer-col-title">Programmes</div>
       <a href="{{ url_for('poty') }}" class="footer-col-link">Annual Excellence Award</a>
-      <a href="/programme-rules" class="footer-col-link">Programme Rules</a>
+      <a href="{{ url_for('contests') }}" class="footer-col-link">Open Programme</a>
+      <a href="{{ url_for('bow_info') }}" class="footer-col-link">Body of Work</a>
       <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Weekly Challenge</a>
-      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Guidelines</a>
     </div>
     <div class="footer-col">
-      <div class="footer-col-title">Learn</div>
-      <a href="{{ url_for('science') }}" class="footer-col-link">Science</a>
-      <a href="{{ url_for('learning') }}" class="footer-col-link">Lessons</a>
-      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Review</a>
-      <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Assignments</a>
+      <div class="footer-col-title">Understanding</div>
+      <a href="{{ url_for('how_it_works') }}" class="footer-col-link">How It Works</a>
+      <a href="{{ url_for('science') }}" class="footer-col-link">The Science</a>
+      <a href="/programme-rules" class="footer-col-link">Programme Rules</a>
+      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Guidelines</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -1999,3 +1999,4 @@ function cbAccept() {
 </html>
 
 <!-- SL UI v2.0 | Session 126 | 2026-07-05 -->
+<!-- SL-DASHBOARD: 161.1 | Session 161 | 2026-07-26 | Nav 10→5 items, footer Understanding column, Making Images Matter tagline -->
