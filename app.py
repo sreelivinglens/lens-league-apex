@@ -1,3 +1,4 @@
+# SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
 # SL-VERSION: 160.2 (Session 160.2 — Filename normalisation: spaces↔underscores, special chars, leading underscores all handled in mim-ddi lookup + MIM pull)
 # SL-VERSION: 160.1 (Session 160 — MIM webhook push: after scoring, SL POSTs DDI scores
@@ -26644,6 +26645,9 @@ def api_mim_ddi():
 
         # ── Normalised fallback ───────────────────────────────────────────────
         if not row and _fn_norm != _normalise_fn(filename):
+            # Extract core stem (strip trailing underscores/dots before extension)
+            # e.g. 'greater_flamingos_...storm.jpg' matches 'greater_flamingos_...storm_.jpg'
+            _stem_core = _fn_norm.rsplit('.', 1)[0].rstrip('_') if '.' in _fn_norm else _fn_norm.rstrip('_')
             row = db.session.execute(
                 db.text(
                     "SELECT id, score, tier, genre, dod_score, disruption_score, "
@@ -26653,11 +26657,11 @@ def api_mim_ddi():
                     "exif_lens, exif_software, exif_has_gps, camera_track, "
                     "mim_theme_score, mim_theme_paragraph "
                     "FROM images "
-                    "WHERE LOWER(REGEXP_REPLACE(original_filename, '[^A-Za-z0-9\\-]', '_', 'g')) "
-                    "LIKE :fn_norm AND status = 'scored' "
+                    "WHERE LOWER(REGEXP_REPLACE(TRIM(original_filename), '[^A-Za-z0-9\\-\\.]', '_', 'g')) "
+                    "LIKE :stem_pat AND status = 'scored' "
                     "ORDER BY scored_at DESC LIMIT 1"
                 ),
-                {'fn_norm': f'%{_fn_norm}%'}
+                {'stem_pat': f'{_stem_core}%'}
             ).fetchone()
             if row:
                 app.logger.warning(f'[mim-ddi] fuzzy match: {filename} → id={row.id}')
