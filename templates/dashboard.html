@@ -14,7 +14,7 @@
 /* ═══════════════════════════════════════════════════════
    SHUTTER LEAGUE DASHBOARD v1.0
    Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
-   SL-DASHBOARD: 161.10 | Session 161 | 2026-07-26
+   SL-DASHBOARD: 161.11 | Session 161 | 2026-07-26
    Changes since 161.5:
    - Hero margin-top removed, aligns flush with right panel top
    - Right panel padding-top set to 12px to match hero start
@@ -280,7 +280,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     overflow-y: auto;
     scrollbar-width: none;
     gap: 1px;
-    text-align: left;
+    text-align: left !important;
   }
   .sidenav::-webkit-scrollbar { display: none; }
   .sidenav-item {
@@ -288,20 +288,20 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     padding: 8px 11px; border-radius: 9px;
     text-decoration: none; transition: background 0.1s;
     color: var(--d-text);
-    text-align: left;
+    text-align: left !important;
   }
   .sidenav-item:hover { background: rgba(0,0,0,0.04); }
   .sidenav-item.si-active { background: #FDF6DC; }
   .sidenav-item.si-dim { opacity: 0.65; }
   .sidenav-item.si-dim:hover { opacity: 1; }
-  .si-label { font-size: 14px; font-weight: 600; color: var(--d-text); line-height: 1.4; display: block; }
+  .si-label { font-size: 14px; font-weight: 600; color: var(--d-text); line-height: 1.4; display: block; text-align: left !important; }
   .sidenav-item.si-active .si-label { color: #7A5800; font-weight: 700; }
   .sidenav-item.si-dim .si-label { font-weight: 400; color: var(--d-muted); }
-  .si-sub { font-size: 13px; color: var(--d-muted); line-height: 1.4; display: block; margin-top: 1px; }
+  .si-sub { font-size: 13px; color: var(--d-muted); line-height: 1.4; display: block; margin-top: 1px; text-align: left !important; }
   .sidenav-divider {
     font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; color: #AAAAAA;
-    padding: 12px 11px 4px; display: block;
+    padding: 12px 11px 4px; display: block; text-align: left !important;
   }
 
   /* ── Centre column ── */
@@ -570,7 +570,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <a href="{{ url_for('image_detail', image_id=_last.id) }}" style="font-size:14px;font-weight:600;color:rgba(214,164,40,0.90);text-decoration:none;text-shadow:0 1px 4px rgba(0,0,0,0.5);">View full evaluation report →</a>
         </div>
         {# Right — previous + delta + photo count — contained within box #}
-        <div style="flex:0 0 auto;text-align:right;min-width:0;overflow:hidden;">
+        <div style="flex:0 0 auto;text-align:right;min-width:0;max-width:180px;overflow:hidden;">
           {% if _prev %}
           <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(246,242,233,0.55);display:block;margin-bottom:4px;">Previous</span>
           <div style="font-size:26px;font-weight:700;color:rgba(246,242,233,0.60);line-height:1;margin-bottom:6px;">{{ '%.1f'|format(_prev.score) }}</div>
