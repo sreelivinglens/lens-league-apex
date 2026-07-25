@@ -747,7 +747,7 @@ body.page-home {
   </a>
   <div class="sl-mob-imgcredit">
     {% if hero.score %}
-    <span style="font-weight:700;color:#1A1A18;">Score {{ '%.1f'|format(hero.score) }} &middot; {{ hero.tier or '' }}</span>
+    <span style="font-weight:700;color:#1A1A18;">{{ '%.1f'|format(hero.score) }} &middot; {{ hero.tier or '' }}</span>
     {% endif %}
     <span>&copy; {{ hero.photographer_name or '' }}</span>
   </div>
