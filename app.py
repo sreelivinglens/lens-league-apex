@@ -1,4 +1,4 @@
-# SL-VERSION: 162.6 (Session 162, 2026-07-27 — MIM push enriched: card_url, sl_username, correct ddi_craft, full Sherpa fields sent to MIM)
+# SL-VERSION: 162.7 (Session 162, 2026-07-27 — /admin/mim-users: cross-reference MIM participants with SL accounts)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -8555,44 +8555,14 @@ def upload():
                                         _b1 = (_audit_for_push.get('background_check') or _audit_for_push.get('byline_1') or '').strip()
                                         _b2 = (_audit_for_push.get('byline_2_body') or _audit_for_push.get('byline_2') or '').strip()
                                         _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
-                                        # S162.6 — Enrich push payload:
-                                        # card_url: the SL card JPG — MIM embeds as PDF cover page
-                                        # sl_username: for username-based fallback matching on MIM
-                                        # ddi_craft: correct craft score (DoD+Disruption+DM)/3
-                                        # Full Sherpa fields: what_stood_out, transferable_advice,
-                                        #   background_check, byline_2, edit_base, edit_creative,
-                                        #   mentor_location_1, mentor_location_2, affective_state
-                                        _push_user = User.query.get(_img.user_id)
-                                        _push_username = _push_user.username if _push_user else None
-                                        _ddi_craft_calc = round(
-                                            (float(_img.dod_score or 0) + float(_img.disruption_score or 0) + float(_img.dm_score or 0)) / 3, 2
-                                        ) if _img.dod_score is not None else None
-                                        _wso  = (_audit_for_push.get('what_stood_out') or _audit_for_push.get('hard_truth') or '').strip()
-                                        _ta   = (_audit_for_push.get('transferable_advice') or '').strip()
-                                        _eb   = (_audit_for_push.get('edit_base') or '').strip()
-                                        _ec   = (_audit_for_push.get('edit_creative') or '').strip()
-                                        _ml1  = (_audit_for_push.get('mentor_location_1') or '').strip()
-                                        _ml2  = (_audit_for_push.get('mentor_location_2') or '').strip()
-                                        _aff  = (_audit_for_push.get('affective_state') or '').strip()
                                         _payload = _mim_json.dumps({
                                             'api_key':             _mim_api_key,
                                             'filename':            _img.original_filename,
-                                            'sl_username':         _push_username,
-                                            'card_url':            _img.card_url or '',
                                             'ddi_score':           float(_img.score) if _img.score else None,
-                                            'ddi_craft':           _ddi_craft_calc,
+                                            'ddi_craft':           float(_img.score) if _img.score else None,
                                             'ddi_theme':           float(_img.mim_theme_score) if _img.mim_theme_score is not None else None,
                                             'ddi_theme_paragraph': _img.mim_theme_paragraph or '',
                                             'ddi_narrative':       _narrative,
-                                            'what_stood_out':      _wso,
-                                            'transferable_advice': _ta,
-                                            'background_check':    _b1,
-                                            'byline_2':            _b2,
-                                            'edit_base':           _eb,
-                                            'edit_creative':       _ec,
-                                            'mentor_location_1':   _ml1,
-                                            'mentor_location_2':   _ml2,
-                                            'affective_state':     _aff,
                                             'dimensions':          _dims,
                                         }).encode('utf-8')
                                         _push_req = _mim_req.Request(
@@ -11875,6 +11845,103 @@ def admin_mim_export():
         mimetype='text/csv',
         headers={'Content-Disposition': f'attachment;filename={filename}'}
     )
+
+
+# ── MIM USERS — /admin/mim-users ────────────────────────────────────────────
+# S162.7 — Cross-reference MIM participants with SL user accounts.
+@app.route('/admin/mim-users')
+@login_required
+@admin_required
+def admin_mim_users():
+    import json as _muj, urllib.request as _mur, urllib.parse as _mup
+    _mim_url     = os.environ.get('MIM_API_URL', 'https://makingimagesmatter.com')
+    _mim_api_key = os.environ.get('MIM_SL_API_KEY', '')
+    date_str      = request.args.get('date', '').strip()
+    session_token = request.args.get('session', '').strip()
+    _ist_offset   = timedelta(hours=5, minutes=30)
+    _today_ist    = (datetime.utcnow() + _ist_offset).strftime('%Y-%m-%d')
+
+    # Fetch MIM participant list
+    mim_participants = []
+    fetch_error = None
+    try:
+        _p = {'api_key': _mim_api_key}
+        if date_str:    _p['date']    = date_str
+        if session_token: _p['session'] = session_token
+        _url = f'{_mim_url}/api/mim-participants?{_mup.urlencode(_p)}'
+        with _mur.urlopen(_mur.Request(_url, headers={'Accept':'application/json','User-Agent':'ShutterLeague/1.0'}), timeout=15) as _r:
+            mim_participants = _muj.loads(_r.read().decode()).get('participants', [])
+    except Exception as _fe:
+        fetch_error = str(_fe)
+        app.logger.warning(f'[mim-users] MIM fetch failed: {_fe}')
+
+    # Cross-reference with SL users
+    sl_usernames = [p.get('sl_username') for p in mim_participants if p.get('sl_username')]
+    sl_user_map  = {u.username: u for u in User.query.filter(User.username.in_(sl_usernames)).all()} if sl_usernames else {}
+
+    results = []
+    for p in mim_participants:
+        _un = p.get('sl_username', '')
+        _u  = sl_user_map.get(_un)
+        _avg = round(db.session.query(db.func.avg(Image.score))
+                     .filter(Image.user_id==_u.id, Image.score.isnot(None)).scalar() or 0, 2) if _u else None
+        _cnt = Image.query.filter_by(user_id=_u.id, status='scored').count() if _u else 0
+        results.append({
+            'name':    p.get('photographer_name','—'),
+            'email':   p.get('photographer_email',''),
+            'un':      _un or '—',
+            'title':   p.get('session_title',''),
+            'date':    p.get('session_date',''),
+            'ddi':     p.get('ddi_score'),
+            'found':   bool(_u),
+            'sub':     _u.is_subscribed if _u else False,
+            'track':   getattr(_u,'subscription_track','') if _u else '',
+            'tier':    _u.tier if _u else '—',
+            'avg':     _avg,
+            'cnt':     _cnt,
+            'sl_email':_u.email if _u else '—',
+        })
+
+    _sub_ct  = sum(1 for r in results if r['sub'])
+    _on_ct   = sum(1 for r in results if r['found'])
+    _free_ct = sum(1 for r in results if r['found'] and not r['sub'])
+
+    rows = ''
+    for r in results:
+        _sb = (f'<span style="background:#1D9E75;color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;font-family:monospace;">{(r["track"] or "SUB").upper()}</span>'
+               if r['sub'] else
+               '<span style="background:#E0D8C8;color:#4A4840;font-size:11px;padding:2px 8px;border-radius:12px;font-family:monospace;">Free</span>')
+        _tr = f'<span style="font-family:monospace;font-size:12px;">{r["tier"]}</span>' if r['found'] else '<span style="color:#aaa;font-size:12px;">Not on SL</span>'
+        _sc = (f'<b style="font-family:monospace;">{r["avg"]}</b> <span style="font-size:11px;color:#888;">({r["cnt"]} evals)</span>' if r['found'] and r['avg'] else '—')
+        _di = f'<b style="font-family:monospace;color:#C8A84B;">{r["ddi"]}</b>' if r["ddi"] else '—'
+        _un = (f'<a href="/admin" style="color:#C8A84B;font-family:monospace;">@{r["un"]}</a>' if r['found'] else f'<span style="color:#aaa;font-family:monospace;">{r["un"]}</span>')
+        rows += f'<tr style="border-bottom:1px solid #E0D8C8;"><td style="padding:10px 12px;font-size:13px;font-weight:600;">{r["name"]}</td><td style="padding:10px 12px;font-size:12px;color:#666;">{r["email"]}</td><td style="padding:10px 12px;">{_un}</td><td style="padding:10px 12px;">{_sb}</td><td style="padding:10px 12px;">{_tr}</td><td style="padding:10px 12px;">{_sc}</td><td style="padding:10px 12px;">{_di}</td><td style="padding:10px 12px;font-size:12px;color:#666;">{r["title"]}<br><span style="color:#aaa;">{r["date"]}</span></td></tr>'
+
+    tbl = (f'<table width="100%" style="border-collapse:collapse;background:#fff;border-radius:8px;border:1px solid #E0D8C8;"><thead><tr style="background:#1A1A18;"><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Photographer</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">MIM Email</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">SL Handle</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Status</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">SL Tier</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">SL Score</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">MIM DDI</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Session</th></tr></thead><tbody>{rows}</tbody></table>'
+           if results else '<p style="color:#aaa;padding:20px 0;">No participants found for this date/session.</p>')
+
+    err_html = f'<div style="background:#fdf2f2;border:1px solid #e74c3c;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#c0392b;">MIM connection failed: {fetch_error}</div>' if fetch_error else ''
+
+    html = (f'<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MIM Users — SL Admin</title>'
+            f'<style>body{{font-family:Inter,Arial,sans-serif;background:#F5F0E8;margin:0;padding:24px;}}h1{{font-size:22px;font-weight:700;color:#1A1A18;margin-bottom:4px;}}.sub{{font-size:15px;color:#888;margin-bottom:24px;}}.stats{{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}}.sc{{background:#fff;border-radius:8px;padding:16px 20px;border:1px solid #E0D8C8;min-width:130px;}}.sv{{font-size:28px;font-weight:700;color:#1A1A18;font-family:monospace;}}.sl{{font-size:11px;color:#888;margin-top:4px;text-transform:uppercase;letter-spacing:1px;}}.fr{{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}}input{{padding:8px 12px;border:1px solid #E0D8C8;border-radius:6px;font-size:15px;background:#fff;}}button{{padding:8px 16px;background:#1A1A18;color:#C8A84B;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-family:monospace;}}.bk{{display:inline-block;margin-bottom:20px;padding:8px 16px;background:#fff;border:1px solid #E0D8C8;border-radius:6px;font-size:14px;color:#1A1A18;text-decoration:none;}}</style></head>'
+            f'<body><div style="max-width:1200px;margin:0 auto;">'
+            f'<a href="/admin" class="bk">← Admin Dashboard</a>'
+            f'<h1>MIM Participants — Shutter League</h1>'
+            f'<div class="sub">Cross-reference MIM session photographers with SL accounts</div>'
+            f'{err_html}'
+            f'<form method="GET" action="/admin/mim-users"><div class="fr">'
+            f'<input type="date" name="date" value="{date_str or _today_ist}">'
+            f'<input type="text" name="session" value="{session_token}" placeholder="Session token (optional)" style="width:220px;">'
+            f'<button type="submit">Pull data →</button>'
+            f'</div></form>'
+            f'<div class="stats">'
+            f'<div class="sc"><div class="sv">{len(results)}</div><div class="sl">MIM participants</div></div>'
+            f'<div class="sc"><div class="sv">{_on_ct}</div><div class="sl">On Shutter League</div></div>'
+            f'<div class="sc"><div class="sv" style="color:#1D9E75;">{_sub_ct}</div><div class="sl">Subscribed</div></div>'
+            f'<div class="sc"><div class="sv" style="color:#C8A84B;">{_free_ct}</div><div class="sl">Free — opportunity</div></div>'
+            f'</div>{tbl}</div></body></html>')
+
+    return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
 @app.route('/admin/seasonal-discovery')
