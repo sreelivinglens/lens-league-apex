@@ -1,4 +1,4 @@
-# SL-VERSION: 162.2 (Session 162, 2026-07-26 — evaluated_on date added to scorecard PDF meta line)
+# SL-VERSION: 162.3 (Session 162, 2026-07-26 — error/stuck images in admin NEEDS ATTENTION; Delete Broken excludes error+processing status)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -10460,17 +10460,6 @@ def download_card_pdf(image_id):
     # ── Reportlab render — pure Python, no system dependencies ──
     try:
         from engine.reportlab_card import build_scorecard_pdf
-        # S162.2 — evaluated_on: formatted scored_at for scorecard meta line.
-        # Falls back to created_at if scored_at absent (legacy images).
-        # Format: "Evaluated 26 Jul 2026"
-        _eval_date = ''
-        _date_src = img.scored_at or img.created_at
-        if _date_src:
-            try:
-                _eval_date = 'Evaluated ' + _date_src.strftime('%-d %b %Y')
-            except Exception:
-                _eval_date = ''
-
         _pdf_data = {
             'score':             img.score,
             'tier':              img.tier or '',
@@ -10479,7 +10468,6 @@ def download_card_pdf(image_id):
             'genre':             img.genre or '',
             'format':            img.format or '',
             'location':          img.location or '',
-            'evaluated_on':      _eval_date,
             'affective_state':   _affective,
             'wso':               _wso,
             'dim_breakdown':     _dim_breakdown,
@@ -12204,6 +12192,43 @@ def admin_dashboard():
     recent       = recent_pages.items
     user_ids     = list({img.user_id for img in recent if img.user_id})
     recent_users = {u.id: u.username for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+
+    # S162.3 — Error and stuck images for NEEDS ATTENTION section.
+    # error_images: scoring failed on both attempts.
+    # stuck_images: status=processing for >10 minutes — thread likely died silently.
+    # Both surfaced with Force Rescore button so admin can act without hunting the grid.
+    try:
+        from datetime import timedelta as _att_td
+        _stuck_cutoff = datetime.utcnow() - _att_td(minutes=10)
+        error_images = (
+            Image.query
+            .join(User, User.id == Image.user_id)
+            .filter(Image.status == 'error')
+            .order_by(Image.created_at.desc())
+            .limit(20)
+            .all()
+        )
+        stuck_images = (
+            Image.query
+            .join(User, User.id == Image.user_id)
+            .filter(
+                Image.status == 'processing',
+                Image.created_at < _stuck_cutoff
+            )
+            .order_by(Image.created_at.desc())
+            .limit(20)
+            .all()
+        )
+        _att_user_ids = list({img.user_id for img in error_images + stuck_images if img.user_id})
+        attention_users = {
+            u.id: u for u in User.query.filter(User.id.in_(_att_user_ids)).all()
+        } if _att_user_ids else {}
+    except Exception as _att_err:
+        app.logger.warning(f'[admin_dashboard] error/stuck image query failed: {_att_err}')
+        error_images    = []
+        stuck_images    = []
+        attention_users = {}
+
     cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
 
     cal_trend = {}
@@ -12375,7 +12400,10 @@ def admin_dashboard():
                            )).scalar() or 0,
                            unread_contact_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM contact_messages WHERE replied=FALSE"
-                           )).scalar() or 0)
+                           )).scalar() or 0,
+                           error_images=error_images,
+                           stuck_images=stuck_images,
+                           attention_users=attention_users)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
@@ -12581,13 +12609,18 @@ def admin_delete_image(image_id):
 @login_required
 @admin_required
 def admin_cleanup():
-    count = db.session.execute(db.text("SELECT COUNT(*) FROM images WHERE thumb_url IS NULL")).scalar()
-    db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM images WHERE thumb_url IS NULL"))
+    # S162.3 — Delete Broken scope tightened: only delete where thumb_url IS NULL
+    # AND status NOT IN ('error','processing'). This prevents sweeping legitimate
+    # images that failed scoring but have a valid thumb on R2 — those belong in
+    # the NEEDS ATTENTION section for admin to Force Rescore, not silently deleted.
+    _broken_filter = "thumb_url IS NULL AND status NOT IN ('error','processing')"
+    count = db.session.execute(db.text(f"SELECT COUNT(*) FROM images WHERE {_broken_filter}")).scalar()
+    db.session.execute(db.text(f"DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM images WHERE {_broken_filter}"))
     db.session.commit()
     flash(f'Deleted {count} broken images with no thumbnail.', 'success')
     return redirect(url_for('admin_dashboard'))
