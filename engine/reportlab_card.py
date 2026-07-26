@@ -1,5 +1,7 @@
 """
 Shutter League — Reportlab Scorecard PDF  Session 141
+SL-VERSION: 162.2 (Session 162, 2026-07-26 — evaluated_on date added to Page 1 meta line)
+
 Two A4 portrait pages, pure Python, no system deps.
 
 Page 1: Photo hero · Score band · Dimensions · Opening bold ·
@@ -263,9 +265,11 @@ def _draw_page1(c, data):
         c.line(mx, my + 0.5*mm, mx + 80*mm, my + 0.5*mm)
         my -= 5*mm
 
+    # S162.2 — evaluated_on appended: "WILDLIFE  ·  JPEG  ·  Bengaluru  ·  Evaluated 26 Jul 2026"
     meta = '  ·  '.join(filter(None, [data.get('genre',''),
                                        data.get('format',''),
-                                       data.get('location','')]))
+                                       data.get('location',''),
+                                       data.get('evaluated_on','')]))
     if meta:
         _set(c, 8, bold=False, color=DARK2)
         c.drawString(mx, my, meta)
