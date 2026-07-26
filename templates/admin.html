@@ -355,9 +355,10 @@
     <div class="admin-section-header" onclick="toggleSection('review')">
       <div class="admin-section-title">
         ⚠ Needs Attention
-        {% if needs_action or flagged_items %}
+        {% set _total_attention = ((needs_action|length) if needs_action else 0) + ((flagged_items|length) if flagged_items else 0) + ((error_images|length) if error_images else 0) + ((stuck_images|length) if stuck_images else 0) %}
+        {% if _total_attention > 0 %}
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
-          {{ (needs_action|length) + (flagged_items|length) }}
+          {{ _total_attention }}
         </span>
         {% endif %}
       </div>
@@ -370,6 +371,68 @@
       </div>
     </div>
     <div class="admin-section-body" id="body-review">
+
+      {# S162.3 — Error & stuck images block.
+         error_images: status='error' — scoring failed on both attempts.
+         stuck_images: status='processing' >10 minutes — thread died silently.
+         Both show Force Rescore button. Collapsed by default if empty. #}
+      {% if error_images or stuck_images %}
+      <div style="margin-bottom:24px; border:1px solid #c0392b; border-radius:6px; overflow:hidden;">
+        <div style="background:#fdf2f2; padding:10px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #c0392b;">
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#c0392b;">⚠ Scoring Failures</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:1px 8px; border-radius:99px; background:rgba(192,57,43,0.12); color:#c0392b; border:1px solid #c0392b;">
+            {{ (error_images|length) + (stuck_images|length) }}
+          </span>
+          <span style="font-size:13px; color:#666; margin-left:4px;">These images did not score. Force Rescore each one or contact the user to re-upload.</span>
+        </div>
+        <div style="padding:12px 16px; background:#fff8f8;">
+          {% for img in error_images + stuck_images %}
+          {%- set att_user = attention_users.get(img.user_id) -%}
+          <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f5dada; flex-wrap:wrap;">
+            {# Thumbnail #}
+            {% if img.thumb_url %}
+            <a href="{{ url_for('image_detail', image_id=img.id) }}" target="_blank">
+              <img src="{{ img.thumb_url }}" style="width:56px; height:44px; object-fit:cover; border-radius:4px; flex-shrink:0;">
+            </a>
+            {% else %}
+            <div style="width:56px; height:44px; background:#eee; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#999; flex-shrink:0;">No thumb</div>
+            {% endif %}
+            {# Image info #}
+            <div style="flex:1; min-width:160px;">
+              <div style="font-size:14px; font-weight:600; color:var(--text-primary); line-height:1.6;">
+                <a href="{{ url_for('image_detail', image_id=img.id) }}" target="_blank" style="color:inherit; text-decoration:none;">
+                  {{ img.asset_name or img.original_filename or 'Untitled' }}
+                </a>
+              </div>
+              <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">
+                {{ img.genre or '—' }} · {{ img.created_at.strftime('%-d %b %Y %H:%M') if img.created_at else '—' }} UTC
+              </div>
+              {% if att_user %}
+              <div style="font-size:13px; color:var(--text-muted);">
+                @{{ att_user.username }} · {{ att_user.email }}
+              </div>
+              {% endif %}
+            </div>
+            {# Status badge #}
+            <div style="flex-shrink:0;">
+              {% if img.status == 'error' %}
+              <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(192,57,43,0.12); color:#c0392b; border:1px solid #c0392b; text-transform:uppercase; letter-spacing:1px;">Failed</span>
+              {% else %}
+              <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(52,152,219,0.12); color:#2471a3; border:1px solid #2471a3; text-transform:uppercase; letter-spacing:1px;">Stuck</span>
+              {% endif %}
+            </div>
+            {# Force Rescore button #}
+            <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="flex-shrink:0;">
+              <button type="submit" class="act-btn act-ref" style="font-size:13px; padding:6px 14px;"
+                      onclick="return confirm('Force rescore image {{ img.id }} — {{ (img.asset_name or img.original_filename or 'Untitled')|replace("'", '') }}?')">
+                ↺ Force Rescore
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
 
       {# Search bar #}
       <form method="GET" action="{{ url_for("admin_dashboard") }}" style="display:flex; gap:8px; margin-bottom:16px;">
