@@ -11928,14 +11928,27 @@ def admin_mim_theme_backfill():
         _tmp_path = None
 
         try:
-            # Resolve thumb
+            # Resolve thumb — use R2 storage client, not urlretrieve (R2 blocks direct HTTP)
             _thumb = img.thumb_path
             if not _thumb or not _os.path.exists(_thumb):
                 if img.thumb_url:
-                    _tf = _tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
-                    _ureq.urlretrieve(img.thumb_url, _tf.name)
-                    _tf.close()
-                    _thumb = _tmp_path = _tf.name
+                    try:
+                        from storage import get_client, BUCKET
+                        _tf = _tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+                        get_client().download_fileobj(
+                            BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], _tf
+                        )
+                        _tf.close()
+                        _thumb = _tmp_path = _tf.name
+                    except Exception as _r2_err:
+                        results.append({
+                            'image_id': img.id,
+                            'filename': img.original_filename,
+                            'username': _username,
+                            'status':   f'error — R2 download failed: {str(_r2_err)[:80]}',
+                        })
+                        errors += 1
+                        continue
 
             if not _thumb or not _os.path.exists(_thumb):
                 results.append({
