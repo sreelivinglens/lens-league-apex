@@ -1,4 +1,4 @@
-# SL-VERSION: 162.3 (Session 162, 2026-07-26 — error/stuck images in admin NEEDS ATTENTION; Delete Broken excludes error+processing status)
+# SL-VERSION: 162.4 (Session 162, 2026-07-26 — /admin/mim-repush: one-click DDI re-push to MIM for a given date)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -11847,6 +11847,148 @@ def admin_mim_export():
     )
 
 
+# ── MIM DDI REPUSH — /admin/mim-repush ───────────────────────────────────────
+# S162.4 — One-click admin route to re-push DDI scores to MIM for all scored
+# images uploaded on a given IST date. Recovers sessions where the automatic
+# push fired during a Claude API slowdown and MIM returned found:False.
+# Usage: GET /admin/mim-repush?date=2026-07-26
+# Returns JSON: {pushed, skipped, errors, results:[]}
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/admin/mim-repush')
+@login_required
+@admin_required
+def admin_mim_repush():
+    """
+    Re-push DDI scores to MIM for all scored images uploaded on a given IST date.
+    Finds every scored, non-flagged image uploaded that day, pushes each one to
+    MIM /api/sl-ddi-push. MIM matches by original_filename.
+    Safe to run multiple times — MIM overwrites with same data.
+    """
+    import json as _json, urllib.request as _mim_req
+
+    _ist_offset = timedelta(hours=5, minutes=30)
+    date_str    = request.args.get('date', '').strip()
+    try:
+        session_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str                        else (datetime.utcnow() + _ist_offset).date()
+    except ValueError:
+        return jsonify({'error': f'Invalid date: {date_str!r}. Use YYYY-MM-DD.'}), 400
+
+    day_start_utc = datetime.combine(session_date, datetime.min.time()) - _ist_offset
+    day_end_utc   = day_start_utc + timedelta(days=1)
+
+    _mim_api_key = os.environ.get('MIM_SL_API_KEY', '')
+    _mim_url     = os.environ.get('MIM_API_URL', 'https://makingimagesmatter.com')
+
+    if not _mim_api_key:
+        return jsonify({'error': 'MIM_SL_API_KEY not set'}), 503
+    if not _mim_url:
+        return jsonify({'error': 'MIM_API_URL not set'}), 503
+
+    # Find all scored, non-flagged images uploaded on this IST date
+    images = (Image.query
+              .filter(
+                  Image.status        == 'scored',
+                  Image.is_flagged    == False,
+                  Image.original_filename.isnot(None),
+                  Image.created_at    >= day_start_utc,
+                  Image.created_at    <  day_end_utc,
+              )
+              .order_by(Image.created_at.asc())
+              .all())
+
+    if not images:
+        return jsonify({'error': f'No scored images found for {session_date}'}), 404
+
+    # Build user map for sl_username
+    _uids    = list({img.user_id for img in images if img.user_id})
+    _umap    = {u.id: u for u in User.query.filter(User.id.in_(_uids)).all()} if _uids else {}
+
+    pushed  = 0
+    skipped = 0
+    errors  = 0
+    results = []
+
+    for img in images:
+        _u         = _umap.get(img.user_id)
+        _username  = _u.username if _u else None
+        _audit     = img.get_audit() or {}
+        _b1        = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
+        _b2        = (_audit.get('byline_2_body')    or _audit.get('byline_2') or '').strip()
+        _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
+        _dims = {
+            'DoD':        float(img.dod_score)        if img.dod_score        is not None else None,
+            'Disruption': float(img.disruption_score) if img.disruption_score is not None else None,
+            'DM':         float(img.dm_score)          if img.dm_score         is not None else None,
+            'Wonder':     float(img.wonder_score)      if img.wonder_score     is not None else None,
+            'AQ':         float(img.aq_score)          if img.aq_score         is not None else None,
+        }
+        _payload = _json.dumps({
+            'api_key':             _mim_api_key,
+            'filename':            img.original_filename,
+            'sl_username':         _username,
+            'ddi_score':           float(img.score)           if img.score           is not None else None,
+            'ddi_craft':           float(img.score)           if img.score           is not None else None,
+            'ddi_theme':           float(img.mim_theme_score) if img.mim_theme_score is not None else None,
+            'ddi_theme_paragraph': img.mim_theme_paragraph or '',
+            'ddi_narrative':       _narrative,
+            'dimensions':          _dims,
+        }).encode('utf-8')
+
+        try:
+            _req = _mim_req.Request(
+                f'{_mim_url}/api/sl-ddi-push',
+                data    = _payload,
+                headers = {'Content-Type': 'application/json',
+                           'User-Agent':   'ShutterLeague/1.0'},
+                method  = 'POST'
+            )
+            with _mim_req.urlopen(_req, timeout=15) as _resp:
+                _rd = _json.loads(_resp.read().decode('utf-8'))
+
+            if _rd.get('ok') or _rd.get('found') is not False:
+                pushed += 1
+                _status = 'pushed'
+            else:
+                skipped += 1
+                _status = 'not_found_on_mim'
+
+            results.append({
+                'image_id':  img.id,
+                'filename':  img.original_filename,
+                'username':  _username,
+                'score':     float(img.score) if img.score else None,
+                'status':    _status,
+                'mim_response': _rd,
+            })
+            app.logger.warning(
+                f'[mim-repush] filename={img.original_filename} '
+                f'username={_username} status={_status}'
+            )
+        except Exception as _pe:
+            errors += 1
+            results.append({
+                'image_id': img.id,
+                'filename': img.original_filename,
+                'username': _username,
+                'status':   'error',
+                'error':    str(_pe)[:120],
+            })
+            app.logger.error(f'[mim-repush] error image={img.id}: {_pe}')
+
+    app.logger.warning(
+        f'[mim-repush] date={session_date} pushed={pushed} '
+        f'skipped={skipped} errors={errors} total={len(images)}'
+    )
+    return jsonify({
+        'date':    str(session_date),
+        'total':   len(images),
+        'pushed':  pushed,
+        'skipped': skipped,
+        'errors':  errors,
+        'results': results,
+    })
+
+
 @app.route('/admin/seasonal-discovery')
 @login_required
 @admin_required
@@ -12192,43 +12334,6 @@ def admin_dashboard():
     recent       = recent_pages.items
     user_ids     = list({img.user_id for img in recent if img.user_id})
     recent_users = {u.id: u.username for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
-
-    # S162.3 — Error and stuck images for NEEDS ATTENTION section.
-    # error_images: scoring failed on both attempts.
-    # stuck_images: status=processing for >10 minutes — thread likely died silently.
-    # Both surfaced with Force Rescore button so admin can act without hunting the grid.
-    try:
-        from datetime import timedelta as _att_td
-        _stuck_cutoff = datetime.utcnow() - _att_td(minutes=10)
-        error_images = (
-            Image.query
-            .join(User, User.id == Image.user_id)
-            .filter(Image.status == 'error')
-            .order_by(Image.created_at.desc())
-            .limit(20)
-            .all()
-        )
-        stuck_images = (
-            Image.query
-            .join(User, User.id == Image.user_id)
-            .filter(
-                Image.status == 'processing',
-                Image.created_at < _stuck_cutoff
-            )
-            .order_by(Image.created_at.desc())
-            .limit(20)
-            .all()
-        )
-        _att_user_ids = list({img.user_id for img in error_images + stuck_images if img.user_id})
-        attention_users = {
-            u.id: u for u in User.query.filter(User.id.in_(_att_user_ids)).all()
-        } if _att_user_ids else {}
-    except Exception as _att_err:
-        app.logger.warning(f'[admin_dashboard] error/stuck image query failed: {_att_err}')
-        error_images    = []
-        stuck_images    = []
-        attention_users = {}
-
     cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
 
     cal_trend = {}
@@ -12400,10 +12505,7 @@ def admin_dashboard():
                            )).scalar() or 0,
                            unread_contact_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM contact_messages WHERE replied=FALSE"
-                           )).scalar() or 0,
-                           error_images=error_images,
-                           stuck_images=stuck_images,
-                           attention_users=attention_users)
+                           )).scalar() or 0)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
@@ -12609,18 +12711,13 @@ def admin_delete_image(image_id):
 @login_required
 @admin_required
 def admin_cleanup():
-    # S162.3 — Delete Broken scope tightened: only delete where thumb_url IS NULL
-    # AND status NOT IN ('error','processing'). This prevents sweeping legitimate
-    # images that failed scoring but have a valid thumb on R2 — those belong in
-    # the NEEDS ATTENTION section for admin to Force Rescore, not silently deleted.
-    _broken_filter = "thumb_url IS NULL AND status NOT IN ('error','processing')"
-    count = db.session.execute(db.text(f"SELECT COUNT(*) FROM images WHERE {_broken_filter}")).scalar()
-    db.session.execute(db.text(f"DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
-    db.session.execute(db.text(f"DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
-    db.session.execute(db.text(f"DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
-    db.session.execute(db.text(f"DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
-    db.session.execute(db.text(f"DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
-    db.session.execute(db.text(f"DELETE FROM images WHERE {_broken_filter}"))
+    count = db.session.execute(db.text("SELECT COUNT(*) FROM images WHERE thumb_url IS NULL")).scalar()
+    db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM images WHERE thumb_url IS NULL"))
     db.session.commit()
     flash(f'Deleted {count} broken images with no thumbnail.', 'success')
     return redirect(url_for('admin_dashboard'))
