@@ -1,3 +1,4 @@
+# SL-VERSION: 162.1 (Session 162, 2026-07-26 — timeout 90s→120s; portfolio trim 8→5; seasonal cap 300 chars; master refs cap 2; retry success dashboard banner + email)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -6739,11 +6740,11 @@ def _get_quota_status(user):
         }
 
 
-def _auto_score_with_timeout(timeout_secs=90, retry_wait=10, **kwargs):
+def _auto_score_with_timeout(timeout_secs=120, retry_wait=10, **kwargs):
     """
     Wraps auto_score() with a hard timeout and one automatic retry.
 
-    Why: The main Claude API scoring call averages 60-78s and has no timeout
+    Why: The main Claude API scoring call averages 60-90s and has no timeout
     guard. Without this, a slow or hung API call keeps the background thread
     alive indefinitely — the image stays 'processing' forever and the user
     never sees a result or an error.
@@ -6758,7 +6759,11 @@ def _auto_score_with_timeout(timeout_secs=90, retry_wait=10, **kwargs):
     Called from: _score_in_background (upload), _force_rescore_in_background,
                  _retry_score_in_background, and the upload_edit scoring path.
 
-    Option B (prompt trimming) will be applied here after the 26 July event.
+    SL-VERSION: 162.1 — timeout raised 90s → 120s (Session 162, 2026-07-26).
+    Observed scoring calls: 84–190s. 90s threshold had zero headroom for normal
+    API variance. 120s covers the P95 case while still catching genuinely hung calls.
+    Option B prompt trimming applied separately (portfolio 8→5, seasonal cap 300 chars,
+    master refs cap 2) — see Change 2 comments below.
     """
     import concurrent.futures as _cf
     from engine.auto_score import auto_score as _auto_score
@@ -7828,7 +7833,7 @@ def upload():
                                     Image.user_id == _img.user_id,
                                     Image.status  == 'scored',
                                     Image.genre   == _img.genre,
-                                ).order_by(Image.scored_at.desc()).limit(8).all()
+                                ).order_by(Image.scored_at.desc()).limit(5).all()  # S162.2: portfolio trim 8→5
                                 if _sc_recent and len(_sc_recent) >= 1:
                                     _sc_recent = list(reversed(_sc_recent))
                                     _sc_portfolio = {
@@ -7909,7 +7914,7 @@ def upload():
                             _csi_boost_ctx = ''
 
                         _recent_masters = (_sc_portfolio or {}).get('recent_masters', [])
-                        _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters)
+                        _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters, limit=2)  # S162.2: cap 2 refs
 
                         # ── Session 160: Weekly Challenge theme injection ──────────────
                         # If this image is submitted to an active weekly challenge,
@@ -7958,7 +7963,7 @@ def upload():
                                 camera_track=_img.camera_track,
                                 genre=_img.genre or '',
                             ) if _img.camera_track == 'mobile' or _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
-                            seasonal_context  = _sc_seasonal_ctx + _csi_boost_ctx + _weekly_theme_ctx,
+                            seasonal_context  = (_sc_seasonal_ctx + _csi_boost_ctx + _weekly_theme_ctx)[:300],  # S162.2: cap 300 chars
                             portfolio_summary = _sc_portfolio,
                             user_city         = _sc_user_city,
                             primary_genre     = _sc_primary_genre,
@@ -8925,7 +8930,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                         Image.user_id == _owner.id,
                         Image.status  == 'scored',
                         Image.genre   == img.genre,
-                    ).order_by(Image.scored_at.desc()).limit(8).all()
+                    ).order_by(Image.scored_at.desc()).limit(5).all()  # S162.2: portfolio trim 8→5
                     if _recent:
                         _recent = list(reversed(_recent))
                         _portfolio_summary = {
@@ -9012,7 +9017,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 subject           = img.subject,
                 location          = img.location,
                 exif_context      = _exif_ctx,
-                seasonal_context  = _seasonal_ctx + _retry_weekly_theme_ctx,
+                seasonal_context  = (_seasonal_ctx + _retry_weekly_theme_ctx)[:300],  # S162.2: cap 300 chars
                 portfolio_summary = _portfolio_summary,
                 user_city         = _user_city,
                 primary_genre     = _primary_genre or img.genre or '',
@@ -9319,6 +9324,66 @@ def _retry_score_in_background(image_id, old_status):
             except Exception:
                 app.logger.error(f'[retry_score_bg card error] {traceback.format_exc()}')
 
+            # S162.3 — Dashboard notification: set scoring_flash so the next dashboard
+            # visit shows a dismissable banner. The existing scoring_flash system
+            # (line ~4613) picks this up, flashes it, and clears it automatically.
+            try:
+                img.scoring_flash = f'Evaluation complete — {img.tier} tier. View your full evaluation report.'
+                db.session.commit()
+            except Exception as _sf_err:
+                app.logger.warning(f'[retry_score_bg] scoring_flash set failed (non-fatal): {_sf_err}')
+
+            # S162.4 — Email notification on successful background retry.
+            # The upload path told the user "scoring failed — retry from dashboard".
+            # The background retry succeeded silently. This email closes that loop.
+            # Non-fatal — a failed email must never affect the scored image record.
+            try:
+                _notify_user = User.query.get(img.user_id)
+                if _notify_user and _notify_user.email and _notify_user.is_subscribed:
+                    _img_url  = f'{os.getenv("SITE_URL", "https://shutterleague.com")}/image/{img.id}'
+                    _name     = _notify_user.full_name or _notify_user.username or 'Photographer'
+                    _title    = img.asset_name or img.original_filename or 'your photograph'
+                    _tier_str = img.tier or 'Evaluated'
+                    _genre    = (img.genre or '').title()
+                    _subject  = f'Your photograph has been evaluated — {_tier_str}'
+                    _html = (
+                        '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                        '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px;">'
+                        '<table width="600" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:8px;overflow:hidden;max-width:600px;">'
+                        '<tr><td style="background:#1A1A18;padding:24px 32px;">'
+                        '<span style="font-family:\'Courier New\',monospace;font-size:20px;font-weight:700;color:#F5C518;letter-spacing:2px;">SHUTTER LEAGUE</span>'
+                        '</td></tr>'
+                        '<tr><td style="padding:32px;">'
+                        f'<p style="margin:0 0 8px;font-size:15px;color:#4A4840;">Hi {_name},</p>'
+                        f'<p style="margin:0 0 24px;font-size:15px;color:#4A4840;line-height:1.6;">Your {_genre} photograph <strong>"{_title}"</strong> has been evaluated.</p>'
+                        '<table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">'
+                        '<tr>'
+                        f'<td style="padding:16px 24px;background:#F5F0E8;border-radius:6px;text-align:center;">'
+                        f'<div style="font-family:\'Courier New\',monospace;font-size:28px;font-weight:700;color:#1A1A18;">{_tier_str}</div>'
+                        f'<div style="font-size:13px;color:#8a8070;margin-top:4px;text-transform:uppercase;letter-spacing:1px;">{_genre} · Evaluation</div>'
+                        '</td></tr></table>'
+                        '<p style="margin:0 0 24px;font-size:14px;color:#6A6460;line-height:1.6;">'
+                        'Your image was queued for re-evaluation after an initial delay. It has now been fully assessed. '
+                        'View your evaluation report for dimension-by-dimension feedback and your next coaching direction.</p>'
+                        f'<a href="{_img_url}" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:\'Courier New\',monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">View Evaluation Report →</a>'
+                        '</td></tr>'
+                        f'<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">'
+                        f'<p style="margin:0;font-size:13px;color:#8a8070;">Questions? Contact <a href="mailto:{CONTACT_EMAIL}" style="color:#C8A84B;">{CONTACT_EMAIL}</a></p>'
+                        '</td></tr>'
+                        '</table></td></tr></table></body></html>'
+                    )
+                    _text = (
+                        f'Hi {_name},\n\n'
+                        f'Your {_genre} photograph "{_title}" has been evaluated — {_tier_str}.\n\n'
+                        'It was queued for re-evaluation after an initial delay and has now been fully assessed.\n\n'
+                        f'View your evaluation report: {_img_url}\n\n'
+                        '— Shutter League'
+                    )
+                    _ok = send_email(_notify_user.email, _subject, _html, _text)
+                    app.logger.info(f'[retry_score_bg] evaluation email {"sent" if _ok else "failed"} → {_notify_user.email} image={image_id}')
+            except Exception as _email_err:
+                app.logger.warning(f'[retry_score_bg] evaluation email error (non-fatal): {_email_err}')
+
             app.logger.info(f'[retry_score_bg] image={image_id} scored -> {img.score:.2f} ({img.tier})')
 
         except Exception as e:
@@ -9578,7 +9643,7 @@ def upload_edited_version(image_id):
                                     Image.user_id == _img.user_id,
                                     Image.status  == 'scored',
                                     Image.genre   == _img.genre,
-                                ).order_by(Image.scored_at.desc()).limit(8).all()
+                                ).order_by(Image.scored_at.desc()).limit(5).all()  # S162.2: portfolio trim 8→5
                                 if _edit_recent:
                                     _edit_recent = list(reversed(_edit_recent))
                                     _edit_portfolio = {
@@ -9625,7 +9690,7 @@ def upload_edited_version(image_id):
                             title=_img.asset_name, photographer=_img.photographer_name,
                             subject=_img.subject, location=_img.location,
                             exif_context      = _edit_exif_ctx,
-                            seasonal_context  = _edit_seasonal_ctx,
+                            seasonal_context  = (_edit_seasonal_ctx or '')[:300],  # S162.2: cap 300 chars
                             portfolio_summary = _edit_portfolio,
                             image_number      = _edit_image_number,
                             previous_score    = _edit_prev_score,
