@@ -1,4 +1,4 @@
-# SL-VERSION: 162.4 (Session 162, 2026-07-26 — /admin/mim-repush: one-click DDI re-push to MIM for a given date)
+# SL-VERSION: 162.5 (Session 162, 2026-07-26 — /admin/mim-theme-backfill: theme-only scoring for images missing mim_theme_score)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -11847,27 +11847,32 @@ def admin_mim_export():
     )
 
 
-# ── MIM DDI REPUSH — /admin/mim-repush ───────────────────────────────────────
-# S162.4 — One-click admin route to re-push DDI scores to MIM for all scored
-# images uploaded on a given IST date. Recovers sessions where the automatic
-# push fired during a Claude API slowdown and MIM returned found:False.
-# Usage: GET /admin/mim-repush?date=2026-07-26
-# Returns JSON: {pushed, skipped, errors, results:[]}
+# ── MIM THEME BACKFILL — /admin/mim-theme-backfill ───────────────────────────
+# S162.5 — For images scored during Claude API degradation where mim_theme_score
+# is NULL. Runs theme-only scoring call, writes mim_theme_score +
+# mim_theme_paragraph to SL DB, then pushes updated theme to MIM.
+# Existing scores, dimensions, tier — all untouched.
+# Usage: GET /admin/mim-theme-backfill?date=2026-07-26&theme=BETWEEN
 # ─────────────────────────────────────────────────────────────────────────────
-@app.route('/admin/mim-repush')
+@app.route('/admin/mim-theme-backfill')
 @login_required
 @admin_required
-def admin_mim_repush():
+def admin_mim_theme_backfill():
     """
-    Re-push DDI scores to MIM for all scored images uploaded on a given IST date.
-    Finds every scored, non-flagged image uploaded that day, pushes each one to
-    MIM /api/sl-ddi-push. MIM matches by original_filename.
-    Safe to run multiple times — MIM overwrites with same data.
+    Run theme scoring for images from a given IST date where mim_theme_score is NULL.
+    Only writes mim_theme_score + mim_theme_paragraph — no other fields change.
+    Then pushes updated theme score to MIM.
+    S162.5 — 2026-07-26
     """
-    import json as _json, urllib.request as _mim_req
+    import json as _json, urllib.request as _mim_req, tempfile as _tmp, os as _os
 
     _ist_offset = timedelta(hours=5, minutes=30)
     date_str    = request.args.get('date', '').strip()
+    mim_theme   = request.args.get('theme', '').strip().upper()
+
+    if not mim_theme:
+        return jsonify({'error': 'theme parameter required e.g. ?theme=BETWEEN'}), 400
+
     try:
         session_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str                        else (datetime.utcnow() + _ist_offset).date()
     except ValueError:
@@ -11879,111 +11884,211 @@ def admin_mim_repush():
     _mim_api_key = os.environ.get('MIM_SL_API_KEY', '')
     _mim_url     = os.environ.get('MIM_API_URL', 'https://makingimagesmatter.com')
 
-    if not _mim_api_key:
-        return jsonify({'error': 'MIM_SL_API_KEY not set'}), 503
-    if not _mim_url:
-        return jsonify({'error': 'MIM_API_URL not set'}), 503
+    # Optional username filter — restricts to specific photographers
+    _usernames_param = request.args.get('usernames', '').strip()
+    _username_list   = [u.strip() for u in _usernames_param.split(',') if u.strip()] if _usernames_param else []
 
-    # Find all scored, non-flagged images uploaded on this IST date
-    images = (Image.query
+    # Find scored images from this date with no theme score yet
+    _img_q = (Image.query
+              .join(User, User.id == Image.user_id)
               .filter(
-                  Image.status        == 'scored',
-                  Image.is_flagged    == False,
+                  Image.status             == 'scored',
+                  Image.is_flagged         == False,
                   Image.original_filename.isnot(None),
-                  Image.created_at    >= day_start_utc,
-                  Image.created_at    <  day_end_utc,
-              )
-              .order_by(Image.created_at.asc())
-              .all())
+                  Image.mim_theme_score.is_(None),
+                  Image.created_at         >= day_start_utc,
+                  Image.created_at         <  day_end_utc,
+              ))
+    if _username_list:
+        _img_q = _img_q.filter(User.username.in_(_username_list))
+    images = _img_q.order_by(Image.created_at.asc()).all()
 
     if not images:
-        return jsonify({'error': f'No scored images found for {session_date}'}), 404
+        return jsonify({
+            'message': f'No images needing theme scoring found for {session_date}',
+            'date': str(session_date),
+            'theme': mim_theme,
+        })
 
-    # Build user map for sl_username
-    _uids    = list({img.user_id for img in images if img.user_id})
-    _umap    = {u.id: u for u in User.query.filter(User.id.in_(_uids)).all()} if _uids else {}
+    # Build user map
+    _uids = list({img.user_id for img in images if img.user_id})
+    _umap = {u.id: u for u in User.query.filter(User.id.in_(_uids)).all()} if _uids else {}
 
-    pushed  = 0
-    skipped = 0
-    errors  = 0
-    results = []
+    results  = []
+    scored   = 0
+    pushed   = 0
+    errors   = 0
+
+    from engine.auto_score import auto_score as _auto_score_fn, build_exif_context as _bec
+    import urllib.request as _ureq
 
     for img in images:
-        _u         = _umap.get(img.user_id)
-        _username  = _u.username if _u else None
-        _audit     = img.get_audit() or {}
-        _b1        = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
-        _b2        = (_audit.get('byline_2_body')    or _audit.get('byline_2') or '').strip()
-        _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
-        _dims = {
-            'DoD':        float(img.dod_score)        if img.dod_score        is not None else None,
-            'Disruption': float(img.disruption_score) if img.disruption_score is not None else None,
-            'DM':         float(img.dm_score)          if img.dm_score         is not None else None,
-            'Wonder':     float(img.wonder_score)      if img.wonder_score     is not None else None,
-            'AQ':         float(img.aq_score)          if img.aq_score         is not None else None,
-        }
-        _payload = _json.dumps({
-            'api_key':             _mim_api_key,
-            'filename':            img.original_filename,
-            'sl_username':         _username,
-            'ddi_score':           float(img.score)           if img.score           is not None else None,
-            'ddi_craft':           float(img.score)           if img.score           is not None else None,
-            'ddi_theme':           float(img.mim_theme_score) if img.mim_theme_score is not None else None,
-            'ddi_theme_paragraph': img.mim_theme_paragraph or '',
-            'ddi_narrative':       _narrative,
-            'dimensions':          _dims,
-        }).encode('utf-8')
+        _u        = _umap.get(img.user_id)
+        _username = _u.username if _u else None
+        _tmp_path = None
 
         try:
-            _req = _mim_req.Request(
-                f'{_mim_url}/api/sl-ddi-push',
-                data    = _payload,
-                headers = {'Content-Type': 'application/json',
-                           'User-Agent':   'ShutterLeague/1.0'},
-                method  = 'POST'
-            )
-            with _mim_req.urlopen(_req, timeout=15) as _resp:
-                _rd = _json.loads(_resp.read().decode('utf-8'))
+            # Resolve thumb
+            _thumb = img.thumb_path
+            if not _thumb or not _os.path.exists(_thumb):
+                if img.thumb_url:
+                    _tf = _tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    _ureq.urlretrieve(img.thumb_url, _tf.name)
+                    _tf.close()
+                    _thumb = _tmp_path = _tf.name
 
-            if _rd.get('ok') or _rd.get('found') is not False:
-                pushed += 1
-                _status = 'pushed'
-            else:
-                skipped += 1
-                _status = 'not_found_on_mim'
+            if not _thumb or not _os.path.exists(_thumb):
+                results.append({
+                    'image_id': img.id,
+                    'filename': img.original_filename,
+                    'username': _username,
+                    'status':   'error — thumb not found',
+                })
+                errors += 1
+                continue
+
+            # Build theme context — same as api_mim_ddi
+            _theme_ctx = (
+                f"\n\nMIM SESSION THEME: {mim_theme}\n"
+                f"This image was shot for a structured group session on the theme of "
+                f"{mim_theme.title()}. In addition to your standard DDI evaluation, "
+                f"you must also assess theme relevance:\n"
+                f"1. Add a field 'mim_theme_score' (float 1.0–10.0): how directly and "
+                f"compellingly does this image respond to the theme of {mim_theme.title()}? "
+                f"10 = the theme is the image's core idea, unmissable. "
+                f"1 = the theme is absent or accidental.\n"
+                f"2. Add a field 'mim_theme_paragraph' (one sentence, max 40 words): "
+                f"a specific coaching observation about what this image does or misses "
+                f"thematically. Name what you see. Be direct."
+            )
+
+            _exif_ctx = ''
+            try:
+                _exif_ctx = _bec(
+                    {'make': img.exif_make, 'model': img.exif_model,
+                     'focal_length_35mm': img.exif_focal_length_35mm,
+                     'lens': img.exif_lens, 'software': img.exif_software,
+                     'has_gps': img.exif_has_gps},
+                    camera_track=img.camera_track or '',
+                    genre=img.genre or '',
+                ) if (img.camera_track == 'mobile' or img.exif_make or img.exif_model) else ''
+            except Exception:
+                pass
+
+            # Run theme scoring — full auto_score but only theme fields extracted
+            _theme_result = _auto_score_fn(
+                image_path       = _thumb,
+                genre            = img.genre,
+                title            = img.asset_name,
+                photographer     = img.photographer_name,
+                subject          = img.subject,
+                location         = img.location,
+                exif_context     = _exif_ctx,
+                seasonal_context = _theme_ctx,
+            )
+
+            _ts = _theme_result.get('mim_theme_score')
+            _tp = (_theme_result.get('mim_theme_paragraph') or '').strip()
+
+            if _ts is None:
+                results.append({
+                    'image_id': img.id,
+                    'filename': img.original_filename,
+                    'username': _username,
+                    'status':   'error — engine returned no theme score',
+                })
+                errors += 1
+                continue
+
+            # Write ONLY theme fields to SL DB — nothing else changes
+            db.session.execute(db.text(
+                "UPDATE images SET mim_theme_score=:ts, mim_theme_paragraph=:tp WHERE id=:iid"
+            ), {'ts': float(_ts), 'tp': _tp or None, 'iid': img.id})
+            db.session.commit()
+            scored += 1
+            app.logger.warning(
+                f'[mim-theme-backfill] image={img.id} filename={img.original_filename} '
+                f'theme={mim_theme} theme_score={_ts}'
+            )
+
+            # Push updated theme to MIM
+            _push_status = 'not_pushed'
+            if _mim_api_key and _mim_url and img.original_filename:
+                try:
+                    _audit     = img.get_audit() or {}
+                    _b1        = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
+                    _b2        = (_audit.get('byline_2_body')    or _audit.get('byline_2') or '').strip()
+                    _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
+                    if _tp:
+                        _theme_label = f'Theme ({mim_theme.title()}): {_tp}'
+                        _narrative   = '\n\n'.join(filter(None, [_narrative, _theme_label]))
+                    _dims = {
+                        'DoD':        float(img.dod_score)        if img.dod_score        is not None else None,
+                        'Disruption': float(img.disruption_score) if img.disruption_score is not None else None,
+                        'DM':         float(img.dm_score)          if img.dm_score         is not None else None,
+                        'Wonder':     float(img.wonder_score)      if img.wonder_score     is not None else None,
+                        'AQ':         float(img.aq_score)          if img.aq_score         is not None else None,
+                    }
+                    _payload = _json.dumps({
+                        'api_key':             _mim_api_key,
+                        'filename':            img.original_filename,
+                        'sl_username':         _username,
+                        'ddi_score':           float(img.score)  if img.score  is not None else None,
+                        'ddi_craft':           round((float(img.dod_score or 0) + float(img.disruption_score or 0) + float(img.dm_score or 0)) / 3, 2) if img.dod_score is not None else None,
+                        'ddi_theme':           float(_ts),
+                        'ddi_theme_paragraph': _tp,
+                        'ddi_narrative':       _narrative,
+                        'dimensions':          _dims,
+                    }).encode('utf-8')
+                    _req = _mim_req.Request(
+                        f'{_mim_url}/api/sl-ddi-push',
+                        data    = _payload,
+                        headers = {'Content-Type': 'application/json',
+                                   'User-Agent':   'ShutterLeague/1.0'},
+                        method  = 'POST'
+                    )
+                    with _mim_req.urlopen(_req, timeout=15) as _resp:
+                        _rd = _json.loads(_resp.read().decode('utf-8'))
+                    _push_status = 'pushed' if (_rd.get('ok') or _rd.get('found') is not False) else 'not_found_on_mim'
+                    pushed += 1 if _push_status == 'pushed' else 0
+                except Exception as _pe:
+                    _push_status = f'push_error: {str(_pe)[:80]}'
 
             results.append({
-                'image_id':  img.id,
-                'filename':  img.original_filename,
-                'username':  _username,
-                'score':     float(img.score) if img.score else None,
-                'status':    _status,
-                'mim_response': _rd,
+                'image_id':    img.id,
+                'filename':    img.original_filename,
+                'username':    _username,
+                'theme_score': float(_ts),
+                'theme_para':  _tp,
+                'push_status': _push_status,
+                'status':      'scored',
             })
-            app.logger.warning(
-                f'[mim-repush] filename={img.original_filename} '
-                f'username={_username} status={_status}'
-            )
-        except Exception as _pe:
+
+        except Exception as e:
+            db.session.rollback()
             errors += 1
             results.append({
                 'image_id': img.id,
                 'filename': img.original_filename,
                 'username': _username,
-                'status':   'error',
-                'error':    str(_pe)[:120],
+                'status':   f'error: {str(e)[:120]}',
             })
-            app.logger.error(f'[mim-repush] error image={img.id}: {_pe}')
+            app.logger.error(f'[mim-theme-backfill] error image={img.id}: {e}')
+        finally:
+            if _tmp_path:
+                try: _os.unlink(_tmp_path)
+                except: pass
 
     app.logger.warning(
-        f'[mim-repush] date={session_date} pushed={pushed} '
-        f'skipped={skipped} errors={errors} total={len(images)}'
+        f'[mim-theme-backfill] date={session_date} theme={mim_theme} '
+        f'scored={scored} pushed={pushed} errors={errors} total={len(images)}'
     )
     return jsonify({
         'date':    str(session_date),
+        'theme':   mim_theme,
         'total':   len(images),
+        'scored':  scored,
         'pushed':  pushed,
-        'skipped': skipped,
         'errors':  errors,
         'results': results,
     })
