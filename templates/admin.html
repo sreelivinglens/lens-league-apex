@@ -295,6 +295,7 @@
     <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
     <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
     <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
+    <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
   </div>
 
   {# ── Action Required Banner ── #}
@@ -356,7 +357,7 @@
     <div class="admin-section-header" onclick="toggleSection('review')">
       <div class="admin-section-title">
         ⚠ Needs Attention
-        {% set _total_attention = ((needs_action|length) if needs_action else 0) + ((flagged_items|length) if flagged_items else 0) + ((error_images|length) if error_images else 0) + ((stuck_images|length) if stuck_images else 0) %}
+        {% set _total_attention = ((needs_action|length) if needs_action else 0) + ((flagged_items|length) if flagged_items else 0) + ((error_images|length) if error_images else 0) + ((stuck_images|length) if stuck_images else 0) + (bot_count if bot_count else 0) %}
         {% if _total_attention > 0 %}
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
           {{ _total_attention }}
@@ -377,6 +378,16 @@
          error_images: status='error' — scoring failed on both attempts.
          stuck_images: status='processing' >10 minutes — thread died silently.
          Both show Force Rescore button. Collapsed by default if empty. #}
+      {% if bot_count and bot_count > 0 %}
+      <div style="background:#fff8f8;border:1px solid #e57373;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;">
+          🤖 Suspected Bot Accounts
+          <span style="font-family:monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:12px;background:#C62828;color:#fff;margin-left:6px;">{{ bot_count }}</span>
+        </div>
+        <div style="font-size:13px;color:#666;margin-bottom:10px;">Unverified accounts with random usernames and zero images registered in the last 7 days.</div>
+        <a href="/admin/bot-review" style="display:inline-block;padding:8px 16px;background:#C62828;color:#fff;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;">Review &amp; Delete →</a>
+      </div>
+      {% endif %}
       {% if error_images or stuck_images %}
       <div style="margin-bottom:24px; border:1px solid #c0392b; border-radius:6px; overflow:hidden;">
         <div style="background:#fdf2f2; padding:10px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #c0392b;">
