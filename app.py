@@ -1,3 +1,4 @@
+# SL-VERSION: 163.1 (Session 163, 2026-07-27 — Bot auto-cleanup: /admin/bot-cleanup route purges unverified zero-image accounts >48h with random username; auto-purge fires on every /admin/bot-review page load)
 # SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
 # SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
 # SL-VERSION: 162.7 (162.7 — /admin/mim-users)
@@ -11955,6 +11956,27 @@ def admin_bot_review():
         _cands = User.query.filter(User.is_active==False, User.created_at>=_cutoff).order_by(User.created_at.desc()).all()
         return [u for u in _cands if _is_bot(u) and Image.query.filter_by(user_id=u.id).count()==0]
 
+    # S163.1 — Auto-purge stale bots (>48h, unverified, zero images) on every page load
+    import re as _re2
+    try:
+        _stale_cutoff = datetime.utcnow() - timedelta(hours=48)
+        _stale = (User.query
+                  .filter(User.is_active == False, User.created_at <= _stale_cutoff)
+                  .all())
+        _stale_bots = [
+            u for u in _stale
+            if bool(_re2.match(r'^[a-z]{8,16}$', u.username or ''))
+            and Image.query.filter_by(user_id=u.id).count() == 0
+        ]
+        if _stale_bots:
+            for _sb in _stale_bots:
+                db.session.delete(_sb)
+            db.session.commit()
+            app.logger.warning(f'[bot-review] auto-purged {len(_stale_bots)} stale bot(s) on page load')
+    except Exception as _spe:
+        db.session.rollback()
+        app.logger.warning(f'[bot-review] auto-purge failed (non-fatal): {_spe}')
+
     deleted = 0
     if request.method == 'POST':
         for _uid in request.form.getlist('user_ids'):
@@ -12018,6 +12040,42 @@ def admin_bot_review():
         '</div></body></html>'
     )
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+# ── BOT AUTO-CLEANUP — /admin/bot-cleanup ────────────────────────────────────
+# S163.1 — Auto-purge unverified, zero-image accounts older than 48 hours
+# whose username matches the random all-lowercase bot pattern.
+# Safe: is_active=False + zero images + 48h old = zero legitimate users.
+# Can be run manually or called from bot-review on page load.
+# Usage: GET /admin/bot-cleanup
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/admin/bot-cleanup')
+@login_required
+@admin_required
+def admin_bot_cleanup():
+    import re as _re
+    _cutoff_48h = datetime.utcnow() - timedelta(hours=48)
+    try:
+        _cands = (User.query
+                  .filter(User.is_active == False,
+                          User.created_at <= _cutoff_48h)
+                  .all())
+        _to_delete = [
+            u for u in _cands
+            if bool(_re.match(r'^[a-z]{8,16}$', u.username or ''))
+            and Image.query.filter_by(user_id=u.id).count() == 0
+        ]
+        _count = len(_to_delete)
+        for _u in _to_delete:
+            db.session.delete(_u)
+        if _count:
+            db.session.commit()
+            app.logger.warning(f'[bot-cleanup] auto-purged {_count} stale bot accounts (>48h, unverified, zero images)')
+        return jsonify({'purged': _count, 'message': f'{_count} stale bot account(s) deleted.'})
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[bot-cleanup] error: {_e}')
+        return jsonify({'error': str(_e)}), 500
 
 
 # ── MIM USERS — /admin/mim-users ────────────────────────────────────────────
