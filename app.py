@@ -1,4 +1,4 @@
-# SL-VERSION: 163.3 (Session 163, 2026-07-28 — percentile debug log in mim-repush to diagnose NULL percentile issue)
+# SL-VERSION: 163.4 (Session 163, 2026-07-28 — 150ms sleep between mim-repush iterations to prevent MIM DB race condition on concurrent writes)
 # SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
 # SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
 # SL-VERSION: 162.7 (162.7 — /admin/mim-users)
@@ -12225,6 +12225,7 @@ def admin_mim_repush():
             _status = 'pushed' if (_rd.get('ok') or _rd.get('found') is not False) else 'not_found_on_mim'
             pushed += 1 if _status == 'pushed' else 0
             results.append({'filename': img.original_filename, 'username': _username, 'status': _status})
+            import time as _time; _time.sleep(0.15)  # S163.4-SL: prevent race condition on MIM DB writes
         except Exception as _e:
             errors += 1
             results.append({'filename': img.original_filename, 'status': f'error: {str(_e)[:80]}'})
