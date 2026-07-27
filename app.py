@@ -1,4 +1,11 @@
-# SL-VERSION: 162.7 (Session 162, 2026-07-27 — /admin/mim-users: cross-reference MIM participants with SL accounts)
+# SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
+# SL-VERSION: 162.7 (162.7 — /admin/mim-users)
+# SL-VERSION: 162.6 (162.6 — enriched MIM push: card_url, sl_username, correct craft, Sherpa fields)
+# SL-VERSION: 162.5 (162.5 — /admin/mim-theme-backfill: theme-only scoring backfill)
+# SL-VERSION: 162.4 (162.4 — /admin/mim-repush: one-click DDI re-push to MIM)
+# SL-VERSION: 162.3 (162.3 — error/stuck images in admin NEEDS ATTENTION; Delete Broken fix)
+# SL-VERSION: 162.2 (162.2 — evaluated_on date in scorecard PDF)
+# SL-VERSION: 162.1 (162.1 — timeout 120s; portfolio trim 5; seasonal cap 300; master refs 2; retry email)
 # SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
 # SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
 # SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
@@ -410,12 +417,12 @@ def send_challenge_notification(challenge):
 
       <!-- Header -->
       <tr><td style="background:#3D5A80;padding:20px 32px 6px;">
-        <div style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#ffffff;text-transform:uppercase;line-height:1.6;">SHUTTER LEAGUE</div>
+        <div style="margin:0;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#ffffff;text-transform:uppercase;line-height:1.6;">SHUTTER LEAGUE</div>
       </td></tr>
 
       <!-- Challenge banner -->
       <tr><td style="background:#3D5A80;padding:0 32px 28px;" class="sl-email-pad">
-        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.75);text-transform:uppercase;line-height:1.6;">Weekly Assignment &middot; {challenge.week_ref}</p>
+        <p style="margin:0 0 8px;font-family:monospace;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,0.75);text-transform:uppercase;line-height:1.6;">Weekly Assignment &middot; {challenge.week_ref}</p>
         <h1 class="sl-email-h1" style="margin:0;font-size:34px;font-style:italic;color:#C8A84B;line-height:1.6;">{challenge.prompt_title}</h1>
       </td></tr>
 
@@ -441,7 +448,7 @@ def send_challenge_notification(challenge):
           Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
         </p>
 
-        <a href="{challenge_url}" class="sl-email-cta" style="display:inline-block;background:#1a1a18;color:#ffffff;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;line-height:1.6;">{cta_text} &rarr;</a>
+        <a href="{challenge_url}" class="sl-email-cta" style="display:inline-block;background:#1a1a18;color:#ffffff;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;line-height:1.6;">{cta_text} &rarr;</a>
 
         <!-- AEA line — end of body, separated -->
         <p style="margin:28px 0 0;font-size:15px;color:#8a8070;line-height:1.7;border-top:1px solid #E0D8C8;padding-top:20px;">
@@ -6740,7 +6747,7 @@ def _get_quota_status(user):
         }
 
 
-def _auto_score_with_timeout(timeout_secs=90, retry_wait=10, **kwargs):
+def _auto_score_with_timeout(timeout_secs=120, retry_wait=10, **kwargs):
     """
     Wraps auto_score() with a hard timeout and one automatic retry.
 
@@ -7829,7 +7836,7 @@ def upload():
                                     Image.user_id == _img.user_id,
                                     Image.status  == 'scored',
                                     Image.genre   == _img.genre,
-                                ).order_by(Image.scored_at.desc()).limit(8).all()
+                                ).order_by(Image.scored_at.desc()).limit(5).all()  # S162.1: portfolio trim 8→5
                                 if _sc_recent and len(_sc_recent) >= 1:
                                     _sc_recent = list(reversed(_sc_recent))
                                     _sc_portfolio = {
@@ -7910,7 +7917,7 @@ def upload():
                             _csi_boost_ctx = ''
 
                         _recent_masters = (_sc_portfolio or {}).get('recent_masters', [])
-                        _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters)
+                        _masters_for_score = get_masters_for_genre(genre=_img.genre or 'Street', exclude_names=_recent_masters, limit=2)  # S162.1: cap 2 refs
 
                         # ── Session 160: Weekly Challenge theme injection ──────────────
                         # If this image is submitted to an active weekly challenge,
@@ -7959,7 +7966,7 @@ def upload():
                                 camera_track=_img.camera_track,
                                 genre=_img.genre or '',
                             ) if _img.camera_track == 'mobile' or _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
-                            seasonal_context  = _sc_seasonal_ctx + _csi_boost_ctx + _weekly_theme_ctx,
+                            seasonal_context  = (_sc_seasonal_ctx + _csi_boost_ctx + _weekly_theme_ctx)[:300],  # S162.1: cap 300 chars
                             portfolio_summary = _sc_portfolio,
                             user_city         = _sc_user_city,
                             primary_genre     = _sc_primary_genre,
@@ -8551,18 +8558,33 @@ def upload():
                                             'Wonder':     float(_img.wonder_score)      if _img.wonder_score     is not None else None,
                                             'AQ':         float(_img.aq_score)          if _img.aq_score         is not None else None,
                                         }
+                                        # S162.6 — Enriched push: card_url, sl_username, correct craft, full Sherpa fields
                                         _audit_for_push = _img.get_audit() or {}
                                         _b1 = (_audit_for_push.get('background_check') or _audit_for_push.get('byline_1') or '').strip()
                                         _b2 = (_audit_for_push.get('byline_2_body') or _audit_for_push.get('byline_2') or '').strip()
                                         _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
+                                        _push_user = User.query.get(_img.user_id)
+                                        _push_username = _push_user.username if _push_user else None
+                                        _ddi_craft_calc = round((float(_img.dod_score or 0)+float(_img.disruption_score or 0)+float(_img.dm_score or 0))/3,2) if _img.dod_score is not None else None
                                         _payload = _mim_json.dumps({
                                             'api_key':             _mim_api_key,
                                             'filename':            _img.original_filename,
+                                            'sl_username':         _push_username,
+                                            'card_url':            _img.card_url or '',
                                             'ddi_score':           float(_img.score) if _img.score else None,
-                                            'ddi_craft':           float(_img.score) if _img.score else None,
+                                            'ddi_craft':           _ddi_craft_calc,
                                             'ddi_theme':           float(_img.mim_theme_score) if _img.mim_theme_score is not None else None,
                                             'ddi_theme_paragraph': _img.mim_theme_paragraph or '',
                                             'ddi_narrative':       _narrative,
+                                            'what_stood_out':      (_audit_for_push.get('what_stood_out') or _audit_for_push.get('hard_truth') or '').strip(),
+                                            'transferable_advice': (_audit_for_push.get('transferable_advice') or '').strip(),
+                                            'background_check':    _b1,
+                                            'byline_2':            _b2,
+                                            'edit_base':           (_audit_for_push.get('edit_base') or '').strip(),
+                                            'edit_creative':       (_audit_for_push.get('edit_creative') or '').strip(),
+                                            'mentor_location_1':   (_audit_for_push.get('mentor_location_1') or '').strip(),
+                                            'mentor_location_2':   (_audit_for_push.get('mentor_location_2') or '').strip(),
+                                            'affective_state':     (_audit_for_push.get('affective_state') or '').strip(),
                                             'dimensions':          _dims,
                                         }).encode('utf-8')
                                         _push_req = _mim_req.Request(
@@ -8691,7 +8713,7 @@ def submit_upload_dispute(dispute_id):
   <tr><td align="center">
     <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
       <tr><td style="background:#1a1a18;padding:24px 32px;">
-        <p style="margin:0;font-family:'Courier New',monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
+        <p style="margin:0;font-family:monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
       </td></tr>
       <tr><td style="padding:28px 32px;">
         <h1 style="margin:0 0 6px;font-size:22px;color:#1a1a18;">Upload rejection disputed</h1>
@@ -8706,10 +8728,10 @@ def submit_upload_dispute(dispute_id):
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
           <tr>
             <td style="padding-right:8px;">
-              <a href="{_site_url}/admin/dispute/{dispute_id}/approve" style="display:inline-block;background:#2a7a3a;color:#fff;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:6px;text-decoration:none;">✓ Approve — Clear Flag</a>
+              <a href="{_site_url}/admin/dispute/{dispute_id}/approve" style="display:inline-block;background:#2a7a3a;color:#fff;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:6px;text-decoration:none;">✓ Approve — Clear Flag</a>
             </td>
             <td>
-              <a href="{_site_url}/admin/dispute/{dispute_id}/reject" style="display:inline-block;background:#7a2a2a;color:#fff;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:6px;text-decoration:none;">✗ Reject — Keep Flagged</a>
+              <a href="{_site_url}/admin/dispute/{dispute_id}/reject" style="display:inline-block;background:#7a2a2a;color:#fff;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:6px;text-decoration:none;">✗ Reject — Keep Flagged</a>
             </td>
           </tr>
         </table>
@@ -8926,7 +8948,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                         Image.user_id == _owner.id,
                         Image.status  == 'scored',
                         Image.genre   == img.genre,
-                    ).order_by(Image.scored_at.desc()).limit(8).all()
+                    ).order_by(Image.scored_at.desc()).limit(5).all()  # S162.1: portfolio trim 8→5
                     if _recent:
                         _recent = list(reversed(_recent))
                         _portfolio_summary = {
@@ -9013,7 +9035,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 subject           = img.subject,
                 location          = img.location,
                 exif_context      = _exif_ctx,
-                seasonal_context  = _seasonal_ctx + _retry_weekly_theme_ctx,
+                seasonal_context  = (_seasonal_ctx + _retry_weekly_theme_ctx)[:300],  # S162.1: cap 300 chars
                 portfolio_summary = _portfolio_summary,
                 user_city         = _user_city,
                 primary_genre     = _primary_genre or img.genre or '',
@@ -9320,6 +9342,41 @@ def _retry_score_in_background(image_id, old_status):
             except Exception:
                 app.logger.error(f'[retry_score_bg card error] {traceback.format_exc()}')
 
+            # S162.1 — Dashboard notification + email on retry success
+            try:
+                img.scoring_flash = f'Evaluation complete — {img.tier} tier. View your full evaluation report.'
+                db.session.commit()
+            except Exception as _sf_err:
+                app.logger.warning(f'[retry_score_bg] scoring_flash set failed (non-fatal): {_sf_err}')
+            try:
+                _notify_user = User.query.get(img.user_id)
+                if _notify_user and _notify_user.email and _notify_user.is_subscribed:
+                    _img_url  = f'{os.getenv("SITE_URL", "https://shutterleague.com")}/image/{img.id}'
+                    _name     = _notify_user.full_name or _notify_user.username or 'Photographer'
+                    _title    = img.asset_name or img.original_filename or 'your photograph'
+                    _tier_str = img.tier or 'Evaluated'
+                    _genre    = (img.genre or '').title()
+                    _subject  = f'Your photograph has been evaluated — {_tier_str}'
+                    _html = (
+                        '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                        '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px;">'
+                        '<table width="600" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:8px;overflow:hidden;max-width:600px;">'
+                        '<tr><td style="background:#1A1A18;padding:24px 32px;">'
+                        '<span style="font-family:monospace;font-size:20px;font-weight:700;color:#F5C518;letter-spacing:2px;">SHUTTER LEAGUE</span>'
+                        '</td></tr><tr><td style="padding:32px;">'
+                        f'<p style="margin:0 0 8px;font-size:15px;color:#4A4840;">Hi {_name},</p>'
+                        f'<p style="margin:0 0 24px;font-size:15px;color:#4A4840;line-height:1.6;">Your {_genre} photograph <strong>"{_title}"</strong> has been evaluated — <strong>{_tier_str}</strong>.</p>'
+                        f'<a href="{_img_url}" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">View Evaluation Report &#8594;</a>'
+                        '</td></tr>'
+                        f'<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">'
+                        f'<p style="margin:0;font-size:13px;color:#8a8070;">Questions? Contact <a href="mailto:{CONTACT_EMAIL}" style="color:#C8A84B;">{CONTACT_EMAIL}</a></p>'
+                        '</td></tr></table></td></tr></table></body></html>'
+                    )
+                    _text = f'Hi {_name},\n\nYour {_genre} photograph "{_title}" has been evaluated — {_tier_str}.\n\nView: {_img_url}\n\n— Shutter League'
+                    _ok = send_email(_notify_user.email, _subject, _html, _text)
+                    app.logger.info(f'[retry_score_bg] eval email {"sent" if _ok else "failed"} → {_notify_user.email}')
+            except Exception as _email_err:
+                app.logger.warning(f'[retry_score_bg] eval email error (non-fatal): {_email_err}')
             app.logger.info(f'[retry_score_bg] image={image_id} scored -> {img.score:.2f} ({img.tier})')
 
         except Exception as e:
@@ -9579,7 +9636,7 @@ def upload_edited_version(image_id):
                                     Image.user_id == _img.user_id,
                                     Image.status  == 'scored',
                                     Image.genre   == _img.genre,
-                                ).order_by(Image.scored_at.desc()).limit(8).all()
+                                ).order_by(Image.scored_at.desc()).limit(5).all()  # S162.1: portfolio trim 8→5
                                 if _edit_recent:
                                     _edit_recent = list(reversed(_edit_recent))
                                     _edit_portfolio = {
@@ -9626,7 +9683,7 @@ def upload_edited_version(image_id):
                             title=_img.asset_name, photographer=_img.photographer_name,
                             subject=_img.subject, location=_img.location,
                             exif_context      = _edit_exif_ctx,
-                            seasonal_context  = _edit_seasonal_ctx,
+                            seasonal_context  = (_edit_seasonal_ctx or '')[:300],  # S162.1: cap 300 chars
                             portfolio_summary = _edit_portfolio,
                             image_number      = _edit_image_number,
                             previous_score    = _edit_prev_score,
@@ -10460,6 +10517,15 @@ def download_card_pdf(image_id):
     # ── Reportlab render — pure Python, no system dependencies ──
     try:
         from engine.reportlab_card import build_scorecard_pdf
+        # S162.2 — evaluated_on date for scorecard PDF meta line
+        _eval_date = ''
+        _date_src = img.scored_at or img.created_at
+        if _date_src:
+            try:
+                _eval_date = 'Evaluated ' + _date_src.strftime('%-d %b %Y')
+            except Exception:
+                _eval_date = ''
+
         _pdf_data = {
             'score':             img.score,
             'tier':              img.tier or '',
@@ -10468,6 +10534,7 @@ def download_card_pdf(image_id):
             'genre':             img.genre or '',
             'format':            img.format or '',
             'location':          img.location or '',
+            'evaluated_on':      _eval_date,
             'affective_state':   _affective,
             'wso':               _wso,
             'dim_breakdown':     _dim_breakdown,
@@ -11944,6 +12011,198 @@ def admin_mim_users():
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
+# ── MIM REPUSH — /admin/mim-repush ──────────────────────────────────────────
+# S162.4 — One-click re-push of enriched DDI payload to MIM for all scored
+# images on a given IST date. Sends card_url + Sherpa fields + correct craft.
+# Usage: GET /admin/mim-repush?date=2026-07-26
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/admin/mim-repush')
+@login_required
+@admin_required
+def admin_mim_repush():
+    import json as _rj, urllib.request as _rur
+    _ist_offset  = timedelta(hours=5, minutes=30)
+    date_str     = request.args.get('date', '').strip()
+    _mim_api_key = os.environ.get('MIM_SL_API_KEY', '')
+    _mim_url     = os.environ.get('MIM_API_URL', 'https://makingimagesmatter.com')
+    try:
+        session_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str                        else (datetime.utcnow() + _ist_offset).date()
+    except ValueError:
+        return jsonify({'error': f'Invalid date: {date_str!r}. Use YYYY-MM-DD.'}), 400
+    day_start_utc = datetime.combine(session_date, datetime.min.time()) - _ist_offset
+    day_end_utc   = day_start_utc + timedelta(days=1)
+    images = (Image.query
+              .filter(Image.status == 'scored', Image.is_flagged == False,
+                      Image.original_filename.isnot(None),
+                      Image.created_at >= day_start_utc, Image.created_at < day_end_utc)
+              .order_by(Image.created_at.asc()).all())
+    if not images:
+        return jsonify({'message': f'No scored images found for {session_date}', 'date': str(session_date)})
+    _uids = list({img.user_id for img in images if img.user_id})
+    _umap = {u.id: u for u in User.query.filter(User.id.in_(_uids)).all()} if _uids else {}
+    pushed = 0; errors = 0; results = []
+    for img in images:
+        try:
+            _u = _umap.get(img.user_id)
+            _username = _u.username if _u else None
+            _audit = img.get_audit() or {}
+            _b1  = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
+            _b2  = (_audit.get('byline_2_body') or _audit.get('byline_2') or '').strip()
+            _narrative = '\n\n'.join(filter(None, [_b1, _b2]))
+            _dims = {'DoD': float(img.dod_score) if img.dod_score else None,
+                     'Disruption': float(img.disruption_score) if img.disruption_score else None,
+                     'DM': float(img.dm_score) if img.dm_score else None,
+                     'Wonder': float(img.wonder_score) if img.wonder_score else None,
+                     'AQ': float(img.aq_score) if img.aq_score else None}
+            _craft = round((float(img.dod_score or 0)+float(img.disruption_score or 0)+float(img.dm_score or 0))/3,2) if img.dod_score else None
+            _payload = _rj.dumps({
+                'api_key': _mim_api_key, 'filename': img.original_filename,
+                'sl_username': _username, 'card_url': img.card_url or '',
+                'ddi_score': float(img.score) if img.score else None,
+                'ddi_craft': _craft,
+                'ddi_theme': float(img.mim_theme_score) if img.mim_theme_score is not None else None,
+                'ddi_theme_paragraph': img.mim_theme_paragraph or '',
+                'ddi_narrative': _narrative,
+                'what_stood_out': (_audit.get('what_stood_out') or _audit.get('hard_truth') or '').strip(),
+                'transferable_advice': (_audit.get('transferable_advice') or '').strip(),
+                'background_check': _b1, 'byline_2': _b2,
+                'edit_base': (_audit.get('edit_base') or '').strip(),
+                'edit_creative': (_audit.get('edit_creative') or '').strip(),
+                'mentor_location_1': (_audit.get('mentor_location_1') or '').strip(),
+                'mentor_location_2': (_audit.get('mentor_location_2') or '').strip(),
+                'affective_state': (_audit.get('affective_state') or '').strip(),
+                'dimensions': _dims,
+            }).encode('utf-8')
+            _req = _rur.Request(f'{_mim_url}/api/sl-ddi-push', data=_payload,
+                                headers={'Content-Type':'application/json','User-Agent':'ShutterLeague/1.0'}, method='POST')
+            with _rur.urlopen(_req, timeout=15) as _resp:
+                _rd = _rj.loads(_resp.read().decode())
+            _status = 'pushed' if (_rd.get('ok') or _rd.get('found') is not False) else 'not_found_on_mim'
+            pushed += 1 if _status == 'pushed' else 0
+            results.append({'filename': img.original_filename, 'username': _username, 'status': _status})
+        except Exception as _e:
+            errors += 1
+            results.append({'filename': img.original_filename, 'status': f'error: {str(_e)[:80]}'})
+    return jsonify({'date': str(session_date), 'total': len(images), 'pushed': pushed, 'errors': errors, 'results': results})
+
+
+# ── MIM THEME BACKFILL — /admin/mim-theme-backfill ───────────────────────────
+# S162.5 — Theme-only scoring for images missing mim_theme_score.
+# Only writes mim_theme_score + mim_theme_paragraph — no other fields change.
+# Usage: GET /admin/mim-theme-backfill?date=2026-07-26&theme=BETWEEN&usernames=user1,user2
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/admin/mim-theme-backfill')
+@login_required
+@admin_required
+def admin_mim_theme_backfill():
+    import json as _tj, urllib.request as _tur, tempfile as _ttmp, os as _tos
+    _ist_offset = timedelta(hours=5, minutes=30)
+    date_str    = request.args.get('date', '').strip()
+    mim_theme   = request.args.get('theme', '').strip().upper()
+    if not mim_theme:
+        return jsonify({'error': 'theme parameter required e.g. ?theme=BETWEEN'}), 400
+    try:
+        session_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str                        else (datetime.utcnow() + _ist_offset).date()
+    except ValueError:
+        return jsonify({'error': f'Invalid date: {date_str!r}'}), 400
+    day_start_utc = datetime.combine(session_date, datetime.min.time()) - _ist_offset
+    day_end_utc   = day_start_utc + timedelta(days=1)
+    _mim_url     = os.environ.get('MIM_API_URL', 'https://makingimagesmatter.com')
+    _mim_api_key = os.environ.get('MIM_SL_API_KEY', '')
+    _usernames_param = request.args.get('usernames', '').strip()
+    _username_list   = [u.strip() for u in _usernames_param.split(',') if u.strip()] if _usernames_param else []
+    _img_q = (Image.query.join(User, User.id == Image.user_id)
+              .filter(Image.status == 'scored', Image.is_flagged == False,
+                      Image.original_filename.isnot(None),
+                      Image.mim_theme_score.is_(None),
+                      Image.created_at >= day_start_utc, Image.created_at < day_end_utc))
+    if _username_list:
+        _img_q = _img_q.filter(User.username.in_(_username_list))
+    images = _img_q.order_by(Image.created_at.asc()).all()
+    if not images:
+        return jsonify({'message': f'No images needing theme scoring for {session_date}',
+                        'date': str(session_date), 'theme': mim_theme})
+    _uids = list({img.user_id for img in images if img.user_id})
+    _umap = {u.id: u for u in User.query.filter(User.id.in_(_uids)).all()} if _uids else {}
+    results = []; scored = 0; pushed = 0; errors = 0
+    from engine.auto_score import auto_score as _asf, build_exif_context as _bec
+    for img in images:
+        _u = _umap.get(img.user_id); _username = _u.username if _u else None; _tmp_path = None
+        try:
+            _thumb = img.thumb_path
+            if not _thumb or not _tos.path.exists(_thumb):
+                if img.thumb_url:
+                    try:
+                        from storage import get_client, BUCKET
+                        _tf = _ttmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+                        get_client().download_fileobj(BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], _tf)
+                        _tf.close(); _thumb = _tmp_path = _tf.name
+                    except Exception as _r2e:
+                        results.append({'image_id': img.id, 'filename': img.original_filename, 'username': _username, 'status': f'error — R2: {str(_r2e)[:60]}'}); errors += 1; continue
+            if not _thumb or not _tos.path.exists(_thumb):
+                results.append({'image_id': img.id, 'filename': img.original_filename, 'username': _username, 'status': 'error — thumb not found'}); errors += 1; continue
+            _theme_ctx = (f'\n\nMIM SESSION THEME: {mim_theme}\n'
+                f'This image was shot for a structured group session on the theme of {mim_theme.title()}. '
+                f'In addition to your standard DDI evaluation, you must also assess theme relevance:\n'
+                f"1. Add a field 'mim_theme_score' (float 1.0–10.0): how directly and compellingly does this image respond to the theme of {mim_theme.title()}?\n"
+                f"2. Add a field 'mim_theme_paragraph' (one sentence, max 40 words): a specific coaching observation about what this image does or misses thematically.")
+            _exif_ctx = ''
+            try:
+                _exif_ctx = _bec({'make': img.exif_make, 'model': img.exif_model,
+                                   'focal_length_35mm': img.exif_focal_length_35mm,
+                                   'lens': img.exif_lens, 'software': img.exif_software,
+                                   'has_gps': img.exif_has_gps},
+                                  camera_track=img.camera_track or '', genre=img.genre or '') if (img.camera_track == 'mobile' or img.exif_make or img.exif_model) else ''
+            except Exception: pass
+            _tr = _asf(image_path=_thumb, genre=img.genre, title=img.asset_name,
+                       photographer=img.photographer_name, subject=img.subject,
+                       location=img.location, exif_context=_exif_ctx, seasonal_context=_theme_ctx)
+            _ts = _tr.get('mim_theme_score'); _tp = (_tr.get('mim_theme_paragraph') or '').strip()
+            if _ts is None:
+                results.append({'image_id': img.id, 'filename': img.original_filename, 'username': _username, 'status': 'error — no theme score returned'}); errors += 1; continue
+            db.session.execute(db.text('UPDATE images SET mim_theme_score=:ts, mim_theme_paragraph=:tp WHERE id=:iid'),
+                               {'ts': float(_ts), 'tp': _tp or None, 'iid': img.id})
+            db.session.commit(); scored += 1
+            _push_status = 'not_pushed'
+            if _mim_api_key and _mim_url and img.original_filename:
+                try:
+                    _audit = img.get_audit() or {}
+                    _b1 = (_audit.get('background_check') or '').strip()
+                    _b2 = (_audit.get('byline_2_body') or _audit.get('byline_2') or '').strip()
+                    _narrative = '\n\n'.join(filter(None,[_b1,_b2]))
+                    if _tp: _narrative = '\n\n'.join(filter(None,[_narrative,f'Theme ({mim_theme.title()}): {_tp}']))
+                    _dims = {'DoD': float(img.dod_score) if img.dod_score else None,
+                             'Disruption': float(img.disruption_score) if img.disruption_score else None,
+                             'DM': float(img.dm_score) if img.dm_score else None,
+                             'Wonder': float(img.wonder_score) if img.wonder_score else None,
+                             'AQ': float(img.aq_score) if img.aq_score else None}
+                    _craft = round((float(img.dod_score or 0)+float(img.disruption_score or 0)+float(img.dm_score or 0))/3,2) if img.dod_score else None
+                    _pl = _tj.dumps({'api_key': _mim_api_key, 'filename': img.original_filename,
+                                     'sl_username': _username, 'card_url': img.card_url or '',
+                                     'ddi_score': float(img.score) if img.score else None,
+                                     'ddi_craft': _craft, 'ddi_theme': float(_ts),
+                                     'ddi_theme_paragraph': _tp, 'ddi_narrative': _narrative,
+                                     'dimensions': _dims}).encode('utf-8')
+                    _req = _tur.Request(f'{_mim_url}/api/sl-ddi-push', data=_pl,
+                                       headers={'Content-Type':'application/json','User-Agent':'ShutterLeague/1.0'}, method='POST')
+                    with _tur.urlopen(_req, timeout=15) as _rsp:
+                        _rd = _tj.loads(_rsp.read().decode())
+                    _push_status = 'pushed' if (_rd.get('ok') or _rd.get('found') is not False) else 'not_found_on_mim'
+                    pushed += 1 if _push_status == 'pushed' else 0
+                except Exception as _pe: _push_status = f'push_error: {str(_pe)[:60]}'
+            results.append({'image_id': img.id, 'filename': img.original_filename, 'username': _username,
+                            'theme_score': float(_ts), 'theme_para': _tp, 'push_status': _push_status, 'status': 'scored'})
+        except Exception as e:
+            db.session.rollback(); errors += 1
+            results.append({'image_id': img.id, 'filename': img.original_filename, 'status': f'error: {str(e)[:120]}'})
+        finally:
+            if _tmp_path:
+                try: _tos.unlink(_tmp_path)
+                except: pass
+    return jsonify({'date': str(session_date), 'theme': mim_theme, 'total': len(images),
+                    'scored': scored, 'pushed': pushed, 'errors': errors, 'results': results})
+
+
 @app.route('/admin/seasonal-discovery')
 @login_required
 @admin_required
@@ -12289,6 +12548,22 @@ def admin_dashboard():
     recent       = recent_pages.items
     user_ids     = list({img.user_id for img in recent if img.user_id})
     recent_users = {u.id: u.username for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+
+    # S162.3 — Error & stuck images for NEEDS ATTENTION section
+    try:
+        from datetime import timedelta as _att_td
+        _stuck_cutoff = datetime.utcnow() - _att_td(minutes=10)
+        error_images = (Image.query.join(User, User.id == Image.user_id)
+            .filter(Image.status == 'error').order_by(Image.created_at.desc()).limit(20).all())
+        stuck_images = (Image.query.join(User, User.id == Image.user_id)
+            .filter(Image.status == 'processing', Image.created_at < _stuck_cutoff)
+            .order_by(Image.created_at.desc()).limit(20).all())
+        _att_user_ids = list({img.user_id for img in error_images + stuck_images if img.user_id})
+        attention_users = {u.id: u for u in User.query.filter(User.id.in_(_att_user_ids)).all()} if _att_user_ids else {}
+    except Exception as _att_err:
+        app.logger.warning(f'[admin_dashboard] error/stuck image query failed: {_att_err}')
+        error_images = []; stuck_images = []; attention_users = {}
+
     cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
 
     cal_trend = {}
@@ -12460,7 +12735,10 @@ def admin_dashboard():
                            )).scalar() or 0,
                            unread_contact_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM contact_messages WHERE replied=FALSE"
-                           )).scalar() or 0)
+                           )).scalar() or 0,
+                           error_images=error_images,
+                           stuck_images=stuck_images,
+                           attention_users=attention_users)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
@@ -12666,13 +12944,16 @@ def admin_delete_image(image_id):
 @login_required
 @admin_required
 def admin_cleanup():
-    count = db.session.execute(db.text("SELECT COUNT(*) FROM images WHERE thumb_url IS NULL")).scalar()
-    db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
-    db.session.execute(db.text("DELETE FROM images WHERE thumb_url IS NULL"))
+    # S162.3 — Only delete where thumb_url IS NULL AND status NOT IN ('error','processing')
+    # Protects legitimate images that failed scoring from being swept by Delete Broken
+    _broken_filter = "thumb_url IS NULL AND status NOT IN ('error','processing')"
+    count = db.session.execute(db.text(f"SELECT COUNT(*) FROM images WHERE {_broken_filter}")).scalar()
+    db.session.execute(db.text(f"DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE {_broken_filter})"))
+    db.session.execute(db.text(f"DELETE FROM images WHERE {_broken_filter}"))
     db.session.commit()
     flash(f'Deleted {count} broken images with no thumbnail.', 'success')
     return redirect(url_for('admin_dashboard'))
