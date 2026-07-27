@@ -1,4 +1,4 @@
-# SL-VERSION: 163.2 (Session 163, 2026-07-27 — mim-repush payload adds sl_percentile_overall + sl_percentile_genre + sl_genre calculated against full SL scored image corpus)
+# SL-VERSION: 163.3 (Session 163, 2026-07-28 — percentile debug log in mim-repush to diagnose NULL percentile issue)
 # SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
 # SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
 # SL-VERSION: 162.7 (162.7 — /admin/mim-users)
@@ -12190,6 +12190,12 @@ def admin_mim_repush():
                         _pct_genre = round((_below_genre / (_total_genre - 1)) * 100)
             except Exception as _pe:
                 app.logger.warning(f'[mim-repush] percentile calc failed: {_pe}')
+
+            app.logger.warning(
+                f'[mim-repush] percentile debug: filename={img.original_filename} '
+                f'score={_this_score} genre={img.genre} '
+                f'pct_overall={_pct_overall} pct_genre={_pct_genre}'
+            )
 
             _payload = _rj.dumps({
                 'api_key': _mim_api_key, 'filename': img.original_filename,
