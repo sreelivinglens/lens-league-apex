@@ -1,4 +1,4 @@
-# SL-VERSION: 163.1 (Session 163, 2026-07-27 — Bot auto-cleanup: /admin/bot-cleanup route purges unverified zero-image accounts >48h with random username; auto-purge fires on every /admin/bot-review page load)
+# SL-VERSION: 163.2 (Session 163, 2026-07-27 — mim-repush payload adds sl_percentile_overall + sl_percentile_genre + sl_genre calculated against full SL scored image corpus)
 # SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
 # SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
 # SL-VERSION: 162.7 (162.7 — /admin/mim-users)
@@ -11956,27 +11956,6 @@ def admin_bot_review():
         _cands = User.query.filter(User.is_active==False, User.created_at>=_cutoff).order_by(User.created_at.desc()).all()
         return [u for u in _cands if _is_bot(u) and Image.query.filter_by(user_id=u.id).count()==0]
 
-    # S163.1 — Auto-purge stale bots (>48h, unverified, zero images) on every page load
-    import re as _re2
-    try:
-        _stale_cutoff = datetime.utcnow() - timedelta(hours=48)
-        _stale = (User.query
-                  .filter(User.is_active == False, User.created_at <= _stale_cutoff)
-                  .all())
-        _stale_bots = [
-            u for u in _stale
-            if bool(_re2.match(r'^[a-z]{8,16}$', u.username or ''))
-            and Image.query.filter_by(user_id=u.id).count() == 0
-        ]
-        if _stale_bots:
-            for _sb in _stale_bots:
-                db.session.delete(_sb)
-            db.session.commit()
-            app.logger.warning(f'[bot-review] auto-purged {len(_stale_bots)} stale bot(s) on page load')
-    except Exception as _spe:
-        db.session.rollback()
-        app.logger.warning(f'[bot-review] auto-purge failed (non-fatal): {_spe}')
-
     deleted = 0
     if request.method == 'POST':
         for _uid in request.form.getlist('user_ids'):
@@ -12040,42 +12019,6 @@ def admin_bot_review():
         '</div></body></html>'
     )
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
-
-
-# ── BOT AUTO-CLEANUP — /admin/bot-cleanup ────────────────────────────────────
-# S163.1 — Auto-purge unverified, zero-image accounts older than 48 hours
-# whose username matches the random all-lowercase bot pattern.
-# Safe: is_active=False + zero images + 48h old = zero legitimate users.
-# Can be run manually or called from bot-review on page load.
-# Usage: GET /admin/bot-cleanup
-# ─────────────────────────────────────────────────────────────────────────────
-@app.route('/admin/bot-cleanup')
-@login_required
-@admin_required
-def admin_bot_cleanup():
-    import re as _re
-    _cutoff_48h = datetime.utcnow() - timedelta(hours=48)
-    try:
-        _cands = (User.query
-                  .filter(User.is_active == False,
-                          User.created_at <= _cutoff_48h)
-                  .all())
-        _to_delete = [
-            u for u in _cands
-            if bool(_re.match(r'^[a-z]{8,16}$', u.username or ''))
-            and Image.query.filter_by(user_id=u.id).count() == 0
-        ]
-        _count = len(_to_delete)
-        for _u in _to_delete:
-            db.session.delete(_u)
-        if _count:
-            db.session.commit()
-            app.logger.warning(f'[bot-cleanup] auto-purged {_count} stale bot accounts (>48h, unverified, zero images)')
-        return jsonify({'purged': _count, 'message': f'{_count} stale bot account(s) deleted.'})
-    except Exception as _e:
-        db.session.rollback()
-        app.logger.error(f'[bot-cleanup] error: {_e}')
-        return jsonify({'error': str(_e)}), 500
 
 
 # ── MIM USERS — /admin/mim-users ────────────────────────────────────────────
@@ -12219,6 +12162,35 @@ def admin_mim_repush():
                      'Wonder': float(img.wonder_score) if img.wonder_score else None,
                      'AQ': float(img.aq_score) if img.aq_score else None}
             _craft = round((float(img.dod_score or 0)+float(img.disruption_score or 0)+float(img.dm_score or 0))/3,2) if img.dod_score else None
+            # S163.6-SL — Percentile against all scored SL images
+            _this_score  = float(img.score) if img.score else 0.0
+            _pct_overall = None
+            _pct_genre   = None
+            try:
+                _total_all = Image.query.filter(
+                    Image.status == 'scored', Image.score.isnot(None),
+                    Image.is_flagged == False).count()
+                _below_all = Image.query.filter(
+                    Image.status == 'scored', Image.score.isnot(None),
+                    Image.is_flagged == False,
+                    Image.score < _this_score).count()
+                if _total_all > 1:
+                    _pct_overall = round((_below_all / (_total_all - 1)) * 100)
+                if img.genre:
+                    _total_genre = Image.query.filter(
+                        Image.status == 'scored', Image.score.isnot(None),
+                        Image.is_flagged == False,
+                        Image.genre == img.genre).count()
+                    _below_genre = Image.query.filter(
+                        Image.status == 'scored', Image.score.isnot(None),
+                        Image.is_flagged == False,
+                        Image.genre == img.genre,
+                        Image.score < _this_score).count()
+                    if _total_genre > 1:
+                        _pct_genre = round((_below_genre / (_total_genre - 1)) * 100)
+            except Exception as _pe:
+                app.logger.warning(f'[mim-repush] percentile calc failed: {_pe}')
+
             _payload = _rj.dumps({
                 'api_key': _mim_api_key, 'filename': img.original_filename,
                 'sl_username': _username, 'card_url': img.card_url or '',
@@ -12236,6 +12208,9 @@ def admin_mim_repush():
                 'mentor_location_2': (_audit.get('mentor_location_2') or '').strip(),
                 'affective_state': (_audit.get('affective_state') or '').strip(),
                 'dimensions': _dims,
+                'sl_percentile_overall': _pct_overall,
+                'sl_percentile_genre':   _pct_genre,
+                'sl_genre':              img.genre or '',
             }).encode('utf-8')
             _req = _rur.Request(f'{_mim_url}/api/sl-ddi-push', data=_payload,
                                 headers={'Content-Type':'application/json','User-Agent':'ShutterLeague/1.0'}, method='POST')
