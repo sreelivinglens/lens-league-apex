@@ -1,3 +1,4 @@
+# SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
 # SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
 # SL-VERSION: 162.7 (162.7 — /admin/mim-users)
 # SL-VERSION: 162.6 (162.6 — enriched MIM push: card_url, sl_username, correct craft, Sherpa fields)
@@ -3320,6 +3321,30 @@ def register():
 
     if request.method == 'POST':
         import secrets as _sec
+
+        # ── S162.9 — Bot protection ───────────────────────────────────────
+        # 1. Honeypot: hidden 'website' field — bots fill it, humans don't
+        if request.form.get('website', '').strip():
+            # Silent fake success — don't tip off the bot
+            flash('Account created! Check your email to verify.', 'success')
+            return render_template('register.html', email_sent=True)
+
+        # 2. IP rate limit — max 3 registration attempts per IP per hour
+        _reg_ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+        if _reg_ip:
+            try:
+                _one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+                _reg_count = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM users WHERE created_at >= :since AND signup_ip = :ip"
+                ), {'since': _one_hour_ago, 'ip': _reg_ip}).scalar() or 0
+                if _reg_count >= 3:
+                    app.logger.warning(f'[register] rate limit hit: ip={_reg_ip} count={_reg_count}')
+                    flash('Too many registration attempts from your connection. Please try again later.', 'error')
+                    return render_template('register.html')
+            except Exception as _rl_err:
+                app.logger.warning(f'[register] rate limit check failed (non-fatal): {_rl_err}')
+        # ─────────────────────────────────────────────────────────────────
+
         full_name  = request.form.get('full_name',  '').strip()
         username   = request.form.get('username',   '').strip().lower()
         email      = request.form.get('email',      '').strip().lower()
@@ -11914,6 +11939,87 @@ def admin_mim_export():
     )
 
 
+# ── BOT REVIEW — /admin/bot-review ──────────────────────────────────────────
+# S162.9 — Review and delete suspected bot accounts safely.
+@app.route('/admin/bot-review', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_bot_review():
+    import re as _re
+    _cutoff = datetime.utcnow() - timedelta(days=7)
+
+    def _is_bot(u):
+        return bool(_re.match(r'^[a-z]{8,16}$', u.username or ''))
+
+    def _get_bots():
+        _cands = User.query.filter(User.is_active==False, User.created_at>=_cutoff).order_by(User.created_at.desc()).all()
+        return [u for u in _cands if _is_bot(u) and Image.query.filter_by(user_id=u.id).count()==0]
+
+    deleted = 0
+    if request.method == 'POST':
+        for _uid in request.form.getlist('user_ids'):
+            try:
+                _u = User.query.get(int(_uid))
+                if _u and not _u.is_active:
+                    db.session.delete(_u)
+                    deleted += 1
+            except Exception as _e:
+                app.logger.warning(f'[bot-review] {_e}')
+        if deleted:
+            db.session.commit()
+            app.logger.warning(f'[bot-review] deleted {deleted} bot accounts')
+
+    _bots = _get_bots()
+    _ip_counts = {}
+    for _u in _bots:
+        _ip = _u.signup_ip or 'unknown'
+        _ip_counts[_ip] = _ip_counts.get(_ip, 0) + 1
+
+    _rows = ''
+    for _u in _bots:
+        _ip = _u.signup_ip or '—'
+        _flag = ' <span style="background:#C62828;color:#fff;font-size:10px;padding:1px 5px;border-radius:8px;">x' + str(_ip_counts.get(_u.signup_ip or 'unknown', 1)) + '</span>' if _ip_counts.get(_u.signup_ip or 'unknown', 0) > 1 else ''
+        _joined = _u.created_at.strftime('%-d %b %Y %H:%M') if _u.created_at else '—'
+        _domain = _u.email.split('@')[-1] if _u.email and '@' in _u.email else '—'
+        _rows += (
+            '<tr style="border-bottom:1px solid #E0D8C8;">' +
+            '<td style="padding:10px 12px;"><input type="checkbox" name="user_ids" value="' + str(_u.id) + '" checked style="width:16px;height:16px;accent-color:#C62828;"></td>' +
+            '<td style="padding:10px 12px;font-family:monospace;font-size:13px;">' + (_u.username or '') + '</td>' +
+            '<td style="padding:10px 12px;font-size:12px;color:#666;">' + (_u.email or '—') + '</td>' +
+            '<td style="padding:10px 12px;font-size:12px;color:#888;">' + _domain + '</td>' +
+            '<td style="padding:10px 12px;font-size:12px;color:#888;">' + _ip + _flag + '</td>' +
+            '<td style="padding:10px 12px;font-size:12px;color:#888;">' + _joined + '</td>' +
+            '<td style="padding:10px 12px;font-size:12px;color:#888;">0 images · unverified</td>' +
+            '</tr>'
+        )
+
+    _del_msg = ('<div style="background:#e8f5e9;border:1px solid #4caf50;border-radius:6px;padding:12px;margin-bottom:20px;font-size:14px;color:#2e7d32;">Deleted ' + str(deleted) + ' bot account(s).</div>') if deleted else ''
+    _warn = ('<div style="background:#fff8e1;border:1px solid #f9a825;border-radius:6px;padding:12px;margin-bottom:20px;font-size:14px;color:#5d4037;">Warning: ' + str(len(_bots)) + ' suspected bot accounts. Uncheck any legitimate users before deleting.</div>') if _bots else ''
+    _table = (
+        '<form method="POST" action="/admin/bot-review" onsubmit="return confirm(String.fromCharCode(68,101,108,101,116,101,32,99,104,101,99,107,101,100,63));">' +
+        '<div style="margin-bottom:12px;">' +
+        '<button type="submit" style="padding:10px 20px;background:#C62828;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;">Delete Checked</button>' +
+        ' <a onclick="document.querySelectorAll(\'[name=user_ids]\').forEach(c=>c.checked=true);return false;" href="#" style="font-size:13px;color:#C8A84B;margin-left:12px;">Select all</a>' +
+        ' <a onclick="document.querySelectorAll(\'[name=user_ids]\').forEach(c=>c.checked=false);return false;" href="#" style="font-size:13px;color:#C8A84B;margin-left:8px;">Deselect all</a>' +
+        '</div>' +
+        '<table width="100%" style="border-collapse:collapse;background:#fff;border-radius:8px;border:1px solid #E0D8C8;">' +
+        '<thead><tr style="background:#1A1A18;"><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">✓</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Username</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Email</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Domain</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Signup IP</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Joined</th><th style="padding:10px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;text-align:left;font-family:monospace;">Status</th></tr></thead>' +
+        '<tbody>' + _rows + '</tbody></table></form>'
+    ) if _bots else '<p style="color:#aaa;padding:20px 0;">No suspected bot accounts found.</p>'
+
+    html = (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bot Review</title>' +
+        '<style>body{font-family:Inter,Arial,sans-serif;background:#F5F0E8;margin:0;padding:24px;}.bk{display:inline-block;margin-bottom:20px;padding:8px 16px;background:#fff;border:1px solid #E0D8C8;border-radius:6px;font-size:14px;color:#1A1A18;text-decoration:none;}</style>' +
+        '</head><body><div style="max-width:1100px;margin:0 auto;">' +
+        '<a href="/admin" class="bk">← Admin Dashboard</a>' +
+        '<h1 style="font-size:22px;font-weight:700;color:#1A1A18;margin-bottom:4px;">Bot Account Review</h1>' +
+        '<div style="font-size:14px;color:#888;margin-bottom:20px;">Unverified · zero images · random username · joined last 7 days</div>' +
+        _del_msg + _warn + _table +
+        '</div></body></html>'
+    )
+    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
 # ── MIM USERS — /admin/mim-users ────────────────────────────────────────────
 # S162.7 — Cross-reference MIM participants with SL user accounts.
 @app.route('/admin/mim-users')
@@ -12738,7 +12844,10 @@ def admin_dashboard():
                            )).scalar() or 0,
                            error_images=error_images,
                            stuck_images=stuck_images,
-                           attention_users=attention_users)
+                           attention_users=attention_users,
+                           bot_count=db.session.execute(db.text(
+                               "SELECT COUNT(*) FROM users WHERE is_active=FALSE "                               "AND created_at >= NOW() - INTERVAL '7 days' "                               "AND username ~ '^[a-z]{8,16}$' "                               "AND NOT EXISTS (SELECT 1 FROM images WHERE user_id=users.id)"
+                           )).scalar() or 0)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
