@@ -1658,6 +1658,88 @@ def audit_apppy(filepath):
     else:
         _ok('No KYC terms in flash messages or render_template context strings')
 
+    # ── MIM integrity checks (S167) ───────────────────────────────────────────
+    # These 7 checks run only on mim-app.py. They fire as a gate before every
+    # MIM delivery. Check 1 was a standing reminder (session lock not built);
+    # it now passes because the lock was built in S167.
+    _is_mim = 'mim-app' in os.path.basename(filepath).lower() or 'makingimagesmatter' in src[:200]
+    if _is_mim:
+        _section('MIM data integrity checks (S167)')
+
+        # Check 1 — Session lock: sl-ddi-push must reject published AND archived
+        _c1_push = '_session_push_allowed' in src and "'published'" in src and "'archived'" in src
+        if _c1_push:
+            _ok('Session lock — DDI push rejects published/archived sessions')
+        else:
+            _fail('Session lock — DDI push does NOT reject published/archived sessions')
+            fails += 1
+
+        # Check 2 — Repopulate atomic: all 13 Sherpa fields in one route
+        _sherpa_fields = [
+            'card_url', 'ddi_score', 'ddi_craft', 'ddi_theme', 'ddi_dimensions',
+            'what_stood_out', 'background_check', 'transferable_advice', 'byline_2',
+            'edit_base', 'edit_creative', 'mentor_location_1', 'affective_state',
+        ]
+        _repop_m = re.search(r'def admin_repopulate_sherpa.*?(?=\n@app\.route|\ndef [a-z])', src, re.DOTALL)
+        _repop_body = _repop_m.group(0) if _repop_m else ''
+        _missing = [f for f in _sherpa_fields if f not in _repop_body]
+        if not _missing:
+            _ok('Repopulate atomic — all 13 Sherpa fields written in one route')
+        else:
+            _fail(f'Repopulate atomic — missing fields: {", ".join(_missing)}')
+            fails += 1
+
+        # Check 3 — Engine-box dedup: kta must NOT render inside engine-box
+        # Find the engine-box HTML render block and check it contains only mref/wso
+        _eb_m = re.search(r'<div class=\\"engine-box\\">(.*?)</div>', src, re.DOTALL)
+        if not _eb_m:
+            # Try alternate quote style in f-string
+            _eb_m = re.search(r'engine-box\\">\\n(.*?)\\n    </div>', src, re.DOTALL)
+        _eb_body = _eb_m.group(1) if _eb_m else ''
+        # kta as a variable (not in a CSS class name or HTML comment)
+        _kta_in_eb = bool(re.search(r'\bkta\b(?![_-])', _eb_body)) and '<!-- KTA' not in _eb_body[:_eb_body.find('kta')] if 'kta' in _eb_body else False
+        if not _kta_in_eb:
+            _ok('Engine-box dedup — kta does NOT appear in engine-box render')
+        else:
+            _fail('Engine-box dedup — kta appears in engine-box render (duplicate with kta-box)')
+            fails += 1
+
+        # Check 4 — Send-reports loop: must loop MIMImage not MIMRegistration
+        _sr_m = re.search(r'def admin_send_reports.*?(?=\n@app\.route|\ndef [a-z])', src, re.DOTALL)
+        _sr_body = _sr_m.group(0) if _sr_m else ''
+        _loops_image = 'MIMImage.query.filter_by(session_id=s.id)' in _sr_body
+        _loops_reg   = 'MIMRegistration.query.filter_by(session_id=s.id' in _sr_body
+        if _loops_image and not _loops_reg:
+            _ok('Send-reports loop — iterates MIMImage (not MIMRegistration)')
+        else:
+            _fail('Send-reports loop — still iterates MIMRegistration (skips unregistered photographers)')
+            fails += 1
+
+        # Check 5 — Resend subject: must contain "Updated:" prefix when ?resend=1
+        if "'Updated:" in src or '"Updated:' in src:
+            _ok('Resend subject — "Updated:" prefix present')
+        else:
+            _fail('Resend subject — missing "Updated:" prefix for resend emails')
+            fails += 1
+
+        # Check 6 — f-string safety: no nested list comprehensions inside f-strings
+        _nested = re.findall(r'f[\'\"]{1,3}[^\'\"]*\[.*? for .*? in .*?\][^\'\"]*[\'\"]{1,3}', src)
+        if not _nested:
+            _ok('f-string safety — no nested comprehensions inside f-strings (Python 3.12 safe)')
+        else:
+            _fail(f'f-string safety — {len(_nested)} nested comprehension(s) inside f-strings (Python 3.12 crash)')
+            fails += 1
+
+        # Check 7 — Sherpa field coverage: all 13 fields writable via repopulate or patch-field
+        _patch_m = re.search(r'patch.field.*?(?=\n@app\.route|\ndef [a-z])', src, re.DOTALL)
+        _patch_body = _patch_m.group(0) if _patch_m else ''
+        _uncovered = [f for f in _sherpa_fields if f not in _repop_body and f not in _patch_body]
+        if not _uncovered:
+            _ok('Sherpa field coverage — all 13 fields writable via repopulate or patch-field')
+        else:
+            _fail(f'Sherpa field coverage — uncovered fields: {", ".join(_uncovered)}')
+            fails += 1
+
     # ── Reminders ─────────────────────────────────────────────────────────────
     _section('Manual reminders')
     _note('Rule 2: Re-read the full change in context before deploying')
