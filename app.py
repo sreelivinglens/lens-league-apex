@@ -1,3 +1,6 @@
+# SL-VERSION: 168.14 (Session 168, 2026-07-31 — Remove "The Living Lens" from scorecard email header — Shutter League only)
+# SL-VERSION: 168.13 (Session 168, 2026-07-31 — Email: ▪ bullets → HTML paragraphs, **bold** stripped, structure preserved)
+# SL-VERSION: 168.12 (Session 168, 2026-07-31 — Strip markdown **bold**, ▪ bullets from Sherpa audit fields before email HTML insertion)
 # SL-VERSION: 168.11 (Session 168, 2026-07-31 02:25 IST — Scorecard email: remove bold from hero title and greeting photo title — REDEPLOY after Railway outage)
 # SL-VERSION: 168.10 (Session 168, 2026-07-31 — One-time test route /admin/test-scorecard-email/<id> — remove after testing)
 # SL-VERSION: 168.9 (Session 168, 2026-07-31 — Email prefs handler uses raw SQL UPDATE — model attrs on unmapped columns silently ignored by SQLAlchemy)
@@ -22521,6 +22524,33 @@ def _send_scorecard_email(img, user):
     _nxt      = (_audit.get('byline_2_body') or _audit.get('byline_2') or '').strip()
     _loc      = (_audit.get('mentor_location_1') or '').strip()
 
+    # S168.12 — strip markdown, convert bullets to HTML paragraphs
+    import re as _mdre
+    def _clean_md(text):
+        if not text:
+            return text
+        # Remove **bold** and *italic* markers but keep the text
+        text = _mdre.sub(r'\*\*(.*?)\*\*', r'\1', text)
+        text = _mdre.sub(r'\*(.*?)\*', r'\1', text)
+        # Split on ▪ bullet markers — each becomes its own paragraph
+        if '\u25aa' in text:
+            parts = [p.strip() for p in text.split('\u25aa') if p.strip()]
+            return '</p><p style="margin:0 0 12px;font-size:15px;line-height:1.8;color:#1a1a18;">'.join(parts)
+        # Split on newlines — each non-empty line becomes a paragraph
+        lines = [l.strip() for l in text.split('\n') if l.strip()]
+        return '</p><p style="margin:0 0 12px;font-size:15px;line-height:1.8;color:#1a1a18;">'.join(lines)
+
+    def _wrap_paras(text):
+        """Wrap cleaned text in opening and closing <p> tags."""
+        if not text:
+            return ''
+        return '<p style="margin:0 0 12px;font-size:15px;line-height:1.8;color:#1a1a18;">' + text + '</p>'
+
+    _wso = _wrap_paras(_clean_md(_wso))
+    _bck = _wrap_paras(_clean_md(_bck))
+    _nxt = _wrap_paras(_clean_md(_nxt))
+    _loc = _clean_md(_loc)  # location stays as plain text — already short
+
     # Weakest dimension
     _dim_scores = {
         'Depth of Difficulty': float(img.dod_score or 0),
@@ -22746,7 +22776,7 @@ def _send_scorecard_email(img, user):
             '<div style="font-size:11px;letter-spacing:2px;color:#888;'
             'text-transform:uppercase;margin-bottom:8px;font-family:monospace;">'
             'What your eye caught</div>'
-            f'<p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a18;">{_wso}</p>'
+            f'{_wso}'
             '</div></td></tr>'
         )
 
@@ -22761,7 +22791,7 @@ def _send_scorecard_email(img, user):
             'text-transform:uppercase;font-family:monospace;font-weight:700;">'
             f'To improve your {_weakest_name}</span></div>'
             '<div style="background:#D6E0F0;padding:14px 16px;">'
-            f'<p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a18;">{_bck}</p>'
+            f'{_bck}'
             '</div></div></td></tr>'
         )
 
@@ -22776,7 +22806,7 @@ def _send_scorecard_email(img, user):
             'text-transform:uppercase;font-family:monospace;font-weight:700;">'
             'Your next assignment</span></div>'
             '<div style="background:#FFFBF0;padding:14px 16px;">'
-            f'<p style="margin:0 0 8px;font-size:15px;line-height:1.8;color:#1a1a18;">{_nxt}</p>'
+            f'{_nxt}'
             '<p style="margin:0;font-size:12px;color:#854F0B;font-family:monospace;">'
             'This assignment expires in 48 hours.</p>'
             '</div></div></td></tr>'
@@ -22796,7 +22826,7 @@ def _send_scorecard_email(img, user):
     # Header
     parts.append('<tr><td style="background:#0F1F3D;padding:18px 28px;">')
     parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
-    parts.append('<td><div style="font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:3px;font-family:monospace;">The Living Lens</div>')
+    parts.append('<td>')
     parts.append('<div style="font-family:monospace;font-size:14px;letter-spacing:2.5px;color:#ffffff;text-transform:uppercase;font-weight:700;">Shutter League</div></td>')
     parts.append('<td style="text-align:right;font-family:monospace;font-size:12px;color:rgba(200,168,75,0.6);letter-spacing:1px;">Apex DDI Engine<br>Evaluation Report</td>')
     parts.append('</tr></table></td></tr>')
