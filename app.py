@@ -1,5 +1,5 @@
-# SL-VERSION: 168.14 (Session 168, 2026-07-31 — Remove "The Living Lens" from scorecard email header — Shutter League only)
-# SL-VERSION: 168.13 (Session 168, 2026-07-31 — Email: ▪ bullets → HTML paragraphs, **bold** stripped, structure preserved)
+# SL-VERSION: 168.15 (Session 168, 2026-07-31 — Fix: recent_work filter_genres/filter_tiers re-added; LINK MISSING placeholder stripped from email)
+# SL-VERSION: 168.14 (Session 168, 2026-07-31 — Remove The Living Lens from email header; ▪ bullets → paragraphs; **bold** stripped)
 # SL-VERSION: 168.12 (Session 168, 2026-07-31 — Strip markdown **bold**, ▪ bullets from Sherpa audit fields before email HTML insertion)
 # SL-VERSION: 168.11 (Session 168, 2026-07-31 02:25 IST — Scorecard email: remove bold from hero title and greeting photo title — REDEPLOY after Railway outage)
 # SL-VERSION: 168.10 (Session 168, 2026-07-31 — One-time test route /admin/test-scorecard-email/<id> — remove after testing)
@@ -10820,12 +10820,23 @@ def recent_work():
         app.logger.error(f'[recent_work] {_e}')
         images, total, total_pages, page = [], 0, 1, 1
 
+    # S168.1 — filter lists for dropdowns (all pages, not just current)
+    try:
+        _all_genres = sorted({img['genre'] for img in all_images if img.get('genre')})
+        _tier_order = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
+        _all_tiers  = [t for t in _tier_order if any(img.get('tier') == t for img in all_images)]
+    except Exception:
+        _all_genres = []
+        _all_tiers  = []
+
     return render_template(
         'recent_work.html',
-        feed_images  = images,
-        page         = page,
-        total_pages  = total_pages,
-        total        = total,
+        feed_images   = images,
+        page          = page,
+        total_pages   = total_pages,
+        total         = total,
+        filter_genres = _all_genres,
+        filter_tiers  = _all_tiers,
     )
 
 
@@ -22532,6 +22543,11 @@ def _send_scorecard_email(img, user):
         # Remove **bold** and *italic* markers but keep the text
         text = _mdre.sub(r'\*\*(.*?)\*\*', r'\1', text)
         text = _mdre.sub(r'\*(.*?)\*', r'\1', text)
+        # Remove engine placeholder artifacts
+        text = _mdre.sub(r'\[LINK MISSING\]', '', text, flags=_mdre.IGNORECASE)
+        text = _mdre.sub(r'\[link missing\]', '', text, flags=_mdre.IGNORECASE)
+        text = _mdre.sub(r'\[.*?MISSING.*?\]', '', text, flags=_mdre.IGNORECASE)
+        text = _mdre.sub(r'\[.*?PLACEHOLDER.*?\]', '', text, flags=_mdre.IGNORECASE)
         # Split on ▪ bullet markers — each becomes its own paragraph
         if '\u25aa' in text:
             parts = [p.strip() for p in text.split('\u25aa') if p.strip()]
