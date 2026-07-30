@@ -1,3 +1,4 @@
+# SL-VERSION: 168.7 (Session 168, 2026-07-31 — Email prefs save redirects to #email-preferences anchor via session flag)
 # SL-VERSION: 168.6 (Session 168, 2026-07-30 — Granular email prefs: email_eval_unsub/email_platform_unsub/email_nudge_unsub columns + toggle state fix)
 # SL-VERSION: 168.5 (Session 168, 2026-07-30 — Email preferences form handler in profile route + email_pref_saved context)
 # SL-VERSION: 168.4 (Session 168, 2026-07-30 — _send_scorecard_email() + /unsubscribe/<token> route + /admin/site-settings + email_unsubscribed migration)
@@ -6274,33 +6275,9 @@ def profile():
                     db.session.rollback()
                     app.logger.error(f'[email_prefs] error: {_ep_err}')
 
-            # Rebuild and render with saved confirmation
-            progress_data = _build_progress_data(current_user)
-            _ref_code  = get_or_create_referral_code(current_user)
-            _ref_stats = get_referral_stats(current_user)
-            _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
-            _ref_url   = f'{_site_url}/ref/{_ref_code}' if _ref_code else None
-            _loc = {}
-            for _s, _c in INDIA_STATES_CITIES.items():
-                _loc.setdefault('India', {})[_s] = _c
-            for _country, _states in WORLD_LOCATIONS.items():
-                _loc[_country] = _states
-            _paid_plans = ('monthly', 'halfyearly', 'annual')
-            _has_active_sub = (getattr(current_user, 'is_subscribed', False) and
-                               getattr(current_user, 'subscription_plan', '') in _paid_plans)
-            return render_template('profile.html',
-                                   images_used=images_used,
-                                   progress_data=progress_data,
-                                   referral_code=_ref_code,
-                                   referral_stats=_ref_stats,
-                                   referral_url=_ref_url,
-                                   countries=get_countries(),
-                                   location_data_json=json.dumps(_loc),
-                                   has_active_sub=_has_active_sub,
-                                   email_pref_saved=True,
-                                   email_eval_on=not getattr(current_user, 'email_eval_unsub', False),
-                                   email_platform_on=not getattr(current_user, 'email_platform_unsub', False),
-                                   email_nudge_on=not getattr(current_user, 'email_nudge_unsub', False))
+            # Redirect to anchor so user lands at Section 5 with green bar visible
+            session['email_pref_saved'] = True
+            return redirect(url_for('profile') + '#email-preferences')
 
     progress_data = _build_progress_data(current_user)
     _ref_code  = get_or_create_referral_code(current_user)
@@ -6322,7 +6299,7 @@ def profile():
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
                            countries=get_countries(), location_data_json=json.dumps(_loc),
                            has_active_sub=_has_active_sub,
-                           email_pref_saved=False,
+                           email_pref_saved=session.pop('email_pref_saved', False),
                            email_eval_on=not getattr(current_user, 'email_eval_unsub', False),
                            email_platform_on=not getattr(current_user, 'email_platform_unsub', False),
                            email_nudge_on=not getattr(current_user, 'email_nudge_unsub', False))
