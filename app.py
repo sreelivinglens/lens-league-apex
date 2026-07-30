@@ -805,6 +805,9 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_track VARCHAR(20)",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20)",
+                    # S168 — email unsubscribe
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_unsubscribed BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_unsubscribe_token VARCHAR(64)",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMP",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_uploads_used INTEGER DEFAULT 0",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_reset_date DATE",
@@ -2009,6 +2012,38 @@ def _run_startup_tasks():
             except Exception as _cr_mig:
                 db.session.rollback()
                 print(f'cancellation_reasons migration warning: {_cr_mig}')
+
+            # S168 — site settings table (Fresh from SL banner + future admin config)
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS site_settings ("
+                    "  key   VARCHAR(80) PRIMARY KEY,"
+                    "  value TEXT,"
+                    "  updated_at TIMESTAMP DEFAULT NOW()"
+                    ")"
+                ))
+                db.session.commit()
+                print('site_settings table OK.')
+            except Exception as _ss_mig:
+                db.session.rollback()
+                print(f'site_settings migration warning: {_ss_mig}')
+
+            # S168 — backfill unsubscribe tokens for existing users
+            try:
+                import secrets as _usec
+                _users_no_token = db.session.execute(db.text(
+                    "SELECT id FROM users WHERE email_unsubscribe_token IS NULL"
+                )).fetchall()
+                for _ut_row in _users_no_token:
+                    db.session.execute(db.text(
+                        "UPDATE users SET email_unsubscribe_token = :tok WHERE id = :uid"
+                    ), {'tok': _usec.token_urlsafe(32), 'uid': _ut_row[0]})
+                if _users_no_token:
+                    db.session.commit()
+                print(f'email_unsubscribe_token backfill OK — {len(_users_no_token)} users.')
+            except Exception as _utok_err:
+                db.session.rollback()
+                print(f'email_unsubscribe_token backfill warning: {_utok_err}')
 
             print('Columns migrated OK.')
 
@@ -3361,11 +3396,6 @@ def register():
         import re as _re
         if not _re.match(r'^[a-z0-9_]+$', username):
             errors.append('Username may only contain letters, numbers and underscores.')
-        # Bot pattern block (S168) — 10 random lowercase letters, no numbers or underscores.
-        # All 15 bot accounts confirmed this exact pattern. Legitimate usernames almost
-        # never consist of exactly 10 lowercase letters with no digits or underscores.
-        if _re.match(r'^[a-z]{10}$', username):
-            errors.append('Please choose a username that includes at least one number or underscore (e.g. john_photo or john83).')
         if not email or '@' not in email:
             errors.append('Please enter a valid email address.')
         if len(password) < 8:
@@ -6201,6 +6231,63 @@ def profile():
             logout_user()
             return redirect(url_for('login'))
 
+        # ── S168 — Email preferences ───────────────────────────────────────
+        elif request.form.get('form_type') == 'email_preferences':
+            _unsub_all = request.form.get('unsubscribe_all') == '1'
+            if _unsub_all:
+                # One-click unsubscribe from all emails
+                try:
+                    current_user.email_unsubscribed = True
+                    db.session.commit()
+                    app.logger.info(f'[email_prefs] user={current_user.id} unsubscribed_all')
+                except Exception as _ep_err:
+                    db.session.rollback()
+                    app.logger.error(f'[email_prefs] error: {_ep_err}')
+            else:
+                # At least one checkbox checked — treat as resubscribe
+                # Individual checkbox granularity stored as a JSON preference
+                # in future; for now a single email_unsubscribed flag covers all
+                _eval_on     = request.form.get('email_eval')     == '1'
+                _platform_on = request.form.get('email_platform') == '1'
+                _nudge_on    = request.form.get('email_nudge')    == '1'
+                _any_on      = _eval_on or _platform_on or _nudge_on
+                try:
+                    current_user.email_unsubscribed = not _any_on
+                    db.session.commit()
+                    app.logger.info(
+                        f'[email_prefs] user={current_user.id} '
+                        f'eval={_eval_on} platform={_platform_on} nudge={_nudge_on} '
+                        f'unsubscribed={not _any_on}'
+                    )
+                except Exception as _ep_err:
+                    db.session.rollback()
+                    app.logger.error(f'[email_prefs] error: {_ep_err}')
+
+            # Rebuild and render with saved confirmation
+            progress_data = _build_progress_data(current_user)
+            _ref_code  = get_or_create_referral_code(current_user)
+            _ref_stats = get_referral_stats(current_user)
+            _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
+            _ref_url   = f'{_site_url}/ref/{_ref_code}' if _ref_code else None
+            _loc = {}
+            for _s, _c in INDIA_STATES_CITIES.items():
+                _loc.setdefault('India', {})[_s] = _c
+            for _country, _states in WORLD_LOCATIONS.items():
+                _loc[_country] = _states
+            _paid_plans = ('monthly', 'halfyearly', 'annual')
+            _has_active_sub = (getattr(current_user, 'is_subscribed', False) and
+                               getattr(current_user, 'subscription_plan', '') in _paid_plans)
+            return render_template('profile.html',
+                                   images_used=images_used,
+                                   progress_data=progress_data,
+                                   referral_code=_ref_code,
+                                   referral_stats=_ref_stats,
+                                   referral_url=_ref_url,
+                                   countries=get_countries(),
+                                   location_data_json=json.dumps(_loc),
+                                   has_active_sub=_has_active_sub,
+                                   email_pref_saved=True)
+
     progress_data = _build_progress_data(current_user)
     _ref_code  = get_or_create_referral_code(current_user)
     _ref_stats = get_referral_stats(current_user)
@@ -6220,7 +6307,8 @@ def profile():
     return render_template('profile.html', images_used=images_used, progress_data=progress_data,
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
                            countries=get_countries(), location_data_json=json.dumps(_loc),
-                           has_active_sub=_has_active_sub)
+                           has_active_sub=_has_active_sub,
+                           email_pref_saved=False)
 
 
 # ---------------------------------------------------------------------------
@@ -8633,6 +8721,23 @@ def upload():
                                             )
                             except Exception as _push_err:
                                 app.logger.warning(f'[mim-push] failed (non-fatal): {_push_err}')
+
+                            # ── S168 — Rich scorecard email (SL users only) ───────────
+                            # Fires immediately after scoring completes.
+                            # Sent to all users (UAT + subscribers) who have not
+                            # unsubscribed. Skips flagged/needs_review images.
+                            try:
+                                if (not _img.is_flagged
+                                        and not getattr(_img, 'needs_review', False)
+                                        and _img.score
+                                        and _img.status == 'scored'):
+                                    _se_user = User.query.get(_img.user_id)
+                                    if (_se_user
+                                            and _se_user.email
+                                            and not getattr(_se_user, 'email_unsubscribed', False)):
+                                        _send_scorecard_email(_img, _se_user)
+                            except Exception as _se_err:
+                                app.logger.warning(f'[scorecard_email] failed (non-fatal): {_se_err}')
 
                     except Exception as e:
                         app.logger.error(f'[background scoring error] {traceback.format_exc()}')
@@ -16821,6 +16926,215 @@ def sitemap_cards():
     return xml, 200, {'Content-Type': 'application/xml; charset=utf-8'}
 
 
+@app.route('/unsubscribe/<token>')
+def email_unsubscribe(token):
+    """
+    One-click unsubscribe from evaluation emails (S168).
+    No login required — token is per-user, URL-safe, 32 bytes.
+    Sets email_unsubscribed = TRUE on the user record.
+    Shows a confirmation page. Sends a confirmation email.
+    """
+    if not token or len(token) < 20:
+        return 'Invalid unsubscribe link.', 400
+
+    try:
+        _u = db.session.execute(db.text(
+            "SELECT id, email, full_name, username, email_unsubscribed "
+            "FROM users WHERE email_unsubscribe_token = :tok LIMIT 1"
+        ), {'tok': token}).fetchone()
+    except Exception:
+        _u = None
+
+    if not _u:
+        _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+        return (
+            f'<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            f'<meta name="viewport" content="width=device-width,initial-scale=1">'
+            f'<title>Unsubscribe — Shutter League</title></head>'
+            f'<body style="font-family:Inter,Arial,sans-serif;background:#F5F0E8;'
+            f'min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">'
+            f'<div style="max-width:480px;background:#fff;border-radius:8px;'
+            f'border:1px solid #D0C8B0;padding:40px 32px;text-align:center;">'
+            f'<div style="font-family:monospace;font-size:12px;letter-spacing:2px;'
+            f'color:#C8A84B;text-transform:uppercase;margin-bottom:16px;">Shutter League</div>'
+            f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">'
+            f'This unsubscribe link is not valid or has already been used.</p>'
+            f'<a href="{_site}" style="display:inline-block;margin-top:20px;font-size:14px;'
+            f'color:#2C3E6B;text-decoration:none;font-weight:600;">Return to Shutter League →</a>'
+            f'</div></body></html>'
+        ), 404
+
+    _uid   = _u[0]
+    _email = _u[1]
+    _name  = (_u[2] or _u[3] or 'Photographer').split()[0]
+    _already = _u[4]
+    _site  = os.getenv('SITE_URL', 'https://shutterleague.com')
+
+    if not _already:
+        try:
+            db.session.execute(db.text(
+                "UPDATE users SET email_unsubscribed = TRUE WHERE id = :uid"
+            ), {'uid': _uid})
+            db.session.commit()
+            app.logger.info(f'[unsubscribe] user={_uid} email={_email} unsubscribed')
+        except Exception as _ue:
+            db.session.rollback()
+            app.logger.error(f'[unsubscribe] DB error: {_ue}')
+
+        # Send confirmation email
+        try:
+            _conf_html = (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                '<table width="100%" cellpadding="0" cellspacing="0">'
+                '<tr><td align="center" style="padding:32px 16px;">'
+                '<table width="520" cellpadding="0" cellspacing="0" '
+                'style="background:#ffffff;border:1px solid #D0C8B0;border-radius:4px;'
+                'max-width:520px;width:100%;overflow:hidden;">'
+                '<tr><td style="background:#0F1F3D;padding:18px 28px;">'
+                '<span style="font-family:monospace;font-size:13px;font-weight:700;'
+                'letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</span>'
+                '</td></tr>'
+                '<tr><td style="padding:28px 28px 24px;">'
+                f'<p style="margin:0 0 12px;font-size:15px;color:#4A4840;line-height:1.7;">'
+                f'Hi {_name},</p>'
+                '<p style="margin:0 0 16px;font-size:15px;color:#4A4840;line-height:1.7;">'
+                'You have been unsubscribed from Shutter League evaluation emails. '
+                'You will no longer receive evaluation summaries after your photographs are scored.</p>'
+                '<p style="margin:0 0 16px;font-size:15px;color:#4A4840;line-height:1.7;">'
+                'Your account, evaluation history and standing remain unchanged. '
+                'You can resubscribe at any time from your profile settings.</p>'
+                f'<a href="{_site}/profile" style="display:inline-block;background:#0F1F3D;'
+                'color:#C8A84B;font-family:monospace;font-size:12px;font-weight:700;'
+                'letter-spacing:1.5px;text-transform:uppercase;padding:12px 22px;'
+                'text-decoration:none;border-radius:4px;">Manage email preferences →</a>'
+                '</td></tr>'
+                f'<tr><td style="padding:14px 28px;border-top:1px solid #E0D8C8;">'
+                f'<p style="margin:0;font-size:12px;color:#999;">— Shutter League · '
+                f'<a href="mailto:{CONTACT_EMAIL}" style="color:#C8A84B;">{CONTACT_EMAIL}</a></p>'
+                '</td></tr>'
+                '</table></td></tr></table></body></html>'
+            )
+            send_email(_email, 'You have been unsubscribed from Shutter League emails',
+                       _conf_html,
+                       f'Hi {_name},\n\nYou have been unsubscribed from Shutter League evaluation emails.\n\nYour account and evaluation history remain unchanged.\n\n— Shutter League')
+        except Exception as _ce:
+            app.logger.warning(f'[unsubscribe] confirmation email failed (non-fatal): {_ce}')
+
+    # Render confirmation page
+    _resubscribe_url = f'{_site}/profile'
+    return (
+        f'<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        f'<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f'<title>Unsubscribed — Shutter League</title></head>'
+        f'<body style="font-family:Inter,Arial,sans-serif;background:#F5F0E8;'
+        f'min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">'
+        f'<div style="max-width:480px;background:#fff;border-radius:8px;'
+        f'border:1px solid #D0C8B0;padding:40px 32px;text-align:center;">'
+        f'<div style="font-family:monospace;font-size:12px;letter-spacing:2px;'
+        f'color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League</div>'
+        f'<div style="font-size:32px;margin-bottom:16px;">&#10003;</div>'
+        f'<h1 style="font-size:20px;font-weight:700;color:#0F1F3D;margin:0 0 12px;">'
+        f'{"You were already unsubscribed." if _already else "You have been unsubscribed."}</h1>'
+        f'<p style="font-size:15px;color:#4A4840;line-height:1.7;margin:0 0 24px;">'
+        f'You will no longer receive evaluation email summaries. '
+        f'Your account, photographs and standing remain unchanged.</p>'
+        f'<a href="{_resubscribe_url}" style="display:inline-block;background:#0F1F3D;'
+        f'color:#C8A84B;font-family:monospace;font-size:12px;font-weight:700;'
+        f'letter-spacing:1.5px;text-transform:uppercase;padding:13px 24px;'
+        f'text-decoration:none;border-radius:4px;">Manage email preferences →</a>'
+        f'<p style="margin-top:20px;font-size:13px;color:#999;">Changed your mind? '
+        f'<a href="{_resubscribe_url}" style="color:#2C3E6B;">Resubscribe from your profile.</a></p>'
+        f'</div></body></html>'
+    ), 200
+
+
+@app.route('/admin/site-settings', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_site_settings():
+    """
+    Admin page to manage site-wide settings (S168).
+    Currently: Fresh from SL banner (text + URL shown in scorecard emails).
+    If banner text is blank, the section is hidden in all emails.
+    """
+    _msg = None
+    try:
+        _banner_row = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = 'sl_news_banner'"
+        )).fetchone()
+        _banner_url_row = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = 'sl_news_banner_url'"
+        )).fetchone()
+        _banner_text = _banner_row[0] if _banner_row else ''
+        _banner_url  = _banner_url_row[0] if _banner_url_row else ''
+    except Exception:
+        _banner_text = ''
+        _banner_url  = ''
+
+    if request.method == 'POST':
+        _new_text = request.form.get('banner_text', '').strip()
+        _new_url  = request.form.get('banner_url',  '').strip()
+        try:
+            db.session.execute(db.text(
+                "INSERT INTO site_settings (key, value, updated_at) "
+                "VALUES ('sl_news_banner', :v, NOW()) "
+                "ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()"
+            ), {'v': _new_text})
+            db.session.execute(db.text(
+                "INSERT INTO site_settings (key, value, updated_at) "
+                "VALUES ('sl_news_banner_url', :v, NOW()) "
+                "ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()"
+            ), {'v': _new_url})
+            db.session.commit()
+            _banner_text = _new_text
+            _banner_url  = _new_url
+            _msg = 'Banner updated. Leave text blank to hide the section from all emails.'
+        except Exception as _se:
+            db.session.rollback()
+            _msg = f'Error: {_se}'
+
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>Site Settings — SL Admin</title></head>'
+        '<body style="font-family:Inter,Arial,sans-serif;background:#F5F0E8;padding:32px 24px;">'
+        '<div style="max-width:600px;margin:0 auto;">'
+        '<a href="/admin" style="font-size:13px;color:#2C3E6B;text-decoration:none;">'
+        '← Back to Admin</a>'
+        '<h1 style="font-size:22px;font-weight:700;color:#0F1F3D;margin:20px 0 6px;">'
+        'Fresh from Shutter League</h1>'
+        '<p style="font-size:14px;color:#4A4840;line-height:1.7;margin:0 0 24px;">'
+        'This text appears in every evaluation scorecard email. '
+        'Use it for MIM session announcements, Freedom Offer, new contests, or any platform news. '
+        'Leave blank to hide the section entirely.</p>'
+        + (f'<div style="background:#E8EDF5;border-radius:6px;padding:12px 16px;'
+           f'margin-bottom:20px;font-size:14px;color:#2C3E6B;">{_msg}</div>' if _msg else '')
+        + '<form method="POST">'
+        '<label style="display:block;font-size:13px;font-weight:600;color:#0F1F3D;'
+        'margin-bottom:6px;letter-spacing:0.5px;text-transform:uppercase;">Banner text</label>'
+        f'<textarea name="banner_text" rows="3" '
+        'style="width:100%;padding:12px 14px;border:1.5px solid #D0C8B0;border-radius:6px;'
+        'font-size:15px;font-family:inherit;resize:vertical;margin-bottom:16px;'
+        'box-sizing:border-box;background:#fff;">'
+        f'{_banner_text}</textarea>'
+        '<label style="display:block;font-size:13px;font-weight:600;color:#0F1F3D;'
+        'margin-bottom:6px;letter-spacing:0.5px;text-transform:uppercase;">'
+        'Link URL (optional)</label>'
+        f'<input type="url" name="banner_url" value="{_banner_url}" '
+        'placeholder="https://shutterleague.com/..." '
+        'style="width:100%;padding:12px 14px;border:1.5px solid #D0C8B0;border-radius:6px;'
+        'font-size:15px;font-family:inherit;margin-bottom:20px;box-sizing:border-box;'
+        'background:#fff;">'
+        '<button type="submit" style="background:#0F1F3D;color:#C8A84B;font-family:monospace;'
+        'font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;'
+        'padding:13px 28px;border:none;border-radius:4px;cursor:pointer;">'
+        'Save banner →</button>'
+        '</form></div></body></html>'
+    ), 200
+
+
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
@@ -22114,6 +22428,463 @@ def raw_submit(contest_type, image_id):
 # JPEG Provenance Verification
 # Alternative to RAW for camera-direct JPEG shooters with intact EXIF
 # ---------------------------------------------------------------------------
+
+
+def _send_scorecard_email(img, user):
+    """
+    S168 — Rich scorecard email, fires immediately after scoring in _score_in_background.
+    Sends to all SL users (UAT + subscribers) who have not unsubscribed.
+    Skips flagged and needs_review images.
+    Uses parts-list HTML assembly to avoid implicit/explicit concat mixing.
+    """
+    import secrets as _sc_sec
+
+    _site    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _name    = (user.full_name or user.username or 'Photographer').split()[0]
+    _email   = user.email
+    _genre   = (img.genre or 'Photography').title()
+    _score   = img.score or 0.0
+    _tier    = img.tier or 'Evaluated'
+    _title   = img.asset_name or img.original_filename or 'your photograph'
+    _img_url = f'{_site}/image/{img.id}'
+    _thumb   = img.thumb_url or ''
+    _plan    = getattr(user, 'subscription_plan', '') or ''
+    _is_uat  = (_plan == 'uat')
+
+    # Ensure unsubscribe token exists
+    _unsub_token = getattr(user, 'email_unsubscribe_token', None)
+    if not _unsub_token:
+        try:
+            _unsub_token = _sc_sec.token_urlsafe(32)
+            db.session.execute(db.text(
+                'UPDATE users SET email_unsubscribe_token = :tok WHERE id = :uid'
+            ), {'tok': _unsub_token, 'uid': user.id})
+            db.session.commit()
+        except Exception:
+            _unsub_token = 'invalid'
+    _unsub_url = f'{_site}/unsubscribe/{_unsub_token}'
+
+    # Subject
+    _subject = f'Your {_genre} photograph \u2014 {_score:.2f} \u00b7 {_tier} \u00b7 {_name}'
+
+    # Audit JSON fields
+    _audit    = img.get_audit() or {}
+    _wso      = (_audit.get('what_stood_out') or _audit.get('hard_truth') or '').strip()
+    _bck      = (_audit.get('background_check') or _audit.get('byline_1') or '').strip()
+    _nxt      = (_audit.get('byline_2_body') or _audit.get('byline_2') or '').strip()
+    _loc      = (_audit.get('mentor_location_1') or '').strip()
+
+    # Weakest dimension
+    _dim_scores = {
+        'Depth of Difficulty': float(img.dod_score or 0),
+        'Visual Disruption':   float(img.disruption_score or 0),
+        'Decisive Moment':     float(img.dm_score or 0),
+        'Wonder Factor':       float(img.wonder_score or 0),
+        'Affective Quotient':  float(img.aq_score or 0),
+    }
+    _dim_short = {
+        'Depth of Difficulty': 'DoD',
+        'Visual Disruption':   'Disruption',
+        'Decisive Moment':     'DM',
+        'Wonder Factor':       'Wonder',
+        'Affective Quotient':  'AQ',
+    }
+    _weakest_name  = min(_dim_scores, key=_dim_scores.get)
+    _weakest_score = _dim_scores[_weakest_name]
+
+    def _dim_cell(full_name, score):
+        short = _dim_short[full_name]
+        if full_name == _weakest_name:
+            return (
+                '<td style="text-align:center;background:rgba(200,168,75,0.2);'
+                'padding:10px 2px;border-left:1px solid rgba(200,168,75,0.2);'
+                'border-right:1px solid rgba(200,168,75,0.2);">'
+                f'<div style="font-size:14px;font-weight:700;color:#F5C518;'
+                f'font-family:monospace;">{score:.1f} &#8595;</div>'
+                f'<div style="font-size:12px;color:#C8A84B;text-transform:uppercase;'
+                f'letter-spacing:0.5px;margin-top:3px;">{short}</div></td>'
+            )
+        return (
+            '<td style="text-align:center;padding:12px 4px;">'
+            f'<div style="font-size:14px;font-weight:600;color:#F5C518;'
+            f'font-family:monospace;">{score:.1f}</div>'
+            f'<div style="font-size:12px;color:rgba(255,255,255,0.3);text-transform:uppercase;'
+            f'letter-spacing:0.5px;margin-top:3px;">{short}</div></td>'
+        )
+
+    _dim_row = ''.join(_dim_cell(n, s) for n, s in _dim_scores.items())
+
+    # Percentile
+    _pct_text = ''
+    try:
+        from engine.scoring import compute_percentile
+        _pct = compute_percentile(float(_score), genre=img.genre,
+                                  camera_track=getattr(img, 'camera_track', None))
+        if _pct and _pct.get('genre_pct'):
+            _pct_text = f'Top {_pct["genre_pct"]}% \u00b7 {_genre}'
+    except Exception:
+        pass
+
+    # Grandmaster hero
+    _hero_html = ''
+    try:
+        _gm = db.session.execute(db.text(
+            "SELECT i.thumb_url, i.asset_name, i.genre, i.score, u.full_name, u.username "
+            "FROM images i JOIN users u ON u.id = i.user_id "
+            "WHERE i.tier IN ('Grandmaster','Legend') "
+            "AND i.status = 'scored' AND i.is_public = TRUE "
+            "AND i.is_flagged = FALSE AND i.thumb_url IS NOT NULL "
+            "ORDER BY i.scored_at DESC LIMIT 1"
+        )).fetchone()
+        if _gm:
+            _gm_t  = _gm[1] or 'Untitled'
+            _gm_g  = (_gm[2] or '').title()
+            _gm_s  = _gm[3] or 0
+            _gm_a  = _gm[4] or _gm[5] or 'Photographer'
+            _gm_th = _gm[0]
+            _hero_html = (
+                '<tr><td style="padding:0;">'
+                f'<div style="position:relative;overflow:hidden;">'
+                f'<img src="{_gm_th}" alt="{_gm_t}" onerror="this.style.display=\'none\'" '
+                f'style="width:100%;max-width:560px;height:160px;object-fit:cover;display:block;">'
+                f'<div style="position:absolute;bottom:0;left:0;right:0;'
+                f'background:linear-gradient(to top,rgba(15,31,61,0.9),transparent);'
+                f'padding:12px 20px;">'
+                f'<div style="font-size:12px;letter-spacing:2px;color:#9FD4BC;'
+                f'text-transform:uppercase;font-family:monospace;margin-bottom:3px;">'
+                f'This week on Shutter League \u00b7 Grandmaster</div>'
+                f'<div style="font-size:14px;font-weight:700;color:#ffffff;">'
+                f'{_gm_t} \u2014 {_gm_a} \u00b7 {_gm_g} \u00b7 {_gm_s:.2f}</div>'
+                f'</div></div></td></tr>'
+            )
+    except Exception:
+        pass
+
+    # User image
+    _img_html = ''
+    if _thumb:
+        _img_html = (
+            '<tr><td style="padding:0 0 4px;">'
+            f'<a href="{_img_url}" style="display:block;text-decoration:none;">'
+            f'<img src="{_thumb}" alt="{_title}" '
+            f'style="width:100%;max-width:560px;height:auto;display:block;" '
+            f'onerror="this.style.display=\'none\'"></a></td></tr>'
+        )
+
+    # Weekly challenge
+    _wc_html = ''
+    try:
+        _now_utc = datetime.utcnow()
+        _wc = db.session.execute(db.text(
+            'SELECT prompt_title, closes_at FROM weekly_challenges '
+            'WHERE opens_at <= :now AND closes_at >= :now AND is_active = TRUE '
+            'ORDER BY opens_at DESC LIMIT 1'
+        ), {'now': _now_utc}).fetchone()
+        if _wc:
+            _wc_title = _wc[0] or 'Weekly Challenge'
+            _wc_days  = max(0, (_wc[1] - _now_utc).days) if _wc[1] else 0
+            _wc_ds    = f'{_wc_days} day{"s" if _wc_days != 1 else ""} left'
+            _wc_html  = (
+                '<tr><td style="padding:0 0 14px;">'
+                '<div style="border-radius:6px;overflow:hidden;">'
+                '<div style="background:#854F0B;padding:9px 16px;">'
+                '<span style="font-size:11px;letter-spacing:2px;color:#FFF3CD;'
+                'text-transform:uppercase;font-family:monospace;font-weight:700;">'
+                'Weekly Challenge</span></div>'
+                '<div style="background:#FFF8F0;padding:12px 16px;">'
+                f'<span style="font-size:14px;color:#4A4840;line-height:1.7;">'
+                f'{_wc_title} \u00b7 {_wc_ds}</span>'
+                '</div></div></td></tr>'
+            )
+    except Exception:
+        pass
+
+    # Evaluations remaining
+    _evals = '\u2014'
+    try:
+        _plan_limits = {
+            'monthly': 4, 'halfyearly': 4, 'annual': 4,
+            'uat': 10, 'beta': 10, 'camera': 4, 'mobile': 4,
+        }
+        _scored_this_month = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id = :uid AND status = 'scored' "
+            "AND scored_at >= date_trunc('month', NOW())"
+        ), {'uid': user.id}).scalar() or 0
+        _limit  = _plan_limits.get(_plan, 3)
+        _evals  = str(max(0, _limit - _scored_this_month))
+    except Exception:
+        pass
+
+    # Fresh from SL
+    _news_html = ''
+    try:
+        _nb  = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = 'sl_news_banner'"
+        )).fetchone()
+        _nbu = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = 'sl_news_banner_url'"
+        )).fetchone()
+        _nb_text = (_nb[0] or '').strip() if _nb else ''
+        _nb_url  = (_nbu[0] or '').strip() if _nbu else ''
+        if _nb_text:
+            _nb_link = (
+                f' <a href="{_nb_url}" style="color:#854F0B;text-decoration:underline;">'
+                f'Read more \u2192</a>'
+            ) if _nb_url else ''
+            _news_html = (
+                '<tr><td style="padding:0 0 14px;">'
+                '<div style="border-radius:6px;overflow:hidden;'
+                'border:1px solid rgba(200,168,75,0.4);">'
+                '<div style="background:#854F0B;padding:9px 16px;">'
+                '<span style="font-size:11px;letter-spacing:2px;color:#FFF3CD;'
+                'text-transform:uppercase;font-family:monospace;font-weight:700;">'
+                'Fresh from Shutter League</span></div>'
+                '<div style="background:#FFFBF0;padding:12px 16px;">'
+                f'<span style="font-size:14px;color:#4A4840;line-height:1.7;">'
+                f'{_nb_text}{_nb_link}</span>'
+                '</div></div></td></tr>'
+            )
+    except Exception:
+        pass
+
+    # UAT notice
+    _uat_html = ''
+    if _is_uat:
+        _uat_html = (
+            '<tr><td style="padding:0 0 14px;">'
+            '<div style="border-radius:6px;overflow:hidden;border:1.5px solid #E6B800;">'
+            '<div style="background:#E6B800;padding:9px 16px;">'
+            '<span style="font-size:11px;letter-spacing:2px;color:#2a1800;'
+            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
+            'UAT access \u2014 closing 15 August 2026</span></div>'
+            '<div style="background:#FEF6E4;padding:14px 16px;">'
+            '<p style="margin:0 0 12px;font-size:14px;color:#4A4840;line-height:1.8;">'
+            'Your UAT access closes on 15 August. Your photographs, evaluations and '
+            'standing remain on record permanently \u2014 nothing is lost. '
+            'To continue uploading after 15 August, subscribe before that date.</p>'
+            f'<a href="{_site}/pricing" style="display:inline-block;background:#0F1F3D;'
+            'color:#C8A84B;font-family:monospace;font-size:12px;font-weight:700;'
+            'letter-spacing:1.5px;text-transform:uppercase;padding:12px 20px;'
+            'text-decoration:none;border-radius:4px;">'
+            'Subscribe \u2014 \u20b92,000/year \u2192</a>'
+            '</div></div></td></tr>'
+        )
+
+    # Location
+    _loc_html = ''
+    _user_city = getattr(user, 'city', None) or 'Bengaluru'
+    if _loc:
+        _loc_html = (
+            '<tr><td style="padding:0 0 14px;">'
+            '<div style="border-radius:6px;overflow:hidden;">'
+            '<div style="background:#2C4A3E;padding:9px 16px;">'
+            '<span style="font-size:11px;letter-spacing:2px;color:#9FD4BC;'
+            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
+            f'Location advisory \u00b7 {_user_city}</span></div>'
+            '<div style="background:#DDE8E2;padding:14px 16px;">'
+            f'<p style="margin:0;font-size:14px;color:#1a1a18;line-height:1.8;">{_loc}</p>'
+            '</div></div></td></tr>'
+        )
+
+    # Feedback URLs
+    _fb_yes = f'{_site}/email-feedback?uid={user.id}&etype=scorecard&v=yes'
+    _fb_no  = f'{_site}/email-feedback?uid={user.id}&etype=scorecard&v=no'
+
+    # What your eye caught
+    _wso_html = ''
+    if _wso:
+        _wso_html = (
+            '<tr><td style="padding:0 0 22px;">'
+            '<div style="border-left:3px solid #C8A84B;padding-left:16px;">'
+            '<div style="font-size:11px;letter-spacing:2px;color:#888;'
+            'text-transform:uppercase;margin-bottom:8px;font-family:monospace;">'
+            'What your eye caught</div>'
+            f'<p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a18;">{_wso}</p>'
+            '</div></td></tr>'
+        )
+
+    # Improvement prescription
+    _bck_html = ''
+    if _bck:
+        _bck_html = (
+            '<tr><td style="padding:0 0 22px;">'
+            '<div style="border-radius:6px;overflow:hidden;">'
+            '<div style="background:#854F0B;padding:9px 16px;">'
+            '<span style="font-size:11px;letter-spacing:2px;color:#FFF3CD;'
+            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
+            f'To improve your {_weakest_name}</span></div>'
+            '<div style="background:#D6E0F0;padding:14px 16px;">'
+            f'<p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a18;">{_bck}</p>'
+            '</div></div></td></tr>'
+        )
+
+    # Next assignment
+    _nxt_html = ''
+    if _nxt:
+        _nxt_html = (
+            '<tr><td style="padding:0 0 14px;">'
+            '<div style="border-radius:6px;overflow:hidden;border:1.5px solid #C8A84B;">'
+            '<div style="background:#C8A84B;padding:9px 16px;">'
+            '<span style="font-size:11px;letter-spacing:2px;color:#2a1800;'
+            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
+            'Your next assignment</span></div>'
+            '<div style="background:#FFFBF0;padding:14px 16px;">'
+            f'<p style="margin:0 0 8px;font-size:15px;line-height:1.8;color:#1a1a18;">{_nxt}</p>'
+            '<p style="margin:0;font-size:12px;color:#854F0B;font-family:monospace;">'
+            'This assignment expires in 48 hours.</p>'
+            '</div></div></td></tr>'
+        )
+
+    # Assemble HTML using parts list — no implicit/explicit concat mixing
+    parts = []
+    parts.append('<!DOCTYPE html><html><head>')
+    parts.append('<meta charset="UTF-8">')
+    parts.append('<meta name="viewport" content="width=device-width,initial-scale=1">')
+    parts.append('</head>')
+    parts.append('<body style="margin:0;padding:0;background:#E8E4DC;font-family:-apple-system,Arial,sans-serif;">')
+    parts.append('<table width="100%" cellpadding="0" cellspacing="0">')
+    parts.append('<tr><td align="center" style="padding:24px 16px;">')
+    parts.append('<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #D0C8B0;border-radius:4px;max-width:560px;width:100%;overflow:hidden;">')
+
+    # Header
+    parts.append('<tr><td style="background:#0F1F3D;padding:18px 28px;">')
+    parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
+    parts.append('<td><div style="font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:3px;font-family:monospace;">The Living Lens</div>')
+    parts.append('<div style="font-family:monospace;font-size:14px;letter-spacing:2.5px;color:#ffffff;text-transform:uppercase;font-weight:700;">Shutter League</div></td>')
+    parts.append('<td style="text-align:right;font-family:monospace;font-size:12px;color:rgba(200,168,75,0.6);letter-spacing:1px;">Apex DDI Engine<br>Evaluation Report</td>')
+    parts.append('</tr></table></td></tr>')
+
+    # Grandmaster hero
+    parts.append(_hero_html)
+
+    # Body open
+    parts.append('<tr><td style="padding:22px 28px 0;">')
+    parts.append('<table width="100%" cellpadding="0" cellspacing="0">')
+
+    # Greeting
+    parts.append('<tr><td style="padding:0 0 20px;">')
+    parts.append(f'<p style="margin:0;font-size:15px;color:#4A4840;line-height:1.8;">Hi {_name},<br><br>')
+    parts.append(f'Your {_genre} photograph <strong style="color:#0F1F3D;">{_title}</strong> has been evaluated.</p></td></tr>')
+
+    # User image
+    parts.append(_img_html)
+
+    # Score block
+    parts.append('<tr><td style="padding:0 0 22px;">')
+    parts.append('<div style="background:#0F1F3D;border-radius:6px;overflow:hidden;">')
+    parts.append('<div style="padding:14px 20px 10px;">')
+    parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
+    parts.append('<td>')
+    parts.append(f'<span style="font-family:monospace;font-size:30px;font-weight:700;color:#F5C518;line-height:1;">{_score:.2f}</span>')
+    parts.append(f'&nbsp;&nbsp;<span style="font-family:monospace;font-size:15px;font-weight:600;color:#ffffff;">{_tier}</span>')
+    parts.append(f'<br><span style="font-size:11px;color:rgba(255,255,255,0.4);">{_pct_text}</span>')
+    parts.append('</td>')
+    parts.append(f'<td style="text-align:right;font-size:11px;color:rgba(255,255,255,0.3);font-family:monospace;">{_title}<br>{_genre}</td>')
+    parts.append('</tr></table></div>')
+    parts.append('<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.08);">')
+    parts.append(f'<tr>{_dim_row}</tr>')
+    parts.append('</table></div></td></tr>')
+
+    # What your eye caught
+    parts.append(_wso_html)
+
+    # Weakest dimension — diagnosis
+    parts.append('<tr><td style="padding:0 0 10px;">')
+    parts.append('<div style="border-radius:6px;overflow:hidden;">')
+    parts.append('<div style="background:#2C3E6B;padding:9px 16px;">')
+    parts.append(f'<span style="font-size:11px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;font-family:monospace;font-weight:700;">Your weakest dimension \u2014 {_weakest_name} \u00b7 {_weakest_score:.1f}</span>')
+    parts.append('</div>')
+    parts.append('<div style="background:#E8EDF5;padding:14px 16px;">')
+    parts.append('<p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a18;">This is the dimension the engine found most room to grow in on this frame.</p>')
+    parts.append('</div></div></td></tr>')
+
+    # Improvement prescription
+    parts.append(_bck_html)
+
+    # Next assignment
+    parts.append(_nxt_html)
+
+    # Location advisory
+    parts.append(_loc_html)
+
+    # Evaluations remaining
+    parts.append('<tr><td style="padding:0 0 14px;">')
+    parts.append('<div style="border-radius:6px;overflow:hidden;">')
+    parts.append('<div style="background:#2C3E6B;padding:9px 16px;">')
+    parts.append('<span style="font-size:11px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;font-family:monospace;font-weight:700;">Your account</span>')
+    parts.append('</div>')
+    parts.append('<div style="background:#E8EDF5;padding:14px 16px;">')
+    parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
+    parts.append(f'<td><span style="font-family:monospace;font-size:28px;font-weight:700;color:#0F1F3D;">{_evals}</span>')
+    parts.append('<span style="font-size:12px;color:#4A4840;display:block;margin-top:3px;">evaluations remaining this month</span></td>')
+    parts.append(f'<td style="text-align:right;"><a href="{_img_url}" style="font-size:12px;color:#2C3E6B;text-decoration:none;font-family:monospace;font-weight:600;">View evaluation \u2192</a></td>')
+    parts.append('</tr></table>')
+    parts.append('</div></div></td></tr>')
+
+    # Weekly challenge
+    parts.append(_wc_html)
+
+    # Fresh from SL
+    parts.append(_news_html)
+
+    # UAT notice
+    parts.append(_uat_html)
+
+    # CTA
+    parts.append('<tr><td style="padding:0 0 22px;">')
+    parts.append(f'<a href="{_site}/upload" style="display:block;background:#0F1F3D;color:#C8A84B;font-family:monospace;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 28px;text-decoration:none;border-radius:6px;text-align:center;">')
+    parts.append('Your eye is still sharp from this. Upload your next image \u2192</a></td></tr>')
+
+    # Sign off
+    parts.append('<tr><td style="padding:0 0 22px;">')
+    parts.append(f'<p style="margin:0 0 3px;font-size:14px;color:#4A4840;">\u2014 Shutter League</p>')
+    parts.append(f'<p style="margin:0;font-size:15px;color:#888;">{CONTACT_EMAIL}</p>')
+    parts.append('</td></tr>')
+
+    # Close body table
+    parts.append('</table></td></tr>')
+
+    # Footer
+    parts.append('<tr><td style="background:#F5F0E8;padding:12px 28px;border-top:1px solid #E0D8C8;">')
+    parts.append('<p style="margin:0;font-size:12px;color:#888;line-height:1.9;">')
+    parts.append('Was this useful?&nbsp;')
+    parts.append(f'<a href="{_fb_yes}" style="color:#C8A84B;text-decoration:none;font-weight:600;">Yes</a>')
+    parts.append('&nbsp;\u00b7&nbsp;')
+    parts.append(f'<a href="{_fb_no}" style="color:#C8A84B;text-decoration:none;font-weight:600;">No</a>')
+    parts.append('&nbsp;&nbsp;&nbsp;\u00b7&nbsp;&nbsp;&nbsp;')
+    parts.append(f'<a href="{_unsub_url}" style="color:#999;text-decoration:none;">Unsubscribe from evaluation emails</a>')
+    parts.append('</p></td></tr>')
+
+    # Close outer tables
+    parts.append('</table></td></tr></table>')
+    parts.append('</body></html>')
+
+    _html = ''.join(parts)
+
+    _text = (
+        f'Hi {_name},\n\n'
+        f'Your {_genre} photograph "{_title}" has been evaluated.\n\n'
+        f'Evaluation: {_score:.2f} \u00b7 {_tier}\n'
+        + (f'Standing: {_pct_text}\n' if _pct_text else '')
+        + f'\nWeakest dimension: {_weakest_name} \u00b7 {_weakest_score:.1f}\n\n'
+        + (f'What your eye caught:\n{_wso}\n\n' if _wso else '')
+        + (f'To improve your {_weakest_name}:\n{_bck}\n\n' if _bck else '')
+        + (f'Your next assignment:\n{_nxt}\n(Expires in 48 hours)\n\n' if _nxt else '')
+        + f'View your full evaluation: {_img_url}\n\n'
+        + f'Upload your next image: {_site}/upload\n\n'
+        + f'\u2014 Shutter League\n{CONTACT_EMAIL}\n\n'
+        + f'Unsubscribe: {_unsub_url}'
+    )
+
+    try:
+        _ok = send_email(_email, _subject, _html, _text)
+        app.logger.info(
+            f'[scorecard_email] {"sent" if _ok else "failed"} \u2192 '
+            f'user={user.id} image={img.id} score={_score:.2f}'
+        )
+    except Exception as _send_err:
+        app.logger.warning(f'[scorecard_email] send error: {_send_err}')
+
 
 def _send_grandmaster_raw_email(user_email, user_name, asset_name, score, tier, submit_url):
     """
