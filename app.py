@@ -1,4 +1,5 @@
-# SL-VERSION: 168.16 (Session 168, 2026-07-31 — Remove 24hr re-engagement emailer (replaced by scorecard email) + remove test scorecard route)
+# SL-VERSION: 168.17 (Session 168, 2026-07-31 — Restore /upload/preflight route: similar image check + Haiku genre suggestion)
+# SL-VERSION: 168.16 (Session 168, 2026-07-31 — Remove 24hr re-engagement emailer + remove test scorecard route)
 # SL-VERSION: 168.15 (Session 168, 2026-07-31 — Fix: recent_work filter_genres/filter_tiers re-added; LINK MISSING placeholder stripped from email)
 # SL-VERSION: 168.14 (Session 168, 2026-07-31 — Remove The Living Lens from email header; ▪ bullets → paragraphs; **bold** stripped)
 # SL-VERSION: 168.12 (Session 168, 2026-07-31 — Strip markdown **bold**, ▪ bullets from Sherpa audit fields before email HTML insertion)
@@ -6939,6 +6940,187 @@ def _auto_score_with_timeout(timeout_secs=120, retry_wait=10, **kwargs):
                     raise TimeoutError(
                         f'auto_score did not complete within {timeout_secs}s on either attempt'
                     )
+
+
+@app.route('/upload/preflight', methods=['POST'])
+@login_required
+def upload_preflight():
+    """
+    S168 — Pre-upload preflight checks. Accepts a browser-resized thumbnail
+    (≤600px) as multipart/form-data. Returns JSON with two independent checks:
+
+    1. similar_warning — same user has a visually similar image in last 24h (≥80% phash)
+    2. genre_suggestion — Haiku detects the most likely genre from the image
+
+    Both checks are non-blocking — if either fails, upload proceeds normally.
+    Cost: ≤₹0.40 per preflight (Haiku only).
+    """
+    import base64 as _b64
+    import io as _io
+
+    result = {
+        'similar_warning': None,
+        'genre_suggestion': None,
+    }
+
+    file = request.files.get('image')
+    if not file:
+        return jsonify(result)
+
+    try:
+        img_bytes = file.read()
+    except Exception:
+        return jsonify(result)
+
+    # ── 1. Similar image check ────────────────────────────────────────────────
+    try:
+        from engine.processor import hash_similarity_pct, ingest_image
+        import tempfile, os as _os
+
+        _tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+        _tmp.write(img_bytes)
+        _tmp.close()
+        try:
+            _thumb_path, _w, _h, _fmt, _phash = ingest_image(
+                _tmp.name, app.config['UPLOAD_FOLDER']
+            )
+            if _thumb_path and _os.path.exists(_thumb_path):
+                _os.remove(_thumb_path)
+        finally:
+            if _os.path.exists(_tmp.name):
+                _os.remove(_tmp.name)
+
+        if _phash:
+            from datetime import timedelta as _td
+            _cutoff = datetime.utcnow() - _td(hours=24)
+            _own_recent = (
+                Image.query
+                .filter(
+                    Image.user_id   == current_user.id,
+                    Image.phash.isnot(None),
+                    Image.created_at >= _cutoff,
+                )
+                .all()
+            )
+            _best_sim   = 0.0
+            _best_match = None
+            for _ex in _own_recent:
+                try:
+                    _sim = hash_similarity_pct(_phash, _ex.phash)
+                    if _sim >= 80.0 and _sim > _best_sim:
+                        _best_sim   = _sim
+                        _best_match = _ex
+                except Exception:
+                    continue
+
+            if _best_match:
+                result['similar_warning'] = {
+                    'image_id':   _best_match.id,
+                    'asset_name': _best_match.asset_name or _best_match.original_filename or 'a recent image',
+                    'similarity': round(_best_sim, 1),
+                }
+                app.logger.info(
+                    f'[preflight] similar: user={current_user.id} '
+                    f'sim={_best_sim:.1f}% image={_best_match.id}'
+                )
+    except Exception as _sim_err:
+        app.logger.warning(f'[preflight] similarity check failed (non-fatal): {_sim_err}')
+
+    # ── 2. Haiku genre suggestion ─────────────────────────────────────────────
+    try:
+        import urllib.request as _ur, json as _json
+
+        _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if _api_key:
+            from PIL import Image as _PILG
+            _pil = _PILG.open(_io.BytesIO(img_bytes)).convert('RGB')
+            if max(_pil.size) > 600:
+                _pil.thumbnail((600, 600), _PILG.LANCZOS)
+            _buf = _io.BytesIO()
+            _pil.save(_buf, format='JPEG', quality=80)
+            _img_b64 = _b64.b64encode(_buf.getvalue()).decode()
+
+            _prompt = (
+                "Look at this photograph and identify which single genre best describes it.\n\n"
+                "Choose ONLY from: Creative, Documentary, Drone, Fashion, Landscape, "
+                "Macro, Nature, People, Street, Wedding, Wildlife\n\n"
+                "Creative means: abstract, ICM, panning, zoom burst, star trails, light painting, "
+                "minimalist, fine art — images where blur or abstraction IS the point.\n\n"
+                "Return ONLY valid JSON, nothing else:\n"
+                "{\"genre\": \"<name>\", \"confidence\": \"high|medium|low\", "
+                "\"reason\": \"<one short phrase>\"}"
+            )
+
+            _payload = _json.dumps({
+                'model': 'claude-haiku-4-5-20251001',
+                'max_tokens': 80,
+                'messages': [{'role': 'user', 'content': [
+                    {'type': 'image', 'source': {
+                        'type': 'base64', 'media_type': 'image/jpeg', 'data': _img_b64
+                    }},
+                    {'type': 'text', 'text': _prompt}
+                ]}]
+            }).encode()
+
+            _req = _ur.Request(
+                'https://api.anthropic.com/v1/messages',
+                data=_payload,
+                headers={
+                    'Content-Type': 'application/json',
+                    'x-api-key': _api_key,
+                    'anthropic-version': '2023-06-01',
+                },
+                method='POST'
+            )
+            with _ur.urlopen(_req, timeout=15) as _resp:
+                _raw = _json.loads(_resp.read().decode())
+
+            _text = ''.join(
+                b.get('text', '') for b in (_raw.get('content') or [])
+                if b.get('type') == 'text'
+            ).strip()
+            if _text.startswith('```'):
+                _text = _text.split('```')[1]
+                if _text.startswith('json'):
+                    _text = _text[4:]
+            _parsed = _json.loads(_text.strip())
+            _genre  = _parsed.get('genre', '').strip()
+            _conf   = _parsed.get('confidence', 'medium')
+            _reason = _parsed.get('reason', '')
+
+            VALID = {
+                'Creative', 'Documentary', 'Drone', 'Fashion', 'Landscape',
+                'Macro', 'Nature', 'People', 'Street', 'Wedding', 'Wildlife'
+            }
+            if _genre in VALID:
+                if _genre == 'Creative':
+                    _msg = (
+                        f'This looks like Creative photography ({_reason}). '
+                        'Is that right?\n\n'
+                        'Creative allows blur, ICM, and abstraction — intentional technique '
+                        'is celebrated here. All other genres reduce weightage for anything '
+                        'not sharp or not specific to that genre.'
+                    )
+                else:
+                    _msg = (
+                        f'This looks like {_genre} photography. Is that right?\n\n'
+                        'Choosing the right interest area matters — the engine adjusts its '
+                        'standards for each genre. Creative allows blur and abstraction; '
+                        'all other genres expect images sharp and specific to their subject.'
+                    )
+                result['genre_suggestion'] = {
+                    'genre':      _genre,
+                    'confidence': _conf,
+                    'message':    _msg,
+                }
+                app.logger.info(
+                    f'[preflight] genre: user={current_user.id} '
+                    f'detected={_genre} confidence={_conf}'
+                )
+    except Exception as _genre_err:
+        app.logger.warning(f'[preflight] genre suggestion failed (non-fatal): {_genre_err}')
+
+    return jsonify(result)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
