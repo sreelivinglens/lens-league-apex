@@ -1,3 +1,4 @@
+# SL-VERSION: 168.6 (Session 168, 2026-07-30 — Granular email prefs: email_eval_unsub/email_platform_unsub/email_nudge_unsub columns + toggle state fix)
 # SL-VERSION: 168.5 (Session 168, 2026-07-30 — Email preferences form handler in profile route + email_pref_saved context)
 # SL-VERSION: 168.4 (Session 168, 2026-07-30 — _send_scorecard_email() + /unsubscribe/<token> route + /admin/site-settings + email_unsubscribed migration)
 # SL-VERSION: 168.3 (Session 168, 2026-07-30 — Bot username block: reject ^[a-z]{10}$ pattern at registration)
@@ -812,6 +813,10 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20)",
                     # S168 — email unsubscribe
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_unsubscribed BOOLEAN DEFAULT FALSE",
+                    # S168.6 — granular email preferences (eval / platform / nudge)
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_eval_unsub BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_platform_unsub BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_nudge_unsub BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_unsubscribe_token VARCHAR(64)",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMP",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_uploads_used INTEGER DEFAULT 0",
@@ -6236,33 +6241,34 @@ def profile():
             logout_user()
             return redirect(url_for('login'))
 
-        # ── S168 — Email preferences ───────────────────────────────────────
+        # ── S168.6 — Email preferences (granular per-type columns) ────────
         elif request.form.get('form_type') == 'email_preferences':
             _unsub_all = request.form.get('unsubscribe_all') == '1'
             if _unsub_all:
-                # One-click unsubscribe from all emails
                 try:
-                    current_user.email_unsubscribed = True
+                    current_user.email_unsubscribed    = True
+                    current_user.email_eval_unsub      = True
+                    current_user.email_platform_unsub  = True
+                    current_user.email_nudge_unsub     = True
                     db.session.commit()
                     app.logger.info(f'[email_prefs] user={current_user.id} unsubscribed_all')
                 except Exception as _ep_err:
                     db.session.rollback()
                     app.logger.error(f'[email_prefs] error: {_ep_err}')
             else:
-                # At least one checkbox checked — treat as resubscribe
-                # Individual checkbox granularity stored as a JSON preference
-                # in future; for now a single email_unsubscribed flag covers all
                 _eval_on     = request.form.get('email_eval')     == '1'
                 _platform_on = request.form.get('email_platform') == '1'
                 _nudge_on    = request.form.get('email_nudge')    == '1'
                 _any_on      = _eval_on or _platform_on or _nudge_on
                 try:
-                    current_user.email_unsubscribed = not _any_on
+                    current_user.email_eval_unsub      = not _eval_on
+                    current_user.email_platform_unsub  = not _platform_on
+                    current_user.email_nudge_unsub     = not _nudge_on
+                    current_user.email_unsubscribed    = not _any_on
                     db.session.commit()
                     app.logger.info(
                         f'[email_prefs] user={current_user.id} '
-                        f'eval={_eval_on} platform={_platform_on} nudge={_nudge_on} '
-                        f'unsubscribed={not _any_on}'
+                        f'eval={_eval_on} platform={_platform_on} nudge={_nudge_on}'
                     )
                 except Exception as _ep_err:
                     db.session.rollback()
@@ -6291,7 +6297,10 @@ def profile():
                                    countries=get_countries(),
                                    location_data_json=json.dumps(_loc),
                                    has_active_sub=_has_active_sub,
-                                   email_pref_saved=True)
+                                   email_pref_saved=True,
+                                   email_eval_on=not getattr(current_user, 'email_eval_unsub', False),
+                                   email_platform_on=not getattr(current_user, 'email_platform_unsub', False),
+                                   email_nudge_on=not getattr(current_user, 'email_nudge_unsub', False))
 
     progress_data = _build_progress_data(current_user)
     _ref_code  = get_or_create_referral_code(current_user)
@@ -6313,7 +6322,10 @@ def profile():
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
                            countries=get_countries(), location_data_json=json.dumps(_loc),
                            has_active_sub=_has_active_sub,
-                           email_pref_saved=False)
+                           email_pref_saved=False,
+                           email_eval_on=not getattr(current_user, 'email_eval_unsub', False),
+                           email_platform_on=not getattr(current_user, 'email_platform_unsub', False),
+                           email_nudge_on=not getattr(current_user, 'email_nudge_unsub', False))
 
 
 # ---------------------------------------------------------------------------
@@ -8739,7 +8751,8 @@ def upload():
                                     _se_user = User.query.get(_img.user_id)
                                     if (_se_user
                                             and _se_user.email
-                                            and not getattr(_se_user, 'email_unsubscribed', False)):
+                                            and not getattr(_se_user, 'email_unsubscribed', False)
+                                            and not getattr(_se_user, 'email_eval_unsub', False)):
                                         _send_scorecard_email(_img, _se_user)
                             except Exception as _se_err:
                                 app.logger.warning(f'[scorecard_email] failed (non-fatal): {_se_err}')
