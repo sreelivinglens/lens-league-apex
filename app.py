@@ -1,3 +1,4 @@
+# SL-VERSION: 168.11 (Session 168, 2026-07-31 — Scorecard email: remove bold from hero title and greeting photo title)
 # SL-VERSION: 168.10 (Session 168, 2026-07-31 — One-time test route /admin/test-scorecard-email/<id> — remove after testing)
 # SL-VERSION: 168.9 (Session 168, 2026-07-31 — Email prefs handler uses raw SQL UPDATE — model attrs on unmapped columns silently ignored by SQLAlchemy)
 # SL-VERSION: 168.8 (Session 168, 2026-07-31 — Email prefs GET render uses fresh DB query to avoid stale Gunicorn worker state on toggle display)
@@ -22599,7 +22600,7 @@ def _send_scorecard_email(img, user):
                 f'<div style="font-size:12px;letter-spacing:2px;color:#9FD4BC;'
                 f'text-transform:uppercase;font-family:monospace;margin-bottom:3px;">'
                 f'This week on Shutter League \u00b7 Grandmaster</div>'
-                f'<div style="font-size:14px;font-weight:700;color:#ffffff;">'
+                f'<div style="font-size:14px;font-weight:400;color:#ffffff;">'
                 f'{_gm_t} \u2014 {_gm_a} \u00b7 {_gm_g} \u00b7 {_gm_s:.2f}</div>'
                 f'</div></div></td></tr>'
             )
@@ -22810,7 +22811,7 @@ def _send_scorecard_email(img, user):
     # Greeting
     parts.append('<tr><td style="padding:0 0 20px;">')
     parts.append(f'<p style="margin:0;font-size:15px;color:#4A4840;line-height:1.8;">Hi {_name},<br><br>')
-    parts.append(f'Your {_genre} photograph <strong style="color:#0F1F3D;">{_title}</strong> has been evaluated.</p></td></tr>')
+    parts.append(f'Your {_genre} photograph {_title} has been evaluated.</p></td></tr>')
 
     # User image
     parts.append(_img_html)
