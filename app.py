@@ -1,3 +1,4 @@
+# SL-VERSION: 168.8 (Session 168, 2026-07-31 — Email prefs GET render uses fresh DB query to avoid stale Gunicorn worker state on toggle display)
 # SL-VERSION: 168.7 (Session 168, 2026-07-31 — Email prefs save redirects to #email-preferences anchor via session flag)
 # SL-VERSION: 168.6 (Session 168, 2026-07-30 — Granular email prefs: email_eval_unsub/email_platform_unsub/email_nudge_unsub columns + toggle state fix)
 # SL-VERSION: 168.5 (Session 168, 2026-07-30 — Email preferences form handler in profile route + email_pref_saved context)
@@ -6300,9 +6301,15 @@ def profile():
                            countries=get_countries(), location_data_json=json.dumps(_loc),
                            has_active_sub=_has_active_sub,
                            email_pref_saved=session.pop('email_pref_saved', False),
-                           email_eval_on=not getattr(current_user, 'email_eval_unsub', False),
-                           email_platform_on=not getattr(current_user, 'email_platform_unsub', False),
-                           email_nudge_on=not getattr(current_user, 'email_nudge_unsub', False))
+                           email_eval_on=not db.session.execute(db.text(
+                               'SELECT email_eval_unsub FROM users WHERE id=:uid'), {'uid': current_user.id}
+                           ).scalar(),
+                           email_platform_on=not db.session.execute(db.text(
+                               'SELECT email_platform_unsub FROM users WHERE id=:uid'), {'uid': current_user.id}
+                           ).scalar(),
+                           email_nudge_on=not db.session.execute(db.text(
+                               'SELECT email_nudge_unsub FROM users WHERE id=:uid'), {'uid': current_user.id}
+                           ).scalar())
 
 
 # ---------------------------------------------------------------------------
