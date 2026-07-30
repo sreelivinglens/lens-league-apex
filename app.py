@@ -1,3 +1,8 @@
+# SL-VERSION: 168.5 (Session 168, 2026-07-30 — Email preferences form handler in profile route + email_pref_saved context)
+# SL-VERSION: 168.4 (Session 168, 2026-07-30 — _send_scorecard_email() + /unsubscribe/<token> route + /admin/site-settings + email_unsubscribed migration)
+# SL-VERSION: 168.3 (Session 168, 2026-07-30 — Bot username block: reject ^[a-z]{10}$ pattern at registration)
+# SL-VERSION: 168.2 (Session 168, 2026-07-30 — /upload/preflight route: similar image check + Haiku genre suggestion)
+# SL-VERSION: 168.1 (Session 168, 2026-07-30 — recent_work route: filter_genres + filter_tiers passed to template)
 # SL-VERSION: 163.4 (Session 163, 2026-07-28 — 150ms sleep between mim-repush iterations to prevent MIM DB race condition on concurrent writes)
 # SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
 # SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
