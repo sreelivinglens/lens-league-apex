@@ -371,7 +371,7 @@
        class="rw-card"
        data-genre="{{ image.genre or '' }}"
        data-tier="{{ image.tier or '' }}"
-       data-search="{{ ((image.asset_name or '') ~ ' ' ~ (image.photographer_name or '') ~ ' ' ~ (image.genre or '')) | lower }}">
+       data-search="{{ ((image.asset_name or '') ~ ' ' ~ (image.photographer_name or '') ~ ' ' ~ (image.genre or '') ~ ' ' ~ (image.tier or '')) | lower }}">
 
       <div class="rw-img-wrap">
         {% if image.thumb_url %}
@@ -470,9 +470,9 @@
       var cSearch = (card.dataset.search || '').toLowerCase();
 
       var show = true;
-      if (genre  && cGenre  !== genre)            show = false;
-      if (tier   && cTier   !== tier)             show = false;
-      if (query  && cSearch.indexOf(query) < 0)   show = false;
+      if (genre  && cGenre  !== genre.toLowerCase())  show = false;
+      if (tier   && cTier   !== tier.toLowerCase())   show = false;
+      if (query  && cSearch.indexOf(query) < 0)       show = false;
 
       card.style.display = show ? '' : 'none';
       if (show) visible++;
