@@ -901,6 +901,12 @@
         </div>
         {% endif %}
 
+        {% if not email_eval_on and not email_platform_on and not email_nudge_on %}
+        <div style="background:rgba(74,72,64,0.07);border:1px solid rgba(74,72,64,0.2);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:15px;color:#4A4840;line-height:1.7;">
+          You are currently unsubscribed from all Shutter League emails. Switch on the types you want to receive and save.
+        </div>
+        {% endif %}
+
         <form method="POST" action="{{ url_for('profile') }}" id="email-pref-form">
           <input type="hidden" name="form_type" value="email_preferences">
 
