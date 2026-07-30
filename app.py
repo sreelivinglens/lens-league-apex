@@ -1,3 +1,4 @@
+# SL-VERSION: 168.16 (Session 168, 2026-07-31 — Remove 24hr re-engagement emailer (replaced by scorecard email) + remove test scorecard route)
 # SL-VERSION: 168.15 (Session 168, 2026-07-31 — Fix: recent_work filter_genres/filter_tiers re-added; LINK MISSING placeholder stripped from email)
 # SL-VERSION: 168.14 (Session 168, 2026-07-31 — Remove The Living Lens from email header; ▪ bullets → paragraphs; **bold** stripped)
 # SL-VERSION: 168.12 (Session 168, 2026-07-31 — Strip markdown **bold**, ▪ bullets from Sherpa audit fields before email HTML insertion)
@@ -17083,34 +17084,6 @@ def email_unsubscribe(token):
     ), 200
 
 
-@app.route('/admin/test-scorecard-email/<int:image_id>')
-@login_required
-@admin_required
-def admin_test_scorecard_email(image_id):
-    """
-    S168 — One-time test route to fire the scorecard email for a specific image.
-    Admin only. Remove after testing.
-    Usage: /admin/test-scorecard-email/1254
-    """
-    try:
-        _img  = Image.query.get_or_404(image_id)
-        _user = User.query.get_or_404(_img.user_id)
-        _send_scorecard_email(_img, _user)
-        return (
-            f'<p style="font-family:monospace;padding:20px;">'
-            f'Test scorecard email fired for image {image_id} '
-            f'({_img.asset_name}) to {_user.email}. '
-            f'Check inbox.</p>'
-            f'<p style="font-family:monospace;padding:0 20px;">'
-            f'<a href="/admin">← Back to Admin</a></p>'
-        ), 200
-    except Exception as _te:
-        return (
-            f'<p style="font-family:monospace;padding:20px;color:red;">'
-            f'Error: {_te}</p>'
-        ), 500
-
-
 @app.route('/admin/site-settings', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -27741,14 +27714,9 @@ if _sched_lock_held:
         name             = 'Monthly 6-6-12 residency clock increment',
         replace_existing = True,
     )
-    # Re-engagement emailer — runs every hour
-    _scheduler.add_job(
-        func             = run_reengagement_emailer,
-        trigger          = CronTrigger(minute=15, timezone='UTC'),
-        id               = 'reengagement_emailer',
-        name             = '24hr re-engagement email trigger',
-        replace_existing = True,
-    )
+    # Re-engagement emailer REMOVED S168.16 — replaced by _send_scorecard_email()
+    # which fires immediately after scoring. The 24hr generic email was redundant
+    # and caused users to receive two emails for the same scored image.
     # Session 152 — onboarding email drip E1–E7, every 6 hours
     _scheduler.add_job(
         func             = run_onboarding_email_sequence,
