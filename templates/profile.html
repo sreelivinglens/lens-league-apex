@@ -195,6 +195,51 @@
   }
   .acc-cancel-submit:hover { background: var(--acc-red); color: #fff; }
 
+  /* ── Email preference toggle (section 5) ── */
+  .acc-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+  .acc-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  .acc-toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--acc-border);
+    border-radius: 28px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .acc-toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 4px;
+    top: 4px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .acc-toggle input:checked + .acc-toggle-slider {
+    background: #2E7D52;
+  }
+  .acc-toggle input:checked + .acc-toggle-slider::before {
+    transform: translateX(20px);
+  }
+  .acc-toggle input:focus + .acc-toggle-slider {
+    outline: 2px solid #F5C518;
+    outline-offset: 2px;
+  }
+
   /* ── Account State (section 2) ── */
   .acc-league-badge {
     display: flex; align-items: center; justify-content: space-between;
@@ -839,6 +884,95 @@
       {% endif %}
       {# end section 4 #}
       </div>{# /acc-grid-bottom #}
+
+      {# ══ Section 5 — Email Preferences ══ #}
+      <div class="acc-section" id="email-preferences" style="border-top:3px solid #4A4840;">
+        <div class="acc-section-header" style="background:rgba(74,72,64,0.05);border-radius:6px;padding:12px 16px;margin-bottom:20px;">
+          <div class="acc-section-num">5</div>
+          <div>
+            <div class="acc-section-title">Email Preferences</div>
+            <div class="acc-section-sub">Choose which emails Shutter League sends you.</div>
+          </div>
+        </div>
+
+        {% if email_pref_saved %}
+        <div style="background:rgba(46,125,82,0.10);border:1px solid rgba(46,125,82,0.3);border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#2E7D52;line-height:1.7;">
+          Your email preferences have been saved.
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('profile') }}" id="email-pref-form">
+          <input type="hidden" name="form_type" value="email_preferences">
+
+          <div style="display:flex;flex-direction:column;gap:0;">
+
+            {# Row — Evaluation summaries #}
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--acc-border);">
+              <div style="flex:1;">
+                <div style="font-size:16px;font-weight:700;color:var(--acc-dark);margin-bottom:4px;">Evaluation summaries</div>
+                <div style="font-size:15px;color:var(--acc-muted);line-height:1.7;">Rich scorecard email sent immediately after your photograph is evaluated — score, dimension breakdown, next assignment, location advisory.</div>
+              </div>
+              <div style="flex-shrink:0;padding-top:2px;">
+                <label class="acc-toggle" aria-label="Toggle evaluation summary emails">
+                  <input type="checkbox" name="email_eval" value="1"
+                    {% if not current_user.email_unsubscribed %}checked{% endif %}>
+                  <span class="acc-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            {# Row — Platform updates #}
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--acc-border);">
+              <div style="flex:1;">
+                <div style="font-size:16px;font-weight:700;color:var(--acc-dark);margin-bottom:4px;">Platform updates</div>
+                <div style="font-size:15px;color:var(--acc-muted);line-height:1.7;">New features, challenges, MIM sessions, and announcements from Shutter League.</div>
+              </div>
+              <div style="flex-shrink:0;padding-top:2px;">
+                <label class="acc-toggle" aria-label="Toggle platform update emails">
+                  <input type="checkbox" name="email_platform" value="1"
+                    {% if not current_user.email_unsubscribed %}checked{% endif %}>
+                  <span class="acc-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            {# Row — Re-engagement nudges #}
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 0;">
+              <div style="flex:1;">
+                <div style="font-size:16px;font-weight:700;color:var(--acc-dark);margin-bottom:4px;">Activity nudges</div>
+                <div style="font-size:15px;color:var(--acc-muted);line-height:1.7;">Reminders when you haven't uploaded in a while — your next assignment, standing updates, and what's new on the platform.</div>
+              </div>
+              <div style="flex-shrink:0;padding-top:2px;">
+                <label class="acc-toggle" aria-label="Toggle activity nudge emails">
+                  <input type="checkbox" name="email_nudge" value="1"
+                    {% if not current_user.email_unsubscribed %}checked{% endif %}>
+                  <span class="acc-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <button type="submit"
+              style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;min-height:44px;background:#0F1F3D;color:#C8A84B;border:none;border-radius:6px;cursor:pointer;">
+              Save preferences
+            </button>
+            {% if not current_user.email_unsubscribed %}
+            <button type="submit" name="unsubscribe_all" value="1"
+              style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0.5px;padding:12px 20px;min-height:44px;background:transparent;color:var(--acc-muted);border:1px solid var(--acc-border);border-radius:6px;cursor:pointer;">
+              Unsubscribe from all emails
+            </button>
+            {% else %}
+            <div style="font-size:15px;color:var(--acc-muted);line-height:1.7;">
+              You are currently unsubscribed from all Shutter League emails.
+              Save your preferences above to resubscribe.
+            </div>
+            {% endif %}
+          </div>
+        </form>
+
+      </div>{# /section 5 #}
 
       {# ── Delete account ── #}
       <div style="margin-top:8px;padding:16px 20px;border:1px solid rgba(192,57,43,0.20);border-radius:var(--acc-radius);background:#fff;">
