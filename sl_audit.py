@@ -546,6 +546,12 @@ def audit_html(filepath):
         'admin_raw_detail.html', 'admin_raw_verification.html', 'admin_raw_poty.html',
         'admin.html', 'admin_user_detail.html', 'admin_ratings.html',
         'admin_users.html', 'admin_curation.html', 'admin_engagement.html',
+        'notify.html', 'register.html', 'register_thanks.html',
+        'eval_landing.html', 'eval_image.html', 'eval_complete.html',
+        'eval_not_open.html', 'reveal_session.html', 'reveal_not_ready.html',
+        'admin_login.html', 'admin_dashboard.html', 'admin_new_session.html',
+        'admin_session_detail.html', 'admin_edit_session.html',
+        'admin_registrations.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
