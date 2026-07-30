@@ -915,7 +915,7 @@
               <div style="flex-shrink:0;padding-top:2px;">
                 <label class="acc-toggle" aria-label="Toggle evaluation summary emails">
                   <input type="checkbox" name="email_eval" value="1"
-                    {% if not current_user.email_unsubscribed %}checked{% endif %}>
+                    {% if email_eval_on %}checked{% endif %}>
                   <span class="acc-toggle-slider"></span>
                 </label>
               </div>
@@ -930,7 +930,7 @@
               <div style="flex-shrink:0;padding-top:2px;">
                 <label class="acc-toggle" aria-label="Toggle platform update emails">
                   <input type="checkbox" name="email_platform" value="1"
-                    {% if not current_user.email_unsubscribed %}checked{% endif %}>
+                    {% if email_platform_on %}checked{% endif %}>
                   <span class="acc-toggle-slider"></span>
                 </label>
               </div>
@@ -945,7 +945,7 @@
               <div style="flex-shrink:0;padding-top:2px;">
                 <label class="acc-toggle" aria-label="Toggle activity nudge emails">
                   <input type="checkbox" name="email_nudge" value="1"
-                    {% if not current_user.email_unsubscribed %}checked{% endif %}>
+                    {% if email_nudge_on %}checked{% endif %}>
                   <span class="acc-toggle-slider"></span>
                 </label>
               </div>
@@ -958,7 +958,7 @@
               style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;min-height:44px;background:#0F1F3D;color:#C8A84B;border:none;border-radius:6px;cursor:pointer;">
               Save preferences
             </button>
-            {% if not current_user.email_unsubscribed %}
+            {% if email_eval_on or email_platform_on or email_nudge_on %}
             <button type="submit" name="unsubscribe_all" value="1"
               style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0.5px;padding:12px 20px;min-height:44px;background:transparent;color:var(--acc-muted);border:1px solid var(--acc-border);border-radius:6px;cursor:pointer;">
               Unsubscribe from all emails
