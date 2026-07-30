@@ -127,6 +127,66 @@
     background: #fdecea; border: 1px solid #e53935;
     border-radius: var(--radius-sm); color: #7a0000; font-size: 16px; line-height: 1.6;
   }
+
+  /* ── PREFLIGHT MODAL ── similar-image warning + genre suggestion ── */
+  #preflightOverlay {
+    display: none; position: fixed; inset: 0; z-index: 9998;
+    background: rgba(26,26,24,0.88); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  #preflightOverlay.active { display: flex; }
+  .preflight-card {
+    background: #1A1A18; border: 1px solid #F5C518;
+    border-radius: 12px; max-width: 520px; width: 100%;
+    padding: 32px 28px; color: #F5F0E8;
+  }
+  .preflight-tag {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 3px; color: #F5C518; text-transform: uppercase;
+    margin-bottom: 18px; display: block;
+  }
+  .preflight-section { margin-bottom: 24px; }
+  .preflight-section:last-of-type { margin-bottom: 0; }
+  .preflight-section-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: #F5C518;
+    font-family: var(--font-mono); margin-bottom: 10px;
+  }
+  .preflight-body {
+    font-size: 17px; line-height: 1.7; color: #F5F0E8;
+    white-space: pre-line;
+  }
+  .preflight-actions {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px;
+  }
+  .preflight-btn {
+    flex: 1; min-width: 120px; padding: 15px 18px;
+    border-radius: 6px; font-size: 16px; font-weight: 700;
+    letter-spacing: 0.5px; cursor: pointer; border: none;
+    font-family: var(--font-mono); text-align: center; line-height: 1.5;
+  }
+  .preflight-btn-confirm {
+    background: #F5C518; color: #1A1A18;
+  }
+  .preflight-btn-change {
+    background: transparent; color: #F5C518;
+    border: 2px solid #F5C518;
+  }
+  .preflight-btn-proceed {
+    background: #F5C518; color: #1A1A18;
+  }
+  .preflight-btn-cancel {
+    background: transparent; color: #888;
+    border: 2px solid #444;
+  }
+  .preflight-divider {
+    border: none; border-top: 1px solid #333; margin: 20px 0;
+  }
+  @media (max-width: 480px) {
+    .preflight-card { padding: 24px 18px; }
+    .preflight-body { font-size: 16px; }
+    .preflight-btn  { font-size: 15px; padding: 14px 12px; }
+  }
   .genre-hint { min-height: 20px; font-size: 16px; color: var(--text-primary); line-height: 1.6; margin-top: 6px; padding: 0 2px; }
   .exif-note {
     margin-top: 20px; padding: 14px 18px; background: #F5F0E8;
@@ -645,6 +705,29 @@
   </div>
 </div>
 
+<!-- PREFLIGHT MODAL — similar image warning + genre suggestion -->
+<div id="preflightOverlay">
+  <div class="preflight-card">
+    <span class="preflight-tag">Before you submit</span>
+
+    <!-- Section A: Similar image warning -->
+    <div class="preflight-section" id="preflightSimilar" style="display:none;">
+      <div class="preflight-section-title">⚠ Similar image detected</div>
+      <div class="preflight-body" id="preflightSimilarText"></div>
+    </div>
+
+    <hr class="preflight-divider" id="preflightDivider" style="display:none;">
+
+    <!-- Section B: Genre suggestion -->
+    <div class="preflight-section" id="preflightGenre" style="display:none;">
+      <div class="preflight-section-title">Interest area suggestion</div>
+      <div class="preflight-body" id="preflightGenreText"></div>
+    </div>
+
+    <div class="preflight-actions" id="preflightActions"></div>
+  </div>
+</div>
+
 <!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Shutter League · Analysing</div>
@@ -1081,13 +1164,209 @@
           );
           return;
         }
-        _fireUpload();
+        _runPreflight(file);
       };
-      _tmpImg.onerror = function() { _fireUpload(); };
+      _tmpImg.onerror = function() { _runPreflight(file); };
       _tmpImg.src = _re.target.result;
     };
-    _resReader.onerror = function() { _fireUpload(); };
+    _resReader.onerror = function() { _runPreflight(file); };
     _resReader.readAsDataURL(file);
+
+    // ── Preflight — similar image + genre suggestion ──────────────────────
+    function _runPreflight(originalFile) {
+      // Resize to ≤600px in-browser before sending — fast, saves bandwidth
+      var _pfReader = new FileReader();
+      _pfReader.onload = function(_pfE) {
+        var _pfImg = new window.Image();
+        _pfImg.onload = function() {
+          var _canvas = document.createElement('canvas');
+          var _maxPx  = 600;
+          var _scale  = Math.min(1, _maxPx / Math.max(_pfImg.naturalWidth, _pfImg.naturalHeight));
+          _canvas.width  = Math.round(_pfImg.naturalWidth  * _scale);
+          _canvas.height = Math.round(_pfImg.naturalHeight * _scale);
+          _canvas.getContext('2d').drawImage(_pfImg, 0, 0, _canvas.width, _canvas.height);
+          _canvas.toBlob(function(_blob) {
+            if (!_blob) { _fireUpload(); return; }
+            var _fd = new FormData();
+            _fd.append('image', _blob, 'preflight.jpg');
+            var _pfXhr = new XMLHttpRequest();
+            _pfXhr.open('POST', '/upload/preflight');
+            _pfXhr.withCredentials = true;
+            _pfXhr.timeout = 20000;
+            _pfXhr.onload = function() {
+              var _r = null;
+              try { _r = JSON.parse(_pfXhr.responseText); } catch(e) {}
+              if (!_r || (!_r.similar_warning && !_r.genre_suggestion)) {
+                // Nothing to warn about — proceed directly
+                _fireUpload();
+                return;
+              }
+              _showPreflightModal(_r, originalFile);
+            };
+            _pfXhr.onerror   = function() { _fireUpload(); };
+            _pfXhr.ontimeout = function() { _fireUpload(); };
+            _pfXhr.send(_fd);
+          }, 'image/jpeg', 0.82);
+        };
+        _pfImg.onerror = function() { _fireUpload(); };
+        _pfImg.src = _pfE.target.result;
+      };
+      _pfReader.onerror = function() { _fireUpload(); };
+      _pfReader.readAsDataURL(originalFile);
+    }
+
+    // ── Show preflight modal with warnings ───────────────────────────────
+    function _showPreflightModal(data, originalFile) {
+      submitBtn.disabled    = false;
+      submitBtn.textContent = 'Submit for Evaluation';
+
+      var overlay      = document.getElementById('preflightOverlay');
+      var simSection   = document.getElementById('preflightSimilar');
+      var simText      = document.getElementById('preflightSimilarText');
+      var genreSection = document.getElementById('preflightGenre');
+      var genreText    = document.getElementById('preflightGenreText');
+      var divider      = document.getElementById('preflightDivider');
+      var actions      = document.getElementById('preflightActions');
+      actions.innerHTML = '';
+
+      var _hasSim   = !!(data.similar_warning);
+      var _hasGenre = !!(data.genre_suggestion);
+
+      // ── Similar image section ─────────────────────────────────────────
+      if (_hasSim) {
+        var _sw = data.similar_warning;
+        simText.textContent = (
+          'You have already uploaded a similar image today (\u201c' + _sw.asset_name + '\u201d, ' +
+          Math.round(_sw.similarity) + '% match).\n\n' +
+          'Are you sure you want a second evaluation? ' +
+          'Delete previous ones already on your dashboard to proceed. ' +
+          'System Admin will be free to delete to keep data clean.'
+        );
+        simSection.style.display = '';
+      } else {
+        simSection.style.display = 'none';
+      }
+
+      // ── Genre suggestion section ──────────────────────────────────────
+      if (_hasGenre) {
+        var _gs = data.genre_suggestion;
+        genreText.textContent = _gs.message;
+        genreSection.style.display = '';
+      } else {
+        genreSection.style.display = 'none';
+      }
+
+      // ── Divider between the two sections ─────────────────────────────
+      divider.style.display = (_hasSim && _hasGenre) ? '' : 'none';
+
+      // ── Action buttons ────────────────────────────────────────────────
+      if (_hasGenre && !_hasSim) {
+        // Genre only — Confirm or Change genre
+        var _btnConfirm = document.createElement('button');
+        _btnConfirm.type = 'button';
+        _btnConfirm.className = 'preflight-btn preflight-btn-confirm';
+        _btnConfirm.textContent = 'Yes, ' + data.genre_suggestion.genre + ' — submit';
+        _btnConfirm.onclick = function() {
+          // Set the genre dropdown to the suggested genre
+          var _genreSel = document.getElementById('genre');
+          if (_genreSel) {
+            for (var _oi = 0; _oi < _genreSel.options.length; _oi++) {
+              if (_genreSel.options[_oi].value === data.genre_suggestion.genre) {
+                _genreSel.selectedIndex = _oi;
+                _genreSel.dispatchEvent(new Event('change'));
+                break;
+              }
+            }
+          }
+          overlay.classList.remove('active');
+          _fireUpload();
+        };
+
+        var _btnChange = document.createElement('button');
+        _btnChange.type = 'button';
+        _btnChange.className = 'preflight-btn preflight-btn-change';
+        _btnChange.textContent = 'Change interest area';
+        _btnChange.onclick = function() {
+          overlay.classList.remove('active');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit for Evaluation';
+          // Scroll to genre dropdown so user can change it
+          var _genreSel = document.getElementById('genre');
+          if (_genreSel) {
+            _genreSel.style.border = '2px solid #F5C518';
+            _genreSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            _genreSel.focus();
+            _genreSel.addEventListener('change', function() {
+              _genreSel.style.border = '';
+            }, { once: true });
+          }
+        };
+        actions.appendChild(_btnConfirm);
+        actions.appendChild(_btnChange);
+
+      } else if (_hasSim && !_hasGenre) {
+        // Similar image only — Proceed anyway or Cancel
+        var _btnProceed = document.createElement('button');
+        _btnProceed.type = 'button';
+        _btnProceed.className = 'preflight-btn preflight-btn-proceed';
+        _btnProceed.textContent = 'Submit anyway';
+        _btnProceed.onclick = function() {
+          overlay.classList.remove('active');
+          _fireUpload();
+        };
+
+        var _btnCancel = document.createElement('button');
+        _btnCancel.type = 'button';
+        _btnCancel.className = 'preflight-btn preflight-btn-cancel';
+        _btnCancel.textContent = 'Go to dashboard';
+        _btnCancel.onclick = function() {
+          overlay.classList.remove('active');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit for Evaluation';
+          window.location.href = '/dashboard';
+        };
+        actions.appendChild(_btnProceed);
+        actions.appendChild(_btnCancel);
+
+      } else {
+        // Both warnings — genre confirm + proceed with similar
+        var _btnBoth = document.createElement('button');
+        _btnBoth.type = 'button';
+        _btnBoth.className = 'preflight-btn preflight-btn-confirm';
+        _btnBoth.textContent = 'Understood — submit anyway';
+        _btnBoth.onclick = function() {
+          // Apply genre suggestion
+          if (data.genre_suggestion) {
+            var _genreSel = document.getElementById('genre');
+            if (_genreSel) {
+              for (var _oi = 0; _oi < _genreSel.options.length; _oi++) {
+                if (_genreSel.options[_oi].value === data.genre_suggestion.genre) {
+                  _genreSel.selectedIndex = _oi;
+                  _genreSel.dispatchEvent(new Event('change'));
+                  break;
+                }
+              }
+            }
+          }
+          overlay.classList.remove('active');
+          _fireUpload();
+        };
+
+        var _btnCancelBoth = document.createElement('button');
+        _btnCancelBoth.type = 'button';
+        _btnCancelBoth.className = 'preflight-btn preflight-btn-cancel';
+        _btnCancelBoth.textContent = 'Go back';
+        _btnCancelBoth.onclick = function() {
+          overlay.classList.remove('active');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit for Evaluation';
+        };
+        actions.appendChild(_btnBoth);
+        actions.appendChild(_btnCancelBoth);
+      }
+
+      overlay.classList.add('active');
+    }
 
     function _fireUpload() {
 
