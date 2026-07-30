@@ -1,3 +1,4 @@
+# SL-VERSION: 168.9 (Session 168, 2026-07-31 — Email prefs handler uses raw SQL UPDATE — model attrs on unmapped columns silently ignored by SQLAlchemy)
 # SL-VERSION: 168.8 (Session 168, 2026-07-31 — Email prefs GET render uses fresh DB query to avoid stale Gunicorn worker state on toggle display)
 # SL-VERSION: 168.7 (Session 168, 2026-07-31 — Email prefs save redirects to #email-preferences anchor via session flag)
 # SL-VERSION: 168.6 (Session 168, 2026-07-30 — Granular email prefs: email_eval_unsub/email_platform_unsub/email_nudge_unsub columns + toggle state fix)
@@ -6248,10 +6249,14 @@ def profile():
             _unsub_all = request.form.get('unsubscribe_all') == '1'
             if _unsub_all:
                 try:
-                    current_user.email_unsubscribed    = True
-                    current_user.email_eval_unsub      = True
-                    current_user.email_platform_unsub  = True
-                    current_user.email_nudge_unsub     = True
+                    db.session.execute(db.text(
+                        'UPDATE users SET '
+                        'email_unsubscribed=TRUE, '
+                        'email_eval_unsub=TRUE, '
+                        'email_platform_unsub=TRUE, '
+                        'email_nudge_unsub=TRUE '
+                        'WHERE id=:uid'
+                    ), {'uid': current_user.id})
                     db.session.commit()
                     app.logger.info(f'[email_prefs] user={current_user.id} unsubscribed_all')
                 except Exception as _ep_err:
@@ -6263,10 +6268,20 @@ def profile():
                 _nudge_on    = request.form.get('email_nudge')    == '1'
                 _any_on      = _eval_on or _platform_on or _nudge_on
                 try:
-                    current_user.email_eval_unsub      = not _eval_on
-                    current_user.email_platform_unsub  = not _platform_on
-                    current_user.email_nudge_unsub     = not _nudge_on
-                    current_user.email_unsubscribed    = not _any_on
+                    db.session.execute(db.text(
+                        'UPDATE users SET '
+                        'email_eval_unsub=:eval_off, '
+                        'email_platform_unsub=:platform_off, '
+                        'email_nudge_unsub=:nudge_off, '
+                        'email_unsubscribed=:all_off '
+                        'WHERE id=:uid'
+                    ), {
+                        'eval_off':     not _eval_on,
+                        'platform_off': not _platform_on,
+                        'nudge_off':    not _nudge_on,
+                        'all_off':      not _any_on,
+                        'uid':          current_user.id,
+                    })
                     db.session.commit()
                     app.logger.info(
                         f'[email_prefs] user={current_user.id} '
