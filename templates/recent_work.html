@@ -197,12 +197,121 @@
   margin-top: 12px;
 }
 
+/* ── Filter bar ─────────────────────────────────────────────────────── */
+.rw-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 28px;
+  padding: 16px 18px;
+  background: var(--surface-1, #fff);
+  border: 1px solid var(--border, rgba(0,0,0,0.10));
+  border-radius: var(--radius-md, 8px);
+}
+.rw-filter-bar label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  margin-right: 2px;
+}
+.rw-filter-select {
+  padding: 9px 32px 9px 12px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.12));
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--surface-0, #F5F0E8);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 140px;
+  transition: border-color 0.15s;
+}
+.rw-filter-select:focus { border-color: #F5C518; outline: none; }
+.rw-search-wrap {
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+}
+.rw-search {
+  width: 100%;
+  padding: 9px 36px 9px 14px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.12));
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--surface-0, #F5F0E8);
+  min-height: 44px;
+  transition: border-color 0.15s;
+}
+.rw-search:focus { border-color: #F5C518; outline: none; }
+.rw-search::placeholder { color: var(--text-muted, #aaa); }
+.rw-search-icon {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted, #aaa);
+  pointer-events: none;
+  font-size: 16px;
+}
+.rw-filter-clear {
+  padding: 9px 16px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.12));
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  min-height: 44px;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  display: none;
+}
+.rw-filter-clear:hover { border-color: #F5C518; color: var(--text-primary); }
+.rw-filter-clear.visible { display: inline-flex; align-items: center; gap: 6px; }
+
+/* No-results state */
+.rw-no-results {
+  display: none;
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.7;
+  grid-column: 1 / -1;
+}
+.rw-no-results.visible { display: block; }
+
+/* Result count badge */
+.rw-result-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  min-height: 20px;
+}
+
 /* ── Mobile — 600px ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .rw-wrap { padding: 24px 16px 56px; }
   .rw-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .rw-body { padding: 10px 10px 12px; }
   .rw-title { font-size: 13px; }
+  .rw-filter-bar { padding: 12px 14px; gap: 8px; }
+  .rw-filter-select { min-width: 100%; }
+  .rw-search-wrap { min-width: 100%; }
 }
 </style>
 {% endblock %}
@@ -216,10 +325,53 @@
   </div>
 
   {% if feed_images %}
-  <div class="rw-grid">
+
+  {# ── Filter bar ── #}
+  <div class="rw-filter-bar" id="rwFilterBar" role="search" aria-label="Filter recent work">
+
+    <label for="rwGenreFilter">Interest</label>
+    <select class="rw-filter-select" id="rwGenreFilter" aria-label="Filter by interest area">
+      <option value="">All interests</option>
+      {% for g in filter_genres %}
+      <option value="{{ g }}">{{ g }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="rwTierFilter">Tier</label>
+    <select class="rw-filter-select" id="rwTierFilter" aria-label="Filter by tier">
+      <option value="">All tiers</option>
+      {% for t in filter_tiers %}
+      <option value="{{ t }}">{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <div class="rw-search-wrap">
+      <input type="search"
+             class="rw-search"
+             id="rwSearch"
+             placeholder="Search by name, title or subject…"
+             aria-label="Search photographs"
+             autocomplete="off"
+             maxlength="80">
+      <span class="rw-search-icon" aria-hidden="true">&#9906;</span>
+    </div>
+
+    <button class="rw-filter-clear" id="rwClearBtn" type="button" aria-label="Clear all filters">
+      ✕ Clear
+    </button>
+
+  </div>
+
+  <div class="rw-result-count" id="rwResultCount" aria-live="polite"></div>
+
+  <div class="rw-grid" id="rwGrid">
     {% for image in feed_images %}
     {% set tk = (image.tier or 'Rookie') | replace(' ', '') %}
-    <a href="{{ url_for('image_detail', image_id=image.id) }}" class="rw-card">
+    <a href="{{ url_for('image_detail', image_id=image.id) }}"
+       class="rw-card"
+       data-genre="{{ image.genre or '' }}"
+       data-tier="{{ image.tier or '' }}"
+       data-search="{{ ((image.asset_name or '') ~ ' ' ~ (image.photographer_name or '') ~ ' ' ~ (image.genre or '')) | lower }}">
 
       <div class="rw-img-wrap">
         {% if image.thumb_url %}
@@ -282,6 +434,10 @@
   <p class="rw-page-info">Page {{ page }} of {{ total_pages }} &nbsp;·&nbsp; {{ total }} image{{ 's' if total != 1 else '' }}</p>
   {% endif %}
 
+  <div class="rw-no-results" id="rwNoResults" aria-live="polite">
+    No photographs match your filter. Try a different combination or <button type="button" style="background:none;border:none;color:#F5C518;font-size:16px;cursor:pointer;padding:0;text-decoration:underline;" onclick="document.getElementById('rwClearBtn').click()">clear all filters</button>.
+  </div>
+
   {% else %}
   <div class="rw-empty">
     No recent work to show yet. Be the first to upload.
@@ -289,4 +445,66 @@
   {% endif %}
 
 </div>
+
+{% if feed_images %}
+<script>
+(function() {
+  var genreEl  = document.getElementById('rwGenreFilter');
+  var tierEl   = document.getElementById('rwTierFilter');
+  var searchEl = document.getElementById('rwSearch');
+  var clearBtn = document.getElementById('rwClearBtn');
+  var countEl  = document.getElementById('rwResultCount');
+  var noRes    = document.getElementById('rwNoResults');
+  var cards    = Array.from(document.querySelectorAll('.rw-card'));
+
+  function applyFilters() {
+    var genre  = genreEl  ? genreEl.value.toLowerCase()  : '';
+    var tier   = tierEl   ? tierEl.value.toLowerCase()   : '';
+    var query  = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    var active = genre || tier || query;
+
+    var visible = 0;
+    cards.forEach(function(card) {
+      var cGenre  = (card.dataset.genre  || '').toLowerCase();
+      var cTier   = (card.dataset.tier   || '').toLowerCase();
+      var cSearch = (card.dataset.search || '').toLowerCase();
+
+      var show = true;
+      if (genre  && cGenre  !== genre)            show = false;
+      if (tier   && cTier   !== tier)             show = false;
+      if (query  && cSearch.indexOf(query) < 0)   show = false;
+
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    // Result count
+    if (active) {
+      countEl.textContent = visible + ' photograph' + (visible !== 1 ? 's' : '') + ' shown';
+    } else {
+      countEl.textContent = '';
+    }
+
+    // No-results state
+    noRes.classList.toggle('visible', active && visible === 0);
+
+    // Clear button visibility
+    clearBtn.classList.toggle('visible', !!active);
+  }
+
+  function clearAll() {
+    if (genreEl)  genreEl.value  = '';
+    if (tierEl)   tierEl.value   = '';
+    if (searchEl) searchEl.value = '';
+    applyFilters();
+    if (searchEl) searchEl.focus();
+  }
+
+  if (genreEl)  genreEl.addEventListener('change', applyFilters);
+  if (tierEl)   tierEl.addEventListener('change',  applyFilters);
+  if (searchEl) searchEl.addEventListener('input',  applyFilters);
+  if (clearBtn) clearBtn.addEventListener('click',  clearAll);
+})();
+</script>
+{% endif %}
 {% endblock %}
