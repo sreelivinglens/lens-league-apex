@@ -1,4 +1,4 @@
-# SL-VERSION: 168.11 (Session 168, 2026-07-31 — Scorecard email: remove bold from hero title and greeting photo title)
+# SL-VERSION: 168.11 (Session 168, 2026-07-31 02:25 IST — Scorecard email: remove bold from hero title and greeting photo title — REDEPLOY after Railway outage)
 # SL-VERSION: 168.10 (Session 168, 2026-07-31 — One-time test route /admin/test-scorecard-email/<id> — remove after testing)
 # SL-VERSION: 168.9 (Session 168, 2026-07-31 — Email prefs handler uses raw SQL UPDATE — model attrs on unmapped columns silently ignored by SQLAlchemy)
 # SL-VERSION: 168.8 (Session 168, 2026-07-31 — Email prefs GET render uses fresh DB query to avoid stale Gunicorn worker state on toggle display)
