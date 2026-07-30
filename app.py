@@ -1,3 +1,4 @@
+# SL-VERSION: 168.10 (Session 168, 2026-07-31 — One-time test route /admin/test-scorecard-email/<id> — remove after testing)
 # SL-VERSION: 168.9 (Session 168, 2026-07-31 — Email prefs handler uses raw SQL UPDATE — model attrs on unmapped columns silently ignored by SQLAlchemy)
 # SL-VERSION: 168.8 (Session 168, 2026-07-31 — Email prefs GET render uses fresh DB query to avoid stale Gunicorn worker state on toggle display)
 # SL-VERSION: 168.7 (Session 168, 2026-07-31 — Email prefs save redirects to #email-preferences anchor via session flag)
@@ -17065,6 +17066,34 @@ def email_unsubscribe(token):
         f'<a href="{_resubscribe_url}" style="color:#2C3E6B;">Resubscribe from your profile.</a></p>'
         f'</div></body></html>'
     ), 200
+
+
+@app.route('/admin/test-scorecard-email/<int:image_id>')
+@login_required
+@admin_required
+def admin_test_scorecard_email(image_id):
+    """
+    S168 — One-time test route to fire the scorecard email for a specific image.
+    Admin only. Remove after testing.
+    Usage: /admin/test-scorecard-email/1254
+    """
+    try:
+        _img  = Image.query.get_or_404(image_id)
+        _user = User.query.get_or_404(_img.user_id)
+        _send_scorecard_email(_img, _user)
+        return (
+            f'<p style="font-family:monospace;padding:20px;">'
+            f'Test scorecard email fired for image {image_id} '
+            f'({_img.asset_name}) to {_user.email}. '
+            f'Check inbox.</p>'
+            f'<p style="font-family:monospace;padding:0 20px;">'
+            f'<a href="/admin">← Back to Admin</a></p>'
+        ), 200
+    except Exception as _te:
+        return (
+            f'<p style="font-family:monospace;padding:20px;color:red;">'
+            f'Error: {_te}</p>'
+        ), 500
 
 
 @app.route('/admin/site-settings', methods=['GET', 'POST'])
