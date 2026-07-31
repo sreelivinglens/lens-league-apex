@@ -1,3 +1,4 @@
+{# SL:version S168-r2 image_detail — upload hook + move all Jinja out of script blocks (score_status URL, dimData) to data attributes 2026-07-31 #}
 <!-- Version: Session 160 · 2026-07-25 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
@@ -324,6 +325,7 @@
           <button type="submit" class="btn btn-solid">Score Now</button>
         </form>
       {% elif image.status == 'processing' %}
+        <span id="sc-status-url" data-url="{{ url_for('score_status', image_id=image.id) }}" style="display:none;" aria-hidden="true"></span>
         <button type="button" class="btn" style="font-size: 14px; opacity:0.6;" disabled>
           <span style="display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspinscorenow 0.7s linear infinite; margin-right:6px; vertical-align:-1px;"></span>
           Evaluating your photograph… this can take up to a minute
@@ -332,7 +334,8 @@
         <script>
           // Poll for completion — same pattern as the admin Force Rescore polling below.
           (function pollScoreNow(){
-            fetch("{{ url_for('score_status', image_id=image.id) }}")
+            var _su = document.getElementById('sc-status-url');
+            fetch(_su ? _su.dataset.url : '')
               .then(r => r.json())
               .then(d => {
                 if (d.status === 'processing') {
@@ -543,7 +546,14 @@
   {% set _wow_r   = _audit_d.get('wonder_reasoning', '') %}
   {% set _aq_r    = _audit_d.get('aq_reasoning', '') %}
   {% set _cal_line = _audit_d.get('calibration_line', '') %}
-  <div class="sc-dim-detail-wrap" id="sc-dim-drawer-wrap" style="display:none;">
+  <div class="sc-dim-detail-wrap" id="sc-dim-drawer-wrap" style="display:none;"
+  data-dim-json='{{ {
+    "dod":        {"label": "Depth of Difficulty",  "score": ("%.1f"|format(image.dod_score)         if image.dod_score         else "—"), "why": (_dod_r | tojson if _dod_r else None), "what": "How hard was it to make this image exist? Access, physical challenge, timing window, and technical execution."},
+    "disruption": {"label": "Visual Disruption",    "score": ("%.1f"|format(image.disruption_score)  if image.disruption_score  else "—"), "why": (_dis_r | tojson if _dis_r else None), "what": "Does this image break the viewer's trained pattern? Not disorder — purposeful departure from expectation."},
+    "dm":         {"label": "The Moment Chosen",    "score": ("%.1f"|format(image.dm_score)          if image.dm_score          else "—"), "why": (_dm_r  | tojson if _dm_r  else None), "what": "Of all the instants available, was this the right one? Applies to every genre — action, landscape, still life, street."},
+    "wonder":     {"label": "The WOW Factor",       "score": ("%.1f"|format(image.wonder_score)      if image.wonder_score      else "—"), "why": (_wow_r | tojson if _wow_r else None), "what": "Does this image take the viewer somewhere they could not go without the photographer? Access, eye, cultural, or emotional wonder."},
+    "aq":         {"label": "The Emotion It Creates","score": ("%.1f"|format(image.aq_score)         if image.aq_score          else "—"), "why": (_aq_r  | tojson if _aq_r  else None), "what": "What specific feeling does a stranger experience? Cannot reach above 7.5 without a named, identifiable emotion."}
+  } | tojson | forceescape }}'>
     <div class="sc-dim-drawer-inner" id="sc-dim-drawer-inner">
       <div class="sc-dim-drawer-header">
         <div>
@@ -561,38 +571,20 @@
 
   <script>
   (function(){
-    var _dimData = {
-      'dod': {
-        label: 'Depth of Difficulty',
-        score: '{{ "%.1f"|format(image.dod_score) if image.dod_score else "—" }}',
-        why: {{ _dod_r | tojson if _dod_r else '"See What Your Eye Read above."' }},
-        what: 'How hard was it to make this image exist? Access, physical challenge, timing window, and technical execution.'
-      },
-      'disruption': {
-        label: 'Visual Disruption',
-        score: '{{ "%.1f"|format(image.disruption_score) if image.disruption_score else "—" }}',
-        why: {{ _dis_r | tojson if _dis_r else '"See What Your Eye Read above."' }},
-        what: 'Does this image break the viewer\'s trained pattern? Not disorder — purposeful departure from expectation.'
-      },
-      'dm': {
-        label: 'The Moment Chosen',
-        score: '{{ "%.1f"|format(image.dm_score) if image.dm_score else "—" }}',
-        why: {{ _dm_r | tojson if _dm_r else '"See What Your Eye Read above."' }},
-        what: 'Of all the instants available, was this the right one? Applies to every genre — action, landscape, still life, street.'
-      },
-      'wonder': {
-        label: 'The WOW Factor',
-        score: '{{ "%.1f"|format(image.wonder_score) if image.wonder_score else "—" }}',
-        why: {{ _wow_r | tojson if _wow_r else '"See What Your Eye Read above."' }},
-        what: 'Does this image take the viewer somewhere they could not go without the photographer? Access, eye, cultural, or emotional wonder.'
-      },
-      'aq': {
-        label: 'The Emotion It Creates',
-        score: '{{ "%.1f"|format(image.aq_score) if image.aq_score else "—" }}',
-        why: {{ _aq_r | tojson if _aq_r else '"See What Your Eye Read above."' }},
-        what: 'What specific feeling does a stranger experience? Cannot reach above 7.5 without a named, identifiable emotion.'
-      }
-    };
+    var _dw = document.getElementById('sc-dim-drawer-wrap');
+    var _raw = _dw ? (_dw.dataset.dimJson || '{}') : '{}';
+    var _parsed = {};
+    try { _parsed = JSON.parse(_raw); } catch(e) {}
+    var _dimData = {};
+    ['dod','disruption','dm','wonder','aq'].forEach(function(k){
+      var r = _parsed[k] || {};
+      _dimData[k] = {
+        label: r.label || k,
+        score: r.score || '—',
+        why:   r.why   || 'See What Your Eye Read above.',
+        what:  r.what  || ''
+      };
+    });
 
     window.slOpenDimDrawer = function(dim) {
       var d = _dimData[dim];
@@ -1923,7 +1915,7 @@
     {# Days since line + visibility status inline #}
     <div style="font-size:14px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span>{{ _days }} day{{ 's' if _days != 1 else '' }} since this was evaluated.</span>
-      {% if _days <= 3 %}<span style="color:var(--text-secondary);font-style:italic;">Your eye is still sharp from this.</span>{% endif %}
+      {% if _days <= 3 %}<span style="color:var(--text-secondary);font-style:italic;">Your eye is still sharp from this.</span> <a href="{{ url_for('upload') }}" style="font-size:14px;font-weight:700;color:var(--gold-dark,#A37B2C);text-decoration:none;white-space:nowrap;">Upload your next image &#8594;</a>{% endif %}
       <span style="font-size:13px;">
         Visibility:
         {% if image.is_flagged %}<strong style="color:var(--red);">Hidden (flagged)</strong>
@@ -2085,7 +2077,8 @@
       <script>
         // Poll for completion if page loads with status=processing (e.g. after redirect)
         (function poll(){
-          fetch("{{ url_for('score_status', image_id=image.id) }}")
+          var _su = document.getElementById('sc-status-url');
+          fetch(_su ? _su.dataset.url : '')
             .then(r => r.json())
             .then(d => { if (d.status !== 'processing') { window.location.reload(); } else { setTimeout(poll, 2500); } })
             .catch(() => setTimeout(poll, 4000));
