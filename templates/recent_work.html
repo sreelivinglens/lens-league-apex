@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S168-r2 recent_work filter+search — tier in data-search, case-insensitive matching 2026-07-31 #}
+{# SL:version S168-r3 recent_work — image links include ?from=recent so Back button returns to Recent Gallery 2026-07-31 #}
 {% block title %}Recent Work — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
@@ -368,7 +368,7 @@
   <div class="rw-grid" id="rwGrid">
     {% for image in feed_images %}
     {% set tk = (image.tier or 'Rookie') | replace(' ', '') %}
-    <a href="{{ url_for('image_detail', image_id=image.id) }}"
+    <a href="{{ url_for('image_detail', image_id=image.id, **{'from': 'recent'}) }}"
        class="rw-card"
        data-genre="{{ image.genre or '' }}"
        data-tier="{{ image.tier or '' }}"
