@@ -1,3 +1,5 @@
+# SL-VERSION: 168.23 (Session 168, 2026-07-31 — image_detail + recent_work: back button returns to Recent Gallery when from=recent)
+# SL-VERSION: 168.22 (Session 168, 2026-07-31 — _get_active_challenge: remove expired-challenge fallback — closed challenges no longer show on dashboard)
 # SL-VERSION: 168.21 (Session 168, 2026-07-31 — city_other flash: remove second sentence — no false promise of immediate upload advisory)
 # SL-VERSION: 168.20 (Session 168, 2026-07-31 — city_other flash: "Building your [city] advisory. Check back in a few hours — or upload a photograph from there")
 # SL-VERSION: 168.19 (Session 168, 2026-07-31 — Fix 4 pre-existing email inline style audit failures: 10px→13px font, 13px→15px p/genre, line-height:1→1.5 on score, 5px→12px CTA padding)
@@ -18,43 +20,8 @@
 # SL-VERSION: 168.3 (Session 168, 2026-07-30 — Bot username block: reject ^[a-z]{10}$ pattern at registration)
 # SL-VERSION: 168.2 (Session 168, 2026-07-30 — /upload/preflight route: similar image check + Haiku genre suggestion)
 # SL-VERSION: 168.1 (Session 168, 2026-07-30 — recent_work route: filter_genres + filter_tiers passed to template)
-# SL-VERSION: 163.4 (Session 163, 2026-07-28 — 150ms sleep between mim-repush iterations to prevent MIM DB race condition on concurrent writes)
-# SL-VERSION: 162.9 (Session 162, 2026-07-27 — Bot protection: honeypot on /register, IP rate limit, /admin/bot-review, bot count on dashboard)
-# SL-VERSION: 162.8 (Session 162, 2026-07-27 — FULL MERGE: 162.1–162.7 all applied to single file)
-# SL-VERSION: 162.7 (162.7 — /admin/mim-users)
-# SL-VERSION: 162.6 (162.6 — enriched MIM push: card_url, sl_username, correct craft, Sherpa fields)
-# SL-VERSION: 162.5 (162.5 — /admin/mim-theme-backfill: theme-only scoring backfill)
-# SL-VERSION: 162.4 (162.4 — /admin/mim-repush: one-click DDI re-push to MIM)
-# SL-VERSION: 162.3 (162.3 — error/stuck images in admin NEEDS ATTENTION; Delete Broken fix)
-# SL-VERSION: 162.2 (162.2 — evaluated_on date in scorecard PDF)
-# SL-VERSION: 162.1 (162.1 — timeout 120s; portfolio trim 5; seasonal cap 300; master refs 2; retry email)
-# SL-VERSION: 160.5 (Session 160.5 — Fuzzy fallback always runs on exact miss, not conditional)
-# SL-VERSION: 160.4 (Session 160.4 — Fuzzy filename match uses stem LIKE query — handles trailing underscores from spaces before extension)
-# SL-VERSION: 160.3 (Session 160.3 — Trailing space in filename stem now stripped before normalisation)
-# SL-VERSION: 160.2 (Session 160.2 — Filename normalisation: spaces↔underscores, special chars, leading underscores all handled in mim-ddi lookup + MIM pull)
-# SL-VERSION: 160.1 (Session 160 — MIM webhook push: after scoring, SL POSTs DDI scores
-#   to MIM /api/sl-ddi-push if original_filename matches a MIM image. Non-fatal.
-#   Requires MIM_API_URL env var on SL Railway (set to https://makingimagesmatter.com).)
-# SL-VERSION: 160.0 (Session 160 — Theme-aware DDI: /api/mim-ddi accepts ?theme= param,
-#   scores theme relevance separately (mim_theme_score 1–10 + mim_theme_paragraph coaching line),
-#   persists to images table. Weekly Challenge upload + retry_score paths inject challenge
-#   prompt_title as theme context. DB migration: mim_theme_score + mim_theme_paragraph columns.)
-# SL-VERSION: 152.0 (Session 152 — sitemap additions, health DB check, admin emails Inter fix, onboarding E1-E7 drip, /share/ redirect, portrait compositor fix)
-# SL-VERSION: 139.0 (Session 139 — city_event_scan: live event advisory, tier pagination fix)
-# SL-VERSION: 115.1 (Session 115 — CSI (Cultural Saturation Intelligence): cross-user 95% phash note,
-#   85% silent admin log, csi_genre_weights + csi_admin_log tables, /admin/csi dashboard,
-#   calibration run with 300-user gate, csi_genre_weights boost passed to auto_score;
-#   _score_edit parity fix: portfolio context, parent delta, EXIF context now passed on edit path)
-# SL-VERSION: 114.8 (Session 114 — peer queue upsert fix (unique constraint); Eye of Judge two-line chart data)
-#   tier column backfill; peer queue fix)
-# SL-VERSION: 111.3 (Session 111 — audit_json attribute fix: _img._audit_json not _img.audit_json
-#   (Image model uses _audit_json backing column + get_audit() property); all 4 cache references fixed;
-#   previously 111.2 — phash cache audit_json, delta scoring, similarity check)
-#   similarity check: exact match (>=99%) passes to cache, near-match (85-98%) enables delta scoring;
-#   delta scoring: previous_score + previous_audit passed to auto_score() for resubmissions;
-#   previously 110.3 — variety history extraction)
-#   uploads route + retry_score now fetch last 5 audit JSONs to populate
-#   recent_masters, recent_openings, recent_locations for scorecard variety mandate)
+# SL-VERSION: 163.4–160.1 (Sessions 111–163: MIM push, CSI, Mobile DDI, peer queue, city advisory, bot protection, email drip, scorecard PDF — all deployed and live)
+
 import os
 import re
 import uuid
@@ -18451,18 +18418,9 @@ def _get_active_challenge(user_track: str = None):
             )
         )
     ch = base.first()
-    if not ch:
-        # Fallback — most recent active challenge for this track
-        fallback = WeeklyChallenge.query.filter_by(is_active=True)
-        if user_track in ('mobile', 'camera'):
-            fallback = fallback.filter(
-                db.or_(
-                    WeeklyChallenge.track == user_track,
-                    WeeklyChallenge.track == 'both',
-                    WeeklyChallenge.track == None,
-                )
-            )
-        ch = fallback.order_by(WeeklyChallenge.opens_at.desc()).first()
+    # S168 — fallback removed. An expired challenge must not show on the
+    # dashboard or directive bar. Returns None when no challenge is currently
+    # open — all callers guard with {% if active_challenge %}.
     return ch
 
 
