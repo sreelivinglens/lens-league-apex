@@ -1,3 +1,4 @@
+# SL-VERSION: 168.21 (Session 168, 2026-07-31 — city_other flash: remove second sentence — no false promise of immediate upload advisory)
 # SL-VERSION: 168.20 (Session 168, 2026-07-31 — city_other flash: "Building your [city] advisory. Check back in a few hours — or upload a photograph from there")
 # SL-VERSION: 168.19 (Session 168, 2026-07-31 — Fix 4 pre-existing email inline style audit failures: 10px→13px font, 13px→15px p/genre, line-height:1→1.5 on score, 5px→12px CTA padding)
 # SL-VERSION: 168.18 (Session 168, 2026-07-31 — city_other free-text: when city dropdown = Other, accept typed sanctuary/town, validate, log, enqueue discovery)
@@ -6242,8 +6243,7 @@ def profile():
                 flash(
                     f'Location updated to {new_city}. '
                     f'We are finding what is worth shooting there — '
-                    f'your advisory will appear within a few hours. '
-                    f'Or upload a photograph from there and the engine will brief you on the spot.',
+                    f'your advisory will appear within a few hours.',
                     'success'
                 )
             elif new_city == 'Other':
