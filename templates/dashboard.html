@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S168-r2 dashboard — fix: inline location widget moved outside dash_advisory conditional so script always renders 2026-07-31 #}
+{# SL:version S168-r4 dashboard — fix location dropdown: replace data-loc attr (breaks on JSON quotes) with script[type=application/json] tags 2026-07-31 #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -701,7 +701,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
 
     {# ── S168 INLINE LOCATION WIDGET — always rendered, shared by advisory + live event toggle buttons ── #}
-    <div id="dash-loc-wrap" style="display:none;background:var(--d-card);border:1px solid var(--d-border);border-radius:10px;padding:16px 18px;margin-top:8px;" data-loc="{{ location_data_json | safe }}" data-country="{{ current_user.country or '' }}" data-state="{{ current_user.state or '' }}">
+    <script type="application/json" id="dash-loc-data">{{ location_data_json | safe }}</script>
+    <script type="application/json" id="dash-loc-user">{"country": {{ (current_user.country or '') | tojson }}, "state": {{ (current_user.state or '') | tojson }}}</script>
+    <div id="dash-loc-wrap" style="display:none;background:var(--d-card);border:1px solid var(--d-border);border-radius:10px;padding:16px 18px;margin-top:8px;">
       <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:12px;">Change your location</div>
       <form method="POST" action="{{ url_for('profile') }}" id="dashLocForm">
         <input type="hidden" name="action" value="update_location">
@@ -750,8 +752,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     <script>
     (function(){
-      var _dw = document.getElementById('dash-loc-wrap');
-      var DLOC = _dw ? JSON.parse(_dw.dataset.loc || '{}') : {};
+      var DLOC = JSON.parse(document.getElementById('dash-loc-data').textContent || '{}');
       var DLOC_RE = /[^A-Za-zÀ-ɏḀ-ỿ '-]/g;
       function dlocFilter(e){ e.target.value = e.target.value.replace(DLOC_RE,''); }
       var dc = document.getElementById('dloc_country');
@@ -784,8 +785,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         if(dow) dow.style.display = isOther ? '' : 'none';
         if(dco){ dco.required=isOther; if(!isOther) dco.value=''; }
       };
-      var curC = _dw ? (_dw.dataset.country || '') : '';
-      var curS = _dw ? (_dw.dataset.state || '') : '';
+      var _user = JSON.parse(document.getElementById('dash-loc-user').textContent || '{}');
+      var curC = _user.country || '';
+      var curS = _user.state || '';
       if(curC && dc){ dc.value=curC; dlocCountryChange(); if(curS && ds){ ds.value=curS; dlocStateChange(); } }
     })();
     </script>
@@ -886,10 +888,10 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       {% set _tscores = progress_data.trend[-3:] %}
       {% set _tlast = _tscores[-1].score %}
       {% set _tprev = _tscores[0].score %}
-      {% set _tdir = '&#8593; climbing' if _tlast > _tprev + 0.05 else ('&#8595; dipping' if _tlast < _tprev - 0.05 else '&#8594; steady') %}
+      {% set _tdir = '↑ climbing' if _tlast > _tprev + 0.05 else ('↓ dipping' if _tlast < _tprev - 0.05 else '→ steady') %}
       {% set _tcolor = '#2A7A3A' if _tlast > _tprev + 0.05 else ('#C05A1A' if _tlast < _tprev - 0.05 else '#6B6B6B') %}
       <div style="font-size:14px;font-weight:700;color:{{ _tcolor }};margin-bottom:4px;letter-spacing:0.02em;">
-        {% for _ts in _tscores %}{{ '%.2f'|format(_ts.score) }}{% if not loop.last %} &#8594; {% endif %}{% endfor %}
+        {% for _ts in _tscores %}{{ '%.2f'|format(_ts.score) }}{% if not loop.last %} → {% endif %}{% endfor %}
         &nbsp;<span style="font-size:13px;">{{ _tdir }}</span>
       </div>
       {% endif %}
