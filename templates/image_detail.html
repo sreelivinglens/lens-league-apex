@@ -1,4 +1,4 @@
-{# SL:version S168-r2 image_detail — upload hook + move all Jinja out of script blocks (score_status URL, dimData) to data attributes 2026-07-31 #}
+{# SL:version S168-r3 image_detail — back button: add from=recent → Back to Recent Gallery; from=gallery → Programme Gallery; default → Dashboard 2026-07-31 #}
 <!-- Version: Session 160 · 2026-07-25 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
@@ -315,8 +315,16 @@
       <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Shutter League Evaluation</p>
     </div>
     <div class="detail-actions">
-      {%- set _back_url = url_for('leaderboard') if request.args.get('from') == 'gallery' else url_for('dashboard') -%}
-      {%- set _back_label = '← Programme Gallery' if request.args.get('from') == 'gallery' else '← Back' -%}
+      {%- if request.args.get('from') == 'gallery' -%}
+        {%- set _back_url = url_for('leaderboard') -%}
+        {%- set _back_label = '← Programme Gallery' -%}
+      {%- elif request.args.get('from') == 'recent' -%}
+        {%- set _back_url = url_for('recent_work') -%}
+        {%- set _back_label = '← Back to Recent Gallery' -%}
+      {%- else -%}
+        {%- set _back_url = url_for('dashboard') -%}
+        {%- set _back_label = '← Back to Dashboard' -%}
+      {%- endif -%}
       <a href="{{ _back_url }}"
          class="btn"
          style="color:#1A1A18; border-color:#1A1A18; font-weight:700;">{{ _back_label }}</a>
@@ -2223,8 +2231,16 @@ function pollRescoreStatus(imgId) {
 
 {# ── Bottom back button — user doesn't have to scroll up ── #}
 <div style="padding:24px 0 8px; text-align:center;">
-  {%- set _back_url2 = url_for('leaderboard') if request.args.get('from') == 'gallery' else url_for('dashboard') -%}
-  {%- set _back_label2 = '← Programme Gallery' if request.args.get('from') == 'gallery' else '← Back to Dashboard' -%}
+  {%- if request.args.get('from') == 'gallery' -%}
+    {%- set _back_url2 = url_for('leaderboard') -%}
+    {%- set _back_label2 = '← Programme Gallery' -%}
+  {%- elif request.args.get('from') == 'recent' -%}
+    {%- set _back_url2 = url_for('recent_work') -%}
+    {%- set _back_label2 = '← Back to Recent Gallery' -%}
+  {%- else -%}
+    {%- set _back_url2 = url_for('dashboard') -%}
+    {%- set _back_label2 = '← Back to Dashboard' -%}
+  {%- endif -%}
   <a href="{{ _back_url2 }}"
      style="display:inline-flex; align-items:center; gap:6px;
             font-size:15px; font-weight:700; color:#1A1A18;
