@@ -1,4 +1,4 @@
-{# SL:version S168-r3 image_detail — back button: add from=recent → Back to Recent Gallery; from=gallery → Programme Gallery; default → Dashboard 2026-07-31 #}
+{# SL:version S168-r4 image_detail — back button: text-transform:none so label renders in sentence case not all-caps 2026-07-31 #}
 <!-- Version: Session 160 · 2026-07-25 -->
 {# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
 #   Save button: renamed "Print / Save as PDF", sky-blue fill added;
@@ -327,7 +327,7 @@
       {%- endif -%}
       <a href="{{ _back_url }}"
          class="btn"
-         style="color:#1A1A18; border-color:#1A1A18; font-weight:700;">{{ _back_label }}</a>
+         style="color:#1A1A18; border-color:#1A1A18; font-weight:700; text-transform:none; letter-spacing:0;">{{ _back_label }}</a>
       {% if image.status not in ['scored', 'processing'] %}
         <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}" style="display:inline;">
           <button type="submit" class="btn btn-solid">Score Now</button>
@@ -2246,7 +2246,8 @@ function pollRescoreStatus(imgId) {
             font-size:15px; font-weight:700; color:#1A1A18;
             text-decoration:none; padding:12px 20px;
             border:2px solid #1A1A18; border-radius:10px;
-            background:var(--surface-1);">
+            background:var(--surface-1);
+            text-transform:none; letter-spacing:0;">
     {{ _back_label2 }}
   </a>
 </div>
