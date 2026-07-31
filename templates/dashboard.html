@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL:version S168-r2 dashboard — fix: inline location widget moved outside dash_advisory conditional so script always renders 2026-07-31 #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -527,6 +528,31 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
+    {# ── S168 DIRECTIVE BAR — always visible above the fold ── #}
+    {% if stats.total > 0 or (dashboard_visit_count is defined and dashboard_visit_count > 1) %}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+      <a href="{{ url_for('mission') }}"
+         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid var(--d-gold);border-radius:8px;padding:10px 14px;text-decoration:none;">
+        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">Your next assignment is waiting</span>
+        <span style="font-size:15px;font-weight:700;color:var(--d-gold-dk);white-space:nowrap;">Begin &#8594;</span>
+      </a>
+      {% if active_challenge %}
+      <a href="{{ url_for('weekly_challenge') }}"
+         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid #27500A;border-radius:8px;padding:10px 14px;text-decoration:none;">
+        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">Weekly Challenge{% if active_challenge.closes_at %} &#183; closes {{ active_challenge.closes_at.strftime('%d %b') }}{% endif %}</span>
+        <span style="font-size:15px;font-weight:700;color:#27500A;white-space:nowrap;">Participate &#8594;</span>
+      </a>
+      {% endif %}
+      {% if quota_status and not quota_status.is_unlimited and quota_status.remaining is defined %}
+      <a href="{{ url_for('upload') }}"
+         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid #2C3E6B;border-radius:8px;padding:10px 14px;text-decoration:none;">
+        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">{{ quota_status.remaining }} evaluation{{ 's' if quota_status.remaining != 1 else '' }} remaining this cycle</span>
+        <span style="font-size:15px;font-weight:700;color:#2C3E6B;white-space:nowrap;">Upload now &#8594;</span>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
     {# ── TODAY'S MISSION (practice card) ── #}
     {% if show_mission %}
     <div class="practice-card">
@@ -602,8 +628,8 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <div style="width:48px;height:48px;border-radius:10px;background:rgba(214,164,40,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;">📍</div>
           <a href="{{ dash_live_event.url }}" target="_blank"
              style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:6px 12px;border-radius:8px;">Get directions →</a>
-          <a href="{{ url_for('profile') }}#location"
-             style="font-size:14px;color:#A37B2C;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
+          <button onclick="document.getElementById('dash-loc-wrap').style.display=document.getElementById('dash-loc-wrap').style.display==='none'?'block':'none';"
+                  style="font-size:14px;color:#A37B2C;text-decoration:underline;white-space:nowrap;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;display:flex;align-items:center;">Change location &#8594;</button>
         </div>
       </div>
       <div style="padding:10px 18px 14px;border-top:1px solid #E8C84A;">
@@ -667,19 +693,109 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           <div style="width:56px;height:56px;border-radius:10px;background:rgba(42,122,58,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
           <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
              style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:5px 12px;border-radius:8px;">Get directions →</a>
-          <a href="{{ url_for('profile') }}#location"
-             style="font-size:14px;color:#2A7A3A;text-decoration:underline;white-space:nowrap;font-weight:600;">Change location →</a>
+          <button onclick="document.getElementById('dash-loc-wrap').style.display=document.getElementById('dash-loc-wrap').style.display==='none'?'block':'none';"
+                  style="font-size:14px;color:#2A7A3A;text-decoration:underline;white-space:nowrap;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;display:flex;align-items:center;">Change location &#8594;</button>
         </div>
       </div>
     </div>
     {% endif %}
+
+    {# ── S168 INLINE LOCATION WIDGET — always rendered, shared by advisory + live event toggle buttons ── #}
+    <div id="dash-loc-wrap" style="display:none;background:var(--d-card);border:1px solid var(--d-border);border-radius:10px;padding:16px 18px;margin-top:8px;" data-loc="{{ location_data_json | safe }}" data-country="{{ current_user.country or '' }}" data-state="{{ current_user.state or '' }}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:12px;">Change your location</div>
+      <form method="POST" action="{{ url_for('profile') }}" id="dashLocForm">
+        <input type="hidden" name="action" value="update_location">
+        <input type="hidden" name="next" value="dashboard">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div style="flex:1;min-width:120px;">
+            <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">Country</label>
+            <select id="dloc_country" name="country" required onchange="dlocCountryChange()"
+                    style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;background:var(--acc-cream,#FEFCF8);color:var(--d-dark);">
+              <option value="">Select</option>
+              {% for c in countries %}
+              <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="flex:1;min-width:120px;">
+            <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">State</label>
+            <select id="dloc_state" name="state" required onchange="dlocStateChange()"
+                    style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;background:var(--acc-cream,#FEFCF8);color:var(--d-dark);">
+              <option value="">Select</option>
+            </select>
+            <input type="text" id="dloc_state_txt" maxlength="60" placeholder="State / Province"
+                   style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;margin-top:4px;box-sizing:border-box;">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">City</label>
+            <select id="dloc_city" name="city" required onchange="dlocCityChange()"
+                    style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;background:var(--acc-cream,#FEFCF8);color:var(--d-dark);">
+              <option value="">Select</option>
+            </select>
+            <input type="text" id="dloc_city_txt" maxlength="60" placeholder="City"
+                   style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;margin-top:4px;box-sizing:border-box;">
+          </div>
+        </div>
+        <div id="dloc_other_wrap" style="display:none;margin-bottom:8px;">
+          <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">Type your city, town or sanctuary</label>
+          <input type="text" id="dloc_city_other" name="city_other" maxlength="60"
+                 placeholder="e.g. Nalsarovar, Rann of Kutch, Hesaraghatta"
+                 style="width:100%;font-size:16px;padding:10px 12px;border:1.5px solid var(--d-border);border-radius:6px;box-sizing:border-box;">
+        </div>
+        <button type="submit"
+                style="background:var(--d-dark);color:var(--d-gold);font-size:15px;font-weight:700;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;min-height:44px;">
+          Update Location
+        </button>
+      </form>
+    </div>
+    <script>
+    (function(){
+      var _dw = document.getElementById('dash-loc-wrap');
+      var DLOC = _dw ? JSON.parse(_dw.dataset.loc || '{}') : {};
+      var DLOC_RE = /[^A-Za-zÀ-ɏḀ-ỿ '-]/g;
+      function dlocFilter(e){ e.target.value = e.target.value.replace(DLOC_RE,''); }
+      var dc = document.getElementById('dloc_country');
+      var ds = document.getElementById('dloc_state');
+      var dct = document.getElementById('dloc_city');
+      var dst = document.getElementById('dloc_state_txt');
+      var dctt = document.getElementById('dloc_city_txt');
+      var dow = document.getElementById('dloc_other_wrap');
+      var dco = document.getElementById('dloc_city_other');
+      if(dst) dst.addEventListener('input', dlocFilter);
+      if(dctt) dctt.addEventListener('input', dlocFilter);
+      if(dco) dco.addEventListener('input', dlocFilter);
+      window.dlocCountryChange = function(){
+        var c = dc.value;
+        ds.innerHTML = '<option value="">Select</option>';
+        dct.innerHTML = '<option value="">Select</option>';
+        if(dow) dow.style.display='none';
+        if(!c || !DLOC[c]){ ds.style.display='none'; dct.style.display='none'; dst.style.display=''; dctt.style.display=''; dst.name='state'; dctt.name='city'; ds.name=''; dct.name=''; dst.required=true; dctt.required=true; ds.required=false; dct.required=false; return; }
+        ds.style.display=''; dct.style.display=''; dst.style.display='none'; dctt.style.display='none'; ds.name='state'; dct.name='city'; dst.name=''; dctt.name=''; ds.required=true; dct.required=true; dst.required=false; dctt.required=false;
+        Object.keys(DLOC[c]).sort().forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; ds.appendChild(o); });
+      };
+      window.dlocStateChange = function(){
+        var c=dc.value, s=ds.value;
+        dct.innerHTML = '<option value="">Select</option>';
+        if(dow) dow.style.display='none';
+        ((DLOC[c]||{})[s]||[]).forEach(function(city){ var o=document.createElement('option'); o.value=city; o.textContent=city; dct.appendChild(o); });
+      };
+      window.dlocCityChange = function(){
+        var isOther = dct.value==='Other';
+        if(dow) dow.style.display = isOther ? '' : 'none';
+        if(dco){ dco.required=isOther; if(!isOther) dco.value=''; }
+      };
+      var curC = _dw ? (_dw.dataset.country || '') : '';
+      var curS = _dw ? (_dw.dataset.state || '') : '';
+      if(curC && dc){ dc.value=curC; dlocCountryChange(); if(curS && ds){ ds.value=curS; dlocStateChange(); } }
+    })();
+    </script>
 
     {# ── PEER EVALUATE — subtle 1-row strip, desktop only ── #}
     {% if peer_queue %}
     <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:18px 20px;">
       <div style="margin-bottom:12px;">
         <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);">Sharpen Your Eye</div>
-        <div style="font-size:13px;color:var(--d-muted);margin-top:3px;">Evaluate others' work &middot; 2 points per evaluation &middot; +2 bonus when you match DDI</div>
+        <div style="font-size:13px;color:var(--d-muted);margin-top:3px;">Rate 3 images &#183; earn 1 free upload &#183; +2 bonus when you match DDI</div>
       </div>
       <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
         {% for _pq in peer_queue %}
@@ -765,6 +881,18 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       </div>
       {# Tier — the proud moment #}
       <div style="font-size:28px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ progress_data.avg_tier }}</div>
+      {# S168 — trend line: last 3 scores from progress_data.trend #}
+      {% if progress_data.trend and progress_data.trend|length >= 2 %}
+      {% set _tscores = progress_data.trend[-3:] %}
+      {% set _tlast = _tscores[-1].score %}
+      {% set _tprev = _tscores[0].score %}
+      {% set _tdir = '&#8593; climbing' if _tlast > _tprev + 0.05 else ('&#8595; dipping' if _tlast < _tprev - 0.05 else '&#8594; steady') %}
+      {% set _tcolor = '#2A7A3A' if _tlast > _tprev + 0.05 else ('#C05A1A' if _tlast < _tprev - 0.05 else '#6B6B6B') %}
+      <div style="font-size:14px;font-weight:700;color:{{ _tcolor }};margin-bottom:4px;letter-spacing:0.02em;">
+        {% for _ts in _tscores %}{{ '%.2f'|format(_ts.score) }}{% if not loop.last %} &#8594; {% endif %}{% endfor %}
+        &nbsp;<span style="font-size:13px;">{{ _tdir }}</span>
+      </div>
+      {% endif %}
       {# AEA or lifetime avg #}
       {% if aea_dash and aea_dash.top6_avg %}
       <div style="font-size:14px;color:var(--d-muted);margin-bottom:6px;">AEA {{ '%.2f'|format(aea_dash.top6_avg) }} &middot; avg {{ '%.2f'|format(progress_data.avg_score) }}</div>
