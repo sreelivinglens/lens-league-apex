@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL:version S168-r2 rate — peer eval benefit statement + move prefill_sliders Jinja out of script block 2026-07-31 #}
 {% block title %}Peer Evaluation — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -266,6 +267,14 @@
     <p class="rate-hero-sub">Blind peer evaluation — help calibrate the platform, earn pool credits</p>
   </div>
 
+  {# S168 — peer eval benefit statement: tangible personal reward, above the fold #}
+  {% if is_subscriber %}
+  <div style="background:#FEFCF8;border:1px solid #E0D8C8;border-left:3px solid #F5C518;border-radius:8px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:22px;flex-shrink:0;">★</span>
+    <span style="font-size:16px;font-weight:700;color:#1A1A18;line-height:1.5;">Rate 3 images &middot; earn 1 free upload &middot; +2 bonus points when you match the engine</span>
+  </div>
+  {% endif %}
+
   {%- if assignment and image %}
   {%- if image.camera_track == 'mobile' %}
   <div style="display:flex; align-items:flex-start; gap:12px; background:#1A1A18; color:#F5F0E8; border-radius:8px; padding:14px 18px; margin-bottom:24px; line-height:1.6;">
@@ -338,7 +347,7 @@
       <div class="rating-timer" id="timerDisplay">⏱ 0s</div>
     </div>
 
-    <form method="POST" action="{{ url_for('submit_rating') }}" class="rating-form" id="ratingForm">
+    <form method="POST" action="{{ url_for('submit_rating') }}" class="rating-form" id="ratingForm" {% if prefill_sliders %}data-prefill="{{ prefill_sliders | tojson | forceescape }}"{% endif %}>
       <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
       <input type="hidden" name="client_start_ts" id="clientStartTs" value="">
       <input type="hidden" name="time_spent" id="timeSpent" value="0">
@@ -533,13 +542,14 @@
 var startTs = Date.now();
 document.getElementById('clientStartTs') && (document.getElementById('clientStartTs').value = startTs);
 
-{% if prefill_sliders %}
-var _prefill = {{ prefill_sliders | tojson }};
-['dod','disruption','dm','wonder','aq'].forEach(function(f) {
-  var sl = document.getElementById('slider_' + f);
-  if (sl && _prefill[f]) { sl.value = _prefill[f]; updateVal(f, _prefill[f]); }
-});
-{% endif %}
+var _prefillEl = document.getElementById('ratingForm');
+var _prefill = _prefillEl && _prefillEl.dataset.prefill ? JSON.parse(_prefillEl.dataset.prefill) : {};
+if(_prefill && Object.keys(_prefill).length){
+  ['dod','disruption','dm','wonder','aq'].forEach(function(f) {
+    var sl = document.getElementById('slider_' + f);
+    if (sl && _prefill[f]) { sl.value = _prefill[f]; updateVal(f, _prefill[f]); }
+  });
+}
 
 document.querySelectorAll('.cb-label input[type="checkbox"]').forEach(function(cb) {
   if (cb.checked) { cb.closest('label').style.borderColor = '#F5C518'; }
