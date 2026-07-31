@@ -1,3 +1,4 @@
+# SL-VERSION: 168.20 (Session 168, 2026-07-31 — city_other flash: "Building your [city] advisory. Check back in a few hours — or upload a photograph from there")
 # SL-VERSION: 168.19 (Session 168, 2026-07-31 — Fix 4 pre-existing email inline style audit failures: 10px→13px font, 13px→15px p/genre, line-height:1→1.5 on score, 5px→12px CTA padding)
 # SL-VERSION: 168.18 (Session 168, 2026-07-31 — city_other free-text: when city dropdown = Other, accept typed sanctuary/town, validate, log, enqueue discovery)
 # SL-VERSION: 168.17 (Session 168, 2026-07-31 — Restore /upload/preflight route: similar image check + Haiku genre suggestion)
@@ -6148,6 +6149,7 @@ def profile():
             # literal "Other" with that typed value before any further processing.
             # Applies to India and all countries with detailed location data so
             # photographers can reach Nalsarovar, Rann of Kutch, Hesaraghatta etc.
+            _came_from_city_other = False
             if new_city == 'Other':
                 _city_other = request.form.get('city_other', '').strip()
                 _city_other_norm = _validate_location_text(_city_other)
@@ -6155,6 +6157,7 @@ def profile():
                     flash('Please type your city, sanctuary or town name (letters and hyphens only).', 'error')
                     return redirect(_redirect_to)
                 new_city = _city_other_norm
+                _came_from_city_other = True
                 _log_location_suggestion(current_user.id, new_country, new_state, new_city)
 
             if not new_country or not new_state or not new_city:
@@ -6235,11 +6238,19 @@ def profile():
                 except Exception as _disc_err:
                     app.logger.warning(f'[update_location] priority discovery enqueue failed: {_disc_err}')
 
-            if new_city == 'Other':
+            if _came_from_city_other:
+                flash(
+                    f'Location updated to {new_city}. '
+                    f'We are finding what is worth shooting there — '
+                    f'your advisory will appear within a few hours. '
+                    f'Or upload a photograph from there and the engine will brief you on the spot.',
+                    'success'
+                )
+            elif new_city == 'Other':
                 flash(
                     f'Active location updated to {new_state}, {new_country}. '
                     f"We don't have detailed local data for this area yet — "
-                    f"\"near you\" advice may be limited.", 'success'
+                    f'"near you" advice may be limited.', 'success'
                 )
             else:
                 flash(f'Active location updated to {new_city}.', 'success')
