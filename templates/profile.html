@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S168-r3 profile — Email Preferences Section 5, granular toggles, anchor redirect, unsubscribed banner, copy fix 2026-07-31 #}
+{# SL:version S168-r4 profile — city_other free-text input: Other city → type sanctuary/town (Nalsarovar, Rann of Kutch etc) 2026-07-31 #}
 {% block title %}My Account — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -610,8 +610,25 @@
             </div>
             <div class="acc-form-group">
               <label>City</label>
-              <select id="loc_city" name="city" required><option value="">Select city</option></select>
+              <select id="loc_city" name="city" required onchange="onLocCityChange()"><option value="">Select city</option></select>
               <input type="text" id="loc_city_text" maxlength="60" placeholder="City" style="display:none;margin-top:8px;">
+            </div>
+            <div id="loc-city-other-wrap" style="display:none;margin-top:-8px;margin-bottom:16px;">
+              <label for="loc_city_other" style="font-size:15px;font-weight:600;color:var(--acc-dark);display:block;margin-bottom:6px;">
+                Type your city, town or sanctuary
+              </label>
+              <input
+                type="text"
+                id="loc_city_other"
+                name="city_other"
+                maxlength="60"
+                autocomplete="off"
+                placeholder="e.g. Nalsarovar, Rann of Kutch, Hesaraghatta"
+                style="width:100%;box-sizing:border-box;font-size:16px;padding:12px 14px;border:1.5px solid var(--acc-border);border-radius:8px;background:var(--acc-cream);color:var(--acc-dark);font-family:Inter,Arial,sans-serif;-webkit-text-size-adjust:100%;"
+              >
+              <p style="font-size:14px;color:var(--acc-muted);margin:6px 0 0;line-height:1.5;">
+                Letters, spaces and hyphens only. The advisory will learn your area within one session.
+              </p>
             </div>
             <p id="loc-freetext-hint" style="display:none;font-size:14px;color:var(--acc-muted);margin-top:-10px;margin-bottom:16px;line-height:1.5;">Type your state/province and city above.</p>
             <button type="submit" class="acc-save-btn">Update Location</button>
@@ -1087,10 +1104,24 @@ function validatePasswords() {
   var hint       = document.getElementById('loc-freetext-hint');
   if (!countrySel) return;
 
+  var cityOtherWrap = document.getElementById('loc-city-other-wrap');
+  var cityOtherTxt  = document.getElementById('loc_city_other');
+
   var LOCATION_TEXT_RE = /[^A-Za-z\u00C0-\u024F\u1E00-\u1EFF '\-]/g;
   function filterText(e) { e.target.value = e.target.value.replace(LOCATION_TEXT_RE, ''); }
-  if (stateTxt) stateTxt.addEventListener('input', filterText);
-  if (cityTxt)  cityTxt.addEventListener('input', filterText);
+  if (stateTxt)    stateTxt.addEventListener('input', filterText);
+  if (cityTxt)     cityTxt.addEventListener('input', filterText);
+  if (cityOtherTxt) cityOtherTxt.addEventListener('input', filterText);
+
+  window.onLocCityChange = function() {
+    if (!citySel || !cityOtherWrap) return;
+    var isOther = citySel.value === 'Other';
+    cityOtherWrap.style.display = isOther ? '' : 'none';
+    if (cityOtherTxt) {
+      cityOtherTxt.required = isOther;
+      if (!isOther) cityOtherTxt.value = '';
+    }
+  };
 
   function setMode(detailed) {
     stateSel.style.display = detailed ? '' : 'none';
@@ -1129,6 +1160,14 @@ function validatePasswords() {
         if (city === preCity) o.selected = true;
         citySel.appendChild(o);
       });
+    }
+    // Reset the Other free-text wrap whenever state changes
+    if (cityOtherWrap) cityOtherWrap.style.display = 'none';
+    if (cityOtherTxt)  { cityOtherTxt.value = ''; cityOtherTxt.required = false; }
+    // If current saved city is Other, show the wrap and restore saved value
+    if (preCity === 'Other' && cityOtherWrap) {
+      cityOtherWrap.style.display = '';
+      if (cityOtherTxt) { cityOtherTxt.required = true; }
     }
   };
 
