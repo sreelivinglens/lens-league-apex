@@ -12,6 +12,11 @@ Usage:
 
 Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
+
+Session 168 (31 Jul 2026): Added check 0b — Jinja {{ }} inside <script> blocks.
+  Any {{ expr }} inside a <script> tag is a FAIL. Dynamic values must be passed
+  via data- attributes on HTML elements and read in JS via el.dataset.myval.
+  Introduced after dashboard.html and rate.html caused "Unexpected token '{'" errors.
 """
 
 import ast, re, sys, os
@@ -1820,6 +1825,35 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         if _opens != _closes:
             _fail(f'CSS brace mismatch in <style> block {_i+1}: {_opens} open vs {_closes} close — unclosed media query or rule will break all CSS below it')
             fails += 1
+
+    # ── 0b. JINJA IN SCRIPT BLOCKS — catches {{ }} inside <script> tags ────────
+    # Session 168: dashboard.html and rate.html had Jinja expressions inside
+    # <script> blocks. When Flask renders the template correctly these work, but
+    # any rendering failure, caching issue, or deployment error causes the browser
+    # to see the literal {{ which throws "Unexpected token '{'".
+    # Rule: no {{ }} may appear inside any <script> tag. All dynamic values must
+    # be passed via data- attributes on HTML elements and read in JS via dataset.
+    # Exempt: {% %} Jinja block tags (if/for/endif) are safe — they produce no
+    # output and are stripped by Jinja before the browser sees the page.
+    _section('DELIVERY STANDARD 0b — Jinja expressions inside <script> blocks')
+    import re as _re2
+    # type="application/json" blocks are data containers, not executable JS.
+    # Jinja expressions inside them are safe — the browser never executes them.
+    # Only check executable script blocks (no type= or type="text/javascript").
+    _script_blocks = _re2.findall(r'<script(?![^>]*type=["\']application/json["\'])[^>]*>(.*?)</script>', content, _re2.DOTALL)
+    _jinja_in_script = []
+    for _sbi, _sb in enumerate(_script_blocks):
+        _jinja_exprs = _re2.findall(r'{{.*?}}', _sb)
+        if _jinja_exprs:
+            for _je in _jinja_exprs:
+                _jinja_in_script.append(f'script block {_sbi+1}: {_je[:60]}')
+    if _jinja_in_script:
+        for _ji in _jinja_in_script:
+            _fail(f'Jinja {{ }} in <script> block — move to data-attribute: {_ji}')
+            fails += 1
+        _note('FIX: add data-myval="{{ value }}" to an HTML element, read in JS via el.dataset.myval')
+    else:
+        _ok('No Jinja {{ }} expressions inside <script> blocks')
 
     # ── 1. KYC — full-page sweep + scorecard-specific terms ──────────────────
     # Session 91: expanded from scorecard-only to full HTML. Gaps in score/rank
