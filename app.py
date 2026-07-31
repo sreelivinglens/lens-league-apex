@@ -1,3 +1,5 @@
+# SL-VERSION: 168.19 (Session 168, 2026-07-31 — Fix 4 pre-existing email inline style audit failures: 10px→13px font, 13px→15px p/genre, line-height:1→1.5 on score, 5px→12px CTA padding)
+# SL-VERSION: 168.18 (Session 168, 2026-07-31 — city_other free-text: when city dropdown = Other, accept typed sanctuary/town, validate, log, enqueue discovery)
 # SL-VERSION: 168.17 (Session 168, 2026-07-31 — Restore /upload/preflight route: similar image check + Haiku genre suggestion)
 # SL-VERSION: 168.16 (Session 168, 2026-07-31 — Remove 24hr re-engagement emailer + remove test scorecard route)
 # SL-VERSION: 168.15 (Session 168, 2026-07-31 — Fix: recent_work filter_genres/filter_tiers re-added; LINK MISSING placeholder stripped from email)
@@ -3235,11 +3237,11 @@ def run_reengagement_emailer():
                     html_body = f"""
     <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;background:#F5F0E8;">
       <div style="background:#0F1F3D;padding:24px 28px;">
-        <div style="border:1.5px solid #C8A84B;display:inline-block;padding:5px 10px;margin-bottom:12px;">
-          <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#C8A84B;display:block;">THE</span>
-          <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#FEFCF8;font-weight:600;display:block;">LIVING LENS</span>
+        <div style="border:1.5px solid #C8A84B;display:inline-block;padding:12px 14px;margin-bottom:12px;">
+          <span style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#C8A84B;display:block;line-height:1.6;">THE</span>
+          <span style="font-size:15px;letter-spacing:0.2em;text-transform:uppercase;color:#FEFCF8;font-weight:600;display:block;line-height:1.6;">LIVING LENS</span>
         </div>
-        <div style="font-family:monospace;font-size:13px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League · Apex DDI Engine</div>
+        <div style="font-family:monospace;font-size:15px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;line-height:1.6;">Shutter League · Apex DDI Engine</div>
       </div>
       <div style="padding:28px 28px 24px;">
         <p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 8px;">Hi {name},</p>
@@ -3248,12 +3250,12 @@ def run_reengagement_emailer():
         <div style="background:#1A1A18;border-radius:10px;padding:20px 24px;margin:20px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;">
           <div>
             <div style="font-family:monospace;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">Evaluation</div>
-            <div style="font-family:monospace;font-size:40px;font-weight:700;color:#F5C518;line-height:1;">{score:.2f}</div>
+            <div style="font-family:monospace;font-size:40px;font-weight:700;color:#F5C518;line-height:1.5;">{score:.2f}</div>
           </div>
           <div style="text-align:right;">
             <div style="font-family:monospace;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">Standing</div>
             <div style="font-family:monospace;font-size:18px;font-weight:700;color:#fff;">{tier}</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">{genre}</div>
+            <div style="font-size:15px;color:rgba(255,255,255,0.5);margin-top:2px;line-height:1.6;">{genre}</div>
           </div>
         </div>
         <div style="margin:24px 0;">
@@ -3262,7 +3264,7 @@ def run_reengagement_emailer():
         <p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 8px;">Read what the engine observed — what your eye caught, what to build on, and your next assignment.</p>
       </div>
       <div style="background:#0F1F3D;padding:16px 28px;text-align:center;">
-        <p style="font-size:13px;color:rgba(255,255,255,0.4);margin:0;">You received this because you have an account on Shutter League.<br>
+        <p style="font-size:15px;color:rgba(255,255,255,0.4);margin:0;line-height:1.6;">You received this because you have an account on Shutter League.<br>
         <a href="{site_url}/profile" style="color:rgba(255,255,255,0.4);">Manage email preferences</a></p>
       </div>
     </div>"""
@@ -6140,6 +6142,20 @@ def profile():
             new_city    = request.form.get('city', '').strip()
             _next       = request.form.get('next', '').strip()
             _redirect_to = url_for('dashboard') if _next == 'dashboard' else url_for('profile')
+
+            # S168 — city_other: when the city dropdown is "Other" and the user
+            # has typed a free-text city (sanctuary, town, village), replace the
+            # literal "Other" with that typed value before any further processing.
+            # Applies to India and all countries with detailed location data so
+            # photographers can reach Nalsarovar, Rann of Kutch, Hesaraghatta etc.
+            if new_city == 'Other':
+                _city_other = request.form.get('city_other', '').strip()
+                _city_other_norm = _validate_location_text(_city_other)
+                if not _city_other_norm:
+                    flash('Please type your city, sanctuary or town name (letters and hyphens only).', 'error')
+                    return redirect(_redirect_to)
+                new_city = _city_other_norm
+                _log_location_suggestion(current_user.id, new_country, new_state, new_city)
 
             if not new_country or not new_state or not new_city:
                 flash('Please select a country, state/province, and city.', 'error')
