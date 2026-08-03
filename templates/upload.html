@@ -1,4 +1,4 @@
-{# SL-VERSION: 73.1 (Session 73 — extended overlay phases to ~90s for species-research-heavy scoring) #}
+{# SL-VERSION: 172.3 #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -450,9 +450,15 @@
 {% block content %}
 <div class="upload-wrap">
   <div class="page-header">
-    <h1>Upload Image</h1>
-    <p>Your photograph is about to get the most honest feedback it has ever received. Under 2 minutes. No ego. No encouragement for its own sake.</p>
+    <h1>{% if is_trial %}Get a Free Evaluation{% else %}Upload Image{% endif %}</h1>
+    <p>{% if is_trial %}Five dimensions. A live percentile. One honest takeaway. Upload your photograph to see where it stands.{% else %}Your photograph is about to get the most honest feedback it has ever received. Under 2 minutes. No ego. No encouragement for its own sake.{% endif %}</p>
   </div>
+  {% if is_trial %}
+  <div style="background:#E8EAF6;border:1px solid #C5CAE9;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#1A1A18;line-height:1.5;">
+    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of 3</strong><br>
+    Every dimension is weighted for your interest area and benchmarked against a live calibration pool.
+  </div>
+  {% endif %}
 
   <!-- ── UPLOAD CAROUSEL ── -->
   <div class="upload-carousel" id="uploadCarousel">
@@ -530,7 +536,10 @@
     </div>
     {% endif %}
 
-    <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
+    <form id="uploadForm" method="POST" enctype="multipart/form-data"
+      action="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
+      data-upload-url="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
+      data-result-base="{% if is_trial %}/try/result/{% else %}{% endif %}">
       {{ csrf_token_field()|safe if csrf_token_field is defined else '' }}
       {# ── Mission tracking — passed from /mission page ── #}
       <input type="hidden" name="mission_dimension" id="mission_dimension_field" value="">
@@ -1376,7 +1385,8 @@
     startOverlay();
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload' + window.location.search);
+    var _uploadUrl = (form.dataset.uploadUrl || '/upload') + (form.dataset.uploadUrl ? '' : window.location.search);
+    xhr.open('POST', _uploadUrl);
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.withCredentials = true;
     xhr.timeout = 180000; // 3 min — larger files need more transfer time
@@ -1483,7 +1493,9 @@
           document.getElementById('clockSecs').textContent        = '\u2713';
           document.getElementById('clockRing').style.strokeDashoffset = '0';
           document.getElementById('clockRing').style.stroke       = '#F5C518';
-          setTimeout(function() { window.location.href = r.redirect || '/image/' + imageId; }, 800);
+          var _resultBase = (document.getElementById('uploadForm') || {}).dataset && document.getElementById('uploadForm').dataset.resultBase;
+          var _dest = _resultBase ? (_resultBase + imageId) : (r.redirect || '/image/' + imageId);
+          setTimeout(function() { window.location.href = _dest; }, 800);
           return;
         }
 
