@@ -1,4 +1,4 @@
-# SL-VERSION: 172.2
+# SL-VERSION: 172.3
 
 import os
 import re
@@ -9239,7 +9239,22 @@ def score_status(image_id):
             'redirect': url_for('image_detail', image_id=img.id)
         })
 
-    _redir = (url_for('challenge_submit') + f'?highlight={img.id}') if _next == 'challenge' else url_for('image_detail', image_id=img.id)
+    # SL 172.3: trial images (haiku_try source) redirect to /try/result/<id>
+    _is_trial_img = False
+    try:
+        import json as _scj
+        _sc_audit = _scj.loads(img._audit_json or '{}')
+        _is_trial_img = _sc_audit.get('source') == 'haiku_try'
+    except Exception:
+        pass
+
+    if _is_trial_img:
+        _redir = url_for('try_result', image_id=img.id)
+    elif _next == 'challenge':
+        _redir = url_for('challenge_submit') + f'?highlight={img.id}'
+    else:
+        _redir = url_for('image_detail', image_id=img.id)
+
     return jsonify({
         'status': 'ok',
         'image_id': img.id,
@@ -13461,7 +13476,11 @@ def admin_dashboard():
         app.logger.warning(f'[admin_dashboard] error/stuck image query failed: {_att_err}')
         error_images = []; stuck_images = []; attention_users = {}
 
-    cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
+    try:
+        cal_stats = compute_calibration_stats(Image.query.filter_by(status='scored').all())
+    except Exception as _cal_err:
+        app.logger.error(f'[admin_dashboard] compute_calibration_stats failed: {_cal_err}')
+        cal_stats = {}
 
     cal_trend = {}
     try:
@@ -13661,7 +13680,11 @@ def admin_clear_suspension(user_id):
 @admin_required
 def run_calibration():
     images = Image.query.filter_by(status='scored').all()
-    stats  = compute_calibration_stats(images)
+    try:
+        stats = compute_calibration_stats(images)
+    except Exception as _st_err:
+        app.logger.error(f'[admin] compute_calibration_stats (2) failed: {_st_err}')
+        stats = {}
     for genre_key, s in stats.items():
         log = CalibrationLog(genre=genre_key, image_count=s['count'], avg_score=s['avg_score'],
                              avg_dod=s['avg_dod'], avg_dis=s['avg_dis'], avg_dm=s['avg_dm'],
@@ -16410,7 +16433,11 @@ def stats_page():
     total_members = User.query.filter(User.role != 'admin').count()
     avg_score     = db.session.query(db.func.avg(Image.score)).filter(Image.score != None).scalar() or 0
     stats = {'total_images': total_images, 'total_members': total_members, 'avg_score': avg_score}
-    genre_stats = compute_calibration_stats(Image.query.filter_by(status='scored').all())
+    try:
+        genre_stats = compute_calibration_stats(Image.query.filter_by(status='scored').all())
+    except Exception as _gs_err:
+        app.logger.error(f'[admin] compute_calibration_stats (3) failed: {_gs_err}')
+        genre_stats = {}
     return render_template('stats.html', stats=stats, genre_stats=genre_stats)
 
 
@@ -28907,10 +28934,17 @@ def _try_run_haiku(image_id, img_b64, genre):
             if not img:
                 app.logger.error(f'[try_haiku] image {image_id} not found')
                 return None
-            img.score     = round(final_score, 2)
-            img.tier      = tier
-            img.status    = 'scored'
-            img.scored_at = datetime.now()  # naive UTC — consistent with codebase convention
+            img.score            = round(final_score, 2)
+            img.tier             = tier
+            img.status           = 'scored'
+            img.scored_at        = datetime.now()  # naive UTC — consistent with codebase convention
+            # SL 172.3 fix: write dimension scores to Image columns
+            # compute_calibration_stats() sums these directly — None causes TypeError
+            img.dod_score        = dod
+            img.disruption_score = vd
+            img.dm_score         = dm
+            img.wonder_score     = wf
+            img.aq_score         = aq
             import json as _j2
             img._audit_json = _j2.dumps({
                 'source':   'haiku_try',
@@ -28962,10 +28996,30 @@ def try_page():
 
     evals_used = int(_lifetime or 0)
 
+    import json as _json
+    from engine.scoring import SUBGENRE_MAP, GENRE_IDS
+    _last_image = Image.query.filter(
+        Image.user_id == current_user.id,
+        Image.location.isnot(None),
+        Image.location != ''
+    ).order_by(Image.created_at.desc()).first()
+    _last_location = (_last_image.location if _last_image else None) or current_user.city or ''
+
     return render_template(
-        'try.html',
-        evals_used=evals_used,
-        genre_choices=GENRE_CHOICES,
+        'upload.html',           # reuse main upload template — is_trial=True gates differences
+        is_trial      = True,
+        evals_used    = evals_used,
+        genres        = GENRE_IDS,
+        genre_choices = GENRE_CHOICES,
+        subgenre_map  = SUBGENRE_MAP,
+        subgenre_map_json = _json.dumps({k: list(v) for k, v in SUBGENRE_MAP.items()}),
+        last_location = _last_location,
+        subscription_track = getattr(current_user, 'subscription_track', '') or '',
+        mission_dimension  = '',
+        curriculum_principle_id = '',
+        mission_title = '',
+        quota_status  = None,   # trial page does not show quota banner
+        next_page     = '',
     )
 
 
@@ -29199,14 +29253,19 @@ def try_upload():
 @login_required
 def try_result(image_id):
     """
-    GET /try/result/<id> -- Return evaluation JSON for try.html frontend.
-    SL 172.1. Includes percentile, dimensions, takeaway, evals remaining.
+    GET /try/result/<id> -- Render the evaluation result page for /try uploads.
+    SL 172.3. Server-side render — no XHR JSON. try.html shows result directly.
     """
     import json as _j
 
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
+
+    # If still processing, redirect back to /try and let user wait
+    if img.status == 'processing':
+        flash('Your evaluation is still being processed. Please wait a moment.', 'info')
+        return redirect(url_for('try_page'))
 
     percentile_data = {}
     if img.score and img.status == 'scored':
@@ -29217,6 +29276,21 @@ def try_result(image_id):
                 genre=img.genre,
                 camera_track=getattr(img, 'camera_track', None),
             )
+            # SL 172.3: Tier-aware context string.
+            if percentile_data and img.tier:
+                _pct  = percentile_data.get('top_pct', 50)
+                _tier = img.tier or ''
+                if _tier in ('Grandmaster', 'Legend'):
+                    _ctx = f'Elite territory — this is a {_tier}-tier image, placing you among the highest evaluated on the platform.'
+                elif _tier == 'Master':
+                    _ctx = f'Master-tier result — your photograph is in the top {_pct}% of all evaluated images on this platform.'
+                elif _tier == 'Maverick':
+                    _ctx = f'Strong Maverick-tier result — you are in the top {_pct}%. Refine your weakest dimension to break into Master.'
+                elif _pct <= 35:
+                    _ctx = f'Above average — you are in the top {_pct}%. Keep building to close the gap to the next tier.'
+                else:
+                    _ctx = f'Every evaluation builds your picture — focus on your lowest dimension to move up.'
+                percentile_data['context'] = _ctx
         except Exception as _pe:
             app.logger.warning(f'[try_result] percentile failed: {_pe}')
 
@@ -29241,17 +29315,22 @@ def try_result(image_id):
     evals_used      = _lifetime
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _lifetime)
 
-    return jsonify({
-        'image_id':        image_id,
-        'score':           img.score,
-        'tier':            img.tier,
-        'genre':           img.genre,
-        'percentile':      percentile_data,
-        'dimensions':      dims,
-        'takeaway':        takeaway,
-        'evals_used':      evals_used,
-        'evals_remaining': evals_remaining,
-    })
+    return render_template(
+        'try.html',
+        image_id       = image_id,
+        score          = img.score,
+        tier           = img.tier or '—',
+        genre          = img.genre or '—',
+        percentile     = percentile_data,
+        dod            = dims.get('dod'),
+        vd             = dims.get('vd'),
+        dm             = dims.get('dm'),
+        wf             = dims.get('wf'),
+        aq             = dims.get('aq'),
+        takeaway       = takeaway,
+        evals_used     = evals_used,
+        evals_remaining= evals_remaining,
+    )
 
 
 # ---------------------------------------------------------------------------
