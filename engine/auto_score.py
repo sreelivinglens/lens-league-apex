@@ -1,3 +1,4 @@
+# SL-VERSION: 171.4 (Session 171, 2026-08-03 — ONE MASTER PER SCORECARD rule hardened: self-check instruction added to SCORE_PROMPT requiring engine to scan all fields before responding and rewrite any second occurrence with a different master. Post-processing master repeat detector added to auto_score() — logs [MASTER_REPEAT] warning to Railway when same master name appears in 2+ scorecard fields.)
 # SL-VERSION: 171.3 (Session 171, 2026-08-03 — Version bump. app.py model string fix: claude-sonnet-4-20250514 → claude-sonnet-4-6. No engine logic change.)
 # SL-VERSION: 171.2 (Session 171, 2026-08-03 — Version bump only. All Haiku model calls in app.py reverted to Sonnet. No engine logic change.)
 # SL-VERSION: 171.1 (Session 171, 2026-08-03 — Version bump: SCORE→EVALUATION fix in image_detail.html scorecard header band. sl_audit.py updated with scorecard header band check. No engine logic change.)
@@ -649,6 +650,14 @@ MASTER PHOTOGRAPHER REFERENCES:
 
 ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
   ONCE across the entire scorecard. Check all four cards before finalising.
+- SELF-CHECK BEFORE RESPONDING — MANDATORY: Before writing your final JSON,
+  scan every text field for master photographer names. If the same name appears
+  in more than one field — transferable_advice, byline_1, background_check,
+  what_stood_out, mentor_technical, mentor_next, byline_2, or any other field —
+  that is a FAILURE. Rewrite the second occurrence with a DIFFERENT master from
+  the pool before responding. A scorecard where Andre Kertesz (or any master name)
+  appears in both transferable_advice AND byline_1 must never be submitted.
+  One name. One card. No exceptions.
 - VARIETY RULE: If portfolio_context shows recent scorecards, do not repeat a master
   already used in the last 3 evaluations for this photographer.
 - PLATFORM MENTOR PRIORITY: If Ashok Kochhar is in the pool, reference him first
@@ -4887,6 +4896,58 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     result['_subgenre_overridden']       = (vision_subgenre and vision_subgenre != sub_genre and vision_subgenre in VALID_SUBGENRES)
     result['_vision_subgenre_reason']    = vision.get('suggested_subgenre_reason', '')
     result['_effective_genre']           = effective_genre_for_weights
+
+    # ── Post-processing: master repeat detection (Session 171.4) ──────────
+    # The ONE MASTER PER SCORECARD rule is a prompt instruction but the engine
+    # occasionally violates it — the same master name appears in transferable_advice
+    # AND byline_1/background_check. Detect this in code after scoring and log it
+    # clearly so it surfaces in Railway logs and can be caught during QA.
+    # This is detection only — the result is returned as-is (do not silently
+    # modify scorecard text in post-processing). The log entry is the signal
+    # to tighten the prompt further if violations persist.
+    _MASTER_FIELDS = [
+        'transferable_advice', 'byline_1', 'background_check', 'what_stood_out',
+        'mentor_technical', 'mentor_next', 'byline_2', 'hard_truth',
+    ]
+    # Extract candidate master names: words of 3+ chars starting with uppercase,
+    # appearing in the masters pool block, or any word that appears in 2+ fields
+    # and looks like a proper name (Title Case, 2+ words).
+    import re as _re_master
+    _field_texts = [
+        (f, str(result.get(f, '') or '')) for f in _MASTER_FIELDS
+    ]
+    # Build map: name -> list of fields it appears in
+    _name_fields = {}
+    for _fname, _ftext in _field_texts:
+        if not _ftext:
+            continue
+        # Match proper names: two or more capitalised words (e.g. Andre Kertesz)
+        _names_in_field = set(
+            _re_master.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', _ftext)
+        )
+        for _n in _names_in_field:
+            # Filter: skip common non-name phrases (Street, Mobile League, etc.)
+            _skip = {
+                'Street League', 'Mobile League', 'Shutter League', 'Soul Bonus',
+                'Body Of', 'Annual Excellence', 'Decisive Moment', 'Visual Disruption',
+                'Wonder Factor', 'Depth Dimension', 'Aesthetic Quality', 'Eye Wonder',
+                'Access Wonder', 'Cultural Wonder', 'Emotional Wonder', 'Camera League',
+                'Russell Market', 'Church Street', 'Cubbon Park', 'Your Assignment',
+            }
+            if _n in _skip:
+                continue
+            if len(_n.split()) < 2:
+                continue
+            if _n not in _name_fields:
+                _name_fields[_n] = []
+            _name_fields[_n].append(_fname)
+    # Log any name appearing in 2+ fields
+    _master_repeats = {n: fields for n, fields in _name_fields.items() if len(fields) >= 2}
+    if _master_repeats:
+        for _mn, _mfields in _master_repeats.items():
+            print(f'[auto_score][MASTER_REPEAT] "{_mn}" appears in multiple fields: {", ".join(_mfields)} — ONE MASTER PER SCORECARD rule violated')
+    else:
+        print('[auto_score][master_check] OK — no master name repeated across fields')
 
     print(f"[auto_score][timing] TOTAL auto_score: {_time.time() - _t_total_start:.2f}s")
 
