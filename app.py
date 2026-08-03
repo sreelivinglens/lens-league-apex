@@ -1,3 +1,5 @@
+# SL-VERSION: 170.2 (Session 170, 2026-08-03 — cross-genre portfolio awareness; re-edit version counting + loop-break protocol; monochrome variant detection — higher evaluation counts toward standing, lower advised for deletion)
+# SL-VERSION: 170.1 (Session 170, 2026-08-03 — Ashok Kochhar master_references corrected; auto_score.py Platform Mentor prompt hardened)
 # SL-VERSION: 169.1 (Session 169, 2026-08-03 — IP block: blocked_ips table + before_request gate + /admin/blocked-ips management route — blocks 12 bot-source IPs identified in S168/S169 bot-review)
 # SL-VERSION: 168.23 (Session 168, 2026-07-31 — image_detail + recent_work: back button returns to Recent Gallery when from=recent)
 # SL-VERSION: 168.22 (Session 168, 2026-07-31 — _get_active_challenge: remove expired-challenge fallback — closed challenges no longer show on dashboard)
@@ -3096,7 +3098,7 @@ def seed_master_references():
             ('GMB Akash','Street,Documentary','Bangladesh','Tier 2','Poverty and resilience in South Asia, emotional human narrative, WPP winner.','Human resilience, South Asian documentary, emotional depth','Wildlife,Fashion,Minimalist',False),
             ('Raghu Rai','Street,Documentary','India — Delhi','Tier 2','Indian political and social life, Indira Gandhi, Bhopal, five decades of Indian documentary.','Indian documentary, political moment, human dignity in India','Fashion,Wildlife,Minimalist',False),
             ('T.S. Satyan','Street,Documentary','India','Tier 2','India in the 1950s-70s, political portraits, independent India documentation.','Historical India, independence era, Indian political portrait','Wildlife,Fashion',False),
-            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India','Platform Mentor','Multi-genre mastery. Think East and Capture philosophy — inner expression over technique. soulfulphotographer.com.','Any genre where photographer is overthinking technique. Cross-genre work. Indian context.','Wedding,Fashion',True),
+            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India / New Zealand — Hamilton','Platform Mentor','Street photography (Indian cities and communities), people and portrait (Indian faces), landscape and nature (New Zealand — Waikato and beyond; Ladakh, Himalayas, Indian wilderness), wildlife and nature (South India — Kabini, Kerala). Think East and Capture philosophy — inner expression over technique. Based in Hamilton, New Zealand. Reference link: soulfulphotographer.com ONLY — never generate a custom search link. NEVER describe as architectural photographer. NEVER invent location-specific claims (Hampi, Khajuraho, Sun Temple, heritage structures, etc.). 25+ years experience, mentor and workshop leader across India and New Zealand.','Any genre where photographer is overthinking technique. Cross-genre work. Indian and New Zealand landscape and nature context. Street and people work.','Wedding,Fashion,Architecture',True),
             ('Nick Brandt','Wildlife,Conservation','UK / Africa','Tier 1','Large format B&W Africa wildlife, animal dignity, extinction themes.','Wildlife B&W, animal dignity, conservation framing, Africa','Street,Fashion,Colour landscape',False),
             ('Frans Lanting','Wildlife,Nature','Netherlands','Tier 1','Intimate animal behaviour, Africa and Amazon, colour and mood.','Animal behaviour, intimate wildlife, colour mood, environmental storytelling','Street,Fashion,Studio',False),
             ('Art Wolfe','Wildlife,Nature,Landscape','USA','Tier 1','Patterns in nature, aerial wildlife, camouflage. Migrations series.','Patterns in wildlife, geometric animal groupings, aerial perspective','Street,Fashion,Portrait',False),
@@ -9352,6 +9354,30 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                             "timing":     [r.dm_score  for r in _recent if r.dm_score  is not None],
                             "difficulty": [r.dod_score for r in _recent if r.dod_score is not None],
                         }
+                        # ── Cross-genre awareness (Session 170) ───────────────
+                        # Give the engine visibility of the photographer's full
+                        # genre pattern — not just this genre — so it can name
+                        # when a photographer is stronger elsewhere and what that
+                        # means for their current submission.
+                        try:
+                            _xg_rows = db.session.execute(db.text(
+                                "SELECT genre, AVG(score) as avg_score, COUNT(*) as cnt "
+                                "FROM images WHERE user_id=:uid AND status='scored' "
+                                "AND score IS NOT NULL AND genre IS NOT NULL "
+                                "GROUP BY genre ORDER BY avg_score DESC"
+                            ), {'uid': _owner.id}).fetchall()
+                            if _xg_rows and len(_xg_rows) > 1:
+                                _xg_summary = []
+                                for _xr in _xg_rows:
+                                    _xg_summary.append({
+                                        'genre': _xr.genre,
+                                        'avg': round(float(_xr.avg_score), 2),
+                                        'count': int(_xr.cnt)
+                                    })
+                                _portfolio_summary['cross_genre'] = _xg_summary
+                                _portfolio_summary['current_genre'] = img.genre
+                        except Exception as _xg_err:
+                            app.logger.debug(f'[scoring] cross-genre context error: {_xg_err}')
                         # ── Variety history — last 5 audit JSONs ──────────────
                         try:
                             _recent_audits = db.session.execute(
@@ -10040,6 +10066,22 @@ def upload_edited_version(image_id):
                                         'timing':     [r.dm_score  for r in _edit_recent if r.dm_score  is not None],
                                         'difficulty': [r.dod_score for r in _edit_recent if r.dod_score is not None],
                                     }
+                                    # Cross-genre awareness — Session 170
+                                    try:
+                                        _xg_edit = db.session.execute(db.text(
+                                            "SELECT genre, AVG(score) as avg_score, COUNT(*) as cnt "
+                                            "FROM images WHERE user_id=:uid AND status='scored' "
+                                            "AND score IS NOT NULL AND genre IS NOT NULL "
+                                            "GROUP BY genre ORDER BY avg_score DESC"
+                                        ), {'uid': _img.user_id}).fetchall()
+                                        if _xg_edit and len(_xg_edit) > 1:
+                                            _edit_portfolio['cross_genre'] = [
+                                                {'genre': r.genre, 'avg': round(float(r.avg_score), 2), 'count': int(r.cnt)}
+                                                for r in _xg_edit
+                                            ]
+                                            _edit_portfolio['current_genre'] = _img.genre
+                                    except Exception as _xge:
+                                        app.logger.debug(f'[upload_edit] cross-genre error: {_xge}')
                         except Exception as _ep_err:
                             app.logger.warning(f'[upload_edit scoring] portfolio context error: {_ep_err}')
                             _edit_portfolio = None
@@ -10048,11 +10090,57 @@ def upload_edited_version(image_id):
                         # Parent image audit + score as delta reference
                         _edit_prev_score = None
                         _edit_prev_audit = None
+                        _edit_is_mono    = False
                         try:
                             _edit_parent = Image.query.get(root_id_inner)
                             if _edit_parent and _edit_parent.status == 'scored' and _edit_parent.score:
                                 _edit_prev_score = float(_edit_parent.score)
                                 _edit_prev_audit = _edit_parent.get_audit() or None
+
+                                # ── Item E: inject edit version number into audit ──
+                                # Re-edit protocol needs to know if this is V2, V3, V4+
+                                # version_num is set above: 2=first edit, 3=second, etc.
+                                # edit_version_number passed to prompt: 1=V2, 2=V3 (loop break)
+                                if _edit_prev_audit is not None:
+                                    _edit_prev_audit['edit_version_number'] = max(1, version_num - 1)
+
+                                # ── Item H: monochrome detection ──────────────────
+                                # Compare colour saturation of edit vs parent to detect
+                                # colour→mono conversion. Both images scored separately
+                                # but only higher-evaluated version counts toward standing.
+                                try:
+                                    from PIL import Image as _PILH
+                                    import numpy as _np
+                                    with _PILH.open(_img.thumb_path) as _edit_pil:
+                                        _edit_rgb = _edit_pil.convert('RGB')
+                                        _edit_arr = _np.array(_edit_rgb).astype(float)
+                                        # Saturation proxy: std deviation of R-G-B channel means
+                                        _edit_ch_means = [_edit_arr[:,:,c].mean() for c in range(3)]
+                                        _edit_sat = float(_np.std(_edit_ch_means))
+
+                                    if _edit_parent.thumb_path and os.path.exists(_edit_parent.thumb_path):
+                                        with _PILH.open(_edit_parent.thumb_path) as _par_pil:
+                                            _par_rgb = _par_pil.convert('RGB')
+                                            _par_arr = _np.array(_par_rgb).astype(float)
+                                            _par_ch_means = [_par_arr[:,:,c].mean() for c in range(3)]
+                                            _par_sat = float(_np.std(_par_ch_means))
+
+                                        # If parent is colour (sat > 8) and edit is mono (sat < 4)
+                                        # — or vice versa — flag as mono variant
+                                        if (_par_sat > 8.0 and _edit_sat < 4.0) or \
+                                           (_par_sat < 4.0 and _edit_sat > 8.0):
+                                            _edit_is_mono = True
+                                            app.logger.info(
+                                                f'[upload_edit] mono variant detected: '
+                                                f'parent_sat={_par_sat:.1f} edit_sat={_edit_sat:.1f} '
+                                                f'image={image_id_inner}'
+                                            )
+                                            if _edit_prev_audit is not None:
+                                                _edit_prev_audit['is_mono_variant'] = True
+                                                _edit_prev_audit['parent_score'] = _edit_prev_score
+                                except Exception as _mono_err:
+                                    app.logger.debug(f'[upload_edit] mono detection error: {_mono_err}')
+
                         except Exception as _ed_err:
                             app.logger.warning(f'[upload_edit scoring] parent delta error: {_ed_err}')
 
