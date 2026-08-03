@@ -589,14 +589,22 @@ def compute_calibration_stats(images):
     stats = {}
     for genre, imgs in genre_buckets.items():
         n = len(imgs)
+        # SL 172.3: guard against None dimension scores (Haiku trial images
+        # may have NULL dimensions if written before 172.3 fix was deployed).
+        # Filter to images that have all five dimension scores present.
+        _scored_dims = [i for i in imgs if all(
+            getattr(i, f, None) is not None
+            for f in ('dod_score', 'disruption_score', 'dm_score', 'wonder_score', 'aq_score')
+        )]
+        _nd = len(_scored_dims) or 1  # avoid div-by-zero
         stats[genre] = {
             'count':      n,
             'avg_score':  round(sum(i.score              for i in imgs) / n, 2),
-            'avg_dod':    round(sum(i.dod_score          for i in imgs) / n, 2),
-            'avg_dis':    round(sum(i.disruption_score   for i in imgs) / n, 2),
-            'avg_dm':     round(sum(i.dm_score           for i in imgs) / n, 2),
-            'avg_wonder': round(sum(i.wonder_score       for i in imgs) / n, 2),
-            'avg_aq':     round(sum(i.aq_score           for i in imgs) / n, 2),
+            'avg_dod':    round(sum(i.dod_score          for i in _scored_dims) / _nd, 2),
+            'avg_dis':    round(sum(i.disruption_score   for i in _scored_dims) / _nd, 2),
+            'avg_dm':     round(sum(i.dm_score           for i in _scored_dims) / _nd, 2),
+            'avg_wonder': round(sum(i.wonder_score       for i in _scored_dims) / _nd, 2),
+            'avg_aq':     round(sum(i.aq_score           for i in _scored_dims) / _nd, 2),
         }
     return stats
 
