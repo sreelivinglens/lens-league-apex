@@ -711,10 +711,36 @@ WEDDING/PEOPLE:
   - The frame that lasts is the one that captured a feeling, not a pose.
   - Eye contact or genuine expression > technically perfect blankness.
 
+GLOBAL OVER-EDITING RULE (all genres except Creative):
+Heavy tone-mapping, over-saturated colour, unnatural contrast, crushed shadows, HDR halos,
+and excessive clarity or texture sliders are AQ penalties in every genre except Creative.
+In Creative, heavy processing is legitimate technique and is not penalised.
+In all other genres — Street, Documentary, Landscape, Wildlife, Nature, People, Wedding,
+Drone, Macro, Fashion, Sports, Astrophotography, Maternity — the edit must serve the moment,
+not replace it. When over-editing is detected, name it plainly in the advisory:
+"The processing is working against the image. The [specific element — sky, shadows, skin]
+has been taken further than the moment requires. Pulling back to a more restrained treatment
+lets the [subject / light / emotion] do the work the edit is currently doing for it."
+NEVER say "score" in user-facing text — use "evaluation" instead.
+
+GLOBAL CLUTTER RULE (all genres):
+DISORGANISED CLUTTER: When the frame has multiple elements of roughly equal visual weight
+with no clear subject hierarchy — the eye moves between competing elements without settling —
+cap AQ at 7.0 and Wonder at 7.0 regardless of other qualities.
+Name it in the advisory: "The eye moves between [element A] and [element B] without settling.
+The frame has not resolved which of these is the subject. That resolution happens at the moment
+of capture — position, timing, or a tighter frame that removes one of the competing elements."
+ORGANISED CLUTTER: A busy frame where a clear primary subject dominates and surrounding elements
+actively support rather than compete — the hierarchy is intentional and legible (Vineet Vohra,
+GMB Akash, Steve McCurry, Raghu Rai all work this way). No penalty. The test in every case:
+can a stranger identify the primary subject within 2 seconds without any explanation?
+If yes — organised clutter, no penalty. If no — disorganised clutter, apply the cap.
+
 EDIT DIRECTIONS — CRAFT ADVICE, NOT SCORE PROMISES:
 Every edit_base suggestion must explain WHY the edit helps the image.
-NEVER attach score improvement numbers. NEVER say "Adds 0.3 to..." or "Likely adds..."
-The photographer edits for the image, not for the score.
+NEVER attach evaluation improvement numbers. NEVER say "Adds 0.3 to..." or "Likely adds..."
+NEVER use the word "score" in any user-facing field — always use "evaluation" instead.
+The photographer edits for the image, not for the evaluation.
 State what the edit does to the visual, and why that makes the image stronger.
 "Darkening the background — the bright patch is competing with the subject for the eye. Remove that competition and the subject becomes the clear focus."
 "Removing the dust spot in the upper left corner — clean. Nothing else to explain."
@@ -776,6 +802,25 @@ The technique is portable. The location is not.
 
 INSTEAD OF "go back": say "next time you are at [type of location / light condition]"
 INSTEAD OF "likely": commit. State what the edit does and why it works.
+
+COUNTER-IMAGE ADVISORY — WEAK DIMENSION RULE (Item D):
+When DM or Wonder is the weakest dimension on a Street or Documentary image,
+give the photographer a specific, technically precise description of what the
+higher-evaluation version of THIS EXACT MOMENT would have looked like —
+framed as a portable technique, never as a return to this location.
+The counter-image must name: the specific technical decision (shutter speed, focal point,
+timing, panning, crop), what it would have done to the frame, and what it would have
+felt like to a stranger. This is not general advice — it is a blueprint for the next
+similar opportunity, wherever that happens to be.
+Example (Rath Yatra jump, DM weak):
+"Next time you are at any procession where a large vehicle is moving — a chariot, a float,
+a temple rath — try panning at half a second to one second, tracking the vehicle.
+The vehicle blurs into motion. Position yourself so one person — face readable — is sharp
+against that blur. That person becomes the human moment inside the momentum of the event.
+That is the frame this moment was asking for. The technique works at any procession,
+any moving ceremonial vehicle, any cultural parade."
+NEVER name the specific location or event as the place to return to.
+The principle is always portable.
 
 SOUL BONUS IMAGES (soul_bonus = true OR score >= 7.5):
 The image worked. Name exactly what made it work.
@@ -1132,7 +1177,18 @@ GENRE_CONTEXT = {
         "DO NOT score Wonder on subject rarity — a bus terminal, a market, a street "
         "corner are not rare. The photographer's eye IS the wonder in street photography.\n\n"
         "AQ: Reward images where technical choices serve the truth of the moment. "
-        "Grain, available light, and imperfect focus are not penalties when they serve the image."
+        "Grain, available light, and imperfect focus are not penalties when they serve the image. "
+        "OVER-EDITING PENALTY (Street and all genres except Creative): Heavy tone-mapping, "
+        "over-saturated colour, unnatural contrast, crushed shadows, or HDR halos are AQ penalties. "
+        "The moment is the truth — the edit must serve it, not replace it. Restraint is rewarded. "
+        "CLUTTER PENALTY — DISORGANISED vs ORGANISED: "
+        "When the frame has multiple elements of roughly equal visual weight with no clear subject "
+        "hierarchy — the eye moves between them without resolution — cap AQ at 7.0 and Wonder at 7.0 "
+        "regardless of other qualities. This is disorganised clutter. "
+        "Organised clutter is different: a busy frame where a clear primary subject dominates and "
+        "surrounding elements support rather than compete (Vineet Vohra, GMB Akash, Steve McCurry) "
+        "carries no penalty — the hierarchy IS the skill. The test: can a stranger identify the "
+        "primary subject within 2 seconds without explanation? If not, it is disorganised clutter."
     ),
     'Macro': (
         "This is Macro photography. The subject fills the frame at extreme magnification — "
@@ -4013,6 +4069,37 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     timing     = portfolio_summary.get("timing", [])     # DM — decisive moment
     difficulty = portfolio_summary.get("difficulty", []) # DoD — difficulty
 
+    # ── Cross-genre pattern (Session 170) ─────────────────────────────────────
+    _cross_genre    = portfolio_summary.get("cross_genre", [])
+    _current_genre  = portfolio_summary.get("current_genre", "")
+    _cross_genre_lines = []
+    if _cross_genre and len(_cross_genre) > 1 and _current_genre:
+        _best   = _cross_genre[0]
+        _worst  = _cross_genre[-1]
+        _current_xg = next((g for g in _cross_genre if g['genre'] == _current_genre), None)
+        _cross_genre_lines.append("CROSS-GENRE PATTERN:")
+        for _xg in _cross_genre:
+            _marker = " ← CURRENT" if _xg['genre'] == _current_genre else ""
+            _cross_genre_lines.append(
+                f"  {_xg['genre']}: average evaluation {_xg['avg']:.2f} across {_xg['count']} image(s){_marker}"
+            )
+        if _current_xg and _best['genre'] != _current_genre:
+            _gap = round(_best['avg'] - _current_xg['avg'], 2)
+            _cross_genre_lines.append(
+                f"CROSS-GENRE INSTRUCTION: This photographer's strongest genre is {_best['genre']} "
+                f"(average {_best['avg']:.2f}). They are currently submitting {_current_genre} "
+                f"(average {_current_xg['avg']:.2f}) — a gap of {_gap:.2f}. "
+                f"If this image shows the same pattern that is holding {_current_genre} below their "
+                f"{_best['genre']} level, name it specifically. Do not soften it. "
+                f"Example: 'Your {_best['genre']} work evaluates at {_best['avg']:.2f} on average. "
+                f"Your {_current_genre} work is at {_current_xg['avg']:.2f}. The gap is not the engine — "
+                f"it is [the specific compositional/timing/emotional decision that differs between the two]. "
+                f"Fix that one thing and your {_current_genre} evaluations will follow.' "
+                f"NEVER use the word 'score' — always 'evaluation'. "
+                f"NEVER suggest switching genres as a solution."
+            )
+        _cross_genre_lines.append("")
+
     # ── Variety history lists (Session 110) ───────────────────────────────────
     recent_masters    = portfolio_summary.get("recent_masters", [])
     recent_openings   = portfolio_summary.get("recent_openings", [])
@@ -4148,6 +4235,9 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
             "Do NOT use any of them in byline_2. Choose a different one from the pool. "
             f"Recently used indices: {', '.join(str(i) for i in recent_philosophy)}."
         )
+
+    if _cross_genre_lines:
+        lines.extend(_cross_genre_lines)
 
     if variety_lines:
         lines.append("SCORECARD VARIETY — MANDATORY:")
@@ -4488,30 +4578,118 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         prompt = prompt + _stability_block
         print(f"[auto_score] stability anchor injected (same_image_rescore): previous_score={previous_score:.2f}")
     elif previous_score is not None and previous_audit:
-        _prev_hard_truth  = previous_audit.get('hard_truth', '')
-        _prev_edit_base   = previous_audit.get('edit_base', '')
-        _prev_cal_line    = previous_audit.get('calibration_line', '')
-        _delta_block = (
-            f"\n\nREEDIT CONTEXT — THIS IS A RESUBMISSION OF A PREVIOUSLY SCORED IMAGE:\n"
-            f"Previous DDI score: {previous_score:.2f}\n"
-            f"Previous opening verdict: {_prev_hard_truth[:200] if _prev_hard_truth else 'Not available'}\n"
-            f"Previous edit directions given: {_prev_edit_base[:400] if _prev_edit_base else 'Not available'}\n"
-            f"Previous calibration line: {_prev_cal_line[:200] if _prev_cal_line else 'Not available'}\n\n"
-            f"DELTA SCORING RULES:\n"
-            f"1. Compare this version against the previous score. Score strictly on what you see NOW.\n"
-            f"2. In hard_truth: acknowledge this is an edited version. Open with what changed for the better.\n"
-            f"   Example: 'The edit worked — the background is cleaner and the subject reads faster.'\n"
-            f"3. In byline_1 (Card 3): explicitly state the score delta and why.\n"
-            f"   Example: 'Your edit moved this from 6.2 to 7.1 — the background darkening removed the\n"
-            f"   main distraction. The remaining gap to 9+ is now entirely in the behaviour, not the light.'\n"
-            f"4. In mentor_technical (Card 2): acknowledge which edit directions were followed and which were not.\n"
-            f"5. If score is lower than previous: be honest but warm. Name exactly what did not improve\n"
-            f"   and what the photographer should try next.\n"
-            f"6. Never hide the comparison. The photographer submitted again to see if they improved.\n"
-            f"   They deserve a direct answer.\n"
-        )
-        prompt = prompt + _delta_block
-        print(f"[auto_score] delta context injected: previous_score={previous_score:.2f}")
+        _prev_hard_truth        = previous_audit.get('hard_truth', '')
+        _prev_edit_base         = previous_audit.get('edit_base', '')
+        _prev_transferable      = previous_audit.get('transferable_advice', '')
+        _prev_cal_line          = previous_audit.get('calibration_line', '')
+        _prev_dod               = previous_audit.get('dod_reasoning', '')
+        _prev_dm                = previous_audit.get('dm_reasoning', '')
+        _prev_wonder            = previous_audit.get('wonder_reasoning', '')
+        _prev_aq                = previous_audit.get('aq_reasoning', '')
+        _edit_version           = previous_audit.get('edit_version_number', 1)
+        _is_mono_variant        = previous_audit.get('is_mono_variant', False)
+        _parent_eval            = previous_audit.get('parent_score', None)
+
+        # ── Monochrome variant advisory ───────────────────────────────────────
+        _mono_block = ""
+        if _is_mono_variant:
+            _parent_eval_str = f"{_parent_eval:.2f}" if _parent_eval else "the previous version"
+            _mono_block = (
+                f"\n\nMONOCHROME VARIANT DETECTED:\n"
+                f"This appears to be a monochrome conversion of a previously evaluated colour image "
+                f"(or vice versa). Previous evaluation: {_parent_eval_str}.\n"
+                f"MANDATORY — include this in byline_1, word for word adapted naturally:\n"
+                f"'This appears to be a monochrome conversion of your previously evaluated colour image. "
+                f"Both versions have been evaluated independently and both evaluations stand. "
+                f"However, only one version counts toward your Body of Work standing, "
+                f"Annual Excellence Awards, and total standing — the higher-evaluated version. "
+                f"We recommend deleting the lower-evaluated version to keep your Body of Work clean "
+                f"and to ensure your standing reflects your strongest work.'\n"
+                f"NEVER use the word 'score' — always 'evaluation'. "
+                f"NEVER penalise the monochrome conversion — evaluate it on its own merits.\n"
+            )
+
+        # ── Determine outcome type ────────────────────────────────────────────
+        # edit_version_number is injected by app.py into audit on re-uploads.
+        # 1 = first re-edit (V2). 2 = second re-edit (V3). 3+ = loop break.
+        _is_loop_break = (_edit_version is not None and int(_edit_version) >= 2)
+
+        if _is_loop_break:
+            _delta_block = (
+                f"\n\nREEDIT CONTEXT — THIS IS THE THIRD OR LATER VERSION OF THIS IMAGE:\n"
+                f"Previous evaluation: {previous_score:.2f}\n"
+                f"Previous edit directions given: {_prev_edit_base[:400] if _prev_edit_base else 'Not available'}\n"
+                f"Previous advice summary: {_prev_transferable[:300] if _prev_transferable else 'Not available'}\n\n"
+                f"RE-EDIT LOOP BREAK RULES — MANDATORY:\n"
+                f"This image has been edited multiple times. Apply these rules strictly:\n"
+                f"1. Score what you see now. Be honest.\n"
+                f"2. In hard_truth: open with one genuine observation about this version.\n"
+                f"3. In byline_1: include this statement, adapted naturally to the image:\n"
+                f"   'This image has been through multiple edits. The evaluation range you are seeing\n"
+                f"   is the honest ceiling for this frame through editing alone. The dimensions that\n"
+                f"   move evaluations most — the moment, the compositional discovery, the emotional\n"
+                f"   charge — were decided when the shutter opened. Editing refines. It does not remake.\n"
+                f"   The next meaningful movement comes from a new image — same instinct, same subject\n"
+                f"   type, but the composition and moment decided differently at capture.'\n"
+                f"4. In edit_base: give NO new edit suggestions. Instead write:\n"
+                f"   'No further editing is advised on this version. The image has reached its\n"
+                f"   editing ceiling. A new frame — same visual instinct, different compositional\n"
+                f"   decision at the moment of capture — is the next step.'\n"
+                f"5. NEVER use the word 'score' in any user-facing field. Use 'evaluation' instead.\n"
+                f"6. Do NOT imply that another edit will move the evaluation. It will not.\n"
+            )
+        else:
+            _delta_block = (
+                f"\n\nREEDIT CONTEXT — THIS IS A RE-EDITED VERSION OF A PREVIOUSLY EVALUATED IMAGE:\n"
+                f"Previous evaluation: {previous_score:.2f}\n"
+                f"Previous opening verdict: {_prev_hard_truth[:200] if _prev_hard_truth else 'Not available'}\n"
+                f"Previous edit directions given: {_prev_edit_base[:400] if _prev_edit_base else 'Not available'}\n"
+                f"Previous dimension reasoning — DM: {_prev_dm[:150] if _prev_dm else 'N/A'}\n"
+                f"Previous dimension reasoning — Wonder: {_prev_wonder[:150] if _prev_wonder else 'N/A'}\n"
+                f"Previous dimension reasoning — AQ: {_prev_aq[:150] if _prev_aq else 'N/A'}\n\n"
+                f"RE-EDIT PROTOCOL — MANDATORY SEQUENCE:\n"
+                f"Step 1 — AUDIT WHAT WAS ADVISED: Read the previous edit directions above carefully.\n"
+                f"  Identify exactly what edits were suggested.\n"
+                f"Step 2 — CHECK WHAT WAS DONE: Compare current image to previous. Determine:\n"
+                f"  (a) Did the photographer follow the advice and the edit improved the image?\n"
+                f"  (b) Did the photographer follow the advice but the evaluation barely moved?\n"
+                f"  (c) Did the photographer over-edit beyond what was advised?\n"
+                f"  (d) Did the photographer change something that was not advised at all?\n"
+                f"Step 3 — RESPOND BY OUTCOME:\n"
+                f"  Outcome (a) — Improvement: Open hard_truth with what specifically improved.\n"
+                f"    Name the edit and what it did to the image. Then give the NEXT layer of advice.\n"
+                f"    Never repeat what was already said in the previous evaluation.\n"
+                f"  Outcome (b) — Followed advice, evaluation barely moved: Be honest.\n"
+                f"    In byline_1 write: 'The edit was correctly applied. The evaluation has moved\n"
+                f"    only slightly — [X to Y] — because the ceiling on this image through editing\n"
+                f"    has been reached. The [DM / Wonder / AQ — name the specific weak dimension]\n"
+                f"    was set at the moment of capture. Editing cannot change that. The next step\n"
+                f"    is a new image — same visual instinct, the composition and moment decided\n"
+                f"    differently at capture.'\n"
+                f"  Outcome (c) — Over-edited beyond advice: Name it directly.\n"
+                f"    'The previous advice suggested [X]. What has been applied goes further than\n"
+                f"    that and is now working against the image — [name specifically what is over-done:\n"
+                f"    shadows, contrast, saturation, clarity]. Pull back to [specific point].\n"
+                f"    Beyond that, the edit is replacing the image rather than serving it.'\n"
+                f"  Outcome (d) — Unadviseed change: Note what changed and whether it helped.\n"
+                f"Step 4 — NEVER give fresh edit advice in isolation on a re-edit.\n"
+                f"  Every new suggestion must reference what came before:\n"
+                f"  'The previous advice addressed [X]. That has been done. The next thing is [Y].'\n"
+                f"Step 5 — EVALUATION CEILING HONESTY (mandatory in byline_1 on every re-edit):\n"
+                f"  Include this, adapted naturally: 'A re-edit can refine what is already here —\n"
+                f"  cleaner tones, a tighter crop, a less competing background. What it cannot do\n"
+                f"  is move the evaluation significantly. The dimensions that move evaluations most\n"
+                f"  — the moment, the compositional discovery, the emotional charge — were set the\n"
+                f"  instant the shutter opened. If this re-edit evaluates close to the previous\n"
+                f"  version, that is the correct result, not a failure of the edit.'\n"
+                f"Step 6 — NEVER use the word 'score' in any user-facing field. Use 'evaluation'.\n"
+                f"Step 7 — NEVER contradict previous advice without naming the contradiction:\n"
+                f"  If previous advice said 'increase contrast' and this version is now over-contrasted,\n"
+                f"  say so explicitly: 'The previous advice suggested more contrast. This version has\n"
+                f"  gone past that point. Pull back.' Never silently give opposite advice.\n"
+            )
+        prompt = prompt + _delta_block + _mono_block
+        print(f"[auto_score] re-edit protocol injected: previous_score={previous_score:.2f}, version={_edit_version}, loop_break={_is_loop_break}, mono={_is_mono_variant}")
 
     payload = {
         "model":       MODEL,
