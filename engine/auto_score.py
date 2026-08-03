@@ -1,13 +1,4 @@
-# SL-VERSION: 171.4 (Session 171, 2026-08-03 — ONE MASTER PER SCORECARD rule hardened: self-check instruction added to SCORE_PROMPT requiring engine to scan all fields before responding and rewrite any second occurrence with a different master. Post-processing master repeat detector added to auto_score() — logs [MASTER_REPEAT] warning to Railway when same master name appears in 2+ scorecard fields.)
-# SL-VERSION: 171.3 (Session 171, 2026-08-03 — Version bump. app.py model string fix: claude-sonnet-4-20250514 → claude-sonnet-4-6. No engine logic change.)
-# SL-VERSION: 171.2 (Session 171, 2026-08-03 — Version bump only. All Haiku model calls in app.py reverted to Sonnet. No engine logic change.)
-# SL-VERSION: 171.1 (Session 171, 2026-08-03 — Version bump: SCORE→EVALUATION fix in image_detail.html scorecard header band. sl_audit.py updated with scorecard header band check. No engine logic change.)
-# SL-VERSION: 171.1 (Session 171, 2026-08-03 — Version bump: SCORE→EVALUATION fix in image_detail.html scorecard header band. sl_audit.py updated with scorecard header band check. No engine logic change.)
-# SL-VERSION: 170.4 (Session 170, 2026-08-03 — Mobile League recognition: Street/Documentary mobile DoD note expanded to name physical/social difficulty explicitly; calibration_line mobile transparency note mandatory — tells photographer their evaluation uses Mobile League weights and why; mobile over-editing qualifier added)
-# SL-VERSION: 170.3 (Session 170, 2026-08-03 — genre suggestion Creative gate: technique-only signals (ICM/panning/long-exp/multi-exp/heavy manipulation visible in pixels); subject-matter/intent triggers removed; Creative suppressed at medium/low confidence; statue/mannequin/cultural misfire class closed permanently. creative_fineart evidentiary bar: statue/idol/religious imagery rule added.)
-# SL-VERSION: 170.2 (Session 170, 2026-08-03 — global over-editing penalty all genres except Creative; organised vs disorganised clutter rule all genres; cross-genre portfolio awareness; counter-image advisory location-independent; re-edit protocol 3-outcome logic + loop-break at V3; evaluation ceiling honesty; monochrome variant advisory; Platform Mentor Ashok Kochhar prompt hardened)
-# SL-VERSION: 170.1 (Session 170, 2026-08-03 — Ashok Kochhar master_references known_for corrected: verified genres Street/People/Landscape/Nature/Wildlife/Documentary, NZ base confirmed, hard block on architectural/Hampi/Khajuraho hallucination; soulfulphotographer.com-only link rule)
-# SL-VERSION: 111.3 (Session 111 — catchlight global ban, delta scoring params, geographic plausibility gate, species display fix, EXIF hallucination gate, bullet format throughout, score promise numbers removed, variety mandate for masters/openings/locations)
+# SL-VERSION: 171.7 (Session 171, 2026-08-03 — Version bump to force deploy. No logic change.)
 """
 Apex DDI Auto-Scoring Engine
 Apex DDI Engine — AI scoring for uploaded images
