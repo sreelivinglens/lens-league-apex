@@ -1,26 +1,8 @@
+# SL-VERSION: 170.3 (Session 170, 2026-08-03 — genre suggestion Creative gate: technique-only signals (ICM/panning/long-exp/multi-exp/heavy manipulation visible in pixels); subject-matter/intent triggers removed; Creative suppressed at medium/low confidence; statue/mannequin/cultural misfire class closed permanently. creative_fineart evidentiary bar: statue/idol/religious imagery rule added.)
+# SL-VERSION: 170.2 (Session 170, 2026-08-03 — global over-editing penalty all genres except Creative; organised vs disorganised clutter rule all genres; cross-genre portfolio awareness; counter-image advisory location-independent; re-edit protocol 3-outcome logic + loop-break at V3; evaluation ceiling honesty; monochrome variant advisory; Platform Mentor Ashok Kochhar prompt hardened)
+# SL-VERSION: 170.1 (Session 170, 2026-08-03 — Ashok Kochhar master_references known_for corrected: verified genres Street/People/Landscape/Nature/Wildlife/Documentary, NZ base confirmed, hard block on architectural/Hampi/Khajuraho hallucination; soulfulphotographer.com-only link rule)
+# SL-VERSION: 111.3 (Session 111 — catchlight global ban, delta scoring params, geographic plausibility gate, species display fix, EXIF hallucination gate, bullet format throughout, score promise numbers removed, variety mandate for masters/openings/locations)
 """
-# SL-VERSION: 170.3 (Session 170, 2026-08-03 — creative_fineart evidentiary bar: explicit statue/idol/religious imagery rule added — blue deity statues and religious figures in street/transport context are NOT staged; only classify Creative when human subject themselves is art-directed)
-# SL-VERSION: 111.3 (Session 111 — catchlight global ban: suppressed across ALL cards when eye
-#   not clearly visible (was leaking into Card 2 prose); previously 111.2 — delta scoring params)
-#   to auto_score(); delta context injected into scoring prompt for near-match resubmissions;
-#   previously 111.1 — geographic plausibility gate in vision_analyse())
-#   user_city + location now passed to vision call, geo gate fires BEFORE species_id assigned;
-#   previously 111.0 — catchlight pre-condition, hard_truth 9+ gap ban, _species_display fix)
-#   truncated at first word (Plum-headed Parakeet, Orange-bellied Parrot, Lion-tailed Macaque);
-#   geographic plausibility gate added to SPECIES RULE: geographically impossible
-#   identifications return null; master reference rule: ONE master per scorecard,
-#   same master may not appear in two cards; previously 110.8 — EXIF hallucination gate)
-#   previously: all four cards + edit fields: bullet format throughout;
-#   edit_base/edit_creative: removed score promise numbers ("Adds 0.X"), explain WHY not WHAT;
-#   transferable_advice/byline_1/byline_2/mentor_technical: all bulleted, blank line between;
-#   card labels consistent with 110.5 template labels)
-#   score-range opening register, EXIF detective logic, sharpness chain,
-#   composition inference, famous location gate, catchlight rule,
-#   award-winning 9+ gap analysis, score plain-English growth map,
-#   calibration_line field, species full-name for endemic species,
-#   location variety mandate, edit improvement ranges,
-#   tomorrow's assignment with philosophy rotation,
-#   variety mandate for masters/openings/locations)
 Apex DDI Auto-Scoring Engine
 Apex DDI Engine — AI scoring for uploaded images
 Returns structured JSON with all module scores, audit text, bylines, badges
