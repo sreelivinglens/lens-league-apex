@@ -1,4 +1,4 @@
-# SL-VERSION: 171.7 (Session 171, 2026-08-03 — /health route: removed DB SELECT 1 check. MY STANDING fix: highest_tier = MAX tier ever achieved. All upload-path calls on claude-sonnet-4-6.)
+# SL-VERSION: 172.1
 
 import os
 import re
@@ -28752,6 +28752,407 @@ def api_mim_ddi():
         'ddi_narrative':        narrative,
         'dimensions':           dimensions,
     })
+
+
+# ---------------------------------------------------------------------------
+# /try -- Free User Haiku Evaluation Page (SL 172.1)
+# ---------------------------------------------------------------------------
+# RULES (Session 172 handoff):
+#   - @login_required -- free users are registered; no anonymous access
+#   - Haiku model only (claude-haiku-4-5-20251001) -- stripped prompt, no Hive
+#   - Writes to images table (is_public=True) -- appears in recent-work, my-gallery
+#   - Increments total_uploads_ever -- enforces FREE_IMAGE_LIMIT = 3 lifetime gate
+#   - NEVER writes to calibration_dataset, standings, BOW, peer pool, AEA pool
+#   - Percentile via existing compute_percentile() -- shown from image 1
+#   - Single Haiku API call: 5 DDI dimensions + one takeaway
+#   - No Sherpa narrative, no Hive AI check, no location advisory
+#   - /try/result/<id> returns JSON for XHR polling from try.html
+# ---------------------------------------------------------------------------
+
+_HAIKU_MODEL = 'claude-haiku-4-5-20251001'
+
+_TRY_HAIKU_PROMPT = (
+    "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
+    "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
+    "DIMENSIONS:\n"
+    "1. dod  - Depth of Difficulty: how hard was it to make this photograph? "
+    "Right time, right place, right conditions, physical effort.\n"
+    "2. vd   - Visual Disruption: does this image stop the viewer? "
+    "Compositional decisions that break expectation.\n"
+    "3. dm   - Decisive Moment: was the trigger pulled at the right moment? "
+    "Behaviour, expression, peak action, geometric alignment.\n"
+    "4. wf   - Wonder Factor: does this image make you feel something? "
+    "Emotional resonance, awe, curiosity.\n"
+    "5. aq   - Affective Quotient: is there soul in this frame? "
+    "The intangible quality that makes it memorable.\n\n"
+    "INTEREST AREA: {genre}\n\n"
+    "GENRE WEIGHTING AWARENESS:\n"
+    "- Wildlife/Sports: weight dm highly - decisive moment is critical\n"
+    "- Landscape/Astro: weight wf and aq - wonder and atmosphere dominate\n"
+    "- Street/Documentary: weight dm and aq - moment and soul matter most\n"
+    "- People/Wedding: weight aq highly - emotional connection is primary\n"
+    "- Creative: weight vd and aq - disruption and artistic intent matter\n"
+    "- Architecture/Drone: weight vd and wf - visual impact and geometry\n\n"
+    "TAKEAWAY:\n"
+    "Write exactly one sentence (max 30 words) that names the single most "
+    "important insight about this photograph. Name the specific dimension "
+    "that most defines or limits this image and say precisely why. "
+    "Be direct. Do not use the word score.\n\n"
+    "Return ONLY valid JSON, nothing else, no markdown:\n"
+    "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
+    "\"takeaway\": \"<one sentence>\"}"
+)
+
+
+def _try_run_haiku(image_id, img_b64, genre):
+    """
+    Single Haiku call: 5 DDI dimensions + takeaway.
+    Writes results to images table. Called from background thread.
+    SL 172.1 - Haiku only, no Hive, no Sherpa narrative.
+    """
+    import urllib.request as _ur
+    import json as _json
+    from engine.scoring import calculate_score, get_tier
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        app.logger.error('[try_haiku] ANTHROPIC_API_KEY not set')
+        return None
+
+    prompt = _TRY_HAIKU_PROMPT.replace('{genre}', genre or 'General')
+
+    payload = _json.dumps({
+        'model': _HAIKU_MODEL,
+        'max_tokens': 200,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {
+                'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
+            }},
+            {'type': 'text', 'text': prompt}
+        ]}]
+    }).encode()
+
+    req = _ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type':      'application/json',
+            'x-api-key':         api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with _ur.urlopen(req, timeout=90) as resp:
+            raw = _json.loads(resp.read().decode())
+    except Exception as e:
+        app.logger.error(f'[try_haiku] API call failed: {e}')
+        return None
+
+    text = ''.join(
+        b.get('text', '') for b in (raw.get('content') or [])
+        if b.get('type') == 'text'
+    ).strip()
+
+    if text.startswith('```'):
+        parts = text.split('```')
+        text = parts[1] if len(parts) > 1 else text
+        if text.startswith('json'):
+            text = text[4:]
+    text = text.strip()
+
+    try:
+        d = _json.loads(text)
+    except Exception as e:
+        app.logger.error(f'[try_haiku] JSON parse failed: {e} | raw: {text[:200]}')
+        return None
+
+    def _clamp(v):
+        try:
+            return min(10.0, max(0.0, round(float(v), 1)))
+        except Exception:
+            return 5.0
+
+    dod = _clamp(d.get('dod', 5.0))
+    vd  = _clamp(d.get('vd',  5.0))
+    dm  = _clamp(d.get('dm',  5.0))
+    wf  = _clamp(d.get('wf',  5.0))
+    aq  = _clamp(d.get('aq',  5.0))
+    takeaway = (d.get('takeaway') or '').strip()[:300]
+
+    try:
+        final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+    except Exception as e:
+        app.logger.error(f'[try_haiku] calculate_score failed: {e}')
+        final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
+        tier = get_tier(final_score)
+
+    with app.app_context():
+        try:
+            img = Image.query.get(image_id)
+            if not img:
+                app.logger.error(f'[try_haiku] image {image_id} not found')
+                return None
+            img.score     = round(final_score, 2)
+            img.tier      = tier
+            img.status    = 'scored'
+            img.scored_at = datetime.utcnow()
+            import json as _j2
+            img._audit_json = _j2.dumps({
+                'source':   'haiku_try',
+                'model':    _HAIKU_MODEL,
+                'dod':      dod,
+                'vd':       vd,
+                'dm':       dm,
+                'wf':       wf,
+                'aq':       aq,
+                'takeaway': takeaway,
+            })
+            db.session.commit()
+            app.logger.info(
+                f'[try_haiku] scored image={image_id} score={final_score} '
+                f'tier={tier} user={img.user_id}'
+            )
+            return {
+                'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
+                'score': round(final_score, 2),
+                'tier': tier,
+                'takeaway': takeaway,
+            }
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[try_haiku] DB write failed: {e}')
+            try:
+                img = Image.query.get(image_id)
+                if img:
+                    img.status = 'error'
+                    db.session.commit()
+            except Exception:
+                pass
+            return None
+
+
+@app.route('/try')
+@login_required
+def try_page():
+    """
+    GET /try -- Free user Haiku evaluation page.
+    SL 172.1. Registered free users only (@login_required).
+    Quota: FREE_IMAGE_LIMIT = 3 lifetime (total_uploads_ever).
+    """
+    from engine.scoring import GENRE_CHOICES
+
+    _lifetime = getattr(current_user, 'total_uploads_ever', None)
+    if _lifetime is None:
+        _lifetime = Image.query.filter_by(user_id=current_user.id).count()
+
+    evals_used = int(_lifetime or 0)
+
+    return render_template(
+        'try.html',
+        evals_used=evals_used,
+        genre_choices=GENRE_CHOICES,
+    )
+
+
+@app.route('/try/upload', methods=['POST'])
+@login_required
+def try_upload():
+    """
+    POST /try/upload -- Accept image, save to images table, spin Haiku scoring thread.
+    SL 172.1. Returns JSON {image_id} for frontend to poll /score-status/<id>.
+    CRITICAL: writes to images table only. Never touches calibration, BOW, peer pool, AEA.
+    """
+    import base64 as _b64
+    import io as _io
+
+    _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    _lifetime = getattr(current_user, 'total_uploads_ever', None)
+    if _lifetime is None:
+        _lifetime = Image.query.filter_by(user_id=current_user.id).count()
+    _lifetime = int(_lifetime or 0)
+
+    if _lifetime >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
+        return jsonify({
+            'error':   True,
+            'message': (
+                f'You have used all {FREE_IMAGE_LIMIT} free evaluations. '
+                'Subscribe now to continue.'
+            )
+        }), 403
+
+    file = request.files.get('image')
+    if not file or file.filename == '':
+        return jsonify({'error': True, 'message': 'No file received.'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'error': True, 'message': 'File type not supported. Please upload a JPG or PNG.'}), 400
+
+    genre = request.form.get('genre', '').strip()
+    if not genre:
+        return jsonify({'error': True, 'message': 'Please select an interest area.'}), 400
+
+    from engine.scoring import normalise_genre, GENRE_IDS
+    genre = normalise_genre(genre)
+    if genre not in GENRE_IDS:
+        return jsonify({'error': True, 'message': 'Invalid interest area selected.'}), 400
+
+    legal = request.form.get('legal_declaration', '')
+    if not legal:
+        return jsonify({'error': True, 'message': 'Please confirm the legal declaration.'}), 400
+
+    try:
+        uid      = str(uuid.uuid4())
+        filename = secure_filename(file.filename)
+        raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f'{uid}_{filename}')
+        file.save(raw_path)
+
+        from PIL import Image as _PIL
+        try:
+            with _PIL.open(raw_path) as _p:
+                if getattr(_p, 'format', '').upper() == 'MPO':
+                    _rgb   = _p.convert('RGB')
+                    _jpath = raw_path.rsplit('.', 1)[0] + '_c.jpg'
+                    _rgb.save(_jpath, 'JPEG', quality=95)
+                    if os.path.exists(raw_path):
+                        os.remove(raw_path)
+                    raw_path = _jpath
+        except Exception:
+            pass
+
+        thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
+
+        try:
+            with _PIL.open(thumb_path) as _tp:
+                _tp_rgb = _tp.convert('RGB')
+                if max(_tp_rgb.size) > 1024:
+                    _tp_rgb.thumbnail((1024, 1024), _PIL.LANCZOS)
+                _buf = _io.BytesIO()
+                _tp_rgb.save(_buf, format='JPEG', quality=85)
+                img_b64 = _b64.b64encode(_buf.getvalue()).decode()
+        except Exception as _pe:
+            app.logger.error(f'[try_upload] PIL resize failed: {_pe}')
+            return jsonify({'error': True, 'message': 'Could not process this image. Please try a different file.'}), 400
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+    except Exception as e:
+        app.logger.error(f'[try_upload] file processing failed: {e}')
+        return jsonify({'error': True, 'message': 'Could not process this image. Please try again.'}), 500
+
+    try:
+        img = Image(
+            user_id           = current_user.id,
+            original_filename = filename,
+            asset_name        = filename.rsplit('.', 1)[0][:120],
+            photographer_name = current_user.full_name or current_user.username,
+            genre             = genre,
+            width             = w,
+            height            = h,
+            phash             = phash,
+            thumb_url         = thumb_url,
+            status            = 'processing',
+            is_public         = True,
+            legal_declaration = True,
+            camera_track      = getattr(current_user, 'subscription_track', None),
+        )
+        db.session.add(img)
+        db.session.execute(
+            db.text(
+                'UPDATE users SET total_uploads_ever = '
+                'COALESCE(total_uploads_ever, 0) + 1 WHERE id = :uid'
+            ),
+            {'uid': current_user.id}
+        )
+        db.session.commit()
+        image_id = img.id
+        app.logger.info(
+            f'[try_upload] image saved: id={image_id} '
+            f'user={current_user.id} genre={genre}'
+        )
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[try_upload] DB insert failed: {e}')
+        return jsonify({'error': True, 'message': 'Could not save your image. Please try again.'}), 500
+
+    def _haiku_thread(iid, b64, g):
+        with app.app_context():
+            _try_run_haiku(iid, b64, g)
+
+    threading.Thread(
+        target=_haiku_thread,
+        args=(image_id, img_b64, genre),
+        daemon=True
+    ).start()
+
+    return jsonify({'image_id': image_id})
+
+
+@app.route('/try/result/<int:image_id>')
+@login_required
+def try_result(image_id):
+    """
+    GET /try/result/<id> -- Return evaluation JSON for try.html frontend.
+    SL 172.1. Includes percentile, dimensions, takeaway, evals remaining.
+    """
+    import json as _j
+
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    percentile_data = {}
+    if img.score and img.status == 'scored':
+        try:
+            from engine.scoring import compute_percentile
+            percentile_data = compute_percentile(
+                float(img.score),
+                genre=img.genre,
+                camera_track=getattr(img, 'camera_track', None),
+            )
+        except Exception as _pe:
+            app.logger.warning(f'[try_result] percentile failed: {_pe}')
+
+    dims     = {}
+    takeaway = ''
+    try:
+        audit = _j.loads(img._audit_json or '{}')
+        if audit.get('source') == 'haiku_try':
+            dims = {
+                'dod': audit.get('dod'),
+                'vd':  audit.get('vd'),
+                'dm':  audit.get('dm'),
+                'wf':  audit.get('wf'),
+                'aq':  audit.get('aq'),
+            }
+            takeaway = audit.get('takeaway', '')
+    except Exception:
+        pass
+
+    _lifetime       = int(getattr(current_user, 'total_uploads_ever', 0) or 0)
+    _bonus          = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    evals_used      = _lifetime
+    evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _lifetime)
+
+    return jsonify({
+        'image_id':        image_id,
+        'score':           img.score,
+        'tier':            img.tier,
+        'genre':           img.genre,
+        'percentile':      percentile_data,
+        'dimensions':      dims,
+        'takeaway':        takeaway,
+        'evals_used':      evals_used,
+        'evals_remaining': evals_remaining,
+    })
+
+
+# ---------------------------------------------------------------------------
+# END /try routes -- SL 172.1
+# ---------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
