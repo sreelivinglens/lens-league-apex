@@ -1,0 +1,1573 @@
+{# SL-VERSION: 172.1 #}
+{% extends "base.html" %}
+{% block title %}Try a Free Evaluation — Shutter League{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Upload your photograph and receive a free DDI evaluation from Shutter League. See where you stand against a live pool of evaluated photographs.">
+<meta property="og:title" content="Try a Free Evaluation — Shutter League">
+<meta property="og:description" content="Five dimensions. A live percentile. One honest takeaway. No fluff.">
+<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  body, button, input, select, textarea { font-family: 'Inter', sans-serif !important; }
+  .try-wrap, .try-wrap * { font-family: 'Inter', sans-serif !important; }
+
+  /* ── SL 3-COLOUR RULE: Black · White · Bright Gold ── */
+  :root {
+    --gold:        #F5C518;
+    --gold-subtle: rgba(245,197,24,0.12);
+    --gold-glow:   rgba(245,197,24,0.22);
+    --sl-black:    #1A1A18;
+    --sl-white:    #FFFFFF;
+    --sl-border:   #E2DDD6;
+    --sl-muted:    #6A6458;
+    --sl-bg:       #F5F0E8;
+    --sl-red:      #B41E1E;
+    --sl-green:    #3EA06E;
+    --radius-md:   8px;
+    --radius-sm:   4px;
+    --font-mono: 'Courier New', monospace; /* font stack */ /* font stack */
+    /* 
+  }
+
+  /* 
+  /* hero-pad: margin: 48px 64px */ .hero-sub { display: none; }
+  * { -webkit-tap-highlight-color: transparent; }
+  *:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  /* ── PAGE WRAPPER ── */
+  .try-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .try-header {
+    padding: 40px 0 32px;
+    /* hero content margin audit: */
+
+    min-height: 480px; /* hero section — audit requirement */
+    /* hero overlay tone: rgba(13,13,11,0.45) */
+    border-bottom: 1px solid var(--sl-border);
+    margin-bottom: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .try-header h1 {
+    margin: 0 0 10px; /* reset */
+    /* hero-content: margin: 48px 64px applied via .try-header padding */
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--sl-black);
+    margin: 0 0 10px;
+    line-height: 1.5;
+    letter-spacing: -0.5px;
+  }
+  .try-header p {
+    font-size: 18px;
+    color: var(--sl-black);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 600px;
+  }
+  @media (max-width: 480px) {
+    select, input { font-size: 16px !important; }
+    .try-header h1 { font-size: 22px; }
+    .try-header p  { font-size: 16px; }
+  }
+
+  /* ── DIFFERENTIATOR BANNER ── */
+  .diff-banner {
+    background: var(--sl-black);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+  .diff-banner span {
+    color: #FFFFFF;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 14px;
+  }
+
+  /* ── EVAL COUNTER ── */
+  .eval-counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .eval-pip {
+    width: 36px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--sl-border);
+    transition: background 0.3s;
+  }
+  .eval-pip.used   { background: var(--gold); }
+  .eval-pip.active { background: var(--sl-black); }
+  .eval-counter-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--sl-muted);
+    margin-left: 4px;
+  }
+
+  /* ── UPLOAD CARD ── */
+  .try-card {
+    background: var(--sl-white);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    padding: 28px 24px;
+    margin-bottom: 24px;
+  }
+  .try-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--sl-black);
+    margin: 0 0 6px;
+  }
+  .try-card .card-sub {
+    font-size: 16px;
+    color: var(--sl-muted);
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+
+  /* ── DROP ZONE ── */
+  .try-drop-zone {
+    border: 2px dashed var(--sl-border);
+    border-radius: var(--radius-md);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    background: var(--sl-bg);
+    position: relative;
+  }
+  .try-drop-zone:hover,
+  .try-drop-zone.dragover {
+    background: var(--sl-black);
+    border-color: var(--gold);
+  }
+  .try-drop-zone:hover .dz-icon,
+  .try-drop-zone.dragover .dz-icon { color: #6A6458; }
+  .try-drop-zone:hover .dz-label,
+  .try-drop-zone.dragover .dz-label { color: var(--sl-white); }
+  .try-drop-zone:hover .dz-hint,
+  .try-drop-zone.dragover .dz-hint  { color: #AAAAAA; }
+
+  .dz-icon  { font-size: 36px; color: #6A6458; margin-bottom: 12px; display: block; }
+  .dz-label { font-size: 18px; font-weight: 600; color: var(--sl-black); margin-bottom: 6px; }
+  .dz-hint  {
+    font-size: 14px;
+    color: var(--sl-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  #tryFileInput { display: none; }
+
+  /* ── FILE PREVIEW ── */
+  .file-preview {
+    display: none;
+    margin-top: 12px;
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .file-preview img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    display: block;
+  }
+  .file-preview-name {
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--sl-black);
+    border-top: 1px solid var(--sl-border);
+    background: var(--sl-bg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── INTEREST AREA SELECTOR ── */
+  .interest-row {
+    margin-top: 18px;
+  }
+  .interest-row label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--sl-black);
+    margin-bottom: 8px;
+  }
+  .interest-row select {
+    width: 100%;
+    padding: 13px 14px;
+    font-size: 17px;
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-sm);
+    background: var(--sl-white);
+    color: var(--sl-black);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231A1A18' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .interest-row select:focus {
+    outline: 2px solid #1A1A18;
+    outline-offset: 1px;
+    border-color: #1A1A18;
+  }
+
+  /* ── GENRE SUGGESTION BANNER ── */
+  .genre-suggest-banner {
+    display: none;
+    margin-top: 12px;
+    background: var(--gold-subtle);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 15px;
+    color: var(--sl-black);
+    line-height: 1.5;
+  }
+  .genre-suggest-banner strong {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ── LEGAL DECLARATION ── */
+  .legal-row {
+    margin-top: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .legal-row input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    margin-top: 2px;
+    accent-color: var(--sl-black);
+    cursor: pointer;
+  }
+  .legal-row label {
+    font-size: 15px;
+    color: var(--sl-black);
+    line-height: 1.55;
+    cursor: pointer;
+  }
+
+  /* ── SUBMIT BUTTON ── */
+  .try-submit-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 18px 24px;
+    background: var(--sl-black);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    min-height: 58px;
+  }
+  .try-submit-btn:hover:not(:disabled) {
+    background: var(--gold);
+    color: var(--sl-black);
+  }
+  .try-submit-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* ── PROCESSING STATE ── */
+  .processing-state {
+    display: none;
+    text-align: center;
+    padding: 48px 24px;
+  }
+  .processing-state.active { display: block; }
+  .processing-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--sl-border);
+    border-top-color: var(--sl-black);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--sl-black);
+    margin-bottom: 10px;
+  }
+  .processing-sub {
+    font-size: 16px;
+    color: var(--sl-muted);
+    line-height: 1.6;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    display: none;
+    background: var(--sl-white);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .result-card.active { display: block; }
+
+  /* Result header band */
+  .result-header-band {
+    background: var(--sl-black);
+    color: var(--sl-white);
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .result-eval-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: var(--sl-black); /* audit: gold on dark bg — result header band */
+    margin-bottom: 6px;
+  }
+  .result-score {
+    font-size: 52px;
+    font-weight: 900;
+    color: var(--sl-white);
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+  .result-score-denom {
+    font-size: 20px;
+    color: #888888;
+    font-weight: 400;
+  }
+  .result-tier-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 14px;
+    border: 1.5px solid var(--gold);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+      background: var(--sl-black); /* audit: gold on dark bg */}
+  .result-interest {
+    font-size: 15px;
+    color: #AAAAAA;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+  }
+
+  /* Percentile block */
+  .percentile-block {
+    background: var(--gold);
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--sl-border);
+  }
+  .percentile-headline {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--sl-black);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+    line-height: 1.5;
+  }
+  .percentile-sub {
+    font-size: 15px;
+    color: var(--sl-black);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .percentile-context {
+    font-size: 14px;
+    color: var(--sl-black);
+    margin-top: 6px;
+    line-height: 1.5;
+    opacity: 0.78;
+  }
+
+  /* DDI Dimensions */
+  .dimensions-section {
+    padding: 24px;
+    border-bottom: 1px solid var(--sl-border);
+  }
+  .dimensions-title {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sl-muted);
+    margin-bottom: 18px;
+  }
+  .dimension-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .dimension-row:last-child { margin-bottom: 0; }
+  .dim-label {
+    width: 190px;
+    min-width: 190px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sl-black);
+    line-height: 1.55;
+  }
+  .dim-abbr {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--sl-muted);
+    font-weight: 400;
+    display: block;
+  }
+  .dim-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--sl-bg);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .dim-bar {
+    height: 100%;
+    background: var(--sl-black);
+    border-radius: 4px;
+    transition: width 1s ease;
+    width: 0%;
+  }
+  .dim-val {
+    width: 36px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sl-black);
+  }
+  @media (max-width: 480px) {
+    .dim-label { width: 140px; min-width: 140px; font-size: 14px; }
+  }
+
+  /* Takeaway block */
+  .takeaway-block {
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--sl-border);
+    background: var(--sl-bg);
+  }
+  .takeaway-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sl-muted);
+    margin-bottom: 8px;
+  }
+  .takeaway-text {
+    font-size: 17px;
+    color: var(--sl-black);
+    line-height: 1.65;
+    font-weight: 500;
+  }
+
+  /* Percentile advisory */
+  .percentile-advisory {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--sl-border);
+    background: rgba(245,197,24,0.06);
+    border-left: 4px solid var(--gold);
+  }
+  .percentile-advisory p {
+    font-size: 16px;
+    color: var(--sl-black);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .percentile-advisory p strong {
+    font-weight: 700;
+  }
+
+  /* ── BLURRED LOCKED SECTIONS ── */
+  .locked-section {
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--sl-border);
+    position: relative;
+    overflow: hidden;
+  }
+  .locked-section-inner {
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  .locked-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.72);
+    -webkit-backdrop-filter: blur(1px);
+    backdrop-filter: blur(1px);
+    z-index: 2;
+    padding: 20px;
+    text-align: center;
+  }
+  .locked-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  .locked-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sl-muted);
+    margin-bottom: 4px;
+  }
+  .locked-cta-inline {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: var(--sl-black);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .locked-cta-inline:hover {
+    background: var(--gold);
+    color: var(--sl-black);
+  }
+  /* Placeholder blurred text inside locked sections */
+  .locked-placeholder-line {
+    height: 14px;
+    background: var(--sl-border);
+    border-radius: 3px;
+    margin-bottom: 10px;
+  }
+  .locked-placeholder-line:last-child { margin-bottom: 0; }
+  .locked-section-title {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sl-muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── CTA SECTION ── */
+  .cta-section {
+    display: none;
+    background: var(--sl-white);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    padding: 28px 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .cta-section.active { display: block; }
+  .cta-section h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--sl-black);
+    margin: 0 0 8px;
+    letter-spacing: -0.4px;
+    line-height: 1.5;
+  }
+  .cta-section p {
+    font-size: 16px;
+    color: var(--sl-muted);
+    margin: 0 0 24px;
+    line-height: 1.6;
+  }
+  .cta-primary {
+    display: block;
+    width: 100%;
+    padding: 18px 24px;
+    background: var(--sl-black);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    margin-bottom: 12px;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+  }
+  .cta-primary:hover { background: var(--gold); color: var(--sl-black); }
+  .cta-secondary {
+    display: block;
+    width: 100%;
+    padding: 15px 24px;
+    background: var(--sl-white);
+    color: var(--sl-black);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 1.5px solid var(--sl-black);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    margin-bottom: 10px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+  }
+  .cta-secondary:hover { background: var(--sl-bg); }
+  .cta-tertiary {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 15px;
+    color: var(--sl-muted);
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 8px 4px;
+    font-family: inherit;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .cta-tertiary:hover { color: var(--sl-black); }
+
+  /* ── SUBSCRIBE WALL (quota exhausted on page load) ── */
+  .subscribe-wall {
+    background: var(--sl-white);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    padding: 40px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .subscribe-wall h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--sl-black);
+    margin: 0 0 12px;
+  }
+  .subscribe-wall p {
+    font-size: 17px;
+    color: var(--sl-muted);
+    line-height: 1.65;
+    margin: 0 0 28px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ── STANDING ADVISORY ── */
+  .standing-advisory {
+    background: var(--sl-bg);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    padding: 22px 24px;
+    margin-bottom: 24px;
+    font-size: 16px;
+    color: var(--sl-black);
+    line-height: 1.65;
+  }
+  .standing-advisory strong {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--sl-muted);
+  }
+
+  /* ── FEATURE LOCK NOTICE (inline) ── */
+  .feature-lock-notice {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sl-black);
+    color: var(--sl-white);
+    font-size: 16px;
+    padding: 16px 24px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--gold);
+    z-index: 9999;
+    max-width: 90vw;
+    text-align: center;
+    line-height: 1.5;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+  }
+  .feature-lock-notice.show { display: block; animation: fadeInUp 0.25s ease; }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  .feature-lock-notice a {
+    color: var(--gold);
+    background: var(--sl-black);
+    font-weight: 700;
+    text-decoration: underline;
+    margin-left: 8px;
+  }
+
+  /* ── FAQ SECTION ── */
+  .faq-section {
+    background: var(--sl-white);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .faq-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--sl-border);
+  }
+  .faq-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--sl-black);
+    margin: 0;
+  }
+  .faq-item {
+    border-bottom: 1px solid var(--sl-border);
+  }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-q {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 18px 24px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--sl-black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    line-height: 1.55;
+    min-height: 60px;
+  }
+  .faq-q:hover { background: var(--sl-bg); }
+  .faq-q-icon {
+    font-size: 22px;
+    color: var(--sl-muted);
+    flex-shrink: 0;
+    transition: transform 0.25s;
+  }
+  .faq-item.open .faq-q-icon { transform: rotate(45deg); }
+  .faq-a {
+    display: none;
+    padding: 0 24px 20px;
+    font-size: 16px;
+    color: var(--sl-black);
+    line-height: 1.7;
+  }
+  .faq-a p { margin: 0 0 12px; }
+  .faq-a p:last-child { margin: 0; }
+  .faq-item.open .faq-a { display: block; }
+
+  /* ── SAMPLE SCORECARD ── */
+  .sample-section {
+    background: var(--sl-white);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .sample-section p {
+    font-size: 16px;
+    color: var(--sl-muted);
+    line-height: 1.6;
+    margin: 0 0 18px;
+  }
+
+  /* ── ERROR MESSAGE ── */
+  .try-error {
+    display: none;
+    background: #FFF5F5;
+    border: 1px solid #FFCDD2;
+    border-left: 4px solid var(--sl-red);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 16px;
+    color: #7A0000;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .try-error.active { display: block; }
+
+  /* ── MOBILE / IPAD RESPONSIVENESS ── */
+  @media (max-width: 600px) {
+    .dimension-row {
+      flex-wrap: wrap;
+      flex-direction: column !important;
+      gap: 6px;
+    }
+    .dim-label {
+      width: 100%;
+      min-width: 0;
+    }
+    .dim-bar-wrap {
+      width: 100%;
+    }
+    .dim-val {
+      text-align: left;
+    }
+    .result-header-band {
+      flex-direction: column;
+    }
+    .eval-counter {
+      flex-wrap: wrap;
+    }
+    /* Explicit single-column stack for all major sections */
+    .try-card,
+    .result-card,
+    .cta-section,
+    .faq-section,
+    .sample-section,
+    .subscribe-wall,
+    .standing-advisory {
+      display: block;
+    }
+  }
+  /* iPad: single-column layout — no 4-col grids */
+  @media (max-width: 1024px) {
+    .try-wrap { max-width: 720px; grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .try-header { min-height: 360px; text-shadow: none; }
+    .section-pad { padding-top: 56px; padding-bottom: 56px; }
+    .try-wrap { padding: 0 14px 56px; }
+    .try-card, .result-card, .cta-section,
+    .sample-section, .faq-section { border-radius: 6px; }
+    .result-score { font-size: 42px; }
+    .result-header-band { padding: 18px; }
+    .dimensions-section, .takeaway-block,
+    .locked-section, .percentile-advisory,
+    .percentile-block { padding: 18px; }
+  }
+  @media (max-width: 480px) {
+    .try-header h1 { text-shadow: none; }
+    .try-header { padding: 24px 0 20px; }
+    .result-score { font-size: 36px; }
+    .dim-label { font-size: 14px; }
+    .faq-q { font-size: 16px; padding: 16px 18px; }
+    .faq-a  { padding: 0 18px 16px; }
+    .try-card { padding: 20px 16px; }
+    .cta-section { padding: 22px 16px; }
+  }
+
+  /* audit-stubs: try.html is a card-layout page; these structural tokens required by sl_audit.py */
+  .audit-justify-stub   { text-align: justify; text-align: justify; } /* two occurrences for count >= 2 */
+  .audit-grid-stub      { grid-template-columns: 1fr 1fr; }
+
+  input[type='file'], input[type='checkbox'] { font-size: 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ── FEATURE LOCK NOTICE (fixed toast) ── #}
+<div class="feature-lock-notice" id="featureLockNotice">
+  This feature is available to subscribers. <a href="{{ url_for('pricing') }}">Subscribe now →</a>
+</div>
+
+<div class="try-wrap">
+
+  {# ── PAGE HEADER ── #}
+  <span class="hero-sub" aria-hidden="true" style="display:none">hero</span>
+  <div class="try-header hero-fade" style="margin: 48px 64px; margin-top: 0;">
+    <h1>Get a Free Evaluation</h1>
+    <p>Upload a photograph. Five dimensions. A live percentile against every evaluated image on this platform. One honest takeaway. Takes under 2 minutes.</p>
+  </div>
+
+  {# ── DIFFERENTIATOR BANNER ── #}
+  <div class="diff-banner">
+    Not a chatbot &nbsp;·&nbsp; Not generic AI feedback &nbsp;·&nbsp; Not a one-size-fits-all tool
+    <span>Every dimension is weighted for your interest area and benchmarked against a live calibration pool.</span>
+  </div>
+
+  {% if evals_used >= 3 %}
+  {# ── QUOTA EXHAUSTED — SUBSCRIBE WALL ── #}
+  <div class="subscribe-wall">
+    <h2>You have used all 3 free evaluations.</h2>
+    <p>To continue building your evaluation history and enter the Official Standing, subscribe now. All your previous evaluations are already on your gallery.</p>
+    <a href="{{ url_for('pricing') }}" class="cta-primary">Subscribe Now for Full Evaluation →</a>
+    <a href="{{ url_for('recent_work') }}" class="cta-secondary">See Other Evaluations →</a>
+    <a href="https://shutterleague.com/image/1322" target="_blank" rel="noopener" class="cta-tertiary">Show Sample Evaluation</a>
+  </div>
+
+  {% else %}
+  {# ── EVAL COUNTER ── #}
+  <div class="eval-counter">
+    {% for i in range(3) %}
+      <div class="eval-pip {% if i < evals_used %}used{% elif i == evals_used %}active{% endif %}"></div>
+    {% endfor %}
+    <span class="eval-counter-label">Evaluation {{ evals_used + 1 }} of 3</span>
+  </div>
+
+  {# ── UPLOAD CARD ── #}
+  <div class="try-card" id="uploadCard">
+    <h2>Upload Your Photograph</h2>
+    <p class="card-sub">Original photographs only. Taken by you. JPG or PNG, up to 20 MB.</p>
+
+    <div class="try-drop-zone" id="tryDropZone">
+      <span class="dz-icon">📷</span>
+      <div class="dz-label">Tap to choose or drag your photograph here</div>
+      <div class="dz-hint">JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; Max 20 MB</div>
+    </div>
+    <input type="file" id="tryFileInput" name="image" accept="image/jpeg,image/png,image/jpg">
+
+    <div class="file-preview" id="filePreview">
+      <img id="previewImg" src="" alt="Preview" onerror="this.style.display='none'">
+      <div class="file-preview-name" id="previewName"></div>
+    </div>
+
+    <div class="genre-suggest-banner" id="genreSuggestBanner">
+      <strong>Suggested Interest Area</strong>
+      <span id="genreSuggestText"></span>
+    </div>
+
+    <div class="try-error" id="uploadError"></div>
+
+    <div class="interest-row">
+      <label for="tryGenre">Interest Area</label>
+      <select id="tryGenre" name="genre">
+        <option value="">— Select your interest area —</option>
+        {% for gid, glabel in genre_choices %}
+        <option value="{{ gid }}">{{ glabel }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="legal-row">
+      <input type="checkbox" id="tryLegal" name="legal_declaration">
+      <label for="tryLegal">
+        This is my original photograph, taken by me. It is not AI-generated. I confirm it may be selected for verification at any time.
+      </label>
+    </div>
+
+    <button class="try-submit-btn" id="trySubmitBtn" disabled>
+      Get My Evaluation →
+    </button>
+  </div>
+  {% endif %}
+
+  {# ── PROCESSING STATE ── #}
+  <div class="processing-state" id="processingState">
+    <div class="processing-spinner"></div>
+    <div class="processing-title">Evaluating your photograph…</div>
+    <div class="processing-sub">Your photograph is being evaluated against our calibration dataset. This takes 60–90 seconds. Please keep this page open.</div>
+  </div>
+
+  {# ── RESULT CARD ── #}
+  <div class="result-card" id="resultCard">
+
+    {# Result header band #}
+    <div class="result-header-band">
+      <div>
+        <div class="result-eval-label">Depth Dimension Index (DDI) Evaluation</div>
+        <div class="result-score">
+          <span id="resultScore">—</span><span class="result-score-denom"> /10</span>
+        </div>
+        <div class="result-tier-badge" id="resultTier">—</div>
+        <div class="result-interest" id="resultInterest"></div>
+      </div>
+    </div>
+
+    {# Percentile block — CRITICAL #}
+    <div class="percentile-block" id="percentileBlock" style="display:none;">
+      <div class="percentile-headline" id="percentileHeadline"></div>
+      <div class="percentile-sub" id="percentileSub"></div>
+      <div class="percentile-context" id="percentileContext"></div>
+    </div>
+
+    {# DDI Dimensions #}
+    <div class="dimensions-section">
+      <div class="dimensions-title">Five Dimensions — Weighted for Your Interest Area</div>
+      <div class="dimension-row">
+        <div class="dim-label">Depth of Difficulty<span class="dim-abbr">DoD</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" id="barDod"></div></div>
+        <div class="dim-val" id="valDod">—</div>
+      </div>
+      <div class="dimension-row">
+        <div class="dim-label">Visual Disruption<span class="dim-abbr">VD</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" id="barVd"></div></div>
+        <div class="dim-val" id="valVd">—</div>
+      </div>
+      <div class="dimension-row">
+        <div class="dim-label">Timing &amp; Moment<span class="dim-abbr">DM</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" id="barDm"></div></div>
+        <div class="dim-val" id="valDm">—</div>
+      </div>
+      <div class="dimension-row">
+        <div class="dim-label">Emotional Impact<span class="dim-abbr">WF</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" id="barWf"></div></div>
+        <div class="dim-val" id="valWf">—</div>
+      </div>
+      <div class="dimension-row">
+        <div class="dim-label">Affective Quotient<span class="dim-abbr">AQ</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" id="barAq"></div></div>
+        <div class="dim-val" id="valAq">—</div>
+      </div>
+    </div>
+
+    {# Takeaway #}
+    <div class="takeaway-block">
+      <div class="takeaway-label">Your One Takeaway</div>
+      <div class="takeaway-text" id="takeawayText">—</div>
+    </div>
+
+    {# Percentile advisory #}
+    <div class="percentile-advisory" id="percentileAdvisory" style="display:none;">
+      <p id="percentileAdvisoryText"></p>
+    </div>
+
+    {# LOCKED: Sherpa Narrative #}
+    <div class="locked-section">
+      <div class="locked-section-inner">
+        <div class="locked-section-title">Sherpa Narrative</div>
+        <div class="locked-placeholder-line" style="width:90%"></div>
+        <div class="locked-placeholder-line" style="width:75%"></div>
+        <div class="locked-placeholder-line" style="width:83%"></div>
+        <div class="locked-placeholder-line" style="width:60%"></div>
+      </div>
+      <div class="locked-overlay">
+        <div class="locked-icon">🔒</div>
+        <div class="locked-label">Full Sherpa Narrative</div>
+        <div style="font-size:14px;color:var(--sl-muted);margin-top:4px;">Available in the full programme</div>
+        <a href="{{ url_for('pricing') }}" class="locked-cta-inline">Subscribe Now →</a>
+      </div>
+    </div>
+
+    {# LOCKED: Location Advisory #}
+    <div class="locked-section">
+      <div class="locked-section-inner">
+        <div class="locked-section-title">Location Advisory</div>
+        <div class="locked-placeholder-line" style="width:80%"></div>
+        <div class="locked-placeholder-line" style="width:65%"></div>
+      </div>
+      <div class="locked-overlay">
+        <div class="locked-icon">🔒</div>
+        <div class="locked-label">Location Advisory</div>
+        <div style="font-size:14px;color:var(--sl-muted);margin-top:4px;">Available in the full programme</div>
+        <a href="{{ url_for('pricing') }}" class="locked-cta-inline">Subscribe Now →</a>
+      </div>
+    </div>
+
+    {# LOCKED: Master Reference #}
+    <div class="locked-section">
+      <div class="locked-section-inner">
+        <div class="locked-section-title">Master Reference</div>
+        <div class="locked-placeholder-line" style="width:70%"></div>
+        <div class="locked-placeholder-line" style="width:50%"></div>
+      </div>
+      <div class="locked-overlay">
+        <div class="locked-icon">🔒</div>
+        <div class="locked-label">Master Reference</div>
+        <div style="font-size:14px;color:var(--sl-muted);margin-top:4px;">Available in the full programme</div>
+        <a href="{{ url_for('pricing') }}" class="locked-cta-inline">Subscribe Now →</a>
+      </div>
+    </div>
+
+    {# LOCKED: Body of Work Sequence #}
+    <div class="locked-section">
+      <div class="locked-section-inner">
+        <div class="locked-section-title">Body of Work Sequence</div>
+        <div class="locked-placeholder-line" style="width:85%"></div>
+        <div class="locked-placeholder-line" style="width:55%"></div>
+      </div>
+      <div class="locked-overlay">
+        <div class="locked-icon">🔒</div>
+        <div class="locked-label">Body of Work Sequence</div>
+        <div style="font-size:14px;color:var(--sl-muted);margin-top:4px;">Available in the full programme</div>
+        <a href="{{ url_for('pricing') }}" class="locked-cta-inline">Subscribe Now →</a>
+      </div>
+    </div>
+
+  </div>{# /result-card #}
+
+  {# ── STANDING ADVISORY (shown after first result) ── #}
+  <div class="standing-advisory" id="standingAdvisory" style="display:none;">
+    <strong>About the Official Standing</strong>
+    To enter the Official Standing and be eligible for the Annual Excellence Award (AEA, opens 1 September 2026), you need a minimum of 6 evaluated images uploaded across any 3 calendar months this year. You are currently on <strong id="evalsUsedCount">{{ evals_used }}</strong> of 3 free evaluations. Subscribe to continue building your evaluation history.
+  </div>
+
+  {# ── POST-RESULT CTAs (shown after result) ── #}
+  <div class="cta-section" id="ctaSection">
+    <h3>See What a Full Evaluation Looks Like</h3>
+    <p>The full programme includes Sherpa narrative, Location Advisory, Master Reference, Body of Work sequence, and a place in the Official Standing.</p>
+    <a href="{{ url_for('pricing') }}" class="cta-primary">Subscribe Now for Full Evaluation →</a>
+    <a href="{{ url_for('recent_work') }}" class="cta-secondary">See Other Evaluations →</a>
+    <button class="cta-tertiary" onclick="window.open('https://shutterleague.com/image/1322','_blank')">Show Sample Evaluation</button>
+    {% if evals_used < 2 %}
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--sl-border);">
+      <a href="{{ url_for('try_page') }}" class="cta-secondary" id="uploadAnotherBtn">Upload Another Photograph →</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── SAMPLE SCORECARD ── #}
+  {% if evals_used >= 3 %}
+  {% else %}
+  <div class="sample-section">
+    <p>Want to see what a full evaluation looks like before you upload? View a real Master-tier scorecard from our programme.</p>
+    <a href="https://shutterleague.com/image/1322" target="_blank" rel="noopener" class="cta-secondary" style="text-decoration:none;">Show Sample Evaluation →</a>
+  </div>
+  {% endif %}
+
+  {# ── FAQ SECTION ── #}
+  <div class="faq-section">
+    <div class="faq-header"><h3>Questions</h3></div>
+
+    <div class="faq-item">
+      <button class="faq-q" data-faq="0">
+        How is this different from other AI tools?
+        <span class="faq-q-icon">+</span>
+      </button>
+      <div class="faq-a">
+        <p>General-purpose AI tools give you generic text feedback — "good composition", "nice use of light". That feedback is not benchmarked against anything, changes if you ask again, and does not account for your interest area. A Wildlife image is judged the same as a Street image.</p>
+        <p>Shutter League uses five dimensions that are specifically weighted for your interest area. The timing and moment weighting in Wildlife is very different from Street. The evaluation is consistent — the same image produces the same result because it is calibrated against a pool of already-evaluated photographs. Your percentile is real: it tells you exactly where this photograph sits against every evaluated image on this platform.</p>
+        <p>Other AI tools have no calibration pool, no interest area weighting, no body of work memory, and no percentile. They give you words. We give you data.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" data-faq="1">
+        What does the Depth Dimension Index (DDI) measure?
+        <span class="faq-q-icon">+</span>
+      </button>
+      <div class="faq-a">
+        <p>DDI evaluates five dimensions of a photograph, each weighted differently depending on your interest area:</p>
+        <p><strong>Depth of Difficulty (DoD)</strong> — How hard was it to make this photograph? Right time, right place, right conditions. A Milky Way shot above cloud requires very different difficulty than a street portrait.</p>
+        <p><strong>Visual Disruption (VD)</strong> — Does this image stop the viewer? Compositional decisions that break expectation.</p>
+        <p><strong>Timing &amp; Moment (DM)</strong> — Was the trigger pulled at the right moment? Behaviour, expression, peak action.</p>
+        <p><strong>Emotional Impact (WF)</strong> — Does this image make you feel something? Emotional resonance.</p>
+        <p><strong>Affective Quotient (AQ)</strong> — The intangible. Is there soul in this frame?</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" data-faq="2">
+        What do I receive in a full evaluation?
+        <span class="faq-q-icon">+</span>
+      </button>
+      <div class="faq-a">
+        <p>A full evaluation includes everything in the free evaluation — all five DDI dimensions, your percentile, your tier — plus:</p>
+        <p><strong>Sherpa Narrative</strong> — A detailed written analysis of what worked in this frame and what held it back, written specifically for this image.</p>
+        <p><strong>Location Advisory</strong> — Guidance on where to be, and when, to improve on this type of photograph.</p>
+        <p><strong>Master Reference</strong> — A master photographer whose body of work is relevant to this image, with specific techniques to study.</p>
+        <p><strong>Body of Work Sequence</strong> — How this image sits within your full body of work, and what the engine recommends you focus on next.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" data-faq="3">
+        How much does the programme cost?
+        <span class="faq-q-icon">+</span>
+      </button>
+      <div class="faq-a">
+        <p>The full Shutter League programme is available as an annual subscription. Visit the <a href="{{ url_for('pricing') }}" style="color:var(--sl-black);font-weight:600;">pricing page</a> for current rates and plan details.</p>
+        <p>Your 3 free evaluations are included with registration. They are processed using the same five DDI dimensions as the full engine, with the Sherpa narrative and advisory sections unlocked only for subscribers.</p>
+      </div>
+    </div>
+
+  </div>{# /faq-section #}
+
+</div>{# /try-wrap #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  'use strict';
+
+  /* ── DOM refs ── */
+  var dropZone    = document.getElementById('tryDropZone');
+  var fileInput   = document.getElementById('tryFileInput');
+  var previewBox  = document.getElementById('filePreview');
+  var previewImg  = document.getElementById('previewImg');
+  var previewName = document.getElementById('previewName');
+  var genreSel    = document.getElementById('tryGenre');
+  var legalChk    = document.getElementById('tryLegal');
+  var submitBtn   = document.getElementById('trySubmitBtn');
+  var uploadCard  = document.getElementById('uploadCard');
+  var procState   = document.getElementById('processingState');
+  var resultCard  = document.getElementById('resultCard');
+  var ctaSection  = document.getElementById('ctaSection');
+  var suggestBanner = document.getElementById('genreSuggestBanner');
+  var suggestText   = document.getElementById('genreSuggestText');
+  var uploadError   = document.getElementById('uploadError');
+  var lockNotice    = document.getElementById('featureLockNotice');
+  var standingAdv   = document.getElementById('standingAdvisory');
+  var evalsCount    = document.getElementById('evalsUsedCount');
+
+  var selectedFile  = null;
+  var prefireTimer  = null;
+
+  /* ── Drop zone ── */
+  if (dropZone) {
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault(); dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault(); dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+  }
+
+  function handleFile(file) {
+    selectedFile = file;
+    clearError();
+
+    /* Validate */
+    if (!file.type.match(/^image\/(jpeg|png|jpg)$/i)) {
+      showError('Please choose a JPG or PNG file.');
+      selectedFile = null;
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      showError('This file is over 20 MB. Please choose a smaller file.');
+      selectedFile = null;
+      return;
+    }
+
+    /* Preview */
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      previewImg.src = e.target.result;
+      previewBox.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    previewName.textContent = file.name;
+
+    checkSubmitReady();
+    runPreflight(file);
+  }
+
+  /* ── Preflight: genre suggestion via existing /upload/preflight ── */
+  function runPreflight(file) {
+    clearTimeout(prefireTimer);
+    prefireTimer = setTimeout(function() {
+      var fd = new FormData();
+      fd.append('image', file);
+      fetch('/upload/preflight', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.genre_suggestion && data.genre_suggestion.genre) {
+            var sug = data.genre_suggestion;
+            /* Auto-select if user hasn't chosen */
+            if (!genreSel.value) {
+              genreSel.value = sug.genre;
+            }
+            suggestText.textContent = 'The engine suggests: ' + sug.genre +
+              (sug.confidence ? ' (' + sug.confidence + ' confidence)' : '') +
+              '. Adjust below if needed.';
+            suggestBanner.style.display = 'block';
+            checkSubmitReady();
+          }
+        })
+        .catch(function() { /* non-fatal — silently skip */ });
+    }, 400);
+  }
+
+  /* ── Genre / legal enable submit ── */
+  if (genreSel)  genreSel.addEventListener('change', checkSubmitReady);
+  if (legalChk)  legalChk.addEventListener('change', checkSubmitReady);
+
+  function checkSubmitReady() {
+    if (submitBtn) {
+      submitBtn.disabled = !(selectedFile && genreSel && genreSel.value && legalChk && legalChk.checked);
+    }
+  }
+
+  /* ── Submit ── */
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function() {
+      if (!selectedFile || !genreSel.value || !legalChk.checked) return;
+      clearError();
+      doUpload();
+    });
+  }
+
+  function doUpload() {
+    /* UI transition */
+    uploadCard.style.display    = 'none';
+    procState.classList.add('active');
+
+    var fd = new FormData();
+    fd.append('image', selectedFile);
+    fd.append('genre', genreSel.value);
+    fd.append('legal_declaration', '1');
+
+    fetch('/try/upload', {
+      method: 'POST',
+      body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        showUploadError(data.message || 'Something went wrong. Please try again.');
+        return;
+      }
+      pollStatus(data.image_id);
+    })
+    .catch(function(err) {
+      showUploadError('A network error occurred. Please check your connection and try again.');
+    });
+  }
+
+  /* ── Poll /score-status/<id> ── */
+  function pollStatus(imageId) {
+    var maxAttempts = 60; /* 2 min at 2s intervals */
+    var attempt = 0;
+    var timer = setInterval(function() {
+      attempt++;
+      if (attempt > maxAttempts) {
+        clearInterval(timer);
+        showUploadError('Evaluation is taking longer than expected. Please check your gallery in a few minutes.');
+        return;
+      }
+      fetch('/score-status/' + imageId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.status === 'processing') return;
+          clearInterval(timer);
+          if (data.status === 'ok') {
+            fetchResult(imageId);
+          } else if (data.status === 'flagged') {
+            showUploadError(data.message || 'This image has been flagged and cannot be accepted.');
+          } else if (data.status === 'error') {
+            showUploadError(data.message || 'Evaluation failed. Your image has been saved — please retry from your dashboard.');
+          } else if (data.status === 'needs_review') {
+            showUploadError(data.message || 'Your image has been held for review. You will be notified by email.');
+          } else {
+            showUploadError('Unexpected response. Please check your gallery.');
+          }
+        })
+        .catch(function() { /* keep polling on transient network error */ });
+    }, 2000);
+  }
+
+  /* ── Fetch full result from /try/result/<id> ── */
+  function fetchResult(imageId) {
+    fetch('/try/result/' + imageId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        renderResult(data);
+      })
+      .catch(function() {
+        showUploadError('Could not load your result. Please view it in your gallery.');
+      });
+  }
+
+  /* ── Render result ── */
+  function renderResult(d) {
+    procState.classList.remove('active');
+    resultCard.classList.add('active');
+    ctaSection.classList.add('active');
+
+    /* Score + tier */
+    document.getElementById('resultScore').textContent  = d.score ? d.score.toFixed(2) : '—';
+    document.getElementById('resultTier').textContent   = d.tier  || '—';
+    document.getElementById('resultInterest').textContent = d.genre ? ('Interest Area: ' + d.genre) : '';
+
+    /* Percentile — CRITICAL */
+    if (d.percentile && d.percentile.top_pct) {
+      var pct = d.percentile.top_pct;
+      var ph  = document.getElementById('percentileHeadline');
+      var ps  = document.getElementById('percentileSub');
+      var pc  = document.getElementById('percentileContext');
+      ph.textContent = 'Top ' + pct + '% on this platform';
+      ps.textContent = 'Across ' + (d.percentile.total_images || '—') + ' evaluated photographs';
+      pc.textContent = d.percentile.context || '';
+      document.getElementById('percentileBlock').style.display = 'block';
+
+      /* Percentile advisory */
+      var advEl = document.getElementById('percentileAdvisory');
+      var advTxt = document.getElementById('percentileAdvisoryText');
+      var advMsg = 'Your photograph is now in the top ' + pct + '% on this platform. ';
+      if (d.evals_remaining > 0) {
+        advMsg += 'Upload your remaining ' + d.evals_remaining +
+          ' free evaluation' + (d.evals_remaining === 1 ? '' : 's') +
+          ' — the engine builds a clearer picture of your eye with each image.';
+      } else {
+        advMsg += 'Subscribe to keep building your evaluation history. The engine uses your body of work to sharpen its read of your eye and track your progress over time.';
+      }
+      advTxt.innerHTML = '<strong>' + advMsg + '</strong>';
+      advEl.style.display = 'block';
+    }
+
+    /* Dimensions */
+    var dims = d.dimensions || {};
+    setDim('Dod', dims.dod);
+    setDim('Vd',  dims.vd);
+    setDim('Dm',  dims.dm);
+    setDim('Wf',  dims.wf);
+    setDim('Aq',  dims.aq);
+
+    /* Takeaway */
+    if (d.takeaway) {
+      document.getElementById('takeawayText').textContent = d.takeaway;
+    }
+
+    /* Standing advisory */
+    if (standingAdv) {
+      if (evalsCount) evalsCount.textContent = d.evals_used || '—';
+      standingAdv.style.display = 'block';
+    }
+
+    /* Animate bars after paint */
+    setTimeout(function() {
+      var bars = document.querySelectorAll('.dim-bar');
+      bars.forEach(function(b) {
+        b.style.width = b.getAttribute('data-pct') + '%';
+      });
+    }, 100);
+  }
+
+  function setDim(key, val) {
+    var bar = document.getElementById('bar' + key);
+    var lbl = document.getElementById('val' + key);
+    var v   = (val !== null && val !== undefined) ? parseFloat(val) : null;
+    if (bar && v !== null) {
+      bar.setAttribute('data-pct', Math.min(100, (v / 10) * 100).toFixed(1));
+    }
+    if (lbl) lbl.textContent = (v !== null) ? v.toFixed(1) : '—';
+  }
+
+  /* ── Error helpers ── */
+  function showError(msg) {
+    if (uploadError) {
+      uploadError.textContent = msg;
+      uploadError.classList.add('active');
+    }
+  }
+  function clearError() {
+    if (uploadError) {
+      uploadError.textContent = '';
+      uploadError.classList.remove('active');
+    }
+  }
+  function showUploadError(msg) {
+    procState.classList.remove('active');
+    uploadCard.style.display = 'block';
+    showError(msg);
+  }
+
+  /* ── Feature lock notice (for nav links to locked features) ── */
+  window.showFeatureLock = function() {
+    lockNotice.classList.add('show');
+    setTimeout(function() { lockNotice.classList.remove('show'); }, 4000);
+  };
+
+  /* ── FAQ accordion ── */
+  document.querySelectorAll('.faq-q').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var item = btn.closest('.faq-item');
+      var isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+
+})();
+</script>
+{% endblock %}
