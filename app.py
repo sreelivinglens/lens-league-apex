@@ -1,4 +1,4 @@
-# SL-VERSION: 172.1
+# SL-VERSION: 172.2
 
 import os
 import re
@@ -7217,6 +7217,19 @@ def upload():
     if not getattr(current_user, 'interests_complete', False):
         session['post_login_next'] = request.url
         return redirect(url_for('onboarding_interests'))
+
+    # ── SL 172.2: Free user redirect to /try ─────────────────────────────────
+    # Free users (is_subscribed=False, not admin/beta/uat) use /try for Haiku
+    # evaluations. Clicking "Upload" in the nav sends them to /try, not here.
+    # Subscribed users, admin, beta, and uat plans proceed to the full upload.
+    _plan_check = getattr(current_user, 'subscription_plan', None) or ''
+    _is_free_user = (
+        not getattr(current_user, 'is_subscribed', False) and
+        current_user.role != 'admin' and
+        _plan_check not in ('beta', 'uat')
+    )
+    if _is_free_user and request.method == 'GET':
+        return redirect(url_for('try_page'))
 
     # Quota check — runs for GET and POST alike, so a free user who's out of
     # quota gets stopped the moment they click "Upload" anywhere on the site,
@@ -28897,7 +28910,7 @@ def _try_run_haiku(image_id, img_b64, genre):
             img.score     = round(final_score, 2)
             img.tier      = tier
             img.status    = 'scored'
-            img.scored_at = datetime.utcnow()
+            img.scored_at = datetime.now()  # naive UTC — consistent with codebase convention
             import json as _j2
             img._audit_json = _j2.dumps({
                 'source':   'haiku_try',
@@ -29024,6 +29037,97 @@ def try_upload():
         thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         if os.path.exists(raw_path):
             os.remove(raw_path)
+
+        # ── Resolution check — 1500px short side minimum ─────────────────────
+        # Matches the client-side check in upload.html.
+        # Server-side is authoritative — client check can be bypassed.
+        if w and h:
+            short_side = min(w, h)
+            if short_side < 1500:
+                if os.path.exists(thumb_path):
+                    os.remove(thumb_path)
+                return jsonify({
+                    'error':   True,
+                    'message': (
+                        f'This image is {w}×{h}px — the shorter side must be at least 1500px. '
+                        'Please upload the full-resolution original from your camera or phone gallery.'
+                    )
+                }), 422
+
+        # ── Watermark check (Sonnet — same as main /upload route) ────────────
+        # Runs before saving to images table — a watermarked image must never
+        # enter the DB or consume one of the user's 3 free evaluations.
+        _try_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if _try_api_key and os.path.exists(thumb_path):
+            try:
+                import urllib.request as _twmur, json as _twmjson
+                from PIL import Image as _PILWM2
+                import io as _twmio
+
+                _twm_pil = _PILWM2.open(thumb_path).convert('RGB')
+                if max(_twm_pil.size) > 1024:
+                    _twm_pil.thumbnail((1024, 1024))
+                _twm_buf = _twmio.BytesIO()
+                _twm_pil.save(_twm_buf, format='JPEG', quality=80)
+                _twm_b64 = _b64.b64encode(_twm_buf.getvalue()).decode('utf-8')
+
+                _twm_payload = _twmjson.dumps({
+                    'model': 'claude-sonnet-4-6',
+                    'max_tokens': 100,
+                    'messages': [{'role': 'user', 'content': [
+                        {'type': 'image', 'source': {
+                            'type': 'base64', 'media_type': 'image/jpeg', 'data': _twm_b64
+                        }},
+                        {'type': 'text', 'text': (
+                            'Does this photograph contain a photographer-added watermark, text overlay, '
+                            'studio logo, social media handle (@username), copyright text, or any branding '
+                            'embedded into the image by the photographer? '
+                            'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                            'platform watermarks, natural scene text, or phone/camera app overlays '
+                            '(device name, date/time stamps, GPS coordinates, camera model text). '
+                            'ONLY flag if the photographer deliberately added their own branding, studio logo, '
+                            'social handle, or copyright text as a post-processing overlay. '
+                            'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
+                        )}
+                    ]}]
+                }).encode('utf-8')
+
+                _twm_req = _twmur.Request(
+                    'https://api.anthropic.com/v1/messages',
+                    data=_twm_payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'x-api-key': _try_api_key,
+                        'anthropic-version': '2023-06-01',
+                    },
+                    method='POST'
+                )
+                with _twmur.urlopen(_twm_req, timeout=15) as _twmresp:
+                    _twm_result = _twmjson.loads(_twmresp.read().decode())
+
+                _twm_text = (_twm_result.get('content') or [{}])[0].get('text', '{}')
+                _twm_text = _twm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
+                _twm_data = _twmjson.loads(_twm_text)
+
+                if _twm_data.get('watermark_detected'):
+                    if os.path.exists(thumb_path):
+                        os.remove(thumb_path)
+                    app.logger.info(
+                        f'[try_upload] watermark rejected: {_twm_data.get("description")} '
+                        f'uid={current_user.id}'
+                    )
+                    return jsonify({
+                        'error':   True,
+                        'message': (
+                            'Your image contains a watermark, studio logo, or text overlay. '
+                            'Please export the clean original directly from your camera or editing '
+                            'app — without any branding added — and upload that version.'
+                        )
+                    }), 422
+
+            except Exception as _twm_err:
+                # Fail open — watermark check must never block a legitimate upload
+                app.logger.warning(f'[try_upload] watermark check failed (non-fatal): {_twm_err}')
 
         try:
             with _PIL.open(thumb_path) as _tp:
