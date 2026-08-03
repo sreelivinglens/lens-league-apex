@@ -1,3 +1,4 @@
+# SL-VERSION: 169.1 (Session 169, 2026-08-03 — IP block: blocked_ips table + before_request gate + /admin/blocked-ips management route — blocks 12 bot-source IPs identified in S168/S169 bot-review)
 # SL-VERSION: 168.23 (Session 168, 2026-07-31 — image_detail + recent_work: back button returns to Recent Gallery when from=recent)
 # SL-VERSION: 168.22 (Session 168, 2026-07-31 — _get_active_challenge: remove expired-challenge fallback — closed challenges no longer show on dashboard)
 # SL-VERSION: 168.21 (Session 168, 2026-07-31 — city_other flash: remove second sentence — no false promise of immediate upload advisory)
@@ -671,6 +672,49 @@ def block_railway_url():
   </div>
 </body>
 </html>''', 410
+
+@app.before_request
+def block_banned_ip():
+    """S169.1 — Reject requests from IPs in the blocked_ips table.
+    Covers registration, login, and all other routes.
+    Admin routes are included — a banned IP cannot reach the admin panel.
+    Returns 403 with a plain, non-informative page (no detail leaked)."""
+    _req_ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    if not _req_ip:
+        return
+    try:
+        _hit = db.session.execute(
+            db.text("SELECT id FROM blocked_ips WHERE ip_address = :ip"),
+            {'ip': _req_ip}
+        ).fetchone()
+        if _hit:
+            app.logger.warning(f'[ip-block] blocked request from {_req_ip} — {request.path}')
+            return (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                '<title>Access Denied</title>'
+                '<style>'
+                '*{margin:0;padding:0;box-sizing:border-box;}'
+                'body{background:#0D0D0B;color:#F0EFE8;font-family:Inter,Arial,sans-serif;'
+                'display:flex;align-items:center;justify-content:center;min-height:100vh;'
+                'padding:40px 24px;}'
+                '.box{text-align:center;max-width:420px;}'
+                '.title{font-size:17px;letter-spacing:3px;color:#C8A84B;'
+                'font-family:"Courier New",monospace;margin-bottom:20px;text-transform:uppercase;}'
+                '.msg{font-size:16px;color:#aaa;line-height:1.7;}'
+                '</style>'
+                '</head><body>'
+                '<div class="box">'
+                '<div class="title">Access Restricted</div>'
+                '<div class="msg">Your connection cannot access Shutter League at this time.<br>'
+                'If you believe this is an error, please contact support@shutterleague.com</div>'
+                '</div>'
+                '</body></html>'
+            ), 403
+    except Exception as _bip_err:
+        # DB unavailable — fail open so a migration blip never locks out all users
+        app.logger.warning(f'[ip-block] check failed (non-fatal): {_bip_err}')
+
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -2035,6 +2079,23 @@ def _run_startup_tasks():
             except Exception as _utok_err:
                 db.session.rollback()
                 print(f'email_unsubscribe_token backfill warning: {_utok_err}')
+
+            # S169.1 — blocked_ips table for persistent IP ban list
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS blocked_ips ("
+                    "  id         SERIAL PRIMARY KEY,"
+                    "  ip_address VARCHAR(45) NOT NULL UNIQUE,"
+                    "  reason     TEXT,"
+                    "  blocked_by INTEGER REFERENCES users(id) ON DELETE SET NULL,"
+                    "  blocked_at TIMESTAMP DEFAULT NOW()"
+                    ")"
+                ))
+                db.session.commit()
+                print('blocked_ips table OK.')
+            except Exception as _bip_mig:
+                db.session.rollback()
+                print(f'blocked_ips migration warning: {_bip_mig}')
 
             print('Columns migrated OK.')
 
@@ -12339,6 +12400,246 @@ def admin_bot_review():
         '</div></body></html>'
     )
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+# ── IP BLOCK MANAGEMENT — /admin/blocked-ips ─────────────────────────────────
+# S169.1 — View, add, and remove IP addresses from the blocked_ips table.
+# Blocks affect all routes including registration and login.
+@app.route('/admin/blocked-ips', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_blocked_ips():
+    _msg = ''
+    _msg_type = ''
+
+    if request.method == 'POST':
+        _action = request.form.get('action', '').strip()
+
+        # ── Add a single IP ──────────────────────────────────────────────────
+        if _action == 'add':
+            _ip_raw = request.form.get('ip_address', '').strip()
+            _reason = request.form.get('reason', '').strip() or 'Manual block — admin'
+            import re as _re
+            _ipv4_re = re.compile(
+                r'^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$'
+            )
+            if not _ip_raw or not _ipv4_re.match(_ip_raw):
+                _msg = f'Invalid IP address: "{_ip_raw}". Enter a valid IPv4 address (e.g. 152.233.12.241).'
+                _msg_type = 'error'
+            else:
+                try:
+                    db.session.execute(db.text(
+                        "INSERT INTO blocked_ips (ip_address, reason, blocked_by) "
+                        "VALUES (:ip, :reason, :uid) "
+                        "ON CONFLICT (ip_address) DO UPDATE SET reason = EXCLUDED.reason, blocked_at = NOW()"
+                    ), {'ip': _ip_raw, 'reason': _reason, 'uid': current_user.id})
+                    db.session.commit()
+                    app.logger.warning(f'[ip-block] added {_ip_raw} — {_reason} — by {current_user.username}')
+                    _msg = f'IP {_ip_raw} is now blocked.'
+                    _msg_type = 'success'
+                except Exception as _add_err:
+                    db.session.rollback()
+                    _msg = f'Error adding IP: {_add_err}'
+                    _msg_type = 'error'
+
+        # ── Bulk add from bot-review ─────────────────────────────────────────
+        elif _action == 'bulk_add':
+            _bulk_ips = request.form.get('bulk_ips', '').strip()
+            _reason = request.form.get('reason', '').strip() or 'Bulk block — bot-review'
+            _ips = [x.strip() for x in _bulk_ips.replace('\n', ',').split(',') if x.strip()]
+            _added = 0
+            _skipped = []
+            import re as _re2
+            _ipv4_re2 = re.compile(
+                r'^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$'
+            )
+            for _ip in _ips:
+                if not _ipv4_re2.match(_ip):
+                    _skipped.append(_ip)
+                    continue
+                try:
+                    db.session.execute(db.text(
+                        "INSERT INTO blocked_ips (ip_address, reason, blocked_by) "
+                        "VALUES (:ip, :reason, :uid) "
+                        "ON CONFLICT (ip_address) DO NOTHING"
+                    ), {'ip': _ip, 'reason': _reason, 'uid': current_user.id})
+                    _added += 1
+                except Exception:
+                    _skipped.append(_ip)
+            try:
+                db.session.commit()
+                app.logger.warning(f'[ip-block] bulk added {_added} IPs — by {current_user.username}')
+                _msg = f'{_added} IP(s) blocked.'
+                if _skipped:
+                    _msg += f' Skipped (invalid): {", ".join(_skipped)}'
+                _msg_type = 'success'
+            except Exception as _bulk_err:
+                db.session.rollback()
+                _msg = f'Error during bulk add: {_bulk_err}'
+                _msg_type = 'error'
+
+        # ── Remove a single IP ───────────────────────────────────────────────
+        elif _action == 'remove':
+            _ip_id = request.form.get('ip_id', '').strip()
+            _ip_addr = request.form.get('ip_address', '').strip()
+            try:
+                db.session.execute(db.text(
+                    "DELETE FROM blocked_ips WHERE id = :bid"
+                ), {'bid': int(_ip_id)})
+                db.session.commit()
+                app.logger.warning(f'[ip-block] removed {_ip_addr} — by {current_user.username}')
+                _msg = f'IP {_ip_addr} has been unblocked.'
+                _msg_type = 'success'
+            except Exception as _rem_err:
+                db.session.rollback()
+                _msg = f'Error removing IP: {_rem_err}'
+                _msg_type = 'error'
+
+    # ── Fetch current list ───────────────────────────────────────────────────
+    try:
+        _blocked = db.session.execute(db.text(
+            "SELECT id, ip_address, reason, blocked_at "
+            "FROM blocked_ips ORDER BY blocked_at DESC"
+        )).fetchall()
+    except Exception:
+        _blocked = []
+
+    # ── HTML ─────────────────────────────────────────────────────────────────
+    _msg_html = ''
+    if _msg:
+        _bg = '#e8f5e9' if _msg_type == 'success' else '#ffebee'
+        _border = '#4caf50' if _msg_type == 'success' else '#f44336'
+        _color = '#2e7d32' if _msg_type == 'success' else '#c62828'
+        _msg_html = (
+            f'<div style="background:{_bg};border:1px solid {_border};border-radius:8px;'
+            f'padding:14px 18px;margin-bottom:20px;font-size:16px;color:{_color};line-height:1.6;">'
+            f'{_msg}</div>'
+        )
+
+    _rows = ''
+    for _b in _blocked:
+        _when = _b[3].strftime('%-d %B %Y %H:%M') if _b[3] else '—'
+        _rows += (
+            '<tr style="border-bottom:1px solid #E0D8C8;">'
+            '<td style="padding:12px 14px;font-family:monospace;font-size:15px;font-weight:600;">' + (_b[1] or '—') + '</td>'
+            '<td style="padding:12px 14px;font-size:14px;color:#555;line-height:1.6;">' + (_b[2] or '—') + '</td>'
+            '<td style="padding:12px 14px;font-size:14px;color:#888;">' + _when + '</td>'
+            '<td style="padding:12px 14px;">'
+            '<form method="POST" action="/admin/blocked-ips" style="display:inline;" '
+            'onsubmit="return confirm(\'Unblock this IP?\');">'
+            '<input type="hidden" name="action" value="remove">'
+            '<input type="hidden" name="ip_id" value="' + str(_b[0]) + '">'
+            '<input type="hidden" name="ip_address" value="' + (_b[1] or '') + '">'
+            '<button type="submit" style="background:#e53935;color:#fff;border:none;border-radius:5px;'
+            'padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;min-height:36px;">Unblock</button>'
+            '</form>'
+            '</td>'
+            '</tr>'
+        )
+
+    _table = (
+        '<table width="100%" style="border-collapse:collapse;background:#fff;border-radius:8px;'
+        'border:1px solid #E0D8C8;margin-top:20px;">'
+        '<thead><tr style="background:#1A1A18;">'
+        '<th style="padding:12px 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;'
+        'color:#C8A84B;text-align:left;font-family:monospace;">IP Address</th>'
+        '<th style="padding:12px 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;'
+        'color:#C8A84B;text-align:left;font-family:monospace;">Reason</th>'
+        '<th style="padding:12px 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;'
+        'color:#C8A84B;text-align:left;font-family:monospace;">Blocked At (UTC)</th>'
+        '<th style="padding:12px 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;'
+        'color:#C8A84B;text-align:left;font-family:monospace;">Action</th>'
+        '</tr></thead>'
+        '<tbody>' + (_rows if _rows else '<tr><td colspan="4" style="padding:24px;color:#aaa;font-size:15px;text-align:center;">No IPs currently blocked.</td></tr>') + '</tbody>'
+        '</table>'
+    ) if True else ''
+
+    # ── Add single IP form ───────────────────────────────────────────────────
+    _add_form = (
+        '<div style="background:#fff;border:1px solid #E0D8C8;border-radius:8px;padding:24px;margin-bottom:24px;">'
+        '<h2 style="font-size:18px;font-weight:700;color:#1A1A18;margin-bottom:16px;">Block a Single IP</h2>'
+        '<form method="POST" action="/admin/blocked-ips">'
+        '<input type="hidden" name="action" value="add">'
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">'
+        '<div>'
+        '<label style="display:block;font-size:14px;font-weight:600;color:#1A1A18;margin-bottom:6px;">IP Address</label>'
+        '<input type="text" name="ip_address" placeholder="e.g. 152.233.12.241" required '
+        'style="font-size:16px;padding:10px 14px;border:1px solid #ccc;border-radius:6px;'
+        'width:220px;font-family:monospace;min-height:44px;">'
+        '</div>'
+        '<div style="flex:1;min-width:200px;">'
+        '<label style="display:block;font-size:14px;font-weight:600;color:#1A1A18;margin-bottom:6px;">Reason</label>'
+        '<input type="text" name="reason" placeholder="e.g. Bot registration — S169 bot-review" '
+        'style="font-size:16px;padding:10px 14px;border:1px solid #ccc;border-radius:6px;'
+        'width:100%;min-height:44px;">'
+        '</div>'
+        '<button type="submit" style="background:#1A1A18;color:#C8A84B;border:none;border-radius:6px;'
+        'padding:10px 24px;font-size:15px;font-weight:700;cursor:pointer;min-height:44px;'
+        'letter-spacing:1px;white-space:nowrap;">Block IP</button>'
+        '</div>'
+        '</form>'
+        '</div>'
+    )
+
+    # ── Bulk add form ────────────────────────────────────────────────────────
+    _bulk_form = (
+        '<div style="background:#fff;border:1px solid #E0D8C8;border-radius:8px;padding:24px;margin-bottom:24px;">'
+        '<h2 style="font-size:18px;font-weight:700;color:#1A1A18;margin-bottom:8px;">Bulk Block IPs</h2>'
+        '<p style="font-size:15px;color:#555;margin-bottom:16px;line-height:1.6;">'
+        'Paste multiple IPs separated by commas or new lines. Invalid entries are skipped.</p>'
+        '<form method="POST" action="/admin/blocked-ips">'
+        '<input type="hidden" name="action" value="bulk_add">'
+        '<div style="margin-bottom:12px;">'
+        '<label style="display:block;font-size:14px;font-weight:600;color:#1A1A18;margin-bottom:6px;">IP Addresses</label>'
+        '<textarea name="bulk_ips" rows="5" placeholder="152.233.12.241&#10;152.233.13.166&#10;79.127.200.33" '
+        'style="font-size:15px;font-family:monospace;padding:10px 14px;border:1px solid #ccc;'
+        'border-radius:6px;width:100%;resize:vertical;line-height:1.7;"></textarea>'
+        '</div>'
+        '<div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">'
+        '<div style="flex:1;min-width:200px;">'
+        '<label style="display:block;font-size:14px;font-weight:600;color:#1A1A18;margin-bottom:6px;">Reason (applies to all)</label>'
+        '<input type="text" name="reason" placeholder="e.g. Bot registration cluster — S169 bot-review" '
+        'style="font-size:16px;padding:10px 14px;border:1px solid #ccc;border-radius:6px;'
+        'width:100%;min-height:44px;">'
+        '</div>'
+        '<button type="submit" style="background:#C62828;color:#fff;border:none;border-radius:6px;'
+        'padding:10px 24px;font-size:15px;font-weight:700;cursor:pointer;min-height:44px;'
+        'letter-spacing:1px;white-space:nowrap;">Block All Listed</button>'
+        '</div>'
+        '</form>'
+        '</div>'
+    )
+
+    _count_label = f'{len(_blocked)} IP{"s" if len(_blocked) != 1 else ""} currently blocked' if _blocked else 'No IPs currently blocked'
+
+    html = (
+        '<!DOCTYPE html><html lang="en"><head>'
+        '<meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>Blocked IPs — Shutter League Admin</title>'
+        '<style>'
+        'body{font-family:Inter,Arial,sans-serif;background:#F5F0E8;margin:0;padding:24px;}'
+        '@media(max-width:600px){'
+        '  body{padding:16px;}'
+        '  table{font-size:13px;}'
+        '  input[type=text]{width:100%!important;}'
+        '}'
+        '</style>'
+        '</head><body>'
+        '<div style="max-width:1000px;margin:0 auto;">'
+        '<a href="/admin" style="display:inline-block;margin-bottom:20px;padding:10px 18px;'
+        'background:#fff;border:1px solid #E0D8C8;border-radius:6px;font-size:15px;'
+        'color:#1A1A18;text-decoration:none;min-height:44px;line-height:24px;">← Admin Dashboard</a>'
+        '<h1 style="font-size:24px;font-weight:700;color:#1A1A18;margin-bottom:6px;">IP Block List</h1>'
+        '<p style="font-size:15px;color:#888;margin-bottom:24px;line-height:1.6;">'
+        'Blocked IPs cannot register, log in, or access any page on Shutter League. '
+        'The block applies immediately — no deploy needed. ' + _count_label + '.</p>'
+        + _msg_html + _add_form + _bulk_form
+        + '<h2 style="font-size:18px;font-weight:700;color:#1A1A18;margin-bottom:4px;">Currently Blocked</h2>'
+        + _table
+        + '</div></body></html>'
+    )
+    return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
 # ── MIM USERS — /admin/mim-users ────────────────────────────────────────────
