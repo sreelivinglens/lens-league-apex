@@ -1,3 +1,4 @@
+# SL-VERSION: 171.5 (Session 171, 2026-08-03 — MY STANDING fix: highest_tier computed as MAX tier ever achieved on any single image. _build_progress_data() returns highest_tier. dashboard.html: percentile promoted to headline, tier badge from highest_tier not avg_score. Fixes Mahesh Grandmaster display.)
 # SL-VERSION: 171.4 (Session 171, 2026-08-03 — Version bump. auto_score.py: ONE MASTER rule hardened + master repeat detector. No app.py logic change.)
 # SL-VERSION: 171.3 (Session 171, 2026-08-03 — CRITICAL FIX: corrected Sonnet model string from claude-sonnet-4-20250514 (invalid, caused 404) to claude-sonnet-4-6 across all 8 upload-path references. Affected: preflight genre suggestion, watermark detection x2, NSFW check x2, peer eval moderation, admin AI suspicion rescan, plus one pre-existing reference. All calls now routing correctly.)
 # SL-VERSION: 171.2 (Session 171, 2026-08-03 — All upload-path Haiku model calls reverted to Sonnet: preflight genre suggestion, watermark detection x2, NSFW check x2, peer eval comment moderation, admin AI suspicion rescan. Haiku reserved for /try page only. Preflight prompt: fog/mist/haze false-composite rule added — atmospheric conditions are not multiple exposure.)
@@ -5656,6 +5657,21 @@ def _build_progress_data(user):
 
     avg_score = round(sum(img.score for img in scored) / len(scored), 2)
 
+    # ── Highest tier ever achieved (Session 171.5) ─────────────────────────
+    # Tier badge on dashboard must show the highest tier the photographer
+    # ever achieved on any single image — not avg-derived tier.
+    # Mahesh earned Grandmaster on Dawn Break (9.18). That is his tier.
+    _tier_order_rank = ['Rookie','Shooter','Contender','Craftsman','Maverick',
+                        'Master','Grandmaster','Legend']
+    def _tier_rank(t):
+        try: return _tier_order_rank.index(t)
+        except ValueError: return -1
+    _all_tiers = [img.tier for img in scored if img.tier]
+    if _all_tiers:
+        highest_tier = max(_all_tiers, key=_tier_rank)
+    else:
+        highest_tier = get_tier(avg_score)  # fallback if no tier stored
+
     # ── Percentile — within same league ────────────────────────────────────
     overall_pct     = None
     genre_pct       = None
@@ -5730,6 +5746,7 @@ def _build_progress_data(user):
     return {
         'count':          len(scored),
         'avg_tier':       get_tier(avg_score),
+        'highest_tier':   highest_tier,
         'avg_score':      avg_score,
         'dim_avgs':       avgs,
         'dim_labels':     dim_labels,
