@@ -1,3 +1,4 @@
+# SL-VERSION: 170.3 (Session 170, 2026-08-03 — genre suggestion Creative gate: restricted to unambiguous technique signals only — ICM, panning, long exposure, multiple exposure, heavy manipulation visible in pixels. Subject-matter triggers removed entirely. Creative suggestion suppressed at medium/low confidence. Closes statue/mannequin/cultural misfire class permanently.)
 # SL-VERSION: 170.2 (Session 170, 2026-08-03 — cross-genre portfolio awareness; re-edit version counting + loop-break protocol; monochrome variant detection — higher evaluation counts toward standing, lower advised for deletion)
 # SL-VERSION: 170.1 (Session 170, 2026-08-03 — Ashok Kochhar master_references corrected; auto_score.py Platform Mentor prompt hardened)
 # SL-VERSION: 169.1 (Session 169, 2026-08-03 — IP block: blocked_ips table + before_request gate + /admin/blocked-ips management route — blocks 12 bot-source IPs identified in S168/S169 bot-review)
@@ -7101,11 +7102,34 @@ def upload_preflight():
                 "Look at this photograph and identify which single genre best describes it.\n\n"
                 "Choose ONLY from: Creative, Documentary, Drone, Fashion, Landscape, "
                 "Macro, Nature, People, Street, Wedding, Wildlife\n\n"
-                "Creative means: abstract, ICM, panning, zoom burst, star trails, light painting, "
-                "minimalist, fine art — images where blur or abstraction IS the point.\n\n"
+                "CRITICAL RULE FOR CREATIVE — only suggest Creative when you can see ONE OF "
+                "THESE SPECIFIC TECHNIQUES DIRECTLY IN THE PIXELS:\n"
+                "- ICM (intentional camera movement): the entire frame has consistent "
+                "directional motion blur — not just one blurred subject, but the whole image "
+                "is streaked in one direction from camera movement during exposure\n"
+                "- Panning blur: the primary subject is sharp while the background has "
+                "strong horizontal streak blur from the camera tracking a moving subject\n"
+                "- Long exposure: light trails from vehicles, silky smooth water, star trails "
+                "across sky, painted light streaks — exposure time is visibly long\n"
+                "- Multiple exposure: two or more distinct scenes are visibly layered or "
+                "blended into a single composite frame\n"
+                "- Heavy post-processing manipulation that transforms the image beyond normal "
+                "capture: painterly HDR halos, extreme surreal colour grading, impossible "
+                "composites — visible in the pixels, not inferred from subject matter\n\n"
+                "DO NOT suggest Creative based on:\n"
+                "- Subject matter (statues, painted figures, mannequins, costumed people, "
+                "colourful scenes, blue-painted figures, religious imagery, festival scenes)\n"
+                "- Compositional choices (interesting framing, juxtaposition, unusual angle)\n"
+                "- Cultural visual vocabulary (deity colours, festival staging, street art, "
+                "performers, ceremonial dress, religious processions in any country)\n"
+                "- Anything that requires guessing the photographer's intent\n"
+                "A man sleeping next to a blue deity statue in a truck = Street or Documentary.\n"
+                "A mannequin in a Paris shop window = Street.\n"
+                "Festival performers in Japan = Street or Documentary.\n"
+                "Only the technique in the pixels makes it Creative — not the subject.\n\n"
                 "Return ONLY valid JSON, nothing else:\n"
                 "{\"genre\": \"<name>\", \"confidence\": \"high|medium|low\", "
-                "\"reason\": \"<one short phrase>\"}"
+                "\"reason\": \"<one short phrase — name the specific technique if Creative>\"}"
             )
 
             _payload = _json.dumps({
@@ -7150,30 +7174,37 @@ def upload_preflight():
                 'Macro', 'Nature', 'People', 'Street', 'Wedding', 'Wildlife'
             }
             if _genre in VALID:
-                if _genre == 'Creative':
-                    _msg = (
-                        f'This looks like Creative photography ({_reason}). '
-                        'Is that right?\n\n'
-                        'Creative allows blur, ICM, and abstraction — intentional technique '
-                        'is celebrated here. All other genres reduce weightage for anything '
-                        'not sharp or not specific to that genre.'
+                # Creative suggestion only fires on HIGH confidence — medium/low suppressed.
+                # Technique-based Creative detection (ICM, panning, long exposure, multiple
+                # exposure) is either clearly visible or it isn't. A medium-confidence
+                # Creative call means the engine isn't sure — default to photographer's
+                # own genre selection in that case. All other genres show at any confidence.
+                _suppress_creative = (_genre == 'Creative' and _conf != 'high')
+                if not _suppress_creative:
+                    if _genre == 'Creative':
+                        _msg = (
+                            f'This looks like Creative photography ({_reason}). '
+                            'Is that right?\n\n'
+                            'Creative allows blur, ICM, and abstraction — intentional technique '
+                            'is celebrated here. All other genres reduce weightage for anything '
+                            'not sharp or not specific to that genre.'
+                        )
+                    else:
+                        _msg = (
+                            f'This looks like {_genre} photography. Is that right?\n\n'
+                            'Choosing the right interest area matters — the engine adjusts its '
+                            'standards for each genre. Creative allows blur and abstraction; '
+                            'all other genres expect images sharp and specific to their subject.'
+                        )
+                    result['genre_suggestion'] = {
+                        'genre':      _genre,
+                        'confidence': _conf,
+                        'message':    _msg,
+                    }
+                    app.logger.info(
+                        f'[preflight] genre: user={current_user.id} '
+                        f'detected={_genre} confidence={_conf}'
                     )
-                else:
-                    _msg = (
-                        f'This looks like {_genre} photography. Is that right?\n\n'
-                        'Choosing the right interest area matters — the engine adjusts its '
-                        'standards for each genre. Creative allows blur and abstraction; '
-                        'all other genres expect images sharp and specific to their subject.'
-                    )
-                result['genre_suggestion'] = {
-                    'genre':      _genre,
-                    'confidence': _conf,
-                    'message':    _msg,
-                }
-                app.logger.info(
-                    f'[preflight] genre: user={current_user.id} '
-                    f'detected={_genre} confidence={_conf}'
-                )
     except Exception as _genre_err:
         app.logger.warning(f'[preflight] genre suggestion failed (non-fatal): {_genre_err}')
 
