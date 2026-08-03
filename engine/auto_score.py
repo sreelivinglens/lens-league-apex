@@ -1,4 +1,5 @@
 """
+# SL-VERSION: 170.3 (Session 170, 2026-08-03 — creative_fineart evidentiary bar: explicit statue/idol/religious imagery rule added — blue deity statues and religious figures in street/transport context are NOT staged; only classify Creative when human subject themselves is art-directed)
 # SL-VERSION: 111.3 (Session 111 — catchlight global ban: suppressed across ALL cards when eye
 #   not clearly visible (was leaking into Card 2 prose); previously 111.2 — delta scoring params)
 #   to auto_score(); delta context injected into scoring prompt for near-match resubmissions;
@@ -2993,6 +2994,16 @@ CREATIVE sub-genres:
     directed or candid, default to describing it as observed/candid — do not assert
     authorial intent (posing, direction, construction) that cannot be verified from the
     image.
+    STATUES, IDOLS, AND RELIGIOUS IMAGERY — CRITICAL RULE: The presence of painted
+    statues, religious idols, temple figurines, or deity sculptures in a frame does NOT
+    indicate Creative or staged photography. A human subject alongside a statue, idol,
+    or religious figure in a vehicle, truck, market, temple, street, or public space is
+    Street or Documentary — the scene was found, not built. The blue colour of a deity
+    statue (Shiva, Krishna, Rama) is religious iconography, NOT evidence of art-directed
+    body paint or deliberate staging by the photographer. Only classify as creative_fineart
+    when the HUMAN SUBJECT THEMSELVES is painted, costumed, or positioned by the
+    photographer as part of an explicitly art-directed concept — not when statues or
+    religious objects happen to share the frame with a candid human moment.
     TECHNICAL EXPOSURE VS. SUBJECT DIRECTION — these are NOT the same evidence. A
     photographer choosing to expose for the brightest or key subject (letting the rest
     of the frame fall into shadow, silhouette, or near-black) is a deliberate
