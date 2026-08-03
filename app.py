@@ -1,3 +1,5 @@
+# SL-VERSION: 171.2 (Session 171, 2026-08-03 — All upload-path Haiku model calls reverted to Sonnet: preflight genre suggestion, watermark detection x2, NSFW check x2, peer eval comment moderation, admin AI suspicion rescan. Haiku reserved for /try page only. Preflight prompt: fog/mist/haze false-composite rule added — atmospheric conditions are not multiple exposure.)
+# SL-VERSION: 171.1 (Session 171, 2026-08-03 — SCORE label changed to EVALUATION in image_detail.html scorecard header band. KYC language ban compliance. sl_audit.py updated with scorecard header band check.)
 # SL-VERSION: 170.3 (Session 170, 2026-08-03 — genre suggestion Creative gate: restricted to unambiguous technique signals only — ICM, panning, long exposure, multiple exposure, heavy manipulation visible in pixels. Subject-matter triggers removed entirely. Creative suggestion suppressed at medium/low confidence. Closes statue/mannequin/cultural misfire class permanently.)
 # SL-VERSION: 170.2 (Session 170, 2026-08-03 — cross-genre portfolio awareness; re-edit version counting + loop-break protocol; monochrome variant detection — higher evaluation counts toward standing, lower advised for deletion)
 # SL-VERSION: 170.1 (Session 170, 2026-08-03 — Ashok Kochhar master_references corrected; auto_score.py Platform Mentor prompt hardened)
@@ -7084,7 +7086,7 @@ def upload_preflight():
     except Exception as _sim_err:
         app.logger.warning(f'[preflight] similarity check failed (non-fatal): {_sim_err}')
 
-    # ── 2. Haiku genre suggestion ─────────────────────────────────────────────
+    # ── 2. Genre suggestion (Sonnet — Session 171.2: reverted from Haiku) ──────
     try:
         import urllib.request as _ur, json as _json
 
@@ -7123,9 +7125,17 @@ def upload_preflight():
                 "- Cultural visual vocabulary (deity colours, festival staging, street art, "
                 "performers, ceremonial dress, religious processions in any country)\n"
                 "- Anything that requires guessing the photographer's intent\n"
+                "- Atmospheric conditions: fog, mist, haze, smoke, rain, dust are natural "
+                "conditions, not creative techniques. They do not make an image a multiple "
+                "exposure or composite.\n"
+                "- Subjects at different vertical or spatial positions in a single frame.\n"
                 "A man sleeping next to a blue deity statue in a truck = Street or Documentary.\n"
                 "A mannequin in a Paris shop window = Street.\n"
                 "Festival performers in Japan = Street or Documentary.\n"
+                "A sadhu at a shrine with a figure on the rooftop above in morning fog = "
+                "Street or Documentary — single frame, natural atmosphere, NOT multiple exposure.\n"
+                "Multiple exposure REQUIRES visible ghosting or transparency blending of two "
+                "distinct scenes — spatial depth with fog is not that.\n"
                 "Only the technique in the pixels makes it Creative — not the subject.\n\n"
                 "Return ONLY valid JSON, nothing else:\n"
                 "{\"genre\": \"<name>\", \"confidence\": \"high|medium|low\", "
@@ -7133,7 +7143,7 @@ def upload_preflight():
             )
 
             _payload = _json.dumps({
-                'model': 'claude-haiku-4-5-20251001',
+                'model': 'claude-sonnet-4-20250514',
                 'max_tokens': 80,
                 'messages': [{'role': 'user', 'content': [
                     {'type': 'image', 'source': {
@@ -7431,7 +7441,7 @@ def upload():
 
         # ── Watermark / logo detection (v62) ──────────────────────────────────
         # Runs synchronously before DB save or R2 upload — immediate rejection.
-        # Uses Haiku for speed and cost. Fails open (upload proceeds) if API is
+        # Uses Sonnet. Fails open (upload proceeds) if API is
         # unavailable so a network blip never blocks legitimate uploads.
         try:
             _wm_api_key = os.getenv('ANTHROPIC_API_KEY', '')
@@ -7449,7 +7459,7 @@ def upload():
                 _wm_b64 = _b64.b64encode(_wm_buf.getvalue()).decode('utf-8')
 
                 _wm_payload = _wmjson.dumps({
-                    'model': 'claude-haiku-4-5-20251001',
+                    'model': 'claude-sonnet-4-20250514',
                     'max_tokens': 100,
                     'messages': [{
                         'role': 'user',
@@ -7560,7 +7570,7 @@ def upload():
                 )
 
                 _nsfw_payload = _nsfw_json.dumps({
-                    'model': 'claude-haiku-4-5-20251001',
+                    'model': 'claude-sonnet-4-20250514',
                     'max_tokens': 80,
                     'messages': [{
                         'role': 'user',
@@ -15584,7 +15594,7 @@ Even if the image looks beautiful and photographic, flag AI tells honestly."""
                     'content-type': 'application/json'
                 },
                 json={
-                    'model': os.getenv('APEX_MODEL', 'claude-haiku-4-5-20251001'),
+                    'model': os.getenv('APEX_MODEL', 'claude-sonnet-4-20250514'),
                     'max_tokens': 200,
                     'temperature': 0.2,
                     'system': DETECTION_SYSTEM,
@@ -20196,7 +20206,7 @@ def bulk_upload_one():
                 _bwm_buf = _bwm_io.BytesIO()
                 _bwm_pil.save(_bwm_buf, format='JPEG', quality=80)
                 _bwm_payload = _bwm_json.dumps({
-                    'model': 'claude-haiku-4-5-20251001', 'max_tokens': 100,
+                    'model': 'claude-sonnet-4-20250514', 'max_tokens': 100,
                     'messages': [{'role': 'user', 'content': [
                         {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
                             'data': _bwm_b64.b64encode(_bwm_buf.getvalue()).decode('utf-8')}},
@@ -20244,7 +20254,7 @@ def bulk_upload_one():
                 _bnsfw_buf = _bnsfw_io.BytesIO()
                 _bnsfw_pil.save(_bnsfw_buf, format='JPEG', quality=80)
                 _bnsfw_payload = _bnsfw_json.dumps({
-                    'model': 'claude-haiku-4-5-20251001', 'max_tokens': 80,
+                    'model': 'claude-sonnet-4-20250514', 'max_tokens': 80,
                     'messages': [{'role': 'user', 'content': [
                         {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
                             'data': _bnsfw_b64.b64encode(_bnsfw_buf.getvalue()).decode('utf-8')}},
@@ -20517,7 +20527,7 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
         from auto_score import MODEL_HAIKU
         _mod_model = MODEL_HAIKU
     except ImportError:
-        _mod_model = 'claude-haiku-4-5-20251001'
+        _mod_model = 'claude-sonnet-4-20250514'
 
     # Use whichever field has content (called with one empty, one populated)
     _text = (improvement or what_struck or '').strip()
