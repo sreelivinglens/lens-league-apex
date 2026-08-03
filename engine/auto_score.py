@@ -1,3 +1,4 @@
+# SL-VERSION: 171.3 (Session 171, 2026-08-03 — Version bump. app.py model string fix: claude-sonnet-4-20250514 → claude-sonnet-4-6. No engine logic change.)
 # SL-VERSION: 171.2 (Session 171, 2026-08-03 — Version bump only. All Haiku model calls in app.py reverted to Sonnet. No engine logic change.)
 # SL-VERSION: 171.1 (Session 171, 2026-08-03 — Version bump: SCORE→EVALUATION fix in image_detail.html scorecard header band. sl_audit.py updated with scorecard header band check. No engine logic change.)
 # SL-VERSION: 171.1 (Session 171, 2026-08-03 — Version bump: SCORE→EVALUATION fix in image_detail.html scorecard header band. sl_audit.py updated with scorecard header band check. No engine logic change.)
