@@ -1,3 +1,4 @@
+# SL-VERSION: 171.6 (Session 171, 2026-08-03 — /health route: removed DB SELECT 1 check — was blocking during migration window causing Railway healthcheck failures at 4:34. Route now returns 200 immediately on process start. MY STANDING fix from 171.5 also included.)
 # SL-VERSION: 171.5 (Session 171, 2026-08-03 — MY STANDING fix: highest_tier computed as MAX tier ever achieved on any single image. _build_progress_data() returns highest_tier. dashboard.html: percentile promoted to headline, tier badge from highest_tier not avg_score. Fixes Mahesh Grandmaster display.)
 # SL-VERSION: 171.4 (Session 171, 2026-08-03 — Version bump. auto_score.py: ONE MASTER rule hardened + master repeat detector. No app.py logic change.)
 # SL-VERSION: 171.3 (Session 171, 2026-08-03 — CRITICAL FIX: corrected Sonnet model string from claude-sonnet-4-20250514 (invalid, caused 404) to claude-sonnet-4-6 across all 8 upload-path references. Affected: preflight genre suggestion, watermark detection x2, NSFW check x2, peer eval moderation, admin AI suspicion rescan, plus one pre-existing reference. All calls now routing correctly.)
@@ -22164,15 +22165,14 @@ def server_error(e):
 @app.route('/health')
 def health():
     """
-    Health check — Railway, Cloudflare, Razorpay.
-    Returns 503 if DB unavailable. Session 152.
+    Health check — Railway deploy healthcheck.
+    Returns 200 immediately — process-level only, no DB check.
+    DB check removed Session 171.5: DB SELECT 1 was blocking during
+    migration window and causing Railway healthcheck timeouts (4:34).
+    Railway just needs to know the process is up — DB availability
+    is handled by the app itself on first request.
     """
-    try:
-        db.session.execute(db.text('SELECT 1'))
-        return jsonify({'status': 'ok', 'app': 'Shutter League', 'db': 'ok'}), 200
-    except Exception as _he:
-        app.logger.error(f'[health] DB check failed: {_he}')
-        return jsonify({'status': 'degraded', 'app': 'Shutter League', 'db': 'unavailable'}), 503
+    return jsonify({'status': 'ok', 'app': 'Shutter League'}), 200
 
 
 # ===========================================================================
