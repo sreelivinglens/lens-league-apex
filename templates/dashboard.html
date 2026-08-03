@@ -881,8 +881,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div class="rp-label" style="margin-bottom:0;">My Standing</div>
         <span style="font-size:13px;color:var(--d-muted);">▲ full view</span>
       </div>
-      {# Tier — the proud moment #}
-      <div style="font-size:28px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:4px;">{{ progress_data.avg_tier }}</div>
+      {# Percentile — primary metric (Session 171.5: percentile is standing, tier is highest ever) #}
+      {% if progress_data.overall_pct %}
+      <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:2px;">Your Standing</div>
+      <div style="font-size:32px;font-weight:800;color:var(--d-green);line-height:1;margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
+      {% endif %}
+      {# Tier badge — highest ever achieved, not avg-derived #}
+      <div style="display:inline-block;background:var(--d-dark);color:#F5C518;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:6px;">{{ progress_data.highest_tier or progress_data.avg_tier }}</div>
       {# S168 — trend line: last 3 scores from progress_data.trend #}
       {% if progress_data.trend and progress_data.trend|length >= 2 %}
       {% set _tscores = progress_data.trend[-3:] %}
@@ -910,7 +915,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <span style="background:#F5F0E8;color:#4A4840;padding:2px 8px;border-radius:4px;border:0.5px solid #E8E4DA;">📷 Camera League</span>
       </div>
       {%- endif %}
-      {% if progress_data.overall_pct %}<div class="standing-pct">Top {{ progress_data.overall_pct }}% this month</div>{% endif %}
+      {# overall_pct now shown as headline above — removed from here (Session 171.5) #}
       <div class="standing-bar"><div class="standing-fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div></div>
     </div>
     {% endif %}
@@ -1423,7 +1428,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
       </div>
       <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--d-muted);margin-bottom:16px;">
         <span>{{ progress_data.prev_tier or '' }}</span>
-        <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.avg_tier }}</span>
+        <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.highest_tier or progress_data.avg_tier }}</span>
         <span>→ {{ progress_data.next_tier or '' }}</span>
       </div>
     </div>
