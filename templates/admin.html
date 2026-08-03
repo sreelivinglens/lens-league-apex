@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S168-r1 admin — Fresh from SL nav button added 2026-07-30 #}
+{# SL:version S169-r1 admin — Blocked IPs nav button + dashboard card added 2026-08-03 #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -297,6 +297,7 @@
     <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
     <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
     <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
+    <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
     <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
   </div>
 
@@ -390,6 +391,13 @@
         <a href="/admin/bot-review" style="display:inline-block;padding:8px 16px;background:#C62828;color:#fff;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;">Review &amp; Delete →</a>
       </div>
       {% endif %}
+      <div style="background:#f3e5f5;border:1px solid #9C27B0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;">
+          🚫 IP Block List
+        </div>
+        <div style="font-size:14px;color:#555;margin-bottom:10px;line-height:1.6;">Block bot-source IPs from registering or accessing the site. Takes effect immediately — no deploy needed.</div>
+        <a href="/admin/blocked-ips" style="display:inline-block;padding:10px 18px;background:#7B1FA2;color:#fff;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none;min-height:44px;line-height:24px;">Manage Blocked IPs →</a>
+      </div>
       {% if error_images or stuck_images %}
       <div style="margin-bottom:24px; border:1px solid #c0392b; border-radius:6px; overflow:hidden;">
         <div style="background:#fdf2f2; padding:10px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #c0392b;">
