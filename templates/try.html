@@ -1,4 +1,4 @@
-{# SL-VERSION: 172.1 #}
+{# SL-VERSION: 172.2 #}
 {% extends "base.html" %}
 {% block title %}Try a Free Evaluation — Shutter League{% endblock %}
 
@@ -867,13 +867,14 @@
     border: 1px solid #FFCDD2;
     border-left: 4px solid var(--sl-red);
     border-radius: var(--radius-sm);
-    padding: 14px 16px;
+    padding: 16px 18px;
     font-size: 16px;
     color: #7A0000;
-    line-height: 1.5;
-    margin-top: 12px;
+    line-height: 1.6;
+    margin-top: 16px;
   }
   .try-error.active { display: block; }
+  .try-error strong { display: block; font-size: 17px; margin-bottom: 6px; }
 
   /* ── MOBILE / IPAD RESPONSIVENESS ── */
   @media (max-width: 600px) {
@@ -1533,7 +1534,7 @@
   /* ── Error helpers ── */
   function showError(msg) {
     if (uploadError) {
-      uploadError.textContent = msg;
+      uploadError.innerHTML = '<strong>Upload not accepted</strong><br>' + msg;
       uploadError.classList.add('active');
     }
   }
@@ -1545,8 +1546,12 @@
   }
   function showUploadError(msg) {
     procState.classList.remove('active');
-    uploadCard.style.display = 'block';
+    if (uploadCard) uploadCard.style.display = 'block';
     showError(msg);
+    /* Scroll error into view so user sees it immediately */
+    if (uploadError) {
+      uploadError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   /* ── Feature lock notice (for nav links to locked features) ── */
