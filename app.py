@@ -1,3 +1,4 @@
+# SL-VERSION: 171.3 (Session 171, 2026-08-03 — CRITICAL FIX: corrected Sonnet model string from claude-sonnet-4-20250514 (invalid, caused 404) to claude-sonnet-4-6 across all 8 upload-path references. Affected: preflight genre suggestion, watermark detection x2, NSFW check x2, peer eval moderation, admin AI suspicion rescan, plus one pre-existing reference. All calls now routing correctly.)
 # SL-VERSION: 171.2 (Session 171, 2026-08-03 — All upload-path Haiku model calls reverted to Sonnet: preflight genre suggestion, watermark detection x2, NSFW check x2, peer eval comment moderation, admin AI suspicion rescan. Haiku reserved for /try page only. Preflight prompt: fog/mist/haze false-composite rule added — atmospheric conditions are not multiple exposure.)
 # SL-VERSION: 171.1 (Session 171, 2026-08-03 — SCORE label changed to EVALUATION in image_detail.html scorecard header band. KYC language ban compliance. sl_audit.py updated with scorecard header band check.)
 # SL-VERSION: 170.3 (Session 170, 2026-08-03 — genre suggestion Creative gate: restricted to unambiguous technique signals only — ICM, panning, long exposure, multiple exposure, heavy manipulation visible in pixels. Subject-matter triggers removed entirely. Creative suggestion suppressed at medium/low confidence. Closes statue/mannequin/cultural misfire class permanently.)
@@ -7143,7 +7144,7 @@ def upload_preflight():
             )
 
             _payload = _json.dumps({
-                'model': 'claude-sonnet-4-20250514',
+                'model': 'claude-sonnet-4-6',
                 'max_tokens': 80,
                 'messages': [{'role': 'user', 'content': [
                     {'type': 'image', 'source': {
@@ -7459,7 +7460,7 @@ def upload():
                 _wm_b64 = _b64.b64encode(_wm_buf.getvalue()).decode('utf-8')
 
                 _wm_payload = _wmjson.dumps({
-                    'model': 'claude-sonnet-4-20250514',
+                    'model': 'claude-sonnet-4-6',
                     'max_tokens': 100,
                     'messages': [{
                         'role': 'user',
@@ -7570,7 +7571,7 @@ def upload():
                 )
 
                 _nsfw_payload = _nsfw_json.dumps({
-                    'model': 'claude-sonnet-4-20250514',
+                    'model': 'claude-sonnet-4-6',
                     'max_tokens': 80,
                     'messages': [{
                         'role': 'user',
@@ -15594,7 +15595,7 @@ Even if the image looks beautiful and photographic, flag AI tells honestly."""
                     'content-type': 'application/json'
                 },
                 json={
-                    'model': os.getenv('APEX_MODEL', 'claude-sonnet-4-20250514'),
+                    'model': os.getenv('APEX_MODEL', 'claude-sonnet-4-6'),
                     'max_tokens': 200,
                     'temperature': 0.2,
                     'system': DETECTION_SYSTEM,
@@ -20206,7 +20207,7 @@ def bulk_upload_one():
                 _bwm_buf = _bwm_io.BytesIO()
                 _bwm_pil.save(_bwm_buf, format='JPEG', quality=80)
                 _bwm_payload = _bwm_json.dumps({
-                    'model': 'claude-sonnet-4-20250514', 'max_tokens': 100,
+                    'model': 'claude-sonnet-4-6', 'max_tokens': 100,
                     'messages': [{'role': 'user', 'content': [
                         {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
                             'data': _bwm_b64.b64encode(_bwm_buf.getvalue()).decode('utf-8')}},
@@ -20254,7 +20255,7 @@ def bulk_upload_one():
                 _bnsfw_buf = _bnsfw_io.BytesIO()
                 _bnsfw_pil.save(_bnsfw_buf, format='JPEG', quality=80)
                 _bnsfw_payload = _bnsfw_json.dumps({
-                    'model': 'claude-sonnet-4-20250514', 'max_tokens': 80,
+                    'model': 'claude-sonnet-4-6', 'max_tokens': 80,
                     'messages': [{'role': 'user', 'content': [
                         {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
                             'data': _bnsfw_b64.b64encode(_bnsfw_buf.getvalue()).decode('utf-8')}},
@@ -20527,7 +20528,7 @@ def _moderate_eval_text(what_struck: str, improvement: str) -> dict:
         from auto_score import MODEL_HAIKU
         _mod_model = MODEL_HAIKU
     except ImportError:
-        _mod_model = 'claude-sonnet-4-20250514'
+        _mod_model = 'claude-sonnet-4-6'
 
     # Use whichever field has content (called with one empty, one populated)
     _text = (improvement or what_struck or '').strip()
@@ -25175,7 +25176,7 @@ def _run_raw_analysis(submission, img):
                 ) if diff_b64 else ''
 
                 _vision_payload = {
-                    'model': 'claude-sonnet-4-20250514',
+                    'model': 'claude-sonnet-4-6',
                     'max_tokens': 500,
                     'messages': [{
                         'role': 'user',
