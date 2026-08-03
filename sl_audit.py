@@ -117,7 +117,9 @@ KYC_TERMS = [
       'photography scored', 'get your photography',
       # Audit script internal references
       'apex ddi', 'DDI Engine', 'Gold text colour check skipped',
-      'coaching overlay', 'gallery scores', 'confirmed false positive']),
+      'coaching overlay', 'gallery scores', 'confirmed false positive',
+      # Admin-only table headers (admin pages exempt from KYC — Session 171.1)
+      'rank</th>', 'photographer</th>', 'ai susp', 'sl score', 'mim ddi']),
     ('No KYC: rank in user copy (use "standing")',
      ' rank',
      # Internal/template/CSS uses
@@ -1750,6 +1752,54 @@ def audit_apppy(filepath):
         else:
             _fail(f'Sherpa field coverage — uncovered fields: {", ".join(_uncovered)}')
             fails += 1
+
+    # ── Scorecard header band — SCORE label check (Session 171.1) ────────────
+    # The word "SCORE" must never appear as a user-facing label. The scorecard
+    # header band in image_detail.html showed "SCORE 8.42" live — caught in
+    # Session 171 PDF review. This check scans app.py for any HTML string
+    # literal containing ">SCORE<" or "SCORE" as a visible label (not a Python
+    # variable, CSS class, or admin-only table header).
+    # Root cause: sl_audit.py was only scanning app.py source (Python vars),
+    # not the rendered HTML label strings inside Jinja templates.
+    # Fix: image_detail.html must also be passed to sl_audit.py on every delivery.
+    _section('Scorecard header band — SCORE label check (KYC · Session 171.1)')
+    # Patterns that indicate user-facing SCORE label in rendered HTML output.
+    # Deliberately narrow: only catches ">SCORE<" as an actual HTML text node
+    # (the pattern visible in the scorecard header band: <span>SCORE</span>).
+    # Python dict keys ('score': ...), JSON fields ("score": ...), CSS class
+    # names, and variable references are NOT caught here — those are covered
+    # by the KYC_TERMS sweep above with appropriate exclusions.
+    # Session 171.1: root cause was ">SCORE<" as a static text node in
+    # image_detail.html. This check catches that class of label only.
+    _score_label_patterns = [
+        r'>\s*SCORE\s*<',                    # HTML text node: >SCORE<, > SCORE <
+        r'letter-spacing[^"\']{0,200}SCORE[^"\']{0,10}(?:</|\\n)',  # styled label ending tag
+    ]
+    _score_label_hits = []
+    for _pat in _score_label_patterns:
+        for _m in re.finditer(_pat, src):
+            _ln = src[:_m.start()].count('\n') + 1
+            _ctx = src[max(0,_m.start()-40):_m.end()+40].replace('\n', ' ').strip()
+            # Exclude admin-only table headers (admin pages exempt from KYC).
+            # These SCORE labels appear in admin challenge release and standings
+            # tables — never user-facing. Identified by adjacent RANK/IMAGE/
+            # PHOTOGRAPHER headers or the admin #8a8070 muted style.
+            _admin_excl = ['rank</th>', 'photographer</th>', 'ai susp',
+                           'sl score', 'mim ddi', '>rank<', '>image<',
+                           '>photographer<', 'color:#8a8070',
+                           'rankings are set', 'integrity hold',
+                           'auto-releases available']
+            if any(x.lower() in _ctx.lower() for x in _admin_excl):
+                continue
+            _score_label_hits.append(f'line {_ln}: {_ctx[:80]}')
+    if _score_label_hits:
+        for _h in _score_label_hits:
+            _fail(f'User-facing SCORE label in HTML string — must be EVALUATION: {_h}')
+            fails += 1
+    else:
+        _ok('No user-facing SCORE label found in app.py HTML strings')
+    # Mandatory reminder: image_detail.html must be audited separately
+    _note('MANDATORY: also run sl_audit.py image_detail.html on every deploy — scorecard header band is in that template, not in app.py')
 
     # ── Reminders ─────────────────────────────────────────────────────────────
     _section('Manual reminders')
