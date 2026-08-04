@@ -568,6 +568,9 @@ def audit_html(filepath):
         'referral_landing', 'redeem.html',
         'mission_detail.html', 'first_login.html',
         'try.html',
+        'recent_work.html',
+        'my_gallery.html',
+        'leaderboard.html',
     ])
     # index.html: gold text on dark photo bg (coaching overlay) and
     # meta http-equiv tags triggering iOS form-input check are both
