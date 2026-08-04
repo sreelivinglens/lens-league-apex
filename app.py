@@ -1203,6 +1203,11 @@ def _run_startup_tasks():
                     "CREATE INDEX IF NOT EXISTS ix_upload_history_log_user ON upload_history_log(user_id)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS share_token VARCHAR(64)",
                     "CREATE UNIQUE INDEX IF NOT EXISTS ix_images_share_token ON images(share_token) WHERE share_token IS NOT NULL",
+                    # SL 172.3: Gallery performance indexes — prevent full table scans
+                    "CREATE INDEX IF NOT EXISTS ix_images_user_id ON images(user_id)",
+                    "CREATE INDEX IF NOT EXISTS ix_images_user_status ON images(user_id, status)",
+                    "CREATE INDEX IF NOT EXISTS ix_images_public_scored ON images(is_public, status, created_at DESC) WHERE is_public = TRUE AND status = 'scored'",
+                    "CREATE INDEX IF NOT EXISTS ix_images_created_at ON images(created_at DESC)",
                     # v-Session116 — structured peer eval (checkbox system)
                     # stood_out_tags / improve_tags: JSON array of tag strings e.g. '["Light quality","Composition"]'
                     # optional_comment: free-text, email-only, never shown on scorecard
@@ -5372,26 +5377,35 @@ def my_gallery():
 
     images = images_q.paginate(page=page, per_page=24, error_out=False)
 
-    total = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False).count()
-    scored = Image.query.filter_by(user_id=current_user.id, status='scored', is_admin_curation=False).count()
-    best = db.session.query(db.func.max(Image.score)).filter(
-        Image.user_id == current_user.id, Image.score != None, Image.is_admin_curation == False
-    ).scalar() or 0
-    avg = db.session.query(db.func.avg(Image.score)).filter(
-        Image.user_id == current_user.id, Image.score != None, Image.is_admin_curation == False
-    ).scalar() or 0
+    # SL 172.3: Single SQL replaces 5 separate queries — reduces gallery load time
+    _stat_row = db.session.execute(db.text("""
+        SELECT
+            COUNT(*)                                             AS total,
+            COUNT(*) FILTER (WHERE status = 'scored')           AS scored,
+            COALESCE(MAX(score), 0)                             AS best,
+            COALESCE(AVG(score) FILTER (WHERE score IS NOT NULL), 0) AS avg
+        FROM images
+        WHERE user_id = :uid AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+    """), {'uid': current_user.id}).fetchone()
 
-    # Distinct genres for filter dropdown
-    genre_rows = db.session.query(Image.genre).filter(
-        Image.user_id == current_user.id,
-        Image.genre != None,
-        Image.is_admin_curation == False
-    ).distinct().all()
-    genres = sorted([r[0] for r in genre_rows if r[0]])
+    total  = int(_stat_row.total  or 0)
+    scored = int(_stat_row.scored or 0)
+    best   = round(float(_stat_row.best or 0), 2)
+    avg    = round(float(_stat_row.avg  or 0), 2)
+
+    # Distinct genres — single query, combined with stats above where possible
+    genre_rows = db.session.execute(db.text("""
+        SELECT DISTINCT genre FROM images
+        WHERE user_id = :uid
+          AND genre IS NOT NULL
+          AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+        ORDER BY genre
+    """), {'uid': current_user.id}).fetchall()
+    genres = [r[0] for r in genre_rows if r[0]]
 
     stats = {
         'total': total, 'scored': scored,
-        'best': round(best, 2), 'avg': round(avg, 2),
+        'best': best, 'avg': avg,
     }
     return render_template('my_gallery.html',
                            images=images, stats=stats, genres=genres,
@@ -10573,7 +10587,10 @@ def image_detail(image_id):
             db.text("SELECT id FROM images WHERE id = :rid OR parent_image_id = :rid ORDER BY id ASC"),
             {'rid': _root_id}
         ).fetchall()
-        _versions = [Image.query.get(r[0]) for r in _ver_rows if Image.query.get(r[0])]
+        # SL 172.3: single IN query replaces N+1 Image.query.get() calls
+        _ver_ids  = [r[0] for r in _ver_rows]
+        _ver_objs = {v.id: v for v in Image.query.filter(Image.id.in_(_ver_ids)).all()} if _ver_ids else {}
+        _versions = [_ver_objs[vid] for vid in _ver_ids if vid in _ver_objs]
     except Exception as _ve:
         app.logger.warning(f'[image_detail] versions fetch: {_ve}')
 
@@ -11087,7 +11104,9 @@ def recent_work():
 
         _base_q = (
             "SELECT i.id, i.thumb_url, i.asset_name, i.genre, i.score, i.tier,"
-            " i.photographer_name, i.scored_at, u.username, i.user_id"
+            " i.photographer_name, i.scored_at, u.username, i.user_id,"
+            " i.dod_score, i.disruption_score, i.dm_score, i.wonder_score, i.aq_score,"
+            " i.audit_json"
             " FROM images i JOIN users u ON u.id = i.user_id"
             " WHERE i.status = 'scored' AND i.score IS NOT NULL"
             " AND i.is_public = TRUE AND i.is_flagged = FALSE"
