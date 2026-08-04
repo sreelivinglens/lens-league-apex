@@ -398,6 +398,85 @@
   opacity: 0.35;
   pointer-events: none;
 }
+
+  /* ── SL 172.3: Dimension bars + reasoning drawer ── */
+  .mg-img-card { cursor: default; }
+  .mg-card-link { display: block; text-decoration: none; }
+  .mg-dims {
+    display: flex;
+    gap: 3px;
+    padding: 6px 10px 2px;
+    align-items: flex-end;
+    background: #fff;
+  }
+  .mg-dim-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    padding: 3px 1px;
+    border-radius: 3px;
+    transition: background 0.15s;
+    min-width: 0;
+  }
+  .mg-dim-col:hover { background: rgba(200,168,75,0.12); }
+  .mg-dim-track {
+    width: 100%;
+    height: 26px;
+    background: #F0EBE0;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .mg-dim-fill {
+    width: 100%;
+    background: #2C3E6B;
+    border-radius: 2px 2px 0 0;
+  }
+  .mg-dim-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1A18;
+    font-family: monospace;
+  }
+  .mg-dim-lbl {
+    font-size: 13px;
+    color: #8A8070;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .mg-dim-drawer {
+    display: none;
+    margin: 0 10px 8px;
+    background: #FBF8F2;
+    border-left: 3px solid #C8A84B;
+    border-radius: 0 4px 4px 0;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .mg-dim-drawer.open { display: block; }
+  .mg-dim-drawer__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .mg-dim-drawer__label {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #C8A84B;
+  }
+  .mg-dim-drawer__score { font-size: 16px; font-weight: 900; color: #1A1A18; margin-bottom: 4px; }
+  .mg-dim-drawer__why   { font-size: 13px; color: #2a2a28; line-height: 1.55; margin-bottom: 4px; }
+  .mg-dim-drawer__what  { font-size: 13px; color: #8A8070; line-height: 1.55; }
+  .mg-dim-drawer__close { background: none; border: none; font-size: 16px; color: #8A8070; cursor: pointer; padding: 0; }
+
 </style>
 {% endblock %}
 
@@ -487,7 +566,7 @@
 
     <div class="mg-grid">
       {% for img in images.items %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}?from=gallery" class="mg-img-card">
+      <div class="mg-img-card"><a href="{{ url_for('image_detail', image_id=img.id) }}?from=gallery" class="mg-card-link">
         <div class="mg-img-card__photo">
           {% if img.thumb_url %}
           <img src="{{ img.thumb_url }}"
@@ -539,6 +618,36 @@
           <span class="mg-img-card__name">{{ img.asset_name or img.original_filename or 'Untitled' }}</span>
         </div>
       </a>
+      {# ── Dimension bars SL 172.3 ── #}
+      {% if img.dod_score and img.status == 'scored' %}
+      {% set _aud = img.get_audit() or {} %}
+      <div class="mg-dims">
+        {% for _k, _ab, _v, _w in [
+          ('dod','DoD',img.dod_score,_aud.get('dod_reasoning','')),
+          ('disruption','VD',img.disruption_score,_aud.get('disruption_reasoning','')),
+          ('dm','DM',img.dm_score,_aud.get('dm_reasoning','')),
+          ('wonder','WF',img.wonder_score,_aud.get('wonder_reasoning','')),
+          ('aq','AQ',img.aq_score,_aud.get('aq_reasoning',''))] %}
+        {% if _v %}
+        <div class="mg-dim-col" onclick="mgDim(event,'{{ img.id }}','{{ _k }}',{{ _v }},{{ _w|tojson }})">
+          <div class="mg-dim-track"><div class="mg-dim-fill" style="height:{{ ((_v/10*100)|round|int) }}%;"></div></div>
+          <div class="mg-dim-val">{{ '%.1f'|format(_v) }}</div>
+          <div class="mg-dim-lbl">{{ _ab }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div class="mg-dim-drawer" id="mgd-{{ img.id }}">
+        <div class="mg-dim-drawer__head">
+          <span class="mg-dim-drawer__label" id="mgd-lbl-{{ img.id }}"></span>
+          <button class="mg-dim-drawer__close" onclick="mgDimClose(event,'{{ img.id }}')">×</button>
+        </div>
+        <div class="mg-dim-drawer__score" id="mgd-sc-{{ img.id }}"></div>
+        <div class="mg-dim-drawer__why"   id="mgd-why-{{ img.id }}"></div>
+        <div class="mg-dim-drawer__what"  id="mgd-wt-{{ img.id }}"></div>
+      </div>
+      {% endif %}
+      </div>
       {% endfor %}
     </div>
 
