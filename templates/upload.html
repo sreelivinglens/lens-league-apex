@@ -539,7 +539,8 @@
     <form id="uploadForm" method="POST" enctype="multipart/form-data"
       action="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-upload-url="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
-      data-result-base="{% if is_trial %}/try/result/{% else %}{% endif %}">
+      data-result-base="{% if is_trial %}/try/result/{% else %}{% endif %}"
+      data-subgenre-map="{{ subgenre_map_json | safe }}">
       {{ csrf_token_field()|safe if csrf_token_field is defined else '' }}
       {# ── Mission tracking — passed from /mission page ── #}
       <input type="hidden" name="mission_dimension" id="mission_dimension_field" value="">
@@ -1011,7 +1012,7 @@
   }
 
   // ── Genre hints ──────────────────────────────────────────────────────────
-  const SUBGENRE_MAP = {{ subgenre_map_json | safe }};
+  const SUBGENRE_MAP = JSON.parse(document.getElementById('uploadForm').dataset.subgenreMap || '{}');
   const subGenreRow    = document.getElementById('sub-genre-row');
   const subGenreSelect = document.getElementById('sub_genre');
 
