@@ -28980,6 +28980,7 @@ def _try_run_haiku(image_id, img_b64, genre):
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
         'max_tokens': 200,
+        'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
                 'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
