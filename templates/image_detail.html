@@ -1,4 +1,4 @@
-{# SL:version S168-r4 image_detail — back button: text-transform:none so label renders in sentence case not all-caps 2026-07-31 #}
+{# SL-VERSION: 172.3 #}
 <!-- Version: Session 160 · 2026-07-25 -->
 {# SL-VERSION: 172.3 #}
 {% extends "base.html" %}
@@ -835,6 +835,34 @@
       <a href="/science#dimensions" class="glink-inline" style="font-size:13px; font-weight:600; letter-spacing:0.04em;">Understanding dimensions →</a>
     </div>
   </div>
+
+  {# SL 172.3: Owner drawer div with data-dim-json — fixes dimension tap for own images #}
+  {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+  {% set _aud_o2 = image.get_audit() or {} %}
+  <div class="sc-dim-detail-wrap" id="sc-dim-drawer-wrap" style="display:none;"
+  data-dim-json='{{ {
+    "dod":        {"label": "Depth of Difficulty",   "score": ("%.1f"|format(image.dod_score)        if image.dod_score        else "\u2014"), "why": (_aud_o2.get("dod_reasoning","")        | tojson), "what": "How hard was it to make this image exist? Access, physical challenge, timing window, and technical execution."},
+    "disruption": {"label": "Visual Disruption",     "score": ("%.1f"|format(image.disruption_score) if image.disruption_score else "\u2014"), "why": (_aud_o2.get("disruption_reasoning","")  | tojson), "what": "Does this image break the viewer\'s trained pattern? Not disorder — purposeful departure from expectation."},
+    "dm":         {"label": "The Moment Chosen",     "score": ("%.1f"|format(image.dm_score)         if image.dm_score         else "\u2014"), "why": (_aud_o2.get("dm_reasoning","")          | tojson), "what": "Of all the instants available, was this the right one?"},
+    "wonder":     {"label": "The WOW Factor",        "score": ("%.1f"|format(image.wonder_score)     if image.wonder_score     else "\u2014"), "why": (_aud_o2.get("wonder_reasoning","")      | tojson), "what": "Does this image take the viewer somewhere they could not go without the photographer?"},
+    "aq":         {"label": "The Emotion It Creates","score": ("%.1f"|format(image.aq_score)         if image.aq_score         else "\u2014"), "why": (_aud_o2.get("aq_reasoning","")         | tojson), "what": "What specific feeling does a stranger experience?"}
+  } | tojson | forceescape }}'>
+    <div class="sc-dim-drawer-inner" id="sc-dim-drawer-inner">
+      <div class="sc-dim-drawer-header">
+        <div>
+          <div class="sc-dim-drawer-dim" id="sc-dim-drawer-dim"></div>
+          <div class="sc-dim-drawer-score" id="sc-dim-drawer-score"></div>
+          <div class="sc-dim-drawer-title">Why this number?</div>
+        </div>
+        <button class="sc-dim-drawer-close" onclick="slCloseDimDrawer()" aria-label="Close">×</button>
+      </div>
+      <div class="sc-dim-drawer-why" id="sc-dim-drawer-why"></div>
+      <div class="sc-dim-drawer-what" id="sc-dim-drawer-what"></div>
+      <a href="/science#dimensions" class="sc-dim-sci-link" style="display:inline-block;margin-top:10px;">What this dimension measures →</a>
+    </div>
+  </div>
+  {% endif %}
+
   {% endif %}
 
   {% if audit and audit.subgenre_overridden and audit.effective_subgenre %}
