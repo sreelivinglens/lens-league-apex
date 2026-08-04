@@ -314,6 +314,41 @@
   .rw-filter-select { min-width: 100%; }
   .rw-search-wrap { min-width: 100%; }
 }
+
+  /* ── SL 172.3: Dimension bars on recent work cards ── */
+  .rw-card { cursor: default; text-decoration: none; }
+  .rw-card-link { display: block; text-decoration: none; color: inherit; }
+  .rw-dims {
+    display: flex; gap: 3px; padding: 5px 10px 2px;
+    align-items: flex-end; background: #fff;
+  }
+  .rw-dim-col {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 2px; cursor: pointer;
+    padding: 3px 1px; border-radius: 3px;
+    transition: background 0.15s;
+  }
+  .rw-dim-col:hover { background: rgba(200,168,75,0.12); }
+  .rw-dim-track {
+    width: 100%; height: 26px; background: #F0EBE0;
+    border-radius: 2px; overflow: hidden; display: flex; align-items: flex-end;
+  }
+  .rw-dim-fill { width: 100%; background: #2C3E6B; border-radius: 2px 2px 0 0; }
+  .rw-dim-val { font-size: 13px; font-weight: 700; color: #1A1A18; font-family: monospace; }
+  .rw-dim-lbl { font-size: 13px; color: #8A8070; text-transform: uppercase; letter-spacing: 0.3px; }
+  .rw-dim-drawer {
+    display: none; margin: 0 10px 8px;
+    background: #FBF8F2; border-left: 3px solid #C8A84B;
+    border-radius: 0 4px 4px 0; padding: 8px 10px; font-size: 13px;
+  }
+  .rw-dim-drawer.open { display: block; }
+  .rw-dim-drawer__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .rw-dim-drawer__label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #C8A84B; }
+  .rw-dim-drawer__score { font-size: 16px; font-weight: 900; color: #1A1A18; margin-bottom: 4px; }
+  .rw-dim-drawer__why   { font-size: 13px; color: #2a2a28; line-height: 1.55; margin-bottom: 4px; }
+  .rw-dim-drawer__what  { font-size: 13px; color: #8A8070; line-height: 1.55; }
+  .rw-dim-drawer__close { background: none; border: none; font-size: 16px; color: #8A8070; cursor: pointer; padding: 0; }
+
 </style>
 {% endblock %}
 
@@ -368,11 +403,11 @@
   <div class="rw-grid" id="rwGrid">
     {% for image in feed_images %}
     {% set tk = (image.tier or 'Rookie') | replace(' ', '') %}
-    <a href="{{ url_for('image_detail', image_id=image.id, **{'from': 'recent'}) }}"
-       class="rw-card"
+    <div class="rw-card"
        data-genre="{{ image.genre or '' }}"
        data-tier="{{ image.tier or '' }}"
        data-search="{{ ((image.asset_name or '') ~ ' ' ~ (image.photographer_name or '') ~ ' ' ~ (image.genre or '') ~ ' ' ~ (image.tier or '')) | lower }}">
+    <a href="{{ url_for('image_detail', image_id=image.id, **{'from': 'recent'}) }}" class="rw-card-link">
 
       <div class="rw-img-wrap">
         {% if image.thumb_url %}
@@ -394,8 +429,40 @@
         {% if image.genre %}<div class="rw-genre">{{ image.genre }}</div>{% endif %}
         <div class="rw-photographer">{{ image.photographer_name or '—' }}</div>
       </div>
-
     </a>
+    {# ── Dimension bars SL 172.3 ── #}
+    {% if image.dod_score %}
+    {% set _aud = {} %}
+    {% if image.audit_json %}
+      {% set _aud = image.audit_json | from_json if image.audit_json is string else {} %}
+    {% endif %}
+    <div class="rw-dims">
+      {% for _k,_ab,_v,_w in [
+        ('dod','DoD',image.dod_score,_aud.get('dod_reasoning','')),
+        ('disruption','VD',image.disruption_score,_aud.get('disruption_reasoning','')),
+        ('dm','DM',image.dm_score,_aud.get('dm_reasoning','')),
+        ('wonder','WF',image.wonder_score,_aud.get('wonder_reasoning','')),
+        ('aq','AQ',image.aq_score,_aud.get('aq_reasoning',''))] %}
+      {% if _v %}
+      <div class="rw-dim-col" data-dim="{{ _k }}" data-val="{{ _v }}" data-imgid="{{ image.id }}" onclick="rwDim(event,this)">
+        <div class="rw-dim-track"><div class="rw-dim-fill" style="height:{{ ((_v/10*100)|round|int) }}%;"></div></div>
+        <div class="rw-dim-val">{{ '%.1f'|format(_v) }}</div>
+        <div class="rw-dim-lbl">{{ _ab }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    <div class="rw-dim-drawer" id="rwd-{{ image.id }}">
+      <div class="rw-dim-drawer__head">
+        <span class="rw-dim-drawer__label" id="rwd-lbl-{{ image.id }}"></span>
+        <button class="rw-dim-drawer__close" onclick="rwDimClose(event,'{{ image.id }}')">×</button>
+      </div>
+      <div class="rw-dim-drawer__score" id="rwd-sc-{{ image.id }}"></div>
+      <div class="rw-dim-drawer__why"   id="rwd-why-{{ image.id }}"></div>
+      <div class="rw-dim-drawer__what"  id="rwd-wt-{{ image.id }}"></div>
+    </div>
+    {% endif %}
+    </div>
     {% endfor %}
   </div>
 
