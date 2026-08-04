@@ -434,7 +434,6 @@
     {% if image.dod_score %}
     {% set _aud = {} %}
     {% if image.audit_json %}
-      {% set _aud = image.audit_json | from_json if image.audit_json is string else {} %}
     {% endif %}
     <div class="rw-dims">
       {% for _k,_ab,_v,_w in [
