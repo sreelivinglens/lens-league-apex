@@ -600,7 +600,7 @@
       var wrap = document.getElementById('sc-dim-drawer-wrap');
       document.getElementById('sc-dim-drawer-dim').textContent   = d.label.toUpperCase();
       document.getElementById('sc-dim-drawer-score').textContent = d.score;
-      document.getElementById('sc-dim-drawer-why').textContent   = d.why;
+      document.getElementById('sc-dim-drawer-why').textContent   = (d.why || '').replace(/\\u([0-9a-fA-F]{4})/g, function(m,c){return String.fromCharCode(parseInt(c,16));});
       document.getElementById('sc-dim-drawer-what').textContent  = d.what;
       wrap.style.display = 'block';
       wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
