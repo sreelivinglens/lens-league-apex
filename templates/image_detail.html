@@ -1,15 +1,6 @@
 {# SL:version S168-r4 image_detail — back button: text-transform:none so label renders in sentence case not all-caps 2026-07-31 #}
 <!-- Version: Session 160 · 2026-07-25 -->
-{# SL-VERSION: 110.7 (Session 111 — edit cards: bullets split into separate paragraphs;
-#   Save button: renamed "Print / Save as PDF", sky-blue fill added;
-#   Days-since + share block moved to bottom of page (below metadata grid, above visibility row);
-#   previously 110.6 — hero headline: bold removed, pre-line breathing;
-#   EXIF honesty: Card 2 never invents settings when partial/absent;
-#   previously 110.5 — Cards 2-4: 3-col grid → full-width rows; font sizes up
-#   to 17px body / 14px labels; paragraph breathing via \n\n split; master names bold+linked;
-#   card labels updated: What you controlled → What your eye read,
-#   What to watch next → What your evaluation means, Keep this in mind → Your assignment tomorrow;
-#   same changes mirrored on public scorecard) #}
+{# SL-VERSION: 172.3 #}
 {% extends "base.html" %}
 {% block title %}{{ image.asset_name or image.original_filename }} — {{ platform_name }}{% endblock %}
 
@@ -2282,6 +2273,48 @@ document.addEventListener('DOMContentLoaded', function() {
     if (ddiPrev) ddiPrev.style.display = 'none';
   }
 });
+</script>
+
+<script>
+/* SL 172.3 — slOpenDimDrawer available for both owner and public paths */
+(function(){
+  function _initDrawer() {
+    var _dw = document.getElementById('sc-dim-drawer-wrap');
+    if (!_dw) return;
+    var _raw = _dw.dataset.dimJson || '{}';
+    var _parsed = {};
+    try { _parsed = JSON.parse(_raw); } catch(e) {}
+    var _dimData = {};
+    ['dod','disruption','dm','wonder','aq'].forEach(function(k){
+      var r = _parsed[k] || {};
+      _dimData[k] = { label: r.label || k, score: r.score || '—', why: r.why || '', what: r.what || '' };
+    });
+    window.slOpenDimDrawer = function(dim) {
+      var d = _dimData[dim]; if (!d) return;
+      var wrap = document.getElementById('sc-dim-drawer-wrap'); if (!wrap) return;
+      document.getElementById('sc-dim-drawer-dim').textContent   = d.label.toUpperCase();
+      document.getElementById('sc-dim-drawer-score').textContent = d.score;
+      var why = (d.why || '').replace(/\u([0-9a-fA-F]{4})/g, function(m,c){return String.fromCharCode(parseInt(c,16));});
+      document.getElementById('sc-dim-drawer-why').textContent  = why;
+      document.getElementById('sc-dim-drawer-what').textContent = d.what;
+      wrap.style.display = 'block';
+      wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+      ['dod','disruption','dm','wonder','aq'].forEach(function(k){
+        var el = document.getElementById('sc-ddi-lbl-'+k) || document.getElementById('sc-ddi-lbl-o-'+k);
+        if (el) el.classList.toggle('sc-ddi-active', k===dim);
+      });
+    };
+    window.slCloseDimDrawer = function() {
+      var wrap = document.getElementById('sc-dim-drawer-wrap'); if (wrap) wrap.style.display='none';
+      ['dod','disruption','dm','wonder','aq'].forEach(function(k){
+        var el = document.getElementById('sc-ddi-lbl-'+k) || document.getElementById('sc-ddi-lbl-o-'+k);
+        if (el) el.classList.remove('sc-ddi-active');
+      });
+    };
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', _initDrawer); }
+  else { _initDrawer(); }
+})();
 </script>
 {% endblock %}
 
