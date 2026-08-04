@@ -7440,220 +7440,13 @@ def upload():
         except Exception as _cache_err:
             app.logger.warning(f'[upload] phash cache lookup failed (non-fatal): {_cache_err}')
 
-        # ── Watermark / logo detection (v62) ──────────────────────────────────
-        # Runs synchronously before DB save or R2 upload — immediate rejection.
-        # Uses Sonnet. Fails open (upload proceeds) if API is
-        # unavailable so a network blip never blocks legitimate uploads.
-        try:
-            _wm_api_key = os.getenv('ANTHROPIC_API_KEY', '')
-            if _wm_api_key and os.path.exists(thumb_path):
-                import base64 as _b64, urllib.request as _wmur, json as _wmjson
-                from PIL import Image as _PILWM
-                import io as _wmio
-
-                # Resize to 1024px max for speed — watermarks are visible at low res
-                _wm_pil = _PILWM.open(thumb_path).convert('RGB')
-                if max(_wm_pil.size) > 1024:
-                    _wm_pil.thumbnail((1024, 1024))
-                _wm_buf = _wmio.BytesIO()
-                _wm_pil.save(_wm_buf, format='JPEG', quality=80)
-                _wm_b64 = _b64.b64encode(_wm_buf.getvalue()).decode('utf-8')
-
-                _wm_payload = _wmjson.dumps({
-                    'model': 'claude-sonnet-4-6',
-                    'max_tokens': 100,
-                    'messages': [{
-                        'role': 'user',
-                        'content': [
-                            {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': _wm_b64}},
-                            {'type': 'text', 'text': (
-                                'Does this photograph contain a photographer-added watermark, text overlay, '
-                                'studio logo, social media handle (@username), copyright text, or any branding '
-                                'embedded into the image by the photographer? '
-                                'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
-                                'platform watermarks, natural scene text, '
-                                'or phone/camera app overlays (device name, date/time stamps, '
-                                'GPS coordinates, camera model text burned in by the phone — e.g. Galaxy S25, iPhone, '
-                                'date/time overlays added automatically by camera apps). '
-                                'ONLY flag if the photographer deliberately added their own branding, studio logo, '
-                                'social handle, or copyright text as a post-processing overlay. '
-                                'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
-                            )}
-                        ]
-                    }]
-                }).encode('utf-8')
-
-                _wm_req = _wmur.Request(
-                    'https://api.anthropic.com/v1/messages',
-                    data=_wm_payload,
-                    headers={'Content-Type': 'application/json', 'x-api-key': _wm_api_key,
-                             'anthropic-version': '2023-06-01'},
-                    method='POST'
-                )
-                with _wmur.urlopen(_wm_req, timeout=15) as _wmresp:
-                    _wm_result = _wmjson.loads(_wmresp.read().decode())
-
-                _wm_text = _wm_result.get('content', [{}])[0].get('text', '{}')
-                _wm_text = _wm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
-                _wm_data = _wmjson.loads(_wm_text)
-
-                if _wm_data.get('watermark_detected'):
-                    if os.path.exists(thumb_path): os.remove(thumb_path)
-                    app.logger.info(f'[upload] watermark rejected: {_wm_data.get("description")} uid={current_user.id}')
-                    _wm_msg = (
-                        'Your image appears to contain a watermark, logo, text overlay, or UI elements '
-                        '(such as app interface or screenshot chrome). '
-                        'Shutter League evaluates the original photograph only — please export directly '
-                        'from your camera or editing app and re-upload the clean image.'
-                    )
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                        return jsonify({'error': True, 'message': _wm_msg}), 422
-                    flash(_wm_msg, 'error')
-                    return redirect(request.url)
-
-        except Exception as _wm_err:
-            # Fail open — network or API error must never block a legitimate upload
-            app.logger.warning(f'[upload] watermark check failed (non-fatal): {_wm_err}')
-
-        # ── NSFW / Nudity detection (v63) ─────────────────────────────────────
-        # Uses Claude Haiku vision — same pattern as watermark check above.
-        # Hard reject: nudity / explicit content → delete thumb, block upload.
-        # Breastfeeding: passes upload, flagged for scoring-thread sub-genre check.
-        # Fails open — API error never blocks a legitimate upload.
-        _nsfw_breastfeeding_flagged = False
-        try:
-            _nsfw_api_key = os.getenv('ANTHROPIC_API_KEY', '')
-            if _nsfw_api_key and os.path.exists(thumb_path):
-                import base64 as _nsfw_b64, urllib.request as _nsfw_ur, json as _nsfw_json
-                from PIL import Image as _PIL_nsfw
-                import io as _nsfw_io
-
-                # Resize to 1024px max — nudity is obvious at low res, saves tokens
-                _nsfw_pil = _PIL_nsfw.open(thumb_path).convert('RGB')
-                if max(_nsfw_pil.size) > 1024:
-                    _nsfw_pil.thumbnail((1024, 1024))
-                _nsfw_buf = _nsfw_io.BytesIO()
-                _nsfw_pil.save(_nsfw_buf, format='JPEG', quality=80)
-                _nsfw_b64_data = _nsfw_b64.b64encode(_nsfw_buf.getvalue()).decode('utf-8')
-
-                _nsfw_prompt = (
-                    'Examine this photograph carefully. Respond ONLY with JSON — no other text. '
-                    'Return: {"nudity": true/false, "breastfeeding": true/false, "description": "one short phrase or null"} '
-                    'Where: '
-                    '"nudity" = true ONLY if the image contains explicit nudity, exposed genitalia, bare breasts '
-                    '(other than breastfeeding), or explicit sexual content. '
-                    'IMPORTANT: Traditional, cultural, or religious attire must NOT be flagged — this includes '
-                    'dhotis, mundus, lungis, sarongs, loincloths, bare-chested traditional dress at festivals, '
-                    'temples, or cultural events (common in South Asian, African, and Pacific cultures), '
-                    'and any other regional clothing that leaves skin exposed as a matter of cultural practice. '
-                    'ALSO IMPORTANT: Commercial, editorial, or advertising photography — billboards, posters, '
-                    'magazine ads, fashion/swimwear/lingerie shoots, sports uniforms — must NOT be flagged for '
-                    'showing models in swimwear, lingerie, or undergarments. Only flag this kind of image if it '
-                    'exposes genitalia or bare breasts, or is otherwise explicit/sexual rather than commercial. '
-                    'ALSO IMPORTANT: Vigorous physical activity — sports, water play, splashing, running, '
-                    'wrestling, bent-over or twisted poses, wet clothing clinging to the body — must NOT be '
-                    'flagged as nudity on its own. Only flag if genitalia or bare breasts are clearly and '
-                    'unambiguously visible, regardless of pose, motion, or activity. '
-                    'ALSO IMPORTANT: Bare-chested men in any context — family portraits, street photography, '
-                    'documentary, everyday life, cultural events, sports, or casual settings — must NOT be '
-                    'flagged. Male shirtlessness is not nudity. Only flag a male subject if genitalia '
-                    'are explicitly exposed. '
-                    'ALSO IMPORTANT: Children in age-appropriate contexts must NOT be flagged. This includes '
-                    'boys shirtless or in underwear in family, beach, play, or everyday settings; girls in '
-                    'age-appropriate swimwear (bikinis, one-piece), underwear, or everyday clothing; children '
-                    'bathing, swimming, playing, or in family portraits. Only flag a child if genitalia are '
-                    'explicitly and unambiguously exposed, or if there are clear signs of sexual exploitation '
-                    'or abuse. When in doubt about a child image, return nudity=false. '
-                    'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
-                    '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
-                    'this overrides nudity=true when present. '
-                    '"description" = one short phrase describing what was detected, or null if clean.'
-                )
-
-                _nsfw_payload = _nsfw_json.dumps({
-                    'model': 'claude-sonnet-4-6',
-                    'max_tokens': 80,
-                    'messages': [{
-                        'role': 'user',
-                        'content': [
-                            {'type': 'image', 'source': {
-                                'type': 'base64', 'media_type': 'image/jpeg', 'data': _nsfw_b64_data
-                            }},
-                            {'type': 'text', 'text': _nsfw_prompt}
-                        ]
-                    }]
-                }).encode('utf-8')
-
-                _nsfw_req = _nsfw_ur.Request(
-                    'https://api.anthropic.com/v1/messages',
-                    data=_nsfw_payload,
-                    headers={
-                        'Content-Type': 'application/json',
-                        'x-api-key': _nsfw_api_key,
-                        'anthropic-version': '2023-06-01',
-                    },
-                    method='POST'
-                )
-                with _nsfw_ur.urlopen(_nsfw_req, timeout=20) as _nsfw_resp:
-                    _nsfw_result = _nsfw_json.loads(_nsfw_resp.read().decode('utf-8'))
-
-                _nsfw_raw = _nsfw_result.get('content', [{}])[0].get('text', '{}')
-                _nsfw_raw = _nsfw_raw.strip().lstrip('`').lstrip('json').strip('`').strip()
-                _nsfw_data = _nsfw_json.loads(_nsfw_raw)
-
-                _nsfw_reject          = bool(_nsfw_data.get('nudity', False))
-                _nsfw_breastfeeding_flagged = bool(_nsfw_data.get('breastfeeding', False))
-
-                # Breastfeeding overrides nudity reject — do not hard-reject
-                if _nsfw_breastfeeding_flagged:
-                    _nsfw_reject = False
-
-                app.logger.info(
-                    f'[upload] nsfw check (haiku): nudity={_nsfw_reject} '
-                    f'breastfeeding={_nsfw_breastfeeding_flagged} '
-                    f'description={_nsfw_data.get("description")} '
-                    f'uid={current_user.id}'
-                )
-
-                if _nsfw_reject:
-                    # Preserve a copy under disputed/ and create a dispute record
-                    # BEFORE deleting the local thumb — gives the user a "Tell us"
-                    # recourse path instead of a dead-end rejection, and gives an
-                    # admin something to actually look at if they object.
-                    _dispute_id = None
-                    try:
-                        _disputed_uid = str(uuid.uuid4())
-                        _disputed_thumb_url = _r2_upload_disputed_thumb(thumb_path, _disputed_uid)
-                        if _disputed_thumb_url:
-                            _dispute_row = db.session.execute(
-                                db.text("""
-                                    INSERT INTO upload_disputes
-                                        (user_id, thumb_url, original_filename, nsfw_description, status)
-                                    VALUES (:uid, :thumb_url, :fname, :desc, 'pending')
-                                    RETURNING id
-                                """),
-                                {'uid': current_user.id, 'thumb_url': _disputed_thumb_url,
-                                 'fname': file.filename, 'desc': _nsfw_data.get('description')}
-                            )
-                            db.session.commit()
-                            _dispute_id = _dispute_row.scalar()
-                    except Exception as _dispute_save_err:
-                        db.session.rollback()
-                        app.logger.warning(f'[upload] dispute save failed (non-fatal): {_dispute_save_err}')
-
-                    if os.path.exists(thumb_path): os.remove(thumb_path)
-                    _nsfw_msg = (
-                        'Nudity or explicit content was detected in your image. '
-                        'Please re-upload a clean image that complies with Shutter League programme rules.'
-                    )
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                        return jsonify({'error': True, 'message': _nsfw_msg, 'dispute_id': _dispute_id}), 422
-                    flash(_nsfw_msg, 'error')
-                    return redirect(request.url)
-
-        except Exception as _nsfw_err:
-            # Fail open — API error must never block a legitimate upload
-            app.logger.warning(f'[upload] nsfw check failed (non-fatal): {_nsfw_err}')
+        # ── Watermark / NSFW checks moved to background thread (SL 172.3) ──────
+        # Previously ran synchronously here, causing 30-50s delay before POST
+        # returned to browser — browser timed out and showed blue screen even
+        # though upload succeeded. Now run in _score_in_background alongside
+        # Hive and Sonnet scoring. Image saves to DB immediately after R2 upload.
+        # Watermark/NSFW rejection sets img.status='flagged' in the thread.
+        _nsfw_breastfeeding_flagged = False  # thread sets this internally now
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
@@ -7967,7 +7760,130 @@ def upload():
                         if not _img:
                             return
 
-                        # ── LAYER 2: Hive AI detection ─────────────────────
+                        # ── LAYER 1a: Watermark detection (SL 172.3 — moved from sync path) ──
+                        # Runs in background thread — POST already returned image_id to browser.
+                        # Rejection sets status='flagged', notified via score-status polling.
+                        _bg_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+                        if _bg_api_key and _img.thumb_url:
+                            try:
+                                import base64 as _bgb64, urllib.request as _bgwmur
+                                import json as _bgwmjson
+                                from PIL import Image as _BGPILWM
+                                import io as _bgwmio
+                                _bgwm_pil = _BGPILWM.open(_img.thumb_path or '').convert('RGB') if _img.thumb_path and os.path.exists(_img.thumb_path or '') else None
+                                if _bgwm_pil is None:
+                                    # thumb_path gone — fetch from R2 URL
+                                    import urllib.request as _bgfetch
+                                    with _bgfetch.urlopen(_img.thumb_url, timeout=15) as _bgr:
+                                        _bgwm_pil = _BGPILWM.open(_bgwmio.BytesIO(_bgr.read())).convert('RGB')
+                                if max(_bgwm_pil.size) > 1024:
+                                    _bgwm_pil.thumbnail((1024, 1024))
+                                _bgwm_buf = _bgwmio.BytesIO()
+                                _bgwm_pil.save(_bgwm_buf, format='JPEG', quality=80)
+                                _bgwm_b64 = _bgb64.b64encode(_bgwm_buf.getvalue()).decode('utf-8')
+
+                                _bgwm_payload = _bgwmjson.dumps({
+                                    'model': 'claude-sonnet-4-6', 'max_tokens': 100,
+                                    'messages': [{'role': 'user', 'content': [
+                                        {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': _bgwm_b64}},
+                                        {'type': 'text', 'text': (
+                                            'Does this photograph contain a photographer-added watermark, text overlay, '
+                                            'studio logo, social media handle (@username), copyright text, or any branding '
+                                            'embedded into the image by the photographer? '
+                                            'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                                            'platform watermarks, natural scene text, '
+                                            'or phone/camera app overlays (device name, date/time stamps, GPS coordinates, camera model text). '
+                                            'ONLY flag if the photographer deliberately added their own branding, studio logo, '
+                                            'social handle, or copyright text as a post-processing overlay. '
+                                            'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
+                                        )}
+                                    ]}]
+                                }).encode('utf-8')
+                                _bgwm_req = _bgwmur.Request(
+                                    'https://api.anthropic.com/v1/messages',
+                                    data=_bgwm_payload,
+                                    headers={'Content-Type': 'application/json', 'x-api-key': _bg_api_key, 'anthropic-version': '2023-06-01'},
+                                    method='POST'
+                                )
+                                with _bgwmur.urlopen(_bgwm_req, timeout=15) as _bgwmresp:
+                                    _bgwm_result = _bgwmjson.loads(_bgwmresp.read().decode())
+                                _bgwm_text = (_bgwm_result.get('content') or [{}])[0].get('text', '{}')
+                                _bgwm_text = _bgwm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
+                                _bgwm_data = _bgwmjson.loads(_bgwm_text)
+                                if _bgwm_data.get('watermark_detected'):
+                                    app.logger.info(f'[upload] watermark rejected (bg): {_bgwm_data.get("description")} image={image_id}')
+                                    _img.status       = 'flagged'
+                                    _img.is_flagged   = True
+                                    _img.is_public    = False
+                                    _img.flagged_reason = f'Watermark detected: {_bgwm_data.get("description")}'
+                                    _img.scoring_flash  = 'Your image was not accepted — it appears to contain a watermark or logo. Please upload the clean original without any text or branding overlays.'
+                                    db.session.commit()
+                                    return  # stop — do not score a watermarked image
+                            except Exception as _bgwm_err:
+                                app.logger.warning(f'[upload] bg watermark check failed (non-fatal): {_bgwm_err}')
+
+                        # ── LAYER 1b: NSFW detection (SL 172.3 — moved from sync path) ────────
+                        _bg_nsfw_breastfeeding = False
+                        if _bg_api_key and _img.thumb_url:
+                            try:
+                                import base64 as _bgnb64, urllib.request as _bgnsfw_ur
+                                import json as _bgnsfw_json
+                                from PIL import Image as _BGPILNSFW
+                                import io as _bgnsfw_io
+                                _bgnsfw_pil = _BGPILNSFW.open(_img.thumb_path or '').convert('RGB') if _img.thumb_path and os.path.exists(_img.thumb_path or '') else None
+                                if _bgnsfw_pil is None:
+                                    import urllib.request as _bgnfetch
+                                    with _bgnfetch.urlopen(_img.thumb_url, timeout=15) as _bgnr:
+                                        _bgnsfw_pil = _BGPILNSFW.open(_bgnsfw_io.BytesIO(_bgnr.read())).convert('RGB')
+                                if max(_bgnsfw_pil.size) > 1024:
+                                    _bgnsfw_pil.thumbnail((1024, 1024))
+                                _bgnsfw_buf = _bgnsfw_io.BytesIO()
+                                _bgnsfw_pil.save(_bgnsfw_buf, format='JPEG', quality=80)
+                                _bgnsfw_b64 = _bgnb64.b64encode(_bgnsfw_buf.getvalue()).decode('utf-8')
+
+                                _bgnsfw_prompt = (
+                                    'Examine this photograph carefully. Respond ONLY with JSON — no other text. '
+                                    'Return: {"nudity": true/false, "breastfeeding": true/false, "description": "one short phrase or null"} '
+                                    'Where "nudity" = true ONLY if the image contains explicit nudity, exposed genitalia, bare breasts (other than breastfeeding), or explicit sexual content. '
+                                    'Traditional/cultural attire, commercial photography, vigorous physical activity, bare-chested men, and children in age-appropriate contexts must NOT be flagged. '
+                                    '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — overrides nudity=true. '
+                                    '"description" = one short phrase or null.'
+                                )
+                                _bgnsfw_payload = _bgnsfw_json.dumps({
+                                    'model': 'claude-sonnet-4-6', 'max_tokens': 80,
+                                    'messages': [{'role': 'user', 'content': [
+                                        {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': _bgnsfw_b64}},
+                                        {'type': 'text', 'text': _bgnsfw_prompt}
+                                    ]}]
+                                }).encode('utf-8')
+                                _bgnsfw_req = _bgnsfw_ur.Request(
+                                    'https://api.anthropic.com/v1/messages',
+                                    data=_bgnsfw_payload,
+                                    headers={'Content-Type': 'application/json', 'x-api-key': _bg_api_key, 'anthropic-version': '2023-06-01'},
+                                    method='POST'
+                                )
+                                with _bgnsfw_ur.urlopen(_bgnsfw_req, timeout=20) as _bgnresp:
+                                    _bgnsfw_result = _bgnsfw_json.loads(_bgnresp.read().decode())
+                                _bgnsfw_raw = (_bgnsfw_result.get('content') or [{}])[0].get('text', '{}')
+                                _bgnsfw_raw = _bgnsfw_raw.strip().lstrip('`').lstrip('json').strip('`').strip()
+                                _bgnsfw_data = _bgnsfw_json.loads(_bgnsfw_raw)
+                                _bg_nsfw_reject = bool(_bgnsfw_data.get('nudity', False))
+                                _bg_nsfw_breastfeeding = bool(_bgnsfw_data.get('breastfeeding', False))
+                                if _bg_nsfw_breastfeeding:
+                                    _bg_nsfw_reject = False
+                                app.logger.info(f'[upload] nsfw check (bg): nudity={_bg_nsfw_reject} breastfeeding={_bg_nsfw_breastfeeding} image={image_id}')
+                                if _bg_nsfw_reject:
+                                    _img.status       = 'flagged'
+                                    _img.is_flagged   = True
+                                    _img.is_public    = False
+                                    _img.flagged_reason = f'NSFW: {_bgnsfw_data.get("description")}'
+                                    _img.scoring_flash  = 'Your image was not accepted — explicit content was detected. Please review the programme rules and re-upload a clean image.'
+                                    db.session.commit()
+                                    return
+                            except Exception as _bgnsfw_err:
+                                app.logger.warning(f'[upload] bg nsfw check failed (non-fatal): {_bgnsfw_err}')
+
+                                                # ── LAYER 2: Hive AI detection ─────────────────────
                         # Runs before Claude Vision. If Hive detects AI with
                         # high confidence, we reject without calling Claude.
                         # Fails safe — if Hive is down or key missing, scoring
@@ -9053,7 +8969,7 @@ def upload():
                         except Exception:
                             pass
 
-            if not _anchored_score or _nsfw_breastfeeding_flagged:
+            if not _anchored_score or _bg_nsfw_breastfeeding:
                 # Fire scoring thread when: no cache (normal path), OR
                 # breastfeeding flagged (needs sub-genre check even on cache hit)
                 threading.Thread(
@@ -10866,7 +10782,7 @@ def image_detail(image_id):
         _drawer_count = db.session.execute(db.text(
             "SELECT COUNT(*) FROM images WHERE audit_json LIKE '%dod_reasoning%' AND status='scored'"
         )).scalar() or 0
-        _drawer_active = (_drawer_count > 50)
+        _drawer_active = (_drawer_count > 5)  # SL 172.3: lowered from 50 — platform has sufficient scored images
     except Exception as _dge:
         db.session.rollback()
         app.logger.warning(f'[image_detail] drawer gate: {_dge}')
@@ -10990,6 +10906,21 @@ def download_card_pdf(image_id):
     img = Image.query.get_or_404(image_id)
     if not img.score:
         return "This image has not been scored yet.", 404
+
+    # SL 172.3: Trial images (Haiku source) have no Sonnet audit data —
+    # the PDF would be blank. Gate them out regardless of subscription status.
+    try:
+        import json as _cpj
+        _cp_audit = _cpj.loads(img._audit_json or '{}')
+        if _cp_audit.get('source') == 'haiku_try':
+            flash(
+                'The full evaluation card is included in the subscription. '
+                'Subscribe to unlock your complete scorecard PDF.',
+                'info'
+            )
+            return redirect(url_for('pricing'))
+    except Exception:
+        pass
 
     _is_sub   = getattr(current_user, 'is_subscribed', False)
     _is_owner = (img.user_id == current_user.id)
@@ -12479,8 +12410,33 @@ def admin_bot_review():
         return bool(_re.match(r'^[a-z]{8,16}$', u.username or ''))
 
     def _get_bots():
-        _cands = User.query.filter(User.is_active==False, User.created_at>=_cutoff).order_by(User.created_at.desc()).all()
-        return [u for u in _cands if _is_bot(u) and Image.query.filter_by(user_id=u.id).count()==0]
+        # Unverified bots — is_active=False, gibberish username, no images
+        _unverified = User.query.filter(
+            User.is_active == False,
+            User.created_at >= _cutoff,
+            User.role != 'admin'
+        ).order_by(User.created_at.desc()).all()
+        _unverified_bots = [u for u in _unverified if _is_bot(u) and Image.query.filter_by(user_id=u.id).count() == 0]
+
+        # SL 172.3: Verified bots — is_active=True but never completed onboarding,
+        # gibberish username, 0 images, account > 24 hours old (avoids catching new legit users)
+        from datetime import timedelta as _btd
+        _stale_cutoff = datetime.utcnow() - _btd(hours=24)
+        _verified = User.query.filter(
+            User.is_active == True,
+            User.created_at >= _cutoff,
+            User.created_at <= _stale_cutoff,
+            User.is_subscribed == False,
+            User.role != 'admin',
+        ).order_by(User.created_at.desc()).all()
+        _verified_bots = [
+            u for u in _verified
+            if _is_bot(u)
+            and not getattr(u, 'interests_complete', False)
+            and Image.query.filter_by(user_id=u.id).count() == 0
+        ]
+
+        return _unverified_bots + _verified_bots
 
     deleted = 0
     if request.method == 'POST':
@@ -28525,6 +28481,65 @@ if _sched_lock_held:
         name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
         replace_existing = True,
     )
+
+    # SL 172.3 — Daily automated bot purge — 3:15 UTC (8:45 IST)
+    # Deletes accounts with gibberish usernames, 0 images, incomplete onboarding,
+    # older than 24 hours. Runs after the daily digest (3:30 UTC) so admin sees
+    # the count before purge in the digest email.
+    def _run_bot_purge():
+        import re as _bpre
+        try:
+            with app.app_context():
+                from datetime import timedelta as _bptd
+                _cutoff    = datetime.utcnow() - _bptd(days=30)
+                _stale     = datetime.utcnow() - _bptd(hours=24)
+
+                def _is_gibberish(username):
+                    return bool(_bpre.match(r'^[a-z]{8,16}$', username or ''))
+
+                # Unverified bots
+                _unverified = User.query.filter(
+                    User.is_active == False,
+                    User.created_at >= _cutoff,
+                    User.role != 'admin'
+                ).all()
+                _to_delete = [u for u in _unverified
+                              if _is_gibberish(u.username)
+                              and Image.query.filter_by(user_id=u.id).count() == 0]
+
+                # Verified-but-incomplete bots
+                _verified = User.query.filter(
+                    User.is_active == True,
+                    User.created_at >= _cutoff,
+                    User.created_at <= _stale,
+                    User.is_subscribed == False,
+                    User.role != 'admin'
+                ).all()
+                _to_delete += [u for u in _verified
+                               if _is_gibberish(u.username)
+                               and not getattr(u, 'interests_complete', False)
+                               and Image.query.filter_by(user_id=u.id).count() == 0]
+
+                count = 0
+                for u in _to_delete:
+                    try:
+                        db.session.delete(u)
+                        count += 1
+                    except Exception:
+                        pass
+                if count:
+                    db.session.commit()
+                    app.logger.warning(f'[bot-review] auto-purge: deleted {count} bot account(s)')
+        except Exception as _bpe:
+            app.logger.error(f'[bot-review] auto-purge failed: {_bpe}')
+
+    _scheduler.add_job(
+        func             = _run_bot_purge,
+        trigger          = CronTrigger(hour=3, minute=15, timezone='UTC'),
+        id               = 'bot_auto_purge',
+        name             = 'Daily bot account purge — 3:15 UTC (8:45 IST)',
+        replace_existing = True,
+    )
     _scheduler.start()
     import atexit as _atexit
     _atexit.register(lambda: _scheduler.shutdown(wait=False))
@@ -29417,7 +29432,7 @@ def try_result(image_id):
 
 
 
-@app.route('/admin/resend-subscription-email/<int:user_id>', methods=['POST'])
+@app.route('/admin/resend-subscription-email/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def admin_resend_subscription_email(user_id):
