@@ -19322,6 +19322,88 @@ def api_create_payment():
         return jsonify({'error': 'Could not initialise payment. Please try again.'}), 500
 
 
+def _send_subscription_confirmation(user, track, plan):
+    """
+    Send subscription confirmation email after successful payment.
+    SL 172.3 — was missing, causing silent failure on every new subscription.
+    Uses send_email() — same transactional email path as the rest of the codebase.
+    """
+    site_url   = os.getenv('SITE_URL', 'https://shutterleague.com')
+    name       = user.full_name or user.username or 'Photographer'
+    track_labels = {'camera': 'Camera League', 'mobile': 'Mobile League'}
+    plan_labels  = {'monthly': 'Monthly', 'halfyearly': 'Half-Yearly', 'annual': 'Annual'}
+    track_label  = track_labels.get(track, track.title())
+    plan_label   = plan_labels.get(plan, plan.title())
+
+    subject = f'Welcome to {track_label} — your membership is active'
+    body_html = (
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        f'Hi {name},</p>'
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        f'Your {track_label} {plan_label} membership is now active. '
+        f'Upload your first photograph and the engine will evaluate it across five dimensions — '
+        f'benchmarked against every image on the platform.</p>'
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        f'Your first evaluation includes the full Mentor Advice, Location Advisory, Master Reference, '
+        f'and Body of Work sequence.</p>'
+        f'<div style="margin:28px 0;">'
+        f'<a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;'
+        f'color:#FFFFFF;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;'
+        f'text-decoration:none;padding:14px 28px;border-radius:4px;letter-spacing:1px;">'
+        f'Upload Your First Photograph →</a></div>'
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:14px;line-height:1.65;color:#8a8070;margin:0;">'
+        f'Questions? Reply to this email or visit {site_url}/faq</p>'
+    )
+
+    try:
+        send_email(
+            to_addresses = user.email,
+            subject      = subject,
+            html_body    = body_html,
+        )
+        app.logger.info(f'[subscribe_confirm] confirmation email sent to {user.email}')
+    except Exception as _e:
+        app.logger.error(f'[subscribe_confirm] email failed: {_e}')
+
+
+def _send_subscription_cancellation(user, track, plan):
+    """
+    Send cancellation confirmation email.
+    SL 172.3 — was missing, causing silent failure on every cancellation.
+    """
+    site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    name        = user.full_name or user.username or 'Photographer'
+    track_labels = {'camera': 'Camera League', 'mobile': 'Mobile League'}
+    track_label  = track_labels.get(track, track.title())
+
+    subject = f'Your {track_label} membership has been cancelled'
+    body_html = (
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        f'Hi {name},</p>'
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        f'Your {track_label} membership has been cancelled. No further charges will be made.</p>'
+        f'<p style="font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.75;color:#2a2a28;margin:0 0 16px;">'
+        f'Your evaluations, standing, and Body of Work remain exactly where you left them. '
+        f'When you are ready to continue, subscribe again and pick up from where you stopped.</p>'
+        f'<div style="margin:28px 0;">'
+        f'<a href="{site_url}/pricing" style="display:inline-block;background:#1A1A18;'
+        f'color:#FFFFFF;font-family:Inter,Arial,sans-serif;font-size:15px;font-weight:700;'
+        f'text-decoration:none;padding:14px 28px;border-radius:4px;letter-spacing:1px;">'
+        f'Rejoin the programme →</a></div>'
+    )
+
+    try:
+        send_email(
+            to_addresses = user.email,
+            subject      = subject,
+            html_body    = body_html,
+        )
+        app.logger.info(f'[cancel] cancellation email sent to {user.email}')
+    except Exception as _e:
+        app.logger.error(f'[cancel] email failed: {_e}')
+
+
+
 @app.route('/subscribe/confirm', methods=['POST'])
 @login_required
 def subscribe_confirm():
@@ -29332,6 +29414,40 @@ def try_result(image_id):
         evals_remaining= evals_remaining,
     )
 
+
+
+
+@app.route('/admin/resend-subscription-email/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_resend_subscription_email(user_id):
+    """
+    One-time admin trigger: resend subscription confirmation email to a user.
+    SL 172.3 — covers users who subscribed before _send_subscription_confirmation
+    was defined (e.g. Sanjay Tiwari, user 119, jitiwariji@gmail.com).
+    Usage: POST /admin/resend-subscription-email/<user_id>
+    Access: admin only.
+    """
+    user = User.query.get_or_404(user_id)
+    if not user.is_subscribed:
+        flash(f'User {user.email} is not subscribed — no email sent.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    track = user.subscription_track or 'camera'
+    plan  = user.subscription_plan  or 'annual'
+
+    try:
+        _send_subscription_confirmation(user, track, plan)
+        app.logger.info(
+            f'[admin_resend] subscription confirmation resent to '
+            f'{user.email} (user={user_id} track={track} plan={plan})'
+        )
+        flash(f'Subscription confirmation email sent to {user.email}.', 'success')
+    except Exception as _e:
+        app.logger.error(f'[admin_resend] failed for user {user_id}: {_e}')
+        flash(f'Email failed: {_e}', 'error')
+
+    return redirect(url_for('admin_dashboard'))
 
 # ---------------------------------------------------------------------------
 # END /try routes -- SL 172.1
