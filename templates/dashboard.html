@@ -52,8 +52,8 @@ body.page-dashboard #backToTop         { display:none !important }
 .layout{display:grid;grid-template-columns:155px minmax(0,1fr) 220px;align-items:stretch}
 
 /* ── SIDENAV ── */
-.sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0}
-.si{display:flex;align-items:center;gap:7px;padding:5px 10px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer;white-space:nowrap;overflow:hidden;min-height:32px}
+.sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0;min-width:0;overflow:hidden}
+.si{display:flex;align-items:center;gap:7px;padding:5px 10px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer;white-space:nowrap;min-height:32px;overflow:visible;width:100%;max-width:155px}
 .si.active{background:var(--cream);color:var(--dark);font-weight:600;border-left-color:var(--gold)}
 .si:hover:not(.active){color:var(--dark);background:#fafaf8}
 .si i{font-size:14px;flex-shrink:0}
