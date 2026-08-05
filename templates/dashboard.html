@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.3.0 — fully scoped CSS (.sl prefix), audit clean, all base.html interference resolved (Session 175, 2026-08-05 — Final: fully scoped CSS, no base.html interference) #}
+{# SL-VERSION: 175.3.1 — SL logo, sidenav tight spacing, rank panel no-wrap, audit clean (Session 175, 2026-08-05 — Final: fully scoped CSS, no base.html interference) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 {% block extra_head %}
@@ -170,8 +170,9 @@ body.page-dashboard .sl nav.sidenav{display:flex!important;flex-direction:column
 <div class="sl">
 
 <nav class="topnav">
-  <div class="logo-icon">SL</div>
-  <div class="logo-text">Shutter<br>League</div>
+  <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;text-decoration:none;flex-shrink:0">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" style="height:32px;width:auto;display:block">
+  </a>
   <div class="nav-links">
     <a class="nav-link active primary-nav" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="nav-link primary-nav" href="{{ url_for('upload') }}">Upload</a>
@@ -330,9 +331,9 @@ body.page-dashboard .sl nav.sidenav{display:flex!important;flex-direction:column
 <!-- RIGHT PANEL -->
 <div class="rpanel">
   <div class="rank-card rp-rank">
-    {% if progress_data and progress_data.overall_pct %}<div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:6px">You are in the</div><div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:#1A7FD4;letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct }}%</div><div style="font-size:13px;color:#6B6B6B;margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div><div style="font-size:13px;color:#6B6B6B;margin:8px 0"><span style="color:#2A7A3A;font-weight:600">↑ Moving up</span> · Keep shooting</div>
-    {% elif aea_dash and aea_dash.league_rank and aea_dash.league_rank<=50 %}<div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div><div style="font-family:Georgia,serif;font-size:52px;font-weight:700;color:#D6A428;letter-spacing:-2px;line-height:1">'{{ aea_dash.league_rank }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:10px"><span style="color:#2A7A3A;font-weight:600">↑ Climbing</span> this season</div>
-    {% else %}<div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div><div style="font-size:13px;color:#6B6B6B;line-height:1.6">Upload more images to unlock your standing on the platform.</div>{% endif %}
+    {% if progress_data and progress_data.overall_pct %}<div class="rl" style="margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Your Standing · Camera League</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:6px">You are in the</div><div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:#1A7FD4;letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct }}%</div><div style="font-size:13px;color:#6B6B6B;margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div><div style="font-size:13px;color:#6B6B6B;margin:8px 0"><span style="color:#2A7A3A;font-weight:600">↑ Moving up</span> · Keep shooting</div>
+    {% elif aea_dash and aea_dash.league_rank and aea_dash.league_rank<=50 %}<div class="rl" style="margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Your Standing · Camera League</div><div style="font-family:Georgia,serif;font-size:52px;font-weight:700;color:#D6A428;letter-spacing:-2px;line-height:1">'{{ aea_dash.league_rank }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:10px"><span style="color:#2A7A3A;font-weight:600">↑ Climbing</span> this season</div>
+    {% else %}<div class="rl" style="margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Your Standing · Camera League</div><div style="font-size:13px;color:#6B6B6B;line-height:1.6">Upload more images to unlock your standing on the platform.</div>{% endif %}
     <div style="height:0.5px;background:#E8E4DA;margin-bottom:10px"></div>
     {% if aea_dash and aea_dash.top6_avg %}<div style="font-size:13px;color:#6B6B6B;margin-bottom:1px">AEA average</div><div style="font-size:16px;font-weight:700;color:#1A7FD4;margin-bottom:2px">{{ '%.2f'|format(aea_dash.top6_avg) }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:10px">{{ aea_dash.qualifying_months }} month{{ 's' if aea_dash.qualifying_months!=1 else '' }} active</div>
     {% else %}<div style="font-size:13px;color:#6B6B6B;margin-bottom:10px;line-height:1.5">Score 6 images in 3 months to qualify for the Annual Excellence Award.</div>{% endif %}
@@ -340,7 +341,7 @@ body.page-dashboard .sl nav.sidenav{display:flex!important;flex-direction:column
   </div>
 
   {% if progress_data %}<div style="border-top:0.5px solid #E8E4DA;padding-top:10px" class="rp-standing">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div class="rl" style="margin-bottom:0">My Standing</div><a href="{{ url_for('my_gallery') }}" class="lnk">Full view →</a></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div class="rl" style="margin-bottom:0;white-space:nowrap">My Standing</div><a href="{{ url_for('my_gallery') }}" class="lnk">Full view →</a></div>
     <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px"><span style="font-size:13px">👑</span><span style="font-size:17px;font-weight:600;color:#0F2A22">{{ progress_data.highest_tier }}</span></div>
     <div style="font-size:13px;color:#6B6B6B;margin-bottom:6px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
     {% if progress_data.overall_pct %}<div style="font-size:13px;color:#6B6B6B;margin-bottom:3px">You're in the <strong>top {{ progress_data.overall_pct }}%</strong> this month</div><div class="pb"><div class="pbf" style="width:{{ [progress_data.overall_pct,100]|min }}%"></div><div class="pbd" style="left:{{ [progress_data.overall_pct,100]|min }}%"><div class="pbdi"></div></div></div>{% endif %}
@@ -348,13 +349,13 @@ body.page-dashboard .sl nav.sidenav{display:flex!important;flex-direction:column
   </div>{% endif %}
 
   {% if _last and _last.score %}<div style="border-top:0.5px solid #E8E4DA;padding-top:10px" class="rp-latest">
-    <div class="rl">Latest Evaluation</div>
+    <div class="rl" style="white-space:nowrap">Latest Evaluation</div>
     <div style="display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:start"><div style="width:50px;height:50px;border-radius:7px;background:#1A2A22;overflow:hidden">{% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" style="width:100%;height:100%;object-fit:cover" alt="" onerror="this.remove()">{% endif %}</div><div><div style="font-size:24px;font-weight:700;color:#0F2A22;line-height:1">{{ '%.1f'|format(_last.score) }}<span style="font-size:13px;font-weight:400;color:#6B6B6B">/10</span></div><div style="font-size:13px;font-weight:600;color:#2A7A3A">{{ _last.tier or '' }}</div><div style="font-size:13px;color:#6B6B6B">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div></div></div>
     <a href="{{ url_for('image_detail',image_id=_last.id) }}" class="lnk" style="display:block;margin-top:5px;text-align:right">View full report →</a>
   </div>{% endif %}
 
   <div class="wcard rp-weekly">
-    <div class="rl">Weekly Assignment</div>
+    <div class="rl" style="white-space:nowrap">Weekly Assignment</div>
     {% if active_challenge %}<div style="font-size:13px;font-weight:600;color:#0F2A22;margin-bottom:2px">{{ active_challenge.prompt_title }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:2px">Closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
     {% else %}<div style="font-size:13px;font-weight:600;color:#0F2A22;margin-bottom:2px">Shoot still life in black and white</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:2px">New assignment each Monday</div>{% endif %}
     <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
@@ -362,7 +363,7 @@ body.page-dashboard .sl nav.sidenav{display:flex!important;flex-direction:column
   </div>
 
   <div class="mcard rp-expert">
-    <div class="rl">Get Expert Advice</div>
+    <div class="rl" style="white-space:nowrap">Get Expert Advice</div>
     <div style="font-size:13px;color:#6B6B6B;line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
     <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
     <div class="expanded" id="xexp"><div style="font-size:13px;color:#6B6B6B;line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div><a href="{{ url_for('mentors') }}" style="background:#D6A428;color:#0F2A22;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">Request a review →</a><span class="rm" onclick="toggleSpan('xexp','xrm')">Read less →</span></div>
