@@ -1,4 +1,4 @@
-# SL-VERSION: 172.3
+# SL-VERSION: 175.1.1 (Session 175, 2026-08-05 — mentor_sessions rollback fix)
 
 import os
 import re
