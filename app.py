@@ -1,4 +1,4 @@
-# SL-VERSION: 175.1.3 (Session 175, 2026-08-05 — rollback fixes: mentor_sessions + seasonal_calendar date_start cascade)
+# SL-VERSION: 175.1.4 (Session 175, 2026-08-05 — referral calls moved outside render_template with rollback guards)
 
 import os
 import re
@@ -4414,6 +4414,7 @@ def dashboard():
                 )
                 db.session.commit()
             except Exception:
+                db.session.rollback()
                 pass
         total_count = _lifetime
         # Compute shadow rank — position by avg DDI score across all public scored users
@@ -4444,6 +4445,7 @@ def dashboard():
                 if _best:
                     _shadow_tier = get_tier(float(_best))
             except Exception:
+                db.session.rollback()
                 pass
         free_tier = {
             'used':        total_count,
@@ -4647,6 +4649,7 @@ def dashboard():
                 'images_needed':      max(0, _aea_req_images - _aea_total),
             }
         except Exception as _aea_dash_err:
+            db.session.rollback()
             app.logger.warning(f'[dashboard] aea_dash failed: {_aea_dash_err}')
             aea_dash = None
 
@@ -4725,6 +4728,7 @@ def dashboard():
             if _flash_imgs:
                 db.session.commit()
         except Exception as _fle:
+            db.session.rollback()
             app.logger.error(f'[scoring_flash] {_fle}')
 
     # ── Wallet HUD (Sprint 4) ─────────────────────────────────────────────
@@ -4782,12 +4786,14 @@ def dashboard():
         try:
             _lesson = _get_curriculum_lesson(current_user, progress_data)
         except Exception as _le:
+            db.session.rollback()
             app.logger.warning(f'[curriculum_lesson] {_le}')
         try:
             _wx_city = getattr(current_user, 'city', '') or ''
             if _wx_city:
                 _weather = _get_weather(_wx_city)
         except Exception as _we:
+            db.session.rollback()
             app.logger.warning(f'[weather] {_we}')
         # Mission due — open mission upload within last 7 days still pending/processing
         try:
@@ -4802,6 +4808,7 @@ def dashboard():
             if _due_img:
                 _mission_due = True
         except Exception as _mde:
+            db.session.rollback()
             app.logger.warning(f'[mission_due] {_mde}')
         # Mission done today — scored mission image completed successfully today
         # NOTE: do NOT filter on scoring_flash — it is cleared to None on first
@@ -4839,6 +4846,7 @@ def dashboard():
                     _mission_done = True
                     break
         except Exception as _mdd:
+            db.session.rollback()
             app.logger.warning(f'[mission_done] {_mdd}')
     # ── End Photo School ──────────────────────────────────────────────────
 
@@ -4855,6 +4863,7 @@ def dashboard():
         if _skipped_row and _skipped_row[0] and _skipped_row[0] == _ist_today:
             _show_mission = False
     except Exception as _sm_err:
+        db.session.rollback()
         app.logger.warning(f'[mission_skip_gate] {_sm_err}')
     # ── End mission skip gate ─────────────────────────────────────────────
 
@@ -4887,6 +4896,7 @@ def dashboard():
             {'uid': current_user.id}
         ).scalar() or False
     except Exception:
+        db.session.rollback()
         _ref_discount = False
 
     # Fetch version numbers for all images on this page (migration-only column)
@@ -4901,6 +4911,7 @@ def dashboard():
                 if r[1]:  # has parent_image_id = is an edited version
                     _version_map[r[0]] = r[2] or 2  # version_number, default 2
         except Exception as _ve:
+            db.session.rollback()
             app.logger.warning(f'[dashboard] version_map: {_ve}')
 
     # ── Annual Excellence Award — months active this season ──────────────────
@@ -4919,6 +4930,7 @@ def dashboard():
         _season_start_label = '1 September 2026' if _now.year == 2026 else '1 January'
         _pre_season         = (_now.year == 2026 and _now < datetime(2026, 9, 1))
     except Exception as _mae:
+        db.session.rollback()
         app.logger.warning(f'[dashboard] months_active: {_mae}')
         _months_active = 0
         _season_start_label = '1 September 2026'
@@ -4937,6 +4949,7 @@ def dashboard():
                           .order_by(db.func.random())
                           .limit(1).first())
     except Exception:
+        db.session.rollback()
         _dash_carousel = None
 
     # Fetch upload_credits_balance — backfill if 0/NULL for partial free-tier users
@@ -4956,6 +4969,7 @@ def dashboard():
             )
             db.session.commit()
         except Exception as _ucb_e:
+            db.session.rollback()
             app.logger.warning(f'[upload_credits_backfill] {_ucb_e}')
     _ucb_val = _ucb_val or 0
 
@@ -5036,6 +5050,7 @@ def dashboard():
                     ), {'uid': current_user.id}).fetchall()
                     _adv_excluded_ids = [r[0] for r in _adv_log_rows if r[0]]
                 except Exception as _adv_ex_err:
+                    db.session.rollback()
                     app.logger.warning(f'[dashboard] advisory exclusion query: {_adv_ex_err}')
                     _adv_excluded_ids = []
 
@@ -5115,6 +5130,7 @@ def dashboard():
                                 "UPDATE rating_assignments SET genre=:g WHERE id=:id"
                             ), {'g': _img.genre, 'id': _existing.id})
                         except Exception:
+                            db.session.rollback()
                             pass
                         _peer_queue.append(_existing)
                     else:
@@ -5133,14 +5149,17 @@ def dashboard():
                                 "UPDATE rating_assignments SET genre=:g WHERE id=:id"
                             ), {'g': _img.genre, 'id': _a.id})
                         except Exception:
+                            db.session.rollback()
                             pass
                         _peer_queue.append(_a)
                 except Exception as _pq_assign_err:
+                    db.session.rollback()
                     app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
                     db.session.rollback()
             if _peer_queue:
                 db.session.commit()
         except Exception as _pqe:
+            db.session.rollback()
             app.logger.warning(f'[dashboard] peer queue: {_pqe}')
 
     # ── Eye of Judge — calibration trend (shows when ≥5 peer evals submitted) ──
@@ -5178,6 +5197,7 @@ def dashboard():
                     'improving':     _improving,
                 }
         except Exception as _eje:
+            db.session.rollback()
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
     return render_template('dashboard.html', images=images, stats=stats,
