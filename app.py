@@ -1,4 +1,4 @@
-# SL-VERSION: 175.1.1 (Session 175, 2026-08-05 — mentor_sessions rollback fix)
+# SL-VERSION: 175.1.3 (Session 175, 2026-08-05 — rollback fixes: mentor_sessions + seasonal_calendar date_start cascade)
 
 import os
 import re
