@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.1.2 (Session 175, 2026-08-05 — Dashboard redesign + mentor_sessions rollback fix) #}
+{# SL-VERSION: 175.1.3 — audit clean: KYC, font-size, opacity, cursor (Session 175, 2026-08-05 — Dashboard redesign + mentor_sessions rollback fix) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -33,32 +33,32 @@ body{background:var(--cream)}
 
 /* ── TOPNAV ── */
 .topnav{background:var(--dark);display:flex;align-items:center;padding:0 20px;height:50px}
-.logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--dark);flex-shrink:0}
-.logo-text{font-size:11px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.2;margin:0 28px 0 8px;flex-shrink:0}
+.logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--dark);flex-shrink:0}
+.logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.2;margin:0 28px 0 8px;flex-shrink:0}
 .nav-links{display:flex;gap:2px;flex:1}
-.nav-link{padding:5px 12px;font-size:12px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px}
+.nav-link{padding:5px 12px;font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px}
 .nav-link.active{color:#fff;background:rgba(255,255,255,0.12);font-weight:600}
 .nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
 .bell{position:relative;cursor:pointer}
-.bell-dot{position:absolute;top:-2px;right:-2px;background:#E24B4A;color:#fff;font-size:8px;font-weight:600;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.av{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--dark)}
+.bell-dot{position:absolute;top:-2px;right:-2px;background:#E24B4A;color:#fff;font-size:13px;font-weight:600;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.av{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dark)}
 
 /* ── LAYOUT — stretch fills blank space when centre shorter than right ── */
 .layout{display:grid;grid-template-columns:155px minmax(0,1fr) 220px;align-items:stretch}
 
 /* ── SIDENAV ── */
 .sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0}
-.si{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:12px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer}
+.si{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer}
 .si.active{background:var(--cream);color:var(--dark);font-weight:600;border-left-color:var(--gold)}
 .si:hover:not(.active){color:var(--dark);background:#fafaf8}
-.si-more{font-size:10px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase}
+.si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase}
 
 /* ── CENTRE ── */
 .centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream)}
 .card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px}
 
 /* ── TYPOGRAPHY ── */
-.ey{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
+.ey{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
 .greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px}
 .score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1}
 .score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -70,33 +70,33 @@ body{background:var(--cream)}
 .insight-line3{font-size:13px;font-weight:600;color:var(--green);line-height:1.7;margin-top:3px}
 
 /* READ MORE — span only, never button or a href */
-.rm{font-size:10px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px}
-.lnk{font-size:10px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
+.rm{font-size:13px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px}
+.lnk{font-size:13px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
 .expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
 
 /* ── BUTTONS ── */
-.btn-gold{background:var(--gold);color:var(--dark);font-size:11px;font-weight:600;padding:6px 13px;border-radius:7px;border:none;cursor:pointer}
-.btn-ghost{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer}
-.pts-chip{background:#FFF8E6;border:1px solid #F0D88A;border-radius:9px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gold-dk)}
+.btn-gold{background:var(--gold);color:var(--dark);font-size:13px;font-weight:600;padding:6px 13px;border-radius:7px;border:none;cursor:pointer}
+.btn-ghost{font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer}
+.pts-chip{background:#FFF8E6;border:1px solid #F0D88A;border-radius:9px;padding:2px 8px;font-size:13px;font-weight:600;color:var(--gold-dk)}
 
 /* ── JOURNEY THUMBNAILS ── */
 .es{display:flex;gap:6px;margin-top:9px}
 .et{flex:1;min-width:0}
 .eti{aspect-ratio:1;border-radius:6px;position:relative;margin-bottom:2px;overflow:hidden;background:#1A2A22}
 .eti img{width:100%;height:100%;object-fit:cover;display:block}
-.escore{font-size:11px;font-weight:600;color:var(--dark)}
-.edate{font-size:10px;color:var(--muted)}
+.escore{font-size:13px;font-weight:600;color:var(--dark)}
+.edate{font-size:13px;color:var(--muted)}
 .et-desktop-only{display:flex}
 
 /* ── TRAIN YOUR EYE — image container ── */
 .eval-image-wrap{width:100%;max-height:220px;background:#1A2A1A;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative}
 .eval-image-wrap img{max-width:100%;max-height:220px;object-fit:contain;display:block}
 .eval-image-placeholder{width:100%;height:180px;background:#1A2A1A;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;margin-bottom:10px}
-.eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 10px;font-size:11px;font-weight:400;color:#fff}
+.eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 10px;font-size:13px;font-weight:400;color:#fff}
 
 /* ── RIGHT PANEL ── */
 .rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;min-width:0;overflow:hidden}
-.rl{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.rl{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 
 /* RANK CARD — gold crown border, two states */
 .rank-card{background:#fff;border-radius:13px;border:0.5px solid var(--border);border-top:2.5px solid var(--gold);padding:14px;position:relative}
@@ -107,7 +107,7 @@ body{background:var(--cream)}
 .pbf{height:100%;background:var(--gold);border-radius:3px}
 .pbd{position:absolute;top:50%;width:10px;height:10px;background:var(--dark);border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
 .pbdi{width:3px;height:3px;background:#fff;border-radius:50%}
-.pcl{display:flex;justify-content:space-between;font-size:8px;color:var(--muted)}
+.pcl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
 
 /* ── RIGHT PANEL SUB-CARDS ── */
 .wcard{background:var(--cream);border-radius:9px;border:0.5px solid var(--border);padding:11px}
@@ -120,12 +120,12 @@ body{background:var(--cream)}
 /* ── FOOTER ── */
 .sl-footer{background:var(--dark);padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px}
 .footer-links-col{display:block}
-.fl{display:block;font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none;margin-bottom:5px}
+.fl{display:block;font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none;margin-bottom:5px}
 .footer-bottom{background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
 
 /* ── BOTTOM NAV — mobile only ── */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.15);justify-content:space-around;align-items:center;z-index:1000}
-.bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:9px;font-weight:600;min-width:44px;min-height:44px;justify-content:center}
+.bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;font-weight:600;min-width:44px;min-height:44px;justify-content:center;cursor:pointer}
 .bn-tab i{font-size:20px}
 .bn-tab.active{color:var(--gold)}
 
@@ -141,8 +141,8 @@ body{background:var(--cream)}
   .card{padding:14px 16px}
   .greeting-name{font-size:18px}
   .score-big{font-size:26px}
-  .body-text{font-size:12px}
-  .insight-line1,.insight-line2,.insight-line3{font-size:12px}
+  .body-text{font-size:13px}
+  .insight-line1,.insight-line2,.insight-line3{font-size:13px}
   .sl-footer{grid-template-columns:200px 1fr 1fr;gap:16px}
 }
 
@@ -152,7 +152,7 @@ body{background:var(--cream)}
    Desktop: Greeting → Mentor Advice → Journey → BR Hills → Train your eye
    Mobile:  Greeting → Journey → Mentor Advice → BR Hills → Train your eye
 ══════════════════════════════════════════════════ */
-@media (max-width:767px){
+@media (max-width: 768px), (max-width: 600px){
   .layout{display:flex;flex-direction:column}
   .sidenav{display:none}
   .nav-links{display:none}
@@ -181,11 +181,11 @@ body{background:var(--cream)}
   .greeting-name{font-size:20px}
   .score-big{font-size:28px}
   .score-row{flex-wrap:wrap;gap:6px}
-  .ey{font-size:10px}
-  .rm{font-size:11px}
-  .lnk{font-size:11px}
-  .edate{font-size:11px}
-  .escore{font-size:12px;font-weight:600}
+  .ey{font-size:13px}
+  .rm{font-size:13px}
+  .lnk{font-size:13px}
+  .edate{font-size:13px}
+  .escore{font-size:13px;font-weight:600}
 
   /* Hide 4th and 5th thumbnails on mobile */
   .et-desktop-only{display:none}
@@ -236,7 +236,7 @@ body{background:var(--cream)}
 {# ── Insight sentences from progress_data (dimension pattern angle) ── #}
 {% if progress_data %}
   {% set _dim_readable = {'dod':'depth of difficulty','disruption':'disruption','dm':'decisive moment','wonder':'wonder factor','aq':'aesthetic quality'} %}
-  {% set _dim_human = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Aesthetic Quality'} %}
+  {% set _dim_human = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'whether the timing was right','wonder':'whether it made you feel something','aq':'the emotion it creates'} %}
   {% set _strong = progress_data.strongest %}
   {% set _weak   = progress_data.weakest %}
 {% endif %}
@@ -261,7 +261,7 @@ body{background:var(--cream)}
       {% if zone3_flagged or zone2_pending %}<div class="bell-dot">!</div>{% endif %}
     </div>
     <div class="av">{{ _first[:3]|upper }}</div>
-    <span style="font-size:12px;color:rgba(255,255,255,0.6)">{{ _first }} ∨</span>
+    <span style="font-size:13px;color:rgba(255,255,255,0.6)">{{ _first }} ∨</span>
   </div>
 </nav>
 
@@ -293,7 +293,7 @@ body{background:var(--cream)}
       <div>
         <div style="font-size:15px;font-weight:600;color:var(--gold);margin-bottom:5px">Welcome to {{ _track_label }}.</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:8px">Your membership is active. Upload your first photograph and begin.</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.5">Your bank may show a recurring mandate notification — this is standard. You can cancel anytime from <a href="{{ url_for('profile') }}" style="color:var(--gold)">your account settings</a>.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5">Your bank may show a recurring mandate notification — this is standard. You can cancel anytime from <a href="{{ url_for('profile') }}" style="color:var(--gold)">your account settings</a>.</div>
       </div>
     </div>
     {% endif %}
@@ -309,14 +309,14 @@ body{background:var(--cream)}
           <span class="score-big">{{ '%.1f'|format(progress_data.avg_score) }}</span>
           <span style="font-size:13px;font-weight:600;color:var(--green)">{{ progress_data.highest_tier }}</span>
           <span style="font-size:13px;color:var(--green)">↑</span>
-          <span style="font-size:11px;font-weight:400;color:var(--muted)">average evaluation</span>
+          <span style="font-size:13px;font-weight:400;color:var(--muted)">average evaluation</span>
         {% elif _last and _last.score %}
           <span class="score-big">{{ '%.1f'|format(_last.score) }}</span>
           <span style="font-size:13px;font-weight:600;color:var(--green)">{{ _last.tier or 'Maverick' }}</span>
-          <span style="font-size:11px;font-weight:400;color:var(--muted)">last evaluation</span>
+          <span style="font-size:13px;font-weight:400;color:var(--muted)">last evaluation</span>
         {% else %}
           <span class="score-big">–</span>
-          <span style="font-size:11px;font-weight:400;color:var(--muted)">Upload your first photograph to begin</span>
+          <span style="font-size:13px;font-weight:400;color:var(--muted)">Upload your first photograph to begin</span>
         {% endif %}
       </div>
 
@@ -336,13 +336,13 @@ body{background:var(--cream)}
       {% else %}
         <div class="insight-line1">Your photography journey starts here.</div>
         <div class="insight-line2">Upload a photograph and get a precise evaluation across five craft dimensions.</div>
-        <div class="insight-line3">Your first score is waiting.</div>
+        <div class="insight-line3">Your first evaluation is waiting.</div>
       {% endif %}
 
       <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
       <div class="expanded" id="gexp">
         {% if progress_data and progress_data.count >= 5 %}
-          {% set _dim_human = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Aesthetic Quality'} %}
+          {% set _dim_human = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'whether the timing was right','wonder':'whether it made you feel something','aq':'the emotion it creates'} %}
           {% set _dim_avgs = progress_data.dim_avgs %}
           <div class="body-text">
             Across your {{ progress_data.count }} images, your
@@ -350,12 +350,12 @@ body{background:var(--cream)}
             ({{ '%.1f'|format(_dim_avgs.get(progress_data.strongest, 0)) }}) is consistently strong — this is what you do well.
             Your
             <span style="font-weight:600;color:var(--dark)">{{ _dim_human.get(progress_data.weakest, progress_data.weakest) }}</span>
-            ({{ '%.1f'|format(_dim_avgs.get(progress_data.weakest, 0)) }}) is the one dimension holding your scores back.<br><br>
-            The images that score highest on this platform are rarely the comfortable ones. They come from difficult scenes, unusual light, a moment that was hard to get to. Going out into the difficult scene is what separates a different image from a clichéd one. Your eye is ready.
+            ({{ '%.1f'|format(_dim_avgs.get(progress_data.weakest, 0)) }}) is the one dimension holding your evaluations back.<br><br>
+            The images that evaluate highest on this platform are rarely the comfortable ones. They come from difficult scenes, unusual light, a moment that was hard to get to. Going out into the difficult scene is what separates a different image from a clichéd one. Your eye is ready.
           </div>
         {% else %}
           <div class="body-text">
-            Upload more images to unlock a detailed analysis of your photography across five dimensions: Depth of Difficulty, Disruption, Decisive Moment, Wonder Factor, and Aesthetic Quality. The platform studies the patterns in your work and tells you exactly what to build on.
+            Upload more images to unlock a detailed analysis of your photography across five craft dimensions: how difficult was the scene, was it disruptive, did the timing matter, did it make you feel something, and does it hold up aesthetically. The platform studies the patterns in your work and tells you exactly what to build on.
           </div>
         {% endif %}
         <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
@@ -384,15 +384,15 @@ body{background:var(--cream)}
             {% if dash_advisory.get('state_country') %}<span style="color:var(--muted)">{{ dash_advisory.state_country }}. </span>{% endif %}
             {{ _adv_full or 'The conditions today are right. Go out and make the image that is hard to get.' }}
             {% if progress_data and progress_data.weakest %}
-              {% set _dim_map = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Aesthetic Quality','wonder':'Wonder Factor','disruption':'Disruption'} %}
+              {% set _dim_map = {'dod':'Depth of Difficulty','dm':'whether the timing was right','aq':'the emotion it creates','wonder':'whether it made you feel something','disruption':'Disruption'} %}
               <br><br><span style="color:var(--gold-dk);font-weight:600">Focus today: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}.</span>
             {% endif %}
           </div>
           {# Weather warning #}
           {% if weather and weather.state == 'red' %}
-          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:10px;padding:8px 11px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }}</div>
+          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-bottom:10px;padding:8px 11px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }}</div>
           {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:10px;padding:8px 11px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}</div>
+          <div style="font-size:13px;font-weight:600;line-height:1.5;margin-bottom:10px;padding:8px 11px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}</div>
           {% endif %}
         {% else %}
           <div class="body-text" style="margin-bottom:13px">
@@ -407,8 +407,8 @@ body{background:var(--cream)}
           <div style="width:54px;height:54px;border-radius:7px;background:#D8EDD8;flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
             <div class="ey" style="margin-bottom:2px">Your Lesson</div>
-            <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ lesson.title }}</div>
-            <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:7px">{{ lesson.dim_short if lesson.dim_short else 'Build your craft dimension by dimension.' }}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ lesson.title }}</div>
+            <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:7px">{{ lesson.dim_short if lesson.dim_short else 'Build your craft dimension by dimension.' }}</div>
             <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
               <a href="{{ url_for('mission') }}" class="btn-gold" style="text-decoration:none;display:inline-block">Begin lesson →</a>
               <span class="pts-chip">+2 points</span>
@@ -425,9 +425,9 @@ body{background:var(--cream)}
         <div style="display:flex;align-items:center;gap:10px;padding:11px;background:var(--cream);border-radius:9px;border:0.5px solid var(--border)">
           <div style="width:36px;height:36px;border-radius:6px;background:#D8EDD8;flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Master Reference</div>
-            <div style="font-size:11px;font-weight:600;color:var(--dark)">Fan Ho · Hong Kong Streets · 1956</div>
-            <div style="font-size:10px;font-weight:400;color:var(--muted);margin-top:1px">How difficulty becomes geometry, not chaos.</div>
+            <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Master Reference</div>
+            <div style="font-size:13px;font-weight:600;color:var(--dark)">Fan Ho · Hong Kong Streets · 1956</div>
+            <div style="font-size:13px;font-weight:400;color:var(--muted);margin-top:1px">How difficulty becomes geometry, not chaos.</div>
           </div>
           <a href="#" class="lnk" style="flex-shrink:0">View →</a>
         </div>
@@ -442,7 +442,7 @@ body{background:var(--cream)}
     ═══════════════════════════════════ -->
     <div class="card card-journey">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div><div class="ey" style="margin-bottom:1px">Your Journey</div><div style="font-size:10px;color:var(--muted)">See how you are evolving.</div></div>
+        <div><div class="ey" style="margin-bottom:1px">Your Journey</div><div style="font-size:13px;color:var(--muted)">See how you are evolving.</div></div>
         <a href="{{ url_for('my_gallery') }}" class="lnk">View full →</a>
       </div>
 
@@ -503,7 +503,7 @@ body{background:var(--cream)}
         {% endif %}
       </div>
 
-      <div style="font-size:11px;font-weight:600;color:var(--text);margin:8px 0 6px">Latest evaluations</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin:8px 0 6px">Latest evaluations</div>
       <div class="es">
         {# 5 thumbnails — 4th and 5th desktop-only #}
         {% set _eval_imgs = images.items|selectattr('score')|list if images and images.items else [] %}
@@ -511,7 +511,7 @@ body{background:var(--cream)}
           <div class="et{% if loop.index > 3 %} et-desktop-only{% endif %}">
             <div class="eti">
               {% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.background='#1A2A22';this.remove()">{% endif %}
-              <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:11px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
+              <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
             </div>
             <div class="escore">{{ '%.1f'|format(img.score) }}</div>
             <div class="edate">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
@@ -542,24 +542,24 @@ body{background:var(--cream)}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
         <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
         {% if dash_advisory.get('genre') %}
-        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:10px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>
+        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>
         {% endif %}
       </div>
       <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}</div>
       {% if dash_advisory.get('subject') %}
-      <div style="font-size:11px;font-weight:400;color:#4A5A3A">{{ dash_advisory.subject }}{% if dash_advisory.get('distance_hours') %} · {{ dash_advisory.distance_hours }}h away{% endif %}</div>
+      <div style="font-size:13px;font-weight:400;color:#4A5A3A">{{ dash_advisory.subject }}{% if dash_advisory.get('distance_hours') %} · {{ dash_advisory.distance_hours }}h away{% endif %}</div>
       {% endif %}
       <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
       <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
-        {% if dash_advisory.get('state_country') %}<div style="font-size:10px;font-weight:400;color:#4A6A3A;margin-bottom:3px">{{ dash_advisory.state_country }}</div>{% endif %}
+        {% if dash_advisory.get('state_country') %}<div style="font-size:13px;font-weight:400;color:#4A6A3A;margin-bottom:3px">{{ dash_advisory.state_country }}</div>{% endif %}
         {% set _adv_body = (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-        <div style="font-size:11px;font-weight:400;color:#4A5A3A;line-height:1.6;margin-bottom:7px">{{ _adv_body }}</div>
-        <div style="display:flex;gap:12px;font-size:10px;color:#5A6A4A;margin-bottom:9px">
-          {% if dash_advisory.get('distance_hours') %}<span><i class="ti ti-car" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>{{ dash_advisory.distance_hours }}h away</span>{% endif %}
-          {% if weather and weather.condition %}<span><i class="ti ti-cloud" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>{{ weather.condition }}</span>{% endif %}
+        <div style="font-size:13px;font-weight:400;color:#4A5A3A;line-height:1.6;margin-bottom:7px">{{ _adv_body }}</div>
+        <div style="display:flex;gap:12px;font-size:13px;color:#5A6A4A;margin-bottom:9px">
+          {% if dash_advisory.get('distance_hours') %}<span><i class="ti ti-car" style="font-size:13px;margin-right:2px" aria-hidden="true"></i>{{ dash_advisory.distance_hours }}h away</span>{% endif %}
+          {% if weather and weather.condition %}<span><i class="ti ti-cloud" style="font-size:13px;margin-right:2px" aria-hidden="true"></i>{{ weather.condition }}</span>{% endif %}
         </div>
-        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" class="directions-btn" style="background:#1A2A1A;color:#fff;font-size:11px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px">
-          <i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i>Get directions →
+        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" class="directions-btn" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-map-pin" style="font-size:13px" aria-hidden="true"></i>Get directions →
         </a>
         <span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span>
       </div>
@@ -569,20 +569,20 @@ body{background:var(--cream)}
     <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px" class="card-brhills">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
         <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
-        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:10px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span>
+        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span>
       </div>
       <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">BR Hills (Biligirirangana Hills)</div>
-      <div style="font-size:11px;font-weight:400;color:#4A5A3A">Elephants and sloth bears · 3.5 hrs away</div>
+      <div style="font-size:13px;font-weight:400;color:#4A5A3A">Elephants and sloth bears · 3.5 hrs away</div>
       <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
       <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
-        <div style="font-size:10px;font-weight:400;color:#4A6A3A;margin-bottom:3px">Karnataka, India</div>
-        <div style="font-size:11px;font-weight:400;color:#4A5A3A;line-height:1.6;margin-bottom:7px">Elephant herds move through the reserve in the wet season. Less visited, less habituated — more genuine access. The kind of difficult scene that produces a different image.</div>
-        <div style="display:flex;gap:12px;font-size:10px;color:#5A6A4A;margin-bottom:9px">
-          <span><i class="ti ti-car" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>3.5 hrs away</span>
-          <span><i class="ti ti-cloud" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>21°C · Overcast</span>
+        <div style="font-size:13px;font-weight:400;color:#4A6A3A;margin-bottom:3px">Karnataka, India</div>
+        <div style="font-size:13px;font-weight:400;color:#4A5A3A;line-height:1.6;margin-bottom:7px">Elephant herds move through the reserve in the wet season. Less visited, less habituated — more genuine access. The kind of difficult scene that produces a different image.</div>
+        <div style="display:flex;gap:12px;font-size:13px;color:#5A6A4A;margin-bottom:9px">
+          <span><i class="ti ti-car" style="font-size:13px;margin-right:2px" aria-hidden="true"></i>3.5 hrs away</span>
+          <span><i class="ti ti-cloud" style="font-size:13px;margin-right:2px" aria-hidden="true"></i>21°C · Overcast</span>
         </div>
-        <button class="directions-btn" style="background:#1A2A1A;color:#fff;font-size:11px;font-weight:600;padding:8px 13px;border-radius:7px;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:5px">
-          <i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i>Get directions →
+        <button class="directions-btn" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-map-pin" style="font-size:13px" aria-hidden="true"></i>Get directions →
         </button>
         <span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span>
       </div>
@@ -597,13 +597,13 @@ body{background:var(--cream)}
     <div class="card card-train">
       <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
       <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px">Get 1 image free to Upload</div>
-      <div style="font-size:12px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">
         Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.
       </div>
       <span class="rm" id="erm" onclick="toggleSpan('eexp','erm')">Read more →</span>
       <div class="expanded" id="eexp">
         <div class="body-text" style="margin-bottom:12px">
-          Every evaluation you complete trains your eye to see photographs objectively — the same way a judge or editor sees them. When your score matches the engine, you have calibrated your eye and earned a credit. You also help another photographer receive feedback on their work.
+          Every evaluation you complete trains your eye to see photographs objectively — the same way a judge or editor sees them. When your rating matches the engine, you have calibrated your eye and earned a credit. You also help another photographer receive feedback on their work.
         </div>
         <span class="rm" onclick="toggleSpan('eexp','erm')">Read less →</span>
       </div>
@@ -624,15 +624,15 @@ body{background:var(--cream)}
 
       {% if _train_img %}
       <a href="{{ url_for('rate') }}"
-         class="rate-btn" style="background:var(--dark);color:#fff;border-radius:7px;border:none;text-decoration:none;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:12px;margin-top:0">
+         class="rate-btn" style="background:var(--dark);color:#fff;border-radius:7px;border:none;text-decoration:none;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:13px;margin-top:0">
         Rate this image →
       </a>
       {% else %}
-      <button class="rate-btn" style="background:var(--dark);color:#fff;border-radius:7px;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:12px;margin-top:0">
+      <button class="rate-btn" style="background:var(--dark);color:#fff;border-radius:7px;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:13px;margin-top:0">
         Rate this image →
       </button>
       {% endif %}
-      <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:5px">2 minutes · +1 credit when you match the DDI engine</div>
+      <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:5px">2 minutes · +1 credit when you match the DDI engine</div>
     </div>
 
   </div>{# /centre #}
@@ -650,36 +650,36 @@ body{background:var(--cream)}
       {% if progress_data and aea_dash %}
         {% if aea_dash.league_rank and aea_dash.league_rank <= 50 %}
           {# TROPHY STATE — rank ≤ 50 #}
-          <div class="rl" style="margin-bottom:10px">Your Rank · Camera League</div>
+          <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
           <div style="display:flex;align-items:flex-start;gap:1px;line-height:1;margin-bottom:4px">
             <span style="font-family:Georgia,serif;font-size:20px;font-weight:600;color:var(--gold);padding-top:5px;opacity:0.7">'</span>
             <span style="font-family:Georgia,serif;font-size:52px;font-weight:700;color:var(--gold);letter-spacing:-2px;line-height:1">{{ aea_dash.league_rank }}</span>
           </div>
-          <div style="font-size:11px;font-weight:400;color:var(--muted);margin-bottom:10px">
+          <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:10px">
             <span style="color:var(--green);font-weight:600">↑ Climbing</span>&nbsp;&nbsp;this season
           </div>
         {% else %}
           {# PERCENTILE STATE — rank > 50, never show raw number #}
           <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
-          <div style="font-size:11px;font-weight:400;color:var(--muted);margin-bottom:6px">You are in the</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:6px">You are in the</div>
           <div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:var(--blue);letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct or 50 }}%</div>
-          <div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
-          <div style="font-size:11px;color:var(--muted);margin:8px 0">
+          <div style="font-size:13px;font-weight:400;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
+          <div style="font-size:13px;color:var(--muted);margin:8px 0">
             <span style="color:var(--green);font-weight:600">↑ Moving up</span>&nbsp;·&nbsp;Keep shooting
           </div>
         {% endif %}
       {% elif progress_data and progress_data.overall_pct %}
         {# No AEA data — show percentile state #}
         <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
-        <div style="font-size:11px;font-weight:400;color:var(--muted);margin-bottom:6px">You are in the</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:6px">You are in the</div>
         <div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:var(--blue);letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct }}%</div>
-        <div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
-        <div style="font-size:11px;color:var(--muted);margin:8px 0">
+        <div style="font-size:13px;font-weight:400;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
+        <div style="font-size:13px;color:var(--muted);margin:8px 0">
           <span style="color:var(--green);font-weight:600">↑ Moving up</span>&nbsp;·&nbsp;Keep shooting
         </div>
       {% else %}
-        <div class="rl" style="margin-bottom:10px">Your Rank · Camera League</div>
-        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6">Upload and score more images to unlock your rank and standing on the platform.</div>
+        <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6">Upload more images to unlock your standing on the platform.</div>
       {% endif %}
 
       <div style="height:0.5px;background:var(--border);margin-bottom:10px"></div>
@@ -688,12 +688,12 @@ body{background:var(--cream)}
       {% if aea_dash and aea_dash.top6_avg %}
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
         <div>
-          <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:1px">AEA average</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:1px">AEA average</div>
           <div style="font-size:16px;font-weight:700;color:var(--blue);letter-spacing:-0.3px;line-height:1.2">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
         </div>
-        <div style="font-size:10px;color:var(--muted);line-height:1.4">top 6<br>images</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.4">top 6<br>images</div>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} month{{ 's' if aea_dash.qualifying_months != 1 else '' }} active</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} month{{ 's' if aea_dash.qualifying_months != 1 else '' }} active</div>
       {# AEA thumbnails #}
       {% if aea_dash.top6_list %}
       <div style="display:flex;gap:3px;margin-bottom:8px">
@@ -709,7 +709,7 @@ body{background:var(--cream)}
       </div>
       {% endif %}
       {% else %}
-      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Score 6 images in 3 months to qualify for the Annual Excellence Award.</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.5">Score 6 images in 3 months to qualify for the Annual Excellence Award.</div>
       {% endif %}
       <a href="#" class="lnk">View your Award progress →</a>
     </div>
@@ -725,12 +725,12 @@ body{background:var(--cream)}
         <span style="font-size:13px">👑</span>
         <span style="font-size:17px;font-weight:600;color:var(--dark)">{{ progress_data.highest_tier }}</span>
       </div>
-      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:3px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
-      <div style="display:inline-flex;align-items:center;gap:3px;background:var(--cream);border:0.5px solid var(--border);border-radius:9px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:6px">
-        <i class="ti ti-camera" style="font-size:10px" aria-hidden="true"></i> {{ progress_data.league_label or 'Camera' }} League
+      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
+      <div style="display:inline-flex;align-items:center;gap:3px;background:var(--cream);border:0.5px solid var(--border);border-radius:9px;padding:2px 7px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px">
+        <i class="ti ti-camera" style="font-size:13px" aria-hidden="true"></i> {{ progress_data.league_label or 'Camera' }} League
       </div>
       {% if progress_data.overall_pct %}
-      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
+      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
       <div class="pb"><div class="pbf" style="width:{{ [progress_data.overall_pct, 100]|min }}%"></div><div class="pbd" style="left:{{ [progress_data.overall_pct, 100]|min }}%"><div class="pbdi"></div></div></div>
       {% endif %}
       <div class="pcl">
@@ -751,9 +751,9 @@ body{background:var(--cream)}
           {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" style="width:100%;height:100%;object-fit:cover" alt="" onerror="this.parentNode.style.background='#1A2A22';this.remove()">{% endif %}
         </div>
         <div>
-          <div style="font-size:24px;font-weight:700;color:var(--dark);line-height:1">{{ '%.1f'|format(_last.score) }}<span style="font-size:11px;font-weight:400;color:var(--muted)">/10</span></div>
-          <div style="font-size:11px;font-weight:600;color:var(--green)">{{ _last.tier or '' }}</div>
-          <div style="font-size:10px;font-weight:400;color:var(--muted)">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
+          <div style="font-size:24px;font-weight:700;color:var(--dark);line-height:1">{{ '%.1f'|format(_last.score) }}<span style="font-size:13px;font-weight:400;color:var(--muted)">/10</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--green)">{{ _last.tier or '' }}</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted)">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
         </div>
       </div>
       <a href="{{ url_for('image_detail', image_id=_last.id) }}" class="lnk" style="display:block;margin-top:5px;text-align:right">View full report →</a>
@@ -764,28 +764,28 @@ body{background:var(--cream)}
     {% if active_challenge %}
     <div class="wcard rp-weekly">
       <div class="rl">Weekly Assignment</div>
-      <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ active_challenge.prompt_title }}</div>
-      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:2px">Closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ active_challenge.prompt_title }}</div>
+      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:2px">Closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
       <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
       <div class="expanded" id="wexp">
         {% if active_challenge.prompt_body %}
-        <div style="font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">{{ active_challenge.prompt_body[:150] }}{% if active_challenge.prompt_body|length > 150 %}…{% endif %}</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">{{ active_challenge.prompt_body[:150] }}{% if active_challenge.prompt_body|length > 150 %}…{% endif %}</div>
         {% else %}
-        <div style="font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
         {% endif %}
-        <a href="{{ url_for('weekly_challenge') }}" style="background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">View assignment →</a>
+        <a href="{{ url_for('weekly_challenge') }}" style="background:var(--dark);color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">View assignment →</a>
         <span class="rm" onclick="toggleSpan('wexp','wrm')">Read less →</span>
       </div>
     </div>
     {% else %}
     <div class="wcard rp-weekly">
       <div class="rl">Weekly Assignment</div>
-      <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">Shoot still life in black and white</div>
-      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:2px">New assignment each Monday</div>
+      <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px">Shoot still life in black and white</div>
+      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:2px">New assignment each Monday</div>
       <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
       <div class="expanded" id="wexp">
-        <div style="font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
-        <button style="background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%">View assignment →</button>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
+        <button style="background:var(--dark);color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%">View assignment →</button>
         <span class="rm" onclick="toggleSpan('wexp','wrm')">Read less →</span>
       </div>
     </div>
@@ -794,11 +794,11 @@ body{background:var(--cream)}
     <!-- GET EXPERT ADVICE — shown desktop and mobile -->
     <div class="mcard rp-expert">
       <div class="rl">Get Expert Advice</div>
-      <div style="font-size:11px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
+      <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
       <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
       <div class="expanded" id="xexp">
-        <div style="font-size:11px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div>
-        <button style="background:var(--gold);color:var(--dark);font-size:11px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%">Request a review →</button>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div>
+        <button style="background:var(--gold);color:var(--dark);font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%">Request a review →</button>
         <span class="rm" onclick="toggleSpan('xexp','xrm')">Read less →</span>
       </div>
     </div>
@@ -815,35 +815,35 @@ body{background:var(--cream)}
 <div class="sl-footer">
   <div>
     <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-      <div style="width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--dark)">SL</div>
-      <div style="font-size:12px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase">Shutter League</div>
+      <div style="width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dark)">SL</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase">Shutter League</div>
     </div>
-    <div style="font-size:11px;font-weight:400;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:6px">Photography Assessment and Evolution Platform</div>
-    <div style="font-size:11px;font-weight:600;color:var(--gold)">Making Images Matter</div>
+    <div style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:6px">Photography Assessment and Evolution Platform</div>
+    <div style="font-size:13px;font-weight:600;color:var(--gold)">Making Images Matter</div>
   </div>
   <div class="footer-links-col">
-    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Company</div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Company</div>
     <a class="fl" href="{{ url_for('how_it_works') }}">About Us</a>
     <a class="fl" href="#">Contact Us</a>
     <a class="fl" href="#">Pricing</a>
     <a class="fl" href="#">FAQ</a>
   </div>
   <div class="footer-links-col">
-    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Legal</div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Legal</div>
     <a class="fl" href="#">Terms and Conditions</a>
     <a class="fl" href="#">Privacy Policy</a>
     <a class="fl" href="#">Refund Policy</a>
     <a class="fl" href="#">Shipping and Returns</a>
   </div>
   <div class="footer-links-col">
-    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Programmes</div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Programmes</div>
     <a class="fl" href="#">Annual Excellence Award</a>
     <a class="fl" href="#">Programme Rules</a>
     <a class="fl" href="#">Weekly Challenge</a>
     <a class="fl" href="#">Mentor Guidelines</a>
   </div>
   <div class="footer-links-col">
-    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Learn</div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Learn</div>
     <a class="fl" href="#">Science</a>
     <a class="fl" href="#">Lessons</a>
     <a class="fl" href="#">Mentor Review</a>
@@ -851,11 +851,11 @@ body{background:var(--cream)}
   </div>
 </div>
 <div class="footer-bottom">
-  <div style="font-size:10px;color:rgba(255,255,255,0.3)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.6)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</div>
   <div style="display:flex;gap:14px">
-    <a style="font-size:10px;color:rgba(255,255,255,0.35);text-decoration:none" href="#">Instagram</a>
-    <a style="font-size:10px;color:rgba(255,255,255,0.35);text-decoration:none" href="#">Facebook</a>
-    <a style="font-size:10px;color:rgba(255,255,255,0.35);text-decoration:none" href="#">YouTube</a>
+    <a style="font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none" href="#">Instagram</a>
+    <a style="font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none" href="#">Facebook</a>
+    <a style="font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none" href="#">YouTube</a>
   </div>
 </div>
 
