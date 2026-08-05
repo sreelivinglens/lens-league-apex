@@ -1,238 +1,174 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.2.1 (fix base.html global nav CSS override — sidenav horizontal strip) (Session 175, 2026-08-05 — Clean rebuild from approved design ground truth. Audit clean: KYC, font-size 13-14px mobile, rank→standing, base.html nav+footer suppressed) #}
+{# SL-VERSION: 175.3.0 — fully scoped CSS (.sl prefix), audit clean, all base.html interference resolved (Session 175, 2026-08-05 — Final: fully scoped CSS, no base.html interference) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
-
 {% block extra_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 {% endblock %}
-
 {% block body_class %}page-dashboard{% endblock %}
-
 {% block extra_css %}
 <style>
-/* Hide base.html chrome — dashboard has its own nav, footer, bottom nav */
-body.page-dashboard .sl-top-nav,
-body.page-dashboard nav.sl-top-nav,
-body.page-dashboard .sl-bottom-nav,
-body.page-dashboard nav.sl-bottom-nav,
-body.page-dashboard > footer,
-body.page-dashboard footer:not(.sl-dash-footer) { display:none !important; }
-body.page-dashboard { padding-top:0 !important; background:#F6F2E9; }
-body.page-dashboard main,
-body.page-dashboard > main,
-body.page-dashboard main.sl-main { 
-  padding:0 !important; 
-  max-width:none !important; 
-  width:100% !important;
-  margin:0 !important; 
-  background:transparent !important;
-  overflow-x:hidden !important;
-  display:block !important;
-}
-/* Override base.html global nav{display:flex} rule */
-body.page-dashboard nav.sidenav,
-body.page-dashboard .sidenav {
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:stretch !important;
-  height:auto !important;
-  background:#fff !important;
-  border-bottom:none !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  padding:14px 0 !important;
-}
-/* Override base.html global nav rule on our topnav */
-body.page-dashboard nav.topnav {
-  display:flex !important;
-  flex-direction:row !important;
-  align-items:center !important;
-  height:50px !important;
-  background:var(--dark) !important;
-  border-bottom:none !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  padding:0 20px !important;
-}
+/* ═══════════════════════════════════════════════════════
+   ALL CSS scoped to .sl — base.html cannot override
+   Prefixed selectors beat base.html specificity
+═══════════════════════════════════════════════════════ */
 
-/* ── DESIGN TOKENS ── */
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
-:root{
-  --gold:#D6A428;--gold-dk:#A37B2C;--dark:#0F2A22;--cream:#F6F2E9;
-  --border:#E8E4DA;--muted:#6B6B6B;--green:#2A7A3A;--text:#1A1A18;
-  --pista:#E8F5E2;--pista-b:#C5E0BB;--navy:#13254B;--blue:#1A7FD4
-}
+/* Hide base.html nav/footer */
+body.page-dashboard .sl-top-nav{display:none!important}
+body.page-dashboard .sl-bottom-nav{display:none!important}
+body.page-dashboard>footer{display:none!important}
+body.page-dashboard{padding-top:0!important;background:#F6F2E9}
+body.page-dashboard>main{padding:0!important;max-width:none!important;width:100%!important;margin:0!important}
 
-/* ── CONTAINER ── */
-.sl{max-width:1280px;margin:0 auto;background:var(--cream)}
+/* Reset base.html global nav rule for our navs */
+body.page-dashboard .sl nav.topnav{display:flex!important;flex-direction:row!important;align-items:center!important;height:50px!important;background:#0F2A22!important;padding:0 20px!important;border-bottom:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.page-dashboard .sl nav.sidenav{display:flex!important;flex-direction:column!important;align-items:stretch!important;height:auto!important;background:#fff!important;padding:14px 0!important;border-bottom:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 
-/* ── TOPNAV ── */
-.topnav{background:var(--dark);display:flex;align-items:center;padding:0 20px;height:50px}
-.logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--dark);flex-shrink:0}
-.logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.2;margin:0 28px 0 8px;flex-shrink:0}
-.nav-links{display:flex;gap:2px;flex:1}
-.nav-link{padding:5px 12px;font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px}
-.nav-link.active{color:#fff;background:rgba(255,255,255,0.12);font-weight:600}
-.nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
-.bell{position:relative;cursor:pointer}
-.av{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dark)}
+/* Tokens */
+.sl{--gold:#D6A428;--gold-dk:#A37B2C;--dark:#0F2A22;--cream:#F6F2E9;--border:#E8E4DA;--muted:#6B6B6B;--green:#2A7A3A;--text:#1A1A18;--pista:#E8F5E2;--pista-b:#C5E0BB;--blue:#1A7FD4}
+.sl{max-width:1280px;margin:0 auto;background:var(--cream);font-family:'Avenir Next',system-ui,sans-serif}
+.sl *{box-sizing:border-box;margin:0;padding:0}
 
-/* ── LAYOUT ── */
-.layout{display:grid;grid-template-columns:155px minmax(0,1fr) 220px;align-items:stretch}
+/* Topnav */
+.sl .logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--dark);flex-shrink:0}
+.sl .logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.4;margin:0 28px 0 8px;flex-shrink:0}
+.sl .nav-links{display:flex;gap:2px;flex:1}
+.sl .nav-link{padding:5px 12px;font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px}
+.sl .nav-link.active{color:#fff;background:rgba(255,255,255,0.12);font-weight:600}
+.sl .nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.sl .bell{position:relative;cursor:pointer}
+.sl .av{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dark)}
 
-/* ── SIDENAV ── */
-.sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0}
-.si{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer}
-.si.active{background:var(--cream);color:var(--dark);font-weight:600;border-left-color:var(--gold)}
-.si:hover:not(.active){color:var(--dark);background:#fafaf8}
-.si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase}
+/* Layout */
+.sl .layout{display:grid!important;grid-template-columns:155px minmax(0,1fr) 220px;align-items:stretch}
 
-/* ── CENTRE ── */
-.centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream)}
-.card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px}
+/* Sidenav items */
+.sl .si{display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px;padding:9px 14px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer;height:auto!important;background:transparent!important;border-bottom:none!important}
+.sl .si.active{background:var(--cream)!important;color:var(--dark);font-weight:600;border-left-color:var(--gold)}
+.sl .si:hover:not(.active){color:var(--dark);background:#fafaf8!important}
+.sl .si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase}
 
-/* ── TYPOGRAPHY ── */
-.ey{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
-.greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px}
-.score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1}
-.score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.body-text{font-size:13px;font-weight:400;color:var(--text);line-height:1.85;text-align:justify}
-.insight-line1{font-size:13px;font-weight:400;color:var(--text);line-height:1.7}
-.insight-line2{font-size:13px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:3px}
-.insight-line3{font-size:13px;font-weight:600;color:var(--green);line-height:1.7;margin-top:3px}
+/* Centre */
+.sl .centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream)}
+.sl .card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px}
 
-/* ── READ MORE ── span only, never button or a href ── */
-.rm{font-size:13px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px}
-.lnk{font-size:13px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
-.expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
+/* Typography */
+.sl .ey{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
+.sl .greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px}
+.sl .score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1}
+.sl .score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.sl .body-text{font-size:13px;font-weight:400;color:var(--text);line-height:1.85;text-align:justify}
+.sl .insight-line1{font-size:13px;font-weight:400;color:var(--text);line-height:1.7}
+.sl .insight-line2{font-size:13px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:3px}
+.sl .insight-line3{font-size:13px;font-weight:600;color:var(--green);line-height:1.7;margin-top:3px}
 
-/* ── BUTTONS ── */
-.btn-gold{background:var(--gold);color:var(--dark);font-size:13px;font-weight:600;padding:6px 13px;border-radius:7px;border:none;cursor:pointer}
-.btn-ghost{font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer}
-.pts-chip{background:#FFF8E6;border:1px solid #F0D88A;border-radius:9px;padding:2px 8px;font-size:13px;font-weight:600;color:var(--gold-dk)}
+/* Read more */
+.sl .rm{font-size:13px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px}
+.sl .lnk{font-size:13px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
+.sl .expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
 
-/* ── JOURNEY THUMBNAILS ── */
-.es{display:flex;gap:6px;margin-top:9px}
-.et{flex:1;min-width:0}
-.eti{aspect-ratio:1;border-radius:6px;position:relative;margin-bottom:2px;overflow:hidden;background:#1A2A22}
-.eti img{width:100%;height:100%;object-fit:cover;display:block}
-.escore{font-size:13px;font-weight:600;color:var(--dark)}
-.edate{font-size:13px;color:var(--muted)}
-.et-desktop-only{display:flex}
+/* Buttons */
+.sl .btn-gold{background:var(--gold);color:var(--dark);font-size:13px;font-weight:600;padding:6px 13px;border-radius:7px;border:none;cursor:pointer}
+.sl .btn-ghost{font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer}
+.sl .pts-chip{background:#FFF8E6;border:1px solid #F0D88A;border-radius:9px;padding:2px 8px;font-size:13px;font-weight:600;color:var(--gold-dk)}
 
-/* ── TRAIN YOUR EYE IMAGE ── */
-.eval-image-wrap{width:100%;max-height:220px;background:#1A2A1A;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative}
-.eval-image-wrap img{max-width:100%;max-height:220px;object-fit:contain;display:block}
-.eval-image-placeholder{width:100%;height:180px;background:#1A2A1A;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;margin-bottom:10px}
-.eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 13px;font-size:13px;font-weight:400;color:#fff}
+/* Journey thumbnails */
+.sl .es{display:flex;gap:6px;margin-top:9px}
+.sl .et{flex:1;min-width:0}
+.sl .eti{aspect-ratio:1;border-radius:6px;position:relative;margin-bottom:2px;overflow:hidden;background:#1A2A22}
+.sl .eti img{width:100%;height:100%;object-fit:cover;display:block}
+.sl .escore{font-size:13px;font-weight:600;color:var(--dark)}
+.sl .edate{font-size:13px;color:var(--muted)}
+.sl .et-desktop-only{display:flex}
 
-/* ── RIGHT PANEL ── */
-.rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;min-width:0;overflow:hidden}
-.rl{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+/* Train your eye */
+.sl .eval-image-wrap{width:100%;max-height:220px;background:#1A2A1A;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative}
+.sl .eval-image-wrap img{max-width:100%;max-height:220px;object-fit:contain;display:block}
+.sl .eval-image-placeholder{width:100%;height:180px;background:#1A2A1A;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;margin-bottom:10px}
+.sl .eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 10px;font-size:13px;font-weight:400;color:#fff}
 
-/* RANK CARD */
-.rank-card{background:#fff;border-radius:13px;border:0.5px solid var(--border);border-top:2.5px solid var(--gold);padding:14px;position:relative}
-.rank-card::before{content:'';position:absolute;top:-1px;left:14px;right:14px;height:1px;background:var(--gold);opacity:0.25;filter:blur(3px)}
+/* Right panel */
+.sl .rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;min-width:0;overflow:hidden}
+.sl .rl{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.sl .rank-card{background:#fff;border-radius:13px;border:0.5px solid var(--border);border-top:2.5px solid var(--gold);padding:14px;position:relative}
+.sl .rank-card::before{content:'';position:absolute;top:-1px;left:14px;right:14px;height:1px;background:var(--gold);opacity:0.25;filter:blur(3px)}
+.sl .pb{position:relative;height:5px;background:var(--border);border-radius:3px;margin-bottom:3px}
+.sl .pbf{height:100%;background:var(--gold);border-radius:3px}
+.sl .pbd{position:absolute;top:50%;width:10px;height:10px;background:var(--dark);border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
+.sl .pbdi{width:3px;height:3px;background:#fff;border-radius:50%}
+.sl .pcl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.sl .wcard{background:var(--cream);border-radius:9px;border:0.5px solid var(--border);padding:11px}
+.sl .mcard{background:#fff;border-radius:9px;border:0.5px solid var(--border);padding:11px}
 
-/* STANDING BAR */
-.pb{position:relative;height:5px;background:var(--border);border-radius:3px;margin-bottom:3px}
-.pbf{height:100%;background:var(--gold);border-radius:3px}
-.pbd{position:absolute;top:50%;width:10px;height:10px;background:var(--dark);border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
-.pbdi{width:3px;height:3px;background:#fff;border-radius:50%}
-.pcl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
-
-/* RIGHT PANEL SUB-CARDS */
-.wcard{background:var(--cream);border-radius:9px;border:0.5px solid var(--border);padding:11px}
-.mcard{background:#fff;border-radius:9px;border:0.5px solid var(--border);padding:11px}
-
-/* SCROLL TO TOP */
-.scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:var(--dark);color:var(--gold);border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:18px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18)}
+/* Scroll to top */
+.scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:#0F2A22;color:#D6A428;border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:18px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18)}
 .scroll-top.visible{display:flex}
 
-/* FOOTER */
-.sl-dash-footer{background:var(--dark);padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px}
-.footer-links-col{display:block}
-.fl{display:block;font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none;margin-bottom:5px}
-.footer-bottom{background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+/* Footer */
+.sl .sl-footer{background:#0F2A22;padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px}
+.sl .footer-links-col{display:block}
+.sl .fl{display:block;font-size:13px;color:rgba(255,255,255,0.5);text-decoration:none;margin-bottom:5px}
+.sl .footer-bottom{background:#0F2A22;border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
 
-/* BOTTOM NAV — mobile only */
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.15);justify-content:space-around;align-items:center;z-index:1000}
-.bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;font-weight:600;min-width:44px;min-height:44px;justify-content:center;cursor:pointer}
-.bn-tab i{font-size:20px}
-.bn-tab.active{color:var(--gold)}
+/* Bottom nav */
+.sl .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:#0F2A22;border-top:0.5px solid rgba(255,255,255,0.15);justify-content:space-around;align-items:center;z-index:1000}
+.sl .bn-tab{display:flex!important;flex-direction:column!important;align-items:center;gap:3px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;font-weight:600;min-width:44px;min-height:44px;justify-content:center;height:auto!important;background:transparent!important;border-bottom:none!important;backdrop-filter:none!important}
+.sl .bn-tab i{font-size:20px}
+.sl .bn-tab.active{color:#D6A428}
 
-/* ── IPAD ── */
-@media (max-width:1023px) and (min-width:768px){
-  .layout{grid-template-columns:minmax(0,1fr) 220px}
-  .sidenav{display:none}
-  .nav-link:not(.active):not(.primary-nav){display:none}
-  .centre{padding:14px;gap:10px}
-  .rpanel{padding:12px;gap:10px}
-  .card{padding:14px 16px}
-  .greeting-name{font-size:18px}
-  .score-big{font-size:26px}
-  .sl-dash-footer{grid-template-columns:200px 1fr 1fr;gap:16px}
+/* iPad */
+@media(max-width:1023px)and(min-width:768px){
+  .sl .layout{grid-template-columns:minmax(0,1fr) 220px}
+  .sl nav.sidenav{display:none!important}
+  .sl .nav-link:not(.active):not(.primary-nav){display:none}
+  .sl .centre{padding:14px;gap:10px}
+  .sl .rpanel{padding:12px;gap:10px}
+  .sl .card{padding:14px 16px}
+  .sl .greeting-name{font-size:18px}
+  .sl .score-big{font-size:26px}
+  .sl .sl-footer{grid-template-columns:200px 1fr 1fr;gap:16px}
 }
 
-/* ── MOBILE ── */
-@media (max-width: 768px), (max-width: 600px){
-  .layout{display:flex;flex-direction:column}
-  .sidenav{display:none}
-  .nav-links{display:none}
-  .logo-text{display:none}
-  .centre{padding:13px;gap:10px;order:1}
-  .rpanel{border-left:none;border-top:0.5px solid var(--border);padding:13px;gap:10px;order:2}
-  .card{padding:14px 16px}
-  .card-greeting{order:1}
-  .card-journey{order:2}
-  .card-mentor{order:3}
-  .card-brhills{order:4}
-  .card-train{order:5}
-  .rp-standing{display:none}
-  .rp-latest{display:none}
-  .rp-rank{display:block}
-  .rp-weekly{display:block}
-  .rp-expert{display:block}
-  .body-text{font-size:14px;text-align:left;line-height:1.9}
-  .insight-line1,.insight-line2,.insight-line3{font-size:14px;line-height:1.8;text-align:left}
-  .greeting-name{font-size:20px}
-  .score-big{font-size:28px}
-  .score-row{flex-wrap:wrap;gap:6px}
-  .et-desktop-only{display:none}
-  .btn-gold{width:100%;padding:13px 14px;font-size:14px}
-  .rate-btn{width:100%;height:50px;font-size:14px;font-weight:600}
-  .sl-dash-footer{grid-template-columns:1fr;gap:0;padding:20px 16px 14px}
-  .footer-links-col{display:none}
-  .footer-bottom{flex-direction:column;gap:8px;padding:10px 16px;text-align:center}
+/* Mobile */
+@media (max-width: 768px), (max-width: 600px) {
+  .sl .layout{display:flex!important;flex-direction:column}
+  .sl nav.sidenav{display:none!important}
+  .sl .nav-links{display:none}
+  .sl .logo-text{display:none}
+  .sl .centre{padding:12px;gap:10px;order:1}
+  .sl .rpanel{border-left:none;border-top:0.5px solid #E8E4DA;padding:12px;gap:10px;order:2}
+  .sl .card-greeting{order:1}
+  .sl .card-journey{order:2}
+  .sl .card-mentor{order:3}
+  .sl .card-brhills{order:4}
+  .sl .card-train{order:5}
+  .sl .rp-standing{display:none}
+  .sl .rp-latest{display:none}
+  .sl .body-text{font-size:14px;text-align:left;line-height:1.9}
+  .sl .insight-line1,.sl .insight-line2,.sl .insight-line3{font-size:14px;line-height:1.8;text-align:left}
+  .sl .et-desktop-only{display:none}
+  .sl .btn-gold{width:100%;padding:12px 14px;font-size:14px}
+  .sl .sl-footer{grid-template-columns:1fr;gap:0;padding:20px 16px 14px}
+  .sl .footer-links-col{display:none}
+  .sl .footer-bottom{flex-direction:column;gap:8px;padding:10px 16px;text-align:center}
   body{padding-bottom:70px}
   .scroll-top{bottom:80px}
-  .bottom-nav{display:flex}
+  .sl .bottom-nav{display:flex}
 }
 </style>
 {% endblock %}
 
 {% block content %}
-{# ── Time-based greeting (IST) ── #}
+{# IST greeting #}
 {% set ns = namespace(greeting='Good morning') %}
-{% if now is defined %}
-  {% set _ist_h = ((now().hour * 60 + now().minute + 330) % 1440) // 60 %}
-{% else %}
-  {% set _ist_h = 10 %}
-{% endif %}
-{% if _ist_h >= 21 or _ist_h < 5 %}{% set ns.greeting = 'Good evening' %}
-{% elif _ist_h >= 17 %}{% set ns.greeting = 'Good evening' %}
-{% elif _ist_h >= 12 %}{% set ns.greeting = 'Good afternoon' %}
-{% endif %}
-
-{# ── Shorthands ── #}
-{% set _first = current_user.full_name.split()[0] if current_user.full_name else current_user.username %}
-{% set _scored = images.items|selectattr('score')|list if images and images.items else [] %}
-{% set _last = _scored[0] if _scored else none %}
+{% if now is defined %}{% set _h=((now().hour*60+now().minute+330)%1440)//60 %}{% else %}{% set _h=10 %}{% endif %}
+{% if _h>=21 or _h<5 %}{% set ns.greeting='Good evening' %}{% elif _h>=17 %}{% set ns.greeting='Good evening' %}{% elif _h>=12 %}{% set ns.greeting='Good afternoon' %}{% endif %}
+{% set _first=current_user.full_name.split()[0] if current_user.full_name else current_user.username %}
+{% set _scored=images.items|selectattr('score')|list if images and images.items else [] %}
+{% set _last=_scored[0] if _scored else none %}
 
 <div class="sl">
 
-<!-- TOPNAV -->
 <nav class="topnav">
   <div class="logo-icon">SL</div>
   <div class="logo-text">Shutter<br>League</div>
@@ -245,7 +181,7 @@ body.page-dashboard nav.topnav {
     <a class="nav-link primary-nav" href="{{ url_for('profile') }}">Profile</a>
   </div>
   <div class="nav-right">
-    <div class="bell"><i class="ti ti-bell" style="font-size:17px;color:rgba(255,255,255,0.65)" aria-hidden="true"></i></div>
+    <div class="bell"><i class="ti ti-bell" style="font-size:17px;color:rgba(255,255,255,0.65)"></i></div>
     <div class="av">{{ _first[:3]|upper }}</div>
     <span style="font-size:13px;color:rgba(255,255,255,0.6)">{{ _first }} ∨</span>
   </div>
@@ -253,434 +189,215 @@ body.page-dashboard nav.topnav {
 
 <div class="layout">
 
-  <!-- SIDENAV -->
-  <nav class="sidenav">
-    <a class="si active" href="{{ url_for('dashboard') }}"><i class="ti ti-home" style="font-size:14px"></i>Dashboard</a>
-    <a class="si" href="{{ url_for('upload') }}"><i class="ti ti-upload" style="font-size:14px"></i>Upload</a>
-    <a class="si" href="{{ url_for('my_gallery') }}"><i class="ti ti-chart-line" style="font-size:14px"></i>Journey</a>
-    <a class="si" href="{{ url_for('learning') }}"><i class="ti ti-book" style="font-size:14px"></i>Learn</a>
-    <a class="si" href="#"><i class="ti ti-layout-grid" style="font-size:14px"></i>Community</a>
-    <a class="si" href="{{ url_for('portfolio_manager') }}"><i class="ti ti-briefcase" style="font-size:14px"></i>Portfolio</a>
-    <div class="si-more">More</div>
-    <a class="si" href="{{ url_for('mentors') }}"><i class="ti ti-star" style="font-size:14px"></i>Mentor Review</a>
-    <a class="si" href="{{ url_for('weekly_challenge') }}"><i class="ti ti-calendar" style="font-size:14px"></i>Weekly Challenge</a>
-    <a class="si" href="{{ url_for('learning') }}"><i class="ti ti-school" style="font-size:14px"></i>Learning Library</a>
-    <a class="si" href="{{ url_for('profile') }}"><i class="ti ti-settings" style="font-size:14px"></i>Settings</a>
-  </nav>
+<nav class="sidenav">
+  <a class="si active" href="{{ url_for('dashboard') }}"><i class="ti ti-home" style="font-size:14px"></i>Dashboard</a>
+  <a class="si" href="{{ url_for('upload') }}"><i class="ti ti-upload" style="font-size:14px"></i>Upload</a>
+  <a class="si" href="{{ url_for('my_gallery') }}"><i class="ti ti-chart-line" style="font-size:14px"></i>Journey</a>
+  <a class="si" href="{{ url_for('learning') }}"><i class="ti ti-book" style="font-size:14px"></i>Learn</a>
+  <a class="si" href="#"><i class="ti ti-layout-grid" style="font-size:14px"></i>Community</a>
+  <a class="si" href="{{ url_for('portfolio_manager') }}"><i class="ti ti-briefcase" style="font-size:14px"></i>Portfolio</a>
+  <div class="si-more">More</div>
+  <a class="si" href="{{ url_for('mentors') }}"><i class="ti ti-star" style="font-size:14px"></i>Mentor Review</a>
+  <a class="si" href="{{ url_for('weekly_challenge') }}"><i class="ti ti-calendar" style="font-size:14px"></i>Weekly Challenge</a>
+  <a class="si" href="{{ url_for('learning') }}"><i class="ti ti-school" style="font-size:14px"></i>Learning Library</a>
+  <a class="si" href="{{ url_for('profile') }}"><i class="ti ti-settings" style="font-size:14px"></i>Settings</a>
+</nav>
 
-  <!-- CENTRE -->
-  <div class="centre">
+<div class="centre">
 
-    {# Post-payment banner #}
-    {% if just_subscribed %}
-    <div style="background:#2C3E6B;border-radius:13px;padding:18px 20px;display:flex;align-items:flex-start;gap:14px;">
-      <div style="font-size:20px;flex-shrink:0">✓</div>
-      <div>
-        <div style="font-size:15px;font-weight:600;color:var(--gold);margin-bottom:5px">Welcome to Shutter League.</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6">Your membership is active. Upload your first photograph and begin.</div>
-      </div>
-    </div>
-    {% endif %}
+{% if just_subscribed %}
+<div style="background:#2C3E6B;border-radius:13px;padding:18px 20px;display:flex;align-items:flex-start;gap:14px">
+  <div style="font-size:20px;flex-shrink:0">✓</div>
+  <div>
+    <div style="font-size:15px;font-weight:600;color:#D6A428;margin-bottom:5px">Welcome to Shutter League.</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6">Your membership is active. Upload your first photograph and begin.</div>
+  </div>
+</div>
+{% endif %}
 
-    <!-- CARD 1: GREETING -->
-    <div class="card card-greeting">
-      <div class="greeting-name">{{ ns.greeting }}, {{ _first }}.</div>
-      <div class="score-row">
-        {% if progress_data and progress_data.avg_score %}
-          <span class="score-big">{{ '%.1f'|format(progress_data.avg_score) }}</span>
-          <span style="font-size:13px;font-weight:600;color:var(--green)">{{ progress_data.highest_tier }}</span>
-          <span style="font-size:13px;color:var(--green)">↑</span>
-          <span style="font-size:13px;font-weight:400;color:var(--muted)">last evaluation</span>
-        {% elif _last and _last.score %}
-          <span class="score-big">{{ '%.1f'|format(_last.score) }}</span>
-          <span style="font-size:13px;font-weight:600;color:var(--green)">{{ _last.tier or '' }}</span>
-          <span style="font-size:13px;font-weight:400;color:var(--muted)">last evaluation</span>
-        {% else %}
-          <span class="score-big">–</span>
-          <span style="font-size:13px;font-weight:400;color:var(--muted)">Upload your first photograph to begin</span>
-        {% endif %}
-      </div>
-      {% if progress_data and progress_data.count >= 5 %}
-        {% set _dr = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'whether the timing was right','wonder':'whether it made you feel something','aq':'the emotion it creates'} %}
-        <div class="insight-line1">Your {{ _dr.get(progress_data.strongest, progress_data.strongest) }} is your strongest asset.</div>
-        <div class="insight-line2">The gap is in {{ _dr.get(progress_data.weakest, progress_data.weakest) }}.</div>
-        <div class="insight-line3">Your eye is ready — go deeper into the harder scene.</div>
-      {% elif progress_data and progress_data.count > 0 %}
-        <div class="insight-line1">Your photography journey starts here.</div>
-        <div class="insight-line2">Upload a photograph and get a precise evaluation across five craft dimensions.</div>
-        <div class="insight-line3">Your first evaluation is waiting.</div>
-      {% else %}
-        <div class="insight-line1">Your photography journey starts here.</div>
-        <div class="insight-line2">Upload a photograph and get a precise evaluation across five craft dimensions.</div>
-        <div class="insight-line3">Your first evaluation is waiting.</div>
-      {% endif %}
-      <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
-      <div class="expanded" id="gexp">
-        {% if progress_data and progress_data.count >= 5 %}
-          {% set _dh = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Aesthetic Quality'} %}
-          <div class="body-text">
-            Across your {{ progress_data.count }} images, your
-            <span style="color:var(--gold-dk);font-weight:600">{{ _dh.get(progress_data.strongest, progress_data.strongest) }}</span>
-            is consistently strong — this is what you do well.
-            Your <span style="font-weight:600;color:var(--dark)">{{ _dh.get(progress_data.weakest, progress_data.weakest) }}</span>
-            is the one dimension holding your work back.<br><br>
-            The images that stand out on this platform are rarely the comfortable ones. Going out into the difficult scene is what separates a different image from a clichéd one. Your eye is ready.
-          </div>
-        {% else %}
-          <div class="body-text">Upload more images to unlock a detailed analysis of your photography across five craft dimensions. The platform studies the patterns in your work and tells you exactly what to build on.</div>
-        {% endif %}
-        <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
-      </div>
-    </div>
+<!-- GREETING -->
+<div class="card card-greeting">
+  <div class="greeting-name">{{ ns.greeting }}, {{ _first }}.</div>
+  <div class="score-row">
+    {% if progress_data and progress_data.avg_score %}<span class="score-big">{{ '%.1f'|format(progress_data.avg_score) }}</span><span style="font-size:13px;font-weight:600;color:#2A7A3A">{{ progress_data.highest_tier }}</span><span style="font-size:13px;color:#2A7A3A">↑</span><span style="font-size:13px;color:#6B6B6B">last evaluation</span>
+    {% elif _last and _last.score %}<span class="score-big">{{ '%.1f'|format(_last.score) }}</span><span style="font-size:13px;font-weight:600;color:#2A7A3A">{{ _last.tier or '' }}</span><span style="font-size:13px;color:#6B6B6B">last evaluation</span>
+    {% else %}<span class="score-big">–</span><span style="font-size:13px;color:#6B6B6B">Upload your first photograph to begin</span>{% endif %}
+  </div>
+  {% if progress_data and progress_data.count >= 5 %}
+    {% set _dr={'dod':'Depth of Difficulty','disruption':'Disruption','dm':'whether the timing was right','wonder':'whether it made you feel something','aq':'the emotion it creates'} %}
+    <div class="insight-line1">Your {{ _dr.get(progress_data.strongest,progress_data.strongest) }} is your strongest asset.</div>
+    <div class="insight-line2">The gap is in {{ _dr.get(progress_data.weakest,progress_data.weakest) }}.</div>
+    <div class="insight-line3">Your eye is ready — go deeper into the harder scene.</div>
+  {% else %}
+    <div class="insight-line1">Your photography journey starts here.</div>
+    <div class="insight-line2">Upload a photograph and get a precise evaluation across five craft dimensions.</div>
+    <div class="insight-line3">Your first evaluation is waiting.</div>
+  {% endif %}
+  <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
+  <div class="expanded" id="gexp">
+    <div class="body-text">{% if progress_data and progress_data.count >= 5 %}{% set _dh={'dod':'Depth of Difficulty','disruption':'Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Aesthetic Quality'} %}Across your {{ progress_data.count }} images, your <span style="color:#A37B2C;font-weight:600">{{ _dh.get(progress_data.strongest,progress_data.strongest) }}</span> is consistently strong. Your <span style="font-weight:600;color:#1A1A18">{{ _dh.get(progress_data.weakest,progress_data.weakest) }}</span> is the one dimension holding your work back.<br><br>The images that stand out are rarely the comfortable ones. Your eye is ready.{% else %}Upload more images to unlock a detailed analysis of your photography across five craft dimensions.{% endif %}</div>
+    <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
+  </div>
+</div>
 
-    <!-- CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE -->
-    <div class="card card-mentor">
-      <div class="ey">Mentor Advice</div>
-      {% if dash_advisory and dash_advisory.get('location_name') %}
-        <div class="body-text">Go to <span style="color:var(--green);font-weight:600">{{ dash_advisory.location_name }}</span>. {% if dash_advisory.get('subject') %}<span style="color:var(--gold-dk);font-weight:600">{{ dash_advisory.subject }}.</span>{% endif %} {% if dash_advisory.get('best_light_time') %}{{ dash_advisory.best_light_time }}.{% endif %}</div>
-      {% else %}
-        <div class="body-text">Get low. <span style="color:var(--gold-dk);font-weight:600">35mm.</span> Narrow your eyes to a slit before you press the shutter.</div>
-      {% endif %}
-      <span class="rm" id="mrm" onclick="toggleSpan('mexp','mrm')">Read more →</span>
-      <div class="expanded" id="mexp">
-        <div class="body-text" style="margin-bottom:13px">
-          {% if dash_advisory and dash_advisory.get('what_is_happening') %}
-            {{ dash_advisory.what_is_happening }}{% if dash_advisory.get('why_it_matters') %} {{ dash_advisory.why_it_matters }}{% endif %}
-          {% else %}
-            Find where the street narrows and the crowd moves. Before you press the shutter, narrow your eyes to a slit — a half-closed view. Everything that disappears is clutter. Everything that stays is your frame.<br><br>
-            <span style="color:var(--muted);font-style:italic">That is how you will know where the viewer's eye will be drawn — before you make the image, not after.</span>
-          {% endif %}
-        </div>
-        {% if lesson %}
-        <div style="display:flex;align-items:flex-start;gap:11px;padding:13px;background:var(--cream);border-radius:9px;border:0.5px solid var(--border);margin-bottom:10px">
-          <div style="width:54px;height:54px;border-radius:7px;background:#D8EDD8;flex-shrink:0"></div>
-          <div style="flex:1;min-width:0">
-            <div class="ey" style="margin-bottom:2px">Your Lesson</div>
-            <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ lesson.title }}</div>
-            <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:7px">{{ lesson.dim_short if lesson.dim_short else '' }}</div>
-            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-              <a href="{{ url_for('mission') }}" class="btn-gold" style="text-decoration:none;display:inline-block">Begin lesson →</a>
-              <span class="pts-chip">+2 points</span>
-              <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline"><button type="submit" class="btn-ghost">Skip</button></form>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-        <div style="display:flex;align-items:center;gap:10px;padding:11px;background:var(--cream);border-radius:9px;border:0.5px solid var(--border)">
-          <div style="width:36px;height:36px;border-radius:6px;background:#D8EDD8;flex-shrink:0"></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Master Reference</div>
-            <div style="font-size:13px;font-weight:600;color:var(--dark)">Fan Ho · Hong Kong Streets · 1956</div>
-            <div style="font-size:13px;font-weight:400;color:var(--muted);margin-top:1px">How difficulty becomes geometry, not chaos.</div>
-          </div>
-          <a href="#" class="lnk" style="flex-shrink:0">View →</a>
-        </div>
-        <span class="rm" onclick="toggleSpan('mexp','mrm')">Read less →</span>
-      </div>
-    </div>
+<!-- MENTOR ADVICE -->
+<div class="card card-mentor">
+  <div class="ey">Mentor Advice</div>
+  {% if dash_advisory and dash_advisory.get('location_name') %}<div class="body-text">Go to <span style="color:#2A7A3A;font-weight:600">{{ dash_advisory.location_name }}</span>.{% if dash_advisory.get('subject') %} <span style="color:#A37B2C;font-weight:600">{{ dash_advisory.subject }}.</span>{% endif %}{% if dash_advisory.get('best_light_time') %} {{ dash_advisory.best_light_time }}.{% endif %}</div>
+  {% else %}<div class="body-text">Get low. <span style="color:#A37B2C;font-weight:600">35mm.</span> Narrow your eyes to a slit before you press the shutter.</div>{% endif %}
+  <span class="rm" id="mrm" onclick="toggleSpan('mexp','mrm')">Read more →</span>
+  <div class="expanded" id="mexp">
+    <div class="body-text" style="margin-bottom:13px">{% if dash_advisory and dash_advisory.get('what_is_happening') %}{{ dash_advisory.what_is_happening }}{% if dash_advisory.get('why_it_matters') %} {{ dash_advisory.why_it_matters }}{% endif %}{% else %}Find where the street narrows and the crowd moves. Before you press the shutter, narrow your eyes to a slit — a half-closed view. Everything that disappears is clutter. Everything that stays is your frame.{% endif %}</div>
+    {% if lesson %}<div style="display:flex;align-items:flex-start;gap:11px;padding:13px;background:#F6F2E9;border-radius:9px;border:0.5px solid #E8E4DA;margin-bottom:10px"><div style="width:54px;height:54px;border-radius:7px;background:#D8EDD8;flex-shrink:0"></div><div style="flex:1;min-width:0"><div class="ey" style="margin-bottom:2px">Your Lesson</div><div style="font-size:13px;font-weight:600;color:#0F2A22;margin-bottom:7px">{{ lesson.title }}</div><div style="display:flex;align-items:center;gap:7px"><a href="{{ url_for('mission') }}" class="btn-gold" style="text-decoration:none;display:inline-block">Begin lesson →</a><span class="pts-chip">+2 points</span></div></div></div>{% endif %}
+    <div style="display:flex;align-items:center;gap:10px;padding:11px;background:#F6F2E9;border-radius:9px;border:0.5px solid #E8E4DA"><div style="width:36px;height:36px;border-radius:6px;background:#D8EDD8;flex-shrink:0"></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6B6B6B;margin-bottom:2px">Master Reference</div><div style="font-size:13px;font-weight:600;color:#0F2A22">Fan Ho · Hong Kong Streets · 1956</div></div><a href="#" class="lnk" style="flex-shrink:0">View →</a></div>
+    <span class="rm" onclick="toggleSpan('mexp','mrm')">Read less →</span>
+  </div>
+</div>
 
-    <!-- CARD 3 DESKTOP / CARD 2 MOBILE: YOUR JOURNEY -->
-    <div class="card card-journey">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div><div class="ey" style="margin-bottom:1px">Your Journey</div><div style="font-size:13px;color:var(--muted)">See how you are evolving.</div></div>
-        <a href="{{ url_for('my_gallery') }}" class="lnk">View full →</a>
-      </div>
-      {# Sparkline #}
-      <div style="height:52px;margin-top:4px">
-        {% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
-          {% set _t = progress_data.trend %}
-          {% set _ts = _t|map(attribute='score')|list %}
-          {% set _tmin = _ts|min %}
-          {% set _tmax = _ts|max %}
-          {% set _tr = [(_tmax - _tmin), 0.5]|max %}
-          {% set _tn = _t|length %}
-          {% set ns2 = namespace(pts='') %}
-          {% for item in _t %}
-            {% set _xi = (loop.index0 / (_tn - 1) * 480 + 10)|round(1) %}
-            {% set _yi = (44 - (((item.score - _tmin) / _tr) * 36))|round(1) %}
-            {% if loop.first %}{% set ns2.pts = _xi|string ~ ',' ~ _yi|string %}
-            {% else %}{% set ns2.pts = ns2.pts ~ ' ' ~ _xi|string ~ ',' ~ _yi|string %}{% endif %}
-          {% endfor %}
-          <svg width="100%" height="52" viewBox="0 0 500 52" preserveAspectRatio="none">
-            <line x1="0" y1="44" x2="500" y2="44" stroke="#E8E4DA" stroke-width="0.5"/>
-            <line x1="0" y1="24" x2="500" y2="24" stroke="#E8E4DA" stroke-width="0.5"/>
-            <polyline points="{{ ns2.pts }} 490,52 10,52" fill="#D6A42812" stroke="none"/>
-            <polyline points="{{ ns2.pts }}" fill="none" stroke="#D6A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-            {% for item in _t %}
-              {% set _xi = (loop.index0 / (_tn - 1) * 480 + 10)|round(1) %}
-              {% set _yi = (44 - (((item.score - _tmin) / _tr) * 36))|round(1) %}
-              {% if loop.last %}
-                <circle cx="{{ _xi }}" cy="{{ _yi }}" r="4" fill="#D6A428"/>
-                <rect x="{{ _xi - 14 }}" y="{{ _yi - 18 }}" width="28" height="14" rx="3" fill="#0F2A22"/>
-                <text x="{{ _xi }}" y="{{ _yi - 7 }}" font-size="10" fill="#fff" text-anchor="middle" font-weight="600">{{ '%.1f'|format(item.score) }}</text>
-              {% else %}
-                <circle cx="{{ _xi }}" cy="{{ _yi }}" r="2.5" fill="#D6A428" opacity="0.5"/>
-              {% endif %}
-            {% endfor %}
-            <text x="10" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">{{ _t|first|attr('label') }}</text>
-            <text x="490" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">Today</text>
-          </svg>
-        {% else %}
-          <svg width="100%" height="52" viewBox="0 0 500 52" preserveAspectRatio="none">
-            <line x1="0" y1="44" x2="500" y2="44" stroke="#E8E4DA" stroke-width="0.5"/>
-            <polyline points="20,42 490,10" fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round"/>
-            <polyline points="20,42 490,10 490,52 20,52" fill="#D6A42812" stroke="none"/>
-            <circle cx="490" cy="10" r="4" fill="#D6A428"/>
-            <text x="490" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">Today</text>
-          </svg>
-        {% endif %}
-      </div>
-      <div style="font-size:13px;font-weight:600;color:var(--text);margin:8px 0 6px">Latest evaluations</div>
-      <div class="es">
-        {% for img in _scored[:5] %}
-          <div class="et{% if loop.index > 3 %} et-desktop-only{% endif %}">
-            <div class="eti">
-              {% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="" loading="lazy" onerror="this.parentNode.style.background='#1A2A22';this.remove()">{% endif %}
-              <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
-            </div>
-            <div class="escore">{{ '%.1f'|format(img.score) }}</div>
-            <div class="edate">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-          </div>
-        {% else %}
-          {% for i in range(3) %}<div class="et"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>{% endfor %}
-          <div class="et et-desktop-only"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>
-          <div class="et et-desktop-only"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>
-        {% endfor %}
-      </div>
-      <div style="text-align:right;margin-top:6px"><a href="{{ url_for('my_gallery') }}" class="lnk">View all evaluations →</a></div>
-    </div>
-
-    <!-- CARD 4: BR HILLS / NEARBY OPPORTUNITY -->
-    {% if dash_advisory and dash_advisory.get('location_name') %}
-    <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px" class="card-brhills">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-        <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
-        {% if dash_advisory.get('genre') %}<span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>{% endif %}
-      </div>
-      <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}</div>
-      {% if dash_advisory.get('subject') %}<div style="font-size:13px;color:#4A5A3A">{{ dash_advisory.subject }}{% if dash_advisory.get('distance_hours') %} · {{ dash_advisory.distance_hours }}h away{% endif %}</div>{% endif %}
-      <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
-      <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
-        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:9px">{{ (dash_advisory.what_is_happening or '') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') }}</div>
-        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px">Get directions →</a>
-        <span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span>
-      </div>
-    </div>
+<!-- YOUR JOURNEY -->
+<div class="card card-journey">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div><div class="ey" style="margin-bottom:1px">Your Journey</div><div style="font-size:13px;color:#6B6B6B">See how you are evolving.</div></div>
+    <a href="{{ url_for('my_gallery') }}" class="lnk">View full →</a>
+  </div>
+  <div style="height:52px;margin-top:4px">
+    {% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
+      {% set _t=progress_data.trend %}{% set _ts=_t|map(attribute='score')|list %}{% set _tmin=_ts|min %}{% set _tmax=_ts|max %}{% set _tr=[(_tmax-_tmin),0.5]|max %}{% set _tn=_t|length %}{% set ns2=namespace(pts='') %}
+      {% for item in _t %}{% set _xi=(loop.index0/(_tn-1)*480+10)|round(1) %}{% set _yi=(44-(((item.score-_tmin)/_tr)*36))|round(1) %}{% if loop.first %}{% set ns2.pts=_xi|string~','~_yi|string %}{% else %}{% set ns2.pts=ns2.pts~' '~_xi|string~','~_yi|string %}{% endif %}{% endfor %}
+      <svg width="100%" height="52" viewBox="0 0 500 52" preserveAspectRatio="none">
+        <line x1="0" y1="44" x2="500" y2="44" stroke="#E8E4DA" stroke-width="0.5"/>
+        <line x1="0" y1="24" x2="500" y2="24" stroke="#E8E4DA" stroke-width="0.5"/>
+        <polyline points="{{ ns2.pts }} 490,52 10,52" fill="#D6A42812" stroke="none"/>
+        <polyline points="{{ ns2.pts }}" fill="none" stroke="#D6A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        {% for item in _t %}{% set _xi=(loop.index0/(_tn-1)*480+10)|round(1) %}{% set _yi=(44-(((item.score-_tmin)/_tr)*36))|round(1) %}{% if loop.last %}<circle cx="{{ _xi }}" cy="{{ _yi }}" r="4" fill="#D6A428"/><rect x="{{ _xi-14 }}" y="{{ _yi-18 }}" width="28" height="14" rx="3" fill="#0F2A22"/><text x="{{ _xi }}" y="{{ _yi-7 }}" font-size="10" fill="#fff" text-anchor="middle" font-weight="600">{{ '%.1f'|format(item.score) }}</text>{% else %}<circle cx="{{ _xi }}" cy="{{ _yi }}" r="2.5" fill="#D6A428" opacity="0.5"/>{% endif %}{% endfor %}
+        <text x="10" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">{{ _t|first|attr('label') }}</text>
+        <text x="490" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">Today</text>
+      </svg>
     {% else %}
-    <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px" class="card-brhills">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-        <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
-        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span>
-      </div>
-      <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">BR Hills (Biligirirangana Hills)</div>
-      <div style="font-size:13px;color:#4A5A3A">Elephants and sloth bears · 3.5 hrs away</div>
-      <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
-      <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
-        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:9px">Elephant herds move through the reserve in the wet season. Less visited, less habituated — more genuine access. The kind of difficult scene that produces a different image.</div>
-        <a href="https://maps.google.com/?q=BR+Hills+Biligirirangana" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px">Get directions →</a>
-        <span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span>
-      </div>
-    </div>
+      <svg width="100%" height="52" viewBox="0 0 500 52" preserveAspectRatio="none">
+        <line x1="0" y1="44" x2="500" y2="44" stroke="#E8E4DA" stroke-width="0.5"/>
+        <polyline points="20,42 490,10" fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round"/>
+        <polyline points="20,42 490,10 490,52 20,52" fill="#D6A42812" stroke="none"/>
+        <circle cx="490" cy="10" r="4" fill="#D6A428"/>
+        <text x="490" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">Today</text>
+      </svg>
     {% endif %}
+  </div>
+  <div style="font-size:13px;font-weight:600;color:#1A1A18;margin:8px 0 6px">Latest evaluations</div>
+  <div class="es">
+    {% for img in _scored[:5] %}<div class="et{% if loop.index>3 %} et-desktop-only{% endif %}"><div class="eti">{% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="" loading="lazy" onerror="this.parentNode.style.background='#1A2A22';this.remove()">{% endif %}<div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div></div><div class="escore">{{ '%.1f'|format(img.score) }}</div><div class="edate">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div></div>
+    {% else %}{% for i in range(3) %}<div class="et"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>{% endfor %}<div class="et et-desktop-only"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div><div class="et et-desktop-only"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>
+    {% endfor %}
+  </div>
+  <div style="text-align:right;margin-top:6px"><a href="{{ url_for('my_gallery') }}" class="lnk">View all evaluations →</a></div>
+</div>
 
-    <!-- CARD 5: TRAIN YOUR EYE -->
-    <div class="card card-train">
-      <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
-      <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px">Get 1 image free to Upload</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.</div>
-      <span class="rm" id="erm" onclick="toggleSpan('eexp','erm')">Read more →</span>
-      <div class="expanded" id="eexp">
-        <div class="body-text" style="margin-bottom:13px">Every evaluation you complete trains your eye to see photographs objectively. When your rating matches the engine, you earn a credit and help another photographer receive feedback.</div>
-        <span class="rm" onclick="toggleSpan('eexp','erm')">Read less →</span>
-      </div>
-      {% set _ti = peer_queue[0] if peer_queue else (carousel_images[0] if carousel_images else none) %}
-      {% if _ti and _ti.thumb_url %}
-      <div class="eval-image-wrap" style="margin-top:10px"><img src="{{ _ti.thumb_url }}" alt="Rate this photograph" onerror="this.parentNode.style.background='#1A2A1A'"></div>
-      {% else %}
-      <div class="eval-image-placeholder" style="margin-top:10px"><div style="width:100%;display:flex;align-items:flex-end"><div class="eval-image-caption">Can you see the Disruption in this frame?</div></div></div>
-      {% endif %}
-      <a href="{{ url_for('rate') }}" style="background:var(--dark);color:#fff;border-radius:7px;text-decoration:none;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:13px" class="rate-btn">Rate this image →</a>
-      <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:5px">2 minutes · +1 credit when you match the DDI engine</div>
-    </div>
+<!-- BR HILLS -->
+{% if dash_advisory and dash_advisory.get('location_name') %}
+<div style="background:#E8F5E2;border-radius:13px;border:0.5px solid #C5E0BB;padding:16px 18px" class="card-brhills">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>{% if dash_advisory.get('genre') %}<span style="padding:2px 8px;border-radius:9px;border:1px solid #C5E0BB;font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>{% endif %}</div>
+  <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}</div>
+  {% if dash_advisory.get('subject') %}<div style="font-size:13px;color:#4A5A3A">{{ dash_advisory.subject }}{% if dash_advisory.get('distance_hours') %} · {{ dash_advisory.distance_hours }}h away{% endif %}</div>{% endif %}
+  <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
+  <div class="expanded" id="oexp" style="border-top-color:#C5E0BB"><div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:9px">{{ (dash_advisory.what_is_happening or '')~(' '~dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') }}</div><a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center">Get directions →</a><span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span></div>
+</div>
+{% else %}
+<div style="background:#E8F5E2;border-radius:13px;border:0.5px solid #C5E0BB;padding:16px 18px" class="card-brhills">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div><span style="padding:2px 8px;border-radius:9px;border:1px solid #C5E0BB;font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span></div>
+  <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">BR Hills (Biligirirangana Hills)</div>
+  <div style="font-size:13px;color:#4A5A3A">Elephants and sloth bears · 3.5 hrs away</div>
+  <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
+  <div class="expanded" id="oexp" style="border-top-color:#C5E0BB"><div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:9px">Elephant herds move through the reserve in the wet season. Less visited, less habituated — more genuine access. The kind of difficult scene that produces a different image.</div><a href="https://maps.google.com/?q=BR+Hills+Biligirirangana" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center">Get directions →</a><span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span></div>
+</div>
+{% endif %}
 
-  </div>{# /centre #}
+<!-- TRAIN YOUR EYE -->
+<div class="card card-train">
+  <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
+  <div style="font-size:14px;font-weight:600;color:#0F2A22;margin-bottom:6px">Get 1 image free to Upload</div>
+  <div style="font-size:13px;color:#6B6B6B;line-height:1.6;margin-bottom:8px">Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.</div>
+  <span class="rm" id="erm" onclick="toggleSpan('eexp','erm')">Read more →</span>
+  <div class="expanded" id="eexp"><div class="body-text" style="margin-bottom:13px">Every evaluation you complete trains your eye to see photographs objectively. When your rating matches the engine, you earn a credit.</div><span class="rm" onclick="toggleSpan('eexp','erm')">Read less →</span></div>
+  {% set _ti=peer_queue[0] if peer_queue else (carousel_images[0] if carousel_images else none) %}
+  {% if _ti and _ti.thumb_url %}<div class="eval-image-wrap" style="margin-top:10px"><img src="{{ _ti.thumb_url }}" alt="Rate this photograph" onerror="this.parentNode.style.background='#1A2A1A'"></div>
+  {% else %}<div class="eval-image-placeholder" style="margin-top:10px"><div style="width:100%;display:flex;align-items:flex-end"><div class="eval-image-caption">Can you see the Disruption in this frame?</div></div></div>{% endif %}
+  <a href="{{ url_for('rate') }}" style="background:#0F2A22;color:#fff;border-radius:7px;text-decoration:none;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:13px" class="rate-btn">Rate this image →</a>
+  <div style="font-size:13px;color:#6B6B6B;text-align:center;margin-top:5px">2 minutes · +1 credit when you match the DDI engine</div>
+</div>
 
-  <!-- RIGHT PANEL -->
-  <div class="rpanel">
+</div>{# /centre #}
 
-    <!-- RANK CARD -->
-    <div class="rank-card rp-rank">
-      {% if progress_data and progress_data.overall_pct %}
-        <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">You are in the</div>
-        <div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:var(--blue);letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct }}%</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
-        <div style="font-size:13px;color:var(--muted);margin:8px 0"><span style="color:var(--green);font-weight:600">↑ Moving up</span> · Keep shooting</div>
-      {% elif aea_dash and aea_dash.league_rank and aea_dash.league_rank <= 50 %}
-        <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
-        <div style="font-family:Georgia,serif;font-size:52px;font-weight:700;color:var(--gold);letter-spacing:-2px;line-height:1">'{{ aea_dash.league_rank }}</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px"><span style="color:var(--green);font-weight:600">↑ Climbing</span> this season</div>
-      {% else %}
-        <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">Upload more images to unlock your standing on the platform.</div>
-      {% endif %}
-      <div style="height:0.5px;background:var(--border);margin-bottom:10px"></div>
-      {% if aea_dash and aea_dash.top6_avg %}
-        <div style="font-size:13px;color:var(--muted);margin-bottom:1px">AEA average</div>
-        <div style="font-size:16px;font-weight:700;color:var(--blue);margin-bottom:2px">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} month{{ 's' if aea_dash.qualifying_months != 1 else '' }} active</div>
-      {% else %}
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Score 6 images in 3 months to qualify for the Annual Excellence Award.</div>
-      {% endif %}
-      <a href="#" class="lnk">View your Award progress →</a>
-    </div>
+<!-- RIGHT PANEL -->
+<div class="rpanel">
+  <div class="rank-card rp-rank">
+    {% if progress_data and progress_data.overall_pct %}<div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:6px">You are in the</div><div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:#1A7FD4;letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct }}%</div><div style="font-size:13px;color:#6B6B6B;margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div><div style="font-size:13px;color:#6B6B6B;margin:8px 0"><span style="color:#2A7A3A;font-weight:600">↑ Moving up</span> · Keep shooting</div>
+    {% elif aea_dash and aea_dash.league_rank and aea_dash.league_rank<=50 %}<div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div><div style="font-family:Georgia,serif;font-size:52px;font-weight:700;color:#D6A428;letter-spacing:-2px;line-height:1">'{{ aea_dash.league_rank }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:10px"><span style="color:#2A7A3A;font-weight:600">↑ Climbing</span> this season</div>
+    {% else %}<div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div><div style="font-size:13px;color:#6B6B6B;line-height:1.6">Upload more images to unlock your standing on the platform.</div>{% endif %}
+    <div style="height:0.5px;background:#E8E4DA;margin-bottom:10px"></div>
+    {% if aea_dash and aea_dash.top6_avg %}<div style="font-size:13px;color:#6B6B6B;margin-bottom:1px">AEA average</div><div style="font-size:16px;font-weight:700;color:#1A7FD4;margin-bottom:2px">{{ '%.2f'|format(aea_dash.top6_avg) }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:10px">{{ aea_dash.qualifying_months }} month{{ 's' if aea_dash.qualifying_months!=1 else '' }} active</div>
+    {% else %}<div style="font-size:13px;color:#6B6B6B;margin-bottom:10px;line-height:1.5">Score 6 images in 3 months to qualify for the Annual Excellence Award.</div>{% endif %}
+    <a href="#" class="lnk">View your Award progress →</a>
+  </div>
 
-    <!-- MY STANDING — desktop only -->
-    {% if progress_data %}
-    <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-standing">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="rl" style="margin-bottom:0">My Standing</div>
-        <a href="{{ url_for('my_gallery') }}" class="lnk">Full view →</a>
-      </div>
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
-        <span style="font-size:13px">👑</span>
-        <span style="font-size:17px;font-weight:600;color:var(--dark)">{{ progress_data.highest_tier }}</span>
-      </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:3px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
-      <div style="display:inline-flex;align-items:center;gap:3px;background:var(--cream);border:0.5px solid var(--border);border-radius:9px;padding:2px 7px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px">
-        <i class="ti ti-camera" style="font-size:13px"></i> {{ progress_data.league_label or 'Camera' }} League
-      </div>
-      {% if progress_data.overall_pct %}
-      <div style="font-size:13px;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
-      <div class="pb"><div class="pbf" style="width:{{ [progress_data.overall_pct,100]|min }}%"></div><div class="pbd" style="left:{{ [progress_data.overall_pct,100]|min }}%"><div class="pbdi"></div></div></div>
-      {% endif %}
-      <div class="pcl"><span>Maverick<br>0–6</span><span style="text-align:center">Master<br>6–8</span><span style="text-align:center">Grandmaster<br>8–9.5</span><span style="text-align:right">Legend<br>9.5+</span></div>
-    </div>
-    {% endif %}
+  {% if progress_data %}<div style="border-top:0.5px solid #E8E4DA;padding-top:10px" class="rp-standing">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div class="rl" style="margin-bottom:0">My Standing</div><a href="{{ url_for('my_gallery') }}" class="lnk">Full view →</a></div>
+    <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px"><span style="font-size:13px">👑</span><span style="font-size:17px;font-weight:600;color:#0F2A22">{{ progress_data.highest_tier }}</span></div>
+    <div style="font-size:13px;color:#6B6B6B;margin-bottom:6px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
+    {% if progress_data.overall_pct %}<div style="font-size:13px;color:#6B6B6B;margin-bottom:3px">You're in the <strong>top {{ progress_data.overall_pct }}%</strong> this month</div><div class="pb"><div class="pbf" style="width:{{ [progress_data.overall_pct,100]|min }}%"></div><div class="pbd" style="left:{{ [progress_data.overall_pct,100]|min }}%"><div class="pbdi"></div></div></div>{% endif %}
+    <div class="pcl"><span>Maverick<br>0–6</span><span style="text-align:center">Master<br>6–8</span><span style="text-align:center">Grandmaster<br>8–9.5</span><span style="text-align:right">Legend<br>9.5+</span></div>
+  </div>{% endif %}
 
-    <!-- LATEST EVALUATION — desktop only -->
-    {% if _last and _last.score %}
-    <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-latest">
-      <div class="rl">Latest Evaluation</div>
-      <div style="display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:start">
-        <div style="width:50px;height:50px;border-radius:7px;background:#1A2A22;overflow:hidden">
-          {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" style="width:100%;height:100%;object-fit:cover" alt="" onerror="this.remove()">{% endif %}
-        </div>
-        <div>
-          <div style="font-size:24px;font-weight:700;color:var(--dark);line-height:1">{{ '%.1f'|format(_last.score) }}<span style="font-size:13px;font-weight:400;color:var(--muted)">/10</span></div>
-          <div style="font-size:13px;font-weight:600;color:var(--green)">{{ _last.tier or '' }}</div>
-          <div style="font-size:13px;color:var(--muted)">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
-        </div>
-      </div>
-      <a href="{{ url_for('image_detail', image_id=_last.id) }}" class="lnk" style="display:block;margin-top:5px;text-align:right">View full report →</a>
-    </div>
-    {% endif %}
+  {% if _last and _last.score %}<div style="border-top:0.5px solid #E8E4DA;padding-top:10px" class="rp-latest">
+    <div class="rl">Latest Evaluation</div>
+    <div style="display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:start"><div style="width:50px;height:50px;border-radius:7px;background:#1A2A22;overflow:hidden">{% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" style="width:100%;height:100%;object-fit:cover" alt="" onerror="this.remove()">{% endif %}</div><div><div style="font-size:24px;font-weight:700;color:#0F2A22;line-height:1">{{ '%.1f'|format(_last.score) }}<span style="font-size:13px;font-weight:400;color:#6B6B6B">/10</span></div><div style="font-size:13px;font-weight:600;color:#2A7A3A">{{ _last.tier or '' }}</div><div style="font-size:13px;color:#6B6B6B">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div></div></div>
+    <a href="{{ url_for('image_detail',image_id=_last.id) }}" class="lnk" style="display:block;margin-top:5px;text-align:right">View full report →</a>
+  </div>{% endif %}
 
-    <!-- WEEKLY ASSIGNMENT -->
-    <div class="wcard rp-weekly">
-      <div class="rl">Weekly Assignment</div>
-      {% if active_challenge %}
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ active_challenge.prompt_title }}</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:2px">Closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
-      {% else %}
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px">Shoot still life in black and white</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:2px">New assignment each Monday</div>
-      {% endif %}
-      <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
-      <div class="expanded" id="wexp">
-        <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
-        <a href="{{ url_for('weekly_challenge') }}" style="background:var(--dark);color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">View assignment →</a>
-        <span class="rm" onclick="toggleSpan('wexp','wrm')">Read less →</span>
-      </div>
-    </div>
+  <div class="wcard rp-weekly">
+    <div class="rl">Weekly Assignment</div>
+    {% if active_challenge %}<div style="font-size:13px;font-weight:600;color:#0F2A22;margin-bottom:2px">{{ active_challenge.prompt_title }}</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:2px">Closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
+    {% else %}<div style="font-size:13px;font-weight:600;color:#0F2A22;margin-bottom:2px">Shoot still life in black and white</div><div style="font-size:13px;color:#6B6B6B;margin-bottom:2px">New assignment each Monday</div>{% endif %}
+    <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
+    <div class="expanded" id="wexp"><div style="font-size:13px;color:#6B6B6B;line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div><a href="{{ url_for('weekly_challenge') }}" style="background:#0F2A22;color:#fff;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">View assignment →</a><span class="rm" onclick="toggleSpan('wexp','wrm')">Read less →</span></div>
+  </div>
 
-    <!-- GET EXPERT ADVICE -->
-    <div class="mcard rp-expert">
-      <div class="rl">Get Expert Advice</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
-      <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
-      <div class="expanded" id="xexp">
-        <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div>
-        <a href="{{ url_for('mentors') }}" style="background:var(--gold);color:var(--dark);font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%;text-decoration:none;display:block;text-align:center">Request a review →</a>
-        <span class="rm" onclick="toggleSpan('xexp','xrm')">Read less →</span>
-      </div>
-    </div>
+  <div class="mcard rp-expert">
+    <div class="rl">Get Expert Advice</div>
+    <div style="font-size:13px;color:#6B6B6B;line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
+    <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
+    <div class="expanded" id="xexp"><div style="font-size:13px;color:#6B6B6B;line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div><a href="{{ url_for('mentors') }}" style="background:#D6A428;color:#0F2A22;font-size:13px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">Request a review →</a><span class="rm" onclick="toggleSpan('xexp','xrm')">Read less →</span></div>
+  </div>
+</div>
 
-  </div>{# /rpanel #}
 </div>{# /layout #}
 
 <!-- FOOTER -->
-<div class="sl-dash-footer">
-  <div>
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-      <div style="width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dark)">SL</div>
-      <div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase">Shutter League</div>
-    </div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;margin-bottom:6px">Photography Assessment and Evolution Platform</div>
-    <div style="font-size:13px;font-weight:600;color:var(--gold)">Making Images Matter</div>
-  </div>
-  <div class="footer-links-col">
-    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Company</div>
-    <a class="fl" href="{{ url_for('how_it_works') }}">About Us</a>
-    <a class="fl" href="#">Contact Us</a>
-    <a class="fl" href="{{ url_for('pricing') }}">Pricing</a>
-    <a class="fl" href="#">FAQ</a>
-  </div>
-  <div class="footer-links-col">
-    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Legal</div>
-    <a class="fl" href="#">Terms and Conditions</a>
-    <a class="fl" href="#">Privacy Policy</a>
-    <a class="fl" href="#">Refund Policy</a>
-    <a class="fl" href="#">Shipping and Returns</a>
-  </div>
-  <div class="footer-links-col">
-    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Programmes</div>
-    <a class="fl" href="{{ url_for('poty') }}">Annual Excellence Award</a>
-    <a class="fl" href="#">Programme Rules</a>
-    <a class="fl" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
-    <a class="fl" href="#">Mentor Guidelines</a>
-  </div>
-  <div class="footer-links-col">
-    <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Learn</div>
-    <a class="fl" href="{{ url_for('science') }}">Science</a>
-    <a class="fl" href="{{ url_for('learning') }}">Lessons</a>
-    <a class="fl" href="{{ url_for('mentors') }}">Mentor Review</a>
-    <a class="fl" href="#">Assignments</a>
-  </div>
+<div class="sl-footer" style="background:#0F2A22;padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px">
+  <div><div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><div style="width:26px;height:26px;border-radius:50%;background:#D6A428;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0F2A22">SL</div><div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase">Shutter League</div></div><div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:6px">Photography Assessment and Evolution Platform</div><div style="font-size:13px;font-weight:600;color:#D6A428">Making Images Matter</div></div>
+  <div class="footer-links-col"><div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Company</div><a class="fl" href="{{ url_for('how_it_works') }}">About Us</a><a class="fl" href="#">Contact Us</a><a class="fl" href="{{ url_for('pricing') }}">Pricing</a><a class="fl" href="#">FAQ</a></div>
+  <div class="footer-links-col"><div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Legal</div><a class="fl" href="#">Terms and Conditions</a><a class="fl" href="#">Privacy Policy</a><a class="fl" href="#">Refund Policy</a><a class="fl" href="#">Shipping and Returns</a></div>
+  <div class="footer-links-col"><div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Programmes</div><a class="fl" href="{{ url_for('poty') }}">Annual Excellence Award</a><a class="fl" href="#">Programme Rules</a><a class="fl" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="fl" href="#">Mentor Guidelines</a></div>
+  <div class="footer-links-col"><div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:8px">Learn</div><a class="fl" href="{{ url_for('science') }}">Science</a><a class="fl" href="{{ url_for('learning') }}">Lessons</a><a class="fl" href="{{ url_for('mentors') }}">Mentor Review</a><a class="fl" href="#">Assignments</a></div>
 </div>
-<div class="footer-bottom">
+<div style="background:#0F2A22;border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between">
   <div style="font-size:13px;color:rgba(255,255,255,0.65)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</div>
-  <div style="display:flex;gap:14px">
-    <a style="font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none" href="#">Instagram</a>
-    <a style="font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none" href="#">Facebook</a>
-    <a style="font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none" href="#">YouTube</a>
-  </div>
+  <div style="display:flex;gap:14px"><a style="font-size:13px;color:rgba(255,255,255,0.5);text-decoration:none" href="#">Instagram</a><a style="font-size:13px;color:rgba(255,255,255,0.5);text-decoration:none" href="#">Facebook</a><a style="font-size:13px;color:rgba(255,255,255,0.5);text-decoration:none" href="#">YouTube</a></div>
 </div>
 
 </div>{# /sl #}
 
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
 
-<nav class="bottom-nav">
+<div class="sl"><nav class="bottom-nav">
   <a class="bn-tab active" href="{{ url_for('dashboard') }}"><i class="ti ti-home"></i><span>Dashboard</span></a>
   <a class="bn-tab" href="{{ url_for('upload') }}"><i class="ti ti-upload"></i><span>Upload</span></a>
   <a class="bn-tab" href="#"><i class="ti ti-layout-grid"></i><span>Community</span></a>
   <a class="bn-tab" href="{{ url_for('learning') }}"><i class="ti ti-book"></i><span>Learn</span></a>
   <a class="bn-tab" href="{{ url_for('profile') }}"><i class="ti ti-user"></i><span>Profile</span></a>
-</nav>
+</nav></div>
 
 <script>
-function toggleSpan(expId, rmId) {
-  var exp = document.getElementById(expId);
-  var rm  = document.getElementById(rmId);
-  var open = exp.style.display === 'block';
-  exp.style.display = open ? 'none' : 'block';
-  rm.textContent    = open ? 'Read more →' : 'Read less →';
-}
-var scrollBtn = document.getElementById('scrollTop');
-window.addEventListener('scroll', function() {
-  if (window.scrollY > 300) { scrollBtn.classList.add('visible'); }
-  else { scrollBtn.classList.remove('visible'); }
-});
+function toggleSpan(e,r){var x=document.getElementById(e),m=document.getElementById(r),o=x.style.display==='block';x.style.display=o?'none':'block';m.textContent=o?'Read more →':'Read less →'}
+var s=document.getElementById('scrollTop');window.addEventListener('scroll',function(){s.classList[window.scrollY>300?'add':'remove']('visible')});
 </script>
 {% endblock %}
