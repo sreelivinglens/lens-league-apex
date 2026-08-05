@@ -91,20 +91,22 @@ body.page-dashboard #cookie-banner     { z-index: 9999; }
 .sidenav-item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 9px 14px;
+  gap: 7px;
+  padding: 5px 10px;
   font-size: 13px;
   color: var(--d-muted);
   text-decoration: none;
   border-left: 3px solid transparent;
   cursor: pointer;
-  min-height: 40px;
+  min-height: 32px;
   border-radius: 0;
   border-top: none;
   border-right: none;
   border-bottom: none;
   background: transparent;
   transition: none;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .sidenav-item:hover { color: var(--d-dark); background: #fafaf8; }
 .sidenav-item svg { width:15px;height:15px;flex-shrink:0; }
@@ -332,8 +334,8 @@ body.page-dashboard #cookie-banner     { z-index: 9999; }
   .sidenav-item {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 9px 14px;
+    gap: 7px;
+    padding: 5px 10px;
     font-size: 13px;
     font-weight: 400;
     color: var(--d-muted);
@@ -344,7 +346,9 @@ body.page-dashboard #cookie-banner     { z-index: 9999; }
     border-bottom: none;
     border-radius: 0;
     background: transparent;
-    min-height: 40px;
+    min-height: 32px;
+    white-space: nowrap;
+    overflow: hidden;
     transition: background 0.1s, color 0.1s;
   }
   .sidenav-item:hover { color: var(--d-dark); background: #fafaf8; opacity: 1; }
@@ -827,63 +831,6 @@ body.page-dashboard #cookie-banner     { z-index: 9999; }
     </div>
     {% endif %}
 
-    {# ── S168 DIRECTIVE BAR — always visible above the fold ── #}
-    {% if stats.total > 0 or (dashboard_visit_count is defined and dashboard_visit_count > 1) %}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-      <a href="{{ url_for('mission') }}"
-         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid var(--d-gold);border-radius:8px;padding:10px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">Your next assignment is waiting</span>
-        <span style="font-size:15px;font-weight:700;color:var(--d-gold-dk);white-space:nowrap;">Begin &#8594;</span>
-      </a>
-      {% if active_challenge %}
-      <a href="{{ url_for('weekly_challenge') }}"
-         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid #27500A;border-radius:8px;padding:10px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">Weekly Challenge{% if active_challenge.closes_at %} &#183; closes {{ active_challenge.closes_at.strftime('%d %b') }}{% endif %}</span>
-        <span style="font-size:15px;font-weight:700;color:#27500A;white-space:nowrap;">Participate &#8594;</span>
-      </a>
-      {% endif %}
-      {% if quota_status and not quota_status.is_unlimited and quota_status.remaining is defined %}
-      <a href="{{ url_for('upload') }}"
-         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid #2C3E6B;border-radius:8px;padding:10px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">{{ quota_status.remaining }} evaluation{{ 's' if quota_status.remaining != 1 else '' }} remaining this cycle</span>
-        <span style="font-size:15px;font-weight:700;color:#2C3E6B;white-space:nowrap;">Upload now &#8594;</span>
-      </a>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {# ── TODAY'S MISSION (practice card) ── #}
-    {% if show_mission %}
-    <div class="practice-card">
-      <div class="practice-content">
-        <div>
-          <div class="practice-eyebrow">Today's Mission</div>
-          <div class="practice-title">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
-          <div class="practice-meta">
-            <div>
-              <div class="practice-meta-label">Focus</div>
-              <div class="practice-meta-val">{{ lesson.dim_short if lesson else 'Timing' }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="practice-actions">
-          <a href="{{ url_for('mission') }}" class="practice-cta">Begin Today's Practice →</a>
-          <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline;">
-            <button type="submit" class="practice-skip" style="background:none;border:none;padding:0;cursor:pointer;">or Skip for now</button>
-          </form>
-        </div>
-      </div>
-      <div class="practice-img">
-        {% if _hero_img and _hero_img.thumb_url %}
-        <img src="{{ _hero_img.thumb_url }}" alt="Practice photograph" onerror="this.parentNode.style.background='linear-gradient(135deg,#1A3A2A,#2A5A3A)';this.remove()">
-        {% else %}
-        <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#0A1A0E);"></div>
-        {% endif %}
-        <div class="practice-img-grad"></div>
-      </div>
-    </div>
-    {% endif %}{# end show_mission #}
-
     {# ── LIVE EVENT ADVISORY — desktop ── #}
     {% if dash_live_event %}
     <div style="background:linear-gradient(135deg,#FDF6DC 0%,#FFFDF5 100%);border:1px solid #E8C84A;border-radius:12px;overflow:hidden;">
@@ -1116,33 +1063,6 @@ body.page-dashboard #cookie-banner     { z-index: 9999; }
         {% endfor %}
       </div>
     </div>
-    {% endif %}
-
-    {# ── MY GALLERY ── #}
-    {% if images and images.items %}
-    {% set _scored = images.items|selectattr('score')|selectattr('thumb_url')|list %}
-    {% if _scored %}
-    <div class="recent-card">
-      <div class="recent-hdr">
-        <div class="card-eyebrow" style="margin-bottom:0;">My Gallery</div>
-        <a href="{{ url_for('my_gallery') }}" class="recent-link">View all {{ stats.total }} →</a>
-      </div>
-      <div class="recent-grid">
-        {% for img in _scored[:5] %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="recent-item" style="text-decoration:none;">
-          <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy"
-               onerror="this.parentNode.style.cssText='aspect-ratio:1;background:#E8E4DA;border-radius:8px;';this.remove()">
-          {% if img.score %}<div class="recent-score">{{ '%.1f'|format(img.score) }}</div>{% endif %}
-          {%- if img.camera_track == 'mobile' %}
-          <div style="position:absolute;bottom:4px;left:4px;background:#1A1A18;color:#F5C518;font-size:13px;padding:1px 5px;border-radius:3px;line-height:1.5;font-weight:600;">📱</div>
-          {%- elif img.camera_track == 'camera' %}
-          <div style="position:absolute;bottom:4px;left:4px;background:rgba(255,255,255,0.85);color:#1A1A18;font-size:13px;padding:1px 5px;border-radius:3px;line-height:1.5;font-weight:600;">📷</div>
-          {%- endif %}
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
     {% endif %}
 
   </main>
