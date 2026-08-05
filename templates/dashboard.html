@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.2.0 (Session 175, 2026-08-05 — Clean rebuild from approved design ground truth. Audit clean: KYC, font-size 13-14px mobile, rank→standing, base.html nav+footer suppressed) #}
+{# SL-VERSION: 175.2.1 (fix base.html global nav CSS override — sidenav horizontal strip) (Session 175, 2026-08-05 — Clean rebuild from approved design ground truth. Audit clean: KYC, font-size 13-14px mobile, rank→standing, base.html nav+footer suppressed) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -19,8 +19,42 @@ body.page-dashboard nav.sl-bottom-nav,
 body.page-dashboard > footer,
 body.page-dashboard footer:not(.sl-dash-footer) { display:none !important; }
 body.page-dashboard { padding-top:0 !important; background:#F6F2E9; }
+body.page-dashboard main,
 body.page-dashboard > main,
-body.page-dashboard main { padding:0 !important; max-width:none !important; margin:0 !important; background:transparent; }
+body.page-dashboard main.sl-main { 
+  padding:0 !important; 
+  max-width:none !important; 
+  width:100% !important;
+  margin:0 !important; 
+  background:transparent !important;
+  overflow-x:hidden !important;
+  display:block !important;
+}
+/* Override base.html global nav{display:flex} rule */
+body.page-dashboard nav.sidenav,
+body.page-dashboard .sidenav {
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  height:auto !important;
+  background:#fff !important;
+  border-bottom:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  padding:14px 0 !important;
+}
+/* Override base.html global nav rule on our topnav */
+body.page-dashboard nav.topnav {
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  height:50px !important;
+  background:var(--dark) !important;
+  border-bottom:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  padding:0 20px !important;
+}
 
 /* ── DESIGN TOKENS ── */
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
