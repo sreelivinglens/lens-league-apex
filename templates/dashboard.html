@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.1.3 — audit clean: KYC, font-size, opacity, cursor (Session 175, 2026-08-05 — Dashboard redesign + mentor_sessions rollback fix) #}
+{# SL-VERSION: 175.1.4 — hide base.html nav+footer, audit clean: KYC, font-size, opacity, cursor (Session 175, 2026-08-05 — Dashboard redesign + mentor_sessions rollback fix) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -18,6 +18,10 @@
 ═══════════════════════════════════════════════════════ */
 body.page-dashboard { padding-top:0 !important; }
 body.page-dashboard main { padding:0 !important; max-width:none !important; margin:0 !important; }
+/* Hide base.html nav and footer — dashboard has its own */
+body.page-dashboard .sl-top-nav { display:none !important; }
+body.page-dashboard .sl-bottom-nav { display:none !important; }
+body.page-dashboard > footer { display:none !important; }
 
 :root{
   --gold:#D6A428;--gold-dk:#A37B2C;--dark:#0F2A22;--cream:#F6F2E9;
