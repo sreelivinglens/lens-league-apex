@@ -1,11 +1,10 @@
 {% extends "base.html" %}
-{# SL-VERSION: 171.9 (Session 171, 2026-08-03 — Change location button: scrollIntoView added so form appears in viewport after toggle. Tier badge: "Highest tier reached" label.) #}
+{# SL-VERSION: 175.1 (Session 175, 2026-08-05 — Dashboard redesign: approved 3-column layout, insight sentences, mentor advice, journey sparkline, BR Hills, train your eye, rank card two states, mobile reorder, bottom nav) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
 {% block extra_head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 {% endblock %}
 
 {% block body_class %}page-dashboard{% endblock %}
@@ -13,1509 +12,884 @@
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════
-   SHUTTER LEAGUE DASHBOARD v1.0
-   Built from SL_Dashboard_Mock.html — single source of truth
-   Tokens: #F6F2E9 cream · #0F2A22 dark · #D6A428 gold
-   Font: Avenir Next (inherits from base)
+   SHUTTER LEAGUE DASHBOARD — SL 175.1
+   Design tokens, typography and layout from approved
+   design system. Never edit colour tokens here.
 ═══════════════════════════════════════════════════════ */
-body.page-dashboard { padding-top: 0 !important; }
-body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+body.page-dashboard { padding-top:0 !important; }
+body.page-dashboard main { padding:0 !important; max-width:none !important; margin:0 !important; }
 
-:root {
-  --d-gold:    #D6A428;
-  --d-gold-dk: #A37B2C;
-  --d-dark:    #0F2A22;
-  --d-navy:    #13254B;
-  --d-cream:   #F6F2E9;
-  --d-card:    #FFFFFF;
-  --d-border:  #E8E4DA;
-  --d-text:    #1A1A18;
-  --d-muted:   #6B6B6B;
-  --d-green:   #2A7A3A;
-  --d-r:       16px;
+:root{
+  --gold:#D6A428;--gold-dk:#A37B2C;--dark:#0F2A22;--cream:#F6F2E9;
+  --border:#E8E4DA;--muted:#6B6B6B;--green:#2A7A3A;--text:#1A1A18;
+  --pista:#E8F5E2;--pista-b:#C5E0BB;--navy:#13254B;--blue:#1A7FD4
 }
 
-/* ── LAYOUT ── */
-.dash-wrap { background: var(--d-cream); min-height: 100vh; min-height: -webkit-fill-available; }
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
+body{background:var(--cream)}
 
-/* Mobile default: single column */
-.dash-layout {
-  display: block;
-}
-.mobile-dash { display: none; }
+/* ── CONTAINER ── */
+.sl{max-width:1280px;margin:0 auto;background:var(--cream)}
 
-/* ── LEFT SIDENAV — desktop only ── */
-.sidenav { display: none; }
+/* ── TOPNAV ── */
+.topnav{background:var(--dark);display:flex;align-items:center;padding:0 20px;height:50px}
+.logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--dark);flex-shrink:0}
+.logo-text{font-size:11px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.2;margin:0 28px 0 8px;flex-shrink:0}
+.nav-links{display:flex;gap:2px;flex:1}
+.nav-link{padding:5px 12px;font-size:12px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px}
+.nav-link.active{color:#fff;background:rgba(255,255,255,0.12);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.bell{position:relative;cursor:pointer}
+.bell-dot{position:absolute;top:-2px;right:-2px;background:#E24B4A;color:#fff;font-size:8px;font-weight:600;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.av{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--dark)}
+
+/* ── LAYOUT — stretch fills blank space when centre shorter than right ── */
+.layout{display:grid;grid-template-columns:155px minmax(0,1fr) 220px;align-items:stretch}
+
+/* ── SIDENAV ── */
+.sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0}
+.si{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:12px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;cursor:pointer}
+.si.active{background:var(--cream);color:var(--dark);font-weight:600;border-left-color:var(--gold)}
+.si:hover:not(.active){color:var(--dark);background:#fafaf8}
+.si-more{font-size:10px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase}
 
 /* ── CENTRE ── */
-.centre {
-  padding: 20px 16px;
-  display: flex; flex-direction: column; gap: 24px;
+.centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream)}
+.card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px}
+
+/* ── TYPOGRAPHY ── */
+.ey{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
+.greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px}
+.score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1}
+.score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.body-text{font-size:13px;font-weight:400;color:var(--text);line-height:1.85;text-align:justify}
+
+/* INSIGHT SENTENCES — three human lines, not dimension labels */
+.insight-line1{font-size:13px;font-weight:400;color:var(--text);line-height:1.7}
+.insight-line2{font-size:13px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:3px}
+.insight-line3{font-size:13px;font-weight:600;color:var(--green);line-height:1.7;margin-top:3px}
+
+/* READ MORE — span only, never button or a href */
+.rm{font-size:10px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px}
+.lnk{font-size:10px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
+.expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
+
+/* ── BUTTONS ── */
+.btn-gold{background:var(--gold);color:var(--dark);font-size:11px;font-weight:600;padding:6px 13px;border-radius:7px;border:none;cursor:pointer}
+.btn-ghost{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer}
+.pts-chip{background:#FFF8E6;border:1px solid #F0D88A;border-radius:9px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gold-dk)}
+
+/* ── JOURNEY THUMBNAILS ── */
+.es{display:flex;gap:6px;margin-top:9px}
+.et{flex:1;min-width:0}
+.eti{aspect-ratio:1;border-radius:6px;position:relative;margin-bottom:2px;overflow:hidden;background:#1A2A22}
+.eti img{width:100%;height:100%;object-fit:cover;display:block}
+.escore{font-size:11px;font-weight:600;color:var(--dark)}
+.edate{font-size:10px;color:var(--muted)}
+.et-desktop-only{display:flex}
+
+/* ── TRAIN YOUR EYE — image container ── */
+.eval-image-wrap{width:100%;max-height:220px;background:#1A2A1A;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative}
+.eval-image-wrap img{max-width:100%;max-height:220px;object-fit:contain;display:block}
+.eval-image-placeholder{width:100%;height:180px;background:#1A2A1A;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;margin-bottom:10px}
+.eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 10px;font-size:11px;font-weight:400;color:#fff}
+
+/* ── RIGHT PANEL ── */
+.rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;min-width:0;overflow:hidden}
+.rl{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+
+/* RANK CARD — gold crown border, two states */
+.rank-card{background:#fff;border-radius:13px;border:0.5px solid var(--border);border-top:2.5px solid var(--gold);padding:14px;position:relative}
+.rank-card::before{content:'';position:absolute;top:-1px;left:14px;right:14px;height:1px;background:var(--gold);opacity:0.25;filter:blur(3px)}
+
+/* ── STANDING BAR ── */
+.pb{position:relative;height:5px;background:var(--border);border-radius:3px;margin-bottom:3px}
+.pbf{height:100%;background:var(--gold);border-radius:3px}
+.pbd{position:absolute;top:50%;width:10px;height:10px;background:var(--dark);border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
+.pbdi{width:3px;height:3px;background:#fff;border-radius:50%}
+.pcl{display:flex;justify-content:space-between;font-size:8px;color:var(--muted)}
+
+/* ── RIGHT PANEL SUB-CARDS ── */
+.wcard{background:var(--cream);border-radius:9px;border:0.5px solid var(--border);padding:11px}
+.mcard{background:#fff;border-radius:9px;border:0.5px solid var(--border);padding:11px}
+
+/* ── SCROLL TO TOP ── */
+.scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:var(--dark);color:var(--gold);border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:18px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18)}
+.scroll-top.visible{display:flex}
+
+/* ── FOOTER ── */
+.sl-footer{background:var(--dark);padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px}
+.footer-links-col{display:block}
+.fl{display:block;font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none;margin-bottom:5px}
+.footer-bottom{background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+
+/* ── BOTTOM NAV — mobile only ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.15);justify-content:space-around;align-items:center;z-index:1000}
+.bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:9px;font-weight:600;min-width:44px;min-height:44px;justify-content:center}
+.bn-tab i{font-size:20px}
+.bn-tab.active{color:var(--gold)}
+
+/* ══════════════════════════════════════════════════
+   IPAD — 768px to 1023px
+══════════════════════════════════════════════════ */
+@media (max-width:1023px) and (min-width:768px){
+  .layout{grid-template-columns:minmax(0,1fr) 220px}
+  .sidenav{display:none}
+  .nav-link:not(.active):not(.primary-nav){display:none}
+  .centre{padding:14px;gap:10px}
+  .rpanel{padding:12px;gap:10px}
+  .card{padding:14px 16px}
+  .greeting-name{font-size:18px}
+  .score-big{font-size:26px}
+  .body-text{font-size:12px}
+  .insight-line1,.insight-line2,.insight-line3{font-size:12px}
+  .sl-footer{grid-template-columns:200px 1fr 1fr;gap:16px}
 }
 
-/* ── RIGHT PANEL — mobile: below centre ── */
-.rpanel {
-  padding: 0 16px 16px;
-  display: flex; flex-direction: column; gap: 16px;
-}
+/* ══════════════════════════════════════════════════
+   MOBILE — 767px and below
+   Card order differs from desktop:
+   Desktop: Greeting → Mentor Advice → Journey → BR Hills → Train your eye
+   Mobile:  Greeting → Journey → Mentor Advice → BR Hills → Train your eye
+══════════════════════════════════════════════════ */
+@media (max-width:767px){
+  .layout{display:flex;flex-direction:column}
+  .sidenav{display:none}
+  .nav-links{display:none}
+  .logo-text{display:none}
+  .centre{padding:12px;gap:10px;order:1}
+  .rpanel{border-left:none;border-top:0.5px solid var(--border);padding:12px;gap:10px;order:2}
+  .card{padding:14px 16px}
 
-/* ─────────────────────────────────────────
-   GREETING
-───────────────────────────────────────── */
-.greeting {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px; padding: 10px 0 4px 3px;
-  border-left: 3px solid var(--d-gold); padding-left: 12px;
-}
-.greeting-name { font-size: 22px; font-weight: 800; color: var(--d-dark); line-height: 1.2; }
-.greeting-sub { font-size: 13px; color: var(--d-muted); margin-top: 4px; line-height: 1.5; }
-.greeting-sub strong { color: var(--d-dark); font-weight: 700; }
-.streak {
-  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-  background: var(--d-card); border: 1px solid var(--d-border);
-  border-radius: 20px; padding: 4px 10px; cursor: pointer;
-}
-.streak-count { font-size: 18px; font-weight: 800; color: var(--d-dark); }
-.streak-txt { font-size: 13px; color: var(--d-muted); line-height: 1.3; }
+  /* Mobile card reorder */
+  .card-greeting{order:1}
+  .card-journey{order:2}
+  .card-mentor{order:3}
+  .card-brhills{order:4}
+  .card-train{order:5}
 
-/* ─────────────────────────────────────────
-   PRACTISE CARD
-───────────────────────────────────────── */
-.practice-card {
-  background: #1A2D3A;
-  border-radius: var(--d-r);
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr 130px;
-  min-height: 155px;
-}
-.practice-content {
-  padding: 18px 20px;
-  display: flex; flex-direction: column; justify-content: space-between;
-}
-.practice-eyebrow {
-  font-size: 13px; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--d-gold); margin-bottom: 6px;
-}
-.practice-title {
-  font-size: 20px; font-weight: 700; color: #F6F2E9;
-  line-height: 1.2; margin-bottom: 10px;
-}
-.practice-meta { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
-.practice-meta-label {
-  font-size: 13px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: rgba(255,255,255,0.65);
-}
-.practice-meta-val { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); }
-.practice-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.practice-cta {
-  background: var(--d-gold); color: #111; font-size: 13px; font-weight: 700;
-  padding: 9px 18px; border-radius: 9px; text-decoration: none; white-space: nowrap;
-}
-.practice-skip { font-size: 13px; color: rgba(255,255,255,0.65); text-decoration: none; cursor: pointer; }
-.practice-img { position: relative; overflow: hidden; }
-.practice-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.practice-img-grad {
-  position: absolute; inset: 0;
-  background: linear-gradient(to right, #1A2D3A 0%, transparent 35%);
-}
+  /* Right panel — 3 cards only on mobile */
+  .rp-standing{display:none}
+  .rp-latest{display:none}
+  .rp-rank{display:block}
+  .rp-weekly{display:block}
+  .rp-expert{display:block}
 
-/* ─────────────────────────────────────────
-   EVOLUTION CARD
-───────────────────────────────────────── */
-.today-card {
-  background: var(--d-card); border-radius: var(--d-r);
-  border: 1px solid var(--d-border); padding: 16px 18px;
-}
-.card-eyebrow {
-  font-size: 13px; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--d-gold-dk); margin-bottom: 12px;
-}
-.today-grid { display: flex; flex-direction: column; gap: 14px; }
-.evo-score { font-size: 40px; font-weight: 800; color: var(--d-dark); line-height: 1; }
-.evo-grade { font-size: 13px; font-weight: 600; color: var(--d-green); margin: 3px 0; }
-.evo-pool { font-size: 13px; color: var(--d-muted); }
-.trend-wrap { display: flex; flex-direction: column; gap: 4px; }
-.trend-label { font-size: 13px; color: var(--d-muted); }
-.trend-dates { display: flex; justify-content: space-between; font-size: 13px; color: var(--d-muted); margin-top: 4px; }
-.dim-row { margin-bottom: 8px; }
-.dim-row:last-child { margin-bottom: 0; }
-.dim-top { display: flex; justify-content: space-between; align-items: center; }
-.dim-name { font-size: 13px; color: var(--d-muted); }
-.dim-val { font-size: 13px; font-weight: 700; color: var(--d-text); }
-.dim-val.strong { color: var(--d-green); }
-.dim-val.focus { color: #D97A2A; }
-.dim-bar { height: 3px; background: var(--d-border); border-radius: 2px; margin-top: 3px; }
-.dim-fill { height: 100%; border-radius: 2px; background: #8A7A5A; }
-.dim-fill.strong { background: var(--d-green); }
-.dim-fill.focus { background: #D97A2A; }
+  /* Typography */
+  .body-text{font-size:13px;text-align:left;line-height:1.9}
+  .insight-line1,.insight-line2,.insight-line3{font-size:14px;line-height:1.8;text-align:left}
+  .greeting-name{font-size:20px}
+  .score-big{font-size:28px}
+  .score-row{flex-wrap:wrap;gap:6px}
+  .ey{font-size:10px}
+  .rm{font-size:11px}
+  .lnk{font-size:11px}
+  .edate{font-size:11px}
+  .escore{font-size:12px;font-weight:600}
 
-/* ─────────────────────────────────────────
-   RECENT WORK
-───────────────────────────────────────── */
-.recent-card {
-  background: var(--d-card); border-radius: var(--d-r);
-  border: 1px solid var(--d-border); padding: 12px 14px;
-}
-.recent-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.recent-link { font-size: 13px; color: var(--d-dark); font-weight: 600; text-decoration: none; }
-.recent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.recent-item { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; }
-.recent-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
-.recent-score {
-  position: absolute; top: 4px; right: 4px;
-  background: rgba(0,0,0,0.65); color: #fff;
-  font-size: 13px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
-}
+  /* Hide 4th and 5th thumbnails on mobile */
+  .et-desktop-only{display:none}
 
-/* ─────────────────────────────────────────
-   RIGHT PANEL CARDS
-───────────────────────────────────────── */
-.rp-card {
-  background: var(--d-card); border-radius: 10px;
-  border: 1px solid var(--d-border); border-left: 3px solid var(--d-gold);
-  padding: 9px 11px;
-}
-.rp-label {
-  font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--d-muted); margin-bottom: 8px; display: block;
-}
-.latest-eval { display: flex; gap: 10px; align-items: flex-start; }
-.latest-thumb { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--d-border); }
-.latest-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.latest-title { font-size: 13px; font-weight: 700; color: var(--d-dark); margin-bottom: 2px; }
-.latest-score { font-size: 20px; font-weight: 800; color: var(--d-dark); line-height: 1; }
-.latest-tier { font-size: 13px; color: var(--d-green); font-weight: 600; }
-.latest-date { font-size: 13px; color: var(--d-muted); margin-top: 2px; }
-.latest-link {
-  display: block; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--d-dark);
-  text-decoration: none; border-top: 1px solid var(--d-border); padding-top: 8px;
-}
-.standing-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.standing-val { font-size: 14px; font-weight: 700; color: var(--d-dark); }
-.standing-avg { font-size: 13px; color: var(--d-muted); }
-.standing-pct { font-size: 13px; color: var(--d-green); font-weight: 600; margin-bottom: 8px; }
-.standing-bar { height: 4px; background: var(--d-border); border-radius: 2px; }
-.standing-fill { height: 100%; background: var(--d-gold); border-radius: 2px; }
-.mentor-quote {
-  font-size: 13px; font-style: italic; color: var(--d-text); line-height: 1.5;
-  margin-bottom: 8px; border-left: 2px solid var(--d-gold); padding-left: 10px;
-}
-.mentor-name { font-size: 13px; font-weight: 700; color: var(--d-dark); }
-.mentor-tier-badge { font-size: 13px; color: var(--d-muted); }
-.aea-card { background: var(--d-navy); border-radius: 10px; padding: 9px 11px; }
-.aea-label { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--d-gold); margin-bottom: 4px; }
-.aea-title { font-size: 14px; font-weight: 700; color: #F6F2E9; margin-bottom: 3px; }
-.aea-sub { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 8px; }
-.aea-link { font-size: 13px; color: var(--d-gold); font-weight: 600; text-decoration: none; }
+  /* Full-width tap targets */
+  .btn-gold{width:100%;padding:12px 14px;font-size:13px}
+  .rate-btn{width:100%;height:50px;font-size:14px;font-weight:600}
+  .directions-btn{width:100%;padding:12px 14px;font-size:13px}
 
-/* ─────────────────────────────────────────
-   MOBILE — bottom quote strip
-───────────────────────────────────────── */
-.dash-quote-strip {
-  background: var(--d-dark); padding: 16px 20px 24px;
-  text-align: center;
-}
-.dash-quote-txt { font-size: 14px; color: rgba(255,255,255,0.7); font-style: italic; line-height: 1.6; margin-bottom: 6px; }
-.dash-quote-sig { font-size: 13px; color: var(--d-gold); font-weight: 600; }
+  /* Footer stripped on mobile */
+  .sl-footer{grid-template-columns:1fr;gap:0;padding:20px 16px 14px}
+  .footer-links-col{display:none}
+  .footer-bottom{flex-direction:column;gap:8px;padding:10px 16px;text-align:center}
 
-/* ═══════════════════════════════════════
-   DESKTOP ≥ 1025px — 3-column layout
-═══════════════════════════════════════ */
-@media (min-width: 1025px) {
-
-  .dash-layout {
-    display: grid;
-    grid-template-columns: 220px 1fr 320px;
-    align-items: start;
-  }
-
-  /* ── Left sidenav ── */
-  .sidenav {
-    display: flex; flex-direction: column;
-    background: var(--d-cream); border-right: 1px solid var(--d-border);
-    padding: 16px 12px; position: sticky; top: 64px;
-    height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
-    justify-content: space-between;
-  }
-  .sidenav-item {
-    display: flex; align-items: center; gap: 9px;
-    padding: 8px 11px; font-size: 13px; font-weight: 600;
-    text-decoration: none; border-radius: 8px;
-    border-left-width: 3px; border-left-style: solid;
-    border-top: 1px solid transparent;
-    border-right: 1px solid transparent;
-    border-bottom: 1px solid transparent;
-    transition: opacity 0.15s;
-    min-height: 40px;
-  }
-  .sidenav-item:hover { opacity: 0.82; }
-  .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-  .sidenav-item.nav-mission  { background:#FDF6DC; border-left-color:#C8960A; color:#7A5500; }
-  .sidenav-item.nav-portfolio{ background:#F5EDE0; border-left-color:#7A5A3A; color:#5A3A1A; }
-  .sidenav-item.nav-mentor   { background:#EAF3DE; border-left-color:#2A7A3A; color:#1A5A28; }
-  .sidenav-item.nav-challenges{ background:#E0F0F0; border-left-color:#1A6B6B; color:#0A4A4A; }
-  .sidenav-item.nav-bow      { background:#E0E8F5; border-left-color:#1A2744; color:#0A1A3A; }
-  .sidenav-item.nav-awards   { background:#F5E0E8; border-left-color:#7A2040; color:#5A1030; }
-  .sidenav-item.nav-learning { background:#E4EAF5; border-left-color:#2C4A7A; color:#1A2A5A; }
-  .sidenav-item.nav-settings { background:#F0EFED; border-left-color:#8A8A88; color:#6B6B6B; }
-
-  .sidenav-divider { display: none; }
-  .sidenav-bottom  { margin-top: auto; padding-top: 8px; }
-
-  /* ── Centre column ── */
-  .centre {
-    padding: 12px 20px 20px; gap: 10px;
-  }
-
-  /* Practise card wider image column on desktop */
-  .practice-card { grid-template-columns: 1fr 260px; }
-  .practice-content { padding: 16px 20px; }
-  .practice-title { font-size: 20px; }
-
-  /* Evolution grid: score | trend | dimensions side by side */
-  .today-grid {
-    display: grid;
-    grid-template-columns: 130px 1fr 150px;
-    gap: 18px;
-    align-items: start;
-  }
-
-  /* Recent work 5-col */
-  .recent-grid { grid-template-columns: repeat(5, 1fr); }
-
-  /* ── Right panel ── */
-  .rpanel {
-    border-left: 1px solid var(--d-border);
-    padding: 16px 16px; gap: 14px;
-    align-self: start;
-    position: sticky; top: 64px;
-  }
-
-  /* Hide mobile-only quote strip */
-  .dash-quote-strip { display: none; }
-}
-
-/* ── Standing modal ── */
-.standing-modal {
-  display: none; position: fixed; inset: 0; z-index: 9000;
-  background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
-  padding: 20px;
-}
-.standing-modal-inner {
-  background: var(--d-cream); border-radius: 20px;
-  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
-  padding: 24px; position: relative;
-}
-.standing-modal-close {
-  position: absolute; top: 16px; right: 16px;
-  background: none; border: 1px solid var(--d-border);
-  border-radius: 50%; width: 32px; height: 32px;
-  cursor: pointer; font-size: 16px; color: var(--d-muted);
-  display: flex; align-items: center; justify-content: center;
-}
-.standing-modal-close:hover { border-color: var(--d-dark); color: var(--d-dark); }
-.dim-sparkline-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--d-border);
-}
-.dim-sparkline-row:last-child { border-bottom: none; }
-.dim-sparkline-name { font-size: 14px; font-weight: 600; color: var(--d-dark); min-width: 90px; }
-.dim-sparkline-val { font-size: 14px; font-weight: 800; color: var(--d-dark); min-width: 36px; text-align: right; }
-.dim-trend-pill {
-  font-size: 13px; font-weight: 700; padding: 2px 7px; border-radius: 8px;
-  white-space: nowrap;
-}
-.dim-trend-pill.up { background: #EAF3DE; color: #2A7A3A; }
-.dim-trend-pill.steady { background: #F0EDEA; color: #6B6B6B; }
-.dim-trend-pill.down { background: #FEF0E8; color: #C05A1A; }
-
-/* ═══════════════════════════════════════════════════════
-   MOBILE DASHBOARD — approved design
-═══════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  /* Hide desktop sidenav */
-  .sidenav { display: none !important; }
-  
-  /* Hide desktop-only sections */
-  .rpanel { display: none !important; }
-  
-  /* Show mobile dashboard instead */
-  .mobile-dash { display: flex !important; }
-  
-  /* Hide desktop centre */
-  .centre { display: none !important; }
-
-  /* Practice card — mobile 2-col with image */
-  .mob-practice {
-    background: var(--d-card); border-radius: var(--d-r);
-    border: 1px solid var(--d-border); overflow: hidden;
-  }
-  .mob-practice-inner {
-    display: grid; grid-template-columns: 1fr 140px; min-height: 170px;
-  }
-  .mob-practice-content { padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; }
-  .mob-practice-img { position: relative; overflow: hidden; }
-  .mob-practice-img img { width:100%;height:100%;object-fit:cover;object-position:center top;display:block; }
-
-  /* Reflection card */
-  .mob-reflection {
-    background: var(--d-card); border-radius: var(--d-r);
-    border: 1px solid var(--d-border); padding: 16px;
-  }
-
-  /* Evolution rows */
-  .mob-evolution {
-    background: var(--d-card); border-radius: var(--d-r);
-    border: 1px solid var(--d-border); padding: 16px;
-  }
-  .mob-dim-row {
-    display: flex; align-items: center; gap: 10px; padding: 8px 0;
-    border-bottom: 1px solid var(--d-border);
-  }
-  .mob-dim-row:last-of-type { border-bottom: none; }
-  .mob-dim-icon { width: 24px; height: 24px; flex-shrink: 0; opacity: 0.6; }
-  .mob-dim-name { font-size: 14px; font-weight: 500; color: var(--d-dark); flex: 1; }
-  .mob-dim-spark { flex: 1; }
-  .mob-dim-val { font-size: 14px; font-weight: 700; color: var(--d-dark); min-width: 30px; text-align: right; }
-
-  /* Thought card */
-  .mob-thought {
-    background: var(--d-card); border-radius: var(--d-r);
-    border: 1px solid var(--d-border); padding: 14px;
-    display: flex; gap: 14px; align-items: flex-start;
-  }
-  .mob-thought-photo { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
-  .mob-thought-photo img { width:100%;height:100%;object-fit:cover;display:block; }
-
-  /* Nearby card */
-  .mob-nearby {
-    background: var(--d-card); border-radius: var(--d-r);
-    border: 1px solid var(--d-border); overflow: hidden;
-  }
-  .mob-nearby-map { height: 80px; background: #D4E8C4; position: relative; overflow: hidden; }
-  .mob-nearby-map img { width:100%;height:100%;object-fit:cover;display:block; }
-  .mob-nearby-body { padding: 12px 14px; }
-
-  /* Mentor card */
-  .mob-mentor {
-    background: var(--d-card); border-radius: var(--d-r);
-    border: 1px solid var(--d-border); padding: 14px;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
+  /* Bottom nav and spacing */
+  body{padding-bottom:70px}
+  .scroll-top{bottom:80px}
+  .bottom-nav{display:flex}
 }
 </style>
 {% endblock %}
 
 {% block content %}
-{# ── Time-based greeting — now is passed as datetime.utcnow (callable) ── #}
-{% set ns = namespace(greeting='Good morning', emoji='☀️') %}
+{# ── Time-based greeting (IST) ── #}
+{% set ns = namespace(greeting='Good morning') %}
 {% set _ist_mins = (now().hour * 60 + now().minute + 330) % 1440 if now is defined else 540 %}
 {% set _ist_h = _ist_mins // 60 %}
-{% if _ist_h >= 21 or _ist_h < 5 %}{% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌙' %}
-{% elif _ist_h >= 17 %}{% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌆' %}
-{% elif _ist_h >= 12 %}{% set ns.greeting = 'Good afternoon' %}{% set ns.emoji = '🌤️' %}
+{% if _ist_h >= 21 or _ist_h < 5 %}{% set ns.greeting = 'Good evening' %}
+{% elif _ist_h >= 17 %}{% set ns.greeting = 'Good evening' %}
+{% elif _ist_h >= 12 %}{% set ns.greeting = 'Good afternoon' %}
 {% endif %}
 
-{# ── Last scored image ── #}
+{# ── Context shorthands ── #}
+{% set _first = current_user.full_name.split()[0] if current_user.full_name else current_user.username %}
 {% set _last = images.items[0] if images and images.items else none %}
-{% set _hero_img = carousel_images[0] if carousel_images else none %}
+{% set _scored_items = images.items|selectattr('score')|list if images and images.items else [] %}
 
-<div class="dash-wrap">
-<div class="dash-layout">
+{# ── Journey trend for sparkline ── #}
+{% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
+  {% set _trend = progress_data.trend %}
+  {% set _trend_scores = _trend|map(attribute='score')|list %}
+  {% set _tmin = _trend_scores|min %}
+  {% set _tmax = _trend_scores|max %}
+  {% set _trange = [(_tmax - _tmin), 0.5]|max %}
+  {% set _tn = _trend|length %}
+{% endif %}
 
-  {# ════════════════════════════════════
-     LEFT SIDENAV (desktop only)
-  ════════════════════════════════════ #}
-  <nav class="sidenav" aria-label="Dashboard navigation" style="gap:0; justify-content:space-between;">
+{# ── Insight sentences from progress_data (dimension pattern angle) ── #}
+{% if progress_data %}
+  {% set _dim_readable = {'dod':'depth of difficulty','disruption':'disruption','dm':'decisive moment','wonder':'wonder factor','aq':'aesthetic quality'} %}
+  {% set _dim_human = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Aesthetic Quality'} %}
+  {% set _strong = progress_data.strongest %}
+  {% set _weak   = progress_data.weakest %}
+{% endif %}
 
-    <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;">
-      <a href="{{ url_for('mission') }}" class="sidenav-item nav-mission">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Mission
-      </a>
-      <a href="{{ url_for('portfolio_manager') }}" class="sidenav-item nav-portfolio">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>My Portfolio
-      </a>
-      <a href="{{ url_for('mentors') }}" class="sidenav-item nav-mentor">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mentor Guidance
-      </a>
-      <a href="{{ url_for('weekly_challenge') }}" class="sidenav-item nav-challenges">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Challenges
-      </a>
-      <a href="{{ url_for('bow_info') }}" class="sidenav-item nav-bow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Body of Work
-      </a>
-      <a href="{{ url_for('poty') }}" class="sidenav-item nav-awards">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Awards &amp; Recognition
-      </a>
-      <a href="{{ url_for('learning') }}" class="sidenav-item nav-learning">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning Library
-      </a>
+<div class="sl">
+
+<!-- TOPNAV -->
+<nav class="topnav">
+  <div class="logo-icon">SL</div>
+  <div class="logo-text">Shutter<br>League</div>
+  <div class="nav-links">
+    <a class="nav-link active primary-nav" href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a class="nav-link primary-nav" href="{{ url_for('upload') }}">Upload</a>
+    <a class="nav-link" href="{{ url_for('my_gallery') }}">Journey</a>
+    <a class="nav-link" href="{{ url_for('learning') }}">Learn</a>
+    <a class="nav-link primary-nav" href="#">Community</a>
+    <a class="nav-link primary-nav" href="{{ url_for('profile') }}">Profile</a>
+  </div>
+  <div class="nav-right">
+    <div class="bell">
+      <i class="ti ti-bell" style="font-size:17px;color:rgba(255,255,255,0.65)" aria-hidden="true"></i>
+      {% if zone3_flagged or zone2_pending %}<div class="bell-dot">!</div>{% endif %}
     </div>
+    <div class="av">{{ _first[:3]|upper }}</div>
+    <span style="font-size:12px;color:rgba(255,255,255,0.6)">{{ _first }} ∨</span>
+  </div>
+</nav>
 
-    <a href="{{ url_for('profile') }}" class="sidenav-item nav-settings" style="margin-top:auto;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings
-    </a>
+<div class="layout">
 
+  <!-- SIDENAV — desktop only -->
+  <nav class="sidenav">
+    <a class="si active" href="{{ url_for('dashboard') }}"><i class="ti ti-home" style="font-size:14px" aria-hidden="true"></i>Dashboard</a>
+    <a class="si" href="{{ url_for('upload') }}"><i class="ti ti-upload" style="font-size:14px" aria-hidden="true"></i>Upload</a>
+    <a class="si" href="{{ url_for('my_gallery') }}"><i class="ti ti-chart-line" style="font-size:14px" aria-hidden="true"></i>Journey</a>
+    <a class="si" href="{{ url_for('learning') }}"><i class="ti ti-book" style="font-size:14px" aria-hidden="true"></i>Learn</a>
+    <a class="si" href="#"><i class="ti ti-layout-grid" style="font-size:14px" aria-hidden="true"></i>Community</a>
+    <a class="si" href="{{ url_for('profile') }}"><i class="ti ti-user" style="font-size:14px" aria-hidden="true"></i>Profile</a>
+    <div class="si-more">More</div>
+    <a class="si" href="{{ url_for('mentors') }}"><i class="ti ti-star" style="font-size:14px" aria-hidden="true"></i>Mentor Review</a>
+    <a class="si" href="{{ url_for('weekly_challenge') }}"><i class="ti ti-calendar" style="font-size:14px" aria-hidden="true"></i>Weekly Challenge</a>
+    <a class="si" href="{{ url_for('learning') }}"><i class="ti ti-school" style="font-size:14px" aria-hidden="true"></i>Learning Library</a>
+    <a class="si" href="{{ url_for('profile') }}"><i class="ti ti-settings" style="font-size:14px" aria-hidden="true"></i>Settings</a>
   </nav>
 
-  {# ════════════════════════════════════
-     CENTRE COLUMN
-  ════════════════════════════════════ #}
-  <main class="centre">
+  <!-- CENTRE COLUMN -->
+  <div class="centre">
 
     {# ── Post-payment welcome banner ── #}
     {% if just_subscribed %}
-    {% set _track_label = {'camera': 'Camera League', 'mobile': 'Mobile League', 'learning': 'Learning Only', 'mentor': 'Human + AI Mentor'}.get(just_subscribed, just_subscribed|title) %}
-    <div style="background:#2C3E6B;border-radius:8px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:flex-start;gap:16px;">
-      <div style="font-size:24px;line-height:1;">✓</div>
+    {% set _track_label = {'camera':'Camera League','mobile':'Mobile League','learning':'Learning Only','mentor':'Human + AI Mentor'}.get(just_subscribed, just_subscribed|title) %}
+    <div style="background:#2C3E6B;border-radius:13px;padding:18px 20px;display:flex;align-items:flex-start;gap:14px;">
+      <div style="font-size:20px;line-height:1;flex-shrink:0">✓</div>
       <div>
-        <div style="font-family:Inter,Arial,sans-serif;font-size:16px;font-weight:600;color:#F5C518;margin-bottom:6px;">Welcome to {{ _track_label }}.</div>
-        <div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:10px;">Your membership is active. Your evaluations are ready — upload your first photograph and begin.</div>
-        <div style="font-family:Inter,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">Your bank may show a recurring mandate notification — this is standard for all UPI memberships. You can cancel anytime from <a href="/profile" style="color:#F5C518;">your account settings</a>. No refund applies to the current cycle.</div>
+        <div style="font-size:15px;font-weight:600;color:var(--gold);margin-bottom:5px">Welcome to {{ _track_label }}.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:8px">Your membership is active. Upload your first photograph and begin.</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.5">Your bank may show a recurring mandate notification — this is standard. You can cancel anytime from <a href="{{ url_for('profile') }}" style="color:var(--gold)">your account settings</a>.</div>
       </div>
     </div>
     {% endif %}
 
-    {# ── Greeting + streak ── #}
-    <div class="greeting">
-      <div>
-        <div class="greeting-name">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}!</div>
-        <div class="greeting-sub">
-          {% if progress_data and progress_data.count > 0 %}
-            {% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}. {% endif %}
-            From your {{ progress_data.count }} photographs, you've improved most in
-            <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong>
-            — keep building on
-            <strong>{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.weakest, progress_data.weakest|title) }}</strong>.
-          {% elif dash_advisory and dash_advisory.get('light_note') %}
-            {{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}
-          {% else %}
-            Today's practice begins here.
-          {% endif %}
-        </div>
-      </div>
-      <a href="{{ url_for('my_gallery') }}" class="streak" style="text-decoration:none;">
-        <span style="font-size:20px;">📷</span>
-        <span class="streak-count">{{ stats.total or 0 }}</span>
-        <div class="streak-txt">Photographs<br><span style="font-size:13px;">View all →</span></div>
-        <span style="color:var(--d-muted); font-size:13px; margin-left:4px;">›</span>
-      </a>
-    </div>
-
-    {# ── FIRST VISIT WELCOME CARD ── #}
-    {# Only shown on visit 1 AND user has no images — guards against existing users on first load after deploy. #}
-    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 and stats.total == 0 %}
-    <div style="background:linear-gradient(135deg,#13254B 0%,#1A3460 100%);border-radius:14px;padding:20px 22px;color:#fff;">
-      <div style="font-size: 13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.9);margin-bottom:8px;">Welcome to Shutter League</div>
-      <div style="font-size:18px;font-weight:700;line-height:1.35;margin-bottom:10px;">Your photography evaluation platform is ready.</div>
-      <div style="font-size:14px;color:rgba(255,255,255,0.78);line-height:1.6;margin-bottom:16px;">
-        Upload a photograph and get a precise evaluation across five craft dimensions — Difficulty, Timing, Disruption, Wonder, and Visual Impact. See exactly where your photography sits and what to work on next.
-        The brief below shows you where to go and what to shoot today.
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="{{ url_for('upload') }}"
-           style="background:#D6A428;color:#0F2A22;font-size:14px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;">
-          Upload your first photograph →
-        </a>
-        <a href="{{ url_for('how_it_works') }}"
-           style="background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:600;padding:10px 18px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,0.2);">
-          How scoring works
-        </a>
-      </div>
-    </div>
-    {% endif %}
-
-    {# ── S168 DIRECTIVE BAR — always visible above the fold ── #}
-    {% if stats.total > 0 or (dashboard_visit_count is defined and dashboard_visit_count > 1) %}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-      <a href="{{ url_for('mission') }}"
-         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid var(--d-gold);border-radius:8px;padding:10px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">Your next assignment is waiting</span>
-        <span style="font-size:15px;font-weight:700;color:var(--d-gold-dk);white-space:nowrap;">Begin &#8594;</span>
-      </a>
-      {% if active_challenge %}
-      <a href="{{ url_for('weekly_challenge') }}"
-         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid #27500A;border-radius:8px;padding:10px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">Weekly Challenge{% if active_challenge.closes_at %} &#183; closes {{ active_challenge.closes_at.strftime('%d %b') }}{% endif %}</span>
-        <span style="font-size:15px;font-weight:700;color:#27500A;white-space:nowrap;">Participate &#8594;</span>
-      </a>
-      {% endif %}
-      {% if quota_status and not quota_status.is_unlimited and quota_status.remaining is defined %}
-      <a href="{{ url_for('upload') }}"
-         style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--d-card);border:1px solid var(--d-border);border-left:3px solid #2C3E6B;border-radius:8px;padding:10px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--d-dark);line-height:1.4;">{{ quota_status.remaining }} evaluation{{ 's' if quota_status.remaining != 1 else '' }} remaining this cycle</span>
-        <span style="font-size:15px;font-weight:700;color:#2C3E6B;white-space:nowrap;">Upload now &#8594;</span>
-      </a>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {# ── TODAY'S MISSION (practice card) ── #}
-    {% if show_mission %}
-    <div class="practice-card">
-      <div class="practice-content">
-        <div>
-          <div class="practice-eyebrow">Today's Mission</div>
-          <div class="practice-title">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
-          <div class="practice-meta">
-            <div>
-              <div class="practice-meta-label">Focus</div>
-              <div class="practice-meta-val">{{ lesson.dim_short if lesson else 'Timing' }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="practice-actions">
-          <a href="{{ url_for('mission') }}" class="practice-cta">Begin Today's Practice →</a>
-          <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline;">
-            <button type="submit" class="practice-skip" style="background:none;border:none;padding:0;cursor:pointer;">or Skip for now</button>
-          </form>
-        </div>
-      </div>
-      <div class="practice-img">
-        {% if _hero_img and _hero_img.thumb_url %}
-        <img src="{{ _hero_img.thumb_url }}" alt="Practice photograph" onerror="this.parentNode.style.background='linear-gradient(135deg,#1A3A2A,#2A5A3A)';this.remove()">
+    <!-- ═══════════════════════════════════
+         CARD 1: GREETING
+         Desktop order 1 / Mobile order 1
+    ═══════════════════════════════════ -->
+    <div class="card card-greeting">
+      <div class="greeting-name">{{ ns.greeting }}, {{ _first }}.</div>
+      <div class="score-row">
+        {% if progress_data %}
+          <span class="score-big">{{ '%.1f'|format(progress_data.avg_score) }}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--green)">{{ progress_data.highest_tier }}</span>
+          <span style="font-size:13px;color:var(--green)">↑</span>
+          <span style="font-size:11px;font-weight:400;color:var(--muted)">average evaluation</span>
+        {% elif _last and _last.score %}
+          <span class="score-big">{{ '%.1f'|format(_last.score) }}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--green)">{{ _last.tier or 'Maverick' }}</span>
+          <span style="font-size:11px;font-weight:400;color:var(--muted)">last evaluation</span>
         {% else %}
-        <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#0A1A0E);"></div>
+          <span class="score-big">–</span>
+          <span style="font-size:11px;font-weight:400;color:var(--muted)">Upload your first photograph to begin</span>
         {% endif %}
-        <div class="practice-img-grad"></div>
+      </div>
+
+      {# Three insight sentences — photographer language, not dimension labels #}
+      {% if progress_data and progress_data.count >= 5 %}
+        {# Dimension pattern angle — strongest & weakest #}
+        {% set _dim_readable = {'dod':'depth of difficulty','disruption':'disruption','dm':'decisive moment','wonder':'wonder factor','aq':'aesthetic quality'} %}
+        {% set _strong_r = _dim_readable.get(progress_data.strongest, progress_data.strongest) %}
+        {% set _weak_r   = _dim_readable.get(progress_data.weakest, progress_data.weakest) %}
+        <div class="insight-line1">Your {{ _strong_r }} is your strongest asset.</div>
+        <div class="insight-line2">The gap is in your {{ _weak_r }}.</div>
+        <div class="insight-line3">Your eye is ready — go deeper into the harder scene.</div>
+      {% elif progress_data and progress_data.count > 0 %}
+        <div class="insight-line1">You have {{ progress_data.count }} evaluation{{ 's' if progress_data.count != 1 else '' }} so far.</div>
+        <div class="insight-line2">Every image you upload sharpens the picture of where you stand.</div>
+        <div class="insight-line3">Upload more to unlock your full analysis.</div>
+      {% else %}
+        <div class="insight-line1">Your photography journey starts here.</div>
+        <div class="insight-line2">Upload a photograph and get a precise evaluation across five craft dimensions.</div>
+        <div class="insight-line3">Your first score is waiting.</div>
+      {% endif %}
+
+      <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
+      <div class="expanded" id="gexp">
+        {% if progress_data and progress_data.count >= 5 %}
+          {% set _dim_human = {'dod':'Depth of Difficulty','disruption':'Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Aesthetic Quality'} %}
+          {% set _dim_avgs = progress_data.dim_avgs %}
+          <div class="body-text">
+            Across your {{ progress_data.count }} images, your
+            <span style="color:var(--gold-dk);font-weight:600">{{ _dim_human.get(progress_data.strongest, progress_data.strongest) }}</span>
+            ({{ '%.1f'|format(_dim_avgs.get(progress_data.strongest, 0)) }}) is consistently strong — this is what you do well.
+            Your
+            <span style="font-weight:600;color:var(--dark)">{{ _dim_human.get(progress_data.weakest, progress_data.weakest) }}</span>
+            ({{ '%.1f'|format(_dim_avgs.get(progress_data.weakest, 0)) }}) is the one dimension holding your scores back.<br><br>
+            The images that score highest on this platform are rarely the comfortable ones. They come from difficult scenes, unusual light, a moment that was hard to get to. Going out into the difficult scene is what separates a different image from a clichéd one. Your eye is ready.
+          </div>
+        {% else %}
+          <div class="body-text">
+            Upload more images to unlock a detailed analysis of your photography across five dimensions: Depth of Difficulty, Disruption, Decisive Moment, Wonder Factor, and Aesthetic Quality. The platform studies the patterns in your work and tells you exactly what to build on.
+          </div>
+        {% endif %}
+        <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
       </div>
     </div>
-    {% endif %}{# end show_mission #}
 
-    {# ── LIVE EVENT ADVISORY — desktop ── #}
-    {% if dash_live_event %}
-    <div style="background:linear-gradient(135deg,#FDF6DC 0%,#FFFDF5 100%);border:1px solid #E8C84A;border-radius:12px;overflow:hidden;">
-      {# Compact gold eyebrow #}
-      <div style="background:#D6A428;padding:6px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:7px;">
-          <div style="width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
-          <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
+    <!-- ═══════════════════════════════════
+         CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE
+    ═══════════════════════════════════ -->
+    <div class="card card-mentor">
+      <div class="ey">Mentor Advice</div>
+      {% if dash_advisory and dash_advisory.get('location_name') %}
+        <div class="body-text">
+          Go to <span style="color:var(--green);font-weight:600">{{ dash_advisory.location_name }}</span>.
+          {% if dash_advisory.get('subject') %}<span style="color:var(--gold-dk);font-weight:600">{{ dash_advisory.subject }}.</span>{% endif %}
+          {% if dash_advisory.get('best_light_time') %} {{ dash_advisory.best_light_time }}.{% endif %}
         </div>
-        <div style="display:flex;gap:5px;align-items:center;">
-          {% if dash_live_event.deadline_label %}
-          <span style="background:rgba(0,0,0,0.12);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
-          {% endif %}
-          {% if dash_live_event.genre %}
-          <span style="background:rgba(255,255,255,0.4);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.genre|title }}</span>
-          {% endif %}
-        </div>
-      </div>
-      {# Body — same layout as advisory #}
-      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">
-            {{ dash_live_event.location_name }}{% if dash_live_event.state_country %}, {{ dash_live_event.state_country }}{% endif %}
-          </div>
-          {% if dash_live_event.subject %}
-          <div style="font-size:15px;font-weight:700;color:#A37B2C;margin-bottom:8px;">{{ dash_live_event.subject }}</div>
-          {% endif %}
-          {% set _live_full = (dash_live_event.what_is_happening or '') ~ (' ' ~ dash_live_event.why_it_matters if dash_live_event.why_it_matters else '') %}
-          <div id="live-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {% if _live_full|length > 220 %}{{ _live_full[:220].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('live-body-short').style.display='none';document.getElementById('live-body-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _live_full }}{% endif %}
-          </div>
-          <div id="live-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ _live_full }}
-            <button onclick="document.getElementById('live-body-short').style.display='block';document.getElementById('live-body-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
-          </div>
-          <div style="font-size:14px;color:#A37B2C;font-weight:600;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            {% if dash_live_event.best_light_time %}⏱ {{ dash_live_event.best_light_time }}{% endif %}{% if dash_live_event.best_light_time and dash_live_event.access_notes %} · {% endif %}{% if dash_live_event.access_notes %}📌 {{ dash_live_event.access_notes[:40] }}{% if dash_live_event.access_notes|length > 40 %}…{% endif %}{% endif %}{% if dash_live_event.distance_hours %} · 🚗 {{ dash_live_event.distance_hours }}h away{% endif %}
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
-          <div style="width:48px;height:48px;border-radius:10px;background:rgba(214,164,40,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;">📍</div>
-          <a href="{{ dash_live_event.url }}" target="_blank"
-             style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:6px 12px;border-radius:8px;">Get directions →</a>
-          <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'});}"
-                  style="font-size:14px;color:#A37B2C;text-decoration:underline;white-space:nowrap;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;display:flex;align-items:center;">Change location &#8594;</button>
-        </div>
-      </div>
-      <div style="padding:10px 18px 14px;border-top:1px solid #E8C84A;">
-        <a href="{{ url_for('upload') }}" style="font-size:14px;color:#A37B2C;font-weight:700;text-decoration:none;">
-          📷 Photograph today → get your evaluation → tomorrow's brief builds on it →
-        </a>
-      </div>
-    </div>
-    <style>@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:0.35}}</style>
-    {% endif %}
-
-    {# ── LOCATION ADVISORY — desktop ── #}
-    {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
-    <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:12px;overflow:hidden;">
-      {# Body #}
-      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-              <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2A7A3A;">Nearby Opportunity &middot; Now</span>
-            </div>
-            {% if dash_advisory.get('genre') %}
-            <span style="background:#fff;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>
+      {% else %}
+        <div class="body-text">Get low. <span style="color:var(--gold-dk);font-weight:600">35mm.</span> Narrow your eyes to a slit before you press the shutter.</div>
+      {% endif %}
+      <span class="rm" id="mrm" onclick="toggleSpan('mexp','mrm')">Read more →</span>
+      <div class="expanded" id="mexp">
+        {% if dash_advisory and dash_advisory.get('location_name') %}
+          {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or '') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
+          <div class="body-text" style="margin-bottom:13px">
+            {% if dash_advisory.get('state_country') %}<span style="color:var(--muted)">{{ dash_advisory.state_country }}. </span>{% endif %}
+            {{ _adv_full or 'The conditions today are right. Go out and make the image that is hard to get.' }}
+            {% if progress_data and progress_data.weakest %}
+              {% set _dim_map = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Aesthetic Quality','wonder':'Wonder Factor','disruption':'Disruption'} %}
+              <br><br><span style="color:var(--gold-dk);font-weight:600">Focus today: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}.</span>
             {% endif %}
           </div>
-          <div style="font-size:16px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">
-            {{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}
-          </div>
-          {% if dash_advisory.get('subject') %}
-          <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:6px;">{{ dash_advisory.subject }}</div>
-          {% endif %}
-          {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-          <div id="adv-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {% if _adv_full|length > 220 %}{{ _adv_full[:220].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('adv-body-short').style.display='none';document.getElementById('adv-body-full').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _adv_full }}{% endif %}
-          </div>
-          <div id="adv-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ _adv_full }}
-            <button onclick="document.getElementById('adv-body-short').style.display='block';document.getElementById('adv-body-full').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
-          </div>
+          {# Weather warning #}
           {% if weather and weather.state == 'red' %}
-          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
-            ⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }} Skip the outdoor session today.
-          </div>
+          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:10px;padding:8px 11px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }}</div>
           {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
-            ⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}
+          <div style="font-size:12px;font-weight:600;line-height:1.5;margin-bottom:10px;padding:8px 11px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}</div>
+          {% endif %}
+        {% else %}
+          <div class="body-text" style="margin-bottom:13px">
+            Find where the street narrows and the crowd moves. Before you press the shutter, narrow your eyes to a slit — a half-closed view. Everything that disappears is clutter. Everything that stays is your frame.<br><br>
+            <span style="color:var(--muted);font-style:italic">That is how you will know where the viewer's eye will be drawn — before you make the image, not after.</span>
           </div>
-          {% endif %}
-          {% if progress_data and progress_data.weakest %}
-          {% set _dim_map = {'dod':'Difficulty','dm':'Timing','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          <div style="font-size:14px;color:var(--d-green);font-weight:700;margin-top:4px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
-          {% endif %}
-          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:#2A7A3A;font-weight:600;display:flex;align-items:center;gap:3px;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:14px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
+        {% endif %}
+
+        {# Lesson block — from active lesson #}
+        {% if lesson %}
+        <div style="display:flex;align-items:flex-start;gap:11px;padding:13px;background:var(--cream);border-radius:9px;border:0.5px solid var(--border);margin-bottom:10px">
+          <div style="width:54px;height:54px;border-radius:7px;background:#D8EDD8;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div class="ey" style="margin-bottom:2px">Your Lesson</div>
+            <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ lesson.title }}</div>
+            <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:7px">{{ lesson.dim_short if lesson.dim_short else 'Build your craft dimension by dimension.' }}</div>
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+              <a href="{{ url_for('mission') }}" class="btn-gold" style="text-decoration:none;display:inline-block">Begin lesson →</a>
+              <span class="pts-chip">+2 points</span>
+              <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline">
+                <button type="submit" class="btn-ghost">Skip</button>
+              </form>
+            </div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:10px;flex-shrink:0;">
-          <div style="width:56px;height:56px;border-radius:10px;background:rgba(42,122,58,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
-          <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-             style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:5px 12px;border-radius:8px;">Get directions →</a>
-          <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'});}"
-                  style="font-size:14px;color:#2A7A3A;text-decoration:underline;white-space:nowrap;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;display:flex;align-items:center;">Change location &#8594;</button>
+        {% endif %}
+
+        {# Master Reference — static placeholder until real master ref engine is in #}
+        {% if progress_data %}
+        <div style="display:flex;align-items:center;gap:10px;padding:11px;background:var(--cream);border-radius:9px;border:0.5px solid var(--border)">
+          <div style="width:36px;height:36px;border-radius:6px;background:#D8EDD8;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Master Reference</div>
+            <div style="font-size:11px;font-weight:600;color:var(--dark)">Fan Ho · Hong Kong Streets · 1956</div>
+            <div style="font-size:10px;font-weight:400;color:var(--muted);margin-top:1px">How difficulty becomes geometry, not chaos.</div>
+          </div>
+          <a href="#" class="lnk" style="flex-shrink:0">View →</a>
         </div>
+        {% endif %}
+        <span class="rm" onclick="toggleSpan('mexp','mrm')">Read less →</span>
       </div>
     </div>
-    {% endif %}
 
-    {# ── S168 INLINE LOCATION WIDGET — always rendered, shared by advisory + live event toggle buttons ── #}
-    <script type="application/json" id="dash-loc-data">{{ location_data_json | safe }}</script>
-    <script type="application/json" id="dash-loc-user">{"country": {{ (current_user.country or '') | tojson }}, "state": {{ (current_user.state or '') | tojson }}}</script>
-    <div id="dash-loc-wrap" style="display:none;background:var(--d-card);border:1px solid var(--d-border);border-radius:10px;padding:16px 18px;margin-top:8px;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:12px;">Change your location</div>
-      <form method="POST" action="{{ url_for('profile') }}" id="dashLocForm">
-        <input type="hidden" name="action" value="update_location">
-        <input type="hidden" name="next" value="dashboard">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-          <div style="flex:1;min-width:120px;">
-            <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">Country</label>
-            <select id="dloc_country" name="country" required onchange="dlocCountryChange()"
-                    style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;background:var(--acc-cream,#FEFCF8);color:var(--d-dark);">
-              <option value="">Select</option>
-              {% for c in countries %}
-              <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
-              {% endfor %}
-            </select>
+    <!-- ═══════════════════════════════════
+         CARD 3 DESKTOP / CARD 2 MOBILE: YOUR JOURNEY
+         5 thumbnails desktop · 3 mobile
+    ═══════════════════════════════════ -->
+    <div class="card card-journey">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div><div class="ey" style="margin-bottom:1px">Your Journey</div><div style="font-size:10px;color:var(--muted)">See how you are evolving.</div></div>
+        <a href="{{ url_for('my_gallery') }}" class="lnk">View full →</a>
+      </div>
+
+      {# Sparkline — built from progress_data.trend #}
+      <div style="height:52px;margin-top:4px">
+        {% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
+          {% set _t = progress_data.trend %}
+          {% set _ts = _t|map(attribute='score')|list %}
+          {% set _tmin = _ts|min %}
+          {% set _tmax = _ts|max %}
+          {% set _tr = [(_tmax - _tmin), 0.5]|max %}
+          {% set _tn = _t|length %}
+          <svg width="100%" height="52" viewBox="0 0 500 52" preserveAspectRatio="none">
+            <line x1="0" y1="44" x2="500" y2="44" stroke="#E8E4DA" stroke-width="0.5"/>
+            <line x1="0" y1="24" x2="500" y2="24" stroke="#E8E4DA" stroke-width="0.5"/>
+            {# Build points list #}
+            {% set ns2 = namespace(pts='', fill_pts='') %}
+            {% for item in _t %}
+              {% set _xi = (loop.index0 / (_tn - 1) * 480 + 10)|round(1) %}
+              {% set _yi = (44 - (((item.score - _tmin) / _tr) * 36))|round(1) %}
+              {% if loop.first %}{% set ns2.pts = ns2.pts ~ _xi|string ~ ',' ~ _yi|string %}
+              {% else %}{% set ns2.pts = ns2.pts ~ ' ' ~ _xi|string ~ ',' ~ _yi|string %}{% endif %}
+            {% endfor %}
+            {# Last point coords for fill and score chip #}
+            {% set _xlast = (480 + 10)|round(1) %}
+            {% set _ylast = (44 - (((_t[-1].score - _tmin) / _tr) * 36))|round(1) %}
+            <polyline points="{{ ns2.pts }} {{ _xlast }},52 10,52" fill="#D6A42812" stroke="none"/>
+            <polyline points="{{ ns2.pts }}" fill="none" stroke="#D6A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            {# Dots #}
+            {% for item in _t %}
+              {% set _xi = (loop.index0 / (_tn - 1) * 480 + 10)|round(1) %}
+              {% set _yi = (44 - (((item.score - _tmin) / _tr) * 36))|round(1) %}
+              {% if loop.last %}
+                <circle cx="{{ _xi }}" cy="{{ _yi }}" r="4" fill="#D6A428"/>
+                <rect x="{{ _xi - 14 }}" y="{{ _yi - 18 }}" width="28" height="14" rx="3" fill="#0F2A22"/>
+                <text x="{{ _xi }}" y="{{ _yi - 7 }}" font-size="10" fill="#fff" text-anchor="middle" font-weight="600">{{ '%.1f'|format(item.score) }}</text>
+              {% else %}
+                <circle cx="{{ _xi }}" cy="{{ _yi }}" r="2.5" fill="#D6A428" opacity="0.5"/>
+              {% endif %}
+            {% endfor %}
+            {# Date labels at 4 points #}
+            <text x="10" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">{{ _t[0].label }}</text>
+            {% if _tn > 3 %}
+            <text x="{{ (480 / (_tn-1) * ((_tn-1)//3) + 10)|round(0)|int }}" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">{{ _t[(_tn-1)//3].label }}</text>
+            {% endif %}
+            <text x="490" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">Today</text>
+          </svg>
+        {% else %}
+          <svg width="100%" height="52" viewBox="0 0 500 52" preserveAspectRatio="none">
+            <line x1="0" y1="44" x2="500" y2="44" stroke="#E8E4DA" stroke-width="0.5"/>
+            <line x1="0" y1="24" x2="500" y2="24" stroke="#E8E4DA" stroke-width="0.5"/>
+            <polyline points="20,42 120,36 220,30 320,22 420,14 490,10" fill="none" stroke="#D6A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <polyline points="20,42 120,36 220,30 320,22 420,14 490,10 490,52 20,52" fill="#D6A42812" stroke="none"/>
+            <circle cx="490" cy="10" r="4" fill="#D6A428"/>
+            <text x="490" y="52" font-size="9" fill="#6B6B6B" text-anchor="middle">Today</text>
+          </svg>
+        {% endif %}
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:var(--text);margin:8px 0 6px">Latest evaluations</div>
+      <div class="es">
+        {# 5 thumbnails — 4th and 5th desktop-only #}
+        {% set _eval_imgs = images.items|selectattr('score')|list if images and images.items else [] %}
+        {% for img in _eval_imgs[:5] %}
+          <div class="et{% if loop.index > 3 %} et-desktop-only{% endif %}">
+            <div class="eti">
+              {% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.background='#1A2A22';this.remove()">{% endif %}
+              <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:11px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
+            </div>
+            <div class="escore">{{ '%.1f'|format(img.score) }}</div>
+            <div class="edate">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
           </div>
-          <div style="flex:1;min-width:120px;">
-            <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">State</label>
-            <select id="dloc_state" name="state" required onchange="dlocStateChange()"
-                    style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;background:var(--acc-cream,#FEFCF8);color:var(--d-dark);">
-              <option value="">Select</option>
-            </select>
-            <input type="text" id="dloc_state_txt" maxlength="60" placeholder="State / Province"
-                   style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;margin-top:4px;box-sizing:border-box;">
+        {% else %}
+          {# Placeholder thumbnails when no images yet #}
+          {% for i in range(3) %}
+          <div class="et">
+            <div class="eti"></div>
+            <div class="escore">–</div>
+            <div class="edate">–</div>
           </div>
-          <div style="flex:1;min-width:140px;">
-            <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">City</label>
-            <select id="dloc_city" name="city" required onchange="dlocCityChange()"
-                    style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;background:var(--acc-cream,#FEFCF8);color:var(--d-dark);">
-              <option value="">Select</option>
-            </select>
-            <input type="text" id="dloc_city_txt" maxlength="60" placeholder="City"
-                   style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--d-border);border-radius:6px;margin-top:4px;box-sizing:border-box;">
-          </div>
+          {% endfor %}
+          <div class="et et-desktop-only"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>
+          <div class="et et-desktop-only"><div class="eti"></div><div class="escore">–</div><div class="edate">–</div></div>
+        {% endfor %}
+      </div>
+      <div style="text-align:right;margin-top:6px"><a href="{{ url_for('my_gallery') }}" class="lnk">View all evaluations →</a></div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         CARD 4: NEARBY OPPORTUNITY — BR HILLS
+         Pista green card — no dark fills
+         Data from dash_advisory
+    ═══════════════════════════════════ -->
+    {% if dash_advisory and dash_advisory.get('location_name') %}
+    <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px" class="card-brhills">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
+        {% if dash_advisory.get('genre') %}
+        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:10px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>
+        {% endif %}
+      </div>
+      <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}</div>
+      {% if dash_advisory.get('subject') %}
+      <div style="font-size:11px;font-weight:400;color:#4A5A3A">{{ dash_advisory.subject }}{% if dash_advisory.get('distance_hours') %} · {{ dash_advisory.distance_hours }}h away{% endif %}</div>
+      {% endif %}
+      <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
+      <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
+        {% if dash_advisory.get('state_country') %}<div style="font-size:10px;font-weight:400;color:#4A6A3A;margin-bottom:3px">{{ dash_advisory.state_country }}</div>{% endif %}
+        {% set _adv_body = (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
+        <div style="font-size:11px;font-weight:400;color:#4A5A3A;line-height:1.6;margin-bottom:7px">{{ _adv_body }}</div>
+        <div style="display:flex;gap:12px;font-size:10px;color:#5A6A4A;margin-bottom:9px">
+          {% if dash_advisory.get('distance_hours') %}<span><i class="ti ti-car" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>{{ dash_advisory.distance_hours }}h away</span>{% endif %}
+          {% if weather and weather.condition %}<span><i class="ti ti-cloud" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>{{ weather.condition }}</span>{% endif %}
         </div>
-        <div id="dloc_other_wrap" style="display:none;margin-bottom:8px;">
-          <label style="font-size:13px;font-weight:600;color:var(--d-muted);display:block;margin-bottom:4px;">Type your city, town or sanctuary</label>
-          <input type="text" id="dloc_city_other" name="city_other" maxlength="60"
-                 placeholder="e.g. Nalsarovar, Rann of Kutch, Hesaraghatta"
-                 style="width:100%;font-size:16px;padding:10px 12px;border:1.5px solid var(--d-border);border-radius:6px;box-sizing:border-box;">
+        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" class="directions-btn" style="background:#1A2A1A;color:#fff;font-size:11px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i>Get directions →
+        </a>
+        <span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span>
+      </div>
+    </div>
+    {% else %}
+    {# Static BR Hills card when no advisory data #}
+    <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px" class="card-brhills">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
+        <span style="padding:2px 8px;border-radius:9px;border:1px solid var(--pista-b);font-size:10px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">BR Hills (Biligirirangana Hills)</div>
+      <div style="font-size:11px;font-weight:400;color:#4A5A3A">Elephants and sloth bears · 3.5 hrs away</div>
+      <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read more →</span>
+      <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
+        <div style="font-size:10px;font-weight:400;color:#4A6A3A;margin-bottom:3px">Karnataka, India</div>
+        <div style="font-size:11px;font-weight:400;color:#4A5A3A;line-height:1.6;margin-bottom:7px">Elephant herds move through the reserve in the wet season. Less visited, less habituated — more genuine access. The kind of difficult scene that produces a different image.</div>
+        <div style="display:flex;gap:12px;font-size:10px;color:#5A6A4A;margin-bottom:9px">
+          <span><i class="ti ti-car" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>3.5 hrs away</span>
+          <span><i class="ti ti-cloud" style="font-size:10px;margin-right:2px" aria-hidden="true"></i>21°C · Overcast</span>
         </div>
-        <button type="submit"
-                style="background:var(--d-dark);color:var(--d-gold);font-size:15px;font-weight:700;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;min-height:44px;">
-          Update Location
+        <button class="directions-btn" style="background:#1A2A1A;color:#fff;font-size:11px;font-weight:600;padding:8px 13px;border-radius:7px;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i>Get directions →
         </button>
-      </form>
-    </div>
-    <script>
-    (function(){
-      var DLOC = JSON.parse(document.getElementById('dash-loc-data').textContent || '{}');
-      var DLOC_RE = /[^A-Za-zÀ-ɏḀ-ỿ '-]/g;
-      function dlocFilter(e){ e.target.value = e.target.value.replace(DLOC_RE,''); }
-      var dc = document.getElementById('dloc_country');
-      var ds = document.getElementById('dloc_state');
-      var dct = document.getElementById('dloc_city');
-      var dst = document.getElementById('dloc_state_txt');
-      var dctt = document.getElementById('dloc_city_txt');
-      var dow = document.getElementById('dloc_other_wrap');
-      var dco = document.getElementById('dloc_city_other');
-      if(dst) dst.addEventListener('input', dlocFilter);
-      if(dctt) dctt.addEventListener('input', dlocFilter);
-      if(dco) dco.addEventListener('input', dlocFilter);
-      window.dlocCountryChange = function(){
-        var c = dc.value;
-        ds.innerHTML = '<option value="">Select</option>';
-        dct.innerHTML = '<option value="">Select</option>';
-        if(dow) dow.style.display='none';
-        if(!c || !DLOC[c]){ ds.style.display='none'; dct.style.display='none'; dst.style.display=''; dctt.style.display=''; dst.name='state'; dctt.name='city'; ds.name=''; dct.name=''; dst.required=true; dctt.required=true; ds.required=false; dct.required=false; return; }
-        ds.style.display=''; dct.style.display=''; dst.style.display='none'; dctt.style.display='none'; ds.name='state'; dct.name='city'; dst.name=''; dctt.name=''; ds.required=true; dct.required=true; dst.required=false; dctt.required=false;
-        Object.keys(DLOC[c]).sort().forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; ds.appendChild(o); });
-      };
-      window.dlocStateChange = function(){
-        var c=dc.value, s=ds.value;
-        dct.innerHTML = '<option value="">Select</option>';
-        if(dow) dow.style.display='none';
-        ((DLOC[c]||{})[s]||[]).forEach(function(city){ var o=document.createElement('option'); o.value=city; o.textContent=city; dct.appendChild(o); });
-      };
-      window.dlocCityChange = function(){
-        var isOther = dct.value==='Other';
-        if(dow) dow.style.display = isOther ? '' : 'none';
-        if(dco){ dco.required=isOther; if(!isOther) dco.value=''; }
-      };
-      var _user = JSON.parse(document.getElementById('dash-loc-user').textContent || '{}');
-      var curC = _user.country || '';
-      var curS = _user.state || '';
-      if(curC && dc){ dc.value=curC; dlocCountryChange(); if(curS && ds){ ds.value=curS; dlocStateChange(); } }
-    })();
-    </script>
-
-    {# ── PEER EVALUATE — subtle 1-row strip, desktop only ── #}
-    {% if peer_queue %}
-    <div style="background:var(--d-card); border-radius:var(--d-r); border:1px solid var(--d-border); padding:18px 20px;">
-      <div style="margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);">Sharpen Your Eye</div>
-        <div style="font-size:13px;color:var(--d-muted);margin-top:3px;">Rate 3 images &#183; earn 1 free upload &#183; +2 bonus when you match DDI</div>
-      </div>
-      <div style="display:grid; grid-template-columns: repeat({{ peer_queue|length }}, 1fr); gap:10px;">
-        {% for _pq in peer_queue %}
-        <a href="{{ url_for('rate') }}?assignment={{ _pq.id }}"
-           style="display:block; border-radius:10px; overflow:hidden; text-decoration:none; position:relative; aspect-ratio:1; background:var(--d-border);">
-          {% set _pimg = _pq.image %}
-          {% if _pimg and _pimg.thumb_url %}
-          <img src="{{ _pimg.thumb_url }}" alt="{{ _pimg.genre or 'Photo' }}"
-               style="width:100%;height:100%;object-fit:cover;display:block;"
-               onerror="this.parentNode.style.background='#E8E4DA';this.remove()">
-          {% endif %}
-          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.8);">{{ _pq.genre or _pimg.genre or 'Photo' }}</span>
-            <span style="font-size:13px;font-weight:700;color:var(--d-gold);background:rgba(0,0,0,0.4);padding:2px 7px;border-radius:5px;">Evaluate →</span>
-          </div>
-        </a>
-        {% endfor %}
+        <span class="rm" style="color:#3A6B2A;margin-top:6px" onclick="toggleSpan('oexp','orm')">Read less →</span>
       </div>
     </div>
     {% endif %}
 
-    {# ── MY GALLERY ── #}
-    {% if images and images.items %}
-    {% set _scored = images.items|selectattr('score')|selectattr('thumb_url')|list %}
-    {% if _scored %}
-    <div class="recent-card">
-      <div class="recent-hdr">
-        <div class="card-eyebrow" style="margin-bottom:0;">My Gallery</div>
-        <a href="{{ url_for('my_gallery') }}" class="recent-link">View all {{ stats.total }} →</a>
+    <!-- ═══════════════════════════════════
+         CARD 5: TRAIN YOUR EYE — GET 1 IMAGE FREE
+         Rate ONE image — earn ONE free upload credit
+         No progress bar — single action not a sequence
+    ═══════════════════════════════════ -->
+    <div class="card card-train">
+      <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px">Get 1 image free to Upload</div>
+      <div style="font-size:12px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">
+        Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.
       </div>
-      <div class="recent-grid">
-        {% for img in _scored[:5] %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="recent-item" style="text-decoration:none;">
-          <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy"
-               onerror="this.parentNode.style.cssText='aspect-ratio:1;background:#E8E4DA;border-radius:8px;';this.remove()">
-          {% if img.score %}<div class="recent-score">{{ '%.1f'|format(img.score) }}</div>{% endif %}
-          {%- if img.camera_track == 'mobile' %}
-          <div style="position:absolute;bottom:4px;left:4px;background:#1A1A18;color:#F5C518;font-size:13px;padding:1px 5px;border-radius:3px;line-height:1.5;font-weight:600;">📱</div>
-          {%- elif img.camera_track == 'camera' %}
-          <div style="position:absolute;bottom:4px;left:4px;background:rgba(255,255,255,0.85);color:#1A1A18;font-size:13px;padding:1px 5px;border-radius:3px;line-height:1.5;font-weight:600;">📷</div>
-          {%- endif %}
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-  </main>
-
-  {# ════════════════════════════════════
-     RIGHT PANEL
-  ════════════════════════════════════ #}
-  <aside class="rpanel">
-
-    {# Latest Evaluation #}
-    <div class="rp-card" style="border-left-color:#C87820;">
-      <div class="rp-label">Latest Evaluation</div>
-      {% if _last %}
-      <div class="latest-eval">
-        <div class="latest-thumb">
-          {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" alt="" onerror="this.parentNode.style.background='#E8E4DA';this.remove()">{% endif %}
+      <span class="rm" id="erm" onclick="toggleSpan('eexp','erm')">Read more →</span>
+      <div class="expanded" id="eexp">
+        <div class="body-text" style="margin-bottom:12px">
+          Every evaluation you complete trains your eye to see photographs objectively — the same way a judge or editor sees them. When your score matches the engine, you have calibrated your eye and earned a credit. You also help another photographer receive feedback on their work.
         </div>
-        <div>
-          <div class="latest-title">{{ _last.asset_name or (_last.genre or 'Photograph') }}</div>
-          <div class="latest-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<span style="font-size:13px;font-weight:400;color:var(--d-muted)">/10</span></div>
-          <div class="latest-tier">{{ _last.tier or '' }}</div>
-          <div class="latest-date">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
-        </div>
+        <span class="rm" onclick="toggleSpan('eexp','erm')">Read less →</span>
       </div>
-      <a href="{{ url_for('image_detail', image_id=_last.id) }}" class="latest-link">View Assessment Report →</a>
+
+      {# Image container — works for landscape AND portrait #}
+      {% set _train_img = peer_queue[0] if peer_queue else (carousel_images[0] if carousel_images else none) %}
+      {% if _train_img and _train_img.thumb_url %}
+      <div class="eval-image-wrap" style="margin-top:10px">
+        <img src="{{ _train_img.thumb_url }}" alt="Rate this photograph" onerror="this.parentNode.style.background='#1A2A1A'">
+      </div>
       {% else %}
-      <div style="font-size:13px;color:var(--d-muted);padding:4px 0;">Upload your first photograph to see your evaluation here.</div>
+      <div class="eval-image-placeholder" style="margin-top:10px">
+        <div style="width:100%;display:flex;align-items:flex-end">
+          <div class="eval-image-caption">Can you see the Disruption in this frame?</div>
+        </div>
+      </div>
       {% endif %}
+
+      {% if _train_img %}
+      <a href="{{ url_for('rate') }}"
+         class="rate-btn" style="background:var(--dark);color:#fff;border-radius:7px;border:none;text-decoration:none;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:12px;margin-top:0">
+        Rate this image →
+      </a>
+      {% else %}
+      <button class="rate-btn" style="background:var(--dark);color:#fff;border-radius:7px;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;height:44px;font-weight:600;font-size:12px;margin-top:0">
+        Rate this image →
+      </button>
+      {% endif %}
+      <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:5px">2 minutes · +1 credit when you match the DDI engine</div>
     </div>
 
-    {# My Standing — compact card, full detail in modal #}
-    {% if progress_data %}
-    <div class="rp-card" style="cursor:pointer;border-left-color:#1A2744;padding-bottom:14px;" onclick="document.getElementById('standing-modal').style.display='flex'">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div class="rp-label" style="margin-bottom:0;">My Standing</div>
-        <span style="font-size:13px;color:var(--d-muted);">▲ full view</span>
-      </div>
-      {# Percentile — primary metric (Session 171.5: percentile is standing, tier is highest ever) #}
-      {% if progress_data.overall_pct %}
-      <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:2px;">Your Standing</div>
-      <div style="font-size:32px;font-weight:800;color:var(--d-green);line-height:1;margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
+  </div>{# /centre #}
+
+  <!-- RIGHT PANEL
+       Desktop: all 5 sections
+       Mobile: 3 only (rank + weekly + expert advice)
+       My Standing and Latest Evaluation hidden on mobile —
+       score and tier already in greeting card above
+  -->
+  <div class="rpanel">
+
+    <!-- RANK CARD — always shown desktop and mobile -->
+    <div class="rank-card rp-rank">
+      {% if progress_data and aea_dash %}
+        {% if aea_dash.league_rank and aea_dash.league_rank <= 50 %}
+          {# TROPHY STATE — rank ≤ 50 #}
+          <div class="rl" style="margin-bottom:10px">Your Rank · Camera League</div>
+          <div style="display:flex;align-items:flex-start;gap:1px;line-height:1;margin-bottom:4px">
+            <span style="font-family:Georgia,serif;font-size:20px;font-weight:600;color:var(--gold);padding-top:5px;opacity:0.7">'</span>
+            <span style="font-family:Georgia,serif;font-size:52px;font-weight:700;color:var(--gold);letter-spacing:-2px;line-height:1">{{ aea_dash.league_rank }}</span>
+          </div>
+          <div style="font-size:11px;font-weight:400;color:var(--muted);margin-bottom:10px">
+            <span style="color:var(--green);font-weight:600">↑ Climbing</span>&nbsp;&nbsp;this season
+          </div>
+        {% else %}
+          {# PERCENTILE STATE — rank > 50, never show raw number #}
+          <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
+          <div style="font-size:11px;font-weight:400;color:var(--muted);margin-bottom:6px">You are in the</div>
+          <div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:var(--blue);letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct or 50 }}%</div>
+          <div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
+          <div style="font-size:11px;color:var(--muted);margin:8px 0">
+            <span style="color:var(--green);font-weight:600">↑ Moving up</span>&nbsp;·&nbsp;Keep shooting
+          </div>
+        {% endif %}
+      {% elif progress_data and progress_data.overall_pct %}
+        {# No AEA data — show percentile state #}
+        <div class="rl" style="margin-bottom:10px">Your Standing · Camera League</div>
+        <div style="font-size:11px;font-weight:400;color:var(--muted);margin-bottom:6px">You are in the</div>
+        <div style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:var(--blue);letter-spacing:-1.5px;line-height:1">top {{ progress_data.overall_pct }}%</div>
+        <div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:5px;line-height:1.5">of photographers<br>on Shutter League</div>
+        <div style="font-size:11px;color:var(--muted);margin:8px 0">
+          <span style="color:var(--green);font-weight:600">↑ Moving up</span>&nbsp;·&nbsp;Keep shooting
+        </div>
+      {% else %}
+        <div class="rl" style="margin-bottom:10px">Your Rank · Camera League</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6">Upload and score more images to unlock your rank and standing on the platform.</div>
       {% endif %}
-      {# Tier badge — highest ever achieved, not avg-derived #}
-      <div style="display:inline-block;background:var(--d-dark);color:#F5C518;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:2px;">{{ progress_data.highest_tier or progress_data.avg_tier }}</div>
-      <div style="font-size:13px;color:var(--d-muted);letter-spacing:0.3px;margin-bottom:6px;">Highest tier reached</div>
-      {# S168 — trend line: last 3 scores from progress_data.trend #}
-      {% if progress_data.trend and progress_data.trend|length >= 2 %}
-      {% set _tscores = progress_data.trend[-3:] %}
-      {% set _tlast = _tscores[-1].score %}
-      {% set _tprev = _tscores[0].score %}
-      {% set _tdir = '↑ climbing' if _tlast > _tprev + 0.05 else ('↓ dipping' if _tlast < _tprev - 0.05 else '→ steady') %}
-      {% set _tcolor = '#2A7A3A' if _tlast > _tprev + 0.05 else ('#C05A1A' if _tlast < _tprev - 0.05 else '#6B6B6B') %}
-      <div style="font-size:14px;font-weight:700;color:{{ _tcolor }};margin-bottom:4px;letter-spacing:0.02em;">
-        {% for _ts in _tscores %}{{ '%.2f'|format(_ts.score) }}{% if not loop.last %} → {% endif %}{% endfor %}
-        &nbsp;<span style="font-size:13px;">{{ _tdir }}</span>
-      </div>
-      {% endif %}
-      {# AEA or lifetime avg #}
+
+      <div style="height:0.5px;background:var(--border);margin-bottom:10px"></div>
+
+      {# AEA average in luminous blue #}
       {% if aea_dash and aea_dash.top6_avg %}
-      <div style="font-size:14px;color:var(--d-muted);margin-bottom:6px;">AEA {{ '%.2f'|format(aea_dash.top6_avg) }} &middot; avg {{ '%.2f'|format(progress_data.avg_score) }}</div>
-      {% else %}
-      <div style="font-size:14px;color:var(--d-muted);margin-bottom:6px;">avg {{ '%.2f'|format(progress_data.avg_score) }}</div>
-      {% endif %}
-      {%- if current_user.subscription_track == 'mobile' %}
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:6px;">
-        <span style="background:#1A1A18;color:#F5C518;padding:2px 8px;border-radius:4px;">📱 Mobile League</span>
-      </div>
-      {%- elif current_user.subscription_track == 'camera' %}
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:6px;">
-        <span style="background:#F5F0E8;color:#4A4840;padding:2px 8px;border-radius:4px;border:0.5px solid #E8E4DA;">📷 Camera League</span>
-      </div>
-      {%- endif %}
-      {# overall_pct now shown as headline above — removed from here (Session 171.5) #}
-      <div class="standing-bar"><div class="standing-fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div></div>
-    </div>
-    {% endif %}
-
-        {# Points & Redemptions #}
-    <div class="rp-card" style="border-left-color:#1A6B6B;">
-      <div class="rp-label">Points &amp; Redemptions</div>
-      <div style="font-size:22px;font-weight:800;color:var(--d-dark);line-height:1;margin-bottom:8px;">{{ (current_user.points_balance or 0)|int }}</div>
-      <a href="{{ url_for('redeem') }}" style="font-size:13px;color:var(--d-gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
-    </div>
-
-    {# Weekly Assignment #}
-    {% if active_challenge %}
-    <div class="rp-card" style="border-left-color:#27500A;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-        <span style="width:6px;height:6px;border-radius:50%;background:#27500A;flex-shrink:0;"></span>
-        <div class="rp-label" style="margin-bottom:0;color:#27500A;">Weekly Assignment</div>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ active_challenge.prompt_title }}</div>
-      <div style="font-size:13px;color:var(--d-muted);margin-bottom:8px;">closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
-      <a href="{{ url_for('weekly_challenge') }}" style="font-size:13px;font-weight:700;color:#fff;background:#27500A;padding:8px 14px;border-radius:8px;text-decoration:none;display:inline-block;">View assignment →</a>
-    </div>
-    {% endif %}
-
-    {# Mentor Guidance #}
-    <div class="rp-card" style="border-left-color:#2A7A3A;">
-      <div class="rp-label">Mentor Guidance</div>
-      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;text-decoration:none;">
-        <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-             onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
-             style="width:40px;height:40px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Ashok">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
         <div>
-          <div class="mentor-name">Ashok Kochhar</div>
-          <div class="mentor-tier-badge">Grandmaster</div>
+          <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:1px">AEA average</div>
+          <div style="font-size:16px;font-weight:700;color:var(--blue);letter-spacing:-0.3px;line-height:1.2">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
         </div>
-      </a>
-      <div class="mentor-quote">"Patience is not about waiting. It's about how you observe while you wait."</div>
-      <a href="{{ url_for('mentors') }}" style="display:block;margin-top:10px;background:var(--d-gold);color:#111;font-size:13px;font-weight:700;padding:9px 14px;border-radius:9px;text-decoration:none;text-align:center;">Review my Image →</a>
-    </div>
-
-    {# Annual Excellence Award #}
-    {% if aea_dash %}
-    {# ── AEA card: 4 states ── #}
-    {% if aea_dash.qualified %}
-    {# State 1: Fully qualified #}
-    <div class="aea-card" style="background:#1B4F72;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
-             style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));"
-             alt="AEA" onerror="this.style.display='none'">
-        <div>
-          <div class="aea-label" style="margin-bottom:1px;">Annual Excellence Award</div>
-          <div style="font-size:13px;font-weight:700;color:#FFFFFF;">Qualified &middot; {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>
-        </div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.4">top 6<br>images</div>
       </div>
-      <div style="display:flex;align-items:baseline;gap:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.12);margin-bottom:6px;">
-        <div style="font-size:32px;font-weight:500;color:#F5C518;font-family:var(--font-mono,monospace);line-height:1;">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">AEA average evaluation<br>top 6 images · all interests</div>
-      </div>
-      {% if aea_dash.league_rank %}<div style="font-size:13px;color:#7DCEA0;font-weight:600;">#{{ aea_dash.league_rank }} in {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>{% endif %}
-      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">Top {{ aea_dash.percentile }}% &middot; {{ aea_dash.qualifying_months }} months active</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} month{{ 's' if aea_dash.qualifying_months != 1 else '' }} active</div>
+      {# AEA thumbnails #}
       {% if aea_dash.top6_list %}
-      <div style="display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;">
-        {% for img in aea_dash.top6_list %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}"
-           style="width:42px;height:42px;border-radius:4px;overflow:hidden;display:block;border:1.5px solid rgba(245,197,24,0.4);"
-           title="{{ img.name or 'Image' }} — {{ '%.2f'|format(img.score) }}">
-          <img src="{{ img.thumb_url }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"
-               onerror="this.style.background='#1a2540';this.removeAttribute('src')" alt="{{ img.name or '' }}">
-        </a>
+      <div style="display:flex;gap:3px;margin-bottom:8px">
+        {% for im in aea_dash.top6_list[:5] %}
+        <div style="width:24px;height:24px;border-radius:3px;background:#E8E4DA;overflow:hidden;flex-shrink:0">
+          {% if im.thumb_url %}<img src="{{ im.thumb_url }}" style="width:100%;height:100%;object-fit:cover" alt="">{% endif %}
+        </div>
         {% endfor %}
-      </div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:5px;">Your top 6 images — tap to view</div>
-      {% endif %}
-    </div>
-
-    {% elif aea_dash.qualifying_months >= aea_dash.required_months and aea_dash.total_images < aea_dash.required_images %}
-    {# State 2: Months met, images short #}
-    <div class="aea-card" style="background:#D6EAF8;border:1px solid #A9CCE3;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
-             style="width:34px;height:34px;object-fit:contain;filter:grayscale(1) opacity(0.4);"
-             alt="AEA" onerror="this.style.display='none'">
-        <div>
-          <div class="aea-label" style="color:#1B4F72;margin-bottom:1px;">Annual Excellence Award</div>
-          <div style="font-size:13px;font-weight:700;color:#0a1628;">Not yet qualified</div>
-        </div>
-      </div>
-      <div style="font-size:13px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed to qualify.</div>
-      {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
-    </div>
-
-    {% elif aea_dash.total_images >= aea_dash.required_images and aea_dash.qualifying_months < aea_dash.required_months %}
-    {# State 3: Images met, months short #}
-    <div class="aea-card" style="background:#D6EAF8;border:1px solid #A9CCE3;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
-             style="width:34px;height:34px;object-fit:contain;filter:grayscale(1) opacity(0.4);"
-             alt="AEA" onerror="this.style.display='none'">
-        <div>
-          <div class="aea-label" style="color:#1B4F72;margin-bottom:1px;">Annual Excellence Award</div>
-          <div style="font-size:13px;font-weight:700;color:#0a1628;">Not yet qualified</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:5px;margin-bottom:8px;">
-        {% for m in range(aea_dash.required_months) %}
-        <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
-        {% endfor %}
-      </div>
-      <div style="font-size:13px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.</div>
-      {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
-    </div>
-
-    {% else %}
-    {# State 4: Both short #}
-    <div class="aea-card" style="background:#D6EAF8;border:1px solid #A9CCE3;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <img src="{{ url_for('static', filename='img/aea_badge.png') }}"
-             style="width:34px;height:34px;object-fit:contain;filter:grayscale(1) opacity(0.4);"
-             alt="AEA" onerror="this.style.display='none'">
-        <div>
-          <div class="aea-label" style="color:#1B4F72;margin-bottom:1px;">Annual Excellence Award</div>
-          <div style="font-size:13px;font-weight:700;color:#0a1628;">Not yet qualified</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:5px;margin-bottom:8px;">
-        {% for m in range(aea_dash.required_months) %}
-        <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
-        {% endfor %}
-      </div>
-      <div style="font-size:13px;color:#0B7A78;font-weight:500;line-height:1.6;">
-        {% if aea_dash.months_needed > 0 and aea_dash.images_needed > 0 %}
-        {{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} &middot; {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
-        {% elif aea_dash.months_needed > 0 %}
-        {{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.
-        {% else %}
-        {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
-        {% endif %}
-      </div>
-      {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
-    </div>
-    {% endif %}
-
-    {% else %}
-    {# Not subscribed or no data — static fallback #}
-    <div class="aea-card">
-      <div class="aea-label">Annual Excellence Award</div>
-      <div class="aea-title">AEA 2026</div>
-      <div class="aea-sub">Upload consistently and build your standing for the Annual Excellence Award.</div>
-      <a href="{{ url_for('poty') }}" class="aea-link">Learn more →</a>
-    </div>
-    {% endif %}
-
-  </aside>
-
-</div>{# /dash-layout #}
-
-
-{# ════════════════════════════════════
-   MOBILE DASHBOARD — approved design
-════════════════════════════════════ #}
-<div class="mobile-dash" style="flex-direction:column; gap:0; background:var(--d-cream);">
-
-  {# ── Top bar ── #}
-  <div style="padding:16px 20px 4px; padding-top:calc(68px + env(safe-area-inset-top,0px) + 12px);">
-
-    {# ── Greeting + avatar ── #}
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px;">
-      <div>
-        <div style="font-size:26px; font-weight:700; color:var(--d-dark); line-height:1.15;">{{ ns.greeting }},<br>{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
-        <div style="font-size:14px; color:var(--d-muted); margin-top:4px; line-height:1.5;">
-          {% if progress_data and progress_data.count > 0 and progress_data.strongest %}
-            {% if dash_advisory and dash_advisory.get('light_note') %}{{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}. {% endif %}
-            From your {{ progress_data.count }} photographs, you've improved most in <strong style="color:var(--d-dark);">{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.strongest, progress_data.strongest|title) }}</strong> — keep building on <strong style="color:var(--d-dark);">{{ {'dod':'Difficulty','dm':'Moment','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'}.get(progress_data.weakest, progress_data.weakest|title) }}</strong>.
-          {% elif dash_advisory and dash_advisory.get('light_note') %}
-            {{ dash_advisory.get('weather_icon','') }} {{ dash_advisory.light_note }}
-          {% else %}
-            Today's practice begins here.
-          {% endif %}
-        </div>
-      </div>
-      <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--d-dark);border:2px solid var(--d-gold);">
-        {% if current_user.profile_photo_url %}
-        <img src="{{ current_user.profile_photo_url }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-        {% else %}
-        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#F6F2E9;background:var(--d-dark);">{{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div style="padding:0 16px; display:flex; flex-direction:column; gap:12px; padding-bottom:100px;">
-
-    {# ── FIRST VISIT WELCOME CARD — mobile ── #}
-    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 and stats.total == 0 %}
-    <div style="background:linear-gradient(135deg,#13254B 0%,#1A3460 100%);border-radius:14px;padding:18px 16px;color:#fff;">
-      <div style="font-size: 13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.9);margin-bottom:6px;">Welcome to Shutter League</div>
-      <div style="font-size:17px;font-weight:700;line-height:1.35;margin-bottom:8px;">Your photography evaluation platform is ready.</div>
-      <div style="font-size:14px;color:rgba(255,255,255,0.78);line-height:1.6;margin-bottom:14px;">
-        Upload a photograph and get a precise evaluation across five craft dimensions. The brief below shows where to go and what to shoot today.
-      </div>
-      <a href="{{ url_for('upload') }}"
-         style="display:block;text-align:center;background:#D6A428;color:#0F2A22;font-size:14px;font-weight:700;padding:11px 16px;border-radius:8px;text-decoration:none;">
-        Upload your first photograph →
-      </a>
-    </div>
-    {% endif %}
-
-    {# ── TODAY'S PRACTICE ── #}
-    {% if show_mission %}
-    <div class="mob-practice">
-      <div style="padding:12px 14px 8px; border-bottom:1px solid var(--d-border);">
-        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Practice</div>
-      </div>
-      <div class="mob-practice-inner">
-        <div class="mob-practice-content">
-          <div style="font-size:17px;font-weight:700;color:var(--d-dark);line-height:1.3;margin-bottom:8px;">{{ lesson.title if lesson else 'Morning Light, Quiet Moments' }}</div>
-          {% if lesson and lesson.principle %}
-          <div style="font-size:14px;color:var(--d-muted);line-height:1.5;margin-bottom:10px;">{{ lesson.principle[:80] }}{% if lesson.principle|length > 80 %}…{% endif %}</div>
-          {% endif %}
-        </div>
-        <div class="mob-practice-img">
-          {% if _hero_img and _hero_img.thumb_url %}
-          <img src="{{ _hero_img.thumb_url }}" alt="Practice" onerror="this.parentNode.style.background='#1A3A2A';this.remove()">
-          {% else %}
-          <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A2A,#2A5A3A);"></div>
-          {% endif %}
-        </div>
-      </div>
-      <div style="padding:10px 14px;">
-        <a href="{{ url_for('mission') }}" style="display:block;background:var(--d-gold);color:#111;font-size:14px;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;">Begin Today's Practice →</a>
-        <form method="POST" action="{{ url_for('skip_mission') }}" style="text-align:center;margin-top:8px;">
-          <button type="submit" style="background:none;border:none;font-size:14px;color:var(--d-muted);cursor:pointer;padding:4px 0;">or Skip for now</button>
-        </form>
-      </div>
-    </div>
-    {% endif %}{# end show_mission mobile #}
-
-
-      {# ── LIVE EVENT ADVISORY — mobile ── #}
-      {% if dash_live_event %}
-      <div style="background:linear-gradient(135deg,#FDF6DC 0%,#FFFDF5 100%);border:1px solid #E8C84A;border-radius:12px;overflow:hidden;">
-        <div style="background:#D6A428;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:7px;">
-            <div style="width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
-            <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;">Live Event &middot; Now</span>
-          </div>
-          <div style="display:flex;gap:5px;">
-            {% if dash_live_event.deadline_label %}
-            <span style="background:rgba(0,0,0,0.12);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>
-            {% endif %}
-            {% if dash_live_event.genre %}
-            <span style="background:rgba(255,255,255,0.4);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.genre|title }}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div style="padding:16px 18px;">
-          <div style="font-size:17px;font-weight:700;color:var(--d-dark);margin-bottom:2px;">{{ dash_live_event.location_name }}</div>
-          {% if dash_live_event.subject %}
-          <div style="font-size:15px;font-weight:700;color:#A37B2C;margin-bottom:8px;">{{ dash_live_event.subject }}</div>
-          {% endif %}
-          <div id="mob-live-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ (dash_live_event.what_is_happening or '')[:200] }}{% if (dash_live_event.what_is_happening or '')|length > 200 %}<span>… <button onclick="document.getElementById('mob-live-short').style.display='none';document.getElementById('mob-live-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button></span>{% endif %}
-          </div>
-          <div id="mob-live-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ dash_live_event.what_is_happening or '' }}
-            <button onclick="document.getElementById('mob-live-short').style.display='block';document.getElementById('mob-live-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
-          </div>
-          {% if dash_live_event.why_it_matters %}
-          <div style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:8px;">{{ dash_live_event.why_it_matters }}</div>
-          {% endif %}
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-            {% if dash_live_event.best_light_time %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">⏱ {{ dash_live_event.best_light_time }}</span>{% endif %}
-            {% if dash_live_event.distance_hours %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">🚗 {{ dash_live_event.distance_hours }}h away</span>{% endif %}
-            {% if dash_live_event.access_notes %}<span style="font-size:14px;color:#A37B2C;font-weight:600;">📌 {{ dash_live_event.access_notes }}</span>{% endif %}
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #E8C84A;">
-            <a href="{{ dash_live_event.url }}" target="_blank"
-               style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;display:flex;align-items:center;gap:5px;">
-              📍 Get directions →
-            </a>
-            <a href="{{ url_for('profile') }}#location"
-               style="font-size:14px;color:#A37B2C;text-decoration:underline;font-weight:600;">Change location →</a>
-          </div>
-          <a href="{{ url_for('upload') }}" style="display:block;margin-top:12px;font-size:14px;color:#A37B2C;font-weight:700;text-decoration:none;padding-top:10px;border-top:1px solid #E8C84A;">
-            📷 Photograph today → get your evaluation → tomorrow's brief builds on it →
-          </a>
-        </div>
-      </div>
-      {% endif %}
-
-      {# ── LOCATION ADVISORY — mobile ── #}
-      {% if dash_advisory and dash_advisory.get('location_name') and not dash_live_event %}
-      <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:12px;overflow:hidden;">
-        <div style="padding:16px 18px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
-              <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2A7A3A;">Nearby Opportunity &middot; Now</span>
-            </div>
-            {% if dash_advisory.get('genre') %}
-            <span style="background:#fff;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>
-            {% endif %}
-          </div>
-          <div style="font-size:17px;font-weight:700;color:var(--d-dark);margin-bottom:4px;">{{ dash_advisory.location_name }}</div>
-          {% if dash_advisory.get('subject') %}
-          <div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:8px;">{{ dash_advisory.subject }}</div>
-          {% endif %}
-          {% set _adv_full_mob = (dash_advisory.what_is_happening or dash_advisory.light_note or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-          <div id="mob-adv-body-short" style="font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {% if _adv_full_mob|length > 220 %}{{ _adv_full_mob[:220].rsplit(' ', 1)[0] }}… <button onclick="document.getElementById('mob-adv-body-short').style.display='none';document.getElementById('mob-adv-body-full').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _adv_full_mob }}{% endif %}
-          </div>
-          <div id="mob-adv-body-full" style="display:none;font-size:15px;color:var(--d-dark);line-height:1.6;margin-bottom:6px;">
-            {{ _adv_full_mob }}
-            <button onclick="document.getElementById('mob-adv-body-short').style.display='block';document.getElementById('mob-adv-body-full').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
-          </div>
-          {% if weather and weather.state == 'red' %}
-          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">
-            ⚠ {{ weather.message or 'Poor conditions today — skip the outdoor session.' }}
-          </div>
-          {% elif weather and weather.state == 'amber' %}
-          <div style="font-size:14px;font-weight:600;line-height:1.5;margin-bottom:8px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">
-            ⚡ {{ weather.message or 'Marginal conditions — go early or plan for indoors.' }}
-          </div>
-          {% endif %}
-          {% if progress_data and progress_data.weakest %}
-          {% set _dim_map = {'dod':'Difficulty','dm':'Timing','aq':'Visual Impact','wonder':'WOW','disruption':'Disruption'} %}
-          <div style="font-size:14px;color:var(--d-green);font-weight:600;margin-bottom:8px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
-          {% endif %}
-          <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
-            {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:var(--d-muted);">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--d-muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-            {% if weather and weather.condition %}<span style="font-size:14px;color:var(--d-muted);">☁ {{ weather.condition }}</span>{% endif %}
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-            {% if dash_advisory.get('light_note') %}<span style="background:#FDF3DC;color:#8A5A00;font-size:14px;font-weight:600;padding:3px 10px;border-radius:20px;">✦ {{ dash_advisory.light_note }}</span>{% endif %}
-            {% if dash_advisory.get('genre') %}<span style="background:#E6EFF8;color:#1A4A7A;font-size:14px;font-weight:600;padding:3px 10px;border-radius:20px;">{{ dash_advisory.genre|title }}</span>{% endif %}
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--d-border);">
-            <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank"
-               style="font-size:14px;font-weight:600;color:var(--d-dark);text-decoration:none;display:flex;align-items:center;gap:5px;">
-              📍 Get directions
-            </a>
-            <span style="font-size:14px;color:var(--d-dark);">→</span>
-          </div>
-          <a href="{{ url_for('profile') }}#location"
-             style="display:block;font-size:14px;color:var(--d-muted);text-decoration:none;margin-top:6px;">Not your city? Update location →</a>
-        </div>
-      </div>
-      {% endif %}
-
-    {# ── TODAY'S REFLECTION ── #}
-    {% if _last and _last.score %}
-    <div class="mob-reflection">
-      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:8px;">My Gallery</div>
-      <div style="font-size:14px;color:var(--d-muted);margin-bottom:2px;">Latest Evaluation</div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
-        <div style="font-size:48px;font-weight:800;color:var(--d-dark);line-height:1;">{{ '%.1f'|format(_last.score) }}<span style="font-size:20px;font-weight:400;color:var(--d-muted)">/10</span></div>
-        {# Mini sparkline #}
-        {% if progress_data and progress_data.dim_sparklines %}
-        {% set _sp = progress_data.dim_sparklines.values()|list %}
-        {% if _sp and _sp[0] %}
-        <svg viewBox="0 0 100 40" width="100" height="40" style="flex-shrink:0;">
-          {% if _sp[0].polyline %}
-          <polyline fill="none" stroke="{{ '#D6A428' }}" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" points="{{ _sp[0].polyline }}"/>
-          {% if _sp[0].points %}
-          {% for _pt in _sp[0].points %}
-          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.4' }}"/>
-          {% endfor %}
-          {% endif %}
-          {% else %}
-          <polyline fill="none" stroke="#D6A428" stroke-width="2" points="0,35 20,30 40,28 60,22 80,18 100,12"/>
-          <circle cx="100" cy="12" r="3" fill="#D6A428"/>
-          {% endif %}
-        </svg>
-        {% endif %}
-        {% endif %}
-      </div>
-      <a href="{{ url_for('my_gallery') }}" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:10px 14px;border:1px solid var(--d-border);border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;color:var(--d-dark);">
-        <span>View My Gallery</span><span>→</span>
-      </a>
-    </div>
-    {% endif %}
-
-    {# ── YOUR EVOLUTION ── #}
-    {% if progress_data and progress_data.dim_sparklines %}
-    {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
-    {% set _dim_icons  = {'dod':'⬛','dm':'⏱','aq':'👁','wonder':'✦','disruption':'◈'} %}
-    {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
-    <div class="mob-evolution">
-      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:10px;">Your Evolution</div>
-      {% for dim, sp in progress_data.dim_sparklines.items() %}
-      {% set _avg = progress_data.dim_avgs.get(dim, 0) %}
-      <div class="mob-dim-row">
-        <span class="mob-dim-icon" style="font-size:16px;">{{ _dim_icons.get(dim,'◉') }}</span>
-        <span class="mob-dim-name">{{ _dim_labels.get(dim, dim|title) }}</span>
-        <svg viewBox="0 0 80 20" width="80" height="20" class="mob-dim-spark">
-          {% if sp.polyline %}
-          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" points="{{ sp.polyline }}"/>
-          {% if sp.points %}
-          <circle cx="{{ sp.points[-1].x if sp.points else 80 }}" cy="{{ sp.points[-1].y if sp.points else 10 }}" r="2" fill="{{ _dim_colours.get(dim,'#8A7A5A') }}"/>
-          {% endif %}
-          {% else %}
-          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5" points="0,15 20,12 40,14 60,10 80,8"/>
-          {% endif %}
-        </svg>
-        <span class="mob-dim-val">{{ '%.1f'|format(_avg) }}</span>
-      </div>
-      {% endfor %}
-      <div style="font-size:14px;font-weight:600;color:var(--d-gold-dk);text-align:center;margin-top:10px;padding-top:8px;">You're evolving. Keep photographing.</div>
-    </div>
-    {% endif %}
-
-    {# ── TODAY'S THOUGHT ── #}
-    {% if lesson and lesson.master %}
-    <div class="mob-thought">
-      {% if lesson.master_photo %}
-      <div class="mob-thought-photo">
-        <img src="{{ lesson.master_photo }}" alt="{{ lesson.master }}" onerror="this.parentNode.style.background='#2A3A2A';this.remove()">
-      </div>
-      {% endif %}
-      <div style="flex:1; min-width:0;">
-        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:6px;">Today's Thought</div>
-        {% if lesson.master_quote %}
-        <div style="font-size:14px;font-style:italic;color:var(--d-dark);line-height:1.5;margin-bottom:4px;">"{{ lesson.master_quote[:100] }}{% if lesson.master_quote|length > 100 %}…{% endif %}"</div>
-        {% endif %}
-        <div style="font-size:14px;color:var(--d-muted);">– {{ lesson.master }}</div>
-      </div>
-    </div>
-    {% endif %}
-
-
-
-    {# ── MENTOR GUIDANCE ── #}
-    <div class="mob-mentor">
-      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;flex:1;min-width:0;">
-        <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-             onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
-             style="width:44px;height:44px;border-radius:50%;border:2px solid var(--d-gold);object-fit:cover;flex-shrink:0;" alt="Mentor">
-        <div style="min-width:0;">
-          <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-gold-dk);">Mentor Guidance</div>
-          <div style="font-size:14px;font-weight:700;color:var(--d-dark);">Ashok Kochhar</div>
-          <div style="font-size:14px;color:var(--d-muted);">Minimalism in Black &amp; White</div>
-        </div>
-      </a>
-      <a href="{{ url_for('mentors') }}" style="background:var(--d-card);border:1px solid var(--d-gold);color:var(--d-gold-dk);font-size:14px;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">Book Review →</a>
-    </div>
-
-  </div>
-
-</div>
-{# ── Bottom quote strip ── #}
-<div class="dash-quote-strip">
-  <div class="dash-quote-txt">"Your journey is unique. Stay consistent, stay curious.<br>The best camera is the one that's with you. The best time is now."</div>
-  <div class="dash-quote-sig">— Shutter League</div>
-</div>
-
-
-{# ── STANDING FULL-SCREEN MODAL ── #}
-<div class="standing-modal" id="standing-modal" onclick="if(event.target===this)this.style.display='none'">
-  <div class="standing-modal-inner">
-    <button class="standing-modal-close" onclick="document.getElementById('standing-modal').style.display='none'">×</button>
-    {% if progress_data %}
-    <div style="margin-bottom:16px;">
-      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--d-gold-dk);margin-bottom:4px;">My Standing</div>
-
-      {# ── AEA Standing — primary number if qualified ── #}
-      {% if aea_dash and aea_dash.qualified and aea_dash.top6_avg %}
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
-        <span style="font-size:40px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
-        <span style="font-size:14px;color:var(--d-muted);">AEA standing · top 6 evaluations</span>
-      </div>
-      <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:2px;">Top {{ aea_dash.percentile }}%</div>
-      <div style="font-size:14px;color:var(--d-muted);margin-bottom:10px;">{{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League{% if aea_dash.league_rank %} &middot; #{{ aea_dash.league_rank }} qualifier{% endif %}</div>
-      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px;padding:8px 12px;background:var(--d-cream);border-radius:6px;">
-        <span style="font-size:18px;font-weight:700;color:var(--d-muted);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
-        <span style="font-size:13px;color:var(--d-muted);">Lifetime average evaluation · {{ progress_data.count }} images</span>
       </div>
       {% else %}
-      {# Not yet qualified — lifetime average as primary #}
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
-        <span style="font-size:32px;font-weight:800;color:var(--d-dark);">{{ '%.2f'|format(progress_data.avg_score) }}</span>
-        <span style="font-size:14px;color:var(--d-muted);">Average evaluation</span>
-      </div>
-      <div style="font-size:16px;font-weight:700;color:var(--d-green);margin-bottom:4px;">Top {{ progress_data.overall_pct }}%</div>
-      <div style="font-size:14px;color:var(--d-muted);margin-bottom:12px;">{{ progress_data.league_label or 'Camera league' }}</div>
-      {% if aea_dash %}
-      {# Show AEA progress in modal for non-qualified users #}
-      <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1B4F72;margin-bottom:6px;">Annual Excellence Award</div>
-        <div style="display:flex;gap:5px;margin-bottom:6px;">
-          {% for m in range(aea_dash.required_months) %}
-          <div style="flex:1;height:5px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
-          {% endfor %}
-        </div>
-        <div style="font-size:13px;color:#0B7A78;font-weight:500;">
-          {% if aea_dash.months_needed > 0 and aea_dash.images_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} · {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
-          {% elif aea_dash.months_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} needed.
-          {% else %}{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.{% endif %}
-        </div>
-        {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:4px;">Current average evaluation: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+      <div style="display:flex;gap:3px;margin-bottom:8px">
+        {% for i in range(5) %}<div style="width:24px;height:24px;border-radius:3px;background:#E8E4DA"></div>{% endfor %}
       </div>
       {% endif %}
+      {% else %}
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Score 6 images in 3 months to qualify for the Annual Excellence Award.</div>
       {% endif %}
-
-      <div style="height:5px;background:var(--d-border);border-radius:3px;margin-bottom:16px;">
-        <div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--d-gold);border-radius:3px;"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--d-muted);margin-bottom:16px;">
-        <span>{{ progress_data.prev_tier or '' }}</span>
-        <span style="font-weight:700;color:var(--d-dark);">{{ progress_data.highest_tier or progress_data.avg_tier }}</span>
-        <span>→ {{ progress_data.next_tier or '' }}</span>
-      </div>
+      <a href="#" class="lnk">View your Award progress →</a>
     </div>
 
-    {# Lifetime score trend #}
-    {% if progress_data.trend and progress_data.trend|length >= 2 %}
-    <div style="margin-bottom:16px;">
-      <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:3px;">Lifetime evaluation trend</div>
-      <div style="font-size:14px;color:var(--d-muted);margin-bottom:4px;">All {{ progress_data.count }} uploads</div>
-      {% set _t = progress_data.trend %}
-      {% set _scores = _t|map(attribute='score')|list %}
-      {% set _min = _scores|min %}
-      {% set _max = _scores|max %}
-      {% set _range = [(_max - _min), 0.5]|max %}
-      {% set _n = _t|length %}
-      {%- set _ymax = (_max)|round(1) -%}
-      {%- set _ymid = ((_max + _min) / 2)|round(1) -%}
-      {%- set _ymin = (_min)|round(1) -%}
-      <div style="display:flex;gap:4px;align-items:stretch;">
-      <div style="display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;min-width:28px;text-align:right;">
-        <span style="font-size:13px;color:var(--d-muted);line-height:1;">{{ _ymax }}</span>
-        <span style="font-size:13px;color:var(--d-muted);line-height:1;">{{ _ymid }}</span>
-        <span style="font-size:13px;color:var(--d-muted);line-height:1;">{{ _ymin }}</span>
+    <!-- MY STANDING — desktop only, hidden on mobile -->
+    {% if progress_data %}
+    <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-standing">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="rl" style="margin-bottom:0">My Standing</div>
+        <a href="{{ url_for('my_gallery') }}" class="lnk">Full view →</a>
       </div>
-      <div style="flex:1;min-width:0;">
-      <svg viewBox="0 0 320 56" width="100%" height="56" preserveAspectRatio="none" style="display:block;margin-bottom:4px;">
-        <line x1="0" y1="14" x2="320" y2="14" stroke="var(--d-border)" stroke-width="0.5"/>
-        <line x1="0" y1="28" x2="320" y2="28" stroke="var(--d-border)" stroke-width="0.5"/>
-        <line x1="0" y1="42" x2="320" y2="42" stroke="var(--d-border)" stroke-width="0.5"/>
-        {% set _pts = namespace(val='') %}
-        {% for _item in _t %}
-          {% set _x = (loop.index0 / (_n - 1) * 300 + 10)|round(1) %}
-          {% set _y = (42 - ((_item.score - _min) / _range) * 28)|round(1) %}
-          {% set _pts.val = _pts.val ~ _x ~ ',' ~ _y ~ ' ' %}
-        {% endfor %}
-        {% set _last_x = (300 + 10) %}
-        {% set _last_y = (42 - ((_t[-1].score - _min) / _range) * 28)|round(1) %}
-        <polyline fill="rgba(214,164,40,0.08)" stroke="none" points="{{ _pts.val }}{{ _last_x }},50 10,50"/>
-        <polyline fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{ _pts.val }}"/>
-        {% for _item in _t %}
-          {% set _x = (loop.index0 / (_n - 1) * 300 + 10)|round(1) %}
-          {% set _y = (42 - ((_item.score - _min) / _range) * 28)|round(1) %}
-          <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '3.5' if loop.last else '2' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.5' }}"/>
-        {% endfor %}
-      </svg>
-      </div></div>
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
+        <span style="font-size:13px">👑</span>
+        <span style="font-size:17px;font-weight:600;color:var(--dark)">{{ progress_data.highest_tier }}</span>
+      </div>
+      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:3px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
+      <div style="display:inline-flex;align-items:center;gap:3px;background:var(--cream);border:0.5px solid var(--border);border-radius:9px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:6px">
+        <i class="ti ti-camera" style="font-size:10px" aria-hidden="true"></i> {{ progress_data.league_label or 'Camera' }} League
+      </div>
+      {% if progress_data.overall_pct %}
+      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
+      <div class="pb"><div class="pbf" style="width:{{ [progress_data.overall_pct, 100]|min }}%"></div><div class="pbd" style="left:{{ [progress_data.overall_pct, 100]|min }}%"><div class="pbdi"></div></div></div>
+      {% endif %}
+      <div class="pcl">
+        <span>Maverick<br>0–6</span>
+        <span style="text-align:center">Master<br>6–8</span>
+        <span style="text-align:center">Grandmaster<br>8–9.5</span>
+        <span style="text-align:right">Legend<br>9.5+</span>
+      </div>
     </div>
     {% endif %}
 
-    <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px;">Dimension breakdown — last {{ progress_data.dim_window or 10 }} image{{ 's' if (progress_data.dim_window or 10) != 1 else '' }}</div>
-    {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
-    {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
-    {% if progress_data.dim_sparklines %}
-      {% for dim, sp in progress_data.dim_sparklines.items() %}
-      {% set _avg = progress_data.dim_avgs.get(dim, 0) %}
-      {% set _pill = progress_data.dim_pills.get(dim, {}) %}
-      <div class="dim-sparkline-row">
-        <span class="dim-sparkline-name">{{ _dim_labels.get(dim, dim|title) }}</span>
-        <svg viewBox="0 0 280 56" width="100%" height="40" style="flex:1; min-width:0;">
-          {% if sp.polyline %}
-          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" points="{{ sp.polyline }}"/>
-          {% if sp.points %}
-          {% for _pt in sp.points %}
-          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}"
-            r="{{ '2.5' if loop.last else '1.8' }}"
-            fill="{{ _dim_colours.get(dim,'#8A7A5A') }}"
-            opacity="{{ '1' if loop.last else '0.4' }}"/>
-          {% endfor %}
-          {% endif %}
-          {% else %}
-          <polyline fill="none" stroke="{{ _dim_colours.get(dim,'#8A7A5A') }}" stroke-width="1.5"
-            points="0,20 24,18 48,16 72,14 96,12 120,10"/>
-          {% endif %}
-        </svg>
-        <span class="dim-sparkline-val">{{ '%.1f'|format(_avg) }}</span>
-        {% if _pill %}
-        <span class="dim-trend-pill {{ 'up' if _pill.dir == 'up' else ('down' if _pill.dir == 'down' else 'steady') }}">
-          {{ '↑ climbing' if _pill.dir == 'up' else ('↓ sliding' if _pill.dir == 'down' else '— steady') }}
-        </span>
+    <!-- LATEST EVALUATION — desktop only, hidden on mobile -->
+    {% if _last and _last.score %}
+    <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-latest">
+      <div class="rl">Latest Evaluation</div>
+      <div style="display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:start">
+        <div style="width:50px;height:50px;border-radius:7px;background:#1A2A22;overflow:hidden">
+          {% if _last.thumb_url %}<img src="{{ _last.thumb_url }}" style="width:100%;height:100%;object-fit:cover" alt="" onerror="this.parentNode.style.background='#1A2A22';this.remove()">{% endif %}
+        </div>
+        <div>
+          <div style="font-size:24px;font-weight:700;color:var(--dark);line-height:1">{{ '%.1f'|format(_last.score) }}<span style="font-size:11px;font-weight:400;color:var(--muted)">/10</span></div>
+          <div style="font-size:11px;font-weight:600;color:var(--green)">{{ _last.tier or '' }}</div>
+          <div style="font-size:10px;font-weight:400;color:var(--muted)">{{ _last.scored_at.strftime('%d %b %Y') if _last.scored_at else '' }}</div>
+        </div>
+      </div>
+      <a href="{{ url_for('image_detail', image_id=_last.id) }}" class="lnk" style="display:block;margin-top:5px;text-align:right">View full report →</a>
+    </div>
+    {% endif %}
+
+    <!-- WEEKLY ASSIGNMENT — shown desktop and mobile -->
+    {% if active_challenge %}
+    <div class="wcard rp-weekly">
+      <div class="rl">Weekly Assignment</div>
+      <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">{{ active_challenge.prompt_title }}</div>
+      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:2px">Closes {{ active_challenge.closes_at.strftime('%d %b') if active_challenge.closes_at else '' }}</div>
+      <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
+      <div class="expanded" id="wexp">
+        {% if active_challenge.prompt_body %}
+        <div style="font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">{{ active_challenge.prompt_body[:150] }}{% if active_challenge.prompt_body|length > 150 %}…{% endif %}</div>
+        {% else %}
+        <div style="font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
         {% endif %}
+        <a href="{{ url_for('weekly_challenge') }}" style="background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:10px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center">View assignment →</a>
+        <span class="rm" onclick="toggleSpan('wexp','wrm')">Read less →</span>
       </div>
-      {% endfor %}
+    </div>
+    {% else %}
+    <div class="wcard rp-weekly">
+      <div class="rl">Weekly Assignment</div>
+      <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">Shoot still life in black and white</div>
+      <div style="font-size:10px;font-weight:400;color:var(--muted);margin-bottom:2px">New assignment each Monday</div>
+      <span class="rm" id="wrm" onclick="toggleSpan('wexp','wrm')">Read more →</span>
+      <div class="expanded" id="wexp">
+        <div style="font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:8px">Every upload earns you credits and a chance to qualify for the Annual Excellence Award.</div>
+        <button style="background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%">View assignment →</button>
+        <span class="rm" onclick="toggleSpan('wexp','wrm')">Read less →</span>
+      </div>
+    </div>
     {% endif %}
-    {% endif %}
+
+    <!-- GET EXPERT ADVICE — shown desktop and mobile -->
+    <div class="mcard rp-expert">
+      <div class="rl">Get Expert Advice</div>
+      <div style="font-size:11px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
+      <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
+      <div class="expanded" id="xexp">
+        <div style="font-size:11px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div>
+        <button style="background:var(--gold);color:var(--dark);font-size:11px;font-weight:600;padding:10px 13px;border-radius:7px;border:none;cursor:pointer;width:100%">Request a review →</button>
+        <span class="rm" onclick="toggleSpan('xexp','xrm')">Read less →</span>
+      </div>
+    </div>
+
+  </div>{# /rpanel #}
+
+</div>{# /layout #}
+
+<!-- FOOTER
+     Desktop: 5-column grid
+     Mobile: logo + tagline + copyright + socials only
+     All secondary pages live in Profile tab on mobile
+-->
+<div class="sl-footer">
+  <div>
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+      <div style="width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--dark)">SL</div>
+      <div style="font-size:12px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase">Shutter League</div>
+    </div>
+    <div style="font-size:11px;font-weight:400;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:6px">Photography Assessment and Evolution Platform</div>
+    <div style="font-size:11px;font-weight:600;color:var(--gold)">Making Images Matter</div>
+  </div>
+  <div class="footer-links-col">
+    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Company</div>
+    <a class="fl" href="{{ url_for('how_it_works') }}">About Us</a>
+    <a class="fl" href="#">Contact Us</a>
+    <a class="fl" href="#">Pricing</a>
+    <a class="fl" href="#">FAQ</a>
+  </div>
+  <div class="footer-links-col">
+    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Legal</div>
+    <a class="fl" href="#">Terms and Conditions</a>
+    <a class="fl" href="#">Privacy Policy</a>
+    <a class="fl" href="#">Refund Policy</a>
+    <a class="fl" href="#">Shipping and Returns</a>
+  </div>
+  <div class="footer-links-col">
+    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Programmes</div>
+    <a class="fl" href="#">Annual Excellence Award</a>
+    <a class="fl" href="#">Programme Rules</a>
+    <a class="fl" href="#">Weekly Challenge</a>
+    <a class="fl" href="#">Mentor Guidelines</a>
+  </div>
+  <div class="footer-links-col">
+    <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px">Learn</div>
+    <a class="fl" href="#">Science</a>
+    <a class="fl" href="#">Lessons</a>
+    <a class="fl" href="#">Mentor Review</a>
+    <a class="fl" href="#">Assignments</a>
   </div>
 </div>
-</div>{# /dash-wrap #}
+<div class="footer-bottom">
+  <div style="font-size:10px;color:rgba(255,255,255,0.3)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</div>
+  <div style="display:flex;gap:14px">
+    <a style="font-size:10px;color:rgba(255,255,255,0.35);text-decoration:none" href="#">Instagram</a>
+    <a style="font-size:10px;color:rgba(255,255,255,0.35);text-decoration:none" href="#">Facebook</a>
+    <a style="font-size:10px;color:rgba(255,255,255,0.35);text-decoration:none" href="#">YouTube</a>
+  </div>
+</div>
+
+</div>{# /sl #}
+
+<!-- SCROLL TO TOP -->
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+
+<!-- BOTTOM NAV — mobile only
+     Profile tab contains ALL secondary pages:
+     My Account: details, subscription, billing, settings, help
+     About SL: How it works, Science, AEA, Programme Rules,
+               Pricing, FAQ, T&C, Privacy Policy, Refund, Shipping, Contact
+-->
+<nav class="bottom-nav">
+  <a class="bn-tab active" href="{{ url_for('dashboard') }}"><i class="ti ti-home"></i><span>Dashboard</span></a>
+  <a class="bn-tab" href="{{ url_for('upload') }}"><i class="ti ti-upload"></i><span>Upload</span></a>
+  <a class="bn-tab" href="#"><i class="ti ti-layout-grid"></i><span>Community</span></a>
+  <a class="bn-tab" href="{{ url_for('learning') }}"><i class="ti ti-book"></i><span>Learn</span></a>
+  <a class="bn-tab" href="{{ url_for('profile') }}"><i class="ti ti-user"></i><span>Profile</span></a>
+</nav>
+
+<script>
+function toggleSpan(expId, rmId) {
+  var exp = document.getElementById(expId);
+  var rm  = document.getElementById(rmId);
+  var open = exp.style.display === 'block';
+  exp.style.display = open ? 'none' : 'block';
+  rm.textContent    = open ? 'Read more →' : 'Read less →';
+}
+
+var scrollBtn = document.getElementById('scrollTop');
+window.addEventListener('scroll', function() {
+  if (window.scrollY > 300) { scrollBtn.classList.add('visible'); }
+  else { scrollBtn.classList.remove('visible'); }
+});
+</script>
 {% endblock %}
