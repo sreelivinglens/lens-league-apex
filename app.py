@@ -4877,6 +4877,7 @@ def dashboard():
             """), {'uid': current_user.id}).fetchall()
             mentor_reviews = [dict(r._mapping) for r in _reviews]
         except Exception as _mre:
+            db.session.rollback()
             app.logger.error(f'[dashboard_mentor_reviews] {_mre}')
 
     # referred_discount is a migration-only column — not in ORM model, must read directly
