@@ -5066,6 +5066,7 @@ def dashboard():
                         calendar_id=_cal_id,
                     )
     except Exception as _adv_err:
+        db.session.rollback()
         app.logger.warning(f'[dashboard] advisory/live_event: {_adv_err}')
 
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
