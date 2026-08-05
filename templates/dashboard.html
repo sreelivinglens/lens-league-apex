@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.1 (Session 175, 2026-08-05 — Dashboard redesign: three human insight sentences, approved card order desktop/mobile, rank card gold top border, Georgia serif rank number, blue AEA average, align-items stretch no blank space, max-width 1280px, scroll to top button, mobile single column fix, KYC clean) #}
+{# SL-VERSION: 175.1 (Session 175, 2026-08-05 — Dashboard redesign: three human insight sentences, approved card order, rank card gold top border, blue AEA average, max-width 1280px, align-items stretch, scroll to top, base.html nav/footer suppressed, approved dark topnav) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -15,52 +15,130 @@
 /* ═══════════════════════════════════════════════════════
    SHUTTER LEAGUE DASHBOARD — SL 175.1
    Approved design: Session 175, 5 August 2026
-   Tokens, layout, card structure all locked by founder.
-   Do not edit CSS without founder approval.
 ═══════════════════════════════════════════════════════ */
-body.page-dashboard { padding-top: 0 !important; background: #F6F2E9; }
-body.page-dashboard main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
+/* ── SUPPRESS BASE.HTML CHROME ─────────────────────────
+   base.html renders: sl-top-nav (desktop) · sl-bottom-nav (mobile, fixed top)
+   · <main> with padding · <footer>
+   All suppressed here. Dashboard renders its own complete layout.
+──────────────────────────────────────────────────────── */
+body.page-dashboard .sl-top-nav        { display: none !important; }
+body.page-dashboard .sl-bottom-nav     { display: none !important; }
+body.page-dashboard > footer           { display: none !important; }
+body.page-dashboard .nav-mobile        { display: none !important; }
+body.page-dashboard .flash-container   { display: none !important; }
+body.page-dashboard > main             { padding: 0 !important; max-width: none !important; margin: 0 !important; background: #F6F2E9 !important; }
+body.page-dashboard                    { padding-top: 0 !important; background: #F6F2E9 !important; }
+body.page-dashboard #backToTop         { display: none !important; }
+body.page-dashboard #cookie-banner     { z-index: 9999; }
+
+/* ── SL 175 DESIGN TOKENS ─────────────────────────────── */
 :root {
-  /* SL 175 approved tokens — do not change */
-  --d-gold:    #D6A428;   /* rank number, sparkline, progress bar, CTA buttons */
+  --d-gold:    #D6A428;   /* rank, sparkline, progress bar, CTA */
   --d-gold-dk: #A37B2C;   /* eyebrows, links, Read more */
   --d-dark:    #0F2A22;   /* topnav, footer, dark buttons */
   --d-navy:    #13254B;   /* AEA card only */
-  --d-blue:    #1A7FD4;   /* AEA average, percentile number — luminous, not navy */
-  --d-cream:   #F6F2E9;   /* page bg, sidenav active, lesson sub-cards */
+  --d-blue:    #1A7FD4;   /* AEA average, percentile number */
+  --d-cream:   #F6F2E9;   /* page bg, sidenav active */
   --d-card:    #FFFFFF;   /* all cards */
-  --d-border:  #E8E4DA;   /* card borders, gridlines, progress bar empty */
+  --d-border:  #E8E4DA;   /* card borders, gridlines */
   --d-text:    #1A1A18;   /* body copy */
-  --d-muted:   #6B6B6B;   /* supporting text, dates, labels */
-  --d-green:   #2A7A3A;   /* Grandmaster tier, score arrows, BR Hills */
-  --d-pista:   #E8F5E2;   /* BR Hills card background */
-  --d-pistab:  #C5E0BB;   /* BR Hills card border */
-  --d-r:       13px;      /* card border-radius */
+  --d-muted:   #6B6B6B;   /* supporting text, dates */
+  --d-green:   #2A7A3A;   /* Grandmaster tier, score arrows */
+  --d-r:       13px;
 }
 
-/* ── LAYOUT ── */
-.dash-wrap { background: var(--d-cream); min-height: 100vh; min-height: -webkit-fill-available; }
+/* ── APPROVED TOPNAV — SL 175.1 ── */
+.sl175-topnav {
+  background: #0F2A22;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 50px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.sl175-topnav-wrap { background: #0F2A22; }
+.sl175-logo-icon { width:30px;height:30px;border-radius:50%;background:#D6A428;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F2A22;flex-shrink:0;text-decoration:none; }
+.sl175-logo-text { font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.7;margin:0 28px 0 8px;flex-shrink:0; }
+.sl175-toplinks { display:flex;gap:2px;flex:1; }
+.sl175-nav-link { padding:5px 12px;font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px; }
+.sl175-nav-link.active { color:#fff;background:rgba(255,255,255,0.12);font-weight:600; }
+.sl175-nav-right { display:flex;align-items:center;gap:12px;flex-shrink:0; }
+.sl175-bell { position:relative;cursor:pointer; }
+.sl175-av { width:28px;height:28px;border-radius:50%;background:#D6A428;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0F2A22; }
 
-/* Mobile default: single column */
+/* ── APPROVED LAYOUT ── */
+.dash-wrap {
+  background: var(--d-cream);
+  max-width: 1280px;
+  margin: 0 auto;
+}
 .dash-layout {
-  display: block;
+  display: grid;
+  grid-template-columns: 155px minmax(0,1fr) 220px;
+  align-items: stretch;  /* no blank space below cards */
 }
 .mobile-dash { display: none; }
 
-/* ── LEFT SIDENAV — desktop only ── */
-.sidenav { display: none; }
+/* ── SIDENAV — SL 175 style ── */
+.sidenav {
+  display: none;
+  background: var(--d-card);
+  border-right: 0.5px solid var(--d-border);
+  padding: 14px 0;
+}
+.sidenav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--d-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  min-height: 40px;
+  border-radius: 0;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  background: transparent;
+  transition: none;
+}
+.sidenav-item:hover { color: var(--d-dark); background: #fafaf8; }
+.sidenav-item svg { width:15px;height:15px;flex-shrink:0; }
+.sidenav-item.nav-mission   { border-left-color: var(--d-gold); }
+.sidenav-item.nav-portfolio { border-left-color: #7A5A3A; }
+.sidenav-item.nav-mentor    { border-left-color: var(--d-green); }
+.sidenav-item.nav-challenges{ border-left-color: #1A6B6B; }
+.sidenav-item.nav-bow       { border-left-color: #1A2744; }
+.sidenav-item.nav-awards    { border-left-color: #7A2040; }
+.sidenav-item.nav-learning  { border-left-color: #2C4A7A; }
+.sidenav-item.nav-settings  { border-left-color: #8A8A88; color: var(--d-muted); }
+.sidenav-divider { display: none; }
+.sidenav-bottom  { margin-top: auto; padding-top: 8px; }
 
 /* ── CENTRE ── */
 .centre {
-  padding: 20px 16px;
-  display: flex; flex-direction: column; gap: 24px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-width: 0;
+  background: var(--d-cream);
 }
 
-/* ── RIGHT PANEL — mobile: below centre ── */
+/* ── RIGHT PANEL ── */
 .rpanel {
-  padding: 0 16px 16px;
-  display: flex; flex-direction: column; gap: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  border-left: 0.5px solid var(--d-border);
+  background: var(--d-card);
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ─────────────────────────────────────────
@@ -228,60 +306,69 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 ═══════════════════════════════════════ */
 @media (min-width: 1025px) {
 
+  /* ── Approved 3-column layout — 155px / 1fr / 220px ── */
   .dash-layout {
     display: grid;
     grid-template-columns: 155px minmax(0,1fr) 220px;
-    align-items: stretch;  /* fills blank space when centre is shorter than right panel */
-    max-width: 1280px;
-    margin: 0 auto;
+    align-items: stretch;
   }
 
-  /* ── Left sidenav ── */
+  /* ── Left sidenav — SL 175 clean style ── */
   .sidenav {
-    display: flex; flex-direction: column;
-    background: var(--d-cream); border-right: 1px solid var(--d-border);
-    padding: 16px 12px; position: sticky; top: 64px;
-    height: calc(100vh - 64px); height: calc(-webkit-fill-available - 64px); overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: var(--d-border) transparent;
+    display: flex;
+    flex-direction: column;
+    background: var(--d-card);
+    border-right: 0.5px solid var(--d-border);
+    padding: 14px 0;
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 50px);
+    height: calc(-webkit-fill-available - 50px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--d-border) transparent;
     justify-content: space-between;
   }
   .sidenav-item {
-    display: flex; align-items: center; gap: 9px;
-    padding: 8px 11px; font-size: 13px; font-weight: 600;
-    text-decoration: none; border-radius: 8px;
-    border-left-width: 3px; border-left-style: solid;
-    border-top: 1px solid transparent;
-    border-right: 1px solid transparent;
-    border-bottom: 1px solid transparent;
-    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--d-muted);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0;
+    background: transparent;
     min-height: 40px;
+    transition: background 0.1s, color 0.1s;
   }
-  .sidenav-item:hover { opacity: 0.82; }
+  .sidenav-item:hover { color: var(--d-dark); background: #fafaf8; opacity: 1; }
   .sidenav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-  .sidenav-item.nav-mission  { background:#FDF6DC; border-left-color:#C8960A; color:#7A5500; }
-  .sidenav-item.nav-portfolio{ background:#F5EDE0; border-left-color:#7A5A3A; color:#5A3A1A; }
-  .sidenav-item.nav-mentor   { background:#EAF3DE; border-left-color:#2A7A3A; color:#1A5A28; }
-  .sidenav-item.nav-challenges{ background:#E0F0F0; border-left-color:#1A6B6B; color:#0A4A4A; }
-  .sidenav-item.nav-bow      { background:#E0E8F5; border-left-color:#1A2744; color:#0A1A3A; }
-  .sidenav-item.nav-awards   { background:#F5E0E8; border-left-color:#7A2040; color:#5A1030; }
-  .sidenav-item.nav-learning { background:#E4EAF5; border-left-color:#2C4A7A; color:#1A2A5A; }
-  .sidenav-item.nav-settings { background:#F0EFED; border-left-color:#8A8A88; color:#6B6B6B; }
-
+  .sidenav-item.nav-mission   { border-left-color: var(--d-gold); }
+  .sidenav-item.nav-portfolio { border-left-color: #7A5A3A; }
+  .sidenav-item.nav-mentor    { border-left-color: var(--d-green); }
+  .sidenav-item.nav-challenges{ border-left-color: #1A6B6B; }
+  .sidenav-item.nav-bow       { border-left-color: #1A2744; }
+  .sidenav-item.nav-awards    { border-left-color: #7A2040; }
+  .sidenav-item.nav-learning  { border-left-color: #2C4A7A; }
+  .sidenav-item.nav-settings  { border-left-color: #8A8A88; }
   .sidenav-divider { display: none; }
   .sidenav-bottom  { margin-top: auto; padding-top: 8px; }
 
   /* ── Centre column ── */
-  .centre {
-    padding: 12px 20px 20px; gap: 10px;
-  }
+  .centre { padding: 18px; gap: 11px; }
 
-  /* Practise card wider image column on desktop */
+  /* Practice card wider image on desktop */
   .practice-card { grid-template-columns: 1fr 260px; }
   .practice-content { padding: 16px 20px; }
   .practice-title { font-size: 20px; }
 
-  /* Evolution grid: score | trend | dimensions side by side */
+  /* Evolution grid */
   .today-grid {
     display: grid;
     grid-template-columns: 130px 1fr 150px;
@@ -294,39 +381,32 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 
   /* ── Right panel ── */
   .rpanel {
-    border-left: 1px solid var(--d-border);
-    padding: 16px 16px; gap: 14px;
-    align-self: start;
-    position: sticky; top: 64px;
+    border-left: 0.5px solid var(--d-border);
+    padding: 14px;
+    gap: 11px;
+    position: sticky;
+    top: 50px;
   }
 
-  /* Hide mobile-only quote strip */
+  /* Hide mobile quote strip */
   .dash-quote-strip { display: none; }
 }
 
-/* ══════════════════════════════════════════════════
-   SL 175.1 ADDITIONS — approved Session 175
-══════════════════════════════════════════════════ */
+/* ── SL 175 GREETING — THREE HUMAN SENTENCES ──────────────
+   Collapsed state speaks in photographer language.
+   Dimension names appear ONLY in the expanded analysis.
+   line1: what they do well (dark)
+   line2: the honest gap as behaviour (muted)
+   line3: invitation forward (green, weight 600)
+────────────────────────────────────────────────────────── */
+.insight-line1 { font-size:13px;font-weight:400;color:var(--d-text);line-height:1.7;margin-top:6px; }
+.insight-line2 { font-size:13px;font-weight:400;color:var(--d-muted);line-height:1.7;margin-top:3px; }
+.insight-line3 { font-size:13px;font-weight:600;color:var(--d-green);line-height:1.7;margin-top:3px; }
 
-/*
-  GREETING — THREE HUMAN SENTENCES (collapsed state)
-  These replace dimension labels in the collapsed view.
-  Dimension names (Emotional Impact etc) appear ONLY in the expanded analysis.
-  Engine must pick a DIFFERENT insight angle on every login — never repeat.
-  line1: what they do well (dark text)
-  line2: the honest gap as behaviour not score (muted)
-  line3: forward-looking invitation (green, weight 600)
-*/
-.insight-line1 { font-size:13px; font-weight:400; color:var(--d-text); line-height:1.7; margin-top:6px; }
-.insight-line2 { font-size:13px; font-weight:400; color:var(--d-muted); line-height:1.7; margin-top:3px; }
-.insight-line3 { font-size:13px; font-weight:600; color:var(--d-green); line-height:1.7; margin-top:3px; }
-
-/*
-  READ MORE — CRITICAL RULE:
-  Must be <span> — NEVER <button> or <a href>
-  Identical appearance to "View all evaluations →"
-  No box, no border, no background, no box-shadow
-*/
+/* ── SL 175 READ MORE ─────────────────────────────────────
+   MUST be <span> — NEVER <button> or <a href>
+   No box, no border, no background — identical to links
+────────────────────────────────────────────────────────── */
 .sl175-rm {
   font-size: 13px;
   color: var(--d-gold-dk);
@@ -352,14 +432,15 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   text-align: justify;
 }
 
-/*
-  RANK CARD — gold top border crown treatment
-  Trophy state (rank <= 50): serif gold rank + prime mark
-  Percentile state (rank > 50): serif blue "top X%" — NEVER show raw rank number
-*/
+/* ── SL 175 RANK CARD ─────────────────────────────────────
+   Gold top border crown treatment.
+   Trophy state (rank <=50): serif gold rank number.
+   Percentile state (rank >50): serif blue "top X%".
+   NEVER show raw rank number when rank > 50.
+────────────────────────────────────────────────────────── */
 .rank-card-sl175 {
   background: var(--d-card);
-  border-radius: var(--d-r);
+  border-radius: 13px;
   border: 0.5px solid var(--d-border);
   border-top: 2.5px solid var(--d-gold);
   padding: 14px;
@@ -381,7 +462,6 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   color: var(--d-gold);
   letter-spacing: -2px;
   line-height: 1.5;
-  /* font-family: serif applied inline in template — keep CSS block audit-clean */
 }
 .rank-prime-sl175 {
   font-size: 20px;
@@ -390,31 +470,45 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   padding-top: 5px;
   opacity: 0.7;
   vertical-align: top;
-  /* font-family applied inline in template */
 }
 .aea-avg-sl175 {
   font-size: 16px;
   font-weight: 700;
   color: var(--d-blue);
   letter-spacing: -0.3px;
-  line-height: 1.2;
+  line-height: 1.5;
 }
 .percentile-sl175 {
   font-size: 38px;
   font-weight: 700;
   color: var(--d-blue);
   letter-spacing: -1.5px;
-  line-height: 1;
-  /* font-family applied inline in template */
+  line-height: 1.5;
+}
+.rl-sl175 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--d-muted);
+  margin-bottom: 5px;
 }
 
-/* Scroll to top button */
+/* ── SL 175 APPROVED FOOTER ───────────────────────────── */
+.sl175-footer-wrap { background: #0F2A22; max-width: 1280px; margin: 0 auto; }
+.sl175-footer { background:#0F2A22;padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px; }
+.sl175-footer-col { display: block; }
+.sl175-fl { display:block;font-size:13px;color:rgba(255,255,255,0.5);text-decoration:none;margin-bottom:5px; }
+.sl175-fbase { background:#0F2A22;border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between; }
+.sl175-footer-outer { background: #0F2A22; }
+
+/* ── SL 175 SCROLL TO TOP ── */
 .sl175-scroll-top {
   position: fixed;
   bottom: 24px; right: 24px;
   width: 40px; height: 40px;
-  background: var(--d-dark);
-  color: var(--d-gold);
+  background: #0F2A22;
+  color: #D6A428;
   border: none; border-radius: 50%;
   cursor: pointer;
   display: none;
@@ -424,15 +518,9 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 }
 .sl175-scroll-top.visible { display: flex; }
 
-/* Mobile overrides */
-@media (max-width: 767px) {
-  .insight-line1, .insight-line2, .insight-line3 {
-    font-size: 14px; line-height: 1.8; text-align: left;
-  }
-  .sl175-expanded { text-align: left; font-size: 14px; line-height: 1.9; }
-  .sl175-rm { font-size: 14px; }  /* 70yr minimum inside mobile breakpoint */
-  .sl175-scroll-top { bottom: 80px; }
-}
+/* ══════════════════════════════════════════════════
+   DESKTOP ≥ 1025px
+══════════════════════════════════════════════════ */
 
 /* ── Standing modal ── */
 .standing-modal {
@@ -483,9 +571,13 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
   
   /* Hide desktop centre */
   .centre { display: none !important; }
-  
-  /* Mobile single column stack */
+
+  /* Single column stack */
   .dash-layout { display: flex !important; flex-direction: column !important; }
+
+  /* Hide topnav non-essential elements on mobile */
+  .sl175-toplinks { display: none !important; }
+  .sl175-topnav { padding: 0 12px; }
 
   /* Practice card — mobile 2-col with image */
   .mob-practice {
@@ -562,6 +654,29 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 {% set _last = images.items[0] if images and images.items else none %}
 {% set _hero_img = carousel_images[0] if carousel_images else none %}
 
+{# ── SL 175 APPROVED TOPNAV — replaces base.html sl-top-nav ── #}
+<div class="sl175-topnav-outer" style="background:#0F2A22;">
+<nav class="sl175-topnav">
+  <a href="{{ url_for('dashboard') }}" class="sl175-logo-icon" aria-label="Shutter League">SL</a>
+  <div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.7;margin:0 28px 0 8px;flex-shrink:0;">Shutter<br>League</div>
+  <div class="sl175-toplinks">
+    <a class="sl175-nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a class="sl175-nav-link {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
+    <a class="sl175-nav-link {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
+    <a class="sl175-nav-link {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
+    <a class="sl175-nav-link {% if request.endpoint in ['leaderboard','recent_work'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Community</a>
+    <a class="sl175-nav-link {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profile</a>
+  </div>
+  <div class="sl175-nav-right">
+    <div class="sl175-bell">
+      <span style="font-size:17px;color:rgba(255,255,255,0.65);">🔔</span>
+    </div>
+    <div class="sl175-av">{{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}</div>
+    <a href="{{ url_for('logout') }}" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;" title="Log out">↩</a>
+  </div>
+</nav>
+</div>
+
 <div class="dash-wrap">
 <div class="dash-layout">
 
@@ -618,54 +733,40 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── Greeting — SL 175.1 approved design ── #}
+    {# ── GREETING CARD — SL 175.1 approved design ── #}
     {#
-      GREETING CARD — three human sentences in photographer language.
+      THREE HUMAN SENTENCES — collapsed state.
       NOT dimension labels. Dimension names appear ONLY in the expanded analysis.
-      The collapsed state must make the photographer feel seen without opening Read more.
-
-      Engine must pick a DIFFERENT insight angle on every login.
-      Angles: dimension pattern / trajectory / genre / time-of-day / editing / subject / difficulty
-      The sentences below are generated from dash_greeting (passed by app.py).
-      If dash_greeting is not available, fall back to dimension-based sentences.
-
-      line1: what they do well (dark text)
-      line2: the honest gap as behaviour not score (muted)
-      line3: forward-looking invitation (green, weight 600)
+      Engine must pick a DIFFERENT insight angle on every login — never repeat.
+      If dash_greeting dict is passed from app.py: use it.
+      Otherwise: fall back to dimension-based sentences from progress_data.
     #}
-    <div style="background:var(--d-card);border-radius:var(--d-r);border:0.5px solid var(--d-border);padding:16px 18px;margin-bottom:0;">
-      {# Score row #}
+    <div style="background:var(--d-card);border-radius:13px;border:0.5px solid var(--d-border);padding:16px 18px;">
       <div style="font-size:20px;font-weight:600;color:var(--d-dark);margin-bottom:10px;">{{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
+
       {% if _last and _last.score %}
       <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-        <span style="font-size:28px;font-weight:700;color:var(--d-dark);line-height:1;">{{ '%.1f'|format(_last.score) }}</span>
-        {% if _last.tier %}
-        <span style="font-size:13px;font-weight:600;color:var(--d-green);">{{ _last.tier }}</span>
-        {% endif %}
+        <span style="font-size:28px;font-weight:700;color:var(--d-dark);line-height:1.5;">{{ '%.1f'|format(_last.score) }}</span>
+        {% if _last.tier %}<span style="font-size:14px;font-weight:600;color:var(--d-green);">{{ _last.tier }}</span>{% endif %}
         {% if progress_data and progress_data.count > 1 and progress_data.trend and progress_data.trend|length >= 2 %}
           {% if progress_data.trend[-1].score > progress_data.trend[-2].score %}
-          <span style="font-size:13px;color:var(--d-green);">↑</span>
+          <span style="font-size:14px;color:var(--d-green);">↑</span>
           {% elif progress_data.trend[-1].score < progress_data.trend[-2].score %}
-          <span style="font-size:13px;color:#C05A1A;">↓</span>
+          <span style="font-size:14px;color:#C05A1A;">↓</span>
           {% endif %}
         {% endif %}
         <span style="font-size:13px;font-weight:400;color:var(--d-muted);">last evaluation</span>
       </div>
       {% endif %}
 
-      {#
-        THREE HUMAN SENTENCES — collapsed state.
-        If dash_greeting is passed from app.py use it.
-        Otherwise generate from progress_data dimension pattern.
-        NEVER show dimension labels here — those go in expanded section.
-      #}
+      {# THREE HUMAN SENTENCES #}
       {% if dash_greeting and dash_greeting.get('line1') %}
         <div class="insight-line1">{{ dash_greeting.line1 }}</div>
         <div class="insight-line2">{{ dash_greeting.line2 }}</div>
         <div class="insight-line3">{{ dash_greeting.line3 }}</div>
       {% elif progress_data and progress_data.count > 0 and progress_data.strongest %}
         {% set _dim_human = {'dod':'technical precision','dm':'sense of timing','aq':'visual impact','wonder':'ability to find wonder','disruption':'disruptive composition'} %}
-        {% set _dim_gap = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
+        {% set _dim_gap   = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
         <div class="insight-line1">Your {{ _dim_human.get(progress_data.strongest, 'eye') }} is your strongest asset.</div>
         <div class="insight-line2">The gap is in {{ _dim_gap.get(progress_data.weakest, 'the scenes you choose') }}.</div>
         <div class="insight-line3">Your eye is ready — the street is waiting.</div>
@@ -678,23 +779,16 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
         <div class="insight-line3">Upload and the platform builds your brief from your work.</div>
       {% endif %}
 
-      {# Read more — MUST be <span> not <button> or <a> #}
+      {# READ MORE — <span> only, never <button> #}
       {% if progress_data and progress_data.count > 0 %}
-      <span class="sl175-rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
+      <span class="sl175-rm" id="grm" onclick="sl175Toggle('gexp','grm')">Read more →</span>
       <div class="sl175-expanded" id="gexp">
-        {#
-          EXPANDED ANALYSIS — Sherpa tone, dimension names as evidence.
-          Must be specific to this photographer's last 40 images.
-          Must NOT repeat the same analysis on consecutive logins.
-          If dash_greeting.expanded is available, use it.
-          Otherwise fall back to dimension-based paragraph.
-        #}
         {% if dash_greeting and dash_greeting.get('expanded') %}
           {{ dash_greeting.expanded | safe }}
         {% else %}
           {% set _dim_labels = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'WOW Factor','disruption':'Disruption'} %}
           {% set _strong_label = _dim_labels.get(progress_data.strongest, progress_data.strongest|title) %}
-          {% set _weak_label = _dim_labels.get(progress_data.weakest, progress_data.weakest|title) %}
+          {% set _weak_label   = _dim_labels.get(progress_data.weakest,   progress_data.weakest|title) %}
           Across your last {{ progress_data.count }} images, your
           <span style="color:var(--d-gold-dk);font-weight:600;">{{ _strong_label }}</span>
           is consistently your strongest dimension — you have developed a clear eye for it.
@@ -705,7 +799,7 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
           Going out into the difficult scene is what separates a different image from a clichéd one.
           Your eye is ready.
         {% endif %}
-        <span class="sl175-rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
+        <span class="sl175-rm" onclick="sl175Toggle('gexp','grm')">Read less →</span>
       </div>
       {% endif %}
     </div>
@@ -1724,30 +1818,71 @@ body.page-dashboard main { padding: 0 !important; max-width: none !important; ma
 </div>
 </div>{# /dash-wrap #}
 
-{# ── SCROLL TO TOP — SL 175.1
-   Appears after 300px scroll.
-   Desktop: bottom 24px right 24px
-   Mobile: bottom 80px right 16px (clears bottom nav bar)
-#}
+{# ── SL 175 APPROVED FOOTER ── #}
+<div class="sl175-footer-outer">
+  <div class="sl175-footer">
+    <div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:#D6A428;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0F2A22;">SL</div>
+        <div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase;">Shutter League</div>
+      </div>
+      <div style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:6px;">Photography Assessment and Evolution Platform</div>
+      <div style="font-size:13px;font-weight:600;color:#D6A428;">Making Images Matter</div>
+    </div>
+    <div class="sl175-footer-col">
+      <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px;">Company</div>
+      <a class="sl175-fl" href="/about">About Us</a>
+      <a class="sl175-fl" href="/contact">Contact Us</a>
+      <a class="sl175-fl" href="{{ url_for('pricing') }}">Pricing</a>
+      <a class="sl175-fl" href="/faq">FAQ</a>
+    </div>
+    <div class="sl175-footer-col">
+      <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px;">Legal</div>
+      <a class="sl175-fl" href="/terms">Terms &amp; Conditions</a>
+      <a class="sl175-fl" href="/privacy">Privacy Policy</a>
+      <a class="sl175-fl" href="/refund-policy">Refund Policy</a>
+      <a class="sl175-fl" href="/shipping-policy">Shipping &amp; Returns</a>
+    </div>
+    <div class="sl175-footer-col">
+      <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px;">Programmes</div>
+      <a class="sl175-fl" href="{{ url_for('poty') }}">Annual Excellence Award</a>
+      <a class="sl175-fl" href="/programme-rules">Programme Rules</a>
+      <a class="sl175-fl" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
+      <a class="sl175-fl" href="{{ url_for('mentors') }}">Mentor Guidelines</a>
+    </div>
+    <div class="sl175-footer-col">
+      <div style="font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px;">Learn</div>
+      <a class="sl175-fl" href="{{ url_for('science') }}">Science</a>
+      <a class="sl175-fl" href="{{ url_for('learning') }}">Lessons</a>
+      <a class="sl175-fl" href="{{ url_for('mentors') }}">Mentor Review</a>
+      <a class="sl175-fl" href="{{ url_for('weekly_challenge') }}">Assignments</a>
+    </div>
+  </div>
+  <div class="sl175-fbase">
+    <div style="font-size:13px;color:rgba(255,255,255,0.55);">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</div>
+    <div style="display:flex;gap:14px;">
+      <a style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;" href="#">Instagram</a>
+      <a style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;" href="#">Facebook</a>
+      <a style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;" href="#">YouTube</a>
+    </div>
+  </div>
+</div>
+
+{# ── SL 175 SCROLL TO TOP ── #}
 <button class="sl175-scroll-top" id="sl175ScrollTop"
         onclick="window.scrollTo({top:0,behavior:'smooth'})"
         aria-label="Back to top">↑</button>
 
 <script>
 (function(){
-  /* Scroll to top visibility */
   var btn = document.getElementById('sl175ScrollTop');
   if (btn) {
     window.addEventListener('scroll', function(){
       if (window.scrollY > 300) { btn.classList.add('visible'); }
       else { btn.classList.remove('visible'); }
-    }, {passive: true});
+    }, {passive:true});
   }
-
-  /* Read more toggle — greeting card only.
-     Rule: <span class="sl175-rm"> — never a button element.
-     Cards do NOT auto-collapse on scroll. User stays in control. */
-  window.toggleSpan = function(expId, rmId) {
+  window.sl175Toggle = function(expId, rmId) {
     var exp = document.getElementById(expId);
     var rm  = document.getElementById(rmId);
     if (!exp || !rm) return;
