@@ -1,4 +1,4 @@
-# SL-VERSION: 172.3
+# SL-VERSION: 175.1 (Session 175, 2026-08-06 — peer_recognitions added to delete routes, flagged email reworded: no AI accusation)
 
 import os
 import re
@@ -7992,9 +7992,10 @@ def upload():
                                             if _u else 'Photographer'
                                         )
                                         _gen_display = _hive_generator.replace('_', ' ').title()
+                                        # ── User email — no AI accusation, says flagged for review ──
                                         send_email(
                                             to_addresses=[_u.email] if _u else [],
-                                            subject='[Shutter League] Image not accepted — AI generation detected',
+                                            subject='[Shutter League] Image held for review — ' + (_img.asset_name or 'Untitled'),
                                             html_body=(
                                                 '<!DOCTYPE html><html><head><meta charset="UTF-8">'
                                                 '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -8010,12 +8011,12 @@ def upload():
                                                 '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                                                 '</td></tr>'
                                                 '<tr><td class="sl-ai-pad" style="padding:28px 32px;">'
-                                                '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">We couldn&#39;t accept this image.</h2>'
+                                                '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Your image is under review.</h2>'
                                                 '<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + _uname + ',</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Our system flagged <strong>' + (_img.asset_name or 'Untitled') + '</strong> as likely AI-generated (' + _gen_display + ', ' + f'{_hive_ai_score:.0%}' + ' confidence). Shutter League evaluates only original photographs taken by the submitting photographer.</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">High-production constructed shoots — allegorical tableaux, studio work, heavily lit portraits — can occasionally trigger false positives. If this is an original photograph, we want to clear it quickly.</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Your photograph <strong>' + (_img.asset_name or 'Untitled') + '</strong> has been held for admin review before evaluation. This can happen with heavily edited, stylised, or high-production photographs that require manual verification.</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">If this is an original photograph taken by you, we want to clear it quickly. Please reply to this email with any of the following:</p>'
                                                 '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-left:4px solid #C8A84B;border-radius:4px;padding:16px 20px;margin:0 0 20px;">'
-                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, email us with:</p>'
+                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, send us:</p>'
                                                 '<ul style="font-size:15px;line-height:2;color:#4A4840;margin:0;padding-left:20px;">'
                                                 '<li>Your original RAW or unedited file</li>'
                                                 '<li>Any behind-the-scenes photos or production notes</li>'
@@ -8024,7 +8025,7 @@ def upload():
                                                 '<p style="margin:0 0 20px;text-align:center;">'
                                                 '<a href="mailto:' + CONTACT_EMAIL + '" class="sl-ai-btn" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Appeal This Decision &#8594;</a>'
                                                 '</p>'
-                                                '<p style="font-size:15px;color:#6a6458;margin:0;line-height:1.7;">We aim to resolve appeals within 48 hours. Your image goes live immediately if cleared.</p>'
+                                                '<p style="font-size:15px;color:#6a6458;margin:0;line-height:1.7;">We aim to resolve reviews within 48 hours. Your image goes live immediately if cleared.</p>'
                                                 '</td></tr>'
                                                 '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
                                                 '<p style="margin:0;font-size:15px;color:#6a6458;">&#8212; Shutter League</p>'
@@ -8033,20 +8034,15 @@ def upload():
                                             ),
                                             text_body=(
                                                 'Hi ' + _uname + ',\n\n'
-                                                'Your image "' +
+                                                'Your photograph "' +
                                                 (_img.asset_name or 'Untitled') +
-                                                '" has been rejected.\n\n'
-                                                'Our system detected it was generated by ' +
-                                                _gen_display + ' (' +
-                                                f'{_hive_ai_score:.0%}' + ' confidence).\n\n'
-                                                'High-production constructed shoots can sometimes trigger false positives.\n'
-                                                'If this is an original photograph, email ' +
-                                                CONTACT_EMAIL +
-                                                ' with:\n'
+                                                '" has been held for admin review before evaluation.\n\n'
+                                                'This can happen with heavily edited, stylised, or high-production photographs.\n'
+                                                'If this is an original photograph, reply to this email with:\n'
                                                 '  - Your original RAW or unedited file\n'
                                                 '  - Any behind-the-scenes photos or production notes\n'
                                                 '  - Camera and lens used\n\n'
-                                                'We aim to resolve appeals within 48 hours.\n\n'
+                                                'We aim to resolve reviews within 48 hours.\n\n'
                                                 '-- Shutter League'
                                             )
                                         )
@@ -13721,6 +13717,7 @@ def delete_image(image_id):
         "DELETE FROM rating_assignments   WHERE image_id = :iid",
         "DELETE FROM peer_ratings         WHERE image_id = :iid",
         "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+        "DELETE FROM peer_recognitions    WHERE image_id = :iid",
         "DELETE FROM brand_entries        WHERE image_id = :iid",
         "DELETE FROM calibration_notes    WHERE image_id = :iid",
         "DELETE FROM judge_assignments    WHERE image_id = :iid",
@@ -13805,6 +13802,7 @@ def admin_delete_image(image_id):
         "DELETE FROM rating_assignments   WHERE image_id = :iid",
         "DELETE FROM peer_ratings         WHERE image_id = :iid",
         "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+        "DELETE FROM peer_recognitions    WHERE image_id = :iid",
         "DELETE FROM brand_entries        WHERE image_id = :iid",
         "DELETE FROM calibration_notes    WHERE image_id = :iid",
         "DELETE FROM judge_assignments    WHERE image_id = :iid",
@@ -28980,6 +28978,7 @@ def _try_run_haiku(image_id, img_b64, genre):
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
         'max_tokens': 200,
+        'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
                 'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
@@ -29500,3 +29499,5 @@ if __name__ == '__main__':
     else:
         # Local development: `python app.py` (no args) -- unchanged behavior.
         app.run(debug=True)
+
+
