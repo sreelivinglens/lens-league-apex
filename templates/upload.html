@@ -540,7 +540,7 @@
       action="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-upload-url="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-result-base="{% if is_trial %}/try/result/{% else %}{% endif %}"
-      data-subgenre-map="{{ subgenre_map_json | safe }}">
+      data-subgenre-map='{{ (subgenre_map_json or "{}" ) | safe }}'>
       {{ csrf_token_field()|safe if csrf_token_field is defined else '' }}
       {# ── Mission tracking — passed from /mission page ── #}
       <input type="hidden" name="mission_dimension" id="mission_dimension_field" value="">
@@ -790,7 +790,7 @@
       </div>
     </div>
   </div>
-  <div id="backToDashboardWrap" style="display:block; margin-top:18px; text-align:center;">
+  <div id="backToDashboardWrap" style="display:none; margin-top:18px; text-align:center;">
     <a href="/dashboard" id="backToDashboardLink"
        style="display:inline-block; padding:12px 24px; border:1px solid #854F0B; border-radius:var(--radius-sm);
               color:#854F0B; font-family:var(--font-mono); font-size:13px; font-weight:600;
