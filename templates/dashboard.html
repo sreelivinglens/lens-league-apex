@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.10 (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.12 (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -79,7 +79,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px;display:block;width:100%}
 .score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1.5}
 .score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;width:100%}
-.body-text{font-size:13px;font-weight:400;color:var(--text);line-height:1.85;text-align:justify}
+.body-text{font-size:14px;font-weight:400;color:var(--text);line-height:1.85;text-align:justify}
 .insight-line1{font-size:14px;font-weight:400;color:var(--text);line-height:1.8;display:block;width:100%;margin-top:4px}
 .insight-line2{font-size:14px;font-weight:400;color:var(--muted);line-height:1.8;margin-top:2px;display:block;width:100%}
 .insight-line3{font-size:14px;font-weight:600;color:var(--green);line-height:1.8;margin-top:2px;display:block;width:100%}
@@ -184,15 +184,21 @@ body.page-dashboard #backToTop         { display:none !important }
   .sl-nav-top-links{display:none}
   .logo-text{display:none}
   .centre{padding:12px;gap:10px;order:1}
-  .rpanel{border-left:none !important;border-top:0.5px solid var(--border);padding:12px !important;gap:10px !important;order:2 !important;width:100% !important;min-width:0 !important}
+  .rpanel{border-left:none !important;border-top:none !important;padding:0 12px !important;gap:0 !important;order:2 !important;width:100% !important;min-width:0 !important;display:contents !important}
   .card{padding:14px 16px}
+  /* Mobile card order: Greeting → Standing → Mentor → Journey → Nearby+Train → AEA/Expert */
   .card-greeting{order:1}
-  .card-journey{order:2}
+  .card-standing-mob{order:2;display:block !important}
   .card-mentor{order:3}
-  .card-brhills{order:4}
-  .card-train{order:5}
-  .rp-standing{display:none}
-  .rp-latest{display:none}
+  .card-journey{order:4}
+  .card-brhills{order:5}
+  .card-train{order:6}
+  .rp-rank{order:7;display:block !important;margin:0 12px 10px}
+  .rp-expert{order:8;display:block !important;margin:0 12px 10px}
+  /* Hide desktop-only right panel elements */
+  .rp-standing{display:none !important}
+  .rp-latest{display:none !important}
+  .rp-weekly{display:none !important}
   .body-text{font-size:14px;text-align:left;line-height:1.9}
   .insight-line1,.insight-line2,.insight-line3{font-size:14px;line-height:1.8;text-align:left}
   .et-desktop-only{display:none}
@@ -201,11 +207,21 @@ body.page-dashboard #backToTop         { display:none !important }
   .sl-footer{grid-template-columns:1fr;gap:0;padding:20px 16px 14px}
   .footer-col-block{display:none}
   .sl-footer-base{flex-direction:column;gap:8px;padding:10px 16px;text-align:center}
-  body{padding-bottom:70px}
-  .scroll-top{bottom:80px}
+  body{padding-bottom:74px}
+  .scroll-top{bottom:84px}
   .bottom-nav{display:flex !important}
 }
-</style>
+
+/* ── MORE DRAWER — mobile only ── */
+.mob-more-overlay{display:none;position:fixed;inset:0;z-index:1998;background:rgba(0,0,0,0.45)}
+.mob-more-drawer{position:fixed;bottom:60px;left:0;right:0;z-index:1999;background:var(--dark);border-radius:16px 16px 0 0;padding:16px 0 8px;transform:translateY(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1)}
+.mob-more-drawer.open{transform:translateY(0)}
+.mob-more-handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 14px}
+.mob-more-item{display:flex;align-items:center;gap:12px;padding:13px 22px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.8);text-decoration:none;border:none;background:none;width:100%;text-align:left;cursor:pointer}
+.mob-more-item:active{background:rgba(255,255,255,0.07)}
+.mob-more-item svg{opacity:0.6;flex-shrink:0}
+.mob-more-divider{height:0.5px;background:rgba(255,255,255,0.1);margin:4px 22px}</style>
+
 {% endblock %}
 
 {% block content %}
@@ -400,8 +416,8 @@ body.page-dashboard #backToTop         { display:none !important }
       } %}
       <div style="background:var(--cream);border-radius:9px;padding:10px 12px;margin-bottom:10px;border-left:3px solid var(--gold)">
         <div style="font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:3px">Work on this</div>
-        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
+        <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:4px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.75">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
         {% if progress_data.dim_avgs %}
         <div style="font-size:13px;color:var(--muted);margin-top:4px">Your average: <strong style="color:var(--dark)">{{ '%.1f'|format(progress_data.dim_avgs[progress_data.weakest]) }}</strong> · Strongest: <strong style="color:var(--green)">{{ _dim_field.get(progress_data.strongest, progress_data.strongest|title) }} {{ '%.1f'|format(progress_data.dim_avgs[progress_data.strongest]) }}</strong></div>
         {% endif %}
@@ -413,8 +429,8 @@ body.page-dashboard #backToTop         { display:none !important }
         {% if dash_live_event %}
         <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_live_event.location_name }}</div>
         {% if dash_live_event.subject %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:4px">{{ dash_live_event.subject }}</div>{% endif %}
-        {% set _adv_short = (dash_live_event.what_is_happening or '') %}
-        <div class="body-text">{{ _adv_short[:140] }}{% if _adv_short|length > 140 %}…{% endif %}</div>
+        {% set _live_short = (dash_live_event.what_is_happening or '') %}
+        {% if _live_short %}<div class="body-text">{{ _live_short[:140] }}{% if _live_short|length > 140 %}…{% endif %}</div>{% endif %}
         {% elif dash_advisory %}
         <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_advisory.location_name }}</div>
         {% if dash_advisory.get('best_light_time') %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:4px">{{ dash_advisory.best_light_time }}</div>{% endif %}
@@ -556,8 +572,8 @@ body.page-dashboard #backToTop         { display:none !important }
           {% for _tl in _tier_lines %}
             {% if _tl.score >= _floor - 0.2 and _tl.score <= _ceil + 0.2 %}
             {% set _ty = (_SVG_H - 4 - ((_tl.score - _floor) / _range) * (_SVG_H - 8))|round(1) %}
-            <line x1="0" y1="{{ _ty }}" x2="{{ _SVG_W }}" y2="{{ _ty }}" stroke="{{ _tl.color }}" stroke-width="0.7" stroke-dasharray="4,4" opacity="0.4"/>
-            <text x="4" y="{{ _ty - 2 }}" font-size="9" fill="{{ _tl.color }}" opacity="0.7">{{ _tl.label }}</text>
+            <line x1="0" y1="{{ _ty }}" x2="{{ _SVG_W }}" y2="{{ _ty }}" stroke="{{ _tl.color }}" stroke-width="1" stroke-dasharray="5,5" opacity="0.55"/>
+            <text x="4" y="{{ _ty - 3 }}" font-size="9" fill="{{ _tl.color }}" opacity="0.8" font-weight="600">{{ _tl.label }}</text>
             {% endif %}
           {% endfor %}
 
@@ -569,38 +585,49 @@ body.page-dashboard #backToTop         { display:none !important }
           {# Main gold line #}
           <polyline points="{{ _pts.val }}" fill="none" stroke="#D6A428" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 
-          {# Dots + score labels — detect tier breakthroughs #}
-          {% set _prev_tier = namespace(val='') %}
+          {# Dots + score labels — mark only the single highest tier breakthrough #}
+          {# Find the first occurrence of the highest tier in the trend #}
+          {% set _tier_rank_map = {'Rookie':0,'Shooter':1,'Contender':2,'Craftsman':3,'Maverick':4,'Master':5,'Grandmaster':6,'Legend':7} %}
+          {% set _best_tier_rank = namespace(val=0) %}
+          {% set _best_tier_idx = namespace(val=-1) %}
+          {% set _best_tier_name = namespace(val='') %}
+          {% for _item in _t %}
+            {% set _tr = _tier_rank_map.get(_item.tier or '', 0) %}
+            {% if _tr > _best_tier_rank.val %}
+              {% set _best_tier_rank.val = _tr %}
+              {% set _best_tier_idx.val = loop.index0 %}
+              {% set _best_tier_name.val = _item.tier %}
+            {% endif %}
+          {% endfor %}
+
           {% for _item in _t %}
             {% set _x = (loop.index0 / (_n - 1) * 480 + 10)|round(1) %}
             {% set _y = (_SVG_H - 4 - ((_item.score - _floor) / _range) * (_SVG_H - 8))|round(1) %}
             {% set _is_last = loop.last %}
             {% set _is_best = (_item.score == _max_raw) %}
-            {# Tier breakthrough detection #}
-            {% set _this_tier = _item.tier or '' %}
-            {% set _is_breakthrough = (_this_tier and _this_tier != _prev_tier.val and _prev_tier.val != '') %}
-            {% set _prev_tier.val = _this_tier %}
+            {% set _is_tier_hero = (loop.index0 == _best_tier_idx.val) %}
 
-            {# Dot — larger for last and personal best #}
+            {# Dot #}
             <circle cx="{{ _x }}" cy="{{ _y }}"
               r="{{ '6' if _is_last else ('5' if _is_best else '3.5') }}"
               fill="{{ '#D6A428' if (_is_last or _is_best) else '#C8A050' }}"
               opacity="{{ '1' if (_is_last or _is_best) else '0.6' }}"/>
 
             {# Score label #}
-            <text x="{{ _x }}" y="{{ _y - 9 }}" font-size="{% if _is_last or _is_best %}13{% else %}11{% endif %}"
+            <text x="{{ _x }}" y="{{ _y - 10 }}"
+              font-size="{% if _is_last or _is_best %}13{% else %}11{% endif %}"
               fill="{{ '#D6A428' if _is_last else ('#A37B2C' if _is_best else '#6B6B6B') }}"
               text-anchor="middle"
               font-weight="{{ '700' if _is_last else ('600' if _is_best else '400') }}">{{ '%.1f'|format(_item.score) }}</text>
 
-            {# Tier breakthrough badge #}
-            {% if _is_breakthrough %}
-            <text x="{{ _x }}" y="{{ _y + 16 }}" font-size="9" fill="#2A7A3A" text-anchor="middle" font-weight="600">↑ {{ _this_tier }}</text>
-            {% endif %}
-
-            {# Personal best star #}
-            {% if _is_best and not _is_last %}
-            <text x="{{ _x + 7 }}" y="{{ _y - 8 }}" font-size="9" fill="#D6A428">★</text>
+            {# Highest tier breakthrough — hero treatment, shown once only #}
+            {% if _is_tier_hero and _best_tier_name.val %}
+            <g>
+              <rect x="{{ _x - 28 }}" y="{{ _y + 8 }}" width="56" height="14" rx="3"
+                fill="#D6A428" opacity="0.15"/>
+              <text x="{{ _x }}" y="{{ _y + 18 }}"
+                font-size="10" fill="#A37B2C" text-anchor="middle" font-weight="700">★ {{ _best_tier_name.val }}</text>
+            </g>
             {% endif %}
           {% endfor %}
 
@@ -610,17 +637,20 @@ body.page-dashboard #backToTop         { display:none !important }
         </svg>
       </div>
 
-      {# Momentum line — trajectory read in plain English #}
+      {# Momentum line — trajectory in plain English #}
       {% set _first_half_scores = _scores[:(_n // 2)] %}
       {% set _second_half_scores = _scores[(_n // 2):] %}
       {% set _first_avg = (_first_half_scores | sum / _first_half_scores | length) if _first_half_scores else 0 %}
       {% set _second_avg = (_second_half_scores | sum / _second_half_scores | length) if _second_half_scores else 0 %}
       {% set _gap = _second_avg - _first_avg %}
-      <div style="font-size:13px;margin-top:8px;padding:6px 10px;background:{% if _gap > 0.2 %}#EAF3DE{% elif _gap < -0.2 %}#FEF0E8{% else %}var(--cream){% endif %};border-radius:7px;border:0.5px solid {% if _gap > 0.2 %}var(--pista-b){% elif _gap < -0.2 %}#F5D0B8{% else %}var(--border){% endif %}">
-        {% if _gap > 0.3 %}
+      {% set _latest_is_best = (_t[-1].score == _max_raw) %}
+      <div style="font-size:14px;margin-top:8px;padding:8px 12px;background:{% if _latest_is_best %}#EAF3DE{% elif _gap > 0.2 %}#EAF3DE{% elif _gap < -0.2 %}#FEF0E8{% else %}var(--cream){% endif %};border-radius:7px;border:0.5px solid {% if _latest_is_best or _gap > 0.2 %}var(--pista-b){% elif _gap < -0.2 %}#F5D0B8{% else %}var(--border){% endif %};line-height:1.7">
+        {% if _latest_is_best %}
+        <span style="color:var(--green);font-weight:600">★ Personal best.</span> <span style="color:var(--text)">Your last evaluation is your highest. You are at the top of your range — keep shooting at this level.</span>
+        {% elif _gap > 0.3 %}
         <span style="color:var(--green);font-weight:600">↑ Climbing.</span> <span style="color:var(--text)">Your recent work is stronger than your earlier work. Keep going.</span>
         {% elif _gap > 0.1 %}
-        <span style="color:var(--green);font-weight:600">→ Moving up.</span> <span style="color:var(--text)">Steady improvement across your last {{ _n }} evaluations.</span>
+        <span style="color:var(--green);font-weight:600">↑ Moving up.</span> <span style="color:var(--text)">Steady improvement across your last {{ _n }} evaluations.</span>
         {% elif _gap < -0.3 %}
         <span style="color:#C05A1A;font-weight:600">↓ A dip.</span> <span style="color:var(--text)">Recent evaluations below your earlier average — the brief below will help you focus.</span>
         {% else %}
@@ -929,7 +959,7 @@ body.page-dashboard #backToTop         { display:none !important }
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
 
 {# ── BOTTOM NAV — mobile only ── #}
-<nav class="bottom-nav">
+<div class="bottom-nav">
   <a class="bn-tab {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Dashboard</span>
@@ -942,15 +972,51 @@ body.page-dashboard #backToTop         { display:none !important }
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     <span>My Gallery</span>
   </a>
-  <a class="bn-tab {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <span>Explore</span>
+  <a class="bn-tab {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span>Improve</span>
   </a>
-  <a class="bn-tab {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-    <span>Learn</span>
+  <button class="bn-tab" onclick="slMoreOpen()" aria-label="More options">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    <span>More</span>
+  </button>
+</div>
+
+{# ── MORE DRAWER — slides up from bottom nav ── #}
+<div class="mob-more-overlay" id="slMoreOverlay" onclick="slMoreClose()"></div>
+<div class="mob-more-drawer" id="slMoreDrawer">
+  <div class="mob-more-handle"></div>
+  <a class="mob-more-item" href="{{ url_for('recent_work') }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Explore
   </a>
-</nav>
+  <a class="mob-more-item" href="{{ url_for('learning') }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    Learn
+  </a>
+  <a class="mob-more-item" href="{{ url_for('mentors') }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Mentor Review
+  </a>
+  <a class="mob-more-item" href="{{ url_for('weekly_challenge') }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Weekly Challenge
+  </a>
+  <div class="mob-more-divider"></div>
+  <a class="mob-more-item" href="{{ url_for('profile') }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile &amp; Settings
+  </a>
+  <a class="mob-more-item" href="/contact">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Help &amp; Support
+  </a>
+  <div class="mob-more-divider"></div>
+  <a class="mob-more-item" href="{{ url_for('logout') }}" style="color:rgba(255,100,100,0.8)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
+</div>
 
 {# ── STANDING MODAL ── #}
 <div class="standing-modal" id="standing-modal" onclick="if(event.target===this)this.style.display='none'">
@@ -1045,6 +1111,27 @@ body.page-dashboard #backToTop         { display:none !important }
 {# ── LOCATION WIDGET JS ── #}
 <script>
 
+
+/* ── SL 175.12: More drawer ── */
+function slMoreOpen() {
+  var ov = document.getElementById('slMoreOverlay');
+  var dr = document.getElementById('slMoreDrawer');
+  if (!ov || !dr) return;
+  ov.style.display = 'block';
+  dr.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function slMoreClose() {
+  var ov = document.getElementById('slMoreOverlay');
+  var dr = document.getElementById('slMoreDrawer');
+  if (!ov || !dr) return;
+  ov.style.display = 'none';
+  dr.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') slMoreClose();
+});
 
 /* ── SL 175: EVAL PENDING POLL ──────────────────────────────
    If ?eval_pending=ID in URL, show banner and poll every 2s.
