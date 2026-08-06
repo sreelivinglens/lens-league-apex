@@ -757,7 +757,9 @@ function toggleSpan(expId, rmId) {
   if (!exp || !rm) return;
   var open = exp.style.display === 'block';
   exp.style.display = open ? 'none' : 'block';
-  rm.textContent    = open ? 'Read more →' : 'Read less →';
+  /* Preserve "Read" vs "View" prefix based on current text */
+  var prefix = rm.textContent.indexOf('View') === 0 ? 'View' : 'Read';
+  rm.textContent = open ? (prefix + ' more →') : (prefix + ' less →');
 }
 
 /* Scroll to top */
