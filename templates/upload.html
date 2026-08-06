@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.1 (Session 175, 2026-08-06 — 50-sec cutoff paid / 25-sec Haiku, auto-redirect to dashboard with eval_pending ID, backToDashboardWrap hidden until XHR Phase 1 complete) #}
+{# SL-VERSION: 175.1 (50-sec cutoff, redirect to dashboard, backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1422,7 +1422,6 @@
       }
 
       if (resp && resp.status === 'processing' && resp.image_id) {
-        _pendingImageId = resp.image_id; /* SL 175: used for dashboard redirect URL */
         // Phase 1 complete — image received. Now poll for score.
         var backWrap = document.getElementById('backToDashboardWrap');
         var backLink = document.getElementById('backToDashboardLink');
@@ -1542,78 +1541,70 @@
     // ── S156-P1: Cancel / Try Again after 30s ─────────────────────────────
     // After 30s with no result, show an escape button so the user is not
     // trapped waiting. Tapping it stops polling and shows a safe message.
-    /* ── SL 175: Auto-redirect at 50 sec (paid) / 25 sec (Haiku) ── */
-    var _isTrial = {{ 'true' if is_trial else 'false' }};
-    var _cutoffMs = _isTrial ? 25000 : 50000;
-    var _pendingImageId = null; /* set when image_id known from XHR response */
-
     var _cancelTimer = setTimeout(function() {
       var overlay = document.getElementById('scoringOverlay');
       if (!overlay || !overlay.classList.contains('active')) return;
 
-      /* Stop polling — scoring continues in background */
-      if (typeof _pollInterval !== 'undefined') clearInterval(_pollInterval);
+      // Inject cancel button into overlay if not already present
+      if (!document.getElementById('slCancelBtn')) {
+        var cancelWrap = document.createElement('div');
+        cancelWrap.id = 'slCancelWrap';
+        cancelWrap.style.cssText = [
+          'text-align:center',
+          'padding:24px 24px 0',
+          'width:100%',
+        ].join(';');
 
-      /* Update overlay message */
-      var taglineEl = document.getElementById('breathTagline');
-      if (taglineEl) {
-        taglineEl.style.opacity = '0';
-        setTimeout(function() {
-          taglineEl.innerHTML = '<strong style="color:#F5C518">Your image is being evaluated.</strong><br>We\'ll show your result the moment it\'s ready.';
-          taglineEl.style.opacity = '1';
-        }, 300);
-      }
-
-      /* Stop breath animation */
-      var breathLabel = document.getElementById('breathLabel');
-      if (breathLabel) breathLabel.textContent = '🙏';
-
-      /* Show dashboard button */
-      if (!document.getElementById('slDashBtn')) {
-        var btnWrap = document.createElement('div');
-        btnWrap.style.cssText = 'text-align:center;padding:20px 24px 0;width:100%';
-
-        var dashBtn = document.createElement('a');
-        dashBtn.id = 'slDashBtn';
-        dashBtn.href = '/dashboard' + (_pendingImageId ? '?eval_pending=' + _pendingImageId : '');
-        dashBtn.style.cssText = [
-          'display:inline-block',
-          'background:#F5C518',
-          'color:#1a1a18',
-          'border-radius:8px',
+        var cancelBtn = document.createElement('button');
+        cancelBtn.id = 'slCancelBtn';
+        cancelBtn.type = 'button';
+        cancelBtn.textContent = 'Your image is being evaluated — Go to Dashboard →';
+        cancelBtn.style.background = '#F5C518';
+        cancelBtn.style.color = '#1a1a18';
+        cancelBtn.style.cssText = [
+          'background:#2C3E6B',
+          'color:#F5C518',
+          'border:none',
+          'border-radius:6px',
+          'font-family:Inter,Arial,sans-serif',
           'font-size:15px',
-          'font-weight:700',
-          'padding:14px 28px',
-          'text-decoration:none',
+          'font-weight:600',
+          'letter-spacing:0.5px',
+          'padding:14px 22px',
+          'cursor:pointer',
           'width:100%',
           'max-width:340px',
-          'box-sizing:border-box',
-          'text-align:center',
           'line-height:1.7',
         ].join(';');
-        dashBtn.textContent = 'Go to Dashboard →';
 
-        var subText = document.createElement('div');
-        subText.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.5);margin-top:8px';
-        subText.textContent = 'Redirecting automatically in 5 seconds…';
-
-        btnWrap.appendChild(dashBtn);
-        btnWrap.appendChild(subText);
-        overlay.appendChild(btnWrap);
-
-        /* Auto-redirect after 5 more seconds */
+        cancelBtn.onclick = function() {
+          clearInterval(_pollInterval);
+          _clearCancelTimer();
+          window.location.href = '/dashboard';
+        };
+        /* Auto-redirect after 5 seconds */
         setTimeout(function() {
-          window.location.href = '/dashboard' + (_pendingImageId ? '?eval_pending=' + _pendingImageId : '');
+          window.location.href = '/dashboard';
         }, 5000);
+
+        cancelWrap.appendChild(cancelBtn);
+        // Insert after the seconds counter, not at overlay root
+        var timerEl = overlay.querySelector('.overlay-timer, #overlayTimer, [id*="timer"], [class*="timer"]');
+        var continueBtn = overlay.querySelector('[href*="dashboard"], a[href]');
+        if (continueBtn && continueBtn.parentNode) {
+          continueBtn.parentNode.insertBefore(cancelWrap, continueBtn.nextSibling);
+        } else if (timerEl && timerEl.parentNode) {
+          timerEl.parentNode.insertBefore(cancelWrap, timerEl.nextSibling);
+        } else {
+          overlay.appendChild(cancelWrap);
+        }
       }
-    }, _cutoffMs);
+    }, 50000);
 
     function _clearCancelTimer() {
       clearTimeout(_cancelTimer);
       var w = document.getElementById('slCancelWrap');
-      if (w && w.parentNode) w.parentNode.removeChild(w);
-      var b = document.getElementById('slDashBtn');
-      if (b && b.parentNode) b.parentNode.parentNode && b.parentNode.parentNode.removeChild(b.parentNode);
+      if (w) w.parentNode && w.parentNode.removeChild(w);
     }
 
     // Store so overlay teardown can clear it
