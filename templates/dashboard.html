@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.3 (Session 175, 2026-08-06 — Founder review fixes: sidenav text-only no icon font, bottom 2-col Nearest Opportunity + Train your eye, actual logo with fallback, clear Log out button, greeting no Upload button, Read more always visible) #}
+{# SL-VERSION: 175.4 (Session 175, 2026-08-06 — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold score text, _last = scored image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -179,11 +179,11 @@ body.page-dashboard #backToTop         { display:none !important }
 @media(max-width:768px){
   .mob-section{padding-top:56px}
   .layout{display:flex !important;flex-direction:column !important}
-  .sidenav{display:none !important}
+  .sidenav{display:none !important;width:0 !important;min-width:0 !important}
   .sl-nav-top-links{display:none}
   .logo-text{display:none}
   .centre{padding:12px;gap:10px;order:1}
-  .rpanel{border-left:none;border-top:0.5px solid var(--border);padding:12px;gap:10px;order:2}
+  .rpanel{border-left:none !important;border-top:0.5px solid var(--border);padding:12px !important;gap:10px !important;order:2 !important;width:100% !important;min-width:0 !important}
   .card{padding:14px 16px}
   .card-greeting{order:1}
   .card-journey{order:2}
@@ -217,7 +217,8 @@ body.page-dashboard #backToTop         { display:none !important }
 {% endif %}
 
 {# ── Last scored image ── #}
-{% set _last = images.items[0] if images and images.items else none %}
+{# _last = most recent scored image for right panel Latest Evaluation #}
+{% set _last = (images.items | selectattr("score") | list | first) if images and images.items else none %}
 {% set _hero_img = carousel_images[0] if carousel_images else none %}
 
 <div class="sl">
@@ -599,9 +600,9 @@ body.page-dashboard #backToTop         { display:none !important }
     {# MY STANDING — desktop only #}
     {% if progress_data %}
     <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-standing">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:4px">
-        <div class="rl" style="margin-bottom:0">My Standing</div>
-        <a href="#" class="lnk" style="font-size:9px;white-space:nowrap;flex-shrink:0;margin-left:4px" onclick="document.getElementById('standing-modal').style.display='flex';return false">Full view →</a>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:2px;margin-bottom:4px;flex-wrap:nowrap">
+        <div style="font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)">My Standing</div>
+        <a href="#" style="font-size:9px;color:var(--gold-dk);text-decoration:underline;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('standing-modal').style.display='flex';return false">Full view →</a>
       </div>
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
         <span style="font-size:13px">👑</span>
