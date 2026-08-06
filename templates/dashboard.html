@@ -389,8 +389,8 @@ body.page-dashboard #backToTop         { display:none !important }
     {% endif %}
 
     {# ── INLINE LOCATION WIDGET (hidden by default) ── #}
-    <script type="application/json" id="dash-loc-data">{{ location_data_json | default('{}') | safe }}</script>
-    <script type="application/json" id="dash-loc-user">{{ {'country': current_user.country or '', 'state': current_user.state or ''} | tojson }}</script>
+    <script type="application/json" id="dash-loc-data">{{ location_data_json | default('{}') | safe if location_data_json else '{}' }}</script>
+    <script type="application/json" id="dash-loc-user">{{ {'country': (current_user.country or ''), 'state': (current_user.state or '')} | tojson | safe }}</script>
     <div id="dash-loc-wrap" style="display:none;background:#fff;border:1px solid var(--border);border-radius:13px;padding:16px 18px;">
       <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Change your location</div>
       <form method="POST" action="{{ url_for('profile') }}" id="dashLocForm">
