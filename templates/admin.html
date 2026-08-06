@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S169-r1 admin — Blocked IPs nav button + dashboard card added 2026-08-03 #}
+{# SL:version S175-r1 admin — adminPost follows redirect URL so flash messages show correctly #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -1761,7 +1761,7 @@ function adminPost(formId, confirmMsg) {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
-  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
+  }).then(r => { if (r.ok || r.redirected) { window.location.href = r.url && r.url !== window.location.href ? r.url : window.location.href; } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
 }
 
@@ -1839,7 +1839,7 @@ function adminPostUrl(url, confirmMsg) {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: ''
-  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
+  }).then(r => { if (r.ok || r.redirected) { window.location.href = r.url && r.url !== window.location.href ? r.url : window.location.href; } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
 }
 
@@ -1851,7 +1851,7 @@ function adminPostFields(url, fields, confirmMsg) {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
-  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
+  }).then(r => { if (r.ok || r.redirected) { window.location.href = r.url && r.url !== window.location.href ? r.url : window.location.href; } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
 }
 /* ── End v34 fetch helpers ─────────────────────────────────────────────────── */
