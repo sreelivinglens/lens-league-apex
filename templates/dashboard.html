@@ -418,7 +418,7 @@ body.page-dashboard #backToTop         { display:none !important }
     <div class="card card-journey">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div><div class="ey" style="margin-bottom:1px">Your Journey</div><div style="font-size:13px;color:var(--muted)">See how you are evolving.</div></div>
-        <a href="{{ url_for('my_gallery') }}" class="lnk">All evaluations →</a>
+        <a href="#" class="lnk" onclick="document.getElementById('standing-modal').style.display='flex';return false">Full view →</a>
       </div>
       {# Sparkline — using real progress_data.trend #}
       {% set _t = progress_data.trend %}
@@ -454,6 +454,7 @@ body.page-dashboard #backToTop         { display:none !important }
           <text x="480" y="68" font-size="13" fill="#6B6B6B" text-anchor="end">{{ _t[-1].scored_at.strftime('%d %b') if _t[-1].scored_at else 'Today' }}</text>
         </svg>
       </div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin:6px 0 6px">Latest evaluations</div>
       <div class="es">
         {% for img in images.items[:5] if images and images.items %}
         {% if img.score and img.thumb_url %}
@@ -468,6 +469,7 @@ body.page-dashboard #backToTop         { display:none !important }
         {% endif %}
         {% endfor %}
       </div>
+      <div style="text-align:right;margin-top:6px"><a href="{{ url_for('my_gallery') }}" class="lnk">Go to My Gallery →</a></div>
     </div>
     {% endif %}
 
@@ -647,7 +649,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
     {# MY STANDING — desktop only #}
     {% if progress_data %}
-    <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-standing">
+    <div style="display:none" class="rp-standing">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:2px;margin-bottom:4px;flex-wrap:nowrap">
         <div style="font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)">My Standing</div>
         <a href="#" style="font-size:13px;color:var(--gold-dk);text-decoration:underline;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('standing-modal').style.display='flex';return false">Full view →</a>
@@ -663,11 +665,14 @@ body.page-dashboard #backToTop         { display:none !important }
       {% if progress_data.overall_pct %}
       <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
       {% endif %}
+      {% set _tlist = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+      {% set _tcur = progress_data.highest_tier or progress_data.avg_tier %}
+      {% set _tidx = _tlist.index(_tcur) if _tcur in _tlist else 4 %}
       <div class="pb"><div class="pbf" style="width:{{ progress_data.tier_pct or 0 }}%"></div><div class="pbd" style="left:{{ progress_data.tier_pct or 0 }}%"><div class="pbdi"></div></div></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.5">
-        <span style="font-size:13px">{{ progress_data.prev_tier or '—' }}</span>
-        <span style="font-size:13px;font-weight:700;color:var(--dark)">{{ progress_data.highest_tier or progress_data.avg_tier }}</span>
-        <span style="font-size:13px">{{ progress_data.next_tier or '—' }}</span>
+        <span style="font-size:13px">{{ _tlist[_tidx - 1] if _tidx > 0 else '—' }}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--dark)">{{ _tcur }}</span>
+        <span style="font-size:13px">{{ _tlist[_tidx + 1] if _tidx < 7 else '—' }}</span>
       </div>
     </div>
     {% endif %}
