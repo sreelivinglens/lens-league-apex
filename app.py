@@ -1,4 +1,4 @@
-# SL-VERSION: 172.3
+# SL-VERSION: 175.1 (Session 175, 2026-08-06 — peer_recognitions added to delete routes, flagged email reworded: no AI accusation)
 
 import os
 import re
@@ -13717,6 +13717,7 @@ def delete_image(image_id):
         "DELETE FROM rating_assignments   WHERE image_id = :iid",
         "DELETE FROM peer_ratings         WHERE image_id = :iid",
         "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+        "DELETE FROM peer_recognitions    WHERE image_id = :iid",
         "DELETE FROM brand_entries        WHERE image_id = :iid",
         "DELETE FROM calibration_notes    WHERE image_id = :iid",
         "DELETE FROM judge_assignments    WHERE image_id = :iid",
@@ -13801,6 +13802,7 @@ def admin_delete_image(image_id):
         "DELETE FROM rating_assignments   WHERE image_id = :iid",
         "DELETE FROM peer_ratings         WHERE image_id = :iid",
         "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+        "DELETE FROM peer_recognitions    WHERE image_id = :iid",
         "DELETE FROM brand_entries        WHERE image_id = :iid",
         "DELETE FROM calibration_notes    WHERE image_id = :iid",
         "DELETE FROM judge_assignments    WHERE image_id = :iid",
