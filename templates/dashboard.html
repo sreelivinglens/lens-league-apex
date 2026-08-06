@@ -59,17 +59,17 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── CENTRE ── */
 .centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream);flex:1}
-.card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;width:100%;box-sizing:border-box}
+.card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;display:block;width:100%;box-sizing:border-box}
 
 /* ── TYPOGRAPHY ── */
 .ey{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
 .greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px;display:block;width:100%}
 .score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1.5}
-.score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;width:100%}
 .body-text{font-size:13px;font-weight:400;color:var(--text);line-height:1.85;text-align:justify}
-.insight-line1{font-size:13px;font-weight:400;color:var(--text);line-height:1.7;display:block;width:100%}
-.insight-line2{font-size:13px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:3px;display:block;width:100%}
-.insight-line3{font-size:13px;font-weight:600;color:var(--green);line-height:1.7;margin-top:3px;display:block;width:100%}
+.insight-line1{font-size:14px;font-weight:400;color:var(--text);line-height:1.8;display:block;width:100%;margin-top:4px}
+.insight-line2{font-size:14px;font-weight:400;color:var(--muted);line-height:1.8;margin-top:2px;display:block;width:100%}
+.insight-line3{font-size:14px;font-weight:600;color:var(--green);line-height:1.8;margin-top:2px;display:block;width:100%}
 
 /* ── READ MORE — MUST be span, never button ── */
 .rm{font-size:13px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px;background:none;border:none;padding:0}
@@ -97,7 +97,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 10px;font-size:13px;font-weight:400;color:#fff}
 
 /* ── RIGHT PANEL ── */
-.rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;width:220px;flex-shrink:0;flex-grow:0;overflow:visible;min-width:0;word-break:break-word}
+.rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;width:220px;flex-shrink:0;flex-grow:0;min-width:0;overflow:hidden}.rpanel *{min-width:0;max-width:100%;word-wrap:break-word}
 .rl{font-size:9px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 
 /* ── RANK CARD ── */
@@ -109,7 +109,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .pbf{height:100%;background:var(--gold);border-radius:3px}
 .pbd{position:absolute;top:50%;width:10px;height:10px;background:var(--dark);border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
 .pbdi{width:3px;height:3px;background:#fff;border-radius:50%}
-.pcl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.pcl{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);line-height:1.3}
 
 /* ── RIGHT PANEL SUB-CARDS ── */
 .wcard{background:var(--cream);border-radius:9px;border:0.5px solid var(--border);padding:11px}
@@ -283,13 +283,13 @@ body.page-dashboard #backToTop         { display:none !important }
       {% elif progress_data and progress_data.count > 0 and progress_data.strongest %}
         {% set _dim_human = {'dod':'technical precision','dm':'sense of timing','aq':'visual impact','wonder':'ability to find wonder','disruption':'disruptive composition'} %}
         {% set _dim_gap   = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
-        <div class="insight-line1">Your {{ _dim_human.get(progress_data.strongest,'eye') }} is your strongest asset.</div>
-        <div class="insight-line2">The gap is in {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }}.</div>
-        <div class="insight-line3">Your eye is ready — the street is waiting.</div>
+        <div class="insight-line1">Your {{ _dim_human.get(progress_data.strongest,'eye') }} is your strongest asset — it shows consistently across your evaluations.</div>
+        <div class="insight-line2">The gap is in {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }} — this is what separates your current work from your best possible work.</div>
+        <div class="insight-line3">Your eye is ready. The street is waiting. Go out and make it difficult.</div>
       {% elif stats and stats.total == 0 %}
-        <div class="insight-line1">Your first photograph starts everything.</div>
-        <div class="insight-line2">Upload today and the platform begins learning your eye.</div>
-        <div class="insight-line3">The brief below shows you where to go and what to shoot.</div>
+        <div class="insight-line1">Your first photograph starts everything. The platform does not guess — it learns from what you actually shoot.</div>
+        <div class="insight-line2">Upload today and within 48 hours you will have a personalised brief, a score, and a clear picture of where your eye is strongest.</div>
+        <div class="insight-line3">The brief below shows you where to go and what to shoot. Start there.</div>
 
       {% else %}
         <div class="insight-line1">Today's practice begins here.</div>
@@ -538,7 +538,7 @@ body.page-dashboard #backToTop         { display:none !important }
           <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:1px">AEA average</div>
           <div style="font-size:16px;font-weight:700;color:var(--blue);letter-spacing:-0.3px;line-height:1.5">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
         </div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.4">top 6<br>images</div>
+        <div style="font-size:9px;color:var(--muted);line-height:1.4">top 6<br>images</div>
       </div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} months active</div>
       {% endif %}
@@ -575,7 +575,7 @@ body.page-dashboard #backToTop         { display:none !important }
       <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
       {% endif %}
       <div class="pb"><div class="pbf" style="width:{{ progress_data.tier_pct or 0 }}%"></div><div class="pbd" style="left:{{ progress_data.tier_pct or 0 }}%"><div class="pbdi"></div></div></div>
-      <div class="pcl"><span>Maverick<br>0–6</span><span style="text-align:center">Master<br>6–8</span><span style="text-align:center">Grandmaster<br>8–9.5</span><span style="text-align:right">Legend<br>9.5+</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-top:3px;line-height:1.3"><span>Mav<br>0–6</span><span style="text-align:center">Mast<br>6–8</span><span style="text-align:center">GM<br>8–9.5</span><span style="text-align:right">Leg<br>9.5+</span></div>
     </div>
     {% endif %}
 
