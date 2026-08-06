@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.3 (Journey→Improve in nav, hamburger More verified) #}
+{# SL-VERSION: 175.4 (hamburger More: named IDs fix for mobile, Journey→Improve) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1645,8 +1645,8 @@ img {
       <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
       <a href="{% if current_user.is_subscribed %}{{ url_for('recent_work') }}{% else %}/haiku/community{% endif %}" onclick="toggleNav()">Explore</a>
       <a href="{{ url_for('profile') }}" onclick="toggleNav()">Profile</a>
-      <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.textContent=this.textContent.includes('▾')?'More ▸':'More ▾'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;text-align:left;width:100%">More ▸</button>
-      <div style="display:none">
+      <button id="slHamMore" onclick="var m=document.getElementById('slHamMoreList');var open=m.style.display==='block';m.style.display=open?'none':'block';this.textContent=open?'More ▸':'More ▾';" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;text-align:left;width:100%;min-height:44px;">More ▸</button>
+      <div id="slHamMoreList" style="display:none">
         <a href="{{ url_for('mentors') }}" onclick="toggleNav()">Mentor Review</a>
         <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Challenge</a>
         <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence</a>
