@@ -479,7 +479,9 @@ body.page-dashboard #backToTop         { display:none !important }
     {% endif %}
 
     {# ── BOTTOM ROW: Nearest Opportunity (left) + Train your eye (right) — 2 column ── #}
-    {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue %}
+    {# SL 175 STAGING NOTE: dash_advisory and peer_queue are None on staging — showing placeholders for visual confirmation. Remove {% set _show_bottom = true %} before merging to main. #}
+    {% set _show_bottom = true %}{# REMOVE BEFORE MERGE TO MAIN #}
+    {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue or _show_bottom %}
     <div class="card-brhills card-train" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
 
       {# LEFT: NEAREST OPPORTUNITY #}
@@ -506,7 +508,27 @@ body.page-dashboard #backToTop         { display:none !important }
         </div>
       </div>
       {% else %}
-      <div></div>
+      {# STAGING PLACEHOLDER — remove _show_bottom before merge to main #}
+      {% if _show_bottom %}
+      <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px;height:100%">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
+          <span style="padding:2px 7px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span>
+        </div>
+        <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">BR Hills (Biligirirangana Hills)</div>
+        <div style="font-size:13px;font-weight:600;color:#2A7A3A;margin-bottom:2px">Elephants and sloth bears</div>
+        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:6px">Peak wildlife activity at dawn. Herds of elephants have been sighted near the waterhole this week. 3.5h away.</div>
+        <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View more →</span>
+        <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
+          <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:7px">The monsoon has drawn the herds closer to the sanctuary boundaries. Early morning light between 6-8am gives the best conditions — golden low-angle light through the forest canopy. Bring a 400mm minimum. Go silently.</div>
+          <div style="display:flex;gap:10px;font-size:13px;color:#5A6A4A;margin-bottom:9px">
+            <span>🚗 3.5h away</span><span>🌅 Best: 6-8am</span>
+          </div>
+          <a href="https://maps.google.com/?q=BR+Hills+Karnataka" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center;margin-bottom:5px;">📍 Get directions →</a>
+          <span class="rm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View less →</span>
+        </div>
+      </div>
+      {% endif %}
       {% endif %}
 
       {# RIGHT: TRAIN YOUR EYE #}
@@ -533,6 +555,24 @@ body.page-dashboard #backToTop         { display:none !important }
         </div>
         <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:3px">2 minutes · +1 credit</div>
       </div>
+      {% else %}
+      {# STAGING PLACEHOLDER — remove _show_bottom before merge to main #}
+      {% if _show_bottom %}
+      <div style="background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;height:100%">
+        <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.</div>
+        <div style="width:100%;height:140px;background:#1A2A1A;border-radius:8px;margin-bottom:8px;display:flex;align-items:flex-end">
+          <div style="padding:6px 10px;font-size:13px;color:#fff;background:rgba(15,42,34,0.85);width:100%">Can you see the Disruption in this frame?</div>
+        </div>
+        <a href="{{ url_for('rate') }}" style="background:var(--dark);color:#fff;border-radius:7px;width:100%;display:block;text-align:center;padding:11px;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:5px;">Rate this image →</a>
+        <span class="rm" id="erm" onclick="toggleSpan('eexp','erm')">View more →</span>
+        <div class="expanded" id="eexp">
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">Every evaluation trains your eye to see photographs the way a judge or editor sees them. When your rating matches the engine, you earn a credit and help another photographer receive feedback.</div>
+          <span class="rm" onclick="toggleSpan('eexp','erm')">View less →</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:3px">2 minutes · +1 credit</div>
+      </div>
+      {% endif %}
       {% endif %}
 
     </div>
