@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.14 (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.15 (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -62,17 +62,6 @@ body.page-dashboard #backToTop         { display:none !important }
 .centre{padding:18px;display:flex;flex-direction:column;gap:11px;background:var(--cream);flex:1;min-width:300px}
 .card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;display:block;width:100%;box-sizing:border-box}
 @media (max-width: 480px) { .layout { display:flex !important; flex-direction:column !important; } }
-@media (max-width: 768px) {
-  .card-greeting{order:1}
-  .card-journey{order:2}
-  .card-standing-mob{order:3;display:block !important}
-  .card-train{order:4}
-  .card-mentor{order:5}
-  .card-brhills{order:6}
-  .centre{display:flex !important;flex-direction:column !important}
-  .card-brhills.card-train{grid-template-columns:1fr !important;gap:10px}
-  .rp-standing{display:none !important}
-}
 
 /* ── TYPOGRAPHY ── */
 .ey{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
@@ -184,18 +173,16 @@ body.page-dashboard #backToTop         { display:none !important }
   .sl-nav-top-links{display:none}
   .logo-text{display:none}
   .centre{padding:12px;gap:10px;order:1}
-  .rpanel{border-left:none !important;border-top:none !important;padding:0 12px !important;gap:0 !important;order:2 !important;width:100% !important;min-width:0 !important;display:contents !important}
+  .rpanel{border-left:none !important;border-top:none !important;padding:12px !important;gap:10px !important;order:2 !important;width:100% !important;min-width:0 !important;display:flex !important;flex-direction:column !important}
   .card{padding:14px 16px}
-  /* Mobile card order: Greeting → Standing → Mentor → Journey → Nearby+Train → AEA/Expert */
+  /* Mobile card order: Greeting → Standing → Mentor → Journey → Nearby+Train */
   .card-greeting{order:1}
   .card-standing-mob{order:2;display:block !important}
   .card-mentor{order:3}
   .card-journey{order:4}
   .card-brhills{order:5}
   .card-train{order:6}
-  .rp-rank{order:7;display:block !important;margin:0 12px 10px}
-  .rp-expert{order:8;display:block !important;margin:0 12px 10px}
-  /* Hide desktop-only right panel elements */
+  /* Right panel — hide desktop elements, show AEA rank + expert advice */
   .rp-standing{display:none !important}
   .rp-latest{display:none !important}
   .rp-weekly{display:none !important}
