@@ -60,6 +60,15 @@ body.page-dashboard #backToTop         { display:none !important }
 /* ── CENTRE ── */
 .centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream);flex:1}
 .card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;display:block;width:100%;box-sizing:border-box}
+@media(max-width:768px){
+  .card-greeting{order:1}
+  .card-mentor{order:3}
+  .card-journey{order:2}
+  .card-brhills{order:4}
+  .card-train{order:5}
+  .centre{display:flex !important;flex-direction:column !important}
+  .card-brhills.card-train{grid-template-columns:1fr !important;gap:10px}
+}
 
 /* ── TYPOGRAPHY ── */
 .ey{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:5px}
@@ -246,6 +255,7 @@ body.page-dashboard #backToTop         { display:none !important }
   <div class="sidenav">
     <a class="si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
+    <a class="si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
     <a class="si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
     <a class="si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
@@ -437,7 +447,7 @@ body.page-dashboard #backToTop         { display:none !important }
         {% if img.score and img.thumb_url %}
         <div class="et {% if loop.index > 3 %}et-desktop-only{% endif %}">
           <div class="eti">
-            <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.cssText='aspect-ratio:1;background:#1A2A22;border-radius:6px;';this.remove()">
+            <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.cssText='aspect-ratio:1;background:var(--border);border-radius:6px;';this.remove()">
             <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
           </div>
           <div class="escore">{{ '%.1f'|format(img.score) }}</div>
@@ -452,7 +462,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
     {# ── BOTTOM ROW: Nearest Opportunity (left) + Train your eye (right) — 2 column ── #}
     {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue %}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
+    <div class="card-brhills card-train" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
 
       {# LEFT: NEAREST OPPORTUNITY #}
       {% if dash_advisory and dash_advisory.get('location_name') %}
