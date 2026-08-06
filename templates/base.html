@@ -1581,6 +1581,7 @@ img {
         {# SL 175 — Approved photographer nav: Dashboard · Upload · Journey · Learn · Explore · Profile #}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
+        <a href="{{ url_for('my_gallery') }}" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
         <a href="{{ url_for('mission') }}" class="{% if request.endpoint == 'mission' %}nav-active{% endif %}">Journey</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
         {# SL 175.4: Haiku users → /haiku/community once built #}
