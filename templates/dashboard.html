@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.5 (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) #} (Session 175, 2026-08-06 — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.6 (Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) #} (Session 175, 2026-08-06 — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -243,7 +243,7 @@ body.page-dashboard #backToTop         { display:none !important }
     <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
     <a class="nav-link {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="nav-link {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
+    <a class="nav-link {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a>
     <a class="nav-link {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
     <a class="nav-link {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
     <a class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profile</a>
@@ -262,7 +262,7 @@ body.page-dashboard #backToTop         { display:none !important }
     <a class="si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
     <a class="si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
+    <a class="si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a>
     <a class="si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
     <a class="si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
     <a class="si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
@@ -355,7 +355,8 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
 
     {# ── CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE ── #}
-    {% if dash_advisory and dash_advisory.get('location_name') or dash_live_event %}
+    {# SL 175 STAGING: show mentor placeholder when no real advisory data #}
+    {% if dash_advisory and dash_advisory.get('location_name') or dash_live_event or _show_bottom %}
     <div class="card card-mentor">
       <div class="ey">Mentor Advice</div>
       {% if dash_live_event %}
@@ -391,6 +392,18 @@ body.page-dashboard #backToTop         { display:none !important }
           <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:var(--dark);color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:inline-block;margin-bottom:6px;">📍 Get directions →</a>
           <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'})}" style="background:none;border:none;font-size:13px;color:var(--gold-dk);text-decoration:underline;cursor:pointer;display:block;margin-top:4px;">Change location →</button>
         {% endif %}
+        <span class="rm" onclick="toggleSpan('mexp','mrm')">Read less →</span>
+      </div>
+    </div>
+    {% elif _show_bottom %}
+    {# STAGING PLACEHOLDER — Mentor Advice (remove _show_bottom before merge) #}
+    <div class="card card-mentor">
+      <div class="ey">Mentor Advice · Bengaluru</div>
+      <div class="body-text">Go to <span style="color:var(--green);font-weight:600">Cubbon Park</span>. Golden hour at 6:15 AM tomorrow — overcast light ideal for street portraits.</div>
+      <span class="rm" id="mrm" onclick="toggleSpan('mexp','mrm')">Read more →</span>
+      <div class="expanded" id="mexp">
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">Overcast mornings eliminate harsh shadows — light wraps evenly. Cubbon Park's tree canopy adds diffusion. 35mm or 50mm equivalent. Newspaper readers on the benches by the central fountain — consistent subjects, great geometry.</div>
+        <div style="display:flex;gap:10px;font-size:13px;color:var(--muted);margin-bottom:8px"><span>🚗 15 min</span><span>🌅 Best: 6:00–8:00 AM</span></div>
         <span class="rm" onclick="toggleSpan('mexp','mrm')">Read less →</span>
       </div>
     </div>
@@ -435,23 +448,20 @@ body.page-dashboard #backToTop         { display:none !important }
       {% endfor %}
       {% set _lx = 480 %}
       {% set _ly = (42 - ((_t[-1].score - _min) / _range) * 34)|round(1) %}
-      <div style="height:70px;margin-top:4px">
-        <svg width="100%" height="70" viewBox="0 0 500 70" preserveAspectRatio="none">
-          <line x1="0" y1="50" x2="500" y2="50" stroke="#E8E4DA" stroke-width="0.5"/>
-          <line x1="0" y1="28" x2="500" y2="28" stroke="#E8E4DA" stroke-width="0.5"/>
-          <polyline points="{{ _pts.val }}" fill="none" stroke="#D6A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-          <polyline points="{{ _pts.val }}{{ _lx }},60 20,60" fill="#D6A42812" stroke="none"/>
+      <div style="height:100px;margin-top:8px;background:var(--cream);border-radius:8px;padding:8px;">
+        <svg width="100%" height="84" viewBox="0 0 500 84" preserveAspectRatio="none">
+          <line x1="0" y1="62" x2="500" y2="62" stroke="#E8E4DA" stroke-width="0.5"/>
+          <line x1="0" y1="36" x2="500" y2="36" stroke="#E8E4DA" stroke-width="0.5"/>
+          <polyline points="{{ _pts.val }}" fill="none" stroke="#D6A428" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <polyline points="{{ _pts.val }}{{ _lx }},72 20,72" fill="#D6A42815" stroke="none"/>
           {% for _item in _t %}
             {% set _x = (loop.index0 / (_n - 1) * 460 + 20)|round(1) %}
-            {% set _y = (48 - ((_item.score - _min) / _range) * 34)|round(1) %}
-            <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '5' if loop.last else '3' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.6' }}"/>
-            {% if loop.last %}
-            <rect x="{{ _x - 16 }}" y="{{ _y - 20 }}" width="32" height="16" rx="3" fill="#D6A428"/>
-            <text x="{{ _x }}" y="{{ _y - 8 }}" font-size="13" fill="#0F2A22" text-anchor="middle" font-weight="700">{{ '%.1f'|format(_item.score) }}</text>
-            {% endif %}
+            {% set _y = (60 - ((_item.score - _min) / _range) * 44)|round(1) %}
+            <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '5' if loop.last else '3.5' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.7' }}"/>
+            <text x="{{ _x }}" y="{{ _y - 9 }}" font-size="13" fill="{{ '#D6A428' if loop.last else '#6B6B6B' }}" text-anchor="middle" font-weight="{{ '700' if loop.last else '500' }}">{{ '%.1f'|format(_item.score) }}</text>
           {% endfor %}
-          <text x="20" y="68" font-size="13" fill="#6B6B6B">{{ _t[0].scored_at.strftime('%d %b') if _t[0].scored_at else 'Start' }}</text>
-          <text x="480" y="68" font-size="13" fill="#6B6B6B" text-anchor="end">{{ _t[-1].scored_at.strftime('%d %b') if _t[-1].scored_at else 'Today' }}</text>
+          <text x="20" y="82" font-size="13" fill="#6B6B6B">{{ _t[0].scored_at.strftime('%d %b') if _t[0].scored_at else '' }}</text>
+          <text x="480" y="82" font-size="13" fill="#6B6B6B" text-anchor="end">Today</text>
         </svg>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--text);margin:6px 0 6px">Latest evaluations</div>
