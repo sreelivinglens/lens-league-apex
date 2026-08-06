@@ -206,6 +206,19 @@ body.page-dashboard #backToTop         { display:none !important }
 
 <div class="sl">
 
+{# ── SL 175: EVAL PENDING BANNER — shows when redirected from upload at 50-sec cutoff ── #}
+<div id="sl175EvalBanner" style="display:none;background:#0F2A22;border-bottom:2px solid #D6A428;padding:10px 20px;align-items:center;justify-content:space-between;gap:12px;">
+  <div style="display:flex;align-items:center;gap:10px;flex:1">
+    <span id="sl175EvalSpinner" style="font-size:16px;animation:sl175spin 2s linear infinite;display:inline-block">⏳</span>
+    <span id="sl175EvalMsg" style="font-size:13px;font-weight:500;color:#fff;">Your image is being evaluated — usually ready in 2 minutes.</span>
+  </div>
+  <a id="sl175EvalLink" href="{{ url_for('my_gallery') }}" style="display:none;font-size:13px;font-weight:700;color:#D6A428;text-decoration:none;white-space:nowrap;margin-right:12px;">View in My Gallery →</a>
+  <button onclick="document.getElementById('sl175EvalBanner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;">×</button>
+</div>
+<style>
+@keyframes sl175spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+</style>
+
 {# ── TOPNAV ── #}
 <nav class="topnav">
   <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;" aria-label="Shutter League">
@@ -750,7 +763,83 @@ body.page-dashboard #backToTop         { display:none !important }
   if(_user.country && dc){ dc.value=_user.country; dlocCountryChange(); if(_user.state && ds){ ds.value=_user.state; dlocStateChange(); } }
 })();
 
-/* Read more toggle */
+/* ── SL 175: EVAL PENDING POLL ──────────────────────────────
+   If ?eval_pending=ID in URL, show banner and poll every 2s.
+   When scored: update banner → "Your evaluation is ready".
+   Paid DDI: ~60-120s. Haiku: ~20-25s.
+──────────────────────────────────────────────────────────── */
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var pendingId = params.get('eval_pending');
+  if (!pendingId) return;
+
+  var banner   = document.getElementById('sl175EvalBanner');
+  var msgEl    = document.getElementById('sl175EvalMsg');
+  var linkEl   = document.getElementById('sl175EvalLink');
+  var spinner  = document.getElementById('sl175EvalSpinner');
+  if (!banner) return;
+
+  /* Show banner */
+  banner.style.display = 'flex';
+
+  /* Clean URL — remove eval_pending param so refresh doesn't re-trigger */
+  try {
+    var cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  } catch(e) {}
+
+  /* Poll /score-status/{id} every 2 seconds */
+  var pollCount = 0;
+  var maxPolls  = 90; /* 3 minutes max */
+  var pollTimer = setInterval(function() {
+    pollCount++;
+    if (pollCount > maxPolls) {
+      clearInterval(pollTimer);
+      if (msgEl) msgEl.textContent = 'Evaluation taking longer than expected — check My Gallery shortly.';
+      return;
+    }
+
+    fetch('/score-status/' + pendingId, {credentials: 'same-origin'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        clearInterval(pollTimer);
+
+        /* Update banner to success state */
+        if (spinner) { spinner.style.animation = 'none'; spinner.textContent = '✓'; }
+        if (msgEl)   { msgEl.textContent = 'Your evaluation is ready.'; msgEl.style.color = '#D6A428'; }
+        if (linkEl)  { linkEl.style.display = 'inline'; }
+
+        /* Play notification sound */
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var freqs = [440, 660, 880];
+          freqs.forEach(function(f, i) {
+            var o = ctx.createOscillator(), g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.frequency.value = f;
+            g.gain.setValueAtTime(0, ctx.currentTime + i*0.12);
+            g.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i*0.12 + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.12 + 0.6);
+            o.start(ctx.currentTime + i*0.12);
+            o.stop(ctx.currentTime + i*0.12 + 0.6);
+          });
+        } catch(e) {}
+
+        /* Haptic on mobile */
+        try { if (navigator.vibrate) navigator.vibrate([100, 50, 100]); } catch(e) {}
+
+      } else if (data.status === 'flagged' || data.status === 'error') {
+        clearInterval(pollTimer);
+        if (spinner) { spinner.style.animation = 'none'; spinner.textContent = '⚠'; }
+        if (msgEl) msgEl.textContent = data.message || 'Your image could not be evaluated — check My Gallery for details.';
+        if (linkEl) { linkEl.style.display = 'inline'; }
+      }
+      /* status === 'processing' — keep polling */
+    })
+    .catch(function() { /* network error — keep polling silently */ });
+  }, 2000);
+})();
 function toggleSpan(expId, rmId) {
   var exp = document.getElementById(expId);
   var rm  = document.getElementById(rmId);
