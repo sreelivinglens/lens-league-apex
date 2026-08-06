@@ -97,8 +97,8 @@ body.page-dashboard #backToTop         { display:none !important }
 .eval-image-caption{width:100%;background:rgba(15,42,34,0.88);padding:6px 10px;font-size:13px;font-weight:400;color:#fff}
 
 /* ── RIGHT PANEL ── */
-.rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;width:220px;flex-shrink:0;flex-grow:0;overflow:hidden}
-.rl{font-size:9px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;white-space:nowrap}
+.rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;width:220px;flex-shrink:0;flex-grow:0;overflow:visible;min-width:0;word-break:break-word}
+.rl{font-size:9px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 
 /* ── RANK CARD ── */
 .rank-card{background:#fff;border-radius:13px;border:0.5px solid var(--border);border-top:2.5px solid var(--gold);padding:14px;position:relative}
@@ -559,9 +559,9 @@ body.page-dashboard #backToTop         { display:none !important }
     {# MY STANDING — desktop only #}
     {% if progress_data %}
     <div style="border-top:0.5px solid var(--border);padding-top:10px" class="rp-standing">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="rl" style="margin-bottom:0">My Standing</div>
-        <a href="#" class="lnk" onclick="document.getElementById('standing-modal').style.display='flex';return false">Full view →</a>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:4px">
+        <div class="rl" style="margin-bottom:0;white-space:nowrap">My Standing</div>
+        <a href="#" class="lnk" style="font-size:9px;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('standing-modal').style.display='flex';return false">Full view →</a>
       </div>
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
         <span style="font-size:13px">👑</span>
@@ -630,9 +630,9 @@ body.page-dashboard #backToTop         { display:none !important }
 {# ── FOOTER ── #}
 <div class="sl-footer">
   <div>
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-      <div style="width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dark)">SL</div>
-      <div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:1px;text-transform:uppercase">Shutter League</div>
+    <div style="margin-bottom:8px">
+      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" style="height:28px;width:auto;display:block;margin-bottom:4px;" onerror="this.style.display='none'">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase">SHUTTER LEAGUE</div>
     </div>
     <div style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:6px">Photography Assessment and Evolution Platform</div>
     <div style="font-size:13px;font-weight:600;color:var(--gold)">Making Images Matter</div>
