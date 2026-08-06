@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.8 (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.9 (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -557,7 +557,7 @@ body.page-dashboard #backToTop         { display:none !important }
       {% set _pimg = _pq.image %}
       <div style="background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;height:100%">
         <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
-        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">Rate 3 images · earn 1 free upload · +2 bonus points when you match the engine.</div>
         {% if _pimg and _pimg.thumb_url %}
         <div id="tye-img-wrap" style="width:100%;border-radius:8px;overflow:hidden;background:#1A2A1A;display:flex;align-items:center;justify-content:center;margin-bottom:8px;max-height:160px;position:relative;">
           <img src="{{ _pimg.thumb_url }}" alt="Rate this photograph" style="max-width:100%;max-height:160px;object-fit:contain;display:block;"
@@ -584,7 +584,7 @@ body.page-dashboard #backToTop         { display:none !important }
       {% if _show_bottom %}
       <div style="background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;height:100%">
         <div class="ey" style="margin-bottom:3px">Train your eye · Earn a free upload</div>
-        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">Rate this photograph. When your rating matches the DDI engine, you earn one free upload credit.</div>
+        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:8px">Rate 3 images · earn 1 free upload · +2 bonus points when you match the engine.</div>
         <div style="width:100%;height:140px;background:#1A2A1A;border-radius:8px;margin-bottom:8px;display:flex;align-items:flex-end">
           <div style="padding:6px 10px;font-size:13px;color:#fff;background:rgba(15,42,34,0.85);width:100%">Can you see the Disruption in this frame?</div>
         </div>
