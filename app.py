@@ -1,4 +1,4 @@
-# SL-VERSION: 175.1.4 (Session 175, 2026-08-05 — referral calls moved outside render_template with rollback guards)
+# SL-VERSION: 172.3
 
 import os
 import re
@@ -4414,7 +4414,6 @@ def dashboard():
                 )
                 db.session.commit()
             except Exception:
-                db.session.rollback()
                 pass
         total_count = _lifetime
         # Compute shadow rank — position by avg DDI score across all public scored users
@@ -4445,7 +4444,6 @@ def dashboard():
                 if _best:
                     _shadow_tier = get_tier(float(_best))
             except Exception:
-                db.session.rollback()
                 pass
         free_tier = {
             'used':        total_count,
@@ -4649,7 +4647,6 @@ def dashboard():
                 'images_needed':      max(0, _aea_req_images - _aea_total),
             }
         except Exception as _aea_dash_err:
-            db.session.rollback()
             app.logger.warning(f'[dashboard] aea_dash failed: {_aea_dash_err}')
             aea_dash = None
 
@@ -4728,7 +4725,6 @@ def dashboard():
             if _flash_imgs:
                 db.session.commit()
         except Exception as _fle:
-            db.session.rollback()
             app.logger.error(f'[scoring_flash] {_fle}')
 
     # ── Wallet HUD (Sprint 4) ─────────────────────────────────────────────
@@ -4786,14 +4782,12 @@ def dashboard():
         try:
             _lesson = _get_curriculum_lesson(current_user, progress_data)
         except Exception as _le:
-            db.session.rollback()
             app.logger.warning(f'[curriculum_lesson] {_le}')
         try:
             _wx_city = getattr(current_user, 'city', '') or ''
             if _wx_city:
                 _weather = _get_weather(_wx_city)
         except Exception as _we:
-            db.session.rollback()
             app.logger.warning(f'[weather] {_we}')
         # Mission due — open mission upload within last 7 days still pending/processing
         try:
@@ -4808,7 +4802,6 @@ def dashboard():
             if _due_img:
                 _mission_due = True
         except Exception as _mde:
-            db.session.rollback()
             app.logger.warning(f'[mission_due] {_mde}')
         # Mission done today — scored mission image completed successfully today
         # NOTE: do NOT filter on scoring_flash — it is cleared to None on first
@@ -4846,7 +4839,6 @@ def dashboard():
                     _mission_done = True
                     break
         except Exception as _mdd:
-            db.session.rollback()
             app.logger.warning(f'[mission_done] {_mdd}')
     # ── End Photo School ──────────────────────────────────────────────────
 
@@ -4863,7 +4855,6 @@ def dashboard():
         if _skipped_row and _skipped_row[0] and _skipped_row[0] == _ist_today:
             _show_mission = False
     except Exception as _sm_err:
-        db.session.rollback()
         app.logger.warning(f'[mission_skip_gate] {_sm_err}')
     # ── End mission skip gate ─────────────────────────────────────────────
 
@@ -4886,7 +4877,6 @@ def dashboard():
             """), {'uid': current_user.id}).fetchall()
             mentor_reviews = [dict(r._mapping) for r in _reviews]
         except Exception as _mre:
-            db.session.rollback()
             app.logger.error(f'[dashboard_mentor_reviews] {_mre}')
 
     # referred_discount is a migration-only column — not in ORM model, must read directly
@@ -4896,7 +4886,6 @@ def dashboard():
             {'uid': current_user.id}
         ).scalar() or False
     except Exception:
-        db.session.rollback()
         _ref_discount = False
 
     # Fetch version numbers for all images on this page (migration-only column)
@@ -4911,7 +4900,6 @@ def dashboard():
                 if r[1]:  # has parent_image_id = is an edited version
                     _version_map[r[0]] = r[2] or 2  # version_number, default 2
         except Exception as _ve:
-            db.session.rollback()
             app.logger.warning(f'[dashboard] version_map: {_ve}')
 
     # ── Annual Excellence Award — months active this season ──────────────────
@@ -4930,7 +4918,6 @@ def dashboard():
         _season_start_label = '1 September 2026' if _now.year == 2026 else '1 January'
         _pre_season         = (_now.year == 2026 and _now < datetime(2026, 9, 1))
     except Exception as _mae:
-        db.session.rollback()
         app.logger.warning(f'[dashboard] months_active: {_mae}')
         _months_active = 0
         _season_start_label = '1 September 2026'
@@ -4949,7 +4936,6 @@ def dashboard():
                           .order_by(db.func.random())
                           .limit(1).first())
     except Exception:
-        db.session.rollback()
         _dash_carousel = None
 
     # Fetch upload_credits_balance — backfill if 0/NULL for partial free-tier users
@@ -4969,7 +4955,6 @@ def dashboard():
             )
             db.session.commit()
         except Exception as _ucb_e:
-            db.session.rollback()
             app.logger.warning(f'[upload_credits_backfill] {_ucb_e}')
     _ucb_val = _ucb_val or 0
 
@@ -5050,7 +5035,6 @@ def dashboard():
                     ), {'uid': current_user.id}).fetchall()
                     _adv_excluded_ids = [r[0] for r in _adv_log_rows if r[0]]
                 except Exception as _adv_ex_err:
-                    db.session.rollback()
                     app.logger.warning(f'[dashboard] advisory exclusion query: {_adv_ex_err}')
                     _adv_excluded_ids = []
 
@@ -5081,7 +5065,6 @@ def dashboard():
                         calendar_id=_cal_id,
                     )
     except Exception as _adv_err:
-        db.session.rollback()
         app.logger.warning(f'[dashboard] advisory/live_event: {_adv_err}')
 
     # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
@@ -5130,7 +5113,6 @@ def dashboard():
                                 "UPDATE rating_assignments SET genre=:g WHERE id=:id"
                             ), {'g': _img.genre, 'id': _existing.id})
                         except Exception:
-                            db.session.rollback()
                             pass
                         _peer_queue.append(_existing)
                     else:
@@ -5149,17 +5131,14 @@ def dashboard():
                                 "UPDATE rating_assignments SET genre=:g WHERE id=:id"
                             ), {'g': _img.genre, 'id': _a.id})
                         except Exception:
-                            db.session.rollback()
                             pass
                         _peer_queue.append(_a)
                 except Exception as _pq_assign_err:
-                    db.session.rollback()
                     app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
                     db.session.rollback()
             if _peer_queue:
                 db.session.commit()
         except Exception as _pqe:
-            db.session.rollback()
             app.logger.warning(f'[dashboard] peer queue: {_pqe}')
 
     # ── Eye of Judge — calibration trend (shows when ≥5 peer evals submitted) ──
@@ -5197,7 +5176,6 @@ def dashboard():
                     'improving':     _improving,
                 }
         except Exception as _eje:
-            db.session.rollback()
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
     return render_template('dashboard.html', images=images, stats=stats,
@@ -8014,9 +7992,10 @@ def upload():
                                             if _u else 'Photographer'
                                         )
                                         _gen_display = _hive_generator.replace('_', ' ').title()
+                                        # ── User email — no AI accusation, says flagged for review ──
                                         send_email(
                                             to_addresses=[_u.email] if _u else [],
-                                            subject='[Shutter League] Image not accepted — AI generation detected',
+                                            subject='[Shutter League] Image held for review — ' + (_img.asset_name or 'Untitled'),
                                             html_body=(
                                                 '<!DOCTYPE html><html><head><meta charset="UTF-8">'
                                                 '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -8032,12 +8011,12 @@ def upload():
                                                 '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                                                 '</td></tr>'
                                                 '<tr><td class="sl-ai-pad" style="padding:28px 32px;">'
-                                                '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">We couldn&#39;t accept this image.</h2>'
+                                                '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Your image is under review.</h2>'
                                                 '<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + _uname + ',</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Our system flagged <strong>' + (_img.asset_name or 'Untitled') + '</strong> as likely AI-generated (' + _gen_display + ', ' + f'{_hive_ai_score:.0%}' + ' confidence). Shutter League evaluates only original photographs taken by the submitting photographer.</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">High-production constructed shoots — allegorical tableaux, studio work, heavily lit portraits — can occasionally trigger false positives. If this is an original photograph, we want to clear it quickly.</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Your photograph <strong>' + (_img.asset_name or 'Untitled') + '</strong> has been held for admin review before evaluation. This can happen with heavily edited, stylised, or high-production photographs that require manual verification.</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">If this is an original photograph taken by you, we want to clear it quickly. Please reply to this email with any of the following:</p>'
                                                 '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-left:4px solid #C8A84B;border-radius:4px;padding:16px 20px;margin:0 0 20px;">'
-                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, email us with:</p>'
+                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, send us:</p>'
                                                 '<ul style="font-size:15px;line-height:2;color:#4A4840;margin:0;padding-left:20px;">'
                                                 '<li>Your original RAW or unedited file</li>'
                                                 '<li>Any behind-the-scenes photos or production notes</li>'
@@ -8046,7 +8025,7 @@ def upload():
                                                 '<p style="margin:0 0 20px;text-align:center;">'
                                                 '<a href="mailto:' + CONTACT_EMAIL + '" class="sl-ai-btn" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Appeal This Decision &#8594;</a>'
                                                 '</p>'
-                                                '<p style="font-size:15px;color:#6a6458;margin:0;line-height:1.7;">We aim to resolve appeals within 48 hours. Your image goes live immediately if cleared.</p>'
+                                                '<p style="font-size:15px;color:#6a6458;margin:0;line-height:1.7;">We aim to resolve reviews within 48 hours. Your image goes live immediately if cleared.</p>'
                                                 '</td></tr>'
                                                 '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
                                                 '<p style="margin:0;font-size:15px;color:#6a6458;">&#8212; Shutter League</p>'
@@ -8055,20 +8034,15 @@ def upload():
                                             ),
                                             text_body=(
                                                 'Hi ' + _uname + ',\n\n'
-                                                'Your image "' +
+                                                'Your photograph "' +
                                                 (_img.asset_name or 'Untitled') +
-                                                '" has been rejected.\n\n'
-                                                'Our system detected it was generated by ' +
-                                                _gen_display + ' (' +
-                                                f'{_hive_ai_score:.0%}' + ' confidence).\n\n'
-                                                'High-production constructed shoots can sometimes trigger false positives.\n'
-                                                'If this is an original photograph, email ' +
-                                                CONTACT_EMAIL +
-                                                ' with:\n'
+                                                '" has been held for admin review before evaluation.\n\n'
+                                                'This can happen with heavily edited, stylised, or high-production photographs.\n'
+                                                'If this is an original photograph, reply to this email with:\n'
                                                 '  - Your original RAW or unedited file\n'
                                                 '  - Any behind-the-scenes photos or production notes\n'
                                                 '  - Camera and lens used\n\n'
-                                                'We aim to resolve appeals within 48 hours.\n\n'
+                                                'We aim to resolve reviews within 48 hours.\n\n'
                                                 '-- Shutter League'
                                             )
                                         )
