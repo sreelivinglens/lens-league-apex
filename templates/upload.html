@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.6 (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1198,6 +1198,12 @@
           _canvas.getContext('2d').drawImage(_pfImg, 0, 0, _canvas.width, _canvas.height);
           _canvas.toBlob(function(_blob) {
             if (!_blob) { _fireUpload(); return; }
+            // Skip genre preflight if user explicitly chose their genre
+            if (window._slSkipGenrePreflight) {
+              window._slSkipGenrePreflight = false;
+              _fireUpload();
+              return;
+            }
             var _fd = new FormData();
             _fd.append('image', _blob, 'preflight.jpg');
             var _pfXhr = new XMLHttpRequest();
@@ -1272,7 +1278,11 @@
 
       // ── Action buttons ────────────────────────────────────────────────
       if (_hasGenre && !_hasSim) {
-        // Genre only — Confirm or Change genre
+        // Genre only — 3 options: accept suggestion | keep selected | change genre
+        var _selectedGenre = '';
+        var _genreSelEl = document.getElementById('genre');
+        if (_genreSelEl) _selectedGenre = _genreSelEl.options[_genreSelEl.selectedIndex] ? _genreSelEl.options[_genreSelEl.selectedIndex].text : '';
+
         var _btnConfirm = document.createElement('button');
         _btnConfirm.type = 'button';
         _btnConfirm.className = 'preflight-btn preflight-btn-confirm';
@@ -1293,15 +1303,27 @@
           _fireUpload();
         };
 
+        // Option 2 — keep selected genre, skip preflight next time
+        var _btnKeep = document.createElement('button');
+        _btnKeep.type = 'button';
+        _btnKeep.className = 'preflight-btn preflight-btn-change';
+        _btnKeep.textContent = 'Evaluate as per my selected genre';
+        _btnKeep.onclick = function() {
+          overlay.classList.remove('active');
+          /* Set a flag to bypass genre preflight on next fire */
+          window._slSkipGenrePreflight = true;
+          _fireUpload();
+        };
+
         var _btnChange = document.createElement('button');
         _btnChange.type = 'button';
-        _btnChange.className = 'preflight-btn preflight-btn-change';
+        _btnChange.className = 'preflight-btn';
+        _btnChange.style.cssText = 'background:none;border:none;color:#6a6458;font-size:13px;cursor:pointer;padding:8px;text-decoration:underline;';
         _btnChange.textContent = 'Change interest area';
         _btnChange.onclick = function() {
           overlay.classList.remove('active');
           submitBtn.disabled    = false;
           submitBtn.textContent = 'Submit for Evaluation';
-          // Scroll to genre dropdown so user can change it
           var _genreSel = document.getElementById('genre');
           if (_genreSel) {
             _genreSel.style.border = '2px solid #F5C518';
@@ -1313,6 +1335,7 @@
           }
         };
         actions.appendChild(_btnConfirm);
+        actions.appendChild(_btnKeep);
         actions.appendChild(_btnChange);
 
       } else if (_hasSim && !_hasGenre) {
