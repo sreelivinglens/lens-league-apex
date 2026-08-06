@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.2 (attribute quote fix: subgenre-map single-quoted to prevent JSON double-quote collision) #}
+{# SL-VERSION: 175.3 (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1012,7 +1012,8 @@
   }
 
   // ── Genre hints ──────────────────────────────────────────────────────────
-  const SUBGENRE_MAP = JSON.parse(document.getElementById('uploadForm').dataset.subgenreMap || '{}');
+  var _smRaw = document.getElementById('uploadForm') ? document.getElementById('uploadForm').dataset.subgenreMap : null;
+  const SUBGENRE_MAP = (function(){ try{ return JSON.parse(_smRaw || '{}'); } catch(e){ return {}; } })();
   const subGenreRow    = document.getElementById('sub-genre-row');
   const subGenreSelect = document.getElementById('sub_genre');
 
