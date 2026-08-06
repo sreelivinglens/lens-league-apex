@@ -131,6 +131,10 @@ body.page-dashboard #backToTop         { display:none !important }
 .scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:#0F2A22;color:#D6A428;border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:18px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18)}
 .scroll-top.visible{display:flex}
 
+/* Eval banner spinner */
+@keyframes sl175spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
+.sl175-spin { animation: sl175spin 2s linear infinite; display:inline-block; }
+
 /* ── FOOTER ── */
 .sl-footer{background:var(--dark);padding:28px 24px 20px;display:grid;grid-template-columns:200px 1fr 1fr 1fr 1fr;gap:24px}
 .footer-col-block{display:block}
@@ -221,16 +225,12 @@ body.page-dashboard #backToTop         { display:none !important }
 {# ── SL 175: EVAL PENDING BANNER — shows when redirected from upload at 50-sec cutoff ── #}
 <div id="sl175EvalBanner" style="display:none;background:#0F2A22;border-bottom:2px solid #D6A428;padding:10px 20px;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;flex:1">
-    <span id="sl175EvalSpinner" style="font-size:16px;animation:sl175spin 2s linear infinite;display:inline-block">⏳</span>
+    <span id="sl175EvalSpinner" class="sl175-spin" style="font-size:16px">⏳</span>
     <span id="sl175EvalMsg" style="font-size:13px;font-weight:500;color:#fff;">Your image is being evaluated — usually ready in 2 minutes.</span>
   </div>
   <a id="sl175EvalLink" href="{{ url_for('my_gallery') }}" style="display:none;font-size:13px;font-weight:700;color:#D6A428;text-decoration:none;white-space:nowrap;margin-right:12px;">View in My Gallery →</a>
   <button onclick="document.getElementById('sl175EvalBanner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;">×</button>
 </div>
-<style>
-@keyframes sl175spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
-</style>
-
 {# ── TOPNAV ── #}
 <nav class="topnav">
   <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;" aria-label="Shutter League">
