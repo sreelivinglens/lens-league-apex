@@ -36,10 +36,10 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── TOPNAV ── */
 .sl{max-width:1280px;margin:0 auto;background:var(--cream)}
-.topnav{background:var(--dark);display:flex;align-items:center;padding:0 20px;height:50px}
+.topnav{background:var(--dark);display:flex;align-items:center;padding:0 20px;height:50px;gap:8px}
 .logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--dark);flex-shrink:0;text-decoration:none}
 .logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.7;margin:0 28px 0 8px;flex-shrink:0}
-.sl-nav-top-links{display:flex;gap:2px;flex:1}
+.sl-nav-top-links{display:flex;gap:2px;margin-left:auto}
 .nav-link{padding:5px 12px;font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:5px}
 .nav-link.active{color:#fff;background:rgba(255,255,255,0.12);font-weight:600}
 .nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
@@ -58,16 +58,18 @@ body.page-dashboard #backToTop         { display:none !important }
 .si-more{font-size:11px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
 
 /* ── CENTRE ── */
-.centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream);flex:1}
+.centre{padding:18px;display:flex;flex-direction:column;gap:11px;min-width:0;background:var(--cream);flex:1;min-width:0}
 .card{background:#fff;border-radius:13px;border:0.5px solid var(--border);padding:16px 18px;display:block;width:100%;box-sizing:border-box}
 @media(max-width:768px){
   .card-greeting{order:1}
-  .card-mentor{order:3}
   .card-journey{order:2}
-  .card-brhills{order:4}
-  .card-train{order:5}
+  .card-standing-mob{order:3;display:block !important}
+  .card-train{order:4}
+  .card-mentor{order:5}
+  .card-brhills{order:6}
   .centre{display:flex !important;flex-direction:column !important}
   .card-brhills.card-train{grid-template-columns:1fr !important;gap:10px}
+  .rp-standing{display:none !important}
 }
 
 /* ── TYPOGRAPHY ── */
@@ -460,6 +462,21 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
     {% endif %}
 
+    {# ── MOBILE ONLY: YOUR STANDING card — shows between Journey and Train your eye ── #}
+    {% if progress_data %}
+    <div class="card card-standing-mob" style="display:none">
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Your Standing · Camera League</div>
+        <div style="font-size:17px;font-weight:600;color:var(--dark);margin-bottom:2px">👑 {{ progress_data.highest_tier or progress_data.avg_tier }}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
+        {% if progress_data.overall_pct %}
+        <div style="font-size:13px;color:var(--muted)">You're in the <strong style="color:var(--dark)">top {{ progress_data.overall_pct }}%</strong> this month</div>
+        {% endif %}
+        <div style="height:5px;background:var(--border);border-radius:3px;margin:8px auto;max-width:200px"><div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--gold);border-radius:3px"></div></div>
+      </div>
+    </div>
+    {% endif %}
+
     {# ── BOTTOM ROW: Nearest Opportunity (left) + Train your eye (right) — 2 column ── #}
     {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue %}
     <div class="card-brhills card-train" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
@@ -561,7 +578,7 @@ body.page-dashboard #backToTop         { display:none !important }
           <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:1px">AEA average</div>
           <div style="font-size:16px;font-weight:700;color:var(--blue);letter-spacing:-0.3px;line-height:1.5">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
         </div>
-        <div style="font-size:9px;color:var(--muted);line-height:1.4">top 6<br>images</div>
+        <div style="font-size:9px;color:var(--muted);line-height:1.4;white-space:nowrap">top 6 images</div>
       </div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} months active</div>
       {% endif %}
