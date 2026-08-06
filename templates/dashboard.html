@@ -51,7 +51,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .layout{display:flex;align-items:stretch}
 
 /* ── SIDENAV ── */
-.sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0;width:155px;flex-shrink:0;flex-grow:0;overflow:hidden}
+.sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0 !important;width:155px !important;flex-shrink:0 !important;flex-grow:0 !important;overflow:hidden !important;height:auto !important;position:static !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;backdrop-filter:none !important;z-index:auto !important}
 .si{display:block;padding:7px 14px 7px 12px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;line-height:1.5;word-break:break-word}
 .si.active{background:var(--cream);color:var(--dark);font-weight:600;border-left-color:var(--gold)}
 .si:hover:not(.active){color:var(--dark);background:#fafaf8}
@@ -230,7 +230,7 @@ body.page-dashboard #backToTop         { display:none !important }
 <div class="layout">
 
   {# ── SIDENAV ── #}
-  <nav class="sidenav">
+  <div class="sidenav">
     <a class="si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
     <a class="si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
@@ -243,7 +243,7 @@ body.page-dashboard #backToTop         { display:none !important }
     <a class="si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learning Library</a>
     <a class="si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a>
     <a class="si" href="/contact">Help &amp; Support</a>
-  </nav>
+  </div>
 
   {# ── CENTRE COLUMN ── #}
   <div class="centre">
