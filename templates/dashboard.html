@@ -447,11 +447,11 @@ body.page-dashboard #backToTop         { display:none !important }
             <circle cx="{{ _x }}" cy="{{ _y }}" r="{{ '5' if loop.last else '3' }}" fill="#D6A428" opacity="{{ '1' if loop.last else '0.6' }}"/>
             {% if loop.last %}
             <rect x="{{ _x - 16 }}" y="{{ _y - 20 }}" width="32" height="16" rx="3" fill="#D6A428"/>
-            <text x="{{ _x }}" y="{{ _y - 8 }}" font-size="11" fill="#0F2A22" text-anchor="middle" font-weight="700">{{ '%.1f'|format(_item.score) }}</text>
+            <text x="{{ _x }}" y="{{ _y - 8 }}" font-size="13" fill="#0F2A22" text-anchor="middle" font-weight="700">{{ '%.1f'|format(_item.score) }}</text>
             {% endif %}
           {% endfor %}
-          <text x="20" y="68" font-size="11" fill="#6B6B6B">{{ _t[0].scored_at.strftime('%d %b') if _t[0].scored_at else 'Start' }}</text>
-          <text x="480" y="68" font-size="11" fill="#6B6B6B" text-anchor="end">{{ _t[-1].scored_at.strftime('%d %b') if _t[-1].scored_at else 'Today' }}</text>
+          <text x="20" y="68" font-size="13" fill="#6B6B6B">{{ _t[0].scored_at.strftime('%d %b') if _t[0].scored_at else 'Start' }}</text>
+          <text x="480" y="68" font-size="13" fill="#6B6B6B" text-anchor="end">{{ _t[-1].scored_at.strftime('%d %b') if _t[-1].scored_at else 'Today' }}</text>
         </svg>
       </div>
       <div class="es">
@@ -664,7 +664,11 @@ body.page-dashboard #backToTop         { display:none !important }
       <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
       {% endif %}
       <div class="pb"><div class="pbf" style="width:{{ progress_data.tier_pct or 0 }}%"></div><div class="pbd" style="left:{{ progress_data.tier_pct or 0 }}%"><div class="pbdi"></div></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.5"><span>Mav</span><span>Master</span><span>Grandmaster</span><span style="text-align:right">Legend</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.5">
+        <span style="font-size:13px">{{ progress_data.prev_tier or '—' }}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--dark)">{{ progress_data.highest_tier or progress_data.avg_tier }}</span>
+        <span style="font-size:13px">{{ progress_data.next_tier or '—' }}</span>
+      </div>
     </div>
     {% endif %}
 
@@ -770,31 +774,71 @@ body.page-dashboard #backToTop         { display:none !important }
   <div class="standing-modal-inner">
     <button class="standing-modal-close" onclick="document.getElementById('standing-modal').style.display='none'">×</button>
     {% if progress_data %}
-    <div style="margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:4px">My Standing</div>
-      {% if aea_dash and aea_dash.qualified and aea_dash.top6_avg %}
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
-        <span style="font-size:40px;font-weight:700;color:var(--dark)">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
-        <span style="font-size:14px;color:var(--muted)">AEA standing · top 6 evaluations</span>
-      </div>
-      <div style="font-size:16px;font-weight:700;color:var(--green);margin-bottom:2px">Top {{ aea_dash.percentile }}%</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:10px">{{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League{% if aea_dash.league_rank %} · #{{ aea_dash.league_rank }} qualifier{% endif %}</div>
-      {% else %}
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
-        <span style="font-size:32px;font-weight:700;color:var(--dark)">{{ '%.2f'|format(progress_data.avg_score) }}</span>
-        <span style="font-size:14px;color:var(--muted)">Average evaluation</span>
-      </div>
-      {% if progress_data.overall_pct %}<div style="font-size:16px;font-weight:700;color:var(--green);margin-bottom:4px">Top {{ progress_data.overall_pct }}%</div>{% endif %}
-      <div style="font-size:14px;color:var(--muted);margin-bottom:12px">{{ progress_data.league_label or 'Camera League' }}</div>
-      {% endif %}
-      <div style="height:5px;background:var(--border);border-radius:3px;margin-bottom:16px"><div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--gold);border-radius:3px;"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:16px">
-        <span>{{ progress_data.prev_tier or '' }}</span>
-        <span style="font-weight:700;color:var(--dark)">{{ progress_data.highest_tier or progress_data.avg_tier }}</span>
-        <span style="color:var(--gold-dk);font-weight:600">→ {{ progress_data.next_tier or 'Legend' }}</span>
-      </div>
+
+    {# ── AEA Standing (if qualified) ── #}
+    {% if aea_dash and aea_dash.qualified and aea_dash.top6_avg %}
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
+      <span style="font-size:36px;font-weight:700;color:var(--dark)">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
+      <span style="font-size:13px;color:var(--muted)">AEA standing · top 6 evaluations</span>
     </div>
-    <div style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Dimension breakdown</div>
+    <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:2px">Top {{ aea_dash.percentile }}%</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">{{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League{% if aea_dash.league_rank %} · #{{ aea_dash.league_rank }} qualifier{% endif %}</div>
+    {% endif %}
+
+    {# ── Lifetime average ── #}
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
+      <span style="font-size:32px;font-weight:700;color:var(--dark)">{{ '%.2f'|format(progress_data.avg_score) }}</span>
+      <span style="font-size:13px;color:var(--muted)">Lifetime average evaluation · {{ progress_data.count }} images</span>
+    </div>
+    {% if progress_data.overall_pct %}<div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:4px">Top {{ progress_data.overall_pct }}%</div>{% endif %}
+
+    {# ── Tier progress bar — prev → current → next in CORRECT order ── #}
+    {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+    {% set _cur = progress_data.highest_tier or progress_data.avg_tier %}
+    {% set _cur_idx = _tiers.index(_cur) if _cur in _tiers else 4 %}
+    {% set _prev = _tiers[_cur_idx - 1] if _cur_idx > 0 else none %}
+    {% set _next = _tiers[_cur_idx + 1] if _cur_idx < 7 else none %}
+    <div style="height:5px;background:var(--border);border-radius:3px;margin:10px 0 4px"><div style="height:100%;width:{{ progress_data.tier_pct or 0 }}%;background:var(--gold);border-radius:3px;"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:16px">
+      <span>{{ _prev or '—' }}</span>
+      <span style="font-weight:700;color:var(--dark)">{{ _cur }}</span>
+      <span style="color:var(--gold-dk);font-weight:600">→ {{ _next or 'Peak' }}</span>
+    </div>
+
+    {# ── Lifetime evaluation trend sparkline ── #}
+    {% if progress_data.trend and progress_data.trend|length >= 2 %}
+    <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Lifetime Evaluation Trend</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">All {{ progress_data.count }} uploads</div>
+    {% set _mt = progress_data.trend %}
+    {% set _ms = _mt|map(attribute='score')|list %}
+    {% set _mmin = _ms|min %}
+    {% set _mmax = _ms|max %}
+    {% set _mr = [(_mmax - _mmin), 0.5]|max %}
+    {% set _mn = _mt|length %}
+    {% set _mpts = namespace(val='') %}
+    {% for _mi in _mt %}
+      {% set _mx = (loop.index0 / (_mn - 1) * 360 + 20)|round(1) %}
+      {% set _my = (44 - ((_mi.score - _mmin) / _mr) * 34)|round(1) %}
+      {% set _mpts.val = _mpts.val ~ _mx ~ ',' ~ _my ~ ' ' %}
+    {% endfor %}
+    <div style="height:60px;margin-bottom:8px;background:var(--cream);border-radius:8px;padding:4px">
+      <svg width="100%" height="52" viewBox="0 0 400 52" preserveAspectRatio="none">
+        <polyline points="{{ _mpts.val }}" fill="none" stroke="#D6A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <polyline points="{{ _mpts.val }}380,52 20,52" fill="#D6A42815" stroke="none"/>
+        {% for _mi in _mt %}
+          {% set _mx = (loop.index0 / (_mn - 1) * 360 + 20)|round(1) %}
+          {% set _my = (44 - ((_mi.score - _mmin) / _mr) * 34)|round(1) %}
+          {% if loop.first or loop.last or (_mn <= 5) %}
+          <circle cx="{{ _mx }}" cy="{{ _my }}" r="3" fill="#D6A428" opacity="{{ '1' if loop.last else '0.6' }}"/>
+          <text x="{{ _mx }}" y="{{ _my - 6 }}" font-size="13" fill="#6B6B6B" text-anchor="middle">{{ '%.1f'|format(_mi.score) }}</text>
+          {% endif %}
+        {% endfor %}
+      </svg>
+    </div>
+    {% endif %}
+
+    {# ── Dimension breakdown — last 10 images ── #}
+    <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Dimension Breakdown — Last 10 Images</div>
     {% set _dim_labels = {'dod':'Technical','dm':'Moment','aq':'Visual Impact','wonder':'WOW ✦','disruption':'Disruption'} %}
     {% set _dim_colours = {'dod':'#4A7FC1','dm':'#8A4A8A','aq':'#8A6A3A','wonder':'#4A4A8A','disruption':'#8A4A4A'} %}
     {% if progress_data.dim_sparklines %}
