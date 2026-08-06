@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.3 (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 175.4 (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1511,8 +1511,19 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          showError(r.message || '\uD83D\uDEAB This image was flagged as potentially AI-generated.');
-          setTimeout(function() { window.location.href = r.redirect || '/dashboard'; }, 4000);
+          var _flagMsg = (r.message || '\uD83D\uDEAB This image was flagged and could not be evaluated.');
+          _flagMsg += '\n\nYou can view the details and raise a dispute in My Gallery.';
+          showError(_flagMsg);
+          /* Show My Gallery link below error — do NOT auto-redirect */
+          var _galleryLink = document.createElement('a');
+          _galleryLink.href = '/my-gallery';
+          _galleryLink.textContent = 'Go to My Gallery \u2192';
+          _galleryLink.style.cssText = 'display:block;margin-top:12px;color:#854F0B;font-weight:600;font-size:15px;text-align:center;';
+          var _fileErr = document.getElementById('fileError');
+          if (_fileErr && !document.getElementById('flagGalleryLink')) {
+            _galleryLink.id = 'flagGalleryLink';
+            _fileErr.appendChild(_galleryLink);
+          }
           return;
         }
 
