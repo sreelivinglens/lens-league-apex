@@ -1,4 +1,4 @@
-# SL-VERSION: 175.1 (Session 175, 2026-08-06 — peer_recognitions added to delete routes, flagged email reworded: no AI accusation)
+# SL-VERSION: 175.2 (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
 
 import os
 import re
@@ -7959,10 +7959,13 @@ def upload():
                                 )
                                 db.session.commit()
 
-                                if _hive_ai_score >= 0.90:
+                                if _hive_ai_score >= 0.90 and getattr(_img, 'genre', '') != 'Creative':
                                     # ── HARD REJECT ───────────────────────
                                     # High confidence AI — reject immediately,
                                     # never call Claude Vision.
+                                    # Creative genre is exempt — heavily edited/
+                                    # stylised work legitimately scores high on
+                                    # AI detectors. Creative is scored normally.
                                     _img.score            = 0.0
                                     _img.tier             = 'Rookie'
                                     _img.dod_score        = 0.0
@@ -8082,10 +8085,11 @@ def upload():
                                         )
                                     return  # Stop — do not call Claude Vision
 
-                                elif _hive_ai_score >= 0.70:
+                                elif _hive_ai_score >= 0.70 and getattr(_img, 'genre', '') != 'Creative':
                                     # ── AMBER FLAG ────────────────────────
                                     # Medium confidence — score with Claude
                                     # but flag for admin review.
+                                    # Creative genre exempt — see hard reject note above.
                                     _img.needs_review = True
                                     db.session.commit()
                                     app.logger.info(
