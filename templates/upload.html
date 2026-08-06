@@ -1,4 +1,4 @@
-{# SL-VERSION: 172.3 #}
+{# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1012,7 +1012,8 @@
   }
 
   // ── Genre hints ──────────────────────────────────────────────────────────
-  const SUBGENRE_MAP = JSON.parse(document.getElementById('uploadForm').dataset.subgenreMap || '{}');
+  var _smRaw = document.getElementById('uploadForm') ? document.getElementById('uploadForm').dataset.subgenreMap : null;
+  const SUBGENRE_MAP = (function(){ try{ return JSON.parse(_smRaw || '{}'); } catch(e){ return {}; } })();
   const subGenreRow    = document.getElementById('sub-genre-row');
   const subGenreSelect = document.getElementById('sub_genre');
 
@@ -1197,6 +1198,12 @@
           _canvas.getContext('2d').drawImage(_pfImg, 0, 0, _canvas.width, _canvas.height);
           _canvas.toBlob(function(_blob) {
             if (!_blob) { _fireUpload(); return; }
+            // Skip genre preflight if user explicitly chose their genre
+            if (window._slSkipGenrePreflight) {
+              window._slSkipGenrePreflight = false;
+              _fireUpload();
+              return;
+            }
             var _fd = new FormData();
             _fd.append('image', _blob, 'preflight.jpg');
             var _pfXhr = new XMLHttpRequest();
@@ -1271,7 +1278,11 @@
 
       // ── Action buttons ────────────────────────────────────────────────
       if (_hasGenre && !_hasSim) {
-        // Genre only — Confirm or Change genre
+        // Genre only — 3 options: accept suggestion | keep selected | change genre
+        var _selectedGenre = '';
+        var _genreSelEl = document.getElementById('genre');
+        if (_genreSelEl) _selectedGenre = _genreSelEl.options[_genreSelEl.selectedIndex] ? _genreSelEl.options[_genreSelEl.selectedIndex].text : '';
+
         var _btnConfirm = document.createElement('button');
         _btnConfirm.type = 'button';
         _btnConfirm.className = 'preflight-btn preflight-btn-confirm';
@@ -1292,15 +1303,27 @@
           _fireUpload();
         };
 
+        // Option 2 — keep selected genre, skip preflight next time
+        var _btnKeep = document.createElement('button');
+        _btnKeep.type = 'button';
+        _btnKeep.className = 'preflight-btn preflight-btn-change';
+        _btnKeep.textContent = 'Evaluate as per my selected genre';
+        _btnKeep.onclick = function() {
+          overlay.classList.remove('active');
+          /* Set a flag to bypass genre preflight on next fire */
+          window._slSkipGenrePreflight = true;
+          _fireUpload();
+        };
+
         var _btnChange = document.createElement('button');
         _btnChange.type = 'button';
-        _btnChange.className = 'preflight-btn preflight-btn-change';
+        _btnChange.className = 'preflight-btn';
+        _btnChange.style.cssText = 'background:none;border:none;color:#6a6458;font-size:13px;cursor:pointer;padding:8px;text-decoration:underline;';
         _btnChange.textContent = 'Change interest area';
         _btnChange.onclick = function() {
           overlay.classList.remove('active');
           submitBtn.disabled    = false;
           submitBtn.textContent = 'Submit for Evaluation';
-          // Scroll to genre dropdown so user can change it
           var _genreSel = document.getElementById('genre');
           if (_genreSel) {
             _genreSel.style.border = '2px solid #F5C518';
@@ -1312,6 +1335,7 @@
           }
         };
         actions.appendChild(_btnConfirm);
+        actions.appendChild(_btnKeep);
         actions.appendChild(_btnChange);
 
       } else if (_hasSim && !_hasGenre) {
@@ -1407,6 +1431,12 @@
       }
       if (xhr.status === 409) {
         let msg = 'Duplicate image detected.';
+        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+        showError(msg);
+        return;
+      }
+      if (xhr.status === 403) {
+        let msg = 'You have reached your upload limit for this month.';
         try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
         showError(msg);
         return;
@@ -1510,8 +1540,19 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          showError(r.message || '\uD83D\uDEAB This image was flagged as potentially AI-generated.');
-          setTimeout(function() { window.location.href = r.redirect || '/dashboard'; }, 4000);
+          /* Override server message — never accuse photographer of using AI */
+          var _flagMsg = 'Your image has been flagged for admin review before it can be evaluated.\n\nThis can happen with heavily edited or stylised photographs. Our team will review it shortly.\n\nYou can view the status and raise a query in My Gallery.';
+          showError(_flagMsg);
+          /* Show My Gallery link below error — do NOT auto-redirect */
+          var _galleryLink = document.createElement('a');
+          _galleryLink.href = '/my-gallery';
+          _galleryLink.textContent = 'Go to My Gallery \u2192';
+          _galleryLink.style.cssText = 'display:block;margin-top:12px;color:#854F0B;font-weight:600;font-size:15px;text-align:center;';
+          var _fileErr = document.getElementById('fileError');
+          if (_fileErr && !document.getElementById('flagGalleryLink')) {
+            _galleryLink.id = 'flagGalleryLink';
+            _fileErr.appendChild(_galleryLink);
+          }
           return;
         }
 
