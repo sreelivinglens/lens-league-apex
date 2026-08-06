@@ -24,7 +24,7 @@ body.page-dashboard > footer           { display:none !important }
 body.page-dashboard .nav-mobile        { display:none !important }
 body.page-dashboard .flash-container   { display:none !important }
 body.page-dashboard > main             { padding:0 !important; max-width:none !important; margin:0 !important; background:#F6F2E9 !important }
-body.page-dashboard                    { padding-top:0 !important; background:#F6F2E9 !important }
+body.page-dashboard                    { padding-top:0 !important; background:#F6F2E9 !important; margin-top:0 !important }
 body.page-dashboard #backToTop         { display:none !important }
 
 /* ── TOKENS — from dashboard_approved.html ── */
@@ -37,7 +37,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── TOPNAV ── */
 .sl{max-width:1280px;margin:0 auto;background:var(--cream)}
-.topnav{background:var(--dark);display:flex;align-items:center;padding:0 20px;height:50px;gap:8px}
+.topnav{background:rgba(26,24,20,0.94);display:flex;align-items:center;padding:0 20px;height:64px;gap:8px}
 .logo-icon{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--dark);flex-shrink:0;text-decoration:none}
 .logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase;line-height:1.7;margin:0 28px 0 8px;flex-shrink:0}
 .sl-nav-top-links{display:flex;gap:2px;margin-left:auto}
@@ -241,6 +241,7 @@ body.page-dashboard #backToTop         { display:none !important }
   <div class="sl-nav-top-links">
     <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
+    <a class="nav-link {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="nav-link {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
     <a class="nav-link {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
     <a class="nav-link {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
@@ -319,8 +320,14 @@ body.page-dashboard #backToTop         { display:none !important }
         <div class="insight-line3">The brief below shows you where to go and what to shoot. Start there.</div>
 
       {% else %}
+        {% if stats and stats.total > 0 %}
+        <div class="insight-line1">You have uploaded {{ stats.total }} photograph{{ 's' if stats.total != 1 else '' }}. Your eye is developing.</div>
+        <div class="insight-line2">Upload more to build a clearer picture of your strongest dimensions.</div>
+        <div class="insight-line3">Every evaluation sharpens the brief. Keep going.</div>
+        {% else %}
         <div class="insight-line1">Today's practice begins here.</div>
         <div class="insight-line3">Upload and the platform builds your brief from your work.</div>
+        {% endif %}
       {% endif %}
 
       {# READ MORE — span only, never button #}
@@ -387,12 +394,6 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
     </div>
     {% endif %}
-
-    {# ── INLINE LOCATION WIDGET (hidden by default) ── #}
-    <script type="application/json" id="dash-loc-data">{{ location_data_json | default('{}') | safe if location_data_json else '{}' }}</script>
-    <script type="application/json" id="dash-loc-user">{{ {'country': (current_user.country or ''), 'state': (current_user.state or '')} | tojson | safe }}</script>
-    <div id="dash-loc-wrap" style="display:none;background:#fff;border:1px solid var(--border);border-radius:13px;padding:16px 18px;">
-      <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Change your location</div>
       <form method="POST" action="{{ url_for('profile') }}" id="dashLocForm">
         <input type="hidden" name="action" value="update_location">
         <input type="hidden" name="next" value="dashboard">
@@ -809,42 +810,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 {# ── LOCATION WIDGET JS ── #}
 <script>
-(function(){
-  var _dlocRaw = document.getElementById('dash-loc-data').textContent.trim();
-  var DLOC = {};
-  try { DLOC = JSON.parse(_dlocRaw || '{}'); } catch(e) { DLOC = {}; }
-  var dc = document.getElementById('dloc_country');
-  var ds = document.getElementById('dloc_state');
-  var dct = document.getElementById('dloc_city');
-  var dst = document.getElementById('dloc_state_txt');
-  var dctt = document.getElementById('dloc_city_txt');
-  var dow = document.getElementById('dloc_other_wrap');
-  var dco = document.getElementById('dloc_city_other');
-  window.dlocCountryChange = function(){
-    var c = dc.value;
-    ds.innerHTML = '<option value="">Select</option>';
-    dct.innerHTML = '<option value="">Select</option>';
-    if(dow) dow.style.display='none';
-    if(!c || !DLOC[c]){ ds.style.display='none'; dct.style.display='none'; if(dst)dst.style.display=''; if(dctt)dctt.style.display=''; return; }
-    ds.style.display=''; dct.style.display=''; if(dst)dst.style.display='none'; if(dctt)dctt.style.display='none';
-    Object.keys(DLOC[c]).sort().forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; ds.appendChild(o); });
-  };
-  window.dlocStateChange = function(){
-    var c=dc.value, s=ds.value;
-    dct.innerHTML = '<option value="">Select</option>';
-    if(dow) dow.style.display='none';
-    ((DLOC[c]||{})[s]||[]).forEach(function(city){ var o=document.createElement('option'); o.value=city; o.textContent=city; dct.appendChild(o); });
-  };
-  window.dlocCityChange = function(){
-    var isOther = dct.value==='Other';
-    if(dow) dow.style.display = isOther ? '' : 'none';
-    if(dco){ dco.required=isOther; if(!isOther) dco.value=''; }
-  };
-  var _userRaw = document.getElementById('dash-loc-user').textContent.trim();
-  var _user = {};
-  try { _user = JSON.parse(_userRaw || '{}'); } catch(e) { _user = {}; }
-  if(_user.country && dc){ dc.value=_user.country; dlocCountryChange(); if(_user.state && ds){ ds.value=_user.state; dlocStateChange(); } }
-})();
+
 
 /* ── SL 175: EVAL PENDING POLL ──────────────────────────────
    If ?eval_pending=ID in URL, show banner and poll every 2s.
