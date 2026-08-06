@@ -1507,13 +1507,14 @@ img {
 }
 
 /* ── Global sidenav ── */
-.sl-global-sidenav{width:155px;background:#fff;border-right:0.5px solid #E8E4DA;padding:14px 0;position:fixed;top:64px;left:0;height:calc(100vh - 64px);overflow-y:auto;z-index:100}
+.sl-page-wrap{display:flex;align-items:stretch;min-height:calc(100vh - 64px)}
+.sl-global-sidenav{width:155px;flex-shrink:0;background:#fff;border-right:0.5px solid #E8E4DA;padding:14px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;align-self:flex-start}
 .sl-si{display:block;padding:7px 14px;font-size:13px;color:#6B6B6B;text-decoration:none;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.6}
 .sl-si.active{background:#F6F2E9;color:#1A1A18;font-weight:600;border-left-color:#D6A428}
 .sl-si:hover:not(.active){color:#1A1A18;background:#fafaf8}
 .sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
-body:has(.sl-global-sidenav) main{margin-left:155px}
-@media(max-width:768px){.sl-global-sidenav{display:none !important}body:has(.sl-global-sidenav) main{margin-left:0 !important}}
+.sl-main-content{flex:1;min-width:0}
+@media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block}}
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
@@ -1679,26 +1680,33 @@ body:has(.sl-global-sidenav) main{margin-left:155px}
   {% endif %}
 {% endwith %}
 
+
 {% if current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login'] %}
-<div class="sl-global-sidenav">
-  <a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
-  <a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
-  <a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
-  <a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
-  <a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
-  <a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
-  <a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
-  <div class="sl-si-more">More</div>
-  <a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a>
-  <a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
-  <a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a>
-  <a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a>
-  <a class="sl-si" href="/contact">Help &amp; Support</a>
+<div class="sl-page-wrap">
+  <div class="sl-global-sidenav">
+    <a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
+    <a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
+    <a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
+    <a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
+    <a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
+    <a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
+    <div class="sl-si-more">More</div>
+    <a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a>
+    <a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
+    <a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a>
+    <a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a>
+    <a class="sl-si" href="/contact">Help &amp; Support</a>
+  </div>
+  <main class="sl-main-content">
+    {% block content %}{% endblock %}
+  </main>
 </div>
-{% endif %}
+{% else %}
 <main>
   {% block content %}{% endblock %}
 </main>
+{% endif %}
 
 {# ── Mobile tab nav — fixed to top on mobile ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
