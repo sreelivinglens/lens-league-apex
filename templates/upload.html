@@ -1,4 +1,4 @@
-{# SL-VERSION: 172.3 #}
+{# SL-VERSION: 175.2 (attribute quote fix: subgenre-map single-quoted to prevent JSON double-quote collision) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -540,7 +540,7 @@
       action="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-upload-url="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-result-base="{% if is_trial %}/try/result/{% else %}{% endif %}"
-      data-subgenre-map="{{ (subgenre_map_json or '{}') | safe }}">
+      data-subgenre-map='{{ (subgenre_map_json or "{}" ) | safe }}'>
       {{ csrf_token_field()|safe if csrf_token_field is defined else '' }}
       {# ── Mission tracking — passed from /mission page ── #}
       <input type="hidden" name="mission_dimension" id="mission_dimension_field" value="">
