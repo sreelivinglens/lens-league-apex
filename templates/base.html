@@ -1684,32 +1684,11 @@ img {
 {% endwith %}
 
 
-{% if current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login'] %}
-<div class="sl-page-wrap">
-  <div class="sl-global-sidenav">
-    <a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a>
-    <a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
-    <a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
-    <div class="sl-si-more">More</div>
-    <a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a>
-    <a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
-    <a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a>
-    <a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a>
-    <a class="sl-si" href="/contact">Help &amp; Support</a>
-  </div>
-  <main class="sl-main-content">
-    {% block content %}{% endblock %}
-  </main>
-</div>
-{% else %}
-<main>
-  {% block content %}{% endblock %}
-</main>
-{% endif %}
+{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login'] %}
+{% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Journey</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% endif %}
+{% block content %}{% endblock %}
+{% if _show_sidenav %}</main></div>{% else %}</main>{% endif %}
+
 
 {# ── Mobile tab nav — fixed to top on mobile ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
