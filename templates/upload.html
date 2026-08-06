@@ -1,4 +1,4 @@
-{# SL-VERSION: 172.3 #}
+{# SL-VERSION: 175.1 (Session 175, 2026-08-06 — 50-sec cutoff paid / 25-sec Haiku, auto-redirect to dashboard with eval_pending ID, backToDashboardWrap hidden until XHR Phase 1 complete) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -790,7 +790,7 @@
       </div>
     </div>
   </div>
-  <div id="backToDashboardWrap" style="display:block; margin-top:18px; text-align:center;">
+  <div id="backToDashboardWrap" style="display:none; margin-top:18px; text-align:center;">
     <a href="/dashboard" id="backToDashboardLink"
        style="display:inline-block; padding:12px 24px; border:1px solid #854F0B; border-radius:var(--radius-sm);
               color:#854F0B; font-family:var(--font-mono); font-size:13px; font-weight:600;
