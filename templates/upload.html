@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.4 (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 175.6 (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1412,6 +1412,12 @@
         showError(msg);
         return;
       }
+      if (xhr.status === 403) {
+        let msg = 'You have reached your upload limit for this month.';
+        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+        showError(msg);
+        return;
+      }
 
       let resp = null;
       try { resp = JSON.parse(xhr.responseText); } catch(e) {
@@ -1511,8 +1517,8 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          var _flagMsg = (r.message || '\uD83D\uDEAB This image was flagged and could not be evaluated.');
-          _flagMsg += '\n\nYou can view the details and raise a dispute in My Gallery.';
+          /* Override server message — never accuse photographer of using AI */
+          var _flagMsg = 'Your image has been flagged for admin review before it can be evaluated.\n\nThis can happen with heavily edited or stylised photographs. Our team will review it shortly.\n\nYou can view the status and raise a query in My Gallery.';
           showError(_flagMsg);
           /* Show My Gallery link below error — do NOT auto-redirect */
           var _galleryLink = document.createElement('a');
