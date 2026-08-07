@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.7 (bottom nav: 5 tabs Dashboard·Upload·My Gallery·Improve·More matching dashboard; request.endpoint active states on all tabs; SVG icons 18px; More drawer with Explore/Learn/Mentor/Challenge/AEA/Profile/Help/Logout; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.9 (sl-bottom-nav: blur backdrop, stronger border, :active scale(1.15) for satisfying tap feel; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,11 +120,12 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
+  top: auto !important;
   bottom: env(safe-area-inset-bottom, 34px);
   left: 0; right: 0;
   height: 62px;
-  background: #1A1A18;
-  border-top: 1px solid rgba(245,197,24,0.20);
+  background: rgba(26, 24, 20, 0.98);
+  border-top: 1.5px solid rgba(245,197,24,0.25);
   border-bottom: none;
   display: flex;
   justify-content: space-around;
@@ -132,6 +133,8 @@ table { max-width: none; }
   z-index: 998;
   padding-top: 10px;
   overflow: visible;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .sl-bottom-nav .sl-nav-item {
   display: flex;
@@ -152,7 +155,7 @@ table { max-width: none; }
 }
 .sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
-.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.7; }
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; transform: scale(1.15); transition: transform 0.1s; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
