@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.11 (gold progress bar on nav tap; Phase 2 session cache for contest_banners, active_challenge, dash_live_event; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.12 (nav: cream #F6F2E9 bg, dark text #1A1814, gold active state, no backdrop blur; hamburger dark; session 175, 2026-08-08) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -514,10 +514,10 @@ table { max-width: none; }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 nav {
-  background: rgba(26, 24, 20, 0.94);
-  border-bottom: 1px solid rgba(245,197,24,0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #F6F2E9;
+  border-bottom: 1px solid rgba(214,164,40,0.25);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   height: var(--nav-height);
   padding: 0 var(--page-pad);
   display: flex;
@@ -546,7 +546,7 @@ nav {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.40);
+  color: rgba(26,24,20,0.40);
   display: block;
 }
 .nav-links {
@@ -555,22 +555,22 @@ nav {
   gap: 2px;
 }
 .nav-links a {
-  color: #FFFFFF;
+  color: #1A1814;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
   padding: 6px 8px;
   border-radius: var(--radius-sm);
-  transition: color 0.2s, background 0.2s;
+  transition: color 0.1s, background 0.1s;
   white-space: nowrap;
 }
-.nav-links a:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
-.nav-links a:active { color: #FFFFFF; background: rgba(255,255,255,0.20); }
+.nav-links a:hover { color: #1A1814; background: rgba(26,24,20,0.06); }
+.nav-links a:active { color: #1A1814; background: rgba(26,24,20,0.10); transform:scale(1.05); }
 .nav-links a.nav-admin { color: var(--gold); }
 .nav-links a.nav-admin:hover { background: var(--gold-subtle); }
 .nav-links a.nav-active {
-  color: var(--gold) !important;
-  background: rgba(245,197,24,0.12);
+  color: var(--gold-dk) !important;
+  background: rgba(214,164,40,0.10);
   border-bottom: 2px solid var(--gold);
   padding-bottom: 4px;
 }
@@ -813,7 +813,7 @@ nav {
   border: none;
   cursor: pointer;
   padding: 8px;
-  color: #FFFFFF;
+  color: #1A1814;
   flex-direction: column;
   gap: 5px;
 }
