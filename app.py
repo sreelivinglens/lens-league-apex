@@ -1837,6 +1837,21 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS seasonal_calendar_ids_shown VARCHAR(40) DEFAULT NULL"
                 ))
+                # SL 175: Shot prescription fields for live event Sherpa brief (⏱📷📍 chips)
+                db.session.execute(db.text(
+                    "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS shot_time TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS technical_tip TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS position_tip TEXT DEFAULT NULL"
+                ))
+                # SL 175: Dashboard greeting — Claude-written personalised brief cached on user
+                # Refreshed after each evaluation. Zero dashboard latency.
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_greeting_json TEXT DEFAULT NULL"
+                ))
                 db.session.commit()
                 print('Location advisory link columns OK.')
             except Exception as _loc_url_mig:
@@ -2015,6 +2030,26 @@ def _run_startup_tasks():
             except Exception as _asl_mig:
                 db.session.rollback()
                 print(f'advisory_shown_log migration warning: {_asl_mig}')
+
+            # SL 175 — city_event_scan_log (daily city event scan dedup + rate limiting)
+            try:
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS city_event_scan_log (
+                        id           SERIAL PRIMARY KEY,
+                        city         VARCHAR(80) NOT NULL,
+                        scanned_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
+                        events_found INTEGER     NOT NULL DEFAULT 0
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_city_event_scan_log_city_at "
+                    "ON city_event_scan_log (city, scanned_at)"
+                ))
+                db.session.commit()
+                print('city_event_scan_log table OK.')
+            except Exception as _cesl_mig:
+                db.session.rollback()
+                print(f'city_event_scan_log migration warning: {_cesl_mig}')
 
             # cancellation_reasons table
             try:
@@ -5178,6 +5213,16 @@ def dashboard():
         except Exception as _eje:
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
+    # SL 175: Load personalised dashboard greeting brief (cached, zero latency)
+    import json as _dg_json
+    _dash_greeting = None
+    try:
+        _dg_raw = getattr(current_user, 'dash_greeting_json', None)
+        if _dg_raw:
+            _dash_greeting = _dg_json.loads(_dg_raw)
+    except Exception as _dge:
+        app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
+
     return render_template('dashboard.html', images=images, stats=stats,
                            all_masters=ALL_MASTERS,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
@@ -5212,6 +5257,7 @@ def dashboard():
                            show_mission=_show_mission,
                            dash_advisory=_dash_advisory,
                            dash_live_event=_dash_live_event,
+                           dash_greeting=_dash_greeting,
                            peer_queue=_peer_queue,
                            tier_rank=TIER_RANK,
                            eye_of_judge=_eye_of_judge,
@@ -5514,6 +5560,126 @@ def _build_device_label(img) -> str:
         return ''
 
     return f'Shot on {device}'
+
+
+def _refresh_dash_greeting(user_id):
+    """
+    SL 175 — Generate a personalised dashboard greeting brief using Claude.
+    Called after each successful evaluation (in _score_in_background).
+    Stores result as JSON in users.dash_greeting_json — zero dashboard latency.
+
+    Output JSON: {line1, line2, line3, expanded}
+    - line1: strongest dimension insight, specific to their image history
+    - line2: weakest dimension gap, honest and constructive
+    - line3: motivational closing line — "Go out and find the difficult shot while others wait."
+    - expanded: full paragraph coaching brief, 3-4 sentences, Sherpa voice
+    """
+    import json as _json
+    import urllib.request as _ur
+    try:
+        _user = User.query.get(user_id)
+        if not _user:
+            return
+        _pd = _build_progress_data(_user)
+        if not _pd:
+            return  # < 5 images — no brief yet
+
+        _dim_labels = {
+            'dod': 'Depth of Difficulty', 'disruption': 'Visual Disruption',
+            'dm': 'The Moment Chosen', 'wonder': 'WOW Factor', 'aq': 'The Emotion It Creates'
+        }
+        _strongest_label = _dim_labels.get(_pd.get('strongest', ''), _pd.get('strongest', ''))
+        _weakest_label   = _dim_labels.get(_pd.get('weakest', ''),   _pd.get('weakest', ''))
+        _count           = _pd.get('count', 0)
+        _avg             = _pd.get('avg_score', 0)
+        _tier            = _pd.get('highest_tier', '')
+        _top_genre       = _pd.get('top_genre', 'Photography')
+
+        _dim_avgs = _pd.get('dim_avgs', {})
+        _strongest_avg = _dim_avgs.get(_pd.get('strongest', ''), 0)
+        _weakest_avg   = _dim_avgs.get(_pd.get('weakest', ''), 0)
+
+        _prompt = f"""You are writing the personalised dashboard greeting for a photographer on Shutter League.
+
+Photographer data:
+- Evaluated images: {_count}
+- Average evaluation: {_avg:.2f}
+- Highest tier: {_tier}
+- Primary genre: {_top_genre}
+- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.1f})
+- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.1f})
+
+Write a personalised brief with exactly these four fields. Return ONLY raw JSON, no markdown, no preamble.
+
+{{
+  "line1": "One sentence naming their strongest dimension with a specific, warm observation. NOT generic. Reference the actual dimension name and what it means for their photography. 15-20 words.",
+  "line2": "One sentence naming the gap — what the weakest dimension means in practice. Honest, not harsh. 12-18 words.",
+  "line3": "Go out and find the difficult shot while others wait.",
+  "expanded": "3-4 sentence coaching paragraph. Sherpa voice — warm, specific, expert. Name both dimensions. Reference the count of images. End with one concrete thing they can do in the next shoot to close the gap. 60-80 words."
+}}
+
+Rules:
+- line3 must always be exactly: "Go out and find the difficult shot while others wait."
+- Never use the word 'score' or 'rank' — use 'evaluation' instead
+- Never mention competitors or other platforms
+- Sherpa voice: warm, specific, like a friend who is also a master photographer
+- The expanded paragraph must feel like it was written specifically for this photographer, not a template"""
+
+        _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if not _api_key:
+            return
+
+        _payload = _json.dumps({
+            'model': 'claude-haiku-4-5-20251001',
+            'max_tokens': 400,
+            'messages': [{'role': 'user', 'content': _prompt}]
+        }).encode('utf-8')
+
+        _req = _ur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': _api_key,
+                'anthropic-version': '2023-06-01'
+            },
+            method='POST'
+        )
+        with _ur.urlopen(_req, timeout=20) as _resp:
+            _result = _json.loads(_resp.read().decode())
+
+        _raw = (_result.get('content') or [{}])[0].get('text', '').strip()
+        # Strip markdown fences if present
+        if _raw.startswith('```'):
+            _raw = _raw.split('```')[1]
+            if _raw.startswith('json'):
+                _raw = _raw[4:]
+            _raw = _raw.strip().rstrip('`').strip()
+
+        _greeting = _json.loads(_raw)
+
+        # Validate required keys
+        if not all(k in _greeting for k in ('line1', 'line2', 'line3', 'expanded')):
+            app.logger.warning(f'[dash_greeting] missing keys for user {user_id}')
+            return
+
+        # Enforce line3 always correct
+        _greeting['line3'] = 'Go out and find the difficult shot while others wait.'
+
+        # Save to user
+        db.session.execute(
+            db.text('UPDATE users SET dash_greeting_json = :j WHERE id = :uid'),
+            {'j': _json.dumps(_greeting), 'uid': user_id}
+        )
+        db.session.commit()
+        app.logger.info(f'[dash_greeting] refreshed for user {user_id}')
+
+    except Exception as _dg_err:
+        app.logger.warning(f'[dash_greeting] non-fatal error for user {user_id}: {_dg_err}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
 
 
 def _build_progress_data(user):
@@ -8545,6 +8711,13 @@ def upload():
                                 if _img.is_public and not _img.is_flagged:
                                     _ensure_share_token(_img)
                                 db.session.commit()
+
+                                # SL 175: Refresh personalised dashboard greeting brief
+                                # Non-fatal — uses Haiku, ~20s, runs in same background thread
+                                try:
+                                    _refresh_dash_greeting(_img.user_id)
+                                except Exception as _dg_bg_err:
+                                    app.logger.warning(f'[dash_greeting] bg refresh failed: {_dg_bg_err}')
 
                                 # Item C — log rotation entries only on successful scoring,
                                 # so a failed/retried attempt doesn't burn a rotation slot.
