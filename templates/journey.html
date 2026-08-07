@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: journey-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard; session 175, 2026-08-07) #}
 {% block title %}Your Journey — Shutter League{% endblock %}
 {% block meta_description %}Your full evaluation history, dimension progress, and photographic evolution on Shutter League.{% endblock %}
 {# SL-DASHBOARD: 161.5 | Session 161 | 2026-07-26 | New page — /journey #}
@@ -20,7 +21,7 @@ body.page-journey { font-family: 'Inter', sans-serif !important; }
 .journey-wrap { background: var(--j-cream); min-height: 100vh; min-height: -webkit-fill-available; }
 .journey-inner { max-width: 900px; margin: 0 auto; padding: 32px 24px 60px; }
 .journey-header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--j-border); }
-.journey-title { font-size: 28px; font-weight: 800; color: var(--j-dark); margin-bottom: 4px; line-height: 1.6; }
+.journey-title { font-size: 28px; font-weight: 700; color: var(--j-dark); margin-bottom: 4px; line-height: 1.6; }
 .journey-sub { font-size: 16px; color: var(--j-muted); line-height: 1.6; }
 .j-section { background: var(--j-card); border-radius: 14px; border: 1px solid var(--j-border); padding: 20px 22px; margin-bottom: 18px; }
 .j-section-title { font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--j-muted); margin-bottom: 16px; line-height: 1.6; }
@@ -37,13 +38,13 @@ body.page-journey { font-family: 'Inter', sans-serif !important; }
 .dim-name { font-size: 15px; font-weight: 600; color: var(--j-text); width: 180px; flex-shrink: 0; line-height: 1.6; }
 .dim-bar-bg { flex: 1; height: 6px; background: var(--j-border); border-radius: 3px; }
 .dim-bar-fill { height: 100%; border-radius: 3px; background: var(--j-gold); }
-.dim-val { font-size: 15px; font-weight: 800; color: var(--j-dark); min-width: 36px; text-align: right; }
+.dim-val { font-size: 15px; font-weight: 700; color: var(--j-dark); min-width: 36px; text-align: right; }
 /* Image grid */
 .j-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
 .j-img-item { text-align: center; }
 .j-img-wrap { border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--j-border); margin-bottom: 6px; position: relative; }
 .j-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.j-img-score { font-size: 15px; font-weight: 800; color: var(--j-dark); display: block; line-height: 1.6; }
+.j-img-score { font-size: 15px; font-weight: 700; color: var(--j-dark); display: block; line-height: 1.6; }
 .j-img-date { font-size: 14px; color: var(--j-muted); display: block; line-height: 1.6; }
 .j-img-tier { font-size: 14px; color: var(--j-green); font-weight: 600; display: block; line-height: 1.6; }
 /* Back link */
