@@ -1,0 +1,1976 @@
+{# SL-VERSION: 175.7 (bottom nav: 5 tabs Dashboard·Upload·My Gallery·Improve·More matching dashboard; request.endpoint active states on all tabs; SVG icons 18px; More drawer with Explore/Learn/Mentor/Challenge/AEA/Profile/Help/Logout; session 175, 2026-08-07) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+<title>{% block title %}Shutter League{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}For 200 years, nobody built a system to tell photographers where they stand. Shutter League changes that. Honest evaluation across 5 dimensions. Free to start.{% endblock %}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{% block canonical %}https://shutterleague.com{% endblock %}">
+<!-- Open Graph -->
+<meta property="og:site_name" content="Shutter League">
+<meta property="og:title" content="{% block og_title %}Curious how good your photo really is? — Shutter League{% endblock %}">
+<meta property="og:description" content="{% block og_description %}For 200 years, nobody built a system to tell photographers where they stand. We did. Tailored assignments to become a Better Photographer. Upload free.{% endblock %}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{% block og_url %}https://shutterleague.com{% endblock %}">
+<meta property="og:image" content="{% block og_image %}https://shutterleague.com/static/og-image.jpg{% endblock %}">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}Curious how good your photo really is? — Shutter League{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}Upload a photo. Get an honest evaluation across 5 dimensions. Free to start.{% endblock %}">
+<meta name="twitter:image" content="{% block twitter_image %}https://shutterleague.com/static/og-image.jpg{% endblock %}">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='glossary-links.css') }}">
+<style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
+
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* ── Light theme — warm cream gradient surfaces ── */
+  --bg:          #F7F5F2;
+  --black:       #1a1a18;
+  --surface-1:   #FFFFFF;
+  --surface-2:   #FFFFFF;
+  --surface-3:   #F5F0E8;
+  --surface-4:   #EDE8DC;
+
+  --border-subtle: #EDE8DC;
+  --border:        #E0D8C8;
+  --border-strong: #C8C0B0;
+
+  --text-primary:   #1a1a18;
+  --text-secondary: #1a1a18;
+  --text-muted:     #1a1a18;
+  --text-disabled:  #888888;
+
+  --gold:        #F5C518;
+  --gold-light:  #F5C518;
+  --gold-dark:   #F5C518;
+  --gold-subtle: rgba(245, 197, 24, 0.12);
+  --gold-glow:   rgba(245, 197, 24, 0.22);
+
+  --green:       #2E7D4F;
+  --green-dim:   rgba(46, 125, 79, 0.12);
+  --red:         #C0392B;
+  --red-dim:     rgba(192, 57, 43, 0.10);
+  --amber:       #B8700A;
+  --amber-dim:   rgba(184, 112, 10, 0.12);
+  --dim:         #FFFFFF;
+
+  --font-body:  'Inter', sans-serif;
+  --font-mono:  'JetBrains Mono', 'Courier New', monospace;
+
+  --nav-height: 64px;
+  --page-pad:   clamp(16px, 4vw, 48px);
+  --max-width:  1200px;
+
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* Keyboard accessibility — visible focus ring for keyboard nav, hidden on mouse */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid #F5C518; outline-offset: 3px; border-radius: 2px; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
+body {
+  background: #F7F5F2;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+/* ── Suppress iOS Safari long-press context menu on image links sitewide ── */
+a img, a:has(img), a:has([class*="photo"]), a:has([class*="card"]) {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+/* ── Global mobile safety ───────────────────────────────────────────────── */
+* { max-width: 100%; }
+table { max-width: none; }
+
+/* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
+.sl-bottom-nav {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 34px);
+  left: 0; right: 0;
+  height: 62px;
+  background: #1A1A18;
+  border-top: 1px solid rgba(245,197,24,0.20);
+  border-bottom: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  z-index: 998;
+  padding-top: 10px;
+  overflow: visible;
+}
+.sl-bottom-nav .sl-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.40);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: flex-start;
+  padding-top: 4px;
+  transition: color .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.7; }
+.sl-bottom-nav .sl-nav-more-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.sl-bottom-nav .sl-nav-item__icon { font-size: 22px; line-height: 1; }
+/* Logo tab — replaces Home on logged-out nav */
+.sl-nav-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.sl-nav-logo__text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}
+/* More dropdown menu — pops UP from the tab bar */
+.sl-nav-more-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sl-bottom-more-menu {
+  display: none;
+  position: fixed;
+  top: 68px;
+  right: 0;
+  width: auto;
+  min-width: 200px;
+  max-width: 80vw;
+  background: #1A1A18;
+  border-left: 1px solid rgba(245,197,24,0.15);
+  border-bottom: 1px solid rgba(245,197,24,0.25);
+  z-index: 1999;
+  box-shadow: -4px 0 32px rgba(0,0,0,0.60);
+}
+.sl-bottom-more-menu.open { display: flex; flex-direction: column; }
+.sl-bottom-more-menu__list {
+  overflow-y: auto;
+  max-height: 55dvh;
+  padding: 8px 0;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+.sl-bottom-more-menu__fade {
+  position: sticky;
+  bottom: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, #1A1A18);
+  pointer-events: none;
+  margin-top: -48px;
+}
+.sl-bottom-more-menu__pinned {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 4px 0;
+  flex-shrink: 0;
+}
+.sl-bottom-more-menu a {
+  display: block;
+  color: rgba(255,255,255,0.80);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 11px 24px 11px 16px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.sl-bottom-more-menu a:hover,
+.sl-bottom-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
+/* Upload FAB */
+.sl-bottom-nav .sl-nav-fab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.60);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  min-height: 44px;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.sl-bottom-nav .sl-nav-fab__circle {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: #F4C20D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A18;
+  box-shadow: 0 -2px 16px rgba(244,194,13,.50);
+  margin-top: -10px;
+  transition: background .2s, transform .2s;
+}
+.sl-bottom-nav .sl-nav-fab:hover .sl-nav-fab__circle {
+  background: #D9A900;
+  transform: scale(1.05);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SHARED HERO SYSTEM — sl-hero-*
+   Session 132 · 8 July 2026
+   All 7 hero-bearing pages use these shared classes in addition to their
+   own page-specific classes. Fix here = fixed everywhere. Never edit
+   individual page hero CSS for these properties — edit here only.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Container ─────────────────────────────────────────────────────── */
+.sl-hero {
+  position: relative;
+  width: 100%;
+  height: 520px;           /* fixed — no resize, no clamp, no auto */
+  max-height: 520px;
+  background: #0D0D0B;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ── Image ─────────────────────────────────────────────────────────── */
+.sl-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Bias above centre — catches subjects in lower-third without showing
+     only sky. 35% from top is the sweet spot for landscape-orientation
+     photos across all genres: wildlife on ground, people at eye level,
+     architecture, street. Only portrait images need override — but we
+     never use portrait images on heroes. */
+  object-position: center 35%;
+  display: block;
+}
+.sl-hero-img[src=""],
+.sl-hero-img:not([src]) { display: none; }
+
+/* ── Gradient fade — always left-to-right, always reliable ─────────── */
+/* Strong dark left for text legibility regardless of image tone.
+   The left zone (0–55%) is always readable — this is where copy lives.
+   Right zone fades to show the image. Never use rgba < 0.70 on left. */
+.sl-hero-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to right,
+      rgba(13,13,11,0.88) 0%,
+      rgba(13,13,11,0.72) 40%,
+      rgba(13,13,11,0.40) 65%,
+      rgba(13,13,11,0.10) 100%
+    );
+}
+
+/* ── Content block ─────────────────────────────────────────────────── */
+/* Transparent background — the gradient provides the dark zone.
+   Content block must always sit within the dark left zone (≤55% of width). */
+.sl-hero-content {
+  position: absolute;
+  z-index: 2;
+  bottom: 28px;
+  left: clamp(24px, 5vw, 64px);
+  width: clamp(280px, 38vw, 440px);  /* scales with viewport, never overflows */
+  max-width: 440px;
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Typography ────────────────────────────────────────────────────── */
+.sl-hero-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 10px;
+}
+.sl-hero-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.sl-hero-h1 {
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+  /* Prevent very long H1s from overflowing the content block */
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.sl-hero-h1 em,
+.sl-hero-h1 span.gold { font-style: normal; color: #F5C518; }
+
+.sl-hero-body {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.80);
+  line-height: 1.65;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.50);
+  margin-bottom: 0;
+}
+.sl-hero-body p { margin-bottom: 8px; }
+.sl-hero-body p:last-child { margin-bottom: 0; }
+
+.sl-hero-tagline {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 12px;
+}
+
+/* ── Photographer credit — gold text on 20% grey fill rect ─────────── */
+/* Anchored to image corner via .sl-hero-img-wrap (position:relative).
+   Rectangular background rgba(0,0,0,0.20) ensures legibility on any
+   image tone — light, dark, grey, monochrome. Session 133 fix. */
+.sl-hero-credit-pill {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  z-index: 4;
+  color: #FFD700;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  background: rgba(0,0,0,0.20);
+  padding: 3px 8px;
+}
+
+/* ── Image wrapper — anchors credit pill to image corner ───────────── */
+.sl-hero-img-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  line-height: 0;
+}
+
+/* ── Tablet (769–900px) ─────────────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-hero {
+    height: 420px;
+    max-height: 420px;
+  }
+  .sl-hero-content {
+    width: clamp(260px, 45vw, 380px);
+    padding: 20px 22px 24px;
+    bottom: 20px;
+  }
+  .sl-hero-h1 { font-size: clamp(20px, 2.8vw, 26px); }
+}
+
+/* ── Mobile (≤768px) ────────────────────────────────────────────────── */
+/* Image on top at 16:9. Content block below on solid dark background.
+   No text overlaid on image on mobile — ever.
+   This eliminates ALL mobile copy visibility issues in one rule. */
+@media (max-width: 768px) {
+  .sl-hero {
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sl-hero-img-wrap {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    line-height: 0;
+  }
+  .sl-hero-img {
+    position: static;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: center 35%;
+    display: block;
+  }
+  .sl-hero-fade { display: none; }
+  .sl-hero-content {
+    position: static;
+    width: 100%;
+    max-width: none;
+    background: #1A1A18;   /* solid dark — guaranteed readable on any screen */
+    padding: 20px 20px 24px;
+    bottom: auto;
+    left: auto;
+    display: block;
+  }
+  .sl-hero-h1 {
+    font-size: 22px;
+    text-shadow: none;
+    margin-bottom: 0;
+  }
+  .sl-hero-eyebrow { text-shadow: none; }
+  .sl-hero-body { display: none; }   /* hidden on mobile — keeps it clean */
+  .sl-hero-tagline { display: none; }
+  .sl-hero-gold-rule { margin-bottom: 14px; }
+  /* Credit — mobile: gold text on image, 14px for 70yr rule */
+  .sl-hero-credit-pill {
+    font-size: 14px;
+    right: 12px;
+    bottom: 10px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   END SHARED HERO SYSTEM
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Add padding so page content clears the bottom tab bar */
+@media (max-width: 899px) {
+  body:not(.page-home) { 
+    padding-top: 0;
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 10px); 
+  }
+}
+@media (min-width: 900px) {
+  .sl-bottom-nav { display: none !important; }
+}
+
+/* ── Navigation ─────────────────────────────────────────────────────────── */
+nav {
+  background: rgba(26, 24, 20, 0.94);
+  border-bottom: 1px solid rgba(245,197,24,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  height: var(--nav-height);
+  padding: 0 var(--page-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.nav-brand {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+.nav-brand-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.40);
+  display: block;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.nav-links a {
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.nav-links a:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
+.nav-links a:active { color: #FFFFFF; background: rgba(255,255,255,0.20); }
+.nav-links a.nav-admin { color: var(--gold); }
+.nav-links a.nav-admin:hover { background: var(--gold-subtle); }
+.nav-links a.nav-active {
+  color: var(--gold) !important;
+  background: rgba(245,197,24,0.12);
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 4px;
+}
+
+/* ── More dropdown ───────────────────────────────────────────────────────── */
+.nav-more {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-more-btn {
+  color: #FFFFFF;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color 0.2s, background 0.2s;
+  font-family: inherit;
+  line-height: 1;
+}
+.nav-more-btn:hover { background: rgba(255,255,255,0.12); }
+.nav-more-btn.nav-more-active { color: var(--gold); background: rgba(245,197,24,0.12); }
+.nav-more-chevron { font-size: 9px; opacity: 0.6; transition: transform 0.2s; }
+.nav-more.open .nav-more-chevron { transform: rotate(180deg); }
+.nav-more-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: rgba(26,24,20,0.98);
+  border: 1px solid rgba(245,197,24,0.18);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  min-width: 178px;
+  z-index: 201;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.40);
+}
+.nav-more.open .nav-more-menu { display: block; }
+.nav-more-menu a {
+  display: block;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-more-menu a:hover { background: rgba(255,255,255,0.09); color: #FFFFFF; }
+.nav-more-menu a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.10); }
+
+
+/* ── Login/Join dropdown (desktop) ───────────────────────────────────────── */
+.nav-lj-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+}
+.nav-lj-btn {
+  color: var(--gold);
+  background: rgba(245,197,24,0.08);
+  border: 1px solid rgba(245,197,24,0.35);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.nav-lj-btn:hover { background: rgba(245,197,24,0.16); border-color: var(--gold); }
+.nav-lj-chevron { font-size: 9px; opacity: 0.7; transition: transform 0.2s; }
+.nav-lj-wrap.open .nav-lj-chevron { transform: rotate(180deg); }
+.nav-lj-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: rgba(26,24,20,0.99);
+  border: 1px solid rgba(245,197,24,0.20);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  z-index: 202;
+  box-shadow: 0 10px 32px rgba(0,0,0,0.50);
+}
+.nav-lj-wrap.open .nav-lj-dropdown { display: block; }
+/* Tabs */
+.nav-lj-tabs {
+  display: flex;
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  margin-bottom: 14px;
+  gap: 2px;
+}
+.nav-lj-tab {
+  flex: 1;
+  padding: 7px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  font-family: inherit;
+  background: none;
+}
+.nav-lj-tab.active {
+  background: rgba(42,40,32,0.9);
+  color: var(--gold);
+  border-color: rgba(245,197,24,0.40);
+}
+/* Google btn */
+.nav-lj-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  background: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a18;
+  cursor: pointer;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+.nav-lj-google:hover { background: #f5f5f5; }
+/* Divider */
+.nav-lj-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.nav-lj-divider::before, .nav-lj-divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
+}
+.nav-lj-divider span { font-size: 11px; color: rgba(255,255,255,0.40); white-space: nowrap; }
+/* Fields */
+.nav-lj-field { margin-bottom: 8px; }
+.nav-lj-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.40);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.nav-lj-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.nav-lj-input:focus { border-color: var(--gold); }
+.nav-lj-cta {
+  width: 100%;
+  padding: 10px;
+  background: var(--gold);
+  color: #000000;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+.nav-lj-cta:hover { background: #e0b000; }
+.nav-lj-forgot {
+  font-size: 11px;
+  color: rgba(245,197,24,0.65);
+  text-align: center;
+  margin-top: 8px;
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+.nav-lj-forgot:hover { color: var(--gold); }
+
+/* ── Login/Join mobile sheet ─────────────────────────────────────────────── */
+.nav-lj-sheet-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 997;
+}
+.nav-lj-sheet-overlay.open { display: block; }
+.nav-lj-sheet {
+  display: none;
+  position: fixed;
+  top: calc(68px + env(safe-area-inset-top, 0px));
+  left: 0; right: 0;
+  background: #1e1c18;
+  border-bottom: 1px solid rgba(245,197,24,0.20);
+  padding: 16px;
+  z-index: 998;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.50);
+}
+.nav-lj-sheet.open { display: block; }
+
+/* Hamburger */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #FFFFFF;
+  flex-direction: column;
+  gap: 5px;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+.nav-mobile-login {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-right: 6px;
+}
+.nav-mobile-login a {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  padding: 8px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-mobile-login .nav-ml-login {
+  color: var(--gold);
+  border: 1px solid var(--gold);
+}
+.nav-mobile-login .nav-ml-join {
+  display: none;
+}
+@media (max-width: 900px) {
+  .nav-mobile-login { display: flex; }
+}
+
+.nav-mobile {
+  display: none;
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  max-height: calc(100vh - var(--nav-height));
+  max-height: calc(100dvh - var(--nav-height));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(26,24,20,0.96);
+  border-bottom: 1px solid var(--border);
+  padding: 12px var(--page-pad) 32px;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 199;
+}
+.nav-mobile.open { display: flex; }
+.nav-mobile a {
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+}
+.nav-mobile a:hover { color: #FFFFFF; background: rgba(255,255,255,0.10); }
+.nav-mobile a.nav-admin { color: var(--gold); }
+.nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.12); }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-subtle);
+}
+.btn-solid {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0D0D0B !important;
+  font-weight: 700;
+}
+.btn-solid:hover {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+  color: #0D0D0B !important;
+}
+.btn-danger {
+  border-color: #7a2222;
+  color: var(--red);
+}
+.btn-danger:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+}
+.btn:disabled, .btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+/* Logout icon button */
+.btn-logout {
+  padding: 8px 12px;
+  min-width: 44px; min-height: 44px;
+  border-color: rgba(255,255,255,0.25);
+}
+.btn-logout svg { display: block; }
+.btn-logout:hover {
+  border-color: #c0392b;
+  background: rgba(192,57,43,0.12);
+}
+.btn-logout:hover svg { stroke: #c0392b; }
+
+/* ── Flash Messages ──────────────────────────────────────────────────────── */
+.flash-container { padding: 0 var(--page-pad); }
+.flash {
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  margin: 8px 0;
+  border-left: 3px solid;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  animation: flashIn .3s ease;
+  transition: opacity .3s ease, transform .3s ease;
+}
+@keyframes flashIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.flash.success { background: #0f2e18;  border-color: var(--green); color: #6fcf8a; }
+.flash.error   { background: #2e0f0f;  border-color: var(--red);   color: #f08080; }
+.flash.warning { background: #2a1e00;  border-color: var(--amber); color: #F5C518; }
+.flash.info    { background: #1e1800;  border-color: var(--gold);  color: #F5C518; }
+.flash-msg     { flex: 1; line-height: 1.5; }
+.flash-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 0 2px;
+  opacity: .4; transition: opacity .2s; flex-shrink: 0;
+}
+.flash-close:hover { opacity: 1; }
+.flash.success .flash-close { color: #6fcf8a; }
+.flash.error   .flash-close { color: #f08080; }
+.flash.warning .flash-close { color: #F5C518; }
+.flash.info    .flash-close { color: #F5C518; }
+.flash.hiding  { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+/* ── Main Layout ─────────────────────────────────────────────────────────── */
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 40px var(--page-pad);
+}
+/* Homepage — no padding, hero is full viewport */
+body:has(.sl-home) main {
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.card-sm {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.card-gold {
+  border-color: var(--gold-dark);
+  background: linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));
+}
+
+/* ── Grid System ─────────────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 22px; }
+.form-group label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #854F0B;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--gold);
+  background: #FFFDF8;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: var(--text-muted); }
+.form-group select option { background: #FFFFFF; color: var(--text-primary); }
+.form-group textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+
+/* ── Stat Boxes ──────────────────────────────────────────────────────────── */
+.stat-box {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+.stat-val {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-lbl {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+/* ── Image Thumbnails ────────────────────────────────────────────────────── */
+.img-thumb {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: var(--surface-3);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.img-thumb:hover img { transform: scale(1.05); }
+.score-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #000;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.status-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.status-badge.scored  { background: #000; border: 1px solid rgba(255,255,255,0.6); color: #fff; }
+.status-badge.pending { background: #000; border: 1px solid rgba(255,255,255,0.35); color: rgba(255,255,255,0.7); }
+
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.page-header {
+  margin-bottom: 36px;
+  padding-left: 20px;
+  border-left: 3px solid var(--gold);
+}
+.page-header h1 {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 17px;
+  margin-top: 6px;
+}
+
+/* ── Section Label ───────────────────────────────────────────────────────── */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+hr.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 48px 0;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 32px;
+}
+.pagination a, .pagination span {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.pagination a:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+.pagination .active { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+
+/* ── Info Box ────────────────────────────────────────────────────────────── */
+.info-box {
+  background: #F8F4EE;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 18px;
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead tr { background: #F5F0E8; }
+th {
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+td {
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(245,197,24,0.12); }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+/* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
+footer {
+  background: #0F2A22;
+  padding: 3rem var(--page-pad) 1.75rem;
+  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+.footer-top {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+.footer-brand-col {}
+.footer-brand-name {
+  font-size: 13px; font-weight: 700;
+  color: #F6F2E9; letter-spacing: 1.5px;
+  margin-bottom: 6px; text-transform: uppercase;
+}
+.footer-brand-tag {
+  font-size: 12px; color: #6A9A7A;
+  line-height: 1.6; max-width: 180px;
+}
+.footer-col {}
+.footer-col-title {
+  font-size: 10px; font-weight: 700;
+  color: #D6A428; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 14px;
+}
+.footer-col-link {
+  display: block; font-size: 13px;
+  color: #6A9A7A; text-decoration: none;
+  margin-bottom: 8px; transition: color 0.2s;
+}
+.footer-col-link:hover { color: #F6F2E9; }
+.footer-col-link.kyc { color: #9ABAA0; }
+.footer-col-link.kyc:hover { color: #F6F2E9; }
+/* Keep .footer-links for any legacy references */
+.footer-links a { color: #6A9A7A; text-decoration: none; font-size: 13px; }
+.footer-bottom {
+  border-top: 1px solid #1E3A2A;
+  padding-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-copy { font-size: 12px; color: #3A6A4A; }
+.footer-social { display: flex; gap: 20px; }
+.footer-social a { font-size: 12px; color: #3A6A4A; text-decoration: none; }
+.footer-social a:hover { color: #D6A428; }
+/* legacy — keep for mobile override */
+.footer-bottom-legacy {
+  padding: 14px var(--page-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+}
+@media (max-width: 768px) {
+  /* 70yr rule — nav chevrons min 14px on mobile */
+  .nav-more-chevron, .nav-lj-chevron { font-size: 14px; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 16px var(--page-pad) 20px; }
+  .footer-brand-col { grid-column: 1 / -1; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  /* Global mobile overflow guard — prevents any page from causing horizontal scroll */
+  body { overflow-x: hidden; }
+  main { overflow-x: hidden; }
+  p, li, td, th, blockquote, figcaption { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
+  img, video, iframe, table { max-width: 100% !important; }
+  /* Grid/flex containers — collapse to single column if not overridden by page */
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+  pre, code { overflow-x: auto; max-width: 100%; white-space: pre-wrap; word-break: break-all; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 1060px) {
+  .nav-links { gap: 0; }
+  .nav-links a { font-size: 14px; padding: 6px 5px; }
+}
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .nav-toggle { display: flex; }
+
+  main { padding: 24px var(--page-pad); }
+
+  section { padding: 56px var(--page-pad); }
+  h1, h2, h3 { text-shadow: none; }
+
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  .card { padding: 20px 16px; }
+  .card-sm { padding: 16px; }
+
+  .stat-val { font-size: 32px; }
+  .page-header h1 { font-size: 22px; }
+
+  .btn { padding: 10px 18px; font-size: 16px; }
+
+  /* Bottom tab bar replaces top nav on mobile */
+  .sl-top-nav { display: none !important; }
+  .nav-mobile-login { display: none !important; }
+  /* Mobile drawer — triggered by ☰ in bottom tab bar, slides from top */
+  .nav-mobile { display: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
+  .nav-mobile.open { display: flex !important; }
+  
+}
+
+@media (max-width: 480px) {
+  .nav-brand { font-size: 16px; letter-spacing: 2px; }
+  .grid-4 { grid-template-columns: 1fr; gap: 10px; }
+  .stat-val { font-size: 28px; }
+}
+
+/* ── Image right-click protection — sitewide ─────────────────────────────── */
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ── Cookie consent banner ───────────────────────────────────────────────── */
+#cookie-banner {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: rgba(26,24,20,0.97);
+  border-top: 1px solid rgba(245,197,24,0.20);
+  padding: 16px var(--page-pad);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#cookie-banner.cb-visible { display: flex; }
+.cb-text {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: #cccccc;
+  line-height: 1.6;
+  flex: 1;
+  min-width: 220px;
+}
+.cb-text a {
+  color: var(--gold);
+  text-decoration: underline;
+}
+.cb-actions { display: flex; gap: 10px; flex-shrink: 0; }
+#cb-accept {
+  background: var(--gold);
+  border: none;
+  color: #0D0D0B;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+#cb-accept:hover { opacity: 0.88; }
+#cb-dismiss {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #aaaaaa;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#cb-dismiss:hover { border-color: rgba(255,255,255,0.4); color: #ffffff; }
+@media (max-width: 480px) {
+  #cookie-banner { padding: 14px 16px; }
+  .cb-text { font-size: 16px; }
+}
+
+/* ── Accordion (sl-accordion) ───────────────────────────────────────────── */
+.sl-accordion {
+  margin: 0 0 6px 0;
+  padding: 0;
+}
+.sl-accordion summary.sl-accordion-trigger {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: #2C3E6B;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  user-select: none;
+  -webkit-user-select: none;
+  gap: 12px;
+}
+.sl-accordion summary.sl-accordion-trigger::-webkit-details-marker { display: none; }
+.sl-accordion summary.sl-accordion-trigger::marker { display: none; }
+.sl-accordion-icon {
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.75);
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+  line-height: 1;
+}
+.sl-accordion[open] .sl-accordion-icon { transform: rotate(180deg); }
+.sl-accordion[open] summary.sl-accordion-trigger { border-radius: 8px 8px 0 0; }
+.sl-accordion-body {
+  padding: 16px 16px 18px;
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.75;
+  border: 1px solid #2C3E6B;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-bottom: 2px;
+}
+
+/* First accordion open by default via HTML open attribute — all others collapsed */
+
+
+/* ── Photographer credit — plain gold text (shared — all hero pages) ── */
+/* Second definition intentionally overrides first for cascade safety.
+   Gold, 14px, no pill, no blur — consistent across all banners. */
+.sl-hero-credit-pill {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  z-index: 10;
+  pointer-events: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFD700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-hero-img-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  line-height: 0;
+}
+@media (max-width: 768px) {
+  .sl-hero-img-wrap {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+  }
+  .sl-hero-credit-pill {
+    font-size: 14px;
+    right: 12px;
+    bottom: 10px;
+  }
+}
+
+/* ── Global sidenav ── */
+.sl-page-wrap{display:flex;align-items:stretch;min-height:calc(100vh - 64px)}
+.sl-global-sidenav{width:155px;flex-shrink:0;background:#fff;border-right:0.5px solid #E8E4DA;padding:14px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;align-self:flex-start}
+.sl-si{display:block;padding:7px 14px;font-size:13px;color:#6B6B6B;text-decoration:none;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.6}
+.sl-si.active{background:#F6F2E9;color:#1A1A18;font-weight:600;border-left-color:#D6A428}
+.sl-si:hover:not(.active){color:#1A1A18;background:#fafaf8}
+.sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
+.sl-main-content{flex:1;min-width:0}
+@media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block}}
+</style>
+{% block extra_css %}{% endblock %}
+{% block extra_head %}{% endblock %}
+<!-- og:image dimensions — WhatsApp/Facebook render reliability -->
+<meta property="og:image:width" content="{% block og_image_width %}1200{% endblock %}">
+<meta property="og:image:height" content="{% block og_image_height %}630{% endblock %}">
+<meta property="og:image:type" content="{% block og_image_type %}image/jpeg{% endblock %}">
+<!-- Schema.org — WebApplication + Organization entity assertion -->
+<!-- Tells Google's knowledge graph what Shutter League is (fixes brand disambiguation) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": "https://shutterleague.com/#webapp",
+      "name": "Shutter League",
+      "url": "https://shutterleague.com",
+      "description": "Photography evaluation and learning platform. Honest feedback across 5 dimensions — technical difficulty, timing, originality, visual impact, and wonder. Free to start.",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "en",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR",
+        "description": "3 free photograph evaluations. Subscription from ₹200/month."
+      },
+      "provider": { "@id": "https://shutterleague.com/#organization" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://shutterleague.com/#organization",
+      "name": "Shutter League",
+      "url": "https://shutterleague.com",
+      "email": "support@shutterleague.com",
+      "foundingDate": "2026",
+      "description": "Photography learning and certification platform. Photographers are evaluated by the Apex DDI Engine across 5 dimensions.",
+      "sameAs": []
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://shutterleague.com/#website",
+      "url": "https://shutterleague.com",
+      "name": "Shutter League",
+      "publisher": { "@id": "https://shutterleague.com/#organization" }
+    }
+  ]
+}
+</script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+<nav class="sl-top-nav">
+  <a href="{{ url_for('index') }}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League"
+         style="height:34px; width:auto; display:block;"
+         onerror="this.style.display='none'">
+    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
+  </a>
+
+  <!-- Desktop nav -->
+  <div class="nav-links">
+    {% if current_user.is_authenticated %}
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}nav-active{% endif %} nav-admin">Dashboard</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% elif is_approved_judge %}
+        <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% else %}
+        {# SL 175 — Approved photographer nav: Dashboard · Upload · Journey · Learn · Explore · Profile #}
+        <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
+        <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
+        <a href="{{ url_for('my_gallery') }}" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
+        <a href="{{ url_for('mission') }}" class="{% if request.endpoint == 'mission' %}nav-active{% endif %}">Improve</a>
+        <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
+        {# SL 175.4: Haiku users → /haiku/community once built #}
+        <a href="{% if current_user.is_subscribed %}{{ url_for('recent_work') }}{% else %}/haiku/community{% endif %}" class="{% if request.endpoint in ['recent_work','leaderboard','haiku_community'] %}nav-active{% endif %}">Explore</a>
+        <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% endif %}
+    {% else %}
+      <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How it works</a>
+      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+      <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
+      <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
+      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Annual Excellence</a>
+      <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+      <a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}nav-active{% endif %}">Log in</a>
+      <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="nav-lj-btn" style="text-decoration:none; background:#D6A428; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">&#8593; Upload</a>
+    {% endif %}
+  </div>
+
+  <!-- Mobile nav login buttons -->
+  {% if not current_user.is_authenticated %}
+  <div class="nav-mobile-login">
+    <a href="{{ url_for('login') }}" class="nav-ml-login" style="text-decoration:none;">LOG IN</a>
+  </div>
+  {% endif %}
+
+  <!-- Mobile hamburger -->
+  <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav-mobile" id="navMobile">
+  {% if current_user.is_authenticated %}
+    {% if current_user.role == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}" onclick="toggleNav()">Dashboard</a>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
+    {% elif is_approved_judge %}
+      <a href="{{ url_for('judge_dashboard') }}" onclick="toggleNav()" style="color:var(--gold);">⚖️ Jury Dashboard</a>
+      <a href="{{ url_for('judge_history') }}" onclick="toggleNav()">Evaluation History</a>
+      <a href="/contact" onclick="toggleNav()">Help &amp; Support</a>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
+    {% else %}
+      {# SL 175 — Approved photographer mobile menu with collapsible More #}
+      <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
+      <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
+      <a href="{{ url_for('my_gallery') }}" onclick="toggleNav()">My Gallery</a>
+      <a href="{{ url_for('mission') }}" onclick="toggleNav()">Improve</a>
+      <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
+      <a href="{% if current_user.is_subscribed %}{{ url_for('recent_work') }}{% else %}/haiku/community{% endif %}" onclick="toggleNav()">Explore</a>
+      <a href="{{ url_for('profile') }}" onclick="toggleNav()">Profile</a>
+      <button id="slHamMore" onclick="var m=document.getElementById('slHamMoreList');var open=m.style.display==='block';m.style.display=open?'none':'block';this.textContent=open?'More ▸':'More ▾';" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;text-align:left;width:100%;min-height:44px;">More ▸</button>
+      <div id="slHamMoreList" style="display:none">
+        <a href="{{ url_for('mentors') }}" onclick="toggleNav()">Mentor Review</a>
+        <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Challenge</a>
+        <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence</a>
+        <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
+        <a href="/contact" onclick="toggleNav()">Help &amp; Support</a>
+      </div>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
+    {% endif %}
+  {% else %}
+    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
+    <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning</a>
+    <a href="/mentors" onclick="toggleNav()">Mentors</a>
+    <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
+    <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
+    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Programme Gallery</a>
+    <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
+    <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
+    <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
+    <a href="{{ url_for('login') }}" onclick="toggleNav()">Log In</a>
+    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Get My First Evaluation</a>
+  {% endif %}
+</div>
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flashContainer" style="max-width:var(--max-width); margin:12px auto; padding:0 var(--page-pad);">
+    {% for category, message in messages %}
+      <div class="flash {{ category }}" role="alert">
+        <span class="flash-msg">{{ message }}</span>
+        <button class="flash-close" onclick="dismissFlash(this)" aria-label="Dismiss">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+
+{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
+{% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% else %}<main>{% endif %}
+{% block content %}{% endblock %}
+</main>{% if _show_sidenav %}</div>{% endif %}
+
+
+{# ── Mobile tab nav — fixed to top on mobile ── #}
+<nav class="sl-bottom-nav" aria-label="Main navigation">
+  {% if current_user.is_authenticated %}
+    {# SL 175.6 — Bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
+    {# Active state driven by request.endpoint — sticky, correct on every page #}
+    <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('upload') }}" class="sl-nav-item {% if request.endpoint == 'upload' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Gallery</span>
+    </a>
+    <a href="{{ url_for('mission') }}" class="sl-nav-item {% if request.endpoint == 'mission' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>Improve</span>
+    </a>
+    {# More button — triggers drawer #}
+    <div class="sl-nav-more-wrap" id="slNavMoreWrap">
+      <button class="sl-nav-item sl-nav-more-btn {% if request.endpoint in ['learning','recent_work','mentors','weekly_challenge','poty','profile','mission_detail'] %}active{% endif %}"
+              onclick="toggleBottomMore(event)" aria-label="More"
+              style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <span>More</span>
+      </button>
+      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
+        <div class="sl-bottom-more-menu__list">
+          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}">Explore</a>
+          <a href="{{ url_for('learning') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'learning' %}active{% endif %}">Learn</a>
+          <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'mentors' %}active{% endif %}">Mentor Review</a>
+          <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'weekly_challenge' %}active{% endif %}">Weekly Challenge</a>
+          <a href="{{ url_for('poty') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'poty' %}active{% endif %}">Annual Excellence</a>
+          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'profile' %}active{% endif %}">Profile &amp; Settings</a>
+          <a href="/contact" onclick="closeBottomMore()">Help &amp; Support</a>
+          <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:var(--gold);">Log out</a>
+          <div class="sl-bottom-more-menu__fade"></div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    {# Non-authenticated bottom nav — minimal #}
+    <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
+      <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
+    </a>
+    <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="sl-nav-fab">
+      <div class="sl-nav-fab__circle">+</div>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      <span>Log In</span>
+    </a>
+  {% endif %}
+</nav>
+
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand-col">
+      <div class="footer-brand-name">SHUTTER LEAGUE</div>
+      <div class="footer-brand-tag">Photography Assessment<br>&amp; Evolution Platform</div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Company</div>
+      <a href="/about" class="footer-col-link kyc">About Us</a>
+      <a href="/contact" class="footer-col-link kyc">Contact Us</a>
+      <a href="{{ url_for('pricing') }}" class="footer-col-link">Pricing</a>
+      <a href="/faq" class="footer-col-link">FAQ</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Legal</div>
+      <a href="/terms" class="footer-col-link kyc">Terms &amp; Conditions</a>
+      <a href="/privacy" class="footer-col-link kyc">Privacy Policy</a>
+      <a href="/refund-policy" class="footer-col-link kyc">Refund Policy</a>
+      <a href="/shipping-policy" class="footer-col-link kyc">Shipping &amp; Returns</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Programmes</div>
+      <a href="{{ url_for('poty') }}" class="footer-col-link">Annual Excellence Award</a>
+      <a href="/programme-rules" class="footer-col-link">Programme Rules</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Weekly Challenge</a>
+      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Guidelines</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Learn</div>
+      <a href="{{ url_for('science') }}" class="footer-col-link">Science</a>
+      <a href="{{ url_for('learning') }}" class="footer-col-link">Lessons</a>
+      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Review</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Assignments</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">&copy; 2026 Shutter League &middot; Bengaluru, India &middot; UDYAM-KR-03-0697280</span>
+    <div class="footer-social">
+      <a href="#">Instagram</a>
+      <a href="#">Facebook</a>
+      <a href="#">YouTube</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  document.getElementById('navMobile').classList.toggle('open');
+}
+function toggleNavMore() {
+  var nm = document.getElementById('navMore');
+  if (nm) nm.classList.toggle('open');
+}
+function toggleNavMoreLoggedOut() {
+  var nm = document.getElementById('navMoreLoggedOut');
+  if (nm) nm.classList.toggle('open');
+}
+function toggleBottomMore(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('slBottomMoreMenu');
+  if (menu) menu.classList.toggle('open');
+}
+function closeBottomMore() {
+  var menu = document.getElementById('slBottomMoreMenu');
+  if (menu) menu.classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var nm = document.getElementById('navMore');
+  if (nm && nm.classList.contains('open') && !nm.contains(e.target)) {
+    nm.classList.remove('open');
+  }
+  var nmlo = document.getElementById('navMoreLoggedOut');
+  if (nmlo && nmlo.classList.contains('open') && !nmlo.contains(e.target)) {
+    nmlo.classList.remove('open');
+  }
+  var bm = document.getElementById('slBottomMoreMenu');
+  var wrap = document.getElementById('slNavMoreWrap');
+  if (bm && bm.classList.contains('open') && wrap && !wrap.contains(e.target)) {
+    bm.classList.remove('open');
+  }
+  var nav = document.getElementById('navMobile');
+  var toggle = document.querySelector('.nav-toggle');
+  if (nav && nav.classList.contains('open') && !nav.contains(e.target) && toggle && !toggle.contains(e.target)) {
+    nav.classList.remove('open');
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var ljWrap = document.getElementById('navLjWrap');
+    if (ljWrap) ljWrap.classList.remove('open');
+  }
+});
+function dismissFlash(btn) {
+  const flash = btn.closest('.flash');
+  flash.classList.add('hiding');
+  setTimeout(() => flash.remove(), 300);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var flashes = document.querySelectorAll('.flash');
+  flashes.forEach(function(el) {
+    setTimeout(function() {
+      el.classList.add('hiding');
+      setTimeout(() => el.remove(), 300);
+    }, 8000);
+  });
+  // Scroll flash into view so it's never missed on long pages
+  if (flashes.length > 0) {
+    flashes[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+// ── Right-click protection on images — sitewide ────────────────────────────
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG' || e.target.closest('img')) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.target.tagName === 'A' && e.target.querySelector('img')) {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('dragstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('touchstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.target.style.webkitUserSelect = 'none';
+    e.target.style.webkitTouchCallout = 'none';
+  }
+}, { passive: true });
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('img').forEach(function(img) {
+    img.style.webkitTouchCallout = 'none';
+    img.style.webkitUserSelect   = 'none';
+    var parent = img.parentElement;
+    if (parent && parent.tagName === 'A') {
+      parent.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+    }
+    // Walk up to find ancestor <a> (handles nested structures like gallery cards)
+    var ancestor = img.closest('a');
+    if (ancestor && ancestor !== parent) {
+      ancestor.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+    }
+  });
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+<button id="backToTop" aria-label="Back to top">&#8593;</button>
+<style>
+#backToTop {
+  position:fixed; bottom:28px; right:28px; z-index:999;
+  width:44px; height:44px; border-radius:50%;
+  background:var(--gold); color:#1a1a18;
+  border:none; cursor:pointer;
+  font-size:18px; font-weight:700; line-height:44px; text-align:center;
+  opacity:0; visibility:hidden;
+  transition:opacity 0.3s, visibility 0.3s, transform 0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+#backToTop.btt-visible { opacity:1; visibility:visible; }
+#backToTop:hover { transform:translateY(-3px); }
+</style>
+<script>
+(function(){
+  var btt = document.getElementById('backToTop');
+  window.addEventListener('scroll', function(){
+    btt.classList.toggle('btt-visible', window.scrollY > 400);
+  }, { passive: true });
+  btt.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+
+<!-- ── Cookie consent banner ─────────────────────────────────────────────── -->
+<div id="cookie-banner" role="region" aria-label="Cookie consent">
+  <div class="cb-text">
+    We use cookies to keep you logged in and improve your experience.
+    <a href="/privacy">Learn more</a>
+  </div>
+  <div class="cb-actions">
+    <button id="cb-accept" onclick="cbAccept()">Accept</button>
+    <button id="cb-dismiss" onclick="cbAccept()" aria-label="Dismiss">&times;</button>
+  </div>
+</div>
+<script>
+(function(){
+  if (!localStorage.getItem('sl_cookie_ok') && !window.location.pathname.startsWith('/card/')) {
+    document.getElementById('cookie-banner').classList.add('cb-visible');
+  }
+})();
+function cbAccept() {
+  localStorage.setItem('sl_cookie_ok', '1');
+  var b = document.getElementById('cookie-banner');
+  b.style.transition = 'opacity 0.3s';
+  b.style.opacity = '0';
+  setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
+}
+</script>
+
+</body>
+</html>
+
+<!-- SL UI v2.0 | Session 126 | 2026-07-05 -->
