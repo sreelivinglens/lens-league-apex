@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.34 (bn-tab :active scale(1.15) for satisfying tap feel; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.35 (colour redesign: Tonight's Shot dark #0A1F17→slate blue #EBF0F8, chip text dark navy, standing strip slate blue, --dark token #0F2A22→#1A1814; session 175, 2026-08-08) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -32,7 +32,7 @@ body.page-dashboard #backToTop         { display:none !important }
 /* ── TOKENS — from dashboard_approved.html ── */
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
 :root{
-  --gold:#D6A428;--gold-dk:#A37B2C;--dark:#0F2A22;--cream:#F6F2E9;
+  --gold:#D6A428;--gold-dk:#A37B2C;--dark:#1A1814;--cream:#F6F2E9;
   --border:#E8E4DA;--muted:#6B6B6B;--green:#2A7A3A;--text:#1A1A18;
   --pista:#E8F5E2;--pista-b:#C5E0BB;--navy:#13254B;--blue:#1A7FD4
 }
@@ -228,7 +228,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .mob-upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--dark);font-size:15px;font-weight:700;padding:14px 20px;border-radius:11px;text-decoration:none;width:100%;margin-bottom:10px;min-height:52px}
 .mob-quick-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .mob-quick-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;color:var(--dark);font-size:14px;font-weight:600;padding:13px 12px;border-radius:11px;text-decoration:none;border:0.5px solid var(--border);min-height:48px}
-.mob-standing-strip{background:var(--dark);border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.mob-standing-strip{background:#EBF0F8;border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid rgba(44,95,138,0.2)}
 .mob-work-on{background:var(--cream);border-radius:10px;padding:12px 14px;border-left:3px solid var(--gold);margin-bottom:10px}
 .mob-loc-chip{display:inline-flex;align-items:center;gap:5px;background:var(--pista);border:0.5px solid var(--pista-b);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;color:#3A6B2A;margin-bottom:8px}
 .mob-thumb-row{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
@@ -457,40 +457,40 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _ev_pos = dash_live_event.get('position_tip') or '' %}
 
         {# Hero shot prescription block — redesigned to catch the eye (SL 175.21) #}
-        <div style="background:#0A1F17;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.18)">
+        <div style="background:#EBF0F8;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(44,95,138,0.25);box-shadow:0 2px 8px rgba(44,95,138,0.08)">
           {# Header row — gold label + location name #}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
-            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(214,164,40,0.5)">{{ dash_live_event.genre }}</span>{% endif %}
+            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2C5F8A">{{ dash_live_event.genre }}</span>{% endif %}
           </div>
           {# Location #}
           <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 {{ dash_live_event.location_name }}</div>
           {# Subject — the action, bold and white #}
-          <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
+          <div style="font-size:16px;font-weight:700;color:#13254B;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
           {# Chips — each on its own pill row #}
           {% if _ev_shot_time or _ev_tech or _ev_pos %}
           <div style="display:flex;flex-direction:column;gap:7px">
             {% if _ev_shot_time %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
               <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
-              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _ev_shot_time }}</span>
+              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _ev_shot_time }}</span>
             </div>
             {% endif %}
             {% if _ev_tech %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
               <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
-              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _ev_tech }}</span>
+              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _ev_tech }}</span>
             </div>
             {% endif %}
             {% if _ev_pos %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
               <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
-              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _ev_pos }}</span>
+              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _ev_pos }}</span>
             </div>
             {% endif %}
           </div>
           {% else %}
-          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:160] }}{% if (dash_live_event.what_is_happening or '')|length > 160 %}…{% endif %}</div>
+          <div style="font-size:14px;color:#2A3A5A;line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:160] }}{% if (dash_live_event.what_is_happening or '')|length > 160 %}…{% endif %}</div>
           {% endif %}
         </div>
 
@@ -526,25 +526,25 @@ body.page-dashboard #backToTop         { display:none !important }
       {% elif _show_bottom %}
       {# STAGING PLACEHOLDER — location layer (remove _show_bottom before merge) #}
       {# Simulates a live event with the new dark hero treatment #}
-      <div style="background:#0A1F17;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.18)">
+      <div style="background:#EBF0F8;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(44,95,138,0.25);box-shadow:0 2px 8px rgba(44,95,138,0.08)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
-          <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(214,164,40,0.5)">Street</span>
+          <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2C5F8A">Street</span>
         </div>
         <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 Harris Jayaraj Concert, NICE Grounds</div>
-        <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.45;margin-bottom:14px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
+        <div style="font-size:16px;font-weight:700;color:#13254B;line-height:1.45;margin-bottom:14px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
         <div style="display:flex;flex-direction:column;gap:7px">
-          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
             <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
-            <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition window</span>
+            <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition window</span>
           </div>
-          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
             <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
-            <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span>
+            <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span>
           </div>
-          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
             <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
-            <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees, slightly apart</span>
+            <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees, slightly apart</span>
           </div>
         </div>
       </div>
@@ -1170,16 +1170,16 @@ body.page-dashboard #backToTop         { display:none !important }
     {% if progress_data %}
     <div class="mob-standing-strip">
       <div>
-        <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Your Standing</div>
-        <div style="font-size:20px;font-weight:700;color:#fff;line-height:1.4">👑 {{ progress_data.highest_tier or progress_data.avg_tier }}</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:2px">avg {{ '%.2f'|format(progress_data.avg_score) }} · {{ progress_data.count }} evaluations</div>
+        <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#5A7A9A;margin-bottom:4px">Your Standing</div>
+        <div style="font-size:20px;font-weight:700;color:#13254B;line-height:1.4">👑 {{ progress_data.highest_tier or progress_data.avg_tier }}</div>
+        <div style="font-size:13px;color:#5A7A9A;margin-top:2px">avg {{ '%.2f'|format(progress_data.avg_score) }} · {{ progress_data.count }} evaluations</div>
       </div>
       <div style="text-align:right">
         {% if progress_data.overall_pct and progress_data.overall_pct < 100 %}
-        <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:2px">Top</div>
-        <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">{{ progress_data.overall_pct }}%</div>
+        <div style="font-size:13px;color:#5A7A9A;margin-bottom:2px">Top</div>
+        <div style="font-size:26px;font-weight:700;color:#2C5F8A;line-height:1">{{ progress_data.overall_pct }}%</div>
         {% endif %}
-        <a href="#" onclick="document.getElementById('standing-modal').style.display='flex';return false" style="font-size:13px;color:rgba(214,164,40,0.8);text-decoration:none;display:block;margin-top:4px">Full view →</a>
+        <a href="#" onclick="document.getElementById('standing-modal').style.display='flex';return false" style="font-size:13px;color:#2C5F8A;text-decoration:none;display:block;margin-top:4px">Full view →</a>
       </div>
     </div>
     {% endif %}
@@ -1233,33 +1233,33 @@ body.page-dashboard #backToTop         { display:none !important }
         <div style="background:#0A1F17;border-radius:13px;padding:16px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
-            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(214,164,40,0.5)">{{ dash_live_event.genre }}</span>{% endif %}
+            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2C5F8A">{{ dash_live_event.genre }}</span>{% endif %}
           </div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:5px">📍 {{ dash_live_event.location_name }}</div>
+          <div style="font-size:13px;color:#5A7A9A;margin-bottom:5px">📍 {{ dash_live_event.location_name }}</div>
           <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:12px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
           {% if _mob_shot_time or _mob_tech or _mob_pos %}
           <div style="display:flex;flex-direction:column;gap:7px">
             {% if _mob_shot_time %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
               <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
-              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _mob_shot_time }}</span>
+              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _mob_shot_time }}</span>
             </div>
             {% endif %}
             {% if _mob_tech %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
               <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
-              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _mob_tech }}</span>
+              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _mob_tech }}</span>
             </div>
             {% endif %}
             {% if _mob_pos %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
               <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
-              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _mob_pos }}</span>
+              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _mob_pos }}</span>
             </div>
             {% endif %}
           </div>
           {% else %}
-          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:140] }}{% if (dash_live_event.what_is_happening or '')|length > 140 %}…{% endif %}</div>
+          <div style="font-size:14px;color:#2A3A5A;line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:140] }}{% if (dash_live_event.what_is_happening or '')|length > 140 %}…{% endif %}</div>
           {% endif %}
         </div>
         {# Full Sherpa brief — expandable on mobile #}
@@ -1293,12 +1293,12 @@ body.page-dashboard #backToTop         { display:none !important }
         {# ── STAGING PLACEHOLDER ── #}
         <div style="background:#0A1F17;border-radius:13px;padding:16px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25)">
           <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Tonight's shot</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:5px">📍 Harris Jayaraj Concert, NICE Grounds</div>
+          <div style="font-size:13px;color:#5A7A9A;margin-bottom:5px">📍 Harris Jayaraj Concert, NICE Grounds</div>
           <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:12px">Photograph the crowd — the real frames are in the faces, not the stage</div>
           <div style="display:flex;flex-direction:column;gap:7px">
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px"><span style="font-size:16px;flex-shrink:0">⏱</span><span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition</span></div>
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px"><span style="font-size:16px;flex-shrink:0">📷</span><span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one face sharp</span></div>
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px"><span style="font-size:16px;flex-shrink:0">📍</span><span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)"><span style="font-size:16px;flex-shrink:0">⏱</span><span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)"><span style="font-size:16px;flex-shrink:0">📷</span><span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one face sharp</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)"><span style="font-size:16px;flex-shrink:0">📍</span><span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees</span></div>
           </div>
         </div>
         <span class="rm" id="mob-ma-rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')" style="display:block;margin-bottom:6px">Read full brief →</span>
