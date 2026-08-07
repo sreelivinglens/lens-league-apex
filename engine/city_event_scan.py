@@ -495,19 +495,23 @@ def get_live_event_advisory(db_session, user_city):
             FROM seasonal_calendar
             WHERE LOWER(base_city) = LOWER(:city)
               AND event_type       = 'live'
-              AND date_end        >= CURRENT_DATE
-            ORDER BY date_end ASC
+              AND (date_end >= CURRENT_DATE OR date_end IS NULL)
+            ORDER BY
+              CASE WHEN date_end IS NOT NULL THEN 0 ELSE 1 END ASC,
+              date_end ASC NULLS LAST
             LIMIT 1
         """), {"city": city}).fetchone()
 
         if not row:
             return None
 
-        # Build a human-readable deadline string
+        # Build a human-readable deadline string (None for standing venues)
         _today    = date.today()
         _end      = row.date_end
-        _days_left = (_end - _today).days if _end else None
-        if _days_left is not None:
+        if _end is None:
+            deadline_label = None  # standing venue — no expiry
+        else:
+            _days_left = (_end - _today).days
             if _days_left == 0:
                 deadline_label = "Ends today"
             elif _days_left == 1:
@@ -516,8 +520,6 @@ def get_live_event_advisory(db_session, user_city):
                 deadline_label = f"Until {_end.strftime('%d %b')}"
             else:
                 deadline_label = f"Until {_end.strftime('%d %b')}"
-        else:
-            deadline_label = None
 
         from urllib.parse import quote_plus
         _q = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
