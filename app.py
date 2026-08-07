@@ -4505,8 +4505,8 @@ def dashboard():
     # do not improve POTY standing. Calculated from all scored images.
     poty_tracker = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
-        # SL 175: Read from cache first — refreshed after each evaluation
         import json as _ptj
+        _pt_cache_miss = False
         try:
             _pt_raw = db.session.execute(
                 db.text('SELECT poty_tracker_json FROM users WHERE id = :uid'),
@@ -4515,8 +4515,10 @@ def dashboard():
             if _pt_raw:
                 poty_tracker = _ptj.loads(_pt_raw)
             else:
+                _pt_cache_miss = True
                 raise ValueError('no cache')
         except Exception:
+            _pt_cache_miss = True
             # Cache miss — fall back to live computation
             scored_images = (Image.query
                 .filter_by(user_id=current_user.id, status='scored')
@@ -4586,6 +4588,18 @@ def dashboard():
                 'min_images':     POTY_MIN_IMAGES,
             }
 
+        # Cache miss — populate in background so next load is instant
+        if _pt_cache_miss:
+            try:
+                import threading as _thr
+                _uid_bg = current_user.id
+                def _bg_warm():
+                    with app.app_context():
+                        _refresh_dash_caches(_uid_bg)
+                _thr.Thread(target=_bg_warm, daemon=True).start()
+            except Exception:
+                pass
+
     # ── AEA cross-genre top-6 tracker (S156) ─────────────────────────────────
     # SL 175: Read from cache first — refreshed after each evaluation via _refresh_dash_caches
     # Falls back to live computation if cache miss (first login, cache invalidated)
@@ -4593,6 +4607,7 @@ def dashboard():
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False) and \
        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera'):
         import json as _aeaj
+        _aea_cache_miss = False
         try:
             _aea_raw = db.session.execute(
                 db.text('SELECT aea_dash_json FROM users WHERE id = :uid'),
@@ -4601,7 +4616,10 @@ def dashboard():
             if _aea_raw:
                 aea_dash = _aeaj.loads(_aea_raw)
             else:
+                _aea_cache_miss = True
                 raise ValueError('no cache')
+        except Exception:
+            _aea_cache_miss = True
         except Exception:
             # Cache miss — fall back to live computation
             try:
@@ -4716,6 +4734,18 @@ def dashboard():
             except Exception as _aea_dash_err:
                 app.logger.warning(f'[dashboard] aea_dash live fallback failed: {_aea_dash_err}')
                 aea_dash = None
+
+        # Cache miss — populate in background (only if poty didn't already trigger)
+        if _aea_cache_miss and not _pt_cache_miss:
+            try:
+                import threading as _thr2
+                _uid_bg2 = current_user.id
+                def _bg_warm2():
+                    with app.app_context():
+                        _refresh_dash_caches(_uid_bg2)
+                _thr2.Thread(target=_bg_warm2, daemon=True).start()
+            except Exception:
+                pass
 
     # Weekly challenge banner — track-aware (Session 132 Mobile DDI)
     # SL 175: Session cache — changes weekly, no need to query every load
