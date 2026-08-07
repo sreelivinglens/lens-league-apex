@@ -4566,7 +4566,7 @@ def dashboard():
                 'min_images':    POTY_MIN_IMAGES,
             }
 
-            # Warm cache in background so next load is instant
+            # Caches warm via _score_in_background after evaluation
             try:
                 import threading as _thr
                 _uid_bg = current_user.id
@@ -4699,17 +4699,7 @@ def dashboard():
                 app.logger.warning(f'[dashboard] aea_dash live fallback failed: {_aea_dash_err}')
                 aea_dash = None
 
-        # Cache miss — populate in background (only if poty didn't already trigger)
-        if _aea_cache_miss and not _pt_cache_miss:
-            try:
-                import threading as _thr2
-                _uid_bg2 = current_user.id
-                def _bg_warm2():
-                    with app.app_context():
-                        _refresh_dash_caches(_uid_bg2)
-                _thr2.Thread(target=_bg_warm2, daemon=True).start()
-            except Exception:
-                pass
+        # Cache background warm trigger disabled — caches now warm via _score_in_background
 
     # Weekly challenge banner — track-aware (Session 132 Mobile DDI)
     # SL 175: Session cache — changes weekly, no need to query every load
