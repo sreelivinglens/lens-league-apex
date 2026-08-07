@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.5 (nav tap feedback: sl-nav-item :active state gold+opacity for instant mobile tap response; nav-links :active state; transition 0.2→0.1s; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.6 (mobile nav: moved from top:0 to bottom:env(safe-area,34px) — consistent with dashboard; body padding-top removed, padding-bottom added; sl-nav-item justify flex-start + padding-top; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,15 +120,17 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 68px;
+  bottom: env(safe-area-inset-bottom, 34px);
+  left: 0; right: 0;
+  height: 62px;
   background: #1A1A18;
-  border-bottom: 1px solid rgba(245,197,24,0.20);
+  border-top: 1px solid rgba(245,197,24,0.20);
+  border-bottom: none;
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
   z-index: 998;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: 10px;
   overflow: visible;
 }
 .sl-bottom-nav .sl-nav-item {
@@ -143,7 +145,8 @@ table { max-width: none; }
   letter-spacing: .02em;
   min-width: 44px;
   min-height: 44px;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 4px;
   transition: color .1s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -495,11 +498,12 @@ table { max-width: none; }
    END SHARED HERO SYSTEM
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Add padding so page content clears the tab bar — homepage excluded (full-bleed hero) */
-/* Mobile nav padding — only when bottom tab bar is visible */
-/* Using max-width:899px to avoid audit scanning this block for font sizes */
+/* Add padding so page content clears the bottom tab bar */
 @media (max-width: 899px) {
-  body:not(.page-home) { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+  body:not(.page-home) { 
+    padding-top: 0;
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 10px); 
+  }
 }
 @media (min-width: 900px) {
   .sl-bottom-nav { display: none !important; }
