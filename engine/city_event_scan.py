@@ -94,6 +94,20 @@ WRONG: "Hitex Exhibition Centre" or "Chitrakala Parishath"
 RIGHT: "India International Trade Expo, Hitex" or "Ricoh GR Decisive Pocket Exhibition, Chitrakala Parishath"
 If you do not know the specific event name, do not include that row.
 
+SHOT PRESCRIPTION FIELDS — these three fields are the most important for photographers.
+Write them as a Sherpa mentor who has shot this event before:
+- shot_time: The specific time window(s) when the light and subject align best.
+  Be precise: "7:00–7:20 PM — golden to artificial light transition" not just "evening".
+  Include WHY the time matters photographically.
+- technical_tip: Specific camera settings or lens choice for the key frame.
+  Be concrete: "1/15 to 1/30 — crowd blur with one stationary face sharp" not "use slow shutter".
+  Include the photographic effect this creates.
+- position_tip: Exactly where to stand and why. The frame that most photographers miss.
+  Be specific: "Boundary where crowd density drops — solo attendees slightly apart" not "find a good spot".
+
+These three fields together give the photographer a complete shot brief. If you cannot write
+a specific, concrete prescription for any field, write null for that field.
+
 Return ONLY a raw JSON array starting with [ and ending with ]. No preamble, no reasoning, no markdown fences, no explanation. If you are uncertain, return []. The very first character of your response must be [.
 [
   {
@@ -105,6 +119,9 @@ Return ONLY a raw JSON array starting with [ and ending with ]. No preamble, no 
     "what_is_happening": "Rath Yatra 2026 begins on 26 June. The three giant chariots of Jagannath, Balabhadra, and Subhadra are pulled by devotees from Jagannath Temple to Gundicha Temple — one of the world's largest religious processions.",
     "why_it_matters": "The scale, colour, and crowd density create once-a-year conditions for street and documentary photography. The pre-dawn chariot decoration and the main procession both offer distinct shooting windows.",
     "best_light_time": "Pre-dawn for chariot decoration; morning for the main pull",
+    "shot_time": "Pre-dawn 4:30–6:00 AM for chariot decoration; 7:00–10:00 AM for the main procession pull",
+    "technical_tip": "Wide angle 16–35mm for the full chariot scale; 85mm+ to isolate devotee faces in the crowd",
+    "position_tip": "Station on a rooftop or raised side street for elevation on the chariot; ground level at the crowd boundary for faces",
     "access_notes": "Main road Bada Danda. Station yourself on a rooftop or side street for elevation. Free public access along the entire route.",
     "date_start": "2026-07-11",
     "date_end": "2026-07-20",
@@ -226,12 +243,14 @@ def _write_event(db_session, city, event):
                  distance_hours, month_start, month_end,
                  subject, what_is_happening, why_it_matters,
                  best_light_time, access_notes,
+                 shot_time, technical_tip, position_tip,
                  date_start, date_end, source_url, event_type)
             VALUES
                 (:base_city, :genre, :location_name, :state_country,
                  :distance_hours, :month_start, :month_end,
                  :subject, :what_is_happening, :why_it_matters,
                  :best_light_time, :access_notes,
+                 :shot_time, :technical_tip, :position_tip,
                  :date_start, :date_end, :source_url, 'live')
         """), {
             "base_city":         city,
@@ -239,14 +258,16 @@ def _write_event(db_session, city, event):
             "location_name":     location_name,
             "state_country":     (event.get("state_country") or city).strip(),
             "distance_hours":    float(event.get("distance_hours") or 0.0),
-            "month_start":       1,   # live events use date_start/date_end; month
-            "month_end":         12,  # columns set wide so the WHERE clause
-                                      # date-bound path always wins
+            "month_start":       1,
+            "month_end":         12,
             "subject":           (event.get("subject")           or "").strip(),
             "what_is_happening": (event.get("what_is_happening") or "").strip(),
             "why_it_matters":    (event.get("why_it_matters")    or "").strip(),
             "best_light_time":   (event.get("best_light_time")   or None),
             "access_notes":      (event.get("access_notes")      or None),
+            "shot_time":         (event.get("shot_time")         or None),
+            "technical_tip":     (event.get("technical_tip")     or None),
+            "position_tip":      (event.get("position_tip")      or None),
             "date_start":        date_start,
             "date_end":          date_end,
             "source_url":        (event.get("source_url")        or None),
@@ -467,24 +488,30 @@ def get_live_event_advisory(db_session, user_city):
         row = db_session.execute(_sql("""
             SELECT location_name, state_country, distance_hours,
                    subject, what_is_happening, why_it_matters,
-                   best_light_time, access_notes, date_start, date_end,
+                   best_light_time, access_notes,
+                   shot_time, technical_tip, position_tip,
+                   date_start, date_end,
                    source_url, genre
             FROM seasonal_calendar
             WHERE LOWER(base_city) = LOWER(:city)
               AND event_type       = 'live'
-              AND date_end        >= CURRENT_DATE
-            ORDER BY date_end ASC
+              AND (date_end >= CURRENT_DATE OR date_end IS NULL)
+            ORDER BY
+              CASE WHEN date_end IS NOT NULL THEN 0 ELSE 1 END ASC,
+              date_end ASC NULLS LAST
             LIMIT 1
         """), {"city": city}).fetchone()
 
         if not row:
             return None
 
-        # Build a human-readable deadline string
+        # Build a human-readable deadline string (None for standing venues)
         _today    = date.today()
         _end      = row.date_end
-        _days_left = (_end - _today).days if _end else None
-        if _days_left is not None:
+        if _end is None:
+            deadline_label = None  # standing venue — no expiry
+        else:
+            _days_left = (_end - _today).days
             if _days_left == 0:
                 deadline_label = "Ends today"
             elif _days_left == 1:
@@ -493,8 +520,6 @@ def get_live_event_advisory(db_session, user_city):
                 deadline_label = f"Until {_end.strftime('%d %b')}"
             else:
                 deadline_label = f"Until {_end.strftime('%d %b')}"
-        else:
-            deadline_label = None
 
         from urllib.parse import quote_plus
         _q = quote_plus(f"{row.location_name}, {row.state_country or ''}".strip(", "))
@@ -508,6 +533,9 @@ def get_live_event_advisory(db_session, user_city):
             "why_it_matters":    row.why_it_matters,
             "best_light_time":   row.best_light_time,
             "access_notes":      row.access_notes,
+            "shot_time":         getattr(row, 'shot_time', None),
+            "technical_tip":     getattr(row, 'technical_tip', None),
+            "position_tip":      getattr(row, 'position_tip', None),
             "date_start":        row.date_start,
             "date_end":          row.date_end,
             "deadline_label":    deadline_label,
