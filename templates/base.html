@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.6 (mobile nav: moved from top:0 to bottom:env(safe-area,34px) — consistent with dashboard; body padding-top removed, padding-bottom added; sl-nav-item justify flex-start + padding-top; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.8 (sl-bottom-nav: top:auto !important to force bottom positioning; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,6 +120,7 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
+  top: auto !important;
   bottom: env(safe-area-inset-bottom, 34px);
   left: 0; right: 0;
   height: 62px;
@@ -1700,66 +1701,59 @@ img {
 {# ── Mobile tab nav — fixed to top on mobile ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
-    {# SL 175 — Approved mobile bottom nav: Dashboard · Upload · My Gallery · Explore · Learn #}
+    {# SL 175.6 — Bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
+    {# Active state driven by request.endpoint — sticky, correct on every page #}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Dashboard</span>
     </a>
     <a href="{{ url_for('upload') }}" class="sl-nav-item {% if request.endpoint == 'upload' %}active{% endif %}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span>Upload</span>
     </a>
     <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       <span>My Gallery</span>
     </a>
-    {# SL 175: Explore → paid: recent_work | Haiku: /haiku/community (route pending SL 175.4) #}
-    <a href="{% if current_user.is_subscribed %}{{ url_for('recent_work') }}{% else %}/haiku/community{% endif %}" 
-       class="sl-nav-item {% if request.endpoint in ['recent_work','leaderboard','haiku_community'] %}active{% endif %}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span>Explore</span>
+    <a href="{{ url_for('mission') }}" class="sl-nav-item {% if request.endpoint == 'mission' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>Improve</span>
     </a>
-    <a href="{{ url_for('learning') }}" class="sl-nav-item {% if request.endpoint == 'learning' %}active{% endif %}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      <span>Learn</span>
-    </a>
+    {# More button — triggers drawer #}
+    <div class="sl-nav-more-wrap" id="slNavMoreWrap">
+      <button class="sl-nav-item sl-nav-more-btn {% if request.endpoint in ['learning','recent_work','mentors','weekly_challenge','poty','profile','mission_detail'] %}active{% endif %}"
+              onclick="toggleBottomMore(event)" aria-label="More"
+              style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <span>More</span>
+      </button>
+      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
+        <div class="sl-bottom-more-menu__list">
+          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}">Explore</a>
+          <a href="{{ url_for('learning') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'learning' %}active{% endif %}">Learn</a>
+          <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'mentors' %}active{% endif %}">Mentor Review</a>
+          <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'weekly_challenge' %}active{% endif %}">Weekly Challenge</a>
+          <a href="{{ url_for('poty') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'poty' %}active{% endif %}">Annual Excellence</a>
+          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'profile' %}active{% endif %}">Profile &amp; Settings</a>
+          <a href="/contact" onclick="closeBottomMore()">Help &amp; Support</a>
+          <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:var(--gold);">Log out</a>
+          <div class="sl-bottom-more-menu__fade"></div>
+        </div>
+      </div>
+    </div>
   {% else %}
+    {# Non-authenticated bottom nav — minimal #}
     <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
       <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
-    </a>
-    <a href="{{ url_for('mentors') }}" class="sl-nav-item {% if request.endpoint == 'mentors' %}active{% endif %}">
-      <span class="sl-nav-item__icon">◆</span>
-      <span>Mentors</span>
     </a>
     <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="sl-nav-fab">
       <div class="sl-nav-fab__circle">+</div>
       <span>Upload</span>
     </a>
-    <a href="{{ url_for('recent_work') }}" class="sl-nav-item {% if request.endpoint == 'recent_work' %}active{% endif %}">
-      <span class="sl-nav-item__icon">◈</span>
-      <span>Recent</span>
-    </a>
     <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold);">
-      <span class="sl-nav-item__icon">◉</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       <span>Log In</span>
     </a>
-    <div class="sl-nav-more-wrap" id="slNavMoreWrap">
-      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
-        <span class="sl-nav-item__icon">☰</span>
-        <span>More</span>
-      </button>
-      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
-        <div class="sl-bottom-more-menu__list">
-          <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
-          <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
-          <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-          <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Annual Excellence</a>
-          <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-          <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
-          <div class="sl-bottom-more-menu__fade"></div>
-        </div>
-      </div>
-    </div>
   {% endif %}
 </nav>
 
