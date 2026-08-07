@@ -4516,9 +4516,10 @@ def dashboard():
                 poty_tracker = _ptj.loads(_pt_raw)
             else:
                 _pt_cache_miss = True
-                raise ValueError('no cache')
         except Exception:
             _pt_cache_miss = True
+
+        if _pt_cache_miss:
             # Cache miss — fall back to live computation
             scored_images = (Image.query
                 .filter_by(user_id=current_user.id, status='scored')
@@ -4526,70 +4527,58 @@ def dashboard():
                 .order_by(Image.genre, Image.score.desc())
                 .all())
 
-        # Group by normalised genre
-        from engine.scoring import normalise_genre
-        genre_data = {}
-        for img in scored_images:
-            g = normalise_genre(img.genre) if img.genre else 'Other'
-            if g not in genre_data:
-                genre_data[g] = []
-            genre_data[g].append(img)
+            from engine.scoring import normalise_genre
+            genre_data = {}
+            for img in scored_images:
+                g = normalise_genre(img.genre) if img.genre else 'Other'
+                if g not in genre_data:
+                    genre_data[g] = []
+                genre_data[g].append(img)
 
-        # Build per-genre summary: top-6 avg, count, top-6 images
-        # Rules:
-        # - Current scores are stored on 0-10 scale (e.g. 8.4)
-        # - Legacy beta scores > 10.0 were stored on 0-100 scale — divide by 10
-        # - Minimum 6 scored images in a genre before avg is displayed
-        # - Minimum 24 images to qualify for POTY prizes
-        POTY_MIN_IMAGES  = 24
-        POTY_MIN_FOR_AVG = 6
-        from decimal import Decimal, ROUND_HALF_UP
+            POTY_MIN_IMAGES  = 24
+            POTY_MIN_FOR_AVG = 6
+            from decimal import Decimal, ROUND_HALF_UP
 
-        def _norm(s):
-            # Normalise to 0-10 scale
-            if s is None: return None
-            return round(s / 10, 2) if s > 10.0 else s
+            def _norm(s):
+                if s is None: return None
+                return round(s / 10, 2) if s > 10.0 else s
 
-        genre_rows = []
-        for genre, imgs in sorted(genre_data.items()):
-            for img in imgs:
-                img._ns = _norm(img.score)
-            imgs_desc     = sorted(imgs, key=lambda x: x._ns or 0, reverse=True)
-            top6          = imgs_desc[:6]
-            has_enough    = len(imgs) >= POTY_MIN_FOR_AVG
-            if has_enough and top6:
-                _raw      = sum(i._ns for i in top6) / len(top6)
-                top6_avg  = float(Decimal(str(_raw)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-            else:
-                top6_avg  = None
-            genre_rows.append({
-                'genre':         genre,
-                'count':         len(imgs),
-                'top6_avg':      top6_avg,
-                'top6_images':   top6,
-                'has_enough':    has_enough,
-                'qualifies':     len(imgs) >= POTY_MIN_IMAGES,
-                'bar_pct':       min(100, int((top6_avg / 10) * 100)) if top6_avg else 0,
-                'images_needed': max(0, POTY_MIN_FOR_AVG - len(imgs)),
-            })
+            genre_rows = []
+            for genre, imgs in sorted(genre_data.items()):
+                for img in imgs:
+                    img._ns = _norm(img.score)
+                imgs_desc     = sorted(imgs, key=lambda x: x._ns or 0, reverse=True)
+                top6          = imgs_desc[:6]
+                has_enough    = len(imgs) >= POTY_MIN_FOR_AVG
+                if has_enough and top6:
+                    _raw      = sum(i._ns for i in top6) / len(top6)
+                    top6_avg  = float(Decimal(str(_raw)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                else:
+                    top6_avg  = None
+                genre_rows.append({
+                    'genre':         genre,
+                    'count':         len(imgs),
+                    'top6_avg':      top6_avg,
+                    'top6_images':   top6,
+                    'has_enough':    has_enough,
+                    'qualifies':     len(imgs) >= POTY_MIN_IMAGES,
+                    'bar_pct':       min(100, int((top6_avg / 10) * 100)) if top6_avg else 0,
+                    'images_needed': max(0, POTY_MIN_FOR_AVG - len(imgs)),
+                })
 
-        # Genres with avg first (desc), then by count
-        genre_rows.sort(key=lambda x: (x['top6_avg'] is not None, x['top6_avg'] or 0, x['count']), reverse=True)
-
-        best_avg      = next((r['top6_avg'] for r in genre_rows if r['top6_avg'] is not None), None)
-        active_genres = len([r for r in genre_rows if r['count'] > 0])
-        total_scored  = sum(r['count'] for r in genre_rows)
-
-        poty_tracker = {
-                'genre_rows':     genre_rows,
-                'best_avg':       best_avg,
-                'active_genres':  active_genres,
-                'total_scored':   total_scored,
-                'min_images':     POTY_MIN_IMAGES,
+            genre_rows.sort(key=lambda x: (x['top6_avg'] is not None, x['top6_avg'] or 0, x['count']), reverse=True)
+            best_avg      = next((r['top6_avg'] for r in genre_rows if r['top6_avg'] is not None), None)
+            active_genres = len([r for r in genre_rows if r['count'] > 0])
+            total_scored  = sum(r['count'] for r in genre_rows)
+            poty_tracker  = {
+                'genre_rows':    genre_rows,
+                'best_avg':      best_avg,
+                'active_genres': active_genres,
+                'total_scored':  total_scored,
+                'min_images':    POTY_MIN_IMAGES,
             }
 
-        # Cache miss — populate in background so next load is instant
-        if _pt_cache_miss:
+            # Warm cache in background so next load is instant
             try:
                 import threading as _thr
                 _uid_bg = current_user.id
