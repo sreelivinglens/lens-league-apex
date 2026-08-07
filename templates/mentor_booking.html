@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: mentor_booking-175.1 (hide coming-soon cash payment option — not live, removes unfinished impression; session 175, 2026-08-07) #}
 {% block title %}Book a Review — {{ mentor.name }} — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -585,15 +586,15 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
               </div>
               {% endif %}
 
-              <!-- CASH OPTION — COMING SOON -->
-              <div class="sl-mbk-pay-opt disabled">
+              {# CASH OPTION — hidden until payment gateway is live (SL 175, 2026-08-07) #}
+              {# When ready to enable: remove the comment wrapper and restore the div below #}
+              {# <div class="sl-mbk-pay-opt disabled">
                 <div class="sl-mbk-pay-title">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                   Pay Cash ₹{{ mentor.price }}
                   <span class="sl-mbk-coming-soon">Coming Soon</span>
                 </div>
                 <div class="sl-mbk-pay-desc">Pay directly via UPI or card. Available soon.</div>
-              </div>
+              </div> #}
 
             </div>
             {% if points_balance >= mentor.points_cost %}
