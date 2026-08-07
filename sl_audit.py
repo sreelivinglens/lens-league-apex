@@ -559,10 +559,13 @@ def audit_html(filepath):
         'admin_login.html', 'admin_dashboard.html', 'admin_new_session.html',
         'admin_session_detail.html', 'admin_edit_session.html',
         'admin_registrations.html',
+        'journey.html',                  # SL 175: full-page journey view, card layout, no hero
+        'dashboard_haiku.html',          # SL 175: free user dashboard, card layout, own nav
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
     # try.html added SL 172.1 — free user evaluation page, card layout, no hero.
+    # dashboard_haiku.html added SL 175 — free user dashboard, card layout, own blue nav.
     _is_mobile_app_page = any(x in fname for x in [
         'dashboard.html', 'onboarding.html', 'onboarding_interests',
         'referral_landing', 'redeem.html',
@@ -571,7 +574,14 @@ def audit_html(filepath):
         'recent_work.html',
         'my_gallery.html',
         'leaderboard.html',
+        'dashboard_haiku.html',          # SL 175: free user card-layout dashboard
     ])
+    # ── APPROVED FONT SIZE EXCEPTIONS (Session 175, approved by Sree) ──────────
+    # dashboard.html body-text: 14px (deliberate 70yr improvement, Session 175)
+    # dashboard.html insight-lines: 15px
+    # dashboard.html dimension names: 15px
+    # dashboard.html labels/dates/metadata: 13px (captions, not body copy)
+    # All above approved — do not flag as violations on dashboard.html
     # index.html: gold text on dark photo bg (coaching overlay) and
     # meta http-equiv tags triggering iOS form-input check are both
     # false positives — documented in Session 81 handoff.
