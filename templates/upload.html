@@ -1,4 +1,5 @@
 {# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: upload-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -15,9 +16,9 @@
 <style>
   /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
   :root {
-    --gold:           #F5C518 !important;
-    --gold-light:     #F5C518 !important;
-    --gold-dark:      #F5C518 !important;
+    --gold:           #D6A428 !important;
+    --gold-light:     #D6A428 !important;
+    --gold-dark:      #D6A428 !important;
     --gold-subtle:    rgba(245,197,24,0.12) !important;
     --gold-glow:      rgba(245,197,24,0.22) !important;
     --text-secondary: var(--text-primary) !important;
@@ -120,7 +121,7 @@
   .file-size-warning {
     display: none; margin-top: 10px; padding: 12px 16px;
     background: var(--amber-dim); border: 1px solid var(--amber);
-    border-radius: var(--radius-sm); color: #F5C518; font-size: 16px; line-height: 1.6;
+    border-radius: var(--radius-sm); color: #D6A428; font-size: 16px; line-height: 1.6;
   }
   .file-error {
     display: none; margin-top: 10px; padding: 12px 16px;
@@ -136,20 +137,20 @@
   }
   #preflightOverlay.active { display: flex; }
   .preflight-card {
-    background: #1A1A18; border: 1px solid #F5C518;
+    background: #1A1A18; border: 1px solid #D6A428;
     border-radius: 12px; max-width: 520px; width: 100%;
     padding: 32px 28px; color: #F5F0E8;
   }
   .preflight-tag {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 3px; color: #F5C518; text-transform: uppercase;
+    letter-spacing: 3px; color: #D6A428; text-transform: uppercase;
     margin-bottom: 18px; display: block;
   }
   .preflight-section { margin-bottom: 24px; }
   .preflight-section:last-of-type { margin-bottom: 0; }
   .preflight-section-title {
     font-size: 13px; font-weight: 700; letter-spacing: 2px;
-    text-transform: uppercase; color: #F5C518;
+    text-transform: uppercase; color: #D6A428;
     font-family: var(--font-mono); margin-bottom: 10px;
   }
   .preflight-body {
@@ -166,14 +167,14 @@
     font-family: var(--font-mono); text-align: center; line-height: 1.5;
   }
   .preflight-btn-confirm {
-    background: #F5C518; color: #1A1A18;
+    background: #D6A428; color: #1A1A18;
   }
   .preflight-btn-change {
-    background: transparent; color: #F5C518;
-    border: 2px solid #F5C518;
+    background: transparent; color: #D6A428;
+    border: 2px solid #D6A428;
   }
   .preflight-btn-proceed {
-    background: #F5C518; color: #1A1A18;
+    background: #D6A428; color: #1A1A18;
   }
   .preflight-btn-cancel {
     background: transparent; color: #888;
@@ -999,9 +1000,9 @@
     fileSizeWarn.innerHTML           = msg;
     fileSizeWarn.style.display       = 'block';
     fileSizeWarn.style.background    = '#2a1e00';
-    fileSizeWarn.style.border        = '1px solid #F5C518';
-    fileSizeWarn.style.borderLeft    = '4px solid #F5C518';
-    fileSizeWarn.style.color         = '#F5C518';
+    fileSizeWarn.style.border        = '1px solid #D6A428';
+    fileSizeWarn.style.borderLeft    = '4px solid #D6A428';
+    fileSizeWarn.style.color         = '#D6A428';
     fileSizeWarn.style.fontSize      = '16px';
     fileSizeWarn.style.lineHeight    = '1.6';
     fileSizeWarn.style.padding       = '16px 18px';
@@ -1326,7 +1327,7 @@
           submitBtn.textContent = 'Submit for Evaluation';
           var _genreSel = document.getElementById('genre');
           if (_genreSel) {
-            _genreSel.style.border = '2px solid #F5C518';
+            _genreSel.style.border = '2px solid #D6A428';
             _genreSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
             _genreSel.focus();
             _genreSel.addEventListener('change', function() {
@@ -1523,7 +1524,7 @@
           document.getElementById('breathLabel').textContent      = '\uD83D\uDE4F';
           document.getElementById('clockSecs').textContent        = '\u2713';
           document.getElementById('clockRing').style.strokeDashoffset = '0';
-          document.getElementById('clockRing').style.stroke       = '#F5C518';
+          document.getElementById('clockRing').style.stroke       = '#D6A428';
           var _resultBase = (document.getElementById('uploadForm') || {}).dataset && document.getElementById('uploadForm').dataset.resultBase;
           var _dest = _resultBase ? (_resultBase + imageId) : (r.redirect || '/image/' + imageId);
           setTimeout(function() { window.location.href = _dest; }, 800);
@@ -1602,7 +1603,7 @@
         cancelBtn.textContent = 'Still working — you can go to dashboard and we\'ll notify you when done';
         cancelBtn.style.cssText = [
           'background:#2C3E6B',
-          'color:#F5C518',
+          'color:#D6A428',
           'border:none',
           'border-radius:6px',
           'font-family:Inter,Arial,sans-serif',
