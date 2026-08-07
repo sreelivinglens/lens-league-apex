@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.21 (Tonight's Shot hero card: darker #0A1F17, gold border accent, subject 16px bold white, chips as distinct pill rows rgba(255,255,255,0.07) with white text; Nearby Opportunity chips: green pill rows rgba(42,58,26,0.5); session 175, 2026-08-07) #} {# 175.20: (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.22 (mobile: bottom nav height calc(60px+safe-area), bn-tab background:none fixes More white box, mob-topbar cream bg dark text; More drawer max-height 70vh overflow scroll; session 175, 2026-08-07) #} {# 175.21: (Tonight's Shot hero card: darker #0A1F17, gold border accent, subject 16px bold white, chips as distinct pill rows rgba(255,255,255,0.07) with white text; Nearby Opportunity chips: green pill rows rgba(42,58,26,0.5); session 175, 2026-08-07) #} {# 175.20: (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -134,9 +134,29 @@ body.page-dashboard #backToTop         { display:none !important }
 .sl-footer-base{background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.1);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
 
 /* ── BOTTOM NAV — mobile only ── */
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.15);justify-content:space-around;align-items:center;z-index:1000;padding-bottom:env(safe-area-inset-bottom,0px)}
-.bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;font-weight:600;min-width:44px;min-height:44px;justify-content:center}
-.bn-tab i{font-size:20px}
+.bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:calc(60px + env(safe-area-inset-bottom,0px));
+  background:var(--dark);
+  border-top:0.5px solid rgba(255,255,255,0.15);
+  justify-content:space-around;
+  align-items:flex-start;
+  padding-top:6px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:1000;
+}
+.bn-tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:rgba(255,255,255,0.5);text-decoration:none;
+  font-size:13px;font-weight:600;
+  min-width:44px;padding:4px 8px;
+  background:none;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-tab span{display:block;font-size:13px;font-weight:600;line-height:1.2}
+.bn-tab svg{flex-shrink:0}
 .bn-tab.active{color:var(--gold)}
 
 /* ── STANDING MODAL ── */
@@ -193,9 +213,9 @@ body.page-dashboard #backToTop         { display:none !important }
 }
 
 /* ── MOBILE LAYOUT STYLES ── */
-.mob-topbar{background:rgba(15,26,20,0.97);height:56px;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:0;z-index:500;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.mob-topbar{background:var(--cream);border-bottom:0.5px solid var(--border);height:56px;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:0;z-index:500;}
 .mob-topbar-logo{height:28px;width:auto}
-.mob-topbar-title{font-size:13px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;flex:1}
+.mob-topbar-title{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;flex:1}
 .mob-topbar-av{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--dark);flex-shrink:0}
 .mob-card{background:#fff;border-radius:14px;border:0.5px solid var(--border);padding:18px;margin-bottom:10px}
 .mob-card-cream{background:var(--cream);border-radius:14px;border:0.5px solid var(--border);padding:18px;margin-bottom:10px}
@@ -218,7 +238,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── MORE DRAWER — mobile only ── */
 .mob-more-overlay{display:none;position:fixed;inset:0;z-index:1998;background:rgba(0,0,0,0.5)}
-.mob-more-drawer{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:14px 0 10px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1)}
+.mob-more-drawer{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
 .mob-more-drawer.open{transform:translateY(0)}
 .mob-more-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 16px}
 .mob-more-item{display:flex;align-items:center;gap:14px;padding:13px 24px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent}
