@@ -4505,9 +4505,25 @@ def dashboard():
     # do not improve POTY standing. Calculated from all scored images.
     poty_tracker = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
-        # SL 175: Cache reads disabled until caches are warm — re-enable after first evaluation
-        # _pt_cache_miss = True  # always compute live for now
-        if True:
+        import json as _ptj
+        _pt_cache_miss = False
+        try:
+            _pt_raw = db.session.execute(
+                db.text('SELECT poty_tracker_json FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar()
+            if _pt_raw:
+                poty_tracker = _ptj.loads(_pt_raw)
+            else:
+                _pt_cache_miss = True
+        except Exception:
+            _pt_cache_miss = True
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        if _pt_cache_miss:
             # Cache miss — fall back to live computation
             scored_images = (Image.query
                 .filter_by(user_id=current_user.id, status='scored')
@@ -4566,16 +4582,7 @@ def dashboard():
                 'min_images':    POTY_MIN_IMAGES,
             }
 
-            # Warm cache in background so next load is instant
-            try:
-                import threading as _thr
-                _uid_bg = current_user.id
-                def _bg_warm():
-                    with app.app_context():
-                        _refresh_dash_caches(_uid_bg)
-                _thr.Thread(target=_bg_warm, daemon=True).start()
-            except Exception:
-                pass
+            # Note: caches warm via _score_in_background after evaluation only
 
     # ── AEA cross-genre top-6 tracker (S156) ─────────────────────────────────
     # SL 175: Read from cache first — refreshed after each evaluation via _refresh_dash_caches
@@ -4583,9 +4590,26 @@ def dashboard():
     aea_dash = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False) and \
        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera'):
-        # SL 175: Cache reads disabled until warm
-        if True:
-            # Live computation
+        import json as _aeaj
+        _aea_cache_miss = False
+        try:
+            _aea_raw = db.session.execute(
+                db.text('SELECT aea_dash_json FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar()
+            if _aea_raw:
+                aea_dash = _aeaj.loads(_aea_raw)
+            else:
+                _aea_cache_miss = True
+        except Exception:
+            _aea_cache_miss = True
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        if _aea_cache_miss:
+            # Cache miss — fall back to live computation
             try:
                 _aea_year = datetime.utcnow().year
                 _aea_qual_start = date(_aea_year, 1, 1)
@@ -4699,17 +4723,7 @@ def dashboard():
                 app.logger.warning(f'[dashboard] aea_dash live fallback failed: {_aea_dash_err}')
                 aea_dash = None
 
-        # Cache miss — populate in background (only if poty didn't already trigger)
-        if _aea_cache_miss and not _pt_cache_miss:
-            try:
-                import threading as _thr2
-                _uid_bg2 = current_user.id
-                def _bg_warm2():
-                    with app.app_context():
-                        _refresh_dash_caches(_uid_bg2)
-                _thr2.Thread(target=_bg_warm2, daemon=True).start()
-            except Exception:
-                pass
+        # Cache background warm trigger disabled — caches now warm via _score_in_background
 
     # Weekly challenge banner — track-aware (Session 132 Mobile DDI)
     # SL 175: Session cache — changes weekly, no need to query every load
@@ -4821,9 +4835,27 @@ def dashboard():
     # SL 175: Read from cache first — refreshed after each evaluation
     wallet_hud = None
     if current_user.is_subscribed:
-        # SL 175: Cache reads disabled until warm
-        if True:
-            # Live computation
+        import json as _whj
+        _wh_cache_hit = False
+        try:
+            _wh_raw = db.session.execute(
+                db.text('SELECT wallet_hud_json FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar()
+            if _wh_raw:
+                wallet_hud = _whj.loads(_wh_raw)
+                if poty_tracker and poty_tracker.get('genre_rows'):
+                    _best_genre_count = max((r['count'] for r in poty_tracker['genre_rows']), default=0)
+                    wallet_hud['imgs_to_gate'] = max(0, 6 - _best_genre_count)
+                _wh_cache_hit = True
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        if not _wh_cache_hit:
+            # Cache miss — live computation
             _pts_bal  = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
             _pts_life = round(getattr(current_user, 'points_lifetime_earned', 0.0) or 0.0, 1)
             _res_mo   = getattr(current_user, 'residency_months', 0) or 0
