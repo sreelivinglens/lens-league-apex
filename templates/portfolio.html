@@ -1,19 +1,20 @@
 {% extends "base.html" %}
+{# SL-VERSION: portfolio-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% block title %}{{ user.full_name or user.username }} — Portfolio — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
 body:has(.sl-port) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 .sl-port { background: #F7F5F2; min-height: 100vh;
-  min-height: -webkit-fill-available; font-family: 'Inter', sans-serif !important; }
-.sl-port * { font-family: 'Inter', sans-serif !important; }
+  min-height: -webkit-fill-available;  }
+.sl-port * {  }
 
 /* Hero */
-.sl-port-hero { background: #1A2744; padding: 40px 48px 32px; }
+.sl-port-hero { background: #13254B; padding: 40px 48px 32px; }
 .sl-port-hero-row1 { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-.sl-port-avatar { width: 80px; height: 80px; border-radius: 50%; background: #243260; border: 2px solid #F5C518; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.sl-port-avatar { width: 80px; height: 80px; border-radius: 50%; background: #243260; border: 2px solid #D6A428; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .sl-port-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.sl-port-avatar-initials { font-size: 24px; font-weight: 700; color: #F5C518; font-family: 'Courier New', monospace !important; }
+.sl-port-avatar-initials { font-size: 24px; font-weight: 700; color: #D6A428; font-family: 'Courier New', monospace !important; }
 .sl-port-name-block { flex: 1; min-width: 200px; }
 .sl-port-name { font-size: 26px; font-weight: 700; color: #FFFFFF; line-height: 1.5; margin-bottom: 6px; text-shadow: none; }
 .sl-port-meta { display: flex; gap: 16px; flex-wrap: wrap; }
@@ -22,7 +23,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-tier { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,197,24,0.12); border: 1px solid rgba(245,197,24,0.30); padding: 7px 14px; flex-shrink: 0; }
 .sl-port-tier-label { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(255,255,255,0.40); }
 .sl-port-tier-val { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #1a1a18; }
-.sl-port-share-btn { background: #F5C518; color: #1A1A18; font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 18px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 44px; }
+.sl-port-share-btn { background: #D6A428; color: #1A1A18; font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 18px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 44px; }
 .sl-port-bio-row { border-top: 1px solid rgba(255,255,255,0.10); padding-top: 18px; }
 .sl-port-bio { font-size: 15px; color: rgba(255,255,255,0.68); line-height: 1.75; text-align: justify; }
 .sl-port-url { font-family: 'Courier New', monospace !important; font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 8px; letter-spacing: 0.04em; }
@@ -44,15 +45,15 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 /* Awards */
 .sl-port-awards { display: flex; gap: 12px; margin-bottom: 36px; flex-wrap: wrap; }
 .sl-port-award { display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 12px 16px; }
-.sl-port-award-icon { width: 36px; height: 36px; background: #1A2744; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sl-port-award-icon i { font-size: 18px; color: #F5C518; }
+.sl-port-award-icon { width: 36px; height: 36px; background: #13254B; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sl-port-award-icon i { font-size: 18px; color: #D6A428; }
 .sl-port-award-title { font-size: 13px; font-weight: 700; color: #1A1A18; }
 .sl-port-award-sub { font-size: 13px; color: rgba(26,26,24,0.45); }
 
 /* Filter */
 .sl-port-filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .sl-port-filter-btn { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 14px; border: 1px solid rgba(26,26,24,0.18); background: transparent; cursor: pointer; color: rgba(26,26,24,0.55); min-height: 44px; }
-.sl-port-filter-btn.active { background: #1A2744; color: #F5C518; border-color: #1A2744; }
+.sl-port-filter-btn.active { background: #13254B; color: #D6A428; border-color: #13254B; }
 
 /* Image grid */
 .sl-port-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 0; }
@@ -66,7 +67,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-card-meta { display: flex; align-items: center; justify-content: space-between; }
 .sl-port-card-genre { font-size: 13px; color: rgba(26,26,24,0.45); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'Courier New', monospace !important; }
 .sl-port-card-score { font-family: 'Courier New', monospace !important; font-size: 16px; font-weight: 700; color: #1A1A18; }
-.sl-port-card-tier { font-size: 13px; font-family: 'Courier New', monospace !important; font-weight: 700; padding: 2px 8px; background: #1A2744; color: #F5C518; }
+.sl-port-card-tier { font-size: 13px; font-family: 'Courier New', monospace !important; font-weight: 700; padding: 2px 8px; background: #13254B; color: #D6A428; }
 
 /* Genre proficiency */
 .sl-port-genre-section { margin-top: 36px; }
@@ -74,14 +75,14 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-port-genre-row { display: flex; align-items: center; gap: 12px; }
 .sl-port-genre-label { font-size: 13px; color: #1A1A18; width: 120px; flex-shrink: 0; }
 .sl-port-genre-bar-wrap { flex: 1; background: rgba(26,26,24,0.08); height: 8px; }
-.sl-port-genre-bar-fill { height: 8px; background: #1A2744; }
+.sl-port-genre-bar-fill { height: 8px; background: #13254B; }
 .sl-port-genre-score { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #1A1A18; width: 40px; text-align: right; }
 
 /* Shared by SL badge */
 .sl-port-footer { padding: 24px 48px; border-top: 1px solid rgba(26,26,24,0.08); display: flex; align-items: center; justify-content: center; }
 .sl-port-footer-badge { display: flex; align-items: center; gap: 8px; }
 .sl-port-footer-badge span { font-size: 13px; color: rgba(26,26,24,0.40); }
-.sl-port-footer-badge a { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #1A2744; text-decoration: none; letter-spacing: 0.04em; }
+.sl-port-footer-badge a { font-family: 'Courier New', monospace !important; font-size: 13px; font-weight: 700; color: #13254B; text-decoration: none; letter-spacing: 0.04em; }
 
 @media (max-width: 768px) {
   .sl-port-hero { padding: 20px 16px 18px; }
@@ -104,11 +105,11 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 .sl-lightbox.open { display: flex; }
 .sl-lightbox-inner { position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; }
 .sl-lightbox-img { max-width: 90vw; max-height: 80vh; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; }
-.sl-lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: #F5C518; font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 8px; min-height: 44px; min-width: 44px; }
+.sl-lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: #D6A428; font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 8px; min-height: 44px; min-width: 44px; }
 .sl-lightbox-caption { margin-top: 12px; text-align: center; }
 .sl-lightbox-title { font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
 .sl-lightbox-meta { font-family: 'Courier New', monospace !important; font-size: 13px; color: rgba(255,255,255,0.50); letter-spacing: 0.06em; }
-.sl-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(26,26,24,0.60); border: 1px solid rgba(255,255,255,0.15); color: #F5C518; font-size: 20px; cursor: pointer; padding: 12px 14px; min-height: 44px; min-width: 44px; line-height: 1; }
+.sl-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(26,26,24,0.60); border: 1px solid rgba(255,255,255,0.15); color: #D6A428; font-size: 20px; cursor: pointer; padding: 12px 14px; min-height: 44px; min-width: 44px; line-height: 1; }
 .sl-lightbox-prev { left: -56px; }
 .sl-lightbox-next { right: -56px; }
 @media (max-width: 768px) {
@@ -308,21 +309,17 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 {% endblock %}
 
 {% block extra_js %}
+{# SL: Image data lives in JSON data element below — not in executable JS blocks (audit rule) #}
+<script type="application/json" id="sl-port-data">
+[{% for img in images %}{"src":{{ (img.card_url or img.thumb_url or '')|tojson }},"thumb":{{ (img.thumb_url or '')|tojson }},"title":{{ (img.asset_name or 'Untitled')|tojson }},"genre":{{ (img.genre or '')|tojson }},"score":{{ ('%.2f'|format(img.score|float) if img.score else '')|tojson }},"tier":{{ (img.tier or '')|tojson }},"show_score":{{ 'true' if user.portfolio_show_scores and img.score else 'false' }},"interest":{{ ((img.genre or '')|lower)|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]
+</script>
 <script>
-// Portfolio image data for lightbox
-var SL_IMAGES = [
-  {% for img in images %}
-  {
-    src: "{{ img.card_url or img.thumb_url or '' }}",
-    thumb: "{{ img.thumb_url or '' }}",
-    title: "{{ img.asset_name or 'Untitled' }}",
-    genre: "{{ img.genre or '' }}",
-    score: "{{ '%.2f'|format(img.score|float) if img.score else '' }}",
-    tier: "{{ img.tier or '' }}",
-    show_score: {{ 'true' if user.portfolio_show_scores and img.score else 'false' }}
-  }{% if not loop.last %},{% endif %}
-  {% endfor %}
-];
+// Portfolio image data — read from JSON element, never inline Jinja in script
+var SL_IMAGES = [];
+try {
+  var _pd = document.getElementById('sl-port-data');
+  if (_pd) SL_IMAGES = JSON.parse(_pd.textContent || _pd.innerHTML || '[]');
+} catch(e) { SL_IMAGES = []; }
 
 var _lbCurrent = 0;
 var _lbFiltered = [];
