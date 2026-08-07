@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.31 (bottom nav: icon size 22→18px, gap 3→2px, scroll-top pushed higher; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.32 (bottom nav: bn-tab padding-top 10px, align-items flex-start — shifts icons+labels down 1.5 lines into visible zone; session 175, 2026-08-07) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -143,7 +143,7 @@ body.page-dashboard #backToTop         { display:none !important }
   background:var(--dark);
   border-top:0.5px solid rgba(255,255,255,0.15);
   justify-content:space-around;
-  align-items:center;
+  align-items:flex-start;
   padding-top:0;
   padding-bottom:0;
   z-index:1000;
@@ -152,7 +152,7 @@ body.page-dashboard #backToTop         { display:none !important }
   display:flex;flex-direction:column;align-items:center;gap:2px;
   color:rgba(255,255,255,0.5);text-decoration:none;
   font-size:13px;font-weight:600;
-  min-width:44px;padding:4px 8px;
+  min-width:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;
   background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
