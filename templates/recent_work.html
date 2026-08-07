@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{# SL-VERSION: recent_work-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {# SL:version S168-r3 recent_work — image links include ?from=recent so Back button returns to Recent Gallery 2026-07-31 #}
 {% block title %}Recent Work — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
-  body { font-family: 'Inter', sans-serif !important; }
+  body {  }
   /* audit stubs: min-height: 480px min-height: 360px rgba(13,13,11,0.45)
      layout-stubs-present */
   .hero-sub { display: none; }
@@ -12,7 +13,7 @@
 <style>
 /* sl_audit: pre-existing inapplicable —
    Hero (5): no hero section on recent_work
-   Gold text (2): rw-photographer uses #F5C518 — intentional username label on dark bg
+   Gold text (2): rw-photographer uses #D6A428 — intentional username label on dark bg
    2-col-grid (1): card grid is 4-col desktop / 3-col iPad / 2-col mobile — inapplicable
    Mobile h1 text-shadow (1): no text-shadow on h1 in this template — inapplicable
 */
@@ -26,14 +27,14 @@
 .rw-header {
   margin-bottom: 32px;
   padding-left: 20px;
-  border-left: 3px solid #F5C518;
+  border-left: 3px solid #D6A428;
 }
 .rw-header h1 {
   font-size: clamp(22px, 3vw, 32px);
   font-weight: 700;
   line-height: 1.5;
   margin: 0 0 6px;
-  font-family: 'Inter', sans-serif !important;
+  
 }
 .rw-header p {
   font-size: 16px;
@@ -98,7 +99,7 @@
   letter-spacing: 0.4px;
   pointer-events: none;
 }
-.tier-Legend        { background: #F5C518; color: #2a1800; }
+.tier-Legend        { background: #D6A428; color: #2a1800; }
 .tier-Grandmaster   { background: #c084fc; color: #1a0028; }
 .tier-Master        { background: #60a5fa; color: #001a2e; }
 .tier-Maverick      { background: #34d399; color: #00200f; }
@@ -175,7 +176,7 @@
   border: 1px solid var(--border, rgba(0,0,0,0.15));
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Inter', sans-serif !important;
+  
   font-weight: 500;
   color: var(--text-primary);
   text-decoration: none;
@@ -184,11 +185,11 @@
 }
 .rw-page-btn-hover-fix {
   background: var(--surface-2, #f5f5f3);
-  border-color: #F5C518;
+  border-color: #D6A428;
 }
 .rw-page-btn.active {
-  background: #F5C518;
-  border-color: #F5C518;
+  background: #D6A428;
+  border-color: #D6A428;
   color: #1a1a18;
   font-weight: 700;
   pointer-events: none;
@@ -243,7 +244,7 @@
   min-width: 140px;
   transition: border-color 0.15s;
 }
-.rw-filter-select:focus { border-color: #F5C518; outline: none; }
+.rw-filter-select:focus { border-color: #D6A428; outline: none; }
 .rw-search-wrap {
   flex: 1;
   min-width: 180px;
@@ -261,7 +262,7 @@
   min-height: 44px;
   transition: border-color 0.15s;
 }
-.rw-search:focus { border-color: #F5C518; outline: none; }
+.rw-search:focus { border-color: #D6A428; outline: none; }
 .rw-search::placeholder { color: var(--text-muted, #aaa); }
 .rw-search-icon {
   position: absolute;
@@ -287,7 +288,7 @@
   transition: border-color 0.15s, color 0.15s;
   display: none;
 }
-.rw-filter-clear:hover { border-color: #F5C518; color: var(--text-primary); }
+.rw-filter-clear:hover { border-color: #D6A428; color: var(--text-primary); }
 .rw-filter-clear.visible { display: inline-flex; align-items: center; gap: 6px; }
 
 /* No-results state */
@@ -443,7 +444,7 @@
   {% endif %}
 
   <div class="rw-no-results" id="rwNoResults" aria-live="polite">
-    No photographs match your filter. Try a different combination or <button type="button" style="background:none;border:none;color:#F5C518;font-size:16px;cursor:pointer;padding:0;text-decoration:underline;" onclick="document.getElementById('rwClearBtn').click()">clear all filters</button>.
+    No photographs match your filter. Try a different combination or <button type="button" style="background:none;border:none;color:#D6A428;font-size:16px;cursor:pointer;padding:0;text-decoration:underline;" onclick="document.getElementById('rwClearBtn').click()">clear all filters</button>.
   </div>
 
   {% else %}
