@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.11 (gold progress bar on nav tap; Phase 2 session cache for contest_banners, active_challenge, dash_live_event; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1525,6 +1525,9 @@ img {
 .sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
 .sl-main-content{flex:1;min-width:0}
 @media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block}}
+/* SL 175: Page transition loading bar — gold, 3px top, instant on tap */
+#sl-progress-bar{position:fixed;top:0;left:0;height:3px;width:0%;background:#D6A428;z-index:9999;transition:width 0.4s ease;display:none}
+#sl-progress-bar.active{display:block}
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
@@ -1578,6 +1581,28 @@ img {
 </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
+<div id="sl-progress-bar"></div>
+<script>
+// SL 175: Gold progress bar on nav tap — instant visual feedback
+(function(){
+  var bar = document.getElementById('sl-progress-bar');
+  if (!bar) return;
+  document.querySelectorAll('.sl-bottom-nav a, .sl-bottom-nav button, .nav-links a').forEach(function(el){
+    el.addEventListener('click', function(e){
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+      bar.style.width = '0%';
+      bar.classList.add('active');
+      setTimeout(function(){ bar.style.width = '70%'; }, 10);
+      setTimeout(function(){ bar.style.width = '90%'; }, 400);
+    });
+  });
+  // Complete on page load
+  window.addEventListener('pageshow', function(){
+    bar.style.width = '100%';
+    setTimeout(function(){ bar.classList.remove('active'); bar.style.width = '0%'; }, 300);
+  });
+})();
+</script>
 
 <nav class="sl-top-nav">
   <a href="{{ url_for('index') }}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
