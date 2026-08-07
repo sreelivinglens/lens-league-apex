@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.23 (bottom nav: height 60→62px, padding-top 6→8px — pushes tab content up so labels clear iOS edge; body padding 68→72px; session 175, 2026-08-07) #} {# 175.22: (mobile: bottom nav height calc(60px+safe-area), bn-tab background:none fixes More white box, mob-topbar cream bg dark text; More drawer max-height 70vh overflow scroll; session 175, 2026-08-07) #} {# 175.21: (Tonight's Shot hero card: darker #0A1F17, gold border accent, subject 16px bold white, chips as distinct pill rows rgba(255,255,255,0.07) with white text; Nearby Opportunity chips: green pill rows rgba(42,58,26,0.5); session 175, 2026-08-07) #} {# 175.20: (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.27 (greeting expanded: gated on progress_data.strongest and progress_data.weakest to prevent blank dimension names for < 5 image users; Read more hidden when no content; session 175, 2026-08-07) #} {# 175.26: (copy: insight-line3 fallback "Go out and find the difficult shot while others wait"; session 175, 2026-08-07) #} {# 175.25: (mobile Mentor Advice: full Tonight's Shot dark card with ⏱📷📍 chips now in mobile block; expandable full Sherpa brief with Read full brief→/Read less→; standard advisory also gets expandable section on mobile; session 175, 2026-08-07) #} {# 175.24: (bottom nav: height 72px+safe-area, padding-top 10px, padding-bottom safe-area+4px — clears Safari toolbar; body padding 80px; session 175, 2026-08-07) #} {# 175.23: (bottom nav: height 60→62px, padding-top 6→8px — pushes tab content up so labels clear iOS edge; body padding 68→72px; session 175, 2026-08-07) #} {# 175.22: (mobile: bottom nav height calc(60px+safe-area), bn-tab background:none fixes More white box, mob-topbar cream bg dark text; More drawer max-height 70vh overflow scroll; session 175, 2026-08-07) #} {# 175.21: (Tonight's Shot hero card: darker #0A1F17, gold border accent, subject 16px bold white, chips as distinct pill rows rgba(255,255,255,0.07) with white text; Nearby Opportunity chips: green pill rows rgba(42,58,26,0.5); session 175, 2026-08-07) #} {# 175.20: (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -138,13 +138,13 @@ body.page-dashboard #backToTop         { display:none !important }
   display:none;
   position:fixed;
   bottom:0;left:0;right:0;
-  height:calc(62px + env(safe-area-inset-bottom,0px));
+  height:calc(72px + env(safe-area-inset-bottom,0px));
   background:var(--dark);
   border-top:0.5px solid rgba(255,255,255,0.15);
   justify-content:space-around;
   align-items:flex-start;
-  padding-top:8px;
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-top:10px;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px);
   z-index:1000;
 }
 .bn-tab{
@@ -202,7 +202,7 @@ body.page-dashboard #backToTop         { display:none !important }
   /* Show mobile layout */
   .sl-mobile { display:block !important }
   /* Body padding for fixed bottom nav */
-  body { padding-bottom:calc(72px + env(safe-area-inset-bottom,0px)) }
+  body { padding-bottom:calc(80px + env(safe-area-inset-bottom,0px)) }
   .scroll-top { bottom:80px; right:16px }
   /* Footer on mobile */
   .sl-footer{grid-template-columns:1fr;gap:0;padding:20px 16px 14px}
@@ -238,7 +238,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── MORE DRAWER — mobile only ── */
 .mob-more-overlay{display:none;position:fixed;inset:0;z-index:1998;background:rgba(0,0,0,0.5)}
-.mob-more-drawer{position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
+.mob-more-drawer{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
 .mob-more-drawer.open{transform:translateY(0)}
 .mob-more-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 16px}
 .mob-more-item{display:flex;align-items:center;gap:14px;padding:13px 24px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent}
@@ -357,7 +357,7 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _dim_gap   = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
         <div class="insight-line1">Your {{ _dim_human.get(progress_data.strongest,'eye') }} is your strongest asset — it shows consistently across your evaluations.</div>
         <div class="insight-line2">The gap is in {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }} — this is what separates your current work from your best possible work.</div>
-        <div class="insight-line3">Your eye is ready. The street is waiting. Go out and make it difficult.</div>
+        <div class="insight-line3">Your eye is ready. Go out and find the difficult shot while others wait.</div>
       {% elif stats and stats.total == 0 %}
         <div class="insight-line1">Your first photograph starts everything. The platform does not guess — it learns from what you actually shoot.</div>
         <div class="insight-line2">Upload today and within 48 hours you will have a personalised brief, an evaluation, and a clear picture of where your eye is strongest.</div>
@@ -385,26 +385,31 @@ body.page-dashboard #backToTop         { display:none !important }
       {% endif %}
 
       {# READ MORE — span only, never button #}
+      {# Read more only when there's expanded content to show #}
+      {% if dash_greeting and dash_greeting.get('expanded') %}
       <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
       <div class="expanded" id="gexp">
-        {% if dash_greeting and dash_greeting.get('expanded') %}
-          <div class="body-text">{{ dash_greeting.expanded | safe }}</div>
-        {% else %}
-          {% set _dim_labels = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'WOW Factor','disruption':'Disruption'} %}
-          <div class="body-text">
-            Across your last {{ progress_data.count }} images, your
-            <span style="color:var(--gold-dk);font-weight:600">{{ _dim_labels.get(progress_data.strongest, progress_data.strongest|title) }}</span>
-            is consistently your strongest dimension — you have developed a clear eye for it.
-            Your <span style="font-weight:600;color:var(--dark)">{{ _dim_labels.get(progress_data.weakest, progress_data.weakest|title) }}</span>
-            is the one area holding your evaluations back.<br><br>
-            The images that evaluate highest on this platform are rarely the comfortable ones.
-            They come from the rain, from a festival crowd at midnight, from a moment that was hard to get to.
-            Going out into the difficult scene is what separates a different image from a clichéd one.
-            Your eye is ready.
-          </div>
-        {% endif %}
+        <div class="body-text">{{ dash_greeting.expanded | safe }}</div>
         <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
       </div>
+      {% elif progress_data and progress_data.strongest and progress_data.weakest %}
+      {% set _dim_labels = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'WOW Factor','disruption':'Disruption'} %}
+      <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
+      <div class="expanded" id="gexp">
+        <div class="body-text">
+          Across your last {{ progress_data.count }} images, your
+          <span style="color:var(--gold-dk);font-weight:600">{{ _dim_labels.get(progress_data.strongest, progress_data.strongest|title) }}</span>
+          is consistently your strongest dimension — you have developed a clear eye for it.
+          Your <span style="font-weight:600;color:var(--dark)">{{ _dim_labels.get(progress_data.weakest, progress_data.weakest|title) }}</span>
+          is the one area holding your evaluations back.<br><br>
+          The images that evaluate highest on this platform are rarely the comfortable ones.
+          They come from the rain, from a festival crowd at midnight, from a moment that was hard to get to.
+          Going out into the difficult scene is what separates a different image from a clichéd one.
+          Your eye is ready.
+        </div>
+        <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
+      </div>
+      {% endif %}
     </div>
 
     {# ── CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE ── #}
@@ -1143,7 +1148,7 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _dim_gap   = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
         <div class="insight-line1">Your {{ _dim_human.get(progress_data.strongest,'eye') }} is your strongest asset — it shows consistently.</div>
         <div class="insight-line2">The gap is in {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }}.</div>
-        <div class="insight-line3">Your eye is ready. Go out and make it difficult.</div>
+        <div class="insight-line3">Your eye is ready. Go out and find the difficult shot while others wait.</div>
       {% elif stats and stats.total == 0 %}
         <div class="insight-line1">Upload your first photograph and begin.</div>
         <div class="insight-line3">The platform learns from what you actually shoot.</div>
@@ -1193,7 +1198,7 @@ body.page-dashboard #backToTop         { display:none !important }
       </a>
     </div>
 
-    {# ── MENTOR ADVICE — work on this + location ── #}
+    {# ── MENTOR ADVICE — work on this + Tonight's Shot + location ── #}
     {% set _has_mob_mentor = (dash_advisory and dash_advisory.get('location_name')) or dash_live_event or _show_bottom %}
     {% if progress_data and progress_data.weakest or _has_mob_mentor %}
     <div class="mob-card">
@@ -1216,25 +1221,89 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
       {% endif %}
 
-      {# Location advisory #}
+      {# Tonight's Shot / Location advisory #}
       {% if _has_mob_mentor %}
         {% if dash_live_event %}
-        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_live_event.location_name }}</div>
-        {% if dash_live_event.subject %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:5px">{{ dash_live_event.subject }}</div>{% endif %}
-        {% set _mob_live_short = (dash_live_event.what_is_happening or '')[:120] %}
-        {% if _mob_live_short %}<div style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px">{{ _mob_live_short }}{% if (dash_live_event.what_is_happening or '')|length > 120 %}…{% endif %}</div>{% endif %}
-        <a href="{{ dash_live_event.url }}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:12px;border-radius:9px;text-decoration:none;min-height:46px;">📍 Get directions →</a>
+        {# ── LIVE EVENT: Tonight's Shot card — same as desktop, full chips visible ── #}
+        {% set _mob_shot_time = dash_live_event.get('shot_time') or dash_live_event.get('best_light_time') or '' %}
+        {% set _mob_tech = dash_live_event.get('technical_tip') or '' %}
+        {% set _mob_pos = dash_live_event.get('position_tip') or '' %}
+        <div style="background:#0A1F17;border-radius:13px;padding:16px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
+            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(214,164,40,0.5)">{{ dash_live_event.genre }}</span>{% endif %}
+          </div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:5px">📍 {{ dash_live_event.location_name }}</div>
+          <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:12px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
+          {% if _mob_shot_time or _mob_tech or _mob_pos %}
+          <div style="display:flex;flex-direction:column;gap:7px">
+            {% if _mob_shot_time %}
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+              <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
+              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _mob_shot_time }}</span>
+            </div>
+            {% endif %}
+            {% if _mob_tech %}
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+              <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
+              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _mob_tech }}</span>
+            </div>
+            {% endif %}
+            {% if _mob_pos %}
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+              <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
+              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _mob_pos }}</span>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:140] }}{% if (dash_live_event.what_is_happening or '')|length > 140 %}…{% endif %}</div>
+          {% endif %}
+        </div>
+        {# Full Sherpa brief — expandable on mobile #}
+        <span class="rm" id="mob-ma-rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')" style="display:block;margin-bottom:6px">Read full brief →</span>
+        <div class="expanded" id="mob-ma-exp">
+          {% set _mob_live_full = (dash_live_event.what_is_happening or '') ~ (' ' ~ dash_live_event.why_it_matters if dash_live_event.why_it_matters else '') %}
+          <div style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:10px">{{ _mob_live_full }}</div>
+          <a href="{{ dash_live_event.url }}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:13px;border-radius:9px;text-decoration:none;min-height:48px;margin-bottom:6px;">📍 Get directions →</a>
+          <span class="rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')">Read less →</span>
+        </div>
+
         {% elif dash_advisory %}
+        {# ── STANDARD ADVISORY ── #}
         <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_advisory.location_name }}</div>
-        {% if dash_advisory.get('best_light_time') %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:5px">{{ dash_advisory.best_light_time }}</div>{% endif %}
-        {% set _mob_adv_short = (dash_advisory.what_is_happening or dash_advisory.light_note or '')[:120] %}
-        <div style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px">{{ _mob_adv_short }}{% if _mob_adv_short|length >= 120 %}…{% endif %}</div>
-        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:12px;border-radius:9px;text-decoration:none;min-height:46px;margin-bottom:6px;">📍 Get directions →</a>
+        {% if dash_advisory.get('best_light_time') %}
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;background:var(--cream);border-radius:7px;padding:7px 10px">
+          <span style="font-size:14px">⏱</span><span style="font-size:14px;color:var(--dark);font-weight:500">{{ dash_advisory.best_light_time }}</span>
+        </div>
+        {% endif %}
+        {% set _mob_adv_short = (dash_advisory.what_is_happening or dash_advisory.light_note or '') %}
+        <div style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px">{{ _mob_adv_short[:160] }}{% if _mob_adv_short|length > 160 %}…{% endif %}</div>
+        <span class="rm" id="mob-ma-rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')" style="display:block;margin-bottom:6px">Read more →</span>
+        <div class="expanded" id="mob-ma-exp">
+          {% set _mob_adv_full = _mob_adv_short ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
+          <div style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:10px">{{ _mob_adv_full }}</div>
+          <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:13px;border-radius:9px;text-decoration:none;min-height:48px;margin-bottom:6px;">📍 Get directions →</a>
+          <span class="rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')">Read less →</span>
+        </div>
+
         {% elif _show_bottom %}
-        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 Cubbon Park, Bengaluru</div>
-        <div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:5px">6:00–8:00 AM · Overcast morning light</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px">Overcast mornings wrap light evenly. Newspaper readers at the central fountain — clean geometry, consistent subjects.</div>
-        <div class="mob-loc-chip">🌿 Staging placeholder</div>
+        {# ── STAGING PLACEHOLDER ── #}
+        <div style="background:#0A1F17;border-radius:13px;padding:16px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25)">
+          <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Tonight's shot</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:5px">📍 Harris Jayaraj Concert, NICE Grounds</div>
+          <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:12px">Photograph the crowd — the real frames are in the faces, not the stage</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px"><span style="font-size:16px;flex-shrink:0">⏱</span><span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px"><span style="font-size:16px;flex-shrink:0">📷</span><span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one face sharp</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px"><span style="font-size:16px;flex-shrink:0">📍</span><span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees</span></div>
+          </div>
+        </div>
+        <span class="rm" id="mob-ma-rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')" style="display:block;margin-bottom:6px">Read full brief →</span>
+        <div class="expanded" id="mob-ma-exp">
+          <div style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:10px">The moment Harris Jayaraj's signature orchestral swells hit, people stop performing for cameras and become themselves. Stand at the boundary where crowd density drops — the edge where solo attendees watch alone, slightly apart. That isolation against a mass of bodies is exactly the kind of frame your Disruption dimension has not yet reached. Do not centre the subject. Put them at the hard edge of the frame with the crowd bleeding out of focus behind them.</div>
+          <span class="rm" onclick="toggleSpan('mob-ma-exp','mob-ma-rm')">Read less →</span>
+        </div>
         {% endif %}
       {% endif %}
     </div>
