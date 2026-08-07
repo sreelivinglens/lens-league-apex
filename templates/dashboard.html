@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.35 (colour redesign: Tonight's Shot dark #0A1F17→slate blue #EBF0F8, chip text dark navy, standing strip slate blue, --dark token #0F2A22→#1A1814; session 175, 2026-08-08) #}
+{# SL-VERSION: 175.36 (Tonight's Shot subject black; Mentor Advice deduped — shows chips only, links down to Nearby Opportunity for full brief; anchor #nearby-opportunity added; session 175, 2026-08-08) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -466,7 +466,7 @@ body.page-dashboard #backToTop         { display:none !important }
           {# Location #}
           <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 {{ dash_live_event.location_name }}</div>
           {# Subject — the action, bold and white #}
-          <div style="font-size:16px;font-weight:700;color:#13254B;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
+          <div style="font-size:16px;font-weight:700;color:#1A1814;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
           {# Chips — each on its own pill row #}
           {% if _ev_shot_time or _ev_tech or _ev_pos %}
           <div style="display:flex;flex-direction:column;gap:7px">
@@ -494,14 +494,8 @@ body.page-dashboard #backToTop         { display:none !important }
           {% endif %}
         </div>
 
-        {# Read full brief link — scrolls to Nearby Opportunity card #}
-        <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read full brief →</span>
-        <div class="expanded" id="ma-exp">
-          {% set _live_full = (dash_live_event.what_is_happening or '') ~ (' ' ~ dash_live_event.why_it_matters if dash_live_event.why_it_matters else '') %}
-          <div class="body-text" style="margin-bottom:10px">{{ _live_full }}</div>
-          <a href="{{ dash_live_event.url }}" target="_blank" style="background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:7px;text-decoration:none;display:inline-block;">📍 Get directions →</a>
-          <span class="rm" onclick="toggleSpan('ma-exp','ma-rm')">Read less →</span>
-        </div>
+        {# Link to full brief in Nearby Opportunity below — no duplication #}
+        <a href="#nearby-opportunity" style="font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:none;display:inline-block;margin-top:8px">Read full brief ↓</a>
 
         {# ── STANDARD ADVISORY (no live event) ── #}
         {% elif dash_advisory %}
@@ -532,7 +526,7 @@ body.page-dashboard #backToTop         { display:none !important }
           <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2C5F8A">Street</span>
         </div>
         <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 Harris Jayaraj Concert, NICE Grounds</div>
-        <div style="font-size:16px;font-weight:700;color:#13254B;line-height:1.45;margin-bottom:14px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
+        <div style="font-size:16px;font-weight:700;color:#1A1814;line-height:1.45;margin-bottom:14px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
         <div style="display:flex;flex-direction:column;gap:7px">
           <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
             <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
@@ -780,7 +774,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {# ── BOTTOM ROW: Nearest Opportunity (left) + Train your eye (right) — 2 column ── #}
     {# SL 175 STAGING NOTE: dash_advisory and peer_queue are None on staging — showing placeholders via _show_bottom set at top of block. Remove before merging to main. #}
     {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue or _show_bottom %}
-    <div class="card-brhills card-train" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
+    <div class="card-brhills card-train" id="nearby-opportunity" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
 
       {# LEFT: NEAREST OPPORTUNITY — redesigned with structured chips (SL 175.20) #}
       {% if dash_live_event %}
