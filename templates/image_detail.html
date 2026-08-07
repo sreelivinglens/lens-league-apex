@@ -1,5 +1,5 @@
-{# SL-VERSION: 172.3 #}
-<!-- Version: Session 160 · 2026-07-25 -->
+{# SL-VERSION: 175.1 (Under Review banner: warmer message — "Your evaluation is complete. This image will go public once our team completes a routine integrity check"; session 175, 2026-08-07) #}
+<!-- Version: Session 175 · 2026-08-07 -->
 {# SL-VERSION: 172.3 #}
 {% extends "base.html" %}
 {% block title %}{{ image.asset_name or image.original_filename }} — {{ platform_name }}{% endblock %}
@@ -235,7 +235,7 @@
     .sc-loc-grid-3 { grid-template-columns: 1fr !important; }
     .sc-three-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
     .sc-hero-score { font-size: 52px !important; }
-    .sc-hero-img-wrap img { max-height: 300px !important; }
+    .sc-hero-img-wrap img { max-height: 380px !important; }
   }
 
   /* Mobile (600px) — everything single column */
@@ -415,7 +415,7 @@
       {% if image.flagged_reason and 'breastfeeding' in image.flagged_reason.lower() %}
         <strong>⏳ Under Review</strong> — Your image contains breastfeeding content and is being reviewed before going public. This is usually cleared automatically within 24 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
       {% else %}
-        <strong>⏳ Under Review</strong> — This image is being reviewed before going public. Usually resolved within 24–48 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
+        <strong>⏳ Under Review</strong> — Your evaluation is complete. This image will go public once our team completes a routine integrity check — usually within 24 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
       {% endif %}
     </div>
     {% endif %}
@@ -437,7 +437,7 @@
     <div style="position:relative; display:block;">
       <img src="{{ image.thumb_url }}"
            alt="{{ image.asset_name or image.original_filename }}"
-           style="width:100%; max-height:380px; object-fit:contain; display:block;">
+           style="width:100%; max-height:520px; object-fit:contain; display:block;">
       {# Corner watermarks — platform credit top-right, photographer credit bottom-left.
          Opposite corners AND opposite vertical ends so they can never collide, regardless
          of how long the photographer's name is or how narrow the screen is. All positioning
@@ -449,35 +449,10 @@
       {% set _wm_parts = image.photographer_name.split() %}
       <div class="sc-wm sc-wm-credit">© {{ image.photographer_name }}</div>
       {% endif %}
-      {# ── SL 175: Fullscreen expand button — top-right corner ── #}
-      <button onclick="slOpenFullscreen('{{ image.thumb_url }}')"
-              aria-label="View full size"
-              title="View full size"
-              style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.52);border:none;border-radius:7px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;transition:background 0.15s;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
-          <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-        </svg>
-      </button>
     </div>
     {% else %}
     <div style="width:100%; height:360px; background:#2a2a28;"></div>
     {% endif %}
-  </div>
-
-  {# ── SL 175: Fullscreen lightbox overlay ── #}
-  <div id="sl-fullscreen-overlay"
-       onclick="slCloseFullscreen()"
-       style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;cursor:zoom-out;">
-    <img id="sl-fullscreen-img" src="" alt="Full size"
-         style="max-width:96vw;max-height:96vh;object-fit:contain;display:block;border-radius:6px;">
-    <button onclick="slCloseFullscreen()"
-            aria-label="Close full size view"
-            style="position:fixed;top:18px;right:18px;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10000;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
   </div>
 
   {# ── SCORE BAND — slim bar below the photograph ───────────────────── #}
@@ -2314,26 +2289,6 @@ function scToggle(id) {
     if (prev) prev.style.display = 'none';
   }
 }
-/* ── SL 175: Fullscreen lightbox ── */
-function slOpenFullscreen(src) {
-  var ov = document.getElementById('sl-fullscreen-overlay');
-  var img = document.getElementById('sl-fullscreen-img');
-  if (!ov || !img) return;
-  img.src = src;
-  ov.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function slCloseFullscreen() {
-  var ov = document.getElementById('sl-fullscreen-overlay');
-  if (!ov) return;
-  ov.style.display = 'none';
-  document.body.style.overflow = '';
-}
-/* Close on Escape key */
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') slCloseFullscreen();
-});
-
 // CSS collapses all sc-collapse-body sections by default (max-height:0)
 // JS only needs to open DDI on load
 document.addEventListener('DOMContentLoaded', function() {
