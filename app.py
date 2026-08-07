@@ -4605,101 +4605,97 @@ def dashboard():
                 _aea_qual_start = date(_aea_year, 1, 1)
                 _aea_season_end = date(_aea_year + 1, 1, 1)
 
-            # Qualifying months — distinct calendar months with scored public images
-            _aea_qm = db.session.execute(db.text("""
-                SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at))
-                FROM images
-                WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
-                  AND score > 0 AND status = 'scored'
-                  AND (is_flagged = FALSE OR is_flagged IS NULL)
-                  AND (needs_review = FALSE OR needs_review IS NULL)
-                  AND created_at >= :qs AND created_at < :se
-            """), {'uid': current_user.id, 'qs': _aea_qual_start, 'se': _aea_season_end}).scalar() or 0
+                _aea_qm = db.session.execute(db.text("""
+                    SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at))
+                    FROM images
+                    WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
+                      AND score > 0 AND status = 'scored'
+                      AND (is_flagged = FALSE OR is_flagged IS NULL)
+                      AND (needs_review = FALSE OR needs_review IS NULL)
+                      AND created_at >= :qs AND created_at < :se
+                """), {'uid': current_user.id, 'qs': _aea_qual_start, 'se': _aea_season_end}).scalar() or 0
 
-            # Top-6 images cross-genre (best evaluated, any genre)
-            _aea_top6_rows = db.session.execute(db.text("""
-                SELECT id, asset_name, score, genre, thumb_url, tier
-                FROM images
-                WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
-                  AND score > 0 AND status = 'scored'
-                  AND (is_flagged = FALSE OR is_flagged IS NULL)
-                  AND (needs_review = FALSE OR needs_review IS NULL)
-                ORDER BY score DESC LIMIT 6
-            """), {'uid': current_user.id}).fetchall()
+                _aea_top6_rows = db.session.execute(db.text("""
+                    SELECT id, asset_name, score, genre, thumb_url, tier
+                    FROM images
+                    WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
+                      AND score > 0 AND status = 'scored'
+                      AND (is_flagged = FALSE OR is_flagged IS NULL)
+                      AND (needs_review = FALSE OR needs_review IS NULL)
+                    ORDER BY score DESC LIMIT 6
+                """), {'uid': current_user.id}).fetchall()
 
-            _aea_total = db.session.execute(db.text("""
-                SELECT COUNT(*) FROM images
-                WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
-                  AND score > 0 AND status = 'scored'
-                  AND (is_flagged = FALSE OR is_flagged IS NULL)
-                  AND (needs_review = FALSE OR needs_review IS NULL)
-            """), {'uid': current_user.id}).scalar() or 0
+                _aea_total = db.session.execute(db.text("""
+                    SELECT COUNT(*) FROM images
+                    WHERE user_id = :uid AND is_public = TRUE AND score IS NOT NULL
+                      AND score > 0 AND status = 'scored'
+                      AND (is_flagged = FALSE OR is_flagged IS NULL)
+                      AND (needs_review = FALSE OR needs_review IS NULL)
+                """), {'uid': current_user.id}).scalar() or 0
 
-            _aea_req_months = 3 if _aea_year == 2026 else 6
-            _aea_req_images = 6
-            _aea_qualified  = int(_aea_qm) >= _aea_req_months and _aea_total >= _aea_req_images
+                _aea_req_months = 3 if _aea_year == 2026 else 6
+                _aea_req_images = 6
+                _aea_qualified  = int(_aea_qm) >= _aea_req_months and _aea_total >= _aea_req_images
 
-            _aea_top6_avg = None
-            _aea_top6_list = []
-            if _aea_top6_rows:
-                from decimal import Decimal, ROUND_HALF_UP
-                _scores = [float(r[2]) if float(r[2]) <= 10 else float(r[2])/10 for r in _aea_top6_rows]
-                if len(_scores) >= 6:
-                    _raw = sum(_scores) / len(_scores)
-                    _aea_top6_avg = float(Decimal(str(_raw)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-                _aea_top6_list = [
-                    {'id': r[0], 'name': r[1], 'score': round(float(r[2]) if float(r[2]) <= 10 else float(r[2])/10, 2),
-                     'genre': r[3], 'thumb_url': r[4], 'tier': r[5]}
-                    for r in _aea_top6_rows
-                ]
+                _aea_top6_avg = None
+                _aea_top6_list = []
+                if _aea_top6_rows:
+                    from decimal import Decimal, ROUND_HALF_UP
+                    _scores = [float(r[2]) if float(r[2]) <= 10 else float(r[2])/10 for r in _aea_top6_rows]
+                    if len(_scores) >= 6:
+                        _raw = sum(_scores) / len(_scores)
+                        _aea_top6_avg = float(Decimal(str(_raw)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                    _aea_top6_list = [
+                        {'id': r[0], 'name': r[1], 'score': round(float(r[2]) if float(r[2]) <= 10 else float(r[2])/10, 2),
+                         'genre': r[3], 'thumb_url': r[4], 'tier': r[5]}
+                        for r in _aea_top6_rows
+                    ]
 
-            # League rank among qualifiers (camera or mobile)
-            _aea_track = current_user.subscription_track
-            _aea_rank_row = db.session.execute(db.text("""
-                SELECT COUNT(*) FROM (
-                    SELECT i.user_id,
-                           AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg
-                    FROM (
-                        SELECT user_id, score,
-                               ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY score DESC) AS rn
-                        FROM images
-                        WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
-                          AND status = 'scored'
-                          AND (is_flagged = FALSE OR is_flagged IS NULL)
-                          AND (needs_review = FALSE OR needs_review IS NULL)
-                    ) i
+                _aea_track = current_user.subscription_track
+                _aea_rank_row = db.session.execute(db.text("""
+                    SELECT COUNT(*) FROM (
+                        SELECT i.user_id,
+                               AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg
+                        FROM (
+                            SELECT user_id, score,
+                                   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY score DESC) AS rn
+                            FROM images
+                            WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
+                              AND status = 'scored'
+                              AND (is_flagged = FALSE OR is_flagged IS NULL)
+                              AND (needs_review = FALSE OR needs_review IS NULL)
+                        ) i
+                        JOIN users u ON u.id = i.user_id
+                        WHERE u.is_subscribed = TRUE
+                          AND u.subscription_track = :track
+                        GROUP BY i.user_id
+                        HAVING COUNT(*) >= :min_imgs
+                           AND COUNT(DISTINCT DATE_TRUNC('month',
+                               (SELECT MIN(created_at) FROM images WHERE user_id = i.user_id))) >= 1
+                    ) qualified
+                    WHERE top6_avg > :my_avg
+                """), {
+                    'track': _aea_track,
+                    'min_imgs': _aea_req_images,
+                    'my_avg': _aea_top6_avg or 0,
+                }).scalar() or 0
+                _aea_league_rank = int(_aea_rank_row) + 1 if _aea_qualified and _aea_top6_avg else None
+
+                _aea_total_photographers = db.session.execute(db.text("""
+                    SELECT COUNT(DISTINCT user_id) FROM images i
                     JOIN users u ON u.id = i.user_id
-                    WHERE u.is_subscribed = TRUE
-                      AND u.subscription_track = :track
-                    GROUP BY i.user_id
-                    HAVING COUNT(*) >= :min_imgs
-                       AND COUNT(DISTINCT DATE_TRUNC('month',
-                           (SELECT MIN(created_at) FROM images WHERE user_id = i.user_id))) >= 1
-                ) qualified
-                WHERE top6_avg > :my_avg
-            """), {
-                'track': _aea_track,
-                'min_imgs': _aea_req_images,
-                'my_avg': _aea_top6_avg or 0,
-            }).scalar() or 0
-            _aea_league_rank = int(_aea_rank_row) + 1 if _aea_qualified and _aea_top6_avg else None
+                    WHERE u.is_subscribed = TRUE AND u.subscription_track = :track
+                      AND i.score IS NOT NULL AND i.score > 0
+                """), {'track': _aea_track}).scalar() or 1
+                _aea_better_count = db.session.execute(db.text("""
+                    SELECT COUNT(DISTINCT i.user_id)
+                    FROM images i JOIN users u ON u.id = i.user_id
+                    WHERE u.is_subscribed = TRUE AND u.subscription_track = :track
+                      AND i.score > :my_best AND i.score IS NOT NULL
+                """), {'track': _aea_track, 'my_best': _aea_top6_avg or 0}).scalar() or 0
+                _aea_percentile = max(1, round((_aea_better_count / max(_aea_total_photographers, 1)) * 100))
 
-            # Percentile among all subscribed photographers same track
-            _aea_total_photographers = db.session.execute(db.text("""
-                SELECT COUNT(DISTINCT user_id) FROM images i
-                JOIN users u ON u.id = i.user_id
-                WHERE u.is_subscribed = TRUE AND u.subscription_track = :track
-                  AND i.score IS NOT NULL AND i.score > 0
-            """), {'track': _aea_track}).scalar() or 1
-            _aea_better_count = db.session.execute(db.text("""
-                SELECT COUNT(DISTINCT i.user_id)
-                FROM images i JOIN users u ON u.id = i.user_id
-                WHERE u.is_subscribed = TRUE AND u.subscription_track = :track
-                  AND i.score > :my_best AND i.score IS NOT NULL
-            """), {'track': _aea_track, 'my_best': _aea_top6_avg or 0}).scalar() or 0
-            _aea_percentile = max(1, round((_aea_better_count / max(_aea_total_photographers, 1)) * 100))
-
-            aea_dash = {
+                aea_dash = {
                     'qualifying_months':  int(_aea_qm),
                     'required_months':    _aea_req_months,
                     'total_images':       _aea_total,
