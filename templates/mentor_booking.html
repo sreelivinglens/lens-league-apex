@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: mentor_booking-175.1 (hide coming-soon cash payment option — not live, removes unfinished impression; session 175, 2026-08-07) #}
+{# SL-VERSION: mentor_booking-175.2 (payment grid: 2-col → 1-col full width now cash option hidden; pay-opt padding reduced, border-radius added; session 175, 2026-08-07) #}
 {% block title %}Book a Review — {{ mentor.name }} — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -192,14 +192,15 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
 /* ━━ PAYMENT OPTIONS ━━━━━━━━━━━━━━━━━━━━ */
 .sl-mbk-pay-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 .sl-mbk-pay-opt {
   border: 1.5px solid rgba(26,26,24,0.12);
-  padding: 16px 18px;
+  padding: 14px 18px;
   cursor: pointer;
   transition: border-color 0.15s;
+  border-radius: 8px;
 }
 .sl-mbk-pay-opt.selected { border-color: #1A1A18; }
 .sl-mbk-pay-opt.disabled {
