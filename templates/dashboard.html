@@ -1,10 +1,12 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.19 (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.20 (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
 {% block extra_head %}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store">
+{# Dashboard always fresh — never serve from cache. Personalised brief must reflect latest evaluation. #}
 {% endblock %}
 
 {% block body_class %}page-dashboard{% endblock %}
@@ -386,22 +388,13 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
 
     {# ── CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE ── #}
-    {# Two-layer card: Layer 1 = weakest dimension coaching. Layer 2 = location advisory. #}
-    {# SL 175: show when real data OR staging placeholder (_show_bottom) #}
     {% set _has_mentor_data = (dash_advisory and dash_advisory.get('location_name')) or dash_live_event %}
     {% if _has_mentor_data or _show_bottom %}
     <div class="card card-mentor">
       <div class="ey" style="margin-bottom:6px">Mentor Advice</div>
 
-      {# ── LAYER 1: Weakest dimension — only when progress_data exists (5+ images) ── #}
+      {# ── LAYER 1: Weakest dimension ── #}
       {% if progress_data and progress_data.weakest %}
-      {% set _dim_human = {
-        'dod':        'technical depth',
-        'disruption': 'disrupting the expected frame',
-        'dm':         'decisive timing',
-        'wonder':     'finding wonder in the ordinary',
-        'aq':         'visual impact'
-      } %}
       {% set _dim_field = {
         'dod':        'How Difficult It Was',
         'disruption': 'Visual Disruption',
@@ -428,47 +421,102 @@ body.page-dashboard #backToTop         { display:none !important }
 
       {# ── LAYER 2: Location advisory ── #}
       {% if _has_mentor_data %}
+
+        {# ── LIVE EVENT: show shot prescription as hero ── #}
         {% if dash_live_event %}
-        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_live_event.location_name }}</div>
-        {% if dash_live_event.subject %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:4px">{{ dash_live_event.subject }}</div>{% endif %}
-        {% set _live_short = (dash_live_event.what_is_happening or '') %}
-        {% if _live_short %}<div class="body-text">{{ _live_short[:140] }}{% if _live_short|length > 140 %}…{% endif %}</div>{% endif %}
-        {% elif dash_advisory %}
-        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_advisory.location_name }}</div>
-        {% if dash_advisory.get('best_light_time') %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:4px">{{ dash_advisory.best_light_time }}</div>{% endif %}
-        {% set _adv_short = (dash_advisory.what_is_happening or dash_advisory.light_note or '') %}
-        <div class="body-text">{{ _adv_short[:140] }}{% if _adv_short|length > 140 %}…{% endif %}</div>
-        {% endif %}
-        <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read more →</span>
-        <div class="expanded" id="ma-exp">
-          {% if dash_live_event %}
-            {% set _live_full = (dash_live_event.what_is_happening or '') ~ (' ' ~ dash_live_event.why_it_matters if dash_live_event.why_it_matters else '') %}
-            <div class="body-text" style="margin-bottom:10px">{{ _live_full }}</div>
-            {% if dash_live_event.best_light_time %}
-            <div style="font-size:13px;color:var(--muted);margin-bottom:8px">⏱ {{ dash_live_event.best_light_time }}</div>
-            {% endif %}
-            <a href="{{ dash_live_event.url }}" target="_blank" style="background:var(--dark);color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:inline-block;">📍 Get directions →</a>
-          {% elif dash_advisory %}
-            {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or '') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-            <div class="body-text" style="margin-bottom:10px">{{ _adv_full }}</div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:13px;color:var(--muted)">
-              {% if dash_advisory.get('best_light_time') %}<span>⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-              {% if weather and weather.condition %}<span>☁ {{ weather.condition }}</span>{% endif %}
+        {# Shot prescription chips — from structured fields if available, else from best_light_time #}
+        {% set _ev_shot_time = dash_live_event.get('shot_time') or dash_live_event.get('best_light_time') or '' %}
+        {% set _ev_tech = dash_live_event.get('technical_tip') or '' %}
+        {% set _ev_pos = dash_live_event.get('position_tip') or '' %}
+
+        {# Hero shot prescription block — dark card, catches the eye #}
+        <div style="background:var(--dark);border-radius:11px;padding:14px 16px;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.7);margin-bottom:8px">Tonight's shot</div>
+          <div style="font-size:15px;font-weight:600;color:#fff;line-height:1.5;margin-bottom:10px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
+          {# Chips — show when structured fields available #}
+          {% if _ev_shot_time or _ev_tech or _ev_pos %}
+          <div style="display:flex;flex-direction:column;gap:6px">
+            {% if _ev_shot_time %}
+            <div style="display:flex;align-items:flex-start;gap:8px">
+              <span style="font-size:14px;flex-shrink:0;margin-top:1px">⏱</span>
+              <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">{{ _ev_shot_time }}</span>
             </div>
-            <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:var(--dark);color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:inline-block;margin-bottom:6px;">📍 Get directions →</a>
-            <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'})}" style="background:none;border:none;font-size:13px;color:var(--gold-dk);text-decoration:underline;cursor:pointer;display:block;margin-top:4px;">Change location →</button>
+            {% endif %}
+            {% if _ev_tech %}
+            <div style="display:flex;align-items:flex-start;gap:8px">
+              <span style="font-size:14px;flex-shrink:0;margin-top:1px">📷</span>
+              <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">{{ _ev_tech }}</span>
+            </div>
+            {% endif %}
+            {% if _ev_pos %}
+            <div style="display:flex;align-items:flex-start;gap:8px">
+              <span style="font-size:14px;flex-shrink:0;margin-top:1px">📍</span>
+              <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">{{ _ev_pos }}</span>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          {# No structured chips yet — show first meaningful sentence of advisory as teaser #}
+          {% set _ev_teaser = (dash_live_event.what_is_happening or '')[:160] %}
+          {% if _ev_teaser %}
+          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.65">{{ _ev_teaser }}{% if (dash_live_event.what_is_happening or '')|length > 160 %}…{% endif %}</div>
           {% endif %}
+          {% endif %}
+        </div>
+
+        {# Read full brief link — scrolls to Nearby Opportunity card #}
+        <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read full brief →</span>
+        <div class="expanded" id="ma-exp">
+          {% set _live_full = (dash_live_event.what_is_happening or '') ~ (' ' ~ dash_live_event.why_it_matters if dash_live_event.why_it_matters else '') %}
+          <div class="body-text" style="margin-bottom:10px">{{ _live_full }}</div>
+          <a href="{{ dash_live_event.url }}" target="_blank" style="background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:7px;text-decoration:none;display:inline-block;">📍 Get directions →</a>
           <span class="rm" onclick="toggleSpan('ma-exp','ma-rm')">Read less →</span>
         </div>
 
+        {# ── STANDARD ADVISORY (no live event) ── #}
+        {% elif dash_advisory %}
+        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_advisory.location_name }}</div>
+        {% if dash_advisory.get('best_light_time') %}<div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:5px">{{ dash_advisory.best_light_time }}</div>{% endif %}
+        {% set _adv_short = (dash_advisory.what_is_happening or dash_advisory.light_note or '') %}
+        <div class="body-text" style="margin-bottom:8px">{{ _adv_short[:140] }}{% if _adv_short|length > 140 %}…{% endif %}</div>
+        <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read more →</span>
+        <div class="expanded" id="ma-exp">
+          {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or '') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
+          <div class="body-text" style="margin-bottom:10px">{{ _adv_full }}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:14px;color:var(--muted)">
+            {% if dash_advisory.get('best_light_time') %}<span>⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+            {% if weather and weather.condition %}<span>☁ {{ weather.condition }}</span>{% endif %}
+          </div>
+          <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:7px;text-decoration:none;display:inline-block;margin-bottom:6px;">📍 Get directions →</a>
+          <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'})}" style="background:none;border:none;font-size:14px;color:var(--gold-dk);text-decoration:underline;cursor:pointer;display:block;margin-top:4px;">Change location →</button>
+          <span class="rm" onclick="toggleSpan('ma-exp','ma-rm')">Read less →</span>
+        </div>
+        {% endif %}
+
       {% elif _show_bottom %}
       {# STAGING PLACEHOLDER — location layer (remove _show_bottom before merge) #}
-      <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 Cubbon Park, Bengaluru</div>
-      <div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:4px">6:00–8:00 AM · Overcast morning light</div>
-      <div class="body-text">Overcast mornings eliminate harsh shadows — light wraps evenly. Newspaper readers on the benches by the central fountain. 35mm or 50mm equivalent. Go for the separation.</div>
-      <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read more →</span>
+      {# Simulates a live event with the new dark hero treatment #}
+      <div style="background:var(--dark);border-radius:11px;padding:14px 16px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.7);margin-bottom:8px">Tonight's shot</div>
+        <div style="font-size:15px;font-weight:600;color:#fff;line-height:1.5;margin-bottom:10px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:14px;flex-shrink:0">⏱</span>
+            <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">7:00–7:20 PM — golden to artificial light transition window</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:14px;flex-shrink:0">📷</span>
+            <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:14px;flex-shrink:0">📍</span>
+            <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">Boundary where crowd density drops — solo attendees, slightly apart</span>
+          </div>
+        </div>
+      </div>
+      <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read full brief →</span>
       <div class="expanded" id="ma-exp">
-        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:8px">Cubbon Park's tree canopy adds diffusion on overcast days. The geometry of the benches gives you clean lines. Look for a subject that breaks the pattern — one person standing when everyone else is seated, one moment of movement in a still scene.</div>
+        <div class="body-text" style="margin-bottom:10px">The moment Harris Jayaraj's signature orchestral swells hit, people stop performing for cameras and become themselves. Stand at the boundary where crowd density drops — the edge where solo attendees watch alone, slightly apart. That isolation against a mass of bodies is exactly the kind of frame your Disruption dimension has not yet reached. Do not centre the subject. Put them at the hard edge of the frame with the crowd bleeding out of focus behind them.</div>
         <span class="rm" onclick="toggleSpan('ma-exp','ma-rm')">Read less →</span>
       </div>
       {% endif %}
@@ -634,8 +682,8 @@ body.page-dashboard #backToTop         { display:none !important }
           {% endfor %}
 
           {# X-axis: first image label left, "Today" right #}
-          <text x="10" y="88" font-size="11" fill="#6B6B6B">{{ _t[0].label }}</text>
-          <text x="{{ _SVG_W - 4 }}" y="88" font-size="11" fill="#D6A428" text-anchor="end" font-weight="600">Today · {{ '%.1f'|format(_t[-1].score) }}</text>
+          <text x="10" y="88" font-size="12" fill="#6B6B6B">{{ _t[0].label }}</text>
+          <text x="{{ _SVG_W - 4 }}" y="88" font-size="12" fill="#D6A428" text-anchor="end" font-weight="600">Today · {{ '%.1f'|format(_t[-1].score) }}</text>
         </svg>
       </div>
 
@@ -700,51 +748,96 @@ body.page-dashboard #backToTop         { display:none !important }
     {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue or _show_bottom %}
     <div class="card-brhills card-train" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
 
-      {# LEFT: NEAREST OPPORTUNITY #}
-      {% if dash_advisory and dash_advisory.get('location_name') %}
+      {# LEFT: NEAREST OPPORTUNITY — redesigned with structured chips (SL 175.20) #}
+      {% if dash_live_event %}
+      {# LIVE EVENT path — hero treatment matching Mentor Advice card #}
+      {% set _le_shot_time = dash_live_event.get('shot_time') or dash_live_event.get('best_light_time') or '' %}
+      {% set _le_tech = dash_live_event.get('technical_tip') or '' %}
+      {% set _le_pos = dash_live_event.get('position_tip') or '' %}
       <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px;height:100%">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
+          {% if dash_live_event.genre %}<span style="padding:2px 7px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_live_event.genre|title }}</span>{% endif %}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#1A2A1A;margin-bottom:2px">{{ dash_live_event.location_name }}</div>
+        {% if dash_live_event.subject %}<div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:8px;line-height:1.4">{{ dash_live_event.subject }}</div>{% endif %}
+        {# Structured chips when available #}
+        {% if _le_shot_time or _le_tech or _le_pos %}
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;background:rgba(255,255,255,0.5);border-radius:8px;padding:9px 11px">
+          {% if _le_shot_time %}<div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">⏱</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">{{ _le_shot_time }}</span></div>{% endif %}
+          {% if _le_tech %}<div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📷</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">{{ _le_tech }}</span></div>{% endif %}
+          {% if _le_pos %}<div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📍</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">{{ _le_pos }}</span></div>{% endif %}
+        </div>
+        {% endif %}
+        {# Short advisory teaser #}
+        {% set _le_teaser = (dash_live_event.what_is_happening or '')[:120] %}
+        {% if _le_teaser %}<div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:8px">{{ _le_teaser }}{% if (dash_live_event.what_is_happening or '')|length > 120 %}…{% endif %}</div>{% endif %}
+        <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read full brief →</span>
+        <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
+          {# Full Sherpa brief — this is what makes the platform unique #}
+          {% set _le_full = (dash_live_event.what_is_happening or '') %}
+          {% if _le_full %}<div style="font-size:14px;color:#2A3A1A;line-height:1.8;margin-bottom:8px">{{ _le_full }}</div>{% endif %}
+          {% if dash_live_event.why_it_matters %}
+          <div style="font-size:14px;color:#2A3A1A;line-height:1.8;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.6);border-radius:7px;border-left:3px solid var(--gold)">{{ dash_live_event.why_it_matters }}</div>
+          {% endif %}
+          {% if dash_live_event.url %}
+          <a href="{{ dash_live_event.url }}" target="_blank" style="background:#1A2A1A;color:#fff;font-size:14px;font-weight:600;padding:10px 14px;border-radius:7px;text-decoration:none;display:block;text-align:center;margin-bottom:8px;">📍 Get directions →</a>
+          {% endif %}
+          <span class="rm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View less →</span>
+        </div>
+      </div>
+
+      {% elif dash_advisory and dash_advisory.get('location_name') %}
+      {# Standard advisory path — clean card with chips where available #}
+      <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px;height:100%">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
           {% if dash_advisory.get('genre') %}<span style="padding:2px 7px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>{% endif %}
         </div>
-        <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
-        {% if dash_advisory.get('subject') %}<div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:2px">{{ dash_advisory.subject }}</div>{% endif %}
-        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:6px">{{ (dash_advisory.what_is_happening or dash_advisory.light_note or '')[:120] }}{% if dash_advisory.get('distance_hours') %} · {{ dash_advisory.distance_hours }}h away{% endif %}</div>
+        <div style="font-size:15px;font-weight:700;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
+        {% if dash_advisory.get('subject') %}<div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:6px">{{ dash_advisory.subject }}</div>{% endif %}
+        {% if dash_advisory.get('best_light_time') %}
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;background:rgba(255,255,255,0.5);border-radius:8px;padding:7px 10px">
+          <span style="font-size:13px">⏱</span><span style="font-size:13px;color:#2A3A1A;font-weight:500">{{ dash_advisory.best_light_time }}</span>
+        </div>
+        {% endif %}
+        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:6px">{{ (dash_advisory.what_is_happening or dash_advisory.light_note or '')[:120] }}</div>
         <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View more →</span>
         <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
           {% set _adv_full2 = (dash_advisory.what_is_happening or dash_advisory.light_note or '') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-          <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:7px">{{ _adv_full2 }}</div>
+          <div style="font-size:14px;color:#2A3A1A;line-height:1.8;margin-bottom:10px">{{ _adv_full2 }}</div>
           <div style="display:flex;gap:10px;font-size:13px;color:#5A6A4A;margin-bottom:9px;flex-wrap:wrap">
-            {% if dash_advisory.get('distance_hours') %}<span>🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
             {% if weather and weather.condition %}<span>☁ {{ weather.condition }}</span>{% endif %}
           </div>
-          <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center;margin-bottom:5px;">📍 Get directions →</a>
-          <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';" style="background:none;border:none;font-size:13px;color:#3A6B2A;text-decoration:underline;cursor:pointer;display:block;">Change location →</button>
+          <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:#1A2A1A;color:#fff;font-size:14px;font-weight:600;padding:10px 14px;border-radius:7px;text-decoration:none;display:block;text-align:center;margin-bottom:8px;">📍 Get directions →</a>
+          <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';" style="background:none;border:none;font-size:14px;color:#3A6B2A;text-decoration:underline;cursor:pointer;display:block;margin-bottom:6px;">Change location →</button>
           <span class="rm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View less →</span>
         </div>
       </div>
-      {% else %}
-      {# STAGING PLACEHOLDER — remove _show_bottom before merge to main #}
-      {% if _show_bottom %}
+
+      {% elif _show_bottom %}
+      {# STAGING PLACEHOLDER — shows structured chip format #}
       <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px;height:100%">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
-          <span style="padding:2px 7px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">Wildlife</span>
+          <span style="padding:2px 7px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">Street</span>
         </div>
-        <div style="font-size:14px;font-weight:600;color:#1A2A1A;margin-bottom:2px">BR Hills (Biligirirangana Hills)</div>
-        <div style="font-size:13px;font-weight:600;color:var(--gold-dk);margin-bottom:2px">Elephants and sloth bears</div>
-        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:6px">Peak wildlife activity at dawn. Herds of elephants have been sighted near the waterhole this week. 3.5h away.</div>
-        <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View more →</span>
+        <div style="font-size:15px;font-weight:700;color:#1A2A1A;margin-bottom:2px">Harris Jayaraj Concert, NICE Grounds</div>
+        <div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:8px;line-height:1.4">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;background:rgba(255,255,255,0.5);border-radius:8px;padding:9px 11px">
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">⏱</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition window</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📷</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📍</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees, slightly apart</span></div>
+        </div>
+        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:8px">The concert opens at 7 PM. Within the first thirty minutes, the crowd nearest the stage will compress into a single unified mass…</div>
+        <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read full brief →</span>
         <div class="expanded" id="oexp" style="border-top-color:var(--pista-b)">
-          <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:7px">The monsoon has drawn the herds closer to the sanctuary boundaries. Early morning light between 6-8am gives the best conditions — golden low-angle light through the forest canopy. Bring a 400mm minimum. Go silently.</div>
-          <div style="display:flex;gap:10px;font-size:13px;color:#5A6A4A;margin-bottom:9px">
-            <span>🚗 3.5h away</span><span>🌅 Best: 6-8am</span>
-          </div>
-          <a href="https://maps.google.com/?q=BR+Hills+Karnataka" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:block;text-align:center;margin-bottom:5px;">📍 Get directions →</a>
+          <div style="font-size:14px;color:#2A3A1A;line-height:1.8;margin-bottom:10px">The moment Harris Jayaraj's signature orchestral swells hit, people stop performing for cameras and become themselves. Stand at the boundary where crowd density drops — the edge where solo attendees watch alone, slightly apart. That isolation against a mass of bodies is exactly the kind of frame your Disruption dimension has not yet reached. Do not centre the subject. Put them at the hard edge of the frame with the crowd bleeding out of focus behind them.</div>
+          <div style="font-size:14px;color:#2A3A1A;line-height:1.8;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.6);border-radius:7px;border-left:3px solid var(--gold)">Your 9.1 evaluation shows you can break convention — now carry that instinct from a controlled shoot into a chaotic crowd.</div>
+          <a href="https://maps.google.com/?q=NICE+Grounds+Bengaluru" target="_blank" style="background:#1A2A1A;color:#fff;font-size:14px;font-weight:600;padding:10px 14px;border-radius:7px;text-decoration:none;display:block;text-align:center;margin-bottom:8px;">📍 Get directions →</a>
           <span class="rm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">View less →</span>
         </div>
       </div>
-      {% endif %}
       {% endif %}
 
       {# RIGHT: TRAIN YOUR EYE #}
