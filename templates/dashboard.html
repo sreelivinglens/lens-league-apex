@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.29 (bottom nav: height 84px+safe-area, More drawer fixed, body padding 92px; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.30 (bottom nav: position bottom:env(safe-area,34px) instead of bottom:0 — moves nav above iOS toolbar; height fixed 62px; More drawer matches; session 175, 2026-08-07) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -137,14 +137,15 @@ body.page-dashboard #backToTop         { display:none !important }
 .bottom-nav{
   display:none;
   position:fixed;
-  bottom:0;left:0;right:0;
-  height:calc(84px + env(safe-area-inset-bottom,20px));
+  bottom:env(safe-area-inset-bottom,34px);
+  left:0;right:0;
+  height:62px;
   background:var(--dark);
   border-top:0.5px solid rgba(255,255,255,0.15);
   justify-content:space-around;
-  align-items:flex-start;
-  padding-top:10px;
-  padding-bottom:calc(env(safe-area-inset-bottom,20px) + 8px);
+  align-items:center;
+  padding-top:0;
+  padding-bottom:0;
   z-index:1000;
 }
 .bn-tab{
@@ -202,8 +203,8 @@ body.page-dashboard #backToTop         { display:none !important }
   /* Show mobile layout */
   .sl-mobile { display:block !important }
   /* Body padding for fixed bottom nav */
-  body { padding-bottom:calc(92px + env(safe-area-inset-bottom,20px)) }
-  .scroll-top { bottom:96px; right:16px }
+  body { padding-bottom:calc(62px + env(safe-area-inset-bottom,34px) + 10px) }
+  .scroll-top { bottom:calc(70px + env(safe-area-inset-bottom,34px)); right:16px }
   /* Footer on mobile */
   .sl-footer{grid-template-columns:1fr;gap:0;padding:20px 16px 14px}
   .footer-col-block{display:none}
@@ -238,7 +239,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── MORE DRAWER — mobile only ── */
 .mob-more-overlay{display:none;position:fixed;inset:0;z-index:1998;background:rgba(0,0,0,0.5)}
-.mob-more-drawer{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,20px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
+.mob-more-drawer{position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,34px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
 .mob-more-drawer.open{transform:translateY(0)}
 .mob-more-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 16px}
 .mob-more-item{display:flex;align-items:center;gap:14px;padding:13px 24px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent}
