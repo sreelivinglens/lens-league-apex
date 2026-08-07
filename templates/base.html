@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.4 (hamburger More: named IDs fix for mobile, Journey→Improve) #}
+{# SL-VERSION: 175.5 (nav tap feedback: sl-nav-item :active state gold+opacity for instant mobile tap response; nav-links :active state; transition 0.2→0.1s; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,11 +144,12 @@ table { max-width: none; }
   min-width: 44px;
   min-height: 44px;
   justify-content: center;
-  transition: color .2s;
+  transition: color .1s;
   -webkit-tap-highlight-color: transparent;
 }
 .sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.7; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
@@ -557,6 +558,7 @@ nav {
   white-space: nowrap;
 }
 .nav-links a:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
+.nav-links a:active { color: #FFFFFF; background: rgba(255,255,255,0.20); }
 .nav-links a.nav-admin { color: var(--gold); }
 .nav-links a.nav-admin:hover { background: var(--gold-subtle); }
 .nav-links a.nav-active {
