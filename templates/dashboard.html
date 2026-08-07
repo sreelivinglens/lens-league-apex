@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.17 (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.18 (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -68,14 +68,14 @@ body.page-dashboard #backToTop         { display:none !important }
 .greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px;display:block;width:100%}
 .score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1.5}
 .score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;width:100%}
-.body-text{font-size:14px;font-weight:400;color:var(--text);line-height:1.85;text-align:left}
+.body-text{font-size:15px;font-weight:400;color:var(--text);line-height:1.85;text-align:left}
 .insight-line1{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;display:block;width:100%;margin-top:4px}
 .insight-line2{font-size:15px;font-weight:400;color:var(--muted);line-height:1.8;margin-top:2px;display:block;width:100%}
 .insight-line3{font-size:15px;font-weight:600;color:var(--green);line-height:1.8;margin-top:2px;display:block;width:100%}
 
 /* ── READ MORE — MUST be span, never button ── */
 .rm{font-size:13px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px;background:none;border:none;padding:0}
-.lnk{font-size:13px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
+.lnk{font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
 .expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
 
 /* ── BUTTONS ── */
@@ -421,7 +421,7 @@ body.page-dashboard #backToTop         { display:none !important }
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:4px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
         <div style="font-size:14px;color:var(--text);line-height:1.75">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
         {% if progress_data.dim_avgs %}
-        <div style="font-size:13px;color:var(--muted);margin-top:4px">Your average: <strong style="color:var(--dark)">{{ '%.1f'|format(progress_data.dim_avgs[progress_data.weakest]) }}</strong> · Strongest: <strong style="color:var(--green)">{{ _dim_field.get(progress_data.strongest, progress_data.strongest|title) }} {{ '%.1f'|format(progress_data.dim_avgs[progress_data.strongest]) }}</strong></div>
+        <div style="font-size:14px;color:var(--muted);margin-top:5px">Your average: <strong style="color:var(--dark)">{{ '%.1f'|format(progress_data.dim_avgs[progress_data.weakest]) }}</strong> · Strongest: <strong style="color:var(--green)">{{ _dim_field.get(progress_data.strongest, progress_data.strongest|title) }} {{ '%.1f'|format(progress_data.dim_avgs[progress_data.strongest]) }}</strong></div>
         {% endif %}
       </div>
       {% endif %}
@@ -532,7 +532,7 @@ body.page-dashboard #backToTop         { display:none !important }
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div>
           <div class="ey" style="margin-bottom:1px">Your Journey</div>
-          <div style="font-size:13px;color:var(--muted)">
+          <div style="font-size:14px;color:var(--muted)">
             {{ progress_data.count }} evaluations
             {%- if progress_data.avg_score %} · avg {{ '%.2f'|format(progress_data.avg_score) }}{% endif %}
             {%- if progress_data.highest_tier %} · <span style="color:var(--green);font-weight:600">{{ progress_data.highest_tier }}</span>{% endif %}
@@ -570,12 +570,13 @@ body.page-dashboard #backToTop         { display:none !important }
 
       <div style="height:110px;margin-top:10px;background:#fff;border-radius:10px;padding:8px 10px 4px;border:0.5px solid var(--border)">
         <svg width="100%" height="100%" viewBox="0 0 {{ _SVG_W }} 96" preserveAspectRatio="xMidYMid meet">
-          {# Tier threshold lines — only show ones within visible range #}
+          {# Tier threshold lines — dashed reference lines, no text labels (avoid clutter) #}
           {% for _tl in _tier_lines %}
             {% if _tl.score >= _floor - 0.2 and _tl.score <= _ceil + 0.2 %}
             {% set _ty = (_SVG_H - 4 - ((_tl.score - _floor) / _range) * (_SVG_H - 8))|round(1) %}
-            <line x1="0" y1="{{ _ty }}" x2="{{ _SVG_W }}" y2="{{ _ty }}" stroke="{{ _tl.color }}" stroke-width="1" stroke-dasharray="5,5" opacity="0.55"/>
-            <text x="{{ _SVG_W - 6 }}" y="{{ _ty - 3 }}" font-size="9" fill="{{ _tl.color }}" opacity="0.8" font-weight="600" text-anchor="end">{{ _tl.label }}</text>
+            <line x1="0" y1="{{ _ty }}" x2="{{ _SVG_W }}" y2="{{ _ty }}" stroke="{{ _tl.color }}" stroke-width="1" stroke-dasharray="5,5" opacity="0.45"/>
+            {# Tier name as tiny left-edge label only — 8px, fades into margin #}
+            <text x="4" y="{{ _ty - 2 }}" font-size="8" fill="{{ _tl.color }}" opacity="0.5" font-weight="500">{{ _tl.label }}</text>
             {% endif %}
           {% endfor %}
 
@@ -622,13 +623,13 @@ body.page-dashboard #backToTop         { display:none !important }
               text-anchor="middle"
               font-weight="{{ '700' if _is_last else ('600' if _is_best else '400') }}">{{ '%.1f'|format(_item.score) }}</text>
 
-            {# Highest tier breakthrough — hero treatment, shown once only #}
-            {% if _is_tier_hero and _best_tier_name.val %}
+            {# Highest tier breakthrough — shown once, only if NOT the last dot #}
+            {% if _is_tier_hero and _best_tier_name.val and not _is_last %}
             <g>
-              <rect x="{{ _x - 28 }}" y="{{ _y + 8 }}" width="56" height="14" rx="3"
-                fill="#D6A428" opacity="0.15"/>
-              <text x="{{ _x }}" y="{{ _y + 18 }}"
-                font-size="10" fill="#A37B2C" text-anchor="middle" font-weight="700">★ {{ _best_tier_name.val }}</text>
+              <rect x="{{ _x - 32 }}" y="{{ _y + 8 }}" width="64" height="15" rx="4"
+                fill="#D6A428" opacity="0.18"/>
+              <text x="{{ _x }}" y="{{ _y + 19 }}"
+                font-size="9" fill="#A37B2C" text-anchor="middle" font-weight="700">★ {{ _best_tier_name.val }}</text>
             </g>
             {% endif %}
           {% endfor %}
@@ -923,7 +924,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {# GET EXPERT ADVICE #}
     <div class="mcard rp-expert">
       <div class="rl">Get Expert Advice</div>
-      <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
+      <div style="font-size:14px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
       <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
       <div class="expanded" id="xexp">
         <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div>
