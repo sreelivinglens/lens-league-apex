@@ -4508,11 +4508,12 @@ def dashboard():
         # SL 175: Read from cache first — refreshed after each evaluation
         import json as _ptj
         try:
-            _pt_raw = getattr(current_user, 'poty_tracker_json', None)
+            _pt_raw = db.session.execute(
+                db.text('SELECT poty_tracker_json FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar()
             if _pt_raw:
-                _pt_cached = _ptj.loads(_pt_raw)
-                # Restore top6_images as simple dicts (no ORM objects needed for display)
-                poty_tracker = _pt_cached
+                poty_tracker = _ptj.loads(_pt_raw)
             else:
                 raise ValueError('no cache')
         except Exception:
@@ -4593,7 +4594,10 @@ def dashboard():
        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera'):
         import json as _aeaj
         try:
-            _aea_raw = getattr(current_user, 'aea_dash_json', None)
+            _aea_raw = db.session.execute(
+                db.text('SELECT aea_dash_json FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar()
             if _aea_raw:
                 aea_dash = _aeaj.loads(_aea_raw)
             else:
@@ -4825,7 +4829,10 @@ def dashboard():
     if current_user.is_subscribed:
         import json as _whj
         try:
-            _wh_raw = getattr(current_user, 'wallet_hud_json', None)
+            _wh_raw = db.session.execute(
+                db.text('SELECT wallet_hud_json FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar()
             if _wh_raw:
                 wallet_hud = _whj.loads(_wh_raw)
                 # imgs_to_gate needs poty_tracker which may have changed — recalculate
