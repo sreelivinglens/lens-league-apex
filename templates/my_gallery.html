@@ -1,4 +1,5 @@
 {# SL-VERSION: 172.3 #}
+{# SL-VERSION: my_gallery-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% extends "base.html" %}
 {% block title %}My Photographs — {{ platform_name }}{% endblock %}
 {% block meta_description %}Your complete photograph history on Shutter League — all uploads and evaluations.{% endblock %}
@@ -9,7 +10,7 @@
 
 {% block extra_css %}
 <style>
-  body { font-family: 'Inter', sans-serif !important; }
+  body {  }
   /* audit stubs: min-height: 480px min-height: 360px rgba(13,13,11,0.45)
      grid-template-columns: 1fr 1fr text-align: left text-align: left */
   .hero-sub { display: none; }
@@ -40,13 +41,13 @@
 }
 
 .mg-page, .mg-page * {
-  font-family: Inter, sans-serif !important;
+  
 }
 .mg-page {
   background: var(--mg-bg);
   min-height: 100vh;
   min-height: 100dvh;
-  font-family: Inter, sans-serif;
+  
   color: var(--mg-text);
   -webkit-font-smoothing: antialiased;
   padding-bottom: 60px;
@@ -66,7 +67,7 @@
 }
 .mg-header__title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--mg-text);
   line-height: 1.5;
 }
@@ -98,7 +99,7 @@
 }
 .mg-stat__val {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--mg-text);
   line-height: 1;
 }
@@ -134,7 +135,7 @@
   border-radius: 10px;
   padding: 0 12px;
   font-size: 14px;
-  font-family: Inter, sans-serif;
+  
   background: var(--mg-bg);
   color: var(--mg-text);
 }
@@ -144,7 +145,7 @@
   border-radius: 10px;
   padding: 0 10px;
   font-size: 14px;
-  font-family: Inter, sans-serif;
+  
   background: var(--mg-bg);
   color: var(--mg-text);
   cursor: pointer;
@@ -158,7 +159,7 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
-  font-family: Inter, sans-serif;
+  
   cursor: pointer;
   min-height: 40px;
 }
@@ -170,7 +171,7 @@
   border-radius: 10px;
   font-size: 14px;
   color: var(--mg-text-light);
-  font-family: Inter, sans-serif;
+  
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
@@ -245,7 +246,7 @@
 }
 .mg-img-card__score {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: #1a1a18;
   line-height: 1;
   display: inline;
@@ -342,7 +343,7 @@
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  font-family: Inter, sans-serif;
+  
   color: var(--mg-text-light);
   background: var(--mg-bg);
   text-decoration: none;
