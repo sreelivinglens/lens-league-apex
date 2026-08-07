@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.20 (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
+{# SL-VERSION: 175.21 (Tonight's Shot hero card: darker #0A1F17, gold border accent, subject 16px bold white, chips as distinct pill rows rgba(255,255,255,0.07) with white text; Nearby Opportunity chips: green pill rows rgba(42,58,26,0.5); session 175, 2026-08-07) #} {# 175.20: (Mentor Advice: dark hero shot prescription card for live events with ⏱📷📍 chips; Nearby Opportunity: same chip treatment + full Sherpa brief prominent with gold left-border why_it_matters pull-quote; Cache-Control no-store meta; engine fields shot_time/technical_tip/position_tip supported when available; session 175, 2026-08-07) #} {# 175.19: (sparkline: tier label text removed entirely — colour-coded lines only, no collision possible; session 175, 2026-08-07) #} {# 175.18: (sparkline: tier labels left-edge only 8px/0.5 opacity, breakthrough badge hidden when last dot IS breakthrough to prevent collision; font bumps: body-text 14→15px, lnk 13→14px, dim_avgs 13→14px, journey subhead 13→14px, expert advice 13→14px; session 175, 2026-08-07) #} {# 175.17: (mobile complete redesign: dedicated .sl-mobile block separate from .sl-desktop; sticky topbar; dark standing strip; upload CTA first; horizontal thumb scroll; More drawer; mobile eval banner; session 175, 2026-08-07) #} {# 175.16: (sparkline tier labels moved to right side to fix collision with score dots; subject text colour green→gold-dk in Mentor Advice and staging placeholder; session 175, 2026-08-07) #} {# 175.15: (mobile: remove display:contents rpanel fix — use flex column instead; remove duplicate 768px media block; session 175, 2026-08-07) #} {# 175.14: (iOS safe-area-inset-bottom for bottom nav + More drawer + body padding; viewport-fit=cover; session 175, 2026-08-07) #} {# 175.13: (graph bg white+border; insight-lines 15px; body-text left-align; session 175, 2026-08-07) #} {# 175.12: (mobile: bottom nav Learn→Improve, More tab with slide-up drawer giving access to Explore/Learn/Mentor Review/Weekly Challenge/Profile/Help/Logout; mobile card reorder Greeting→Standing→Mentor→Journey→Nearby+Train; rpanel display:contents on mobile; session 175, 2026-08-07) #} {# 175.11: (mobile bottom-nav nav→div fix; body-text 13→14px; Mentor Advice dimension 15px; momentum personal-best detection; sparkline single highest-tier hero annotation; tier lines 1px/0.55 opacity; session 175, 2026-08-07) #} {# 175.10: (Phase 1 dashboard redesign: _show_bottom moved to top; greeting 3-state (0/1-4/5+ images); Journey redesign — tier threshold lines, breakthrough annotations, momentum bar, < 5 images progress tracker; Mentor Advice two-layer — weakest dimension coaching + location; date concatenation fix; Session 175, 2026-08-07) #} {# 175.9: (Train your eye: corrected descriptor text to Rate 3 images · earn 1 free upload · +2 bonus points — Session 175, 2026-08-07) #} {# 175.8: (Train your eye: fix silent onerror black box → show caption fallback; fix duplicate id="erm"/id="eexp" between real and staging paths — Session 175, 2026-08-07) #} {# 175.7: greeting shows tier, Mentor staging placeholder, Improve nav, Journey→Improve, sparkline upgraded with scores on all dots (audit clean: KYC ranking→standing, mobile breakpoints, 70yr fonts 13px min, webkit backdrop-filter, location widget fixed, nav height 64px) — Nav: Dashboard·Upload·Journey·Learn·Explore·Profile, My Gallery in sidenav, mobile bottom nav 5 tabs, zoom-safe flex layout, eval pending banner + 2s poll, sparkline gold label, _last = most recent evaluated image, MY STANDING fix, keyframes moved to CSS block) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -429,38 +429,41 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _ev_tech = dash_live_event.get('technical_tip') or '' %}
         {% set _ev_pos = dash_live_event.get('position_tip') or '' %}
 
-        {# Hero shot prescription block — dark card, catches the eye #}
-        <div style="background:var(--dark);border-radius:11px;padding:14px 16px;margin-bottom:10px">
-          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.7);margin-bottom:8px">Tonight's shot</div>
-          <div style="font-size:15px;font-weight:600;color:#fff;line-height:1.5;margin-bottom:10px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
-          {# Chips — show when structured fields available #}
+        {# Hero shot prescription block — redesigned to catch the eye (SL 175.21) #}
+        <div style="background:#0A1F17;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.18)">
+          {# Header row — gold label + location name #}
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
+            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(214,164,40,0.5)">{{ dash_live_event.genre }}</span>{% endif %}
+          </div>
+          {# Location #}
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 {{ dash_live_event.location_name }}</div>
+          {# Subject — the action, bold and white #}
+          <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
+          {# Chips — each on its own pill row #}
           {% if _ev_shot_time or _ev_tech or _ev_pos %}
-          <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;flex-direction:column;gap:7px">
             {% if _ev_shot_time %}
-            <div style="display:flex;align-items:flex-start;gap:8px">
-              <span style="font-size:14px;flex-shrink:0;margin-top:1px">⏱</span>
-              <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">{{ _ev_shot_time }}</span>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+              <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
+              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _ev_shot_time }}</span>
             </div>
             {% endif %}
             {% if _ev_tech %}
-            <div style="display:flex;align-items:flex-start;gap:8px">
-              <span style="font-size:14px;flex-shrink:0;margin-top:1px">📷</span>
-              <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">{{ _ev_tech }}</span>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+              <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
+              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _ev_tech }}</span>
             </div>
             {% endif %}
             {% if _ev_pos %}
-            <div style="display:flex;align-items:flex-start;gap:8px">
-              <span style="font-size:14px;flex-shrink:0;margin-top:1px">📍</span>
-              <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">{{ _ev_pos }}</span>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+              <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
+              <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">{{ _ev_pos }}</span>
             </div>
             {% endif %}
           </div>
           {% else %}
-          {# No structured chips yet — show first meaningful sentence of advisory as teaser #}
-          {% set _ev_teaser = (dash_live_event.what_is_happening or '')[:160] %}
-          {% if _ev_teaser %}
-          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.65">{{ _ev_teaser }}{% if (dash_live_event.what_is_happening or '')|length > 160 %}…{% endif %}</div>
-          {% endif %}
+          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:160] }}{% if (dash_live_event.what_is_happening or '')|length > 160 %}…{% endif %}</div>
           {% endif %}
         </div>
 
@@ -496,21 +499,25 @@ body.page-dashboard #backToTop         { display:none !important }
       {% elif _show_bottom %}
       {# STAGING PLACEHOLDER — location layer (remove _show_bottom before merge) #}
       {# Simulates a live event with the new dark hero treatment #}
-      <div style="background:var(--dark);border-radius:11px;padding:14px 16px;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.7);margin-bottom:8px">Tonight's shot</div>
-        <div style="font-size:15px;font-weight:600;color:#fff;line-height:1.5;margin-bottom:10px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;align-items:flex-start;gap:8px">
-            <span style="font-size:14px;flex-shrink:0">⏱</span>
-            <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">7:00–7:20 PM — golden to artificial light transition window</span>
+      <div style="background:#0A1F17;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(214,164,40,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.18)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
+          <span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(214,164,40,0.5)">Street</span>
+        </div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 Harris Jayaraj Concert, NICE Grounds</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.45;margin-bottom:14px">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
+            <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition window</span>
           </div>
-          <div style="display:flex;align-items:flex-start;gap:8px">
-            <span style="font-size:14px;flex-shrink:0">📷</span>
-            <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span>
+          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
+            <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span>
           </div>
-          <div style="display:flex;align-items:flex-start;gap:8px">
-            <span style="font-size:14px;flex-shrink:0">📍</span>
-            <span style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">Boundary where crowd density drops — solo attendees, slightly apart</span>
+          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px">
+            <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
+            <span style="font-size:14px;color:#fff;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees, slightly apart</span>
           </div>
         </div>
       </div>
@@ -761,12 +768,12 @@ body.page-dashboard #backToTop         { display:none !important }
         </div>
         <div style="font-size:15px;font-weight:700;color:#1A2A1A;margin-bottom:2px">{{ dash_live_event.location_name }}</div>
         {% if dash_live_event.subject %}<div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:8px;line-height:1.4">{{ dash_live_event.subject }}</div>{% endif %}
-        {# Structured chips when available #}
+        {# Structured chips when available — pill style matching Mentor Advice #}
         {% if _le_shot_time or _le_tech or _le_pos %}
-        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;background:rgba(255,255,255,0.5);border-radius:8px;padding:9px 11px">
-          {% if _le_shot_time %}<div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">⏱</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">{{ _le_shot_time }}</span></div>{% endif %}
-          {% if _le_tech %}<div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📷</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">{{ _le_tech }}</span></div>{% endif %}
-          {% if _le_pos %}<div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📍</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">{{ _le_pos }}</span></div>{% endif %}
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          {% if _le_shot_time %}<div style="display:flex;gap:9px;align-items:flex-start;background:rgba(42,58,26,0.5);border-radius:7px;padding:8px 10px"><span style="font-size:14px;flex-shrink:0">⏱</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:600">{{ _le_shot_time }}</span></div>{% endif %}
+          {% if _le_tech %}<div style="display:flex;gap:9px;align-items:flex-start;background:rgba(42,58,26,0.5);border-radius:7px;padding:8px 10px"><span style="font-size:14px;flex-shrink:0">📷</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:600">{{ _le_tech }}</span></div>{% endif %}
+          {% if _le_pos %}<div style="display:flex;gap:9px;align-items:flex-start;background:rgba(42,58,26,0.5);border-radius:7px;padding:8px 10px"><span style="font-size:14px;flex-shrink:0">📍</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:600">{{ _le_pos }}</span></div>{% endif %}
         </div>
         {% endif %}
         {# Short advisory teaser #}
@@ -824,10 +831,10 @@ body.page-dashboard #backToTop         { display:none !important }
         </div>
         <div style="font-size:15px;font-weight:700;color:#1A2A1A;margin-bottom:2px">Harris Jayaraj Concert, NICE Grounds</div>
         <div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:8px;line-height:1.4">Photograph the crowd at Harris Jayaraj's concert — the real frames are in the faces, not the stage</div>
-        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;background:rgba(255,255,255,0.5);border-radius:8px;padding:9px 11px">
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">⏱</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">7:00–7:20 PM — golden to artificial light transition window</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📷</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:13px;flex-shrink:0">📍</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:500">Boundary where crowd density drops — solo attendees, slightly apart</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          <div style="display:flex;gap:9px;align-items:flex-start;background:rgba(42,58,26,0.5);border-radius:7px;padding:8px 10px"><span style="font-size:14px;flex-shrink:0">⏱</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:600">7:00–7:20 PM — golden to artificial light transition window</span></div>
+          <div style="display:flex;gap:9px;align-items:flex-start;background:rgba(42,58,26,0.5);border-radius:7px;padding:8px 10px"><span style="font-size:14px;flex-shrink:0">📷</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:600">1/15 to 1/30 — crowd blur, one stationary face holds sharp</span></div>
+          <div style="display:flex;gap:9px;align-items:flex-start;background:rgba(42,58,26,0.5);border-radius:7px;padding:8px 10px"><span style="font-size:14px;flex-shrink:0">📍</span><span style="font-size:13px;color:#2A3A1A;line-height:1.5;font-weight:600">Boundary where crowd density drops — solo attendees, slightly apart</span></div>
         </div>
         <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:8px">The concert opens at 7 PM. Within the first thirty minutes, the crowd nearest the stage will compress into a single unified mass…</div>
         <span class="rm" id="orm" style="color:#3A6B2A" onclick="toggleSpan('oexp','orm')">Read full brief →</span>
