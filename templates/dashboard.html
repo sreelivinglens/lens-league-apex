@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.33 (bn-tab :active gold+opacity tap feedback; session 175, 2026-08-07) #}
+{# SL-VERSION: 175.34 (bn-tab :active scale(1.15) for satisfying tap feel; session 175, 2026-08-07) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -159,7 +159,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .bn-tab span{display:block;font-size:13px;font-weight:600;line-height:1.2}
 .bn-tab svg{flex-shrink:0;width:18px;height:18px}
 .bn-tab.active{color:var(--gold)}
-.bn-tab:active{color:var(--gold);opacity:0.7}
+.bn-tab:active{color:var(--gold);transform:scale(1.15);transition:transform 0.1s}
 
 /* ── STANDING MODAL ── */
 .standing-modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:20px}
