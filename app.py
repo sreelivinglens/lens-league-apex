@@ -4518,6 +4518,10 @@ def dashboard():
                 _pt_cache_miss = True
         except Exception:
             _pt_cache_miss = True
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
         if _pt_cache_miss:
             # Cache miss — fall back to live computation
@@ -4606,10 +4610,14 @@ def dashboard():
                 aea_dash = _aeaj.loads(_aea_raw)
             else:
                 _aea_cache_miss = True
-                raise ValueError('no cache')
         except Exception:
             _aea_cache_miss = True
-        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        if _aea_cache_miss:
             # Cache miss — fall back to live computation
             try:
                 _aea_year = datetime.utcnow().year
@@ -4861,6 +4869,10 @@ def dashboard():
             else:
                 raise ValueError('no cache')
         except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             # Cache miss — fall back to live computation
             _pts_bal  = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
             _pts_life = round(getattr(current_user, 'points_lifetime_earned', 0.0) or 0.0, 1)
