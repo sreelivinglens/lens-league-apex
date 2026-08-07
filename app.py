@@ -2031,6 +2031,26 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'advisory_shown_log migration warning: {_asl_mig}')
 
+            # SL 175 — city_event_scan_log (daily city event scan dedup + rate limiting)
+            try:
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS city_event_scan_log (
+                        id           SERIAL PRIMARY KEY,
+                        city         VARCHAR(80) NOT NULL,
+                        scanned_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
+                        events_found INTEGER     NOT NULL DEFAULT 0
+                    )
+                """))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_city_event_scan_log_city_at "
+                    "ON city_event_scan_log (city, scanned_at)"
+                ))
+                db.session.commit()
+                print('city_event_scan_log table OK.')
+            except Exception as _cesl_mig:
+                db.session.rollback()
+                print(f'city_event_scan_log migration warning: {_cesl_mig}')
+
             # cancellation_reasons table
             try:
                 db.session.execute(db.text(
