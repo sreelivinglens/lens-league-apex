@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.12 (nav: cream #F6F2E9 bg, dark text #1A1814, gold active state, no backdrop blur; hamburger dark; session 175, 2026-08-08) #}
+{# SL-VERSION: 175.7 (bottom nav: 5 tabs Dashboard·Upload·My Gallery·Improve·More matching dashboard; request.endpoint active states on all tabs; SVG icons 18px; More drawer with Explore/Learn/Mentor/Challenge/AEA/Profile/Help/Logout; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,21 +120,18 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
-  top: auto !important;
   bottom: env(safe-area-inset-bottom, 34px);
   left: 0; right: 0;
   height: 62px;
-  background: rgba(26, 24, 20, 0.98);
-  border-top: 1.5px solid rgba(245,197,24,0.25);
+  background: #1A1A18;
+  border-top: 1px solid rgba(245,197,24,0.20);
   border-bottom: none;
   display: flex;
   justify-content: space-around;
   align-items: flex-start;
   z-index: 998;
-  padding-top: 12px;
+  padding-top: 10px;
   overflow: visible;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 .sl-bottom-nav .sl-nav-item {
   display: flex;
@@ -155,7 +152,7 @@ table { max-width: none; }
 }
 .sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
-.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; transform: scale(1.15); transition: transform 0.1s; }
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.7; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
@@ -514,10 +511,10 @@ table { max-width: none; }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 nav {
-  background: #F6F2E9;
-  border-bottom: 1px solid rgba(214,164,40,0.25);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: rgba(26, 24, 20, 0.94);
+  border-bottom: 1px solid rgba(245,197,24,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   height: var(--nav-height);
   padding: 0 var(--page-pad);
   display: flex;
@@ -546,7 +543,7 @@ nav {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(26,24,20,0.40);
+  color: rgba(255,255,255,0.40);
   display: block;
 }
 .nav-links {
@@ -555,22 +552,22 @@ nav {
   gap: 2px;
 }
 .nav-links a {
-  color: #1A1814;
+  color: #FFFFFF;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
   padding: 6px 8px;
   border-radius: var(--radius-sm);
-  transition: color 0.1s, background 0.1s;
+  transition: color 0.2s, background 0.2s;
   white-space: nowrap;
 }
-.nav-links a:hover { color: #1A1814; background: rgba(26,24,20,0.06); }
-.nav-links a:active { color: #1A1814; background: rgba(26,24,20,0.10); transform:scale(1.05); }
+.nav-links a:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
+.nav-links a:active { color: #FFFFFF; background: rgba(255,255,255,0.20); }
 .nav-links a.nav-admin { color: var(--gold); }
 .nav-links a.nav-admin:hover { background: var(--gold-subtle); }
 .nav-links a.nav-active {
-  color: var(--gold-dk) !important;
-  background: rgba(214,164,40,0.10);
+  color: var(--gold) !important;
+  background: rgba(245,197,24,0.12);
   border-bottom: 2px solid var(--gold);
   padding-bottom: 4px;
 }
@@ -813,7 +810,7 @@ nav {
   border: none;
   cursor: pointer;
   padding: 8px;
-  color: #1A1814;
+  color: #FFFFFF;
   flex-direction: column;
   gap: 5px;
 }
@@ -1525,9 +1522,6 @@ img {
 .sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
 .sl-main-content{flex:1;min-width:0}
 @media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block}}
-/* SL 175: Page transition loading bar — gold, 3px top, instant on tap */
-#sl-progress-bar{position:fixed;top:0;left:0;height:3px;width:0%;background:#D6A428;z-index:9999;transition:width 0.4s ease;display:none}
-#sl-progress-bar.active{display:block}
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
@@ -1581,28 +1575,6 @@ img {
 </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
-<div id="sl-progress-bar"></div>
-<script>
-// SL 175: Gold progress bar on nav tap — instant visual feedback
-(function(){
-  var bar = document.getElementById('sl-progress-bar');
-  if (!bar) return;
-  document.querySelectorAll('.sl-bottom-nav a, .sl-bottom-nav button, .nav-links a').forEach(function(el){
-    el.addEventListener('click', function(e){
-      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-      bar.style.width = '0%';
-      bar.classList.add('active');
-      setTimeout(function(){ bar.style.width = '70%'; }, 10);
-      setTimeout(function(){ bar.style.width = '90%'; }, 400);
-    });
-  });
-  // Complete on page load
-  window.addEventListener('pageshow', function(){
-    bar.style.width = '100%';
-    setTimeout(function(){ bar.classList.remove('active'); bar.style.width = '0%'; }, 300);
-  });
-})();
-</script>
 
 <nav class="sl-top-nav">
   <a href="{{ url_for('index') }}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
