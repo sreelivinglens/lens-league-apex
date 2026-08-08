@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.36 (Tonight's Shot subject black; Mentor Advice deduped — shows chips only, links down to Nearby Opportunity for full brief; anchor #nearby-opportunity added; session 175, 2026-08-08) #}
+{# SL-VERSION: 175.37 (Work on This: removed dim_avgs Your average/Strongest line — redundant with greeting card; session 175, 2026-08-08) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -440,9 +440,6 @@ body.page-dashboard #backToTop         { display:none !important }
         <div style="font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:3px">Work on this</div>
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:4px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
         <div style="font-size:14px;color:var(--text);line-height:1.75">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
-        {% if progress_data.dim_avgs %}
-        <div style="font-size:14px;color:var(--muted);margin-top:5px">Your average: <strong style="color:var(--dark)">{{ '%.1f'|format(progress_data.dim_avgs[progress_data.weakest]) }}</strong> · Strongest: <strong style="color:var(--green)">{{ _dim_field.get(progress_data.strongest, progress_data.strongest|title) }} {{ '%.1f'|format(progress_data.dim_avgs[progress_data.strongest]) }}</strong></div>
-        {% endif %}
       </div>
       {% endif %}
 
