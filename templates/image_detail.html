@@ -19,14 +19,16 @@
 ===================================================== */
 
 /* ── SUPPRESS BASE CHROME ── */
-body.page-scorecard .sl-top-nav        { display:none !important }
-body.page-scorecard .sl-bottom-nav     { display:none !important }
-body.page-scorecard > footer           { display:none !important }
-body.page-scorecard .nav-mobile        { display:none !important }
-body.page-scorecard .flash-container   { display:none !important }
-body.page-scorecard > main             { padding:0 !important; max-width:none !important; margin:0 !important; background:var(--sc-cream) !important }
-body.page-scorecard                    { padding-top:0 !important; background:var(--sc-cream) !important; margin-top:0 !important }
-body.page-scorecard #backToTop         { display:none !important }
+body.page-scorecard .sl-top-nav          { display:none !important }
+body.page-scorecard .sl-bottom-nav       { display:none !important }
+body.page-scorecard footer               { display:none !important }
+body.page-scorecard .nav-mobile          { display:none !important }
+body.page-scorecard .nav-mobile-login    { display:none !important }
+body.page-scorecard .flash-container     { display:none !important }
+body.page-scorecard #backToTop           { display:none !important }
+body.page-scorecard > main,
+body.page-scorecard main.sl-main         { padding:0 !important; max-width:none !important; margin:0 !important; background:var(--sc-cream) !important }
+body.page-scorecard                      { padding-top:0 !important; background:var(--sc-cream) !important; margin-top:0 !important }
 
 /* ── TOKENS ── */
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
@@ -49,10 +51,10 @@ body.page-scorecard #backToTop         { display:none !important }
 .sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sc-dark);margin-left:10px;text-decoration:none}
 
 /* ── 3-COLUMN SHELL ── */
-.sc-shell{display:grid;grid-template-columns:155px 1fr 212px;background:var(--sc-cream)}
+.sc-shell{display:grid;grid-template-columns:1fr 212px;background:var(--sc-cream)}
 
 /* ── SIDENAV ── */
-.sc-sidenav{background:#fff;border-right:0.5px solid var(--sc-border);padding:12px 0;width:155px;flex-shrink:0}
+.sc-sidenav{display:none !important}
 .sc-si{display:block;padding:7px 14px 7px 12px;font-size:13px;color:var(--sc-muted);border-left:3px solid transparent;line-height:1.5;text-decoration:none}
 .sc-si.active{background:var(--sc-cream);color:var(--sc-dark);font-weight:600;border-left-color:var(--sc-gold)}
 .sc-si:hover:not(.active){color:var(--sc-dark);background:#fafaf8}
@@ -112,7 +114,9 @@ body.page-scorecard #backToTop         { display:none !important }
 .sc-em-inner{padding:16px 18px}
 .sc-em-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .sc-em-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-.sc-em-line{font-size:13px;color:var(--sc-text);line-height:1.65;padding:7px 0;border-bottom:0.5px solid var(--sc-border)}
+.sc-em-line{font-size:14px;color:var(--sc-text);line-height:1.75;padding:10px 0;border-bottom:0.5px solid var(--sc-border)}
+.sc-em-line:first-child{padding-top:0}
+.sc-em-line:last-child{border-bottom:none;padding-bottom:0}
 .sc-em-line:last-child{border-bottom:none}
 .sc-em-line strong{color:var(--sc-dark);font-weight:600}
 .sc-ref-link{color:var(--sc-gold-dk);text-decoration:underline;cursor:pointer;font-size:12px}
@@ -154,16 +158,20 @@ body.page-scorecard #backToTop         { display:none !important }
 .sc-acc-icon{width:25px;height:25px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
 .sc-acc-col{flex:1;min-width:0}
 .sc-acc-title{font-size:13px;font-weight:600;color:var(--sc-dark);line-height:1.3}
-.sc-acc-teaser{font-size:12px;color:var(--sc-muted);margin-top:3px;line-height:1.4}
+.sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.45}
 .sc-acc-chev{font-size:11px;color:var(--sc-muted);flex-shrink:0;margin-top:3px;transition:transform .2s;display:inline-block}
 .sc-acc-row.open .sc-acc-chev{transform:rotate(180deg)}
-.sc-acc-body{display:none;padding:0 16px 13px 51px;font-size:13px;color:var(--sc-text);line-height:1.7}
+.sc-acc-body{display:none;padding:0 16px 16px 51px;font-size:14px;color:var(--sc-text);line-height:1.75}
+.sc-acc-body p{margin-bottom:10px}
+.sc-acc-body p:last-child{margin-bottom:0}
+.sc-acc-body strong{color:var(--sc-dark);font-weight:600}
+.sc-acc-body a{color:var(--sc-gold-dk);text-decoration:underline}
 .sc-acc-row.open .sc-acc-body{display:block}
 
 /* ── WARM TAKE-AWAY (not dark) ── */
 .sc-takeaway-warm{background:#fffbef;border-bottom:0.5px solid #f0e8c8;padding:14px 16px}
 .sc-ta-eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:6px}
-.sc-ta-headline{font-size:15px;font-weight:500;color:var(--sc-dark);line-height:1.5;margin-bottom:5px}
+.sc-ta-headline{font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.55;margin-bottom:6px}
 .sc-ta-body{font-size:12px;color:var(--sc-muted);line-height:1.6}
 
 /* ── NEXT SHOT — cream/green (NEVER dark on scorecard) ── */
@@ -206,10 +214,9 @@ body.page-scorecard #backToTop         { display:none !important }
    IPAD 768–1023px
 ══════════════════════════════════════════ */
 @media (max-width:1023px) and (min-width:769px){
-  .sc-shell{grid-template-columns:0 1fr 0}
-  .sc-sidenav{display:none}
-  .sc-rpanel{display:none}
-  .sc-nav-links .sc-nl:not(.active){display:none}
+  .sc-shell{grid-template-columns:1fr 200px}
+  .sc-sidenav{display:none !important}
+  .sc-rpanel{width:200px}
 }
 
 /* ══════════════════════════════════════════
@@ -217,7 +224,7 @@ body.page-scorecard #backToTop         { display:none !important }
 ══════════════════════════════════════════ */
 @media (max-width:768px){
   .sc-shell{display:block}
-  .sc-sidenav{display:none}
+  .sc-sidenav{display:none !important}
   .sc-rpanel{display:none}
   .sc-nav-links{display:none}
   .sc-logo-text{display:none}
@@ -323,14 +330,14 @@ body.page-scorecard #backToTop         { display:none !important }
     </a>
   </div>
   <div class="sc-nav-links">
+    {# No active nav item — scorecard is accessed from image clicks, not nav #}
     <a class="sc-nl" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="sc-nl" href="{{ url_for('upload') }}">Upload</a>
     <a class="sc-nl" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="sc-nl active" href="#">Improve</a>
     <a class="sc-nl" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-nl" href="{{ url_for('dashboard') }}">Explore</a>
     <a class="sc-nl" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
   </div>
+  <a href="{{ url_for('upload') }}" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,.1);border-radius:5px;font-size:12px;font-weight:500;color:#fff;text-decoration:none;margin-left:8px">↑ Upload next</a>
   {% if current_user.is_authenticated %}
   <a href="{{ url_for('profile') }}" class="sc-av">{{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}</a>
   {% endif %}
@@ -368,9 +375,12 @@ body.page-scorecard #backToTop         { display:none !important }
         {% if image.thumb_url %}
         <img src="{{ image.thumb_url }}"
              alt="{{ image.asset_name or 'Your photograph' }}"
+             style="width:100%;height:320px;object-fit:cover;display:block;background:var(--sc-dark)"
              onerror="this.style.background='var(--sc-dark)'">
         {% else %}
-        <div style="width:100%;height:280px;background:var(--sc-dark)"></div>
+        <div style="width:100%;height:320px;background:var(--sc-dark);display:flex;align-items:center;justify-content:center">
+          <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ image.genre or 'Photograph' }}</span>
+        </div>
         {% endif %}
 
         {# EXIF #}
@@ -471,9 +481,11 @@ body.page-scorecard #backToTop         { display:none !important }
           {% endif %}
         </div>
         {% endif %}
+        {% if _eval_means_full %}
         <div style="display:flex;justify-content:flex-end;margin-top:8px">
           <span class="sc-rm" onclick="scToggleMeans(this)">See full analysis ↓</span>
         </div>
+        {% endif %}
       </div>
     </div>
     {% endif %}
@@ -583,7 +595,7 @@ body.page-scorecard #backToTop         { display:none !important }
       <div class="sc-takeaway-warm">
         <div class="sc-ta-eyebrow">⭐ Your one take-away</div>
         <div class="sc-ta-headline">{{ _takeaway | safe }}</div>
-        {% if _scored_as %}<div class="sc-ta-body">{{ _scored_as }}</div>{% endif %}
+        {# _scored_as (archetype) shown in HUD tier area, not here #}
       </div>
       {% endif %}
 
@@ -633,7 +645,7 @@ body.page-scorecard #backToTop         { display:none !important }
     {% endif %}
 
     {# ⑥ WHAT YOU NEED TO DO #}
-    {% if _assignment or location_links or _note_on_eye or _body_of_work %}
+    {% if _assignment or _mentor_1 or _note_on_eye or _body_of_work %}
     <div class="sc-acc-block">
       <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What you need to do</div></div>
 
@@ -651,18 +663,25 @@ body.page-scorecard #backToTop         { display:none !important }
       </div>
       {% endif %}
 
-      {# Next shot — CREAM background, never dark #}
-      {% if location_links %}
+      {# Next shot — from mentor_location_1 audit field. Cream background, NEVER dark #}
+      {% if _mentor_1 %}
+      <div class="sc-next-shot">
+        <div class="sc-ns-eyebrow">📍 Your next shot — bookmarked</div>
+        <div class="sc-ns-location">{{ _mentor_1.split('\n')[0] if '\n' in _mentor_1 else _mentor_1[:60] }}</div>
+        {% if _mentor_2 %}
+        <div class="sc-ns-spec"><span class="sc-ns-spec-lbl">Details</span><span class="sc-ns-spec-val">{{ _mentor_2 }}</span></div>
+        {% endif %}
+        <div class="sc-ns-cta-row">
+          <a href="https://maps.google.com/?q={{ _mentor_1 | urlencode }}" target="_blank" rel="noopener" class="sc-ns-btn">Go shoot →</a>
+        </div>
+      </div>
+      {% elif location_links %}
       {% for loc in location_links[:1] %}
       <div class="sc-next-shot">
         <div class="sc-ns-eyebrow">📍 Your next shot — bookmarked</div>
-        <div class="sc-ns-location">{{ loc.name or loc.location or 'Nearby location' }}</div>
-        {% if loc.when or loc.timing %}<div class="sc-ns-spec"><span class="sc-ns-spec-lbl">When</span><span class="sc-ns-spec-val">{{ loc.when or loc.timing }}</span></div>{% endif %}
-        {% if loc.how or loc.settings %}<div class="sc-ns-spec"><span class="sc-ns-spec-lbl">How</span><span class="sc-ns-spec-val">{{ loc.how or loc.settings }}</span></div>{% endif %}
-        {% if loc.find or loc.look_for %}<div class="sc-ns-spec"><span class="sc-ns-spec-lbl">Find</span><span class="sc-ns-spec-val">{{ loc.find or loc.look_for }}</span></div>{% endif %}
+        <div class="sc-ns-location">{{ loc.get('name') or loc.get('title') or 'Nearby location' }}</div>
         <div class="sc-ns-cta-row">
-          <a href="{{ loc.maps_url or loc.directions_url or '#' }}" target="_blank" class="sc-ns-btn">Go shoot →</a>
-          {% if loc.brief_url %}<a href="{{ loc.brief_url }}" class="sc-ns-btn-ghost">View full brief →</a>{% endif %}
+          <a href="{{ loc.get('maps_url') or loc.get('url') or '#' }}" target="_blank" class="sc-ns-btn">Go shoot →</a>
         </div>
       </div>
       {% endfor %}
@@ -737,7 +756,7 @@ body.page-scorecard #backToTop         { display:none !important }
     <div class="sc-dev-block">
       <div class="sc-card-hdr">
         <span class="sc-card-title">How you're developing</span>
-        <a href="{{ url_for('profile') }}" class="sc-card-link">View full journey →</a>
+        <a href="{{ url_for('my_gallery') }}" class="sc-card-link">View full journey →</a>
       </div>
       {% with _dims = portfolio_data.dimensions %}
       {% if _dims %}
@@ -776,9 +795,9 @@ body.page-scorecard #backToTop         { display:none !important }
 
     {# ⑧ ACTION BAR #}
     <div class="sc-act-bar">
-      <a href="{{ '#' }}" class="sc-btn-gold">↑ Share Scorecard</a>
-      <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save to Gallery</a>
-      <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Get Mentor Review</a>
+      <a href="{{ url_for('share_image', image_id=image.id) }}" class="sc-btn-gold" target="_blank">↑ Share Scorecard</a>
+      <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save</a>
+      <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Mentor Review</a>
       <a href="{{ url_for('dashboard') }}" class="sc-btn-back">← Back to Dashboard</a>
     </div>
 
@@ -927,6 +946,32 @@ var scDDIData = (function () {
     return JSON.parse(document.getElementById('sc-ddi-data').textContent).filter(Boolean);
   } catch (e) { return []; }
 })();
+/* ── Convert **bold** markdown in text nodes ── */
+(function () {
+  var boldRe = /\*\*(.+?)\*\*/g;
+  var bulletRe = /\s*■\s*/g;
+  function processNode(node) {
+    if (node.nodeType === 3) {  /* TEXT_NODE */
+      var txt = node.textContent;
+      if (boldRe.test(txt) || bulletRe.test(txt)) {
+        var span = document.createElement('span');
+        span.innerHTML = txt
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\s*■\s*/g, '<br>• ');
+        node.parentNode.replaceChild(span, node);
+        boldRe.lastIndex = 0;
+      }
+    } else if (node.nodeType === 1 && !['SCRIPT','STYLE'].includes(node.tagName)) {
+      Array.from(node.childNodes).forEach(processNode);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var targets = document.querySelectorAll('.sc-acc-body, .sc-em-line, .sc-ta-headline, .sc-ta-body, .hk-takeaway');
+    targets.forEach(function(el) { processNode(el); });
+  });
+})();
+
 function scToggleDDI(col, idx) {
   var det = document.getElementById('sc-ddi-detail');
   var cols = col.parentElement.querySelectorAll('.sc-ddi-col');
