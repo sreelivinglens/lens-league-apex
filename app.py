@@ -29949,7 +29949,7 @@ def try_result(image_id):
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _lifetime)
 
     return render_template(
-        'try.html',
+        'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
         image_id       = image_id,
         score          = img.score,
         tier           = img.tier or '—',
