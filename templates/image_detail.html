@@ -768,48 +768,61 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#fce7f3">🎨</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Artistic · Heavy editing</div>
-            <div class="sc-acc-teaser">{{ _edit_creative | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body sc-render-text">{{ _edit_creative | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | replace('convert to black and white','develop a distinctive colour treatment') | safe }}</div>
       </div>
       {% endif %}
     </div>
     {% endif %}
 
-    {# ⑨ HOW YOU'RE DEVELOPING #}
-    {% if portfolio_data and portfolio_data.has_trends %}
+    {# ⑨ HOW YOU'RE DEVELOPING — per-dimension sparklines matching main scorecard #}
+    {% if portfolio_data and portfolio_data.has_trends and portfolio_data.dimensions %}
     <div class="sc-dev-block">
-      <div class="sc-card-hdr">
+      <div class="sc-card-hdr" style="margin-bottom:4px">
         <span class="sc-card-title">How you're developing</span>
+        <span style="font-size:12px;color:var(--sc-muted)">Last {{ portfolio_data.plotted_count }} photographs evaluated</span>
+      </div>
 
-      </div>
-      {% with _dims = portfolio_data.dimensions %}
-      {% if _dims %}{% set _ov = _dims[0] %}
-      <div style="font-size:16px;font-weight:500;color:var(--sc-dark);margin-bottom:5px">
-        {{ _ov.pill.replace('↑ ','Your scores are ').replace('↓ ','') | capitalize if _ov.pill else 'Your journey continues.' }}
-      </div>
-      <div style="font-size:13px;color:var(--sc-muted);margin-bottom:10px;line-height:1.55">
-        {{ portfolio_data.plotted_count }} evaluations tracked.{% if image.score %} Your latest: {{ '%.2f'|format(image.score) }}.{% endif %}
-      </div>
-      <svg viewBox="0 0 460 66" width="100%" height="66" style="margin-bottom:7px">
-        <polyline points="{{ _ov.sparkline }}" fill="none" stroke="{{ _ov.color or '#D6A428' }}" stroke-width="2"/>
-        {% for pt in _ov.points %}
-        <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{% if loop.last %}5{% else %}3.5{% endif %}"
-                fill="{{ _ov.color or '#D6A428' }}"{% if loop.last %} stroke="#fff" stroke-width="2"{% endif %}/>
-        {% endfor %}
-        {% for lp in _ov.label_points %}
-        <text x="{{ (lp.x_pct / 100 * 460)|round }}" y="64" font-size="7.5"
-              fill="{% if loop.last %}{{ _ov.color or '#D6A428' }}{% else %}#888{% endif %}"
-              text-anchor="middle" font-family="sans-serif">{{ lp.value }}</text>
-        {% endfor %}
-      </svg>
-      <div style="display:flex;align-items:center;gap:9px">
-        {% if _ov.pill %}<div class="sc-trend-pill">{{ _ov.pill }}</div>{% endif %}
+      {% for _dim in portfolio_data.dimensions %}
+      {% if _dim.sparkline %}
+      <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:0.5px solid var(--sc-border){% if loop.last %};border-bottom:none;margin-bottom:0;padding-bottom:0{% endif %}">
+        {# Dimension name + current score #}
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:15px;font-weight:500;color:var(--sc-dark)">{{ _dim.label }}</div>
+          <div style="font-size:28px;font-weight:700;color:var(--sc-dark);line-height:1;letter-spacing:-.02em">{{ '%.1f'|format(_dim.current) }}</div>
+        </div>
+        {# Pill — pastel background, dark font #}
+        {% if _dim.pill %}
+        <div style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-bottom:8px;font-family:monospace;
+          background:{{ _dim.pill_bg or '#FEF9EE' }};color:{{ _dim.pill_color or '#7A5E00' }};border:0.5px solid {{ _dim.pill_color or '#C8A43A' }}40">
+          {{ _dim.pill }}
+        </div>
+        {% endif %}
+        {# Sparkline SVG #}
+        <svg viewBox="0 0 460 52" width="100%" height="52">
+          <polyline points="{{ _dim.sparkline }}" fill="none" stroke="{{ _dim.color or '#D6A428' }}" stroke-width="2" stroke-linejoin="round"/>
+          {% for pt in _dim.points %}
+          <circle cx="{{ pt.x }}" cy="{{ pt.y }}"
+                  r="{% if loop.last %}5{% else %}3{% endif %}"
+                  fill="{{ _dim.color or '#D6A428' }}"{% if loop.last %} stroke="#fff" stroke-width="1.5"{% endif %}/>
+          {% endfor %}
+          {# Score labels along x-axis #}
+          {% for lp in _dim.label_points %}
+          <text x="{{ (lp.x_pct / 100 * 460)|round }}" y="50"
+                font-size="9"
+                fill="{% if loop.last %}{{ _dim.color or '#D6A428' }}{% else %}#888{% endif %}"
+                text-anchor="middle"
+                font-family="system-ui,sans-serif"
+                font-weight="{% if loop.last %}600{% else %}400{% endif %}">{{ lp.value }}</text>
+          {% endfor %}
+        </svg>
       </div>
       {% endif %}
-      {% endwith %}
+      {% endfor %}
+
     </div>
     {% endif %}
 
@@ -818,6 +831,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <a href="{{ url_for('share_image', image_id=image.id) }}" class="sc-btn-gold" target="_blank">↑ Share Scorecard</a>
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save</a>
       <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Mentor Review</a>
+      <a href="{{ url_for('evolving_eye') }}" class="sc-btn-ghost" style="border-color:var(--sc-gold);color:var(--sc-gold-dk);font-weight:600">📈 Generate My Evolving Eye Report</a>
       <a href="{{ url_for('dashboard') }}" class="sc-btn-back">← Back to Dashboard</a>
     </div>
 
@@ -935,12 +949,15 @@ function scToggleTakeaway(hdr) {
   if (chev) chev.style.transform = clamped ? '' : 'rotate(180deg)';
 }
 
-/* ── On load: clamp both sections ── */
+/* ── Clamp AFTER render-text processes content ── */
 document.addEventListener('DOMContentLoaded', function () {
+  scRenderText();  /* ensure processed */
   var em = document.getElementById('sc-em-preview-block');
   var ta = document.getElementById('sc-ta-preview-block');
   if (em) em.classList.add('clamped');
   if (ta) ta.classList.add('clamped');
+  /* Force all accordions closed */
+  document.querySelectorAll('.sc-acc-row').forEach(function(r){ r.classList.remove('open'); });
 });
 
 /* ── Eval means expand ── */
@@ -984,31 +1001,35 @@ function scToggleDDI(col, idx) {
 }
 
 /* ── Text rendering: ■ → paragraph, **bold** → <strong>, Search:X → link ── */
-document.addEventListener('DOMContentLoaded', function () {
+function scRenderText() {
   var targets = document.querySelectorAll('.sc-render-text');
   targets.forEach(function (el) {
+    if (el.dataset.rendered) return;
+    el.dataset.rendered = '1';
     var raw = el.innerHTML;
-    /* Split on ■ bullet markers — each becomes a paragraph */
-    var paras = raw.split(/\s*■\s*/g).map(function(p){ return p.trim(); }).filter(Boolean);
+    /* Split on ■ bullet markers — each becomes a <p> */
+    var paras = raw.split('■').map(function(p){ return p.trim(); }).filter(Boolean);
     if (paras.length > 1) {
-      raw = paras.map(function(p){ return '<p>' + p + '</p>'; }).join('');
+      raw = paras.map(function(p){ return '<p style="margin-bottom:10px">' + p + '</p>'; }).join('');
     }
-    /* Convert **bold** to <strong> — only specific words, not entire paragraphs */
-    raw = raw.replace(/\*\*([^*\n]{1,60})\*\*/g, '<strong>$1</strong>');
-    /* Convert "Search: X." and bare "X motion photography." to Google Images link */
-    /* Pattern 1: explicit Search: prefix */
-    raw = raw.replace(/Search:\s*([^.<\n]{5,60})\./g, function(m, term) {
+    /* **bold** → <strong> (short spans only) */
+    raw = raw.replace(/\*\*([^*]{1,60})\*\*/g, '<strong>$1</strong>');
+    /* Search: X. → Google Images link */
+    raw = raw.replace(/Search:\s*([^.<]{5,60})\./g, function(m, term) {
       var q = encodeURIComponent(term.trim() + ' photography');
       return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
     });
-    /* Pattern 2: "Name motion photography." without Search: prefix */
+    /* Name motion/street/wildlife photography. → link */
     raw = raw.replace(/([A-Z][a-z]+ [A-Z][a-z]+(?:\s+[A-Za-z]+)?\s+(?:motion|street|wildlife|documentary|landscape)\s+photography)\./, function(m, term) {
       var q = encodeURIComponent(term.trim());
       return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
     });
     el.innerHTML = raw;
   });
-});
+}
+/* Run immediately + on DOMContentLoaded for any late-rendered elements */
+scRenderText();
+document.addEventListener('DOMContentLoaded', scRenderText);
 </script>
 
 {% endblock %}
