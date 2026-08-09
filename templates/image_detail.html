@@ -1,5 +1,11 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-176.10 (Scorecard redesign — Apex DDI, revelation-first, accordion insights, HUD pill, gold corners, mobile-responsive; session 176, 2026-08-09) #}
+{# SL-VERSION: image_detail-176.11
+   Session 176 — 2026-08-09
+   Changes: No sidenav, full-width photo fills frame, DDI below photo,
+   What this evaluation means before take-away, all accordions closed,
+   correct field mapping from audit, no dark backgrounds on scorecard,
+   paragraph formatting, font size +1, B&W edit guard in prompt,
+   Ernst Haas deduplication via JS, master names bold+linkable #}
 {% block title %}{{ image.asset_name or 'Evaluation' }} — Shutter League{% endblock %}
 {% block meta_description %}Shutter League evaluation for {{ image.asset_name or 'your photograph' }}. Scored {{ '%.2f'|format(image.score) if image.score else '' }} — {{ image.tier or '' }}.{% endblock %}
 {% block body_class %}page-scorecard{% endblock %}
@@ -12,14 +18,13 @@
 {% block extra_css %}
 <style>
 /* =====================================================
-   SHUTTER LEAGUE — image_detail.html
-   SL-VERSION: 176.10 LOCKED
-   Approved by founder 09 Aug 2026
-   DO NOT EDIT without founder approval
+   SL image_detail.html — v176.11
+   LOCKED: session 176 · 2026-08-09
 ===================================================== */
 
 /* ── SUPPRESS BASE CHROME ── */
-body.page-scorecard .sl-top-nav          { display:none !important }
+body.page-scorecard .sl-top-nav,
+body.page-scorecard nav.sl-top-nav       { display:none !important }
 body.page-scorecard .sl-bottom-nav       { display:none !important }
 body.page-scorecard footer               { display:none !important }
 body.page-scorecard .nav-mobile          { display:none !important }
@@ -27,66 +32,61 @@ body.page-scorecard .nav-mobile-login    { display:none !important }
 body.page-scorecard .flash-container     { display:none !important }
 body.page-scorecard #backToTop           { display:none !important }
 body.page-scorecard > main,
-body.page-scorecard main.sl-main         { padding:0 !important; max-width:none !important; margin:0 !important; background:var(--sc-cream) !important }
-body.page-scorecard                      { padding-top:0 !important; background:var(--sc-cream) !important; margin-top:0 !important }
+body.page-scorecard main                 { padding:0 !important; max-width:none !important; margin:0 !important; background:#F6F2E9 !important }
+body.page-scorecard                      { padding-top:0 !important; background:#F6F2E9 !important; margin-top:0 !important }
 
 /* ── TOKENS ── */
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
+*  { box-sizing:border-box; margin:0; padding:0 }
 :root{
-  --sc-gold:#D6A428;--sc-gold-dk:#A37B2C;--sc-dark:#1A1814;--sc-cream:#F6F2E9;
-  --sc-border:#E8E4DA;--sc-muted:#6B6B6B;--sc-green:#2A7A3A;--sc-text:#1A1A18;
-  --sc-pista:#E8F5E2;--sc-pista-b:#C5E0BB;
+  --sc-gold:#D6A428;   --sc-gold-dk:#A37B2C;   --sc-dark:#1A1814;
+  --sc-cream:#F6F2E9;  --sc-border:#E8E4DA;    --sc-muted:#6B6B6B;
+  --sc-green:#2A7A3A;  --sc-text:#1A1A18;
+  --sc-pista:#E8F5E2;  --sc-pista-b:#C5E0BB;
+  --sc-blue:#2C5F8A;   --sc-blue-lt:#E8F0F8;
 }
-
-/* ── PAGE SHELL ── */
-.sc-wrap{max-width:1280px;margin:0 auto;background:var(--sc-cream)}
+body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 /* ── TOPNAV ── */
 .sc-topnav{background:#111214;display:flex;align-items:center;padding:0 20px;height:54px;gap:8px}
 .sc-logo-area{display:flex;align-items:center;gap:8px}
 .sc-logo-text{font-size:12px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
-.sc-nav-links{display:flex;gap:2px;margin-left:auto}
 .sc-nl{padding:5px 10px;font-size:12px;color:rgba(255,255,255,.45);border-radius:5px;text-decoration:none}
-.sc-nl.active{color:#fff;background:rgba(255,255,255,.12);font-weight:600}
-.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sc-dark);margin-left:10px;text-decoration:none}
+.sc-nl:hover{color:#fff}
+.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sc-dark)}
 
-/* ── 3-COLUMN SHELL ── */
-.sc-shell{display:grid;grid-template-columns:1fr 212px;background:var(--sc-cream)}
+/* ── LAYOUT: 2-column, no sidenav ── */
+.sc-wrap{max-width:1200px;margin:0 auto;background:var(--sc-cream)}
+.sc-shell{display:grid;grid-template-columns:1fr 220px;background:var(--sc-cream)}
 
-/* ── SIDENAV ── */
-.sc-sidenav{display:none !important}
-.sc-si{display:block;padding:7px 14px 7px 12px;font-size:13px;color:var(--sc-muted);border-left:3px solid transparent;line-height:1.5;text-decoration:none}
-.sc-si.active{background:var(--sc-cream);color:var(--sc-dark);font-weight:600;border-left-color:var(--sc-gold)}
-.sc-si:hover:not(.active){color:var(--sc-dark);background:#fafaf8}
-.sc-si-lbl{font-size:10px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase;display:block}
-
-/* ── MAIN CENTRE ── */
-.sc-centre{padding:16px 17px;display:flex;flex-direction:column;min-width:0}
+/* ── CENTRE ── */
+.sc-centre{padding:16px 18px;display:flex;flex-direction:column;min-width:0}
 .sc-back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
-.sc-back-lnk{font-size:12px;color:var(--sc-muted);text-decoration:none}
+.sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
+.sc-back-lnk:hover{color:var(--sc-dark)}
 .sc-page-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 
 /* ── SHARED CARD ── */
 .sc-card{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px}
-.sc-card-body{padding:16px 18px}
-.sc-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.sc-card-body{padding:17px 20px}
+.sc-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .sc-card-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-.sc-card-link{font-size:11px;color:var(--sc-gold-dk);cursor:pointer;text-decoration:none}
+.sc-card-link{font-size:12px;color:var(--sc-gold-dk);text-decoration:none}
+.sc-card-link:hover{text-decoration:underline}
 
-/* ── PHOTO HERO ── */
-.sc-photo-hero{width:100%;border-radius:12px;overflow:hidden;position:relative;margin-bottom:10px}
-.sc-photo-inner{width:100%;position:relative;display:block;background:var(--sc-dark)}
-.sc-photo-inner img{width:100%;height:280px;object-fit:cover;display:block}
+/* ── PHOTO HERO — fills frame ── */
+.sc-photo-hero{width:100%;border-radius:12px;overflow:hidden;position:relative;margin-bottom:10px;background:var(--sc-dark)}
+.sc-photo-hero img{width:100%;height:320px;object-fit:cover;display:block}
+.sc-photo-hero .sc-photo-placeholder{width:100%;height:320px;background:var(--sc-dark);display:flex;align-items:center;justify-content:center}
 .sc-photo-exif{position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap}
 .sc-photo-exif span{font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:3px}
-
-/* ── HUD PILL — always legible on any photo ── */
-.sc-hud{position:absolute;bottom:0;left:0;right:0;padding:0 16px 14px}
-.sc-hud-pill{background:rgba(180,175,168,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:12px 16px;border:0.5px solid rgba(255,255,255,.18)}
-.sc-hud-top{display:flex;align-items:flex-end;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.sc-hud-score{font-size:54px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.025em}
-.sc-hud-denom{font-size:20px;font-weight:400;color:rgba(255,255,255,.45);margin-bottom:5px}
-.sc-hud-right{display:flex;flex-direction:column;gap:4px;margin-bottom:4px}
+.sc-photo-copyright{position:absolute;bottom:8px;right:10px;font-size:10px;color:rgba(255,255,255,.5)}
+/* HUD pill on photo */
+.sc-hud{position:absolute;bottom:0;left:0;right:0;padding:0 14px 12px}
+.sc-hud-pill{background:rgba(180,175,168,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:10px 14px;border:0.5px solid rgba(255,255,255,.18)}
+.sc-hud-top{display:flex;align-items:flex-end;gap:9px;margin-bottom:5px;flex-wrap:wrap}
+.sc-hud-score{font-size:52px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.025em}
+.sc-hud-denom{font-size:20px;font-weight:400;color:rgba(255,255,255,.45);margin-bottom:4px}
+.sc-hud-right{display:flex;flex-direction:column;gap:4px;margin-bottom:3px}
 .sc-hud-tier{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--sc-gold);color:var(--sc-dark);border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.05em;width:fit-content}
 .sc-hud-pb{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(214,164,40,.18);border:0.5px solid rgba(214,164,40,.5);color:var(--sc-gold);border-radius:20px;font-size:10px;font-weight:600;width:fit-content}
 .sc-hud-meta{font-size:10px;color:rgba(255,255,255,.5)}
@@ -95,45 +95,28 @@ body.page-scorecard                      { padding-top:0 !important; background:
 .sc-hud-pct{font-size:11px;color:rgba(255,255,255,.45)}
 
 /* ── REVELATION ── */
-.sc-revelation{font-size:15px;color:var(--sc-text);line-height:1.65;border-left:3px solid var(--sc-gold);padding-left:13px;margin-bottom:12px}
+.sc-revelation{font-size:16px;color:var(--sc-text);line-height:1.7;border-left:3px solid var(--sc-gold);padding-left:14px;margin-bottom:14px}
 .sc-revelation em{font-style:italic}
-.sc-dist-wrap{padding-top:11px;border-top:0.5px solid var(--sc-border)}
+.sc-dist-wrap{padding-top:12px;border-top:0.5px solid var(--sc-border)}
 .sc-dist-lbl{font-size:9px;color:var(--sc-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
-.sc-dist-bar{position:relative;height:6px;background:var(--sc-border);border-radius:3px}
+.sc-dist-bar-wrap{position:relative;height:6px;background:var(--sc-border);border-radius:3px}
 .sc-dist-fill{position:absolute;left:0;top:0;height:100%;background:var(--sc-gold);border-radius:3px}
 .sc-dist-val{position:absolute;top:-14px;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--sc-gold)}
 .sc-dist-tri{position:absolute;top:6px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--sc-gold)}
 .sc-dist-ns{display:flex;justify-content:space-between;font-size:9px;color:var(--sc-muted);margin-top:4px}
 
-/* ── WHAT THIS EVALUATION MEANS — premium gold corners ── */
-.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;overflow:hidden;position:relative}
-.sc-eval-means::before{content:'';position:absolute;top:0;left:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:12px 0 0 0;pointer-events:none}
-.sc-eval-means::after{content:'';position:absolute;top:0;right:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 12px 0 0;pointer-events:none}
-.sc-em-bl{position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:0 0 0 12px;pointer-events:none}
-.sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none}
-.sc-em-inner{padding:16px 18px}
-.sc-em-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.sc-em-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-.sc-em-line{font-size:14px;color:var(--sc-text);line-height:1.75;padding:10px 0;border-bottom:0.5px solid var(--sc-border)}
-.sc-em-line:first-child{padding-top:0}
-.sc-em-line:last-child{border-bottom:none;padding-bottom:0}
-.sc-em-line:last-child{border-bottom:none}
-.sc-em-line strong{color:var(--sc-dark);font-weight:600}
-.sc-ref-link{color:var(--sc-gold-dk);text-decoration:underline;cursor:pointer;font-size:12px}
-.sc-rm{font-size:12px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0}
-
-/* ── APEX DDI ANALYSIS ── */
+/* ── DDI STRIP ── */
 .sc-ddi-strip{display:grid;grid-template-columns:repeat(5,1fr);border:0.5px solid var(--sc-border);border-radius:8px;overflow:hidden}
-.sc-ddi-col{padding:10px 6px;text-align:center;border-right:0.5px solid var(--sc-border);cursor:pointer;transition:background .12s}
+.sc-ddi-col{padding:11px 7px;text-align:center;border-right:0.5px solid var(--sc-border);cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
 .sc-ddi-col:last-child{border-right:none}
 .sc-ddi-col:hover{background:var(--sc-cream)}
-.sc-ddi-col.strongest{background:#fffbef}
-.sc-ddi-col.leap{background:#f5f3ff}
+.sc-ddi-col.sc-strongest{background:#fffbef}
+.sc-ddi-col.sc-leap{background:#f5f3ff}
 .sc-ddi-col.active{background:var(--sc-cream);box-shadow:inset 0 -2px 0 var(--sc-gold)}
 .sc-ddi-em{font-size:15px;margin-bottom:4px}
 .sc-ddi-nm{font-size:8.5px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.25;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
 .sc-ddi-sr{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;min-height:26px}
-.sc-ddi-num{font-size:20px;font-weight:700;color:var(--sc-dark);line-height:1}
+.sc-ddi-num{font-size:20px;font-weight:700;color:var(--sc-dark)}
 .sc-ddi-ar{font-size:10px;margin-left:1px}
 .sc-ddi-ar.u{color:#22c55e}.sc-ddi-ar.d{color:#ef4444}.sc-ddi-ar.f{color:var(--sc-muted)}
 .sc-ddi-bar{height:3px;background:#e8e4da;border-radius:2px;margin:4px 4px 6px;overflow:hidden}
@@ -144,118 +127,127 @@ body.page-scorecard                      { padding-top:0 !important; background:
 .sc-dt-good{background:#f1f5f9;color:#475569}
 .sc-dt-str{background:#dcfce7;color:#166534}
 .sc-dt-exc{background:#dbeafe;color:#1e40af}
-.sc-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--sc-cream);border-radius:8px;font-size:12px;color:var(--sc-text);line-height:1.6}
+.sc-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--sc-cream);border-radius:8px;font-size:13px;color:var(--sc-text);line-height:1.65}
 .sc-ddi-hint{font-size:10px;color:var(--sc-muted);text-align:center;margin-top:7px}
+
+/* ── WHAT THIS EVALUATION MEANS — premium gold corners ── */
+.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;overflow:hidden;position:relative}
+.sc-eval-means::before{content:'';position:absolute;top:0;left:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:12px 0 0 0;pointer-events:none;z-index:1}
+.sc-eval-means::after{content:'';position:absolute;top:0;right:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 12px 0 0;pointer-events:none;z-index:1}
+.sc-em-bl{position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:0 0 0 12px;pointer-events:none;z-index:1}
+.sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
+.sc-em-inner{padding:17px 20px}
+.sc-em-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
+.sc-em-para{font-size:15px;color:var(--sc-text);line-height:1.75;margin-bottom:12px;padding-bottom:12px;border-bottom:0.5px solid var(--sc-border)}
+.sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.sc-em-para strong{color:var(--sc-dark);font-weight:700}
+.sc-em-para a{color:var(--sc-gold-dk);text-decoration:underline}
+.sc-rm{font-size:12px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;margin-top:10px;display:inline-block}
+
+/* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
+.sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
+.sc-ta-eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sc-ta-body{font-size:15px;color:var(--sc-dark);line-height:1.75}
+.sc-ta-body p{margin-bottom:10px}
+.sc-ta-body p:last-child{margin-bottom:0}
+.sc-ta-body strong{font-weight:700;color:var(--sc-dark)}
+.sc-ta-body a{color:var(--sc-gold-dk);text-decoration:underline}
 
 /* ── ACCORDION ── */
 .sc-acc-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);overflow:hidden;margin-bottom:10px}
-.sc-acc-sec-hdr{padding:12px 17px 10px;border-bottom:0.5px solid var(--sc-border)}
+.sc-acc-sec-hdr{padding:13px 18px 11px;border-bottom:0.5px solid var(--sc-border)}
 .sc-acc-sec-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 .sc-acc-row{border-bottom:0.5px solid var(--sc-border)}
 .sc-acc-row:last-child{border-bottom:none}
-.sc-acc-head{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
+.sc-acc-head{display:flex;align-items:flex-start;gap:10px;padding:13px 17px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s}
 .sc-acc-head:hover{background:var(--sc-cream)}
-.sc-acc-icon{width:25px;height:25px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
+.sc-acc-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
 .sc-acc-col{flex:1;min-width:0}
-.sc-acc-title{font-size:13px;font-weight:600;color:var(--sc-dark);line-height:1.3}
-.sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.45}
-.sc-acc-chev{font-size:11px;color:var(--sc-muted);flex-shrink:0;margin-top:3px;transition:transform .2s;display:inline-block}
+.sc-acc-title{font-size:14px;font-weight:600;color:var(--sc-dark);line-height:1.3}
+.sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+.sc-acc-chev{font-size:11px;color:var(--sc-muted);flex-shrink:0;margin-top:4px;transition:transform .2s;display:inline-block}
 .sc-acc-row.open .sc-acc-chev{transform:rotate(180deg)}
-.sc-acc-body{display:none;padding:0 16px 16px 51px;font-size:14px;color:var(--sc-text);line-height:1.75}
+/* All accordions CLOSED by default */
+.sc-acc-body{display:none;padding:4px 17px 15px 53px;font-size:15px;color:var(--sc-text);line-height:1.75}
+.sc-acc-row.open .sc-acc-body{display:block}
 .sc-acc-body p{margin-bottom:10px}
 .sc-acc-body p:last-child{margin-bottom:0}
-.sc-acc-body strong{color:var(--sc-dark);font-weight:600}
+.sc-acc-body strong{color:var(--sc-dark);font-weight:700}
 .sc-acc-body a{color:var(--sc-gold-dk);text-decoration:underline}
-.sc-acc-row.open .sc-acc-body{display:block}
+.sc-acc-body ul{padding-left:18px;margin-top:6px;margin-bottom:8px}
+.sc-acc-body ul li{margin-bottom:5px;line-height:1.65}
 
-/* ── WARM TAKE-AWAY (not dark) ── */
-.sc-takeaway-warm{background:#fffbef;border-bottom:0.5px solid #f0e8c8;padding:14px 16px}
-.sc-ta-eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:6px}
-.sc-ta-headline{font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.55;margin-bottom:6px}
-.sc-ta-body{font-size:12px;color:var(--sc-muted);line-height:1.6}
-
-/* ── NEXT SHOT — cream/green (NEVER dark on scorecard) ── */
-.sc-next-shot{background:var(--sc-pista);border:1px solid var(--sc-pista-b);border-radius:10px;padding:14px 15px;margin:10px}
+/* ── NEXT SHOT — cream/green, NEVER dark on scorecard ── */
+.sc-next-shot{background:var(--sc-pista);border:1px solid var(--sc-pista-b);border-radius:10px;padding:15px 16px;margin:8px}
 .sc-ns-eyebrow{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-green);margin-bottom:6px}
-.sc-ns-location{font-size:15px;font-weight:600;color:var(--sc-dark);margin-bottom:4px}
+.sc-ns-location{font-size:15px;font-weight:600;color:var(--sc-dark);margin-bottom:5px}
 .sc-ns-spec{display:flex;align-items:flex-start;gap:7px;margin-bottom:4px}
-.sc-ns-spec-lbl{font-size:10px;font-weight:600;color:var(--sc-muted);letter-spacing:.05em;text-transform:uppercase;width:48px;flex-shrink:0;padding-top:1px}
-.sc-ns-spec-val{font-size:12px;color:var(--sc-text);line-height:1.4}
+.sc-ns-spec-lbl{font-size:10px;font-weight:600;color:var(--sc-muted);letter-spacing:.05em;text-transform:uppercase;width:50px;flex-shrink:0;padding-top:2px}
+.sc-ns-spec-val{font-size:13px;color:var(--sc-text);line-height:1.45}
 .sc-ns-cta-row{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
 .sc-ns-btn{background:var(--sc-gold);color:var(--sc-dark);font-size:12px;font-weight:700;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+.sc-ns-btn:hover{background:var(--sc-gold-dk);color:#fff}
 .sc-ns-btn-ghost{font-size:12px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:8px 12px;cursor:pointer;text-decoration:none}
 
 /* ── DEVELOPING / SPARKLINE ── */
-.sc-dev-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:15px 17px;margin-bottom:10px}
-.sc-trend-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:#fffbef;border:1px solid var(--sc-gold);border-radius:20px;font-size:10px;font-weight:600;color:var(--sc-gold-dk)}
+.sc-dev-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:16px 18px;margin-bottom:10px}
+.sc-trend-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fffbef;border:1px solid var(--sc-gold);border-radius:20px;font-size:10px;font-weight:600;color:var(--sc-gold-dk)}
 
 /* ── ACTION BAR ── */
-.sc-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.sc-btn-gold{background:var(--sc-gold);color:var(--sc-dark);font-size:12px;font-weight:700;padding:9px 17px;border-radius:7px;border:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
-.sc-btn-ghost{font-size:12px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:9px 13px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
-.sc-btn-back{font-size:12px;color:var(--sc-muted);background:transparent;border:none;padding:9px 0;margin-left:auto;cursor:pointer;text-decoration:none}
+.sc-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:12px 17px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.sc-btn-gold{background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:9px 17px;border-radius:7px;border:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+.sc-btn-gold:hover{background:var(--sc-gold-dk);color:#fff}
+.sc-btn-ghost{font-size:13px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:9px 13px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+.sc-btn-ghost:hover{background:var(--sc-cream)}
+.sc-btn-back{font-size:13px;color:var(--sc-muted);background:transparent;border:none;padding:9px 0;margin-left:auto;cursor:pointer;text-decoration:none}
 
 /* ── RIGHT RAIL ── */
-.sc-rpanel{padding:16px 13px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--sc-border);background:#fff;width:212px;flex-shrink:0}
-.sc-rl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:6px}
-.sc-rcard{background:var(--sc-cream);border-radius:9px;border:0.5px solid var(--sc-border);padding:11px}
+.sc-rpanel{padding:16px 14px;display:flex;flex-direction:column;gap:12px;border-left:0.5px solid var(--sc-border);background:#fff;width:220px;flex-shrink:0}
+.sc-rl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:7px}
+.sc-rcard{background:var(--sc-cream);border-radius:9px;border:0.5px solid var(--sc-border);padding:12px}
 .sc-rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)}
 .sc-rr:last-child{border-bottom:none}
 .sc-rk{font-size:12px;color:var(--sc-muted)}
 .sc-rv{font-size:12px;font-weight:600;color:var(--sc-text)}
 .sc-rv.gd{color:var(--sc-gold-dk)}.sc-rv.gn{color:var(--sc-green)}
 
+/* ── EVALUATED BY SL BADGE ── */
+.sc-ev-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:5px;font-size:10px;color:var(--sc-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
+
 /* ── FOOTER ── */
 .sc-footer{background:var(--sc-dark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .sc-footer-text{font-size:11px;color:rgba(255,255,255,.4)}
 .sc-footer-link{font-size:12px;color:var(--sc-gold);font-weight:600;text-decoration:none}
+.sc-footer-link:hover{text-decoration:underline}
 
-/* ══════════════════════════════════════════
-   IPAD 768–1023px
-══════════════════════════════════════════ */
+/* ══════════════════════════════════
+   IPAD 768-1023
+══════════════════════════════════ */
 @media (max-width:1023px) and (min-width:769px){
   .sc-shell{grid-template-columns:1fr 200px}
-  .sc-sidenav{display:none !important}
   .sc-rpanel{width:200px}
 }
 
-/* ══════════════════════════════════════════
+/* ══════════════════════════════════
    MOBILE ≤768px
-══════════════════════════════════════════ */
+══════════════════════════════════ */
 @media (max-width:768px){
   .sc-shell{display:block}
-  .sc-sidenav{display:none !important}
   .sc-rpanel{display:none}
-  .sc-nav-links{display:none}
   .sc-logo-text{display:none}
+  .sc-nav-links-wrap{display:none}
   .sc-centre{padding:11px 11px 80px}
-
-  /* mobile photo hero */
-  .sc-photo-inner img{height:210px}
+  .sc-photo-hero img{height:220px}
   .sc-hud{padding:0 10px 10px}
   .sc-hud-pill{background:rgba(15,20,18,.80)}
-  .sc-hud-score{font-size:46px}
-  .sc-hud-denom{font-size:17px;margin-bottom:4px}
-
-  /* mobile DDI — 2 hero cards + accordion */
-  .sc-ddi-strip{display:none}
+  .sc-hud-score{font-size:44px}
+  .sc-hud-denom{font-size:17px;margin-bottom:3px}
+  .sc-ddi-strip-desktop{display:none}
   .sc-ddi-mobile{display:block}
-
-  /* mobile bottom nav */
-  body.page-scorecard .sl-bottom-nav{display:flex !important}
-
-  /* accordion body indent mobile */
-  .sc-acc-body{padding-left:46px}
-
-  /* mobile next shot compact */
-  .sc-next-shot{margin:8px}
-
-  /* action bar mobile grid */
+  .sc-acc-teaser{max-width:220px}
   .sc-act-bar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .sc-btn-back{grid-column:1/-1;text-align:center;margin-left:0}
-
-  /* eval means font */
-  .sc-em-line{font-size:12px}
+  body.page-scorecard .sl-bottom-nav{display:flex !important}
 }
 @media (min-width:769px){
   .sc-ddi-mobile{display:none}
@@ -265,57 +257,86 @@ body.page-scorecard                      { padding-top:0 !important; background:
 
 {% block content %}
 
-{# ── Resolve audit fields ── #}
+{# ── AUDIT FIELD MAPPING ── #}
 {% set _audit = image.get_audit() or {} %}
-{% set _wso = (_audit.get('what_stood_out') or _audit.get('hard_truth') or '') | trim %}
-{% set _what_you_did = (_audit.get('what_you_did') or _audit.get('transferable_advice') or '') | trim %}
-{% set _what_eye = (_audit.get('what_your_eye') or _audit.get('affective_state') or '') | trim %}
-{% set _takeaway = (_audit.get('one_takeaway') or _audit.get('byline_1') or '') | trim %}
-{% set _eval_means_1 = (_audit.get('eval_means_1') or _audit.get('byline_2_body') or _audit.get('byline_2') or '') | trim %}
-{% set _eval_means_2 = (_audit.get('eval_means_2') or _audit.get('transferable_advice') or '') | trim %}
-{% set _eval_means_3 = (_audit.get('eval_means_3') or _audit.get('background_check') or '') | trim %}
-{% set _eval_means_full = (_audit.get('eval_means_full') or '') | trim %}
+
+{# Revelation — what_stood_out is the REVELATION sentence (not section header) #}
+{% set _revelation = (_audit.get('what_stood_out') or _audit.get('hard_truth') or '') | trim %}
+
+{# Rows fallback for old-format audits #}
+{% set _rows = _audit.get('rows') or [] %}
+{% set _tech_val = '' %}{% set _mom_val = '' %}{% set _next_val = '' %}
+{% for _row in _rows %}
+  {% if _row and _row|length >= 2 %}
+    {% if _row[0] in ('Depth of\nDifficulty','Technical') %}{% set _tech_val = _row[1] or '' %}{% endif %}
+    {% if _row[0] in ('Decisive\nMoment','Moment') %}{% set _mom_val = _row[1] or '' %}{% endif %}
+    {% if _row[0] == 'Next' %}{% set _next_val = _row[1] or '' %}{% endif %}
+  {% endif %}
+{% endfor %}
+
+{# What stood out section — transferable_advice field #}
+{% set _what_stood_out = (_audit.get('transferable_advice') or _tech_val or '') | trim %}
+
+{# What you did that others didn't — tech+moment rows #}
+{% set _what_you_did = (_tech_val if (_audit.get('transferable_advice') or '') else _mom_val) | trim %}
+
+{# What your eye read — affective_state #}
+{% set _what_eye = (_audit.get('affective_state') or '') | trim %}
+
+{# What this evaluation means — background_check/byline_1 (LINE 1 only) #}
+{% set _eval_means = (_audit.get('background_check') or _audit.get('byline_1') or _next_val or '') | trim %}
+
+{# Supplementary eval means — byline_2 #}
+{% set _eval_means_2 = (_audit.get('byline_2_body') or _audit.get('byline_2') or '') | trim %}
+
+{# Your one take-away — byline_2 content is the take-away #}
+{% set _takeaway = (_audit.get('one_takeaway') or _audit.get('sherpa_takeaway') or '') | trim %}
+{# Fallback: if no dedicated takeaway field, use byline_2 #}
+{% if not _takeaway %}{% set _takeaway = _eval_means_2 %}{% endif %}
+
+{# Assignment, note on eye, body of work #}
 {% set _assignment = (_audit.get('assignment_tomorrow') or '') | trim %}
 {% set _note_on_eye = (_audit.get('note_on_eye') or '') | trim %}
-{% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
-{% set _mentor_2 = (_audit.get('mentor_location_2') or '') | trim %}
+{% set _body_of_work = (_audit.get('body_of_work') or '') | trim %}
+
+{# Edit suggestions #}
 {% set _edit_base = (_audit.get('edit_base') or '') | trim %}
 {% set _edit_creative = (_audit.get('edit_creative') or '') | trim %}
-{% set _scored_as = (_audit.get('scored_as') or _audit.get('archetype') or image.archetype or '') | trim %}
-{% set _body_of_work = (_audit.get('body_of_work') or '') | trim %}
-{% set _master_ref = (_audit.get('master_reference') or '') | trim %}
-{% set _master_ref_link = (_audit.get('master_reference_link') or '') | trim %}
 
-{# ── Percentile ── #}
+{# Next shot from mentor_location fields #}
+{% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
+{% set _mentor_2 = (_audit.get('mentor_location_2') or '') | trim %}
+
+{# Percentile #}
 {% set _top_pct = percentile.top_pct if percentile else none %}
-{% set _track_pct = percentile.track_pct if percentile else none %}
-{% set _total_images = percentile.total_images if percentile else none %}
-{% set _pct_display = _track_pct if _track_pct else _top_pct %}
+{% set _pct_display = _top_pct %}
 
-{# ── Score distribution bar position (%) ── #}
+{# Score distribution bar position #}
 {% if image.score %}
   {% set _dist_pct = [(image.score / 10 * 100)|round|int, 2]|max %}
   {% set _dist_pct = [_dist_pct, 98]|min %}
-{% else %}
-  {% set _dist_pct = 50 %}
-{% endif %}
+{% else %}{% set _dist_pct = 50 %}{% endif %}
 
-{# ── Personal best ── #}
+{# Personal best #}
 {% set _is_pb = (stats and stats.best_this_year and image.score and image.score >= stats.best_this_year) %}
 
-{# ── Improvement vs user average ── #}
-{% set _avg = (percentile.platform_avg if percentile else none) %}
-{% set _impr = none %}
-{% if image.score and portfolio_data and portfolio_data.count and portfolio_data.count > 1 %}
-  {# improvement shown only if we have prior data #}
-{% endif %}
+{# Photographer name #}
+{% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) if current_user.is_authenticated else (image.photographer_name or '') %}
 
-{# ── Scored date ── #}
+{# Scored date #}
 {% set _scored_date = image.scored_at.strftime('%-d %b %Y') if image.scored_at else '' %}
-{% set _photographer_name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) if current_user.is_authenticated else (image.photographer_name or '') %}
 
-{# ── Streak from portfolio_data dimensions ── #}
-{% set _streak = none %}
+{# Strongest and weakest DDI #}
+{% set _ddi_map = {'dod_score': ('Difficulty','🏔️'), 'disruption_score': ('Disruption','⚡'), 'dm_score': ('Decisive Moment','🎯'), 'wonder_score': ('Visual Display','⭐'), 'aq_score': ('Affective Q.','❤️')} %}
+{% set _strongest_val = 0 %}{% set _strongest_nm = '' %}
+{% set _weakest_val = 10 %}{% set _weakest_nm = '' %}
+{% for _ak, _av in _ddi_map.items() %}
+  {% set _dv = image|attr(_ak) if image|attr(_ak) is not none else none %}
+  {% if _dv %}
+    {% if _dv > _strongest_val %}{% set _strongest_val = _dv %}{% set _strongest_nm = _av[0] %}{% endif %}
+    {% if _dv < _weakest_val %}{% set _weakest_val = _dv %}{% set _weakest_nm = _av[0] %}{% endif %}
+  {% endif %}
+{% endfor %}
 
 <div class="sc-wrap">
 
@@ -329,37 +350,22 @@ body.page-scorecard                      { padding-top:0 !important; background:
       <span class="sc-logo-text">SHUTTER LEAGUE</span>
     </a>
   </div>
-  <div class="sc-nav-links">
-    {# No active nav item — scorecard is accessed from image clicks, not nav #}
+  <div class="sc-nav-links-wrap" style="display:flex;align-items:center;gap:2px;margin-left:auto">
+    {# No active highlight — scorecard accessed from image click not nav #}
     <a class="sc-nl" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="sc-nl" href="{{ url_for('upload') }}">Upload</a>
     <a class="sc-nl" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="sc-nl" href="{{ url_for('learning') }}">Learn</a>
     <a class="sc-nl" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
   </div>
-  <a href="{{ url_for('upload') }}" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,.1);border-radius:5px;font-size:12px;font-weight:500;color:#fff;text-decoration:none;margin-left:8px">↑ Upload next</a>
   {% if current_user.is_authenticated %}
-  <a href="{{ url_for('profile') }}" class="sc-av">{{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}</a>
+  <a href="{{ url_for('profile') }}" class="sc-av" style="margin-left:10px;text-decoration:none">
+    {{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}
+  </a>
   {% endif %}
 </nav>
 
 <div class="sc-shell">
-
-  {# ── LEFT SIDENAV ── #}
-  <nav class="sc-sidenav">
-    <span class="sc-si-lbl">Main</span>
-    <a class="sc-si" href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a class="sc-si" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sc-si" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="sc-si active" href="#">Improve</a>
-    <a class="sc-si" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-si" href="{{ url_for('dashboard') }}">Explore</a>
-    <a class="sc-si" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
-    <span class="sc-si-lbl">More</span>
-    <a class="sc-si" href="{{ url_for('mentors') }}">Mentor Review</a>
-    <a class="sc-si" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
-    <a class="sc-si" href="{{ url_for('profile') }}">Settings</a>
-  </nav>
 
   {# ── MAIN CENTRE ── #}
   <main class="sc-centre">
@@ -369,128 +375,54 @@ body.page-scorecard                      { padding-top:0 !important; background:
       <span class="sc-page-lbl">Shutter League Evaluation</span>
     </div>
 
-    {# ① PHOTO HERO — HUD pill always legible #}
+    {# ① PHOTO HERO — fills frame, score on overlay #}
     <div class="sc-photo-hero">
-      <div class="sc-photo-inner">
-        {% if image.thumb_url %}
-        <img src="{{ image.thumb_url }}"
-             alt="{{ image.asset_name or 'Your photograph' }}"
-             style="width:100%;height:320px;object-fit:cover;display:block;background:var(--sc-dark)"
-             onerror="this.style.background='var(--sc-dark)'">
-        {% else %}
-        <div style="width:100%;height:320px;background:var(--sc-dark);display:flex;align-items:center;justify-content:center">
-          <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ image.genre or 'Photograph' }}</span>
-        </div>
-        {% endif %}
+      {% if image.thumb_url %}
+      <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Your photograph' }}"
+           onerror="this.style.background='#1A1814';this.style.height='320px'">
+      {% else %}
+      <div class="sc-photo-placeholder">
+        <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ image.genre or 'Photograph' }}</span>
+      </div>
+      {% endif %}
 
-        {# EXIF #}
-        <div class="sc-photo-exif">
-          {% if image.exif_aperture %}<span>{{ image.exif_aperture }}</span>{% endif %}
-          {% if image.exif_shutter %}<span>{{ image.exif_shutter }}</span>{% endif %}
-          {% if image.exif_iso %}<span>ISO {{ image.exif_iso }}</span>{% endif %}
-          {% if image.exif_focal_length %}<span>{{ image.exif_focal_length }}</span>{% endif %}
-          {% if image.camera_model %}<span>{{ image.camera_model }}</span>{% endif %}
-        </div>
+      {# EXIF #}
+      <div class="sc-photo-exif">
+        {% if image.exif_aperture %}<span>{{ image.exif_aperture }}</span>{% endif %}
+        {% if image.exif_shutter %}<span>{{ image.exif_shutter }}</span>{% endif %}
+        {% if image.exif_iso %}<span>ISO {{ image.exif_iso }}</span>{% endif %}
+        {% if image.exif_focal_length %}<span>{{ image.exif_focal_length }}</span>{% endif %}
+        {% if image.camera_model %}<span>{{ image.camera_model }}</span>{% endif %}
+      </div>
 
-        {# HUD PILL #}
-        <div class="sc-hud">
-          <div class="sc-hud-pill">
-            <div class="sc-hud-top">
-              <span class="sc-hud-score">{{ '%.2f'|format(image.score) if image.score else '—' }}</span>
-              <span class="sc-hud-denom">/10</span>
-              <div class="sc-hud-right">
-                <div class="sc-hud-tier">
-                  {% if image.tier == 'Grandmaster' %}👑{% elif image.tier == 'Master' %}🏅{% elif image.tier == 'Maverick' %}⚡{% elif image.tier == 'Artisan' %}🎨{% else %}📷{% endif %}
-                  {{ image.tier or '—' }}
-                </div>
-                {% if _is_pb %}<div class="sc-hud-pb">↑ Personal best</div>{% endif %}
-                <div class="sc-hud-meta">
-                  {{ _photographer_name }}{% if _scored_date %} &nbsp;·&nbsp; {{ _scored_date }}{% endif %}
-                </div>
+      {# Copyright #}
+      {% if _name %}<div class="sc-photo-copyright">© {{ _name }}</div>{% endif %}
+
+      {# HUD PILL — always legible on any photo colour #}
+      <div class="sc-hud">
+        <div class="sc-hud-pill">
+          <div class="sc-hud-top">
+            <span class="sc-hud-score">{{ '%.2f'|format(image.score) if image.score else '—' }}</span>
+            <span class="sc-hud-denom">/10</span>
+            <div class="sc-hud-right">
+              <div class="sc-hud-tier">
+                {% if image.tier == 'Grandmaster' %}👑{% elif image.tier == 'Master' %}🏅{% elif image.tier == 'Maverick' %}⚡{% elif image.tier == 'Artisan' %}🎨{% else %}📷{% endif %}
+                {{ image.tier or '—' }}
               </div>
+              {% if _is_pb %}<div class="sc-hud-pb">↑ Personal best</div>{% endif %}
+              <div class="sc-hud-meta">{{ _name }}{% if _scored_date %} &nbsp;·&nbsp; {{ _scored_date }}{% endif %}</div>
             </div>
-            <div class="sc-hud-bot">
-              {# Improvement vs average — show if portfolio data available #}
-              {% if portfolio_data and portfolio_data.has_trends and portfolio_data.dimensions %}
-                {% set _overall_dim = portfolio_data.dimensions|selectattr('label', 'defined')|first %}
-                {% if _overall_dim and _overall_dim.current and image.score %}
-                  {% set _diff = (image.score - _overall_dim.current)|round(2) %}
-                  {% if _diff > 0 %}
-                  <span class="sc-hud-impr">↑ {{ '%+.2f'|format(_diff) }} above your average</span>
-                  {% elif _diff < 0 %}
-                  <span style="font-size:12px;color:#fca5a5;font-weight:600">{{ '%+.2f'|format(_diff) }} vs your average</span>
-                  {% endif %}
-                {% endif %}
-              {% endif %}
-              {% if _pct_display %}
-              <span class="sc-hud-pct">Top {{ _pct_display }}% of photographers on SL</span>
-              {% endif %}
-            </div>
+          </div>
+          <div class="sc-hud-bot">
+            {% if _pct_display %}
+            <span class="sc-hud-pct">Top {{ _pct_display }}% of photographers on SL</span>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
 
-    {# ② REVELATION SENTENCE #}
-    {% if _wso %}
-    <div class="sc-card">
-      <div class="sc-card-body">
-        <div class="sc-revelation">
-          {{ _wso | safe }}
-        </div>
-        {% if image.score %}
-        <div class="sc-dist-wrap">
-          <div class="sc-dist-lbl">SL Score Distribution</div>
-          <div class="sc-dist-bar">
-            <div class="sc-dist-fill" style="width:{{ _dist_pct }}%"></div>
-            <div class="sc-dist-val" style="left:{{ _dist_pct }}%">{{ '%.2f'|format(image.score) }}</div>
-            <div class="sc-dist-tri" style="left:{{ _dist_pct }}%"></div>
-          </div>
-          <div class="sc-dist-ns"><span>0</span><span>5</span><span>8.5</span><span>10</span></div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    {# ③ WHAT THIS EVALUATION MEANS — premium gold corners #}
-    {% if _eval_means_1 or _eval_means_2 or _eval_means_3 %}
-    <div class="sc-eval-means">
-      <div class="sc-em-bl"></div>
-      <div class="sc-em-br"></div>
-      <div class="sc-em-inner">
-        <div class="sc-em-hdr">
-          <span class="sc-em-title">What this evaluation means</span>
-        </div>
-        {% if _eval_means_1 %}
-        <div class="sc-em-line">{{ _eval_means_1 | safe }}</div>
-        {% endif %}
-        {% if _eval_means_2 %}
-        <div class="sc-em-line">{{ _eval_means_2 | safe }}</div>
-        {% endif %}
-        {% if _eval_means_3 %}
-        <div class="sc-em-line">
-          {{ _eval_means_3 | safe }}
-          {% if _master_ref_link %}
-          <a href="{{ _master_ref_link }}" target="_blank" rel="noopener" class="sc-ref-link">{{ _master_ref or 'See reference →' }}</a>
-          {% elif _master_ref %}
-          <span class="sc-ref-link">{{ _master_ref }} →</span>
-          {% endif %}
-          {% if _eval_means_full %}
-          <div id="sc-means-expanded" style="display:none;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--sc-border);font-size:12px;color:var(--sc-muted);line-height:1.65">{{ _eval_means_full | safe }}</div>
-          {% endif %}
-        </div>
-        {% endif %}
-        {% if _eval_means_full %}
-        <div style="display:flex;justify-content:flex-end;margin-top:8px">
-          <span class="sc-rm" onclick="scToggleMeans(this)">See full analysis ↓</span>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    {# ④ APEX DEPTH DIMENSION INDEX (DDI) ANALYSIS #}
+    {# ② DDI STRIP — directly below photo per your decision #}
     {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
     <div class="sc-card">
       <div class="sc-card-body">
@@ -502,114 +434,155 @@ body.page-scorecard                      { padding-top:0 !important; background:
           </div>
         </div>
 
-        {# Desktop 5-column strip #}
-        <div class="sc-ddi-strip" id="sc-ddi-strip">
-          {% set _dims_data = [
-            ('dod_score',         'Difficulty',      '🏔️', 'f', 'sc-dt-str', 'Strong'),
-            ('disruption_score',  'Disruption',      '⚡',  'd', 'sc-dt-leap','Your Next Leap'),
-            ('dm_score',          'Decisive Moment', '🎯',  'u', 'sc-dt-exc', 'Excellent'),
-            ('wonder_score',      'Visual Display',  '⭐',  'u', 'sc-dt-stg', 'Your Strongest'),
-            ('aq_score',          'Affective Q.',    '❤️',  'f', 'sc-dt-good','Good'),
+        {# Desktop strip #}
+        <div class="sc-ddi-strip sc-ddi-strip-desktop" id="sc-ddi-strip">
+          {% set _ddi_cols = [
+            ('dod_score',        'Difficulty',       '🏔️', 'f'),
+            ('wonder_score',     'Visual Display',   '⭐',  'u'),
+            ('dm_score',         'Decisive Moment',  '🎯',  'u'),
+            ('disruption_score', 'Disruption',       '⚡',  'd'),
+            ('aq_score',         'Affective Q.',     '❤️',  'f'),
           ] %}
-          {% for _attr, _nm, _em, _ar_default, _tag_cls, _tag_lbl in _dims_data %}
-            {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
-            {% if _val %}
-            {% set _pct = (_val / 10 * 100)|round|int %}
-            {% set _col_cls = 'strongest' if _attr == 'wonder_score' else ('leap' if _attr == 'disruption_score' else '') %}
-            <div class="sc-ddi-col {{ _col_cls }}" onclick="scToggleDDI(this, {{ loop.index0 }})">
-              <div class="sc-ddi-em">{{ _em }}</div>
-              <div class="sc-ddi-nm">{{ _nm }}</div>
-              <div class="sc-ddi-sr">
-                <span class="sc-ddi-num">{{ '%.1f'|format(_val) }}</span>
-                <span class="sc-ddi-ar {{ _ar_default }}">
-                  {%- if _ar_default == 'u' %}↑{% elif _ar_default == 'd' %}↓{% else %}—{% endif -%}
-                </span>
-              </div>
-              <div class="sc-ddi-bar"><div class="sc-ddi-bar-fill" style="width:{{ _pct }}%;background:{% if _attr == 'disruption_score' %}#94a3b8{% else %}var(--sc-gold){% endif %}"></div></div>
-              <div class="sc-ddi-tag {{ _tag_cls }}">{{ _tag_lbl }}</div>
+          {% for _attr, _nm, _em, _ar in _ddi_cols %}
+          {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
+          {% if _val %}
+          {% set _pct = (_val / 10 * 100)|round|int %}
+          {% set _is_stg = (_val == _strongest_val and _nm == _strongest_nm) %}
+          {% set _is_lp = (_val == _weakest_val and _nm == _weakest_nm) %}
+          <div class="sc-ddi-col {% if _is_stg %}sc-strongest{% elif _is_lp %}sc-leap{% endif %}"
+               onclick="scToggleDDI(this, {{ loop.index0 }})">
+            <div class="sc-ddi-em">{{ _em }}</div>
+            <div class="sc-ddi-nm">{{ _nm }}</div>
+            <div class="sc-ddi-sr">
+              <span class="sc-ddi-num">{{ '%.1f'|format(_val) }}</span>
+              <span class="sc-ddi-ar {% if _is_stg %}u{% elif _is_lp %}d{% else %}f{% endif %}">
+                {% if _is_stg %}↑{% elif _is_lp %}↓{% else %}—{% endif %}
+              </span>
             </div>
-            {% endif %}
+            <div class="sc-ddi-bar">
+              <div class="sc-ddi-bar-fill" style="width:{{ _pct }}%;background:{% if _is_lp %}#94a3b8{% else %}var(--sc-gold){% endif %}"></div>
+            </div>
+            <div class="sc-ddi-tag {% if _is_stg %}sc-dt-stg{% elif _is_lp %}sc-dt-leap{% elif _val >= 8.0 %}sc-dt-exc{% elif _val >= 7.0 %}sc-dt-str{% else %}sc-dt-good{% endif %}">
+              {% if _is_stg %}Your Strongest{% elif _is_lp %}Your Next Leap{% elif _val >= 8.5 %}Excellent{% elif _val >= 7.0 %}Strong{% else %}Good{% endif %}
+            </div>
+          </div>
+          {% endif %}
           {% endfor %}
         </div>
 
-        {# DDI detail panel — populated by JS on tap #}
         <div class="sc-ddi-detail" id="sc-ddi-detail">
-          <strong id="sc-ddi-title" style="display:block;margin-bottom:4px;color:var(--sc-dark)"></strong>
+          <strong id="sc-ddi-title" style="display:block;margin-bottom:5px;color:var(--sc-dark)"></strong>
           <span id="sc-ddi-text"></span>
         </div>
         <div class="sc-ddi-hint">Tap a dimension to see the engine's reasoning</div>
 
-        {# Mobile — 2 hero cards + accordion for rest #}
-        <div class="sc-ddi-mobile" id="sc-ddi-mobile">
+        {# Mobile: 2 hero dims + accordion for rest #}
+        <div class="sc-ddi-mobile">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:7px">
-            {# Strongest dim #}
             <div style="background:#fffbef;border:0.5px solid #e8d898;border-radius:10px;padding:11px">
               <div style="font-size:14px;margin-bottom:3px">⭐</div>
-              <div style="font-size:9px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em;margin-bottom:3px">Visual Display</div>
-              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(image.wonder_score) if image.wonder_score else '—' }}<span style="font-size:10px;color:#22c55e;margin-left:2px">↑</span></div>
+              <div style="font-size:9px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">{{ _strongest_nm }}</div>
+              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_strongest_val) if _strongest_val else '—' }}<span style="font-size:10px;color:#22c55e;margin-left:2px">↑</span></div>
               <div class="sc-ddi-tag sc-dt-stg">Your Strongest</div>
-              <div style="font-size:11px;color:var(--sc-muted);margin-top:5px;line-height:1.4">{{ (_audit.get('wonder_reasoning') or 'Visual impact and mood of your photograph.') | truncate(80) }}</div>
             </div>
-            {# Next leap — disruption #}
             <div style="background:#f5f3ff;border:0.5px solid #ccc8f0;border-radius:10px;padding:11px">
               <div style="font-size:14px;margin-bottom:3px">⚡</div>
-              <div style="font-size:9px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em;margin-bottom:3px">Disruption</div>
-              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(image.disruption_score) if image.disruption_score else '—' }}<span style="font-size:10px;color:#ef4444;margin-left:2px">↓</span></div>
+              <div style="font-size:9px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">{{ _weakest_nm }}</div>
+              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_weakest_val) if _weakest_val else '—' }}<span style="font-size:10px;color:#ef4444;margin-left:2px">↓</span></div>
               <div class="sc-ddi-tag sc-dt-leap">Your Next Leap</div>
-              <div style="font-size:11px;color:var(--sc-muted);margin-top:5px;line-height:1.4">{{ (_audit.get('disruption_reasoning') or 'Uniqueness and unexpectedness of the frame.') | truncate(80) }}</div>
             </div>
           </div>
-          {# Other 3 collapsed #}
           <div style="border:0.5px solid var(--sc-border);border-radius:8px;overflow:hidden">
-            <div onclick="scToggleMobDims(this)" style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;cursor:pointer;background:var(--sc-cream)">
-              <span style="font-size:11px;font-weight:600;color:var(--sc-muted)">See all 5 dimensions</span>
-              <span style="font-size:10px;color:var(--sc-muted)" id="sc-mob-dim-chev">↓</span>
+            <div onclick="scToggleMobDims(this)" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;background:var(--sc-cream)">
+              <span style="font-size:12px;font-weight:600;color:var(--sc-muted)">See all 5 dimensions</span>
+              <span id="sc-mob-dim-chev" style="font-size:11px;color:var(--sc-muted)">↓</span>
             </div>
-            <div id="sc-mob-dims-rest" style="display:none;padding:9px 11px;border-top:0.5px solid var(--sc-border)">
-              {% for _attr, _nm, _em in [('dod_score','Difficulty','🏔️'),('dm_score','Decisive Moment','🎯'),('aq_score','Affective Q.','❤️')] %}
+            <div id="sc-mob-dims-rest" style="display:none;padding:9px 12px;border-top:0.5px solid var(--sc-border)">
+              {% for _attr, _nm, _em, _ar in _ddi_cols %}
+              {% if _nm != _strongest_nm and _nm != _weakest_nm %}
               {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
               {% if _val %}
               <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)">
                 <div style="display:flex;gap:6px;align-items:center"><span>{{ _em }}</span><span style="font-size:12px;color:var(--sc-muted)">{{ _nm }}</span></div>
-                <div style="display:flex;gap:5px;align-items:center">
-                  <span style="font-size:14px;font-weight:700;color:var(--sc-dark)">{{ '%.1f'|format(_val) }}</span>
-                  <span class="sc-ddi-tag sc-dt-good">—</span>
-                </div>
+                <span style="font-size:14px;font-weight:700;color:var(--sc-dark)">{{ '%.1f'|format(_val) }}</span>
               </div>
+              {% endif %}
               {% endif %}
               {% endfor %}
             </div>
           </div>
         </div>
+
+        {# Evaluated by SL badge #}
+        <div class="sc-ev-badge">✓ Evaluated by SL &nbsp;·&nbsp; Expert-Calibrated</div>
       </div>
     </div>
     {% endif %}
 
-    {# ⑤ WHAT SL SAW IN YOUR PHOTOGRAPH #}
-    {% if _takeaway or _wso or _what_you_did or _what_eye %}
+    {# ③ WHAT THIS EVALUATION MEANS — gold corners, before take-away #}
+    {% if _eval_means or _eval_means_2 %}
+    <div class="sc-eval-means">
+      <div class="sc-em-bl"></div><div class="sc-em-br"></div>
+      <div class="sc-em-inner">
+        <span class="sc-em-title">What this evaluation means</span>
+        {% if _eval_means %}
+        <div class="sc-em-para sc-render-text">{{ _eval_means | safe }}</div>
+        {% endif %}
+        {# Show eval_means_2 only if genuinely different content from takeaway #}
+        {% if _eval_means_2 and _eval_means_2 != _takeaway %}
+        <div id="sc-means-extra" style="display:none">
+          <div class="sc-em-para sc-render-text">{{ _eval_means_2 | safe }}</div>
+        </div>
+        <button class="sc-rm" onclick="scToggleMeans(this)">See full analysis ↓</button>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# ④ REVELATION + SCORE DISTRIBUTION #}
+    {% if _revelation %}
+    <div class="sc-card">
+      <div class="sc-card-body">
+        <div class="sc-revelation">{{ _revelation | safe }}</div>
+        {% if image.score %}
+        <div class="sc-dist-wrap">
+          <div class="sc-dist-lbl">SL Score Distribution</div>
+          <div class="sc-dist-bar-wrap">
+            <div class="sc-dist-fill" style="width:{{ _dist_pct }}%"></div>
+            <div class="sc-dist-val" style="left:{{ _dist_pct }}%">{{ '%.2f'|format(image.score) }}</div>
+            <div class="sc-dist-tri" style="left:{{ _dist_pct }}%"></div>
+          </div>
+          <div class="sc-dist-ns"><span>0</span><span>5</span><span>8.5</span><span>10</span></div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# ⑤ YOUR ONE TAKE-AWAY — warm fill, NOT dark, stands out through colour not bold #}
+    {% if _takeaway %}
+    <div class="sc-takeaway">
+      <div class="sc-ta-eyebrow">⭐ Your one take-away</div>
+      <div class="sc-ta-body sc-render-text">{{ _takeaway | safe }}</div>
+    </div>
+    {% endif %}
+
+    {# ⑥ WHAT SL SAW IN YOUR PHOTOGRAPH — all accordions CLOSED by default #}
+    {% if _what_stood_out or _what_you_did or _what_eye %}
     <div class="sc-acc-block">
       <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What SL saw in your photograph</div></div>
 
-      {# Warm take-away — never dark #}
-      {% if _takeaway %}
-      <div class="sc-takeaway-warm">
-        <div class="sc-ta-eyebrow">⭐ Your one take-away</div>
-        <div class="sc-ta-headline">{{ _takeaway | safe }}</div>
-        {# _scored_as (archetype) shown in HUD tier area, not here #}
-      </div>
-      {% endif %}
-
-      {% if _wso %}
+      {% if _what_stood_out %}
       <div class="sc-acc-row">
         <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
           <div class="sc-acc-icon" style="background:#ede9fe">✨</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">What stood out</div>
-            <div class="sc-acc-teaser">{{ _wso | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _what_stood_out | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _wso | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _what_stood_out | safe }}</div>
       </div>
       {% endif %}
 
@@ -619,11 +592,11 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:#e8f5e2">🏆</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">What you did that others didn't</div>
-            <div class="sc-acc-teaser">{{ _what_you_did | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _what_you_did | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _what_you_did | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _what_you_did | safe }}</div>
       </div>
       {% endif %}
 
@@ -633,18 +606,18 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:#fff8e6">👁️</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">What your eye read</div>
-            <div class="sc-acc-teaser">{{ _what_eye | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _what_eye | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _what_eye | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _what_eye | safe }}</div>
       </div>
       {% endif %}
 
     </div>
     {% endif %}
 
-    {# ⑥ WHAT YOU NEED TO DO #}
+    {# ⑦ WHAT YOU NEED TO DO — all accordions CLOSED #}
     {% if _assignment or _mentor_1 or _note_on_eye or _body_of_work %}
     <div class="sc-acc-block">
       <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What you need to do</div></div>
@@ -655,21 +628,30 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:var(--sc-pista)">📷</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Your assignment tomorrow</div>
-            <div class="sc-acc-teaser">{{ _assignment | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _assignment | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _assignment | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _assignment | safe }}</div>
       </div>
       {% endif %}
 
-      {# Next shot — from mentor_location_1 audit field. Cream background, NEVER dark #}
+      {# Next shot — CREAM/GREEN background, NEVER dark on scorecard #}
       {% if _mentor_1 %}
       <div class="sc-next-shot">
         <div class="sc-ns-eyebrow">📍 Your next shot — bookmarked</div>
-        <div class="sc-ns-location">{{ _mentor_1.split('\n')[0] if '\n' in _mentor_1 else _mentor_1[:60] }}</div>
+        <div class="sc-ns-location">{{ _mentor_1.split('\n')[0] if '\n' in _mentor_1 else (_mentor_1[:80] if _mentor_1|length > 80 else _mentor_1) }}</div>
         {% if _mentor_2 %}
-        <div class="sc-ns-spec"><span class="sc-ns-spec-lbl">Details</span><span class="sc-ns-spec-val">{{ _mentor_2 }}</span></div>
+        <div class="sc-ns-spec">
+          <span class="sc-ns-spec-lbl">Details</span>
+          <span class="sc-ns-spec-val">{{ _mentor_2 }}</span>
+        </div>
+        {% endif %}
+        {% if _mentor_1|length > 80 %}
+        <div class="sc-ns-spec">
+          <span class="sc-ns-spec-lbl">Location</span>
+          <span class="sc-ns-spec-val">{{ _mentor_1 }}</span>
+        </div>
         {% endif %}
         <div class="sc-ns-cta-row">
           <a href="https://maps.google.com/?q={{ _mentor_1 | urlencode }}" target="_blank" rel="noopener" class="sc-ns-btn">Go shoot →</a>
@@ -693,11 +675,11 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:#f0f0ff">✏️</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">A note on your eye</div>
-            <div class="sc-acc-teaser">{{ _note_on_eye | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _note_on_eye | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _note_on_eye | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _note_on_eye | safe }}</div>
       </div>
       {% endif %}
 
@@ -707,18 +689,18 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:#f0f4ff">📚</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Your next body of work sequence</div>
-            <div class="sc-acc-teaser">{{ _body_of_work | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _body_of_work | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _body_of_work | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _body_of_work | safe }}</div>
       </div>
       {% endif %}
 
     </div>
     {% endif %}
 
-    {# EDIT SUGGESTIONS — if present #}
+    {# ⑧ EDIT SUGGESTIONS #}
     {% if _edit_base or _edit_creative %}
     <div class="sc-acc-block">
       <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">Edit suggestions</div></div>
@@ -728,11 +710,11 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:#fef3c7">⚙️</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Balanced · Light editing</div>
-            <div class="sc-acc-teaser">{{ _edit_base | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _edit_base | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _edit_base | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _edit_base | safe }}</div>
       </div>
       {% endif %}
       {% if _edit_creative %}
@@ -741,17 +723,17 @@ body.page-scorecard                      { padding-top:0 !important; background:
           <div class="sc-acc-icon" style="background:#fce7f3">🎨</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Artistic · Heavy editing</div>
-            <div class="sc-acc-teaser">{{ _edit_creative | truncate(100) }}</div>
+            <div class="sc-acc-teaser">{{ _edit_creative | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
-        <div class="sc-acc-body">{{ _edit_creative | safe }}</div>
+        <div class="sc-acc-body sc-render-text">{{ _edit_creative | safe }}</div>
       </div>
       {% endif %}
     </div>
     {% endif %}
 
-    {# ⑦ HOW YOU'RE DEVELOPING #}
+    {# ⑨ HOW YOU'RE DEVELOPING #}
     {% if portfolio_data and portfolio_data.has_trends %}
     <div class="sc-dev-block">
       <div class="sc-card-hdr">
@@ -759,41 +741,34 @@ body.page-scorecard                      { padding-top:0 !important; background:
         <a href="{{ url_for('my_gallery') }}" class="sc-card-link">View full journey →</a>
       </div>
       {% with _dims = portfolio_data.dimensions %}
-      {% if _dims %}
-        {% set _overall = _dims[0] %}
-        <div style="font-size:15px;font-weight:500;color:var(--sc-dark);margin-bottom:4px">
-          {% if _overall.pill %}{{ _overall.pill.replace('↑ ','Your scores are ').replace('↓ ','') | capitalize }}
-          {% else %}Your journey continues.{% endif %}
-        </div>
-        <div style="font-size:12px;color:var(--sc-muted);margin-bottom:10px;line-height:1.55">
-          {{ portfolio_data.plotted_count }} evaluations tracked.
-          {% if image.score %}Your latest: {{ '%.2f'|format(image.score) }}.{% endif %}
-        </div>
-        <svg viewBox="0 0 460 66" width="100%" height="66" style="margin-bottom:7px">
-          <polyline points="{{ _overall.sparkline }}" fill="none" stroke="{{ _overall.color or '#D6A428' }}" stroke-width="2"/>
-          {% for pt in _overall.points %}
-          <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{% if loop.last %}5{% else %}3.5{% endif %}"
-                  fill="{{ _overall.color or '#D6A428' }}"{% if loop.last %} stroke="#fff" stroke-width="2"{% endif %}/>
-          {% endfor %}
-          {% for lp in _overall.label_points %}
-          <text x="{{ (lp.x_pct / 100 * 460)|round }}" y="64" font-size="7.5"
-                fill="{% if loop.last %}{{ _overall.color or '#D6A428' }}{% else %}#888{% endif %}"
-                text-anchor="middle" font-family="sans-serif">{{ lp.value }}</text>
-          {% endfor %}
-        </svg>
-        <div style="display:flex;align-items:center;gap:9px">
-          {% if _overall.pill %}
-          <div class="sc-trend-pill" style="color:{{ _overall.pill_color }};background:{{ _overall.pill_bg }};border-color:{{ _overall.pill_color }}">
-            {{ _overall.pill }}
-          </div>
-          {% endif %}
-        </div>
+      {% if _dims %}{% set _ov = _dims[0] %}
+      <div style="font-size:16px;font-weight:500;color:var(--sc-dark);margin-bottom:5px">
+        {{ _ov.pill.replace('↑ ','Your scores are ').replace('↓ ','') | capitalize if _ov.pill else 'Your journey continues.' }}
+      </div>
+      <div style="font-size:13px;color:var(--sc-muted);margin-bottom:10px;line-height:1.55">
+        {{ portfolio_data.plotted_count }} evaluations tracked.{% if image.score %} Your latest: {{ '%.2f'|format(image.score) }}.{% endif %}
+      </div>
+      <svg viewBox="0 0 460 66" width="100%" height="66" style="margin-bottom:7px">
+        <polyline points="{{ _ov.sparkline }}" fill="none" stroke="{{ _ov.color or '#D6A428' }}" stroke-width="2"/>
+        {% for pt in _ov.points %}
+        <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{% if loop.last %}5{% else %}3.5{% endif %}"
+                fill="{{ _ov.color or '#D6A428' }}"{% if loop.last %} stroke="#fff" stroke-width="2"{% endif %}/>
+        {% endfor %}
+        {% for lp in _ov.label_points %}
+        <text x="{{ (lp.x_pct / 100 * 460)|round }}" y="64" font-size="7.5"
+              fill="{% if loop.last %}{{ _ov.color or '#D6A428' }}{% else %}#888{% endif %}"
+              text-anchor="middle" font-family="sans-serif">{{ lp.value }}</text>
+        {% endfor %}
+      </svg>
+      <div style="display:flex;align-items:center;gap:9px">
+        {% if _ov.pill %}<div class="sc-trend-pill">{{ _ov.pill }}</div>{% endif %}
+      </div>
       {% endif %}
       {% endwith %}
     </div>
     {% endif %}
 
-    {# ⑧ ACTION BAR #}
+    {# ⑩ ACTION BAR #}
     <div class="sc-act-bar">
       <a href="{{ url_for('share_image', image_id=image.id) }}" class="sc-btn-gold" target="_blank">↑ Share Scorecard</a>
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save</a>
@@ -814,170 +789,115 @@ body.page-scorecard                      { padding-top:0 !important; background:
             {{ image.tier or '—' }}
           </span>
         </div>
-        {% if _pct_display %}
-        <div class="sc-rr"><span class="sc-rk">Percentile</span><span class="sc-rv gn">Top {{ _pct_display }}%</span></div>
-        {% endif %}
-        {% if portfolio_data and portfolio_data.count %}
-        <div class="sc-rr"><span class="sc-rk">Evaluations</span><span class="sc-rv">{{ portfolio_data.count }}</span></div>
-        {% endif %}
-        {% if stats and stats.best_this_year %}
-        <div class="sc-rr"><span class="sc-rk">Best this year</span><span class="sc-rv gn">{{ '%.2f'|format(stats.best_this_year) }}</span></div>
-        {% endif %}
-        {% if image.genre %}
-        <div class="sc-rr"><span class="sc-rk">Genre</span><span class="sc-rv">{{ image.genre }}</span></div>
-        {% endif %}
+        {% if _pct_display %}<div class="sc-rr"><span class="sc-rk">Percentile</span><span class="sc-rv gn">Top {{ _pct_display }}%</span></div>{% endif %}
+        {% if portfolio_data and portfolio_data.count %}<div class="sc-rr"><span class="sc-rk">Evaluations</span><span class="sc-rv">{{ portfolio_data.count }}</span></div>{% endif %}
+        {% if stats and stats.best_this_year %}<div class="sc-rr"><span class="sc-rk">Best this year</span><span class="sc-rv gn">{{ '%.2f'|format(stats.best_this_year) }}</span></div>{% endif %}
+        {% if image.genre %}<div class="sc-rr"><span class="sc-rk">Genre</span><span class="sc-rv">{{ image.genre }}</span></div>{% endif %}
       </div>
     </div>
-
     {% if _pct_display %}
     <div>
       <div class="sc-rl">Your standing</div>
       <div class="sc-rcard">
         <div style="font-size:26px;font-weight:700;color:var(--sc-green);line-height:1">Top {{ _pct_display }}%</div>
-        <div style="font-size:11px;color:var(--sc-muted);margin-top:2px">of photographers on SL</div>
+        <div style="font-size:11px;color:var(--sc-muted);margin-top:3px">of photographers on SL</div>
         <div style="height:4px;background:var(--sc-border);border-radius:2px;margin-top:8px;overflow:hidden">
           <div style="height:100%;width:{{ _pct_display }}%;background:var(--sc-green);border-radius:2px"></div>
         </div>
       </div>
     </div>
     {% endif %}
-
-    {# Next milestone #}
     {% if image.tier and image.score %}
     <div>
       <div class="sc-rl">Next milestone</div>
       <div class="sc-rcard">
-        {% if image.tier == 'Maverick' %}
-        <div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 8.0 average to become <strong style="color:var(--sc-gold-dk)">MASTER</strong></div>
-        {% elif image.tier == 'Master' %}
-        <div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 9.0 to reach <strong style="color:var(--sc-gold-dk)">GRANDMASTER</strong></div>
-        {% elif image.tier == 'Artisan' %}
-        <div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 7.0 to become <strong style="color:var(--sc-gold-dk)">MAVERICK</strong></div>
-        {% else %}
-        <div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Keep shooting to build your tier</div>
-        {% endif %}
-        {% if image.score %}
+        {% if image.tier == 'Master' %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 9.0 to become <strong style="color:var(--sc-gold-dk)">GRANDMASTER</strong></div>
+        {% elif image.tier == 'Maverick' %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 8.0 to become <strong style="color:var(--sc-gold-dk)">MASTER</strong></div>
+        {% elif image.tier == 'Artisan' %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 7.0 to become <strong style="color:var(--sc-gold-dk)">MAVERICK</strong></div>
+        {% else %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Keep shooting to build your tier</div>{% endif %}
         <div style="height:4px;background:var(--sc-border);border-radius:2px;margin-bottom:3px;overflow:hidden">
           <div style="height:100%;background:var(--sc-gold);border-radius:2px;width:{{ [(image.score / 10 * 100)|round|int, 100]|min }}%"></div>
         </div>
-        <div style="font-size:10px;color:var(--sc-muted);text-align:right">{{ '%.2f'|format(image.score) }}</div>
-        {% endif %}
+        <div style="text-align:right;font-size:10px;color:var(--sc-muted)">{{ '%.2f'|format(image.score) }}</div>
       </div>
     </div>
     {% endif %}
-
-    {# Evaluation process #}
     <div>
       <div class="sc-rl">Evaluation process</div>
       <div class="sc-rcard" style="display:flex;flex-direction:column;gap:5px">
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);font-size:12px;flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Apex DDI across 5 dimensions</span></div>
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);font-size:12px;flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Expert review by Grandmaster mentor</span></div>
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);font-size:12px;flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Final score calibrated</span></div>
-        {% if _scored_date %}
-        <div style="font-size:10px;color:var(--sc-muted);margin-top:4px;padding-top:5px;border-top:0.5px solid var(--sc-border)">
-          Evaluated {{ _scored_date }}
-          {% if image.is_public %}&nbsp;·&nbsp; 🌐 Public{% endif %}
-        </div>
-        {% endif %}
+        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Apex DDI across 5 dimensions</span></div>
+        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Expert review by Grandmaster mentor</span></div>
+        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Final score calibrated</span></div>
+        {% if _scored_date %}<div style="font-size:10px;color:var(--sc-muted);margin-top:4px;padding-top:5px;border-top:0.5px solid var(--sc-border)">Evaluated {{ _scored_date }}{% if image.is_public %} &nbsp;·&nbsp; 🌐 Public{% endif %}</div>{% endif %}
       </div>
     </div>
-
-    {# PDF download #}
     <div>
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}"
          style="display:block;background:var(--sc-gold);color:var(--sc-dark);font-size:12px;font-weight:700;padding:10px 14px;border-radius:8px;text-align:center;text-decoration:none">
         ↓ Download full scorecard PDF
       </a>
     </div>
-
   </aside>
 
 </div>{# /sc-shell #}
 
 {# FOOTER #}
 <div class="sc-footer">
-  <span class="sc-footer-text">
-    {% if _scored_date %}Evaluated {{ _scored_date }}.{% endif %}
-    Your eye is still sharp from this.
-  </span>
+  <span class="sc-footer-text">{% if _scored_date %}Evaluated {{ _scored_date }}.{% endif %} Your eye is still sharp from this.</span>
   <a href="{{ url_for('upload') }}" class="sc-footer-link">Upload your next image →</a>
 </div>
 
 </div>{# /sc-wrap #}
 
-{# ── DDI reasoning — Jinja2 data island, never inline JS ── #}
+{# DDI data island — Jinja2 renders, browser reads as JSON #}
 <script type="application/json" id="sc-ddi-data">
 [
-  {% if image.dod_score %}{"t": "Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}", "tx": {{ (_audit.get('dod_reasoning') or 'How technically demanding this photograph was to make.') | tojson }}},{% endif %}
-  {% if image.disruption_score %}{"t": "Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}", "tx": {{ (_audit.get('disruption_reasoning') or 'How unexpected and original this frame is.') | tojson }}},{% endif %}
-  {% if image.dm_score %}{"t": "Decisive Moment — {{ '%.1f'|format(image.dm_score) }}", "tx": {{ (_audit.get('dm_reasoning') or 'How well you timed the capture of the peak moment.') | tojson }}},{% endif %}
-  {% if image.wonder_score %}{"t": "Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}", "tx": {{ (_audit.get('wonder_reasoning') or 'The visual impact, mood and drama of this photograph.') | tojson }}},{% endif %}
-  {% if image.aq_score %}{"t": "Affective Quotient — {{ '%.1f'|format(image.aq_score) }}", "tx": {{ (_audit.get('aq_reasoning') or 'The emotional resonance this photograph creates.') | tojson }}},{% endif %}
+  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or 'How technically demanding this photograph was to make.') | tojson }}},{% endif %}
+  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or 'The visual impact, mood and drama of your photograph.') | tojson }}},{% endif %}
+  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or 'How well you timed the capture of the peak moment.') | tojson }}},{% endif %}
+  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or 'How unexpected and original this frame is.') | tojson }}},{% endif %}
+  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or 'The emotional resonance this photograph creates.') | tojson }}},{% endif %}
   null
 ]
 </script>
 
 <script>
-/* =====================================================
-   SL SCORECARD v176.10 — JavaScript
-   No Jinja2 inside this block — data via JSON island
-===================================================== */
-function scToggleAcc(row) {
-  row.classList.toggle('open');
-}
+/* SL image_detail v176.11 — no Jinja2 in this block */
+
+/* ── Accordion toggle ── */
+function scToggleAcc(row) { row.classList.toggle('open'); }
+
+/* ── Eval means expand ── */
 function scToggleMeans(el) {
-  var exp = document.getElementById('sc-means-expanded');
-  if (!exp) return;
-  var open = exp.style.display !== 'none';
-  exp.style.display = open ? 'none' : 'block';
-  el.textContent = open ? 'See full analysis ↓' : 'Hide ↑';
+  var x = document.getElementById('sc-means-extra');
+  if (!x) return;
+  var open = x.style.display !== 'none';
+  x.style.display = open ? 'none' : 'block';
+  el.textContent = open ? 'See full analysis \u2193' : 'Show less \u2191';
 }
+
+/* ── Mobile DDI toggle ── */
 function scToggleMobDims(el) {
-  var rest = document.getElementById('sc-mob-dims-rest');
-  var chev = document.getElementById('sc-mob-dim-chev');
-  if (!rest) return;
-  var open = rest.style.display !== 'none';
-  rest.style.display = open ? 'none' : 'block';
-  if (chev) chev.textContent = open ? '↓' : '↑';
+  var r = document.getElementById('sc-mob-dims-rest');
+  var c = document.getElementById('sc-mob-dim-chev');
+  if (!r) return;
+  var open = r.style.display !== 'none';
+  r.style.display = open ? 'none' : 'block';
+  if (c) c.textContent = open ? '\u2193' : '\u2191';
   el.querySelector('span:first-child').textContent = open ? 'See all 5 dimensions' : 'Hide dimensions';
 }
-var scDDIData = (function () {
-  try {
-    return JSON.parse(document.getElementById('sc-ddi-data').textContent).filter(Boolean);
-  } catch (e) { return []; }
-})();
-/* ── Convert **bold** markdown in text nodes ── */
-(function () {
-  var boldRe = /\*\*(.+?)\*\*/g;
-  var bulletRe = /\s*■\s*/g;
-  function processNode(node) {
-    if (node.nodeType === 3) {  /* TEXT_NODE */
-      var txt = node.textContent;
-      if (boldRe.test(txt) || bulletRe.test(txt)) {
-        var span = document.createElement('span');
-        span.innerHTML = txt
-          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\s*■\s*/g, '<br>• ');
-        node.parentNode.replaceChild(span, node);
-        boldRe.lastIndex = 0;
-      }
-    } else if (node.nodeType === 1 && !['SCRIPT','STYLE'].includes(node.tagName)) {
-      Array.from(node.childNodes).forEach(processNode);
-    }
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    var targets = document.querySelectorAll('.sc-acc-body, .sc-em-line, .sc-ta-headline, .sc-ta-body, .hk-takeaway');
-    targets.forEach(function(el) { processNode(el); });
-  });
-})();
 
+/* ── DDI tap ── */
+var scDDIData = (function () {
+  try { return JSON.parse(document.getElementById('sc-ddi-data').textContent).filter(Boolean); }
+  catch (e) { return []; }
+})();
 function scToggleDDI(col, idx) {
   var det = document.getElementById('sc-ddi-detail');
   var cols = col.parentElement.querySelectorAll('.sc-ddi-col');
-  var isActive = col.classList.contains('active');
-  cols.forEach(function (c) { c.classList.remove('active'); });
-  if (isActive) { if (det) det.style.display = 'none'; return; }
+  var active = col.classList.contains('active');
+  cols.forEach(function(c){ c.classList.remove('active'); });
+  if (active) { if (det) det.style.display = 'none'; return; }
   col.classList.add('active');
   var d = scDDIData[idx];
   if (d && det) {
@@ -986,6 +906,27 @@ function scToggleDDI(col, idx) {
     det.style.display = 'block';
   }
 }
+
+/* ── Text rendering: ■ → paragraph, **bold** → <strong>, Search:X → link ── */
+document.addEventListener('DOMContentLoaded', function () {
+  var targets = document.querySelectorAll('.sc-render-text');
+  targets.forEach(function (el) {
+    var raw = el.innerHTML;
+    /* Split on ■ bullet markers — each becomes a paragraph */
+    var paras = raw.split(/\s*■\s*/g).map(function(p){ return p.trim(); }).filter(Boolean);
+    if (paras.length > 1) {
+      raw = paras.map(function(p){ return '<p>' + p + '</p>'; }).join('');
+    }
+    /* Convert **bold** to <strong> — only specific words, not entire paragraphs */
+    raw = raw.replace(/\*\*([^*\n]{1,60})\*\*/g, '<strong>$1</strong>');
+    /* Convert Search: X. to a Google Images link — master references */
+    raw = raw.replace(/Search:\s*([^.<\n]+)\./g, function(m, term) {
+      var q = encodeURIComponent(term.trim());
+      return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
+    });
+    el.innerHTML = raw;
+  });
+});
 </script>
 
 {% endblock %}
