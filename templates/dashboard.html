@@ -738,14 +738,14 @@ body.page-dashboard #backToTop         { display:none !important }
       <div class="es">
         {% for img in images.items[:5] if images and images.items %}
         {% if img.score and img.thumb_url %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="et {% if loop.index > 3 %}et-desktop-only{% endif %}" style="text-decoration:none;display:block;cursor:pointer">
+        <div class="et {% if loop.index > 3 %}et-desktop-only{% endif %}">
           <div class="eti">
             <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.cssText='aspect-ratio:1;background:var(--border);border-radius:6px;';this.remove()">
             <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
           </div>
-          <div class="escore" style="display:block;line-height:1.4;color:var(--text)">{{ '%.1f'|format(img.score) }}</div>
-          <div class="edate" style="display:block;line-height:1.4;color:var(--muted)">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-        </a>
+          <div class="escore" style="display:block;line-height:1.4">{{ '%.1f'|format(img.score) }}</div>
+          <div class="edate" style="display:block;line-height:1.4">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
+        </div>
         {% endif %}
         {% endfor %}
       </div>
@@ -1339,14 +1339,14 @@ body.page-dashboard #backToTop         { display:none !important }
       <div class="mob-thumb-row">
         {% for img in images.items if images and images.items %}
         {% if img.score and img.thumb_url %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="mob-thumb" style="text-decoration:none;display:block;cursor:pointer">
+        <div class="mob-thumb">
           <div style="position:relative">
             <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" class="mob-thumb-img" loading="lazy" onerror="this.parentNode.style.background='var(--border)';this.remove()">
             <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.7);color:#fff;font-size:13px;font-weight:700;padding:2px 5px;border-radius:4px">{{ '%.1f'|format(img.score) }}</div>
           </div>
-          <div class="mob-thumb-score" style="color:var(--text)">{{ '%.1f'|format(img.score) }}</div>
-          <div class="mob-thumb-date" style="color:var(--muted)">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-        </a>
+          <div class="mob-thumb-score">{{ '%.1f'|format(img.score) }}</div>
+          <div class="mob-thumb-date">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
+        </div>
         {% endif %}
         {% endfor %}
       </div>
@@ -1715,3 +1715,7 @@ function toggleSpan(expId, rmId) {
 })();
 </script>
 {% endblock %}
+
+<script>
+(function(){if(window.location.hash==='#journey'){var m=document.getElementById('standing-modal');if(m)m.style.display='flex';history.replaceState(null,'',window.location.pathname+window.location.search);}})()
+</script>
