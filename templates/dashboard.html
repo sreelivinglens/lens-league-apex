@@ -443,77 +443,6 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
       {% endif %}
 
-      {# ── WHAT SL DISCOVERED ABOUT YOU — visual, no text walls ── #}
-      {% if progress_data and progress_data.count and progress_data.count >= 2 %}
-      <div class="card" style="margin-bottom:10px;overflow:hidden">
-        {# Header #}
-        <div style="padding:14px 16px 12px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">What SL discovered about you</div>
-            <div style="font-size:15px;font-weight:600;color:var(--dark)">
-              {% if progress_data.count <= 5 %}What SL is seeing
-              {% elif progress_data.count <= 10 %}What's emerging
-              {% elif progress_data.count <= 20 %}Your photographic pattern
-              {% else %}How your eye is developing
-              {% endif %}
-            </div>
-          </div>
-          <div style="font-size:11px;color:var(--muted);text-align:right">
-            {{ progress_data.count }} evaluation{% if progress_data.count != 1 %}s{% endif %}
-          </div>
-        </div>
-
-        {# 5 dimension bars — visual, scannable in 2 seconds #}
-        {% if progress_data.dimensions %}
-        <div style="padding:14px 16px">
-          {% set _dim_full = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'Visual Display (WOW)','disruption':'Disruption'} %}
-          {% for dim in progress_data.dimensions[:5] %}
-          {% if dim.label and dim.current %}
-          <div style="margin-bottom:10px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-              <div style="display:flex;align-items:center;gap:7px">
-                <span style="font-size:13px;font-weight:600;color:var(--dark)">{{ _dim_full.get(dim.label, dim.label|title) }}</span>
-                {% if dim.label == progress_data.strongest %}
-                <span style="font-size:10px;font-weight:600;padding:2px 7px;background:#fef3c7;color:#92400e;border-radius:10px">Your Strongest</span>
-                {% elif dim.label == progress_data.weakest %}
-                <span style="font-size:10px;font-weight:600;padding:2px 7px;background:#ede9fe;color:#4a3280;border-radius:10px">Your Next Leap</span>
-                {% endif %}
-              </div>
-              <div style="display:flex;align-items:center;gap:5px">
-                {% if dim.delta is defined and dim.delta %}
-                  {% if dim.delta > 0 %}<span style="font-size:12px;color:var(--green);font-weight:600">↑ +{{ '%.1f'|format(dim.delta) }}</span>
-                  {% elif dim.delta < 0 %}<span style="font-size:12px;color:#C05A1A;font-weight:600">↓ {{ '%.1f'|format(dim.delta) }}</span>
-                  {% else %}<span style="font-size:12px;color:var(--muted)">→</span>{% endif %}
-                {% endif %}
-                <span style="font-size:14px;font-weight:700;color:var(--dark)">{{ '%.1f'|format(dim.current) }}</span>
-              </div>
-            </div>
-            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-              <div style="height:100%;border-radius:3px;background:{% if dim.label == progress_data.weakest %}#94a3b8{% else %}var(--gold){% endif %};width:{{ [(dim.current / 10 * 100)|round|int, 100]|min }}%;transition:width 0.6s ease"></div>
-            </div>
-          </div>
-          {% endif %}
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        {# One sentence insight — bottom of card #}
-        {% if dash_greeting and dash_greeting.get('line2') %}
-        <div style="padding:0 16px 14px;border-top:0.5px solid var(--border);padding-top:12px;margin-top:2px">
-          <div style="font-size:14px;color:var(--text);line-height:1.65;font-style:italic">"{{ dash_greeting.line2 }}"</div>
-        </div>
-        {% elif progress_data.strongest and progress_data.weakest %}
-        <div style="padding:0 16px 14px;border-top:0.5px solid var(--border);padding-top:12px;margin-top:2px">
-          {% set _dim_human = {'dod':'technical difficulty','dm':'decisive moment','aq':'affective impact','wonder':'visual display','disruption':'creative disruption'} %}
-          <div style="font-size:14px;color:var(--text);line-height:1.65">
-            Your <strong style="color:var(--dark)">{{ _dim_human.get(progress_data.strongest, progress_data.strongest) }}</strong> is consistently your highest dimension.
-            The gap is in <strong style="color:var(--dark)">{{ _dim_human.get(progress_data.weakest, progress_data.weakest) }}</strong> — that's your next edge.
-          </div>
-        </div>
-        {% endif %}
-      </div>
-      {% endif %}
-
       {# ── LAYER 2: Location advisory ── #}
       {% if _has_mentor_data %}
 
@@ -523,6 +452,19 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _ev_shot_time = dash_live_event.get('shot_time') or dash_live_event.get('best_light_time') or '' %}
         {% set _ev_tech = dash_live_event.get('technical_tip') or '' %}
         {% set _ev_pos = dash_live_event.get('position_tip') or '' %}
+
+        {# SL-176: My Evolving Eye — So Far banner #}
+        {% if current_user.evolving_eye_json %}
+        {% set _eye = current_user.evolving_eye_json | from_json %}
+        <div style="background:#FFF8EC;border-radius:13px;padding:14px 16px;margin-bottom:10px;border:1px solid #EDD89A;display:flex;align-items:center;gap:14px">
+          <div style="width:38px;height:38px;background:#FEF0C7;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📈</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:600;color:#1A1814;margin-bottom:2px">Your {{ _eye.milestone }}-image advisory is ready</div>
+            <div style="font-size:13px;color:#6B6B6B;line-height:1.45">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:600">Next report at {{ _eye.milestone + 10 }} images →</span></div>
+          </div>
+          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap">Read it →</a>
+        </div>
+        {% endif %}
 
         {# Hero shot prescription block — redesigned to catch the eye (SL 175.21) #}
         <div style="background:#EBF0F8;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(44,95,138,0.25);box-shadow:0 2px 8px rgba(44,95,138,0.08)">
@@ -809,14 +751,14 @@ body.page-dashboard #backToTop         { display:none !important }
       <div class="es">
         {% for img in images.items[:5] if images and images.items %}
         {% if img.score and img.thumb_url %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="et {% if loop.index > 3 %}et-desktop-only{% endif %}" style="text-decoration:none;display:block;cursor:pointer">
+        <div class="et {% if loop.index > 3 %}et-desktop-only{% endif %}">
           <div class="eti">
             <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.cssText='aspect-ratio:1;background:var(--border);border-radius:6px;';this.remove()">
             <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
           </div>
-          <div class="escore" style="display:block;line-height:1.4;color:var(--text)">{{ '%.1f'|format(img.score) }}</div>
-          <div class="edate" style="display:block;line-height:1.4;color:var(--muted)">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-        </a>
+          <div class="escore" style="display:block;line-height:1.4">{{ '%.1f'|format(img.score) }}</div>
+          <div class="edate" style="display:block;line-height:1.4">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
+        </div>
         {% endif %}
         {% endfor %}
       </div>
@@ -1410,14 +1352,14 @@ body.page-dashboard #backToTop         { display:none !important }
       <div class="mob-thumb-row">
         {% for img in images.items if images and images.items %}
         {% if img.score and img.thumb_url %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="mob-thumb" style="text-decoration:none;display:block;cursor:pointer">
+        <div class="mob-thumb">
           <div style="position:relative">
             <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" class="mob-thumb-img" loading="lazy" onerror="this.parentNode.style.background='var(--border)';this.remove()">
             <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.7);color:#fff;font-size:13px;font-weight:700;padding:2px 5px;border-radius:4px">{{ '%.1f'|format(img.score) }}</div>
           </div>
-          <div class="mob-thumb-score" style="color:var(--text)">{{ '%.1f'|format(img.score) }}</div>
-          <div class="mob-thumb-date" style="color:var(--muted)">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-        </a>
+          <div class="mob-thumb-score">{{ '%.1f'|format(img.score) }}</div>
+          <div class="mob-thumb-date">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
+        </div>
         {% endif %}
         {% endfor %}
       </div>
@@ -1786,7 +1728,3 @@ function toggleSpan(expId, rmId) {
 })();
 </script>
 {% endblock %}
-
-<script>
-(function(){if(window.location.hash==='#journey'){var m=document.getElementById('standing-modal');if(m)m.style.display='flex';history.replaceState(null,'',window.location.pathname+window.location.search);}})()
-</script>
