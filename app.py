@@ -1871,6 +1871,12 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_hud_json TEXT DEFAULT NULL"
                 ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL"
+                ))
                 db.session.commit()
                 print('Location advisory link columns OK.')
             except Exception as _loc_url_mig:
@@ -5932,6 +5938,233 @@ def _clean_audit(audit, img):
     return audit
 
 
+
+def _generate_evolving_eye(user_id, milestone):
+    """
+    SL-176: Generate "My Evolving Eye — So Far" advisory at image milestones.
+    Fires at 10, 20, 30... images. Passes full genre breakdown + last 10 audit
+    texts + dimension history + platform percentile to Claude Sonnet.
+    Stores result in users.evolving_eye_json.
+    Cost: ~$0.02 per call (₹1.79). Fires once per milestone — not per page load.
+
+    Rules:
+    - Never reference other photographers by name
+    - Never use dimension codes (AQ, DM, DOD) — only human names
+    - Sherpa tone throughout — warm, honest, forward-looking
+    - "What this evaluation means" section only on first advisory (10-image)
+    - Shutter League always written in full — never SL
+    """
+    import json as _j
+    import threading as _t
+
+    def _run():
+        with app.app_context():
+            try:
+                from engine.auto_score import auto_score as _dummy  # ensure engine importable
+            except Exception:
+                pass
+
+            try:
+                # ── Fetch user ────────────────────────────────────────────
+                _user = db.session.execute(
+                    db.text('SELECT id, full_name FROM users WHERE id = :uid'),
+                    {'uid': user_id}
+                ).fetchone()
+                if not _user:
+                    return
+                _name = (_user.full_name or '').split()[0] if _user.full_name else 'Photographer'
+
+                # ── Fetch all scored images ───────────────────────────────
+                _images = db.session.execute(db.text("""
+                    SELECT genre, score, scored_at::date as date,
+                           dod_score, disruption_score, dm_score,
+                           wonder_score, aq_score,
+                           audit_json::json->>'what_stood_out' as revelation,
+                           audit_json::json->>'transferable_advice' as advice,
+                           audit_json::json->>'mentor_location_1' as next_location
+                    FROM images
+                    WHERE user_id = :uid AND status='scored'
+                      AND score IS NOT NULL
+                    ORDER BY scored_at ASC
+                """), {'uid': user_id}).fetchall()
+
+                if not _images:
+                    return
+
+                _total = len(_images)
+                _all_scores = [float(r.score) for r in _images]
+                _avg = round(sum(_all_scores) / len(_all_scores), 2)
+                _best = max(_all_scores)
+
+                # ── Genre breakdown ───────────────────────────────────────
+                from collections import defaultdict
+                _genres = defaultdict(list)
+                for r in _images:
+                    if r.genre:
+                        _genres[r.genre].append(float(r.score))
+
+                _genre_lines = []
+                for g, scores in sorted(_genres.items(), key=lambda x: -len(x[1])):
+                    _genre_lines.append(
+                        f"{g}: {len(scores)} images, avg {round(sum(scores)/len(scores),2)}, "
+                        f"best {max(scores)}, lowest {min(scores)}"
+                    )
+
+                # ── Dimension avgs per genre ──────────────────────────────
+                _dim_by_genre = {}
+                for g in _genres:
+                    _gi = [r for r in _images if r.genre == g]
+                    _dim_by_genre[g] = {
+                        'Aesthetic Quality': round(sum(float(r.aq_score) for r in _gi if r.aq_score) / max(1, sum(1 for r in _gi if r.aq_score)), 2),
+                        'Decisive Moment':   round(sum(float(r.dm_score) for r in _gi if r.dm_score) / max(1, sum(1 for r in _gi if r.dm_score)), 2),
+                        'Disruption':        round(sum(float(r.disruption_score) for r in _gi if r.disruption_score) / max(1, sum(1 for r in _gi if r.disruption_score)), 2),
+                        'Visual Display':    round(sum(float(r.wonder_score) for r in _gi if r.wonder_score) / max(1, sum(1 for r in _gi if r.wonder_score)), 2),
+                        'Depth of Difficulty': round(sum(float(r.dod_score) for r in _gi if r.dod_score) / max(1, sum(1 for r in _gi if r.dod_score)), 2),
+                    }
+
+                # ── Trajectory ────────────────────────────────────────────
+                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
+                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+
+                # ── Last 10 audit texts ───────────────────────────────────
+                _recent_audits = _images[-10:]
+                _audit_lines = []
+                for r in _recent_audits:
+                    if r.revelation:
+                        _audit_lines.append(f"[{r.genre} {r.date} {r.score}] {r.revelation[:200]}")
+
+                # ── Contest-worthy images ─────────────────────────────────
+                _contest_images = [(r.genre, float(r.score), str(r.date)) for r in _images if float(r.score) >= 8.5]
+
+                # ── Platform percentile ───────────────────────────────────
+                _platform = db.session.execute(db.text("""
+                    SELECT COUNT(*) as total,
+                           COUNT(CASE WHEN avg_score < :my_avg THEN 1 END) as below
+                    FROM (
+                        SELECT user_id, AVG(score) as avg_score
+                        FROM images WHERE status='scored' AND score IS NOT NULL
+                        GROUP BY user_id HAVING COUNT(*) >= 3
+                    ) t
+                """), {'my_avg': _avg}).fetchone()
+
+                _platform_total = _platform.total or 1
+                _platform_rank  = _platform_total - (_platform.below or 0)
+                _platform_pct   = max(1, round((_platform.below / _platform_total) * 100)) if _platform_total > 1 else 50
+
+                # ── Build prompt ──────────────────────────────────────────
+                _is_first = (milestone == 10)
+                _next_milestone = milestone + 10
+
+                _system = """You are the Shutter League mentor — warm, honest, photographic in voice.
+Write "My Evolving Eye — So Far" advisory for a photographer.
+
+RULES (non-negotiable):
+- Never reference other photographers on the platform by name
+- Never use dimension codes: AQ, DM, DOD, WF — use full human names only
+- Never write "Shutter League" as "SL" — always full name
+- Sherpa tone: warm mentor, not algorithm. Speak to the photographer directly.
+- No jargon. No "your metrics show". No "data indicates".
+- Each genre gets its own section. Find the specific insight, not the average.
+- The "one thing" must be one sentence maximum — the single most important thing.
+- Body of work: 4 frames, each a different idea linked by one story/theme.
+- "Why Shutter League" section: only include if milestone == 10 (first advisory).
+- End with next milestone tease — forward-looking, motivational.
+- Write as if you have been watching this photographer for months. Because you have."""
+
+                _user_prompt = f"""Write "My Evolving Eye — So Far" for {_name}.
+
+PHOTOGRAPHER DATA:
+- Total images: {_total}
+- Milestone: {milestone}-image advisory
+- Overall average: {_avg}
+- Best image: {_best}
+- First 10 avg: {_first10} | Last 10 avg: {_last10}
+- Platform ranking: {_platform_rank} of {_platform_total} photographers
+
+GENRE BREAKDOWN:
+{chr(10).join(_genre_lines)}
+
+DIMENSION AVERAGES BY GENRE:
+{chr(10).join(f"{g}: " + ", ".join(f"{k} {v}" for k,v in dims.items()) for g,dims in _dim_by_genre.items())}
+
+CONTEST-WORTHY IMAGES (8.5+):
+{chr(10).join(f"{g} {s} ({d})" for g,s,d in _contest_images) if _contest_images else "None yet"}
+
+WHAT THE ENGINE TOLD THEM (last 10 evaluations):
+{chr(10).join(_audit_lines) if _audit_lines else "No audit data yet"}
+
+STRUCTURE TO FOLLOW:
+1. Where you stand on Shutter League (platform rank, overall avg)
+2. What your images are telling us (trajectory + engine's key word pattern)
+3. Per-genre sections (one per genre with 3+ images — tap to expand)
+4. The one thing (single sentence — the most important insight across all images)
+{"5. Why Shutter League sees what other platforms miss (4 points, plain language — ONLY include at 10-image milestone)" if _is_first else ""}
+5. Your contest-worthy images (only if score >= 8.5; suggest relevant real contests)
+6. Your next body of work (story title + 4 frames, each a different idea)
+7. Next milestone: {_next_milestone} images
+
+Output as JSON with these keys:
+{{
+  "where_you_stand": "...",
+  "what_images_say": "...",
+  "trajectory_note": "...",
+  "genres": [{{"name": "...", "avg": ..., "count": ..., "insight": "...", "key_line": "..."}}],
+  "one_thing": "...",
+  "why_sl": "..." (only at milestone 10, else null),
+  "contests": [{{"name": "...", "url": "...", "why": "...", "free": true/false, "deadline": "..."}}],
+  "bow_title": "...",
+  "bow_story": "...",
+  "bow_frames": ["...", "...", "...", "..."],
+  "bow_footer": "...",
+  "next_milestone_note": "..."
+}}"""
+
+                # ── Call Sonnet ───────────────────────────────────────────
+                import anthropic as _ant
+                _client = _ant.Anthropic()
+                _resp = _client.messages.create(
+                    model='claude-sonnet-4-6',
+                    max_tokens=2000,
+                    system=_system,
+                    messages=[{'role': 'user', 'content': _user_prompt}]
+                )
+                _raw = _resp.content[0].text if _resp.content else ''
+
+                # Strip markdown fences if present
+                import re as _re
+                _raw = _re.sub(r'^```json\s*', '', _raw.strip())
+                _raw = _re.sub(r'```\s*$', '', _raw.strip())
+
+                _advisory = _j.loads(_raw)
+                _advisory['milestone'] = milestone
+                _advisory['generated_at'] = str(db.session.execute(db.text('SELECT NOW()')).scalar())
+                _advisory['total_images'] = _total
+                _advisory['avg_score'] = _avg
+                _advisory['platform_rank'] = _platform_rank
+                _advisory['platform_total'] = _platform_total
+
+                # ── Store in DB ───────────────────────────────────────────
+                db.session.execute(db.text("""
+                    UPDATE users
+                    SET evolving_eye_json = :j,
+                        evolving_eye_milestone = :m
+                    WHERE id = :uid
+                """), {
+                    'j':   _j.dumps(_advisory),
+                    'm':   milestone,
+                    'uid': user_id
+                })
+                db.session.commit()
+                app.logger.info(f'[evolving_eye] generated for user {user_id} at milestone {milestone}')
+
+            except Exception as _ee_err:
+                app.logger.warning(f'[evolving_eye] failed for user {user_id}: {_ee_err}')
+                try: db.session.rollback()
+                except Exception: pass
+
+    _t.Thread(target=_run, daemon=True).start()
+
+
 def _refresh_dash_caches(user_id):
     """
     SL 175 — Refresh all expensive dashboard caches after evaluation.
@@ -9219,6 +9452,17 @@ def upload():
                                 except Exception as _dc_bg_err:
                                     app.logger.warning(f'[dash_cache] bg refresh failed: {_dc_bg_err}')
 
+                                # SL-176: My Evolving Eye — fire at milestones 10/20/30...
+                                try:
+                                    _eye_count = db.session.execute(
+                                        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+                                        {'uid': _img.user_id}
+                                    ).scalar() or 0
+                                    if _eye_count >= 10 and _eye_count % 10 == 0:
+                                        _generate_evolving_eye(_img.user_id, _eye_count)
+                                except Exception as _ee_err:
+                                    app.logger.warning(f'[evolving_eye] trigger failed: {_ee_err}')
+
                                 # Item C — log rotation entries only on successful scoring,
                                 # so a failed/retried attempt doesn't burn a rotation slot.
                                 try:
@@ -11511,6 +11755,77 @@ def image_detail(image_id):
                            drawer_active=_drawer_active,
                            has_pending_eval=_has_pending_eval,
                            now=_now)
+
+
+
+@app.route('/my-eye')
+@login_required
+def evolving_eye():
+    """
+    SL-176: My Evolving Eye — So Far.
+    Renders the personal photographic advisory page.
+    Advisory is pre-generated at milestones — this just displays it.
+    If no advisory exists yet, shows a motivational prompt to keep shooting.
+    """
+    import json as _ej
+    _eye_json = db.session.execute(
+        db.text('SELECT evolving_eye_json, evolving_eye_milestone FROM users WHERE id = :uid'),
+        {'uid': current_user.id}
+    ).fetchone()
+
+    _advisory = None
+    _milestone = None
+    if _eye_json and _eye_json[0]:
+        try:
+            _advisory = _ej.loads(_eye_json[0])
+            _milestone = _eye_json[1]
+        except Exception:
+            pass
+
+    # Count scored images for context
+    _scored_count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+        {'uid': current_user.id}
+    ).scalar() or 0
+
+    _next_milestone = ((_scored_count // 10) + 1) * 10 if _scored_count < 10 else (((_scored_count // 10) + 1) * 10)
+    _images_to_next = _next_milestone - _scored_count
+
+    return render_template('evolving_eye.html',
+        advisory=_advisory,
+        milestone=_milestone,
+        scored_count=_scored_count,
+        next_milestone=_next_milestone,
+        images_to_next=_images_to_next,
+        now=datetime.utcnow()
+    )
+
+
+@app.route('/admin/generate-evolving-eye/<int:user_id>', methods=['POST'])
+@login_required
+def admin_generate_evolving_eye(user_id):
+    """
+    SL-176: Admin trigger to manually generate evolving eye advisory.
+    Used to send advisory emails to photographers before milestone automation.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+    import json as _aej
+
+    # Count their images
+    _count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+        {'uid': user_id}
+    ).scalar() or 0
+
+    if _count == 0:
+        return {'error': 'No scored images for this user'}, 400
+
+    # Use actual count as milestone
+    _milestone = max(10, (_count // 10) * 10) if _count >= 10 else _count
+    _generate_evolving_eye(user_id, _milestone)
+
+    return {'status': 'generating', 'user_id': user_id, 'milestone': _milestone, 'total_images': _count}
 
 
 @app.route('/image/<int:image_id>/score', methods=['POST'])
