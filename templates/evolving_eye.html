@@ -117,7 +117,7 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
       {% if advisory and advisory.generated_at %}&nbsp;·&nbsp; {{ advisory.generated_at[:10] }}{% endif %}
     </div>
   </div>
-  <a href="{{ url_for('download_evolving_eye_pdf') }}" class="ey-pdf-btn">↓ Save as PDF</a>
+  <a href="#" onclick="window.print();return false;" class="ey-pdf-btn">↓ Save as PDF</a>
 </div>
 
 {% if advisory %}
