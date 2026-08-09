@@ -1854,8 +1854,10 @@ def _run_startup_tasks():
                 # SL 175: Dashboard greeting — Claude-written personalised brief cached on user
                 # Refreshed after each evaluation. Zero dashboard latency.
                 db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_greeting_json TEXT DEFAULT NULL",
-                    # SL-176 perf: cache timestamp — stale-while-revalidate pattern
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_greeting_json TEXT DEFAULT NULL"
+                ))
+                # SL-176 perf: cache timestamp for stale-while-revalidate
+                db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_cache_ts TIMESTAMPTZ DEFAULT NULL"
                 ))
                 # SL 175: Dashboard caches — expensive query results cached on user
@@ -6010,6 +6012,8 @@ def _refresh_dash_caches(user_id):
             app.logger.info(f'[dash_cache] poty_tracker refreshed for user {user_id}')
         except Exception as _pt_err:
             app.logger.warning(f'[dash_cache] poty_tracker failed: {_pt_err}')
+            try: db.session.rollback()
+            except Exception: pass
 
         # ── AEA DASH ──────────────────────────────────────────────────────────
         try:
@@ -6121,6 +6125,8 @@ def _refresh_dash_caches(user_id):
             app.logger.info(f'[dash_cache] aea_dash refreshed for user {user_id}')
         except Exception as _aea_err:
             app.logger.warning(f'[dash_cache] aea_dash failed: {_aea_err}')
+            try: db.session.rollback()
+            except Exception: pass
 
         # ── WALLET HUD ────────────────────────────────────────────────────────
         try:
@@ -6153,6 +6159,8 @@ def _refresh_dash_caches(user_id):
             app.logger.info(f'[dash_cache] wallet_hud refreshed for user {user_id}')
         except Exception as _wh_err:
             app.logger.warning(f'[dash_cache] wallet_hud failed: {_wh_err}')
+            try: db.session.rollback()
+            except Exception: pass
 
         db.session.commit()
         app.logger.info(f'[dash_cache] all caches refreshed for user {user_id}')
