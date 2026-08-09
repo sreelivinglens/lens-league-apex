@@ -443,6 +443,77 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
       {% endif %}
 
+      {# ── WHAT SL DISCOVERED ABOUT YOU — visual, no text walls ── #}
+      {% if progress_data and progress_data.count and progress_data.count >= 2 %}
+      <div class="card" style="margin-bottom:10px;overflow:hidden">
+        {# Header #}
+        <div style="padding:14px 16px 12px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">What SL discovered about you</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark)">
+              {% if progress_data.count <= 5 %}What SL is seeing
+              {% elif progress_data.count <= 10 %}What's emerging
+              {% elif progress_data.count <= 20 %}Your photographic pattern
+              {% else %}How your eye is developing
+              {% endif %}
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:right">
+            {{ progress_data.count }} evaluation{% if progress_data.count != 1 %}s{% endif %}
+          </div>
+        </div>
+
+        {# 5 dimension bars — visual, scannable in 2 seconds #}
+        {% if progress_data.dimensions %}
+        <div style="padding:14px 16px">
+          {% set _dim_full = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'Visual Display (WOW)','disruption':'Disruption'} %}
+          {% for dim in progress_data.dimensions[:5] %}
+          {% if dim.label and dim.current %}
+          <div style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="font-size:13px;font-weight:600;color:var(--dark)">{{ _dim_full.get(dim.label, dim.label|title) }}</span>
+                {% if dim.label == progress_data.strongest %}
+                <span style="font-size:10px;font-weight:600;padding:2px 7px;background:#fef3c7;color:#92400e;border-radius:10px">Your Strongest</span>
+                {% elif dim.label == progress_data.weakest %}
+                <span style="font-size:10px;font-weight:600;padding:2px 7px;background:#ede9fe;color:#4a3280;border-radius:10px">Your Next Leap</span>
+                {% endif %}
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                {% if dim.delta is defined and dim.delta %}
+                  {% if dim.delta > 0 %}<span style="font-size:12px;color:var(--green);font-weight:600">↑ +{{ '%.1f'|format(dim.delta) }}</span>
+                  {% elif dim.delta < 0 %}<span style="font-size:12px;color:#C05A1A;font-weight:600">↓ {{ '%.1f'|format(dim.delta) }}</span>
+                  {% else %}<span style="font-size:12px;color:var(--muted)">→</span>{% endif %}
+                {% endif %}
+                <span style="font-size:14px;font-weight:700;color:var(--dark)">{{ '%.1f'|format(dim.current) }}</span>
+              </div>
+            </div>
+            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+              <div style="height:100%;border-radius:3px;background:{% if dim.label == progress_data.weakest %}#94a3b8{% else %}var(--gold){% endif %};width:{{ [(dim.current / 10 * 100)|round|int, 100]|min }}%;transition:width 0.6s ease"></div>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {# One sentence insight — bottom of card #}
+        {% if dash_greeting and dash_greeting.get('line2') %}
+        <div style="padding:0 16px 14px;border-top:0.5px solid var(--border);padding-top:12px;margin-top:2px">
+          <div style="font-size:14px;color:var(--text);line-height:1.65;font-style:italic">"{{ dash_greeting.line2 }}"</div>
+        </div>
+        {% elif progress_data.strongest and progress_data.weakest %}
+        <div style="padding:0 16px 14px;border-top:0.5px solid var(--border);padding-top:12px;margin-top:2px">
+          {% set _dim_human = {'dod':'technical difficulty','dm':'decisive moment','aq':'affective impact','wonder':'visual display','disruption':'creative disruption'} %}
+          <div style="font-size:14px;color:var(--text);line-height:1.65">
+            Your <strong style="color:var(--dark)">{{ _dim_human.get(progress_data.strongest, progress_data.strongest) }}</strong> is consistently your highest dimension.
+            The gap is in <strong style="color:var(--dark)">{{ _dim_human.get(progress_data.weakest, progress_data.weakest) }}</strong> — that's your next edge.
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
       {# ── LAYER 2: Location advisory ── #}
       {% if _has_mentor_data %}
 
