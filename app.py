@@ -5835,6 +5835,101 @@ Rules:
             pass
 
 
+def _clean_audit(audit, img):
+    """
+    SL-176: Post-process audit dict before saving to DB.
+    Runs after build_audit_data(), before set_audit().
+
+    Fixes applied:
+    1. Deduplicates master photographer references across sections
+    2. Trims takeaway bullets to 2 max
+    3. Guards B&W edit suggestion for colour-rich genres
+    4. Removes verbatim repeat sentences across sections
+    """
+    import re as _re_ca
+
+    if not audit:
+        return audit
+
+    try:
+        # ── 1. Deduplicate master references (e.g. Ernst Haas in 3 sections) ──
+        _ref_fields = [
+            'what_stood_out', 'transferable_advice', 'background_check',
+            'byline_1', 'byline_2', 'byline_2_body', 'affective_state',
+            'assignment_tomorrow', 'note_on_eye', 'body_of_work',
+        ]
+        _master_re = _re_ca.compile(r'Search:\s*([^.<\n]{3,60})\.', _re_ca.IGNORECASE)
+        _seen_masters = set()
+        for _field in _ref_fields:
+            _val = (audit.get(_field) or '')
+            for _m in _master_re.findall(_val):
+                _nm = _m.strip().lower()
+                if _nm in _seen_masters:
+                    # Remove the "**Name** ...sentence... Search: Name." block
+                    audit[_field] = _re_ca.sub(
+                        r'\s*\*?\*?' + _re_ca.escape(_m.strip()) + r'\*?\*?[^.!?]*[.!?]?\s*'
+                        r'Search:\s*' + _re_ca.escape(_m.strip()) + r'\s*\.',
+                        '', audit[_field], flags=_re_ca.IGNORECASE
+                    ).strip()
+                    app.logger.info(f'[clean_audit] deduped master ref "{_nm}" from {_field}')
+                else:
+                    _seen_masters.add(_nm)
+
+        # ── 2. Trim take-away to 2 bullets max ──────────────────────────────
+        for _ta_field in ('one_takeaway', 'sherpa_takeaway', 'byline_2', 'byline_2_body'):
+            _ta = (audit.get(_ta_field) or '')
+            if _ta and '\u25a0' in _ta:
+                _parts = [p.strip() for p in _ta.split('\u25a0') if p.strip()]
+                if len(_parts) > 2:
+                    audit[_ta_field] = '\u25a0 ' + ' \u25a0 '.join(_parts[:2])
+                    app.logger.info(f'[clean_audit] {_ta_field} trimmed to 2 bullets')
+
+        # ── 3. Guard B&W edit suggestion for colour-rich genres ─────────────
+        _genre = (getattr(img, 'genre', '') or '').lower()
+        _colour_genres = {'creative', 'wildlife', 'landscape', 'street',
+                          'travel', 'nature', 'sport', 'fashion', 'concert'}
+        _edit_creative = (audit.get('edit_creative') or '')
+        if _edit_creative and _genre in _colour_genres:
+            _bw_re = _re_ca.compile(
+                r'convert\s+to\s+black\s+and\s+white|to\s+b\s*&\s*w|monochrome',
+                _re_ca.IGNORECASE
+            )
+            if _bw_re.search(_edit_creative):
+                _subject = (getattr(img, 'subject', '') or '').lower()
+                _is_grey = any(w in _subject + _edit_creative.lower()
+                               for w in ('grey', 'gray', 'mist', 'fog', 'rain',
+                                         'storm', 'overcast', 'silhouette', 'shadow'))
+                if not _is_grey:
+                    audit['edit_creative'] = _bw_re.sub(
+                        'develop a distinctive colour treatment', _edit_creative
+                    )
+                    app.logger.info(f'[clean_audit] B&W guard applied for genre={_genre}')
+
+        # ── 4. Remove verbatim sentence repeats from secondary sections ──────
+        _primary = (audit.get('what_stood_out') or audit.get('hard_truth') or '').strip()
+        if _primary:
+            _primary_fps = set()
+            for _s in _re_ca.split(r'(?<=[.!?])\s+', _primary):
+                _fp = _re_ca.sub(r'\s+', ' ', _s.strip().lower())
+                if len(_fp) > 25:
+                    _primary_fps.add(_fp)
+            for _sf in ('transferable_advice', 'background_check', 'byline_2'):
+                _sv = (audit.get(_sf) or '')
+                if not _sv:
+                    continue
+                _sents = _re_ca.split(r'(?<=[.!?])\s+', _sv)
+                _cleaned = [s for s in _sents
+                            if _re_ca.sub(r'\s+', ' ', s.strip().lower()) not in _primary_fps]
+                if len(_cleaned) < len(_sents):
+                    audit[_sf] = ' '.join(_cleaned).strip()
+                    app.logger.info(f'[clean_audit] removed {len(_sents)-len(_cleaned)} repeat sents from {_sf}')
+
+    except Exception as _ca_err:
+        app.logger.warning(f'[clean_audit] non-fatal: {_ca_err}')
+
+    return audit
+
+
 def _refresh_dash_caches(user_id):
     """
     SL 175 — Refresh all expensive dashboard caches after evaluation.
@@ -8936,6 +9031,7 @@ def upload():
                                 if not _img.get_audit():
                                     try:
                                         audit = build_audit_data(result, _img)
+                                        audit = _clean_audit(audit, _img)  # SL-176
                                         _img.set_audit(audit)
                                     except Exception as _bf_audit_err:
                                         app.logger.warning(f'[scoring] breastfeeding audit save failed: {_bf_audit_err}')
@@ -9093,6 +9189,7 @@ def upload():
                                 _img.status           = 'scored'
                                 _img.scored_at        = datetime.utcnow()
                                 audit = build_audit_data(result, _img)
+                                audit = _clean_audit(audit, _img)  # SL-176: dedup, trim, B&W guard
                                 _img.set_audit(audit)
                                 if _sc_calendar_ids:
                                     _img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
@@ -10047,6 +10144,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
             img.status           = 'scored'
             img.scored_at        = datetime.utcnow()
             audit = build_audit_data(result, img)
+            audit = _clean_audit(audit, img)  # SL-176
             img.set_audit(audit)
 
             # ── Re-evaluate review/RAW-verification flags against the new score ──
@@ -10267,6 +10365,7 @@ def _retry_score_in_background(image_id, old_status):
             img.scored_at        = datetime.utcnow()
             _ensure_share_token(img)
             audit = build_audit_data(result, img)
+            audit = _clean_audit(audit, img)  # SL-176
             img.set_audit(audit)
             db.session.commit()
 
@@ -10740,6 +10839,7 @@ def upload_edited_version(image_id):
                         _img.status           = 'scored'
                         _img.scored_at        = datetime.utcnow()
                         audit = build_audit_data(result, _img)
+                        audit = _clean_audit(audit, _img)  # SL-176
                         _img.set_audit(audit)
                         db.session.commit()
 
@@ -15639,6 +15739,7 @@ def _recalibrate_audit_in_background(image_id, admin_reason, admin_caveat=''):
             )
 
             new_audit = build_audit_data(result, img)
+            new_audit = _clean_audit(new_audit, img)  # SL-176
             # build_audit_data() returns a fresh dict with no knowledge of the
             # admin_calibration_reason/caveat fields the calling route wrote
             # just before this thread started — preserve them explicitly, and
@@ -26737,6 +26838,7 @@ def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload
             img.status           = 'scored'
 
             audit = build_audit_data(result, img)
+            audit = _clean_audit(audit, img)  # SL-176
 
             # Append rescore log entry
             audit['recalibration_log'] = (img.get_audit() or {}).get('recalibration_log') or []
