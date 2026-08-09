@@ -138,6 +138,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
 .sc-em-inner{padding:17px 20px}
 .sc-em-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
+.sc-em-preview{font-size:15px;color:var(--sc-text);line-height:1.75;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sc-em-para{font-size:15px;color:var(--sc-text);line-height:1.75;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--sc-border)}
 .sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
 .sc-em-para strong{color:var(--sc-dark);font-weight:700}
@@ -147,11 +148,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
 .sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
 .sc-ta-eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.sc-ta-body{font-size:15px;color:var(--sc-dark);line-height:1.75}
-.sc-ta-body p{margin-bottom:10px}
-.sc-ta-body p:last-child{margin-bottom:0}
-.sc-ta-body strong{font-weight:700;color:var(--sc-dark)}
-.sc-ta-body a{color:var(--sc-gold-dk);text-decoration:underline}
+.sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:15px;color:var(--sc-dark);line-height:1.75}
+.sc-ta-preview{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sc-ta-full p,.sc-ta-preview p{margin-bottom:10px}
+.sc-ta-full p:last-child{margin-bottom:0}
+.sc-ta-full strong,.sc-ta-preview strong{font-weight:700;color:var(--sc-dark)}
+.sc-ta-full a,.sc-ta-preview a{color:var(--sc-gold-dk);text-decoration:underline}
 
 /* ── ACCORDION ── */
 .sc-acc-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);overflow:hidden;margin-bottom:10px}
@@ -240,14 +242,24 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   .sc-photo-hero img{height:220px;object-fit:contain;background:var(--sc-dark)}
   .sc-hud{padding:0 10px 10px}
   .sc-hud-pill{background:rgba(15,20,18,.80)}
-  .sc-hud-score{font-size:44px}
-  .sc-hud-denom{font-size:17px;margin-bottom:3px}
+  .sc-hud-score{font-size:42px}
+  .sc-hud-denom{font-size:16px;margin-bottom:3px}
   .sc-ddi-strip-desktop{display:none}
   .sc-ddi-mobile{display:block}
   .sc-acc-teaser{max-width:220px}
   .sc-act-bar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .sc-btn-back{grid-column:1/-1;text-align:center;margin-left:0}
   body.page-scorecard .sl-bottom-nav{display:flex !important}
+  /* 70yr rule: raise small text on mobile */
+  .sc-ddi-nm{font-size:11px !important}
+  .sc-ddi-tag{font-size:11px !important}
+  .sc-ddi-hint{font-size:12px !important}
+  .sc-photo-exif span{font-size:11px !important}
+  .sc-ev-badge{font-size:12px !important}
+  .sc-card-title{font-size:12px !important}
+  .sc-acc-teaser{font-size:14px !important}
+  .sc-dist-lbl{font-size:11px !important}
+  .sc-dist-ns{font-size:11px !important}
 }
 @media (min-width:769px){
   .sc-ddi-mobile{display:none}
@@ -410,32 +422,41 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       {# HUD PILL — always legible on any photo colour #}
       <div class="sc-hud">
         <div class="sc-hud-pill">
-          <div class="sc-hud-top">
-            <span class="sc-hud-score">{{ '%.2f'|format(image.score) if image.score else '—' }}</span>
-            <span class="sc-hud-denom">/10</span>
-            <div class="sc-hud-right">
-              <div class="sc-hud-tier">
+            {# Row 1: Score · title + genre · tier at far right #}
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:nowrap">
+              <span class="sc-hud-score">{{ '%.2f'|format(image.score) if image.score else '—' }}</span>
+              <span class="sc-hud-denom">/10</span>
+              <div style="flex:1;min-width:0;overflow:hidden">
+                {% if image.asset_name %}
+                <div style="font-size:15px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">{{ image.asset_name }}</div>
+                {% endif %}
+                {% if image.genre %}
+                <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:2px">{{ image.genre }}</div>
+                {% endif %}
+              </div>
+              <div class="sc-hud-tier" style="flex-shrink:0">
                 {% if image.tier == 'Grandmaster' %}👑{% elif image.tier == 'Master' %}🏅{% elif image.tier == 'Maverick' %}⚡{% elif image.tier == 'Artisan' %}🎨{% else %}📷{% endif %}
                 {{ image.tier or '—' }}
               </div>
+            </div>
+            {# Row 2: Photographer name #}
+            {% if _name %}
+            <div style="font-size:14px;color:rgba(255,255,255,.8);margin-bottom:4px;font-weight:500">{{ _name }}</div>
+            {% endif %}
+            {# Row 3: Standing · improvement · personal best #}
+            <div class="sc-hud-bot">
+              {% if stats and stats.avg_score and image.score %}
+                {% set _diff = (image.score - stats.avg_score) | round(2) %}
+                {% if _diff > 0 %}<span class="sc-hud-impr">↑ {{ '%+.2f'|format(_diff) }} above your average</span>
+                {% elif _diff < 0 %}<span style="font-size:13px;color:#fca5a5;font-weight:600">{{ '%+.2f'|format(_diff) }} vs your average</span>
+                {% endif %}
+              {% endif %}
+              {% if _pct_display %}
+              <span class="sc-hud-pct">Top {{ _pct_display }}% of photographers on SL</span>
+              {% endif %}
               {% if _is_pb %}<div class="sc-hud-pb">↑ Personal best</div>{% endif %}
-              <div class="sc-hud-meta">{{ _name }}{% if _scored_date %} &nbsp;·&nbsp; {{ _scored_date }}{% endif %}</div>
             </div>
           </div>
-          <div class="sc-hud-bot">
-            {% if stats and stats.avg_score and image.score %}
-              {% set _diff = (image.score - stats.avg_score) | round(2) %}
-              {% if _diff > 0 %}
-              <span class="sc-hud-impr">↑ {{ '%+.2f'|format(_diff) }} above your average</span>
-              {% elif _diff < 0 %}
-              <span style="font-size:12px;color:#fca5a5;font-weight:600">{{ '%+.2f'|format(_diff) }} vs your average</span>
-              {% endif %}
-            {% endif %}
-            {% if _pct_display %}
-            <span class="sc-hud-pct">Top {{ _pct_display }}% of photographers on SL</span>
-            {% endif %}
-          </div>
-        </div>
       </div>
     </div>
 
@@ -541,17 +562,23 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div class="sc-eval-means">
       <div class="sc-em-bl"></div><div class="sc-em-br"></div>
       <div class="sc-em-inner">
-        <span class="sc-em-title">What this evaluation means</span>
+        {# Header row with chevron — taps to collapse/expand #}
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="scToggleEvalMeans(this)">
+        <span class="sc-em-title" style="margin-bottom:0">What this evaluation means</span>
+        <span style="font-size:20px;color:var(--sc-muted);transition:transform .2s;display:inline-block" id="sc-em-chev">⌄</span>
+      </div>
+      {# 3-line preview, rest hidden — chevron expands #}
+      <div class="sc-em-preview">
+        {{ _eval_means | truncate(280) | safe }}
+      </div>
+      <div class="sc-em-full" id="sc-em-full" style="display:none">
         {% if _eval_means %}
         <div class="sc-em-para sc-render-text">{{ _eval_means | safe }}</div>
         {% endif %}
-        {# Show eval_means_2 only if genuinely different content from takeaway #}
         {% if _eval_means_2 and _eval_means_2 != _takeaway %}
-        <div id="sc-means-extra" style="display:none">
-          <div class="sc-em-para sc-render-text">{{ _eval_means_2 | safe }}</div>
-        </div>
-        <button class="sc-rm" onclick="scToggleMeans(this)">See full analysis ↓</button>
+        <div class="sc-em-para sc-render-text">{{ _eval_means_2 | safe }}</div>
         {% endif %}
+      </div>
       </div>
     </div>
     {% endif %}
@@ -579,8 +606,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {# ⑤ YOUR ONE TAKE-AWAY — warm fill, NOT dark, stands out through colour not bold #}
     {% if _takeaway %}
     <div class="sc-takeaway">
-      <div class="sc-ta-eyebrow">⭐ Your one take-away</div>
-      <div class="sc-ta-body sc-render-text">{{ _takeaway | safe }}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px" onclick="scToggleTakeaway(this)">
+        <div class="sc-ta-eyebrow" style="margin-bottom:0">⭐ Your one take-away</div>
+        <span style="font-size:20px;color:var(--sc-gold-dk);transition:transform .2s;display:inline-block" id="sc-ta-chev">⌄</span>
+      </div>
+      {# 3-line preview, rest hidden — chevron expands #}
+      <div class="sc-ta-preview sc-render-text">{{ _takeaway | truncate(280) | safe }}</div>
+      <div class="sc-ta-full sc-render-text" id="sc-ta-full" style="display:none">{{ _takeaway | safe }}</div>
     </div>
     {% endif %}
 
@@ -891,6 +923,30 @@ function scToggleAcc(row) { row.classList.toggle('open'); }
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.sc-acc-row').forEach(function(r){ r.classList.remove('open'); });
 });
+
+/* ── Eval means toggle — 3-line preview, expand on tap ── */
+function scToggleEvalMeans(hdr) {
+  var preview = hdr.nextElementSibling;  /* sc-em-preview */
+  var full = document.getElementById('sc-em-full');
+  var chev = document.getElementById('sc-em-chev');
+  if (!full) return;
+  var open = full.style.display !== 'none';
+  if (preview) preview.style.display = open ? '' : 'none';
+  full.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+/* ── Takeaway toggle — 3-line preview, expand on tap ── */
+function scToggleTakeaway(hdr) {
+  var preview = document.querySelector('.sc-ta-preview');
+  var full = document.getElementById('sc-ta-full');
+  var chev = document.getElementById('sc-ta-chev');
+  if (!full) return;
+  var open = full.style.display !== 'none';
+  if (preview) preview.style.display = open ? '' : 'none';
+  full.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
 
 /* ── Eval means expand ── */
 function scToggleMeans(el) {
