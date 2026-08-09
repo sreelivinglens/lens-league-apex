@@ -82,7 +82,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-photo-copyright{position:absolute;bottom:8px;right:10px;font-size:10px;color:rgba(255,255,255,.5)}
 /* HUD pill on photo */
 .sc-hud{position:absolute;bottom:0;left:0;right:0;padding:0 14px 12px}
-.sc-hud-pill{background:rgba(180,175,168,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:10px 14px;border:0.5px solid rgba(255,255,255,.18)}
+.sc-hud-pill{background:rgba(15,18,15,0.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:10px;padding:10px 14px;border:0.5px solid rgba(255,255,255,.15)}
 .sc-hud-top{display:flex;align-items:flex-end;gap:9px;margin-bottom:5px;flex-wrap:wrap}
 .sc-hud-score{font-size:52px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.025em}
 .sc-hud-denom{font-size:20px;font-weight:400;color:rgba(255,255,255,.45);margin-bottom:4px}
@@ -138,7 +138,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
 .sc-em-inner{padding:17px 20px}
 .sc-em-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
-.sc-em-para{font-size:15px;color:var(--sc-text);line-height:1.75;margin-bottom:12px;padding-bottom:12px;border-bottom:0.5px solid var(--sc-border)}
+.sc-em-para{font-size:15px;color:var(--sc-text);line-height:1.75;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--sc-border)}
 .sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
 .sc-em-para strong{color:var(--sc-dark);font-weight:700}
 .sc-em-para a{color:var(--sc-gold-dk);text-decoration:underline}
@@ -165,7 +165,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-acc-col{flex:1;min-width:0}
 .sc-acc-title{font-size:14px;font-weight:600;color:var(--sc-dark);line-height:1.3}
 .sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
-.sc-acc-chev{font-size:11px;color:var(--sc-muted);flex-shrink:0;margin-top:4px;transition:transform .2s;display:inline-block}
+.sc-acc-chev{font-size:18px;color:var(--sc-muted);flex-shrink:0;margin-top:2px;transition:transform .2s;display:inline-block;line-height:1}
 .sc-acc-row.open .sc-acc-chev{transform:rotate(180deg)}
 /* All accordions CLOSED by default */
 .sc-acc-body{display:none;padding:4px 17px 15px 53px;font-size:15px;color:var(--sc-text);line-height:1.75}
@@ -326,17 +326,26 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {# Scored date #}
 {% set _scored_date = image.scored_at.strftime('%-d %b %Y') if image.scored_at else '' %}
 
-{# Strongest and weakest DDI #}
-{% set _ddi_map = {'dod_score': ('Difficulty','🏔️'), 'disruption_score': ('Disruption','⚡'), 'dm_score': ('Decisive Moment','🎯'), 'wonder_score': ('Visual Display','⭐'), 'aq_score': ('Affective Q.','❤️')} %}
-{% set _strongest_val = 0 %}{% set _strongest_nm = '' %}
-{% set _weakest_val = 10 %}{% set _weakest_nm = '' %}
-{% for _ak, _av in _ddi_map.items() %}
+{# Strongest and weakest DDI — using namespace to persist values across loop #}
+{% set _ns = namespace(strongest_val=0, strongest_nm='', weakest_val=10.0, weakest_nm='') %}
+{% set _ddi_pairs = [
+  ('dod_score', 'Difficulty'),
+  ('disruption_score', 'Disruption'),
+  ('dm_score', 'Decisive Moment'),
+  ('wonder_score', 'Visual Display'),
+  ('aq_score', 'Affective Q.'),
+] %}
+{% for _ak, _anm in _ddi_pairs %}
   {% set _dv = image|attr(_ak) if image|attr(_ak) is not none else none %}
-  {% if _dv %}
-    {% if _dv > _strongest_val %}{% set _strongest_val = _dv %}{% set _strongest_nm = _av[0] %}{% endif %}
-    {% if _dv < _weakest_val %}{% set _weakest_val = _dv %}{% set _weakest_nm = _av[0] %}{% endif %}
+  {% if _dv is not none and _dv > 0 %}
+    {% if _dv > _ns.strongest_val %}{% set _ns.strongest_val = _dv %}{% set _ns.strongest_nm = _anm %}{% endif %}
+    {% if _dv < _ns.weakest_val %}{% set _ns.weakest_val = _dv %}{% set _ns.weakest_nm = _anm %}{% endif %}
   {% endif %}
 {% endfor %}
+{% set _strongest_val = _ns.strongest_val %}
+{% set _strongest_nm = _ns.strongest_nm %}
+{% set _weakest_val = _ns.weakest_val %}
+{% set _weakest_nm = _ns.weakest_nm %}
 
 <div class="sc-wrap">
 
@@ -414,6 +423,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
             </div>
           </div>
           <div class="sc-hud-bot">
+            {% if stats and stats.avg_score and image.score %}
+              {% set _diff = (image.score - stats.avg_score) | round(2) %}
+              {% if _diff > 0 %}
+              <span class="sc-hud-impr">↑ {{ '%+.2f'|format(_diff) }} above your average</span>
+              {% elif _diff < 0 %}
+              <span style="font-size:12px;color:#fca5a5;font-weight:600">{{ '%+.2f'|format(_diff) }} vs your average</span>
+              {% endif %}
+            {% endif %}
             {% if _pct_display %}
             <span class="sc-hud-pct">Top {{ _pct_display }}% of photographers on SL</span>
             {% endif %}
@@ -636,26 +653,31 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
       {% endif %}
 
-      {# Next shot — CREAM/GREEN background, NEVER dark on scorecard #}
+      {# Next shot — CREAM/GREEN, NEVER dark. Show both locations if present #}
       {% if _mentor_1 %}
       <div class="sc-next-shot">
         <div class="sc-ns-eyebrow">📍 Your next shot — bookmarked</div>
-        <div class="sc-ns-location">{{ _mentor_1.split('\n')[0] if '\n' in _mentor_1 else (_mentor_1[:80] if _mentor_1|length > 80 else _mentor_1) }}</div>
+        {# Location 1 #}
+        <div style="margin-bottom:{% if _mentor_2 %}12px{% else %}0{% endif %}">
+          <div class="sc-ns-location">
+            {%- set _loc1_title = _mentor_1.split('.')[0] if '.' in _mentor_1[:60] else _mentor_1[:60] -%}
+            {{ _loc1_title }}
+          </div>
+          <div style="font-size:13px;color:var(--sc-text);line-height:1.6;margin-top:4px">{{ _mentor_1 }}</div>
+          <div class="sc-ns-cta-row" style="margin-top:8px">
+            <a href="https://maps.google.com/?q={{ _mentor_1.split('.')[0] | urlencode }}" target="_blank" rel="noopener" class="sc-ns-btn">Go shoot →</a>
+          </div>
+        </div>
+        {# Location 2 — if present #}
         {% if _mentor_2 %}
-        <div class="sc-ns-spec">
-          <span class="sc-ns-spec-lbl">Details</span>
-          <span class="sc-ns-spec-val">{{ _mentor_2 }}</span>
+        <div style="border-top:1px solid var(--sc-pista-b);padding-top:12px;margin-top:4px">
+          <div class="sc-ns-eyebrow" style="margin-bottom:4px">📍 Also nearby</div>
+          <div style="font-size:13px;color:var(--sc-text);line-height:1.6">{{ _mentor_2 }}</div>
+          <div class="sc-ns-cta-row" style="margin-top:8px">
+            <a href="https://maps.google.com/?q={{ _mentor_2.split('.')[0] | urlencode }}" target="_blank" rel="noopener" class="sc-ns-btn-ghost">Go shoot →</a>
+          </div>
         </div>
         {% endif %}
-        {% if _mentor_1|length > 80 %}
-        <div class="sc-ns-spec">
-          <span class="sc-ns-spec-lbl">Location</span>
-          <span class="sc-ns-spec-val">{{ _mentor_1 }}</span>
-        </div>
-        {% endif %}
-        <div class="sc-ns-cta-row">
-          <a href="https://maps.google.com/?q={{ _mentor_1 | urlencode }}" target="_blank" rel="noopener" class="sc-ns-btn">Go shoot →</a>
-        </div>
       </div>
       {% elif location_links %}
       {% for loc in location_links[:1] %}
@@ -738,7 +760,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div class="sc-dev-block">
       <div class="sc-card-hdr">
         <span class="sc-card-title">How you're developing</span>
-        <a href="{{ url_for('my_gallery') }}" class="sc-card-link">View full journey →</a>
+
       </div>
       {% with _dims = portfolio_data.dimensions %}
       {% if _dims %}{% set _ov = _dims[0] %}
@@ -864,8 +886,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 <script>
 /* SL image_detail v176.11 — no Jinja2 in this block */
 
-/* ── Accordion toggle ── */
+/* ── Accordion toggle — all closed on load ── */
 function scToggleAcc(row) { row.classList.toggle('open'); }
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.sc-acc-row').forEach(function(r){ r.classList.remove('open'); });
+});
 
 /* ── Eval means expand ── */
 function scToggleMeans(el) {
@@ -919,8 +944,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     /* Convert **bold** to <strong> — only specific words, not entire paragraphs */
     raw = raw.replace(/\*\*([^*\n]{1,60})\*\*/g, '<strong>$1</strong>');
-    /* Convert Search: X. to a Google Images link — master references */
-    raw = raw.replace(/Search:\s*([^.<\n]+)\./g, function(m, term) {
+    /* Convert "Search: X." and bare "X motion photography." to Google Images link */
+    /* Pattern 1: explicit Search: prefix */
+    raw = raw.replace(/Search:\s*([^.<\n]{5,60})\./g, function(m, term) {
+      var q = encodeURIComponent(term.trim() + ' photography');
+      return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
+    });
+    /* Pattern 2: "Name motion photography." without Search: prefix */
+    raw = raw.replace(/([A-Z][a-z]+ [A-Z][a-z]+(?:\s+[A-Za-z]+)?\s+(?:motion|street|wildlife|documentary|landscape)\s+photography)\./, function(m, term) {
       var q = encodeURIComponent(term.trim());
       return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
     });
