@@ -4027,12 +4027,11 @@ def login():
         try:
             import threading as _login_th
             if getattr(user, 'is_subscribed', False) and user.role != 'admin':
-                _cache_thread = _login_th.Thread(
-                    target=_refresh_dash_caches,
-                    args=(user.id,),
-                    daemon=True
-                )
-                _cache_thread.start()
+                _uid_for_cache = user.id
+                def _warm_with_ctx():
+                    with app.app_context():
+                        _refresh_dash_caches(_uid_for_cache)
+                _login_th.Thread(target=_warm_with_ctx, daemon=True).start()
         except Exception as _lc_err:
             app.logger.warning(f'[login] cache warm failed: {_lc_err}')
 
@@ -4647,11 +4646,11 @@ def dashboard():
         if _aea_stale and aea_dash is not None:
             try:
                 import threading as _stale_th
-                _stale_th.Thread(
-                    target=_refresh_dash_caches,
-                    args=(current_user.id,),
-                    daemon=True
-                ).start()
+                _uid_stale = current_user.id
+                def _stale_warm():
+                    with app.app_context():
+                        _refresh_dash_caches(_uid_stale)
+                _stale_th.Thread(target=_stale_warm, daemon=True).start()
                 app.logger.info(f'[dashboard] aea_dash stale — background refresh for user {current_user.id}')
             except Exception as _se:
                 app.logger.warning(f'[dashboard] stale revalidate failed: {_se}')
