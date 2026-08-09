@@ -2,7 +2,7 @@
 {# SL-VERSION: image_detail-176.10 (Scorecard redesign — Apex DDI, revelation-first, accordion insights, HUD pill, gold corners, mobile-responsive; session 176, 2026-08-09) #}
 {% block title %}{{ image.asset_name or 'Evaluation' }} — Shutter League{% endblock %}
 {% block meta_description %}Shutter League evaluation for {{ image.asset_name or 'your photograph' }}. Scored {{ '%.2f'|format(image.score) if image.score else '' }} — {{ image.tier or '' }}.{% endblock %}
-{% block body_class %}page-dashboard page-scorecard{% endblock %}
+{% block body_class %}page-scorecard{% endblock %}
 
 {% block extra_head %}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -325,11 +325,11 @@ body.page-scorecard #backToTop         { display:none !important }
   <div class="sc-nav-links">
     <a class="sc-nl" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="sc-nl" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sc-nl" href="{{ url_for('gallery') }}">My Gallery</a>
+    <a class="sc-nl" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="sc-nl active" href="#">Improve</a>
     <a class="sc-nl" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-nl" href="{{ url_for('explore') }}">Explore</a>
-    <a class="sc-nl" href="{{ url_for('portfolio') }}">Portfolio</a>
+    <a class="sc-nl" href="{{ url_for('dashboard') }}">Explore</a>
+    <a class="sc-nl" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
   </div>
   {% if current_user.is_authenticated %}
   <a href="{{ url_for('profile') }}" class="sc-av">{{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}</a>
@@ -343,15 +343,15 @@ body.page-scorecard #backToTop         { display:none !important }
     <span class="sc-si-lbl">Main</span>
     <a class="sc-si" href="{{ url_for('dashboard') }}">Dashboard</a>
     <a class="sc-si" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sc-si" href="{{ url_for('gallery') }}">My Gallery</a>
+    <a class="sc-si" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="sc-si active" href="#">Improve</a>
     <a class="sc-si" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-si" href="{{ url_for('explore') }}">Explore</a>
-    <a class="sc-si" href="{{ url_for('portfolio') }}">Portfolio</a>
+    <a class="sc-si" href="{{ url_for('dashboard') }}">Explore</a>
+    <a class="sc-si" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
     <span class="sc-si-lbl">More</span>
-    <a class="sc-si" href="{{ url_for('mentor_review') }}">Mentor Review</a>
+    <a class="sc-si" href="{{ url_for('mentors') }}">Mentor Review</a>
     <a class="sc-si" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
-    <a class="sc-si" href="{{ url_for('settings') }}">Settings</a>
+    <a class="sc-si" href="{{ url_for('profile') }}">Settings</a>
   </nav>
 
   {# ── MAIN CENTRE ── #}
@@ -776,9 +776,9 @@ body.page-scorecard #backToTop         { display:none !important }
 
     {# ⑧ ACTION BAR #}
     <div class="sc-act-bar">
-      <a href="{{ url_for('share_image', image_id=image.id) if 'share_image' in dir() else '#' }}" class="sc-btn-gold">↑ Share Scorecard</a>
+      <a href="{{ '#' }}" class="sc-btn-gold">↑ Share Scorecard</a>
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save to Gallery</a>
-      <a href="{{ url_for('mentor_review') }}" class="sc-btn-ghost">👤 Get Mentor Review</a>
+      <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Get Mentor Review</a>
       <a href="{{ url_for('dashboard') }}" class="sc-btn-back">← Back to Dashboard</a>
     </div>
 
