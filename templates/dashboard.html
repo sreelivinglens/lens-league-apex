@@ -90,8 +90,8 @@ body.page-dashboard #backToTop         { display:none !important }
 .et{flex:1;min-width:0}
 .eti{aspect-ratio:1;border-radius:6px;position:relative;margin-bottom:2px;overflow:hidden}
 .eti img{width:100%;height:100%;object-fit:cover;display:block}
-.escore{font-size:13px;font-weight:600;color:var(--dark);display:block;line-height:1.4}
-.edate{font-size:13px;color:var(--muted);display:block;line-height:1.4}
+.escore{font-size:13px;font-weight:600;color:var(--dark);display:block;line-height:1.4;white-space:nowrap}
+.edate{font-size:13px;color:var(--muted);display:block;line-height:1.4;white-space:nowrap}
 .et-desktop-only{display:flex}
 
 /* ── TRAIN YOUR EYE image container ── */
@@ -324,7 +324,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
     {# ── POST-PAYMENT WELCOME ── #}
     {% if just_subscribed %}
-    {% set _track_label = {'camera':'Camera League','mobile':'Mobile League','learning':'Learning Only','mentor':'Human + AI Mentor'}.get(just_subscribed, just_subscribed|title) %}
+    {% set _track_label = {'camera':'Shutter League','mobile':'Shutter League','learning':'Learning Only','mentor':'Human + AI Mentor'}.get(just_subscribed, just_subscribed|title) %}
     <div style="background:#2C3E6B;border-radius:13px;padding:20px 22px;color:#fff;">
       <div style="font-size:16px;font-weight:600;color:#F5C518;margin-bottom:6px;">Welcome to {{ _track_label }}.</div>
       <div style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:10px;">Your membership is active. Upload your first photograph and begin.</div>
@@ -334,7 +334,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
     {# ── CARD 1: GREETING — three human sentences ── #}
     <div class="card card-greeting">
-      <div class="greeting-name">{{ ns.greeting }}, {% if progress_data and progress_data.highest_tier %}<span style="font-size:13px;font-weight:600;color:var(--gold-dk);letter-spacing:0.5px;vertical-align:middle;">{{ progress_data.highest_tier }}</span> {% endif %}{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
+      <div class="greeting-name">{{ ns.greeting }}, {% if progress_data and progress_data.highest_tier %}<span style="font-size:20px;font-weight:600;color:var(--gold-dk);letter-spacing:0.3px;vertical-align:baseline;">{{ progress_data.highest_tier }}</span> {% endif %}{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
 
       {% if _last and _last.score %}
       <div class="score-row">
@@ -417,6 +417,39 @@ body.page-dashboard #backToTop         { display:none !important }
     {# ── CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE ── #}
     {% set _has_mentor_data = (dash_advisory and dash_advisory.get('location_name')) or dash_live_event %}
     {% if _has_mentor_data or _show_bottom %}
+
+    {# ── TODAY'S MISSION card — from progress_data.weakest (SL-176 restore) ── #}
+    {% if show_mission and progress_data and progress_data.weakest %}
+    {% set _mission_dim_titles = {
+      'dod':        'The Difficult Frame',
+      'disruption': 'Disruption That Serves the Subject',
+      'dm':         'The Decisive Moment',
+      'wonder':     'Finding Wonder',
+      'aq':         'Making the Image Matter'
+    } %}
+    {% set _mission_dim_desc = {
+      'dod':        'Choose a scene that costs you something. Move closer, lower, into the frame. The difficult shot is the one most photographers walk past.',
+      'disruption': 'Before every frame: walk past the obvious position. Find the angle that makes the expected scene strange. That one step is the difference.',
+      'dm':         'Stay on the subject longer than feels necessary. The peak moment is almost always one second after you would have pressed the shutter.',
+      'wonder':     'Find the thing in this scene that does not belong. The unexpected detail is almost always there — most photographers stop looking too soon.',
+      'aq':         'Before you press the shutter: name the feeling this frame creates. If you cannot name it, find the frame that creates a specific one.'
+    } %}
+    <div class="card" style="background:#1A2A1A;border:0.5px solid #2A4A2A;border-radius:13px;padding:18px 20px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Today's Mission</div>
+      <div style="font-size:19px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:10px">{{ _mission_dim_titles.get(progress_data.weakest, 'Work on Your Eye') }}</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Focus</div>
+      <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:14px">{{ progress_data.weakest | replace('dod','Depth of Difficulty') | replace('disruption','Disruption') | replace('dm','Decisive Moment') | replace('wonder','WOW Factor') | replace('aq','Aesthetic Quality') }}</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:16px">{{ _mission_dim_desc.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <a href="{{ url_for('mission') }}" style="background:var(--gold);color:#1A1814;font-size:14px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;display:inline-block">Begin Today's Practice →</a>
+        <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <button type="submit" style="background:none;border:none;font-size:13px;color:rgba(255,255,255,0.45);cursor:pointer;text-decoration:underline;padding:0">or Skip for now</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="card card-mentor">
       <div class="ey" style="margin-bottom:6px">Mentor Advice</div>
 
@@ -436,10 +469,22 @@ body.page-dashboard #backToTop         { display:none !important }
         'wonder':     'Look for the thing that doesn\'t belong. The unexpected detail is almost always there.',
         'aq':         'Ask what feeling this image creates. If you can\'t name it, the viewer won\'t feel it either.'
       } %}
+      {% set _dim_detail = {
+        'dod':        'The photographers who score highest in Difficulty are those who put themselves in physically or socially demanding positions — closer, lower, inside the action, at the edge of the crowd. Your next shoot: find one moment that made you slightly uncomfortable to photograph. That discomfort is the score.',
+        'disruption': 'The unexpected angle is almost always available — most photographers just do not look for it. Before every frame: walk past the obvious position. Stand lower, higher, behind a foreground element, or wait for an element to move into the geometry. The disruption is there.',
+        'dm':         'The decisive moment is rarely where you first think it is. The approach, the gesture before the peak, the face one second after the action — these are the frames that carry emotional weight. Stay on the subject longer than feels necessary.',
+        'wonder':     'The WOW Factor comes from surprise — the detail that does not belong, the relationship between two elements the viewer did not expect. Train yourself to ask: what in this frame will stop someone mid-scroll?',
+        'aq':         'Aesthetic Quality is the invisible dimension — it measures whether the image creates a specific emotional response. Before uploading your next image, ask: what does this make someone feel? If the answer is nothing specific, look for the frame that creates a named feeling.'
+      } %}
       <div style="background:var(--cream);border-radius:9px;padding:10px 12px;margin-bottom:10px;border-left:3px solid var(--gold)">
         <div style="font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:3px">Work on this</div>
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:4px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.75">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.75;margin-bottom:6px">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
+        <span class="rm" id="wot-rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:13px;color:var(--gold-dk)">What this means →</span>
+        <div class="expanded" id="wot-exp">
+          <div style="font-size:13px;color:var(--text);line-height:1.75;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">{{ _dim_detail.get(progress_data.weakest, 'Study your last five images in this dimension and identify the pattern.') }}</div>
+          <span class="rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:13px;color:var(--gold-dk)">View less →</span>
+        </div>
       </div>
       {% endif %}
 
@@ -751,14 +796,14 @@ body.page-dashboard #backToTop         { display:none !important }
       <div class="es">
         {% for img in images.items[:5] if images and images.items %}
         {% if img.score and img.thumb_url %}
-        <div class="et {% if loop.index > 3 %}et-desktop-only{% endif %}">
+        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="et {% if loop.index > 3 %}et-desktop-only{% endif %}" style="text-decoration:none;display:block;">
           <div class="eti">
             <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'Photo' }}" loading="lazy" onerror="this.parentNode.style.cssText='aspect-ratio:1;background:var(--border);border-radius:6px;';this.remove()">
             <div style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;font-size:13px;font-weight:600;padding:2px 5px;border-radius:3px">{{ '%.1f'|format(img.score) }}</div>
           </div>
           <div class="escore" style="display:block;line-height:1.4">{{ '%.1f'|format(img.score) }}</div>
           <div class="edate" style="display:block;line-height:1.4">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-        </div>
+        </a>
         {% endif %}
         {% endfor %}
       </div>
@@ -770,7 +815,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {% if progress_data %}
     <div class="card card-standing-mob" style="display:none">
       <div style="text-align:center;padding:8px 0">
-        <div style="font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Your Standing · Camera League</div>
+        <div style="font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Your Standing · Shutter League</div>
         <div style="font-size:17px;font-weight:600;color:var(--dark);margin-bottom:2px">👑 {{ progress_data.highest_tier or progress_data.avg_tier }}</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:6px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
         {% if progress_data.overall_pct %}
@@ -786,8 +831,22 @@ body.page-dashboard #backToTop         { display:none !important }
     {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue or _show_bottom %}
     <div class="card-brhills card-train" id="nearby-opportunity" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
 
-      {# LEFT: NEAREST OPPORTUNITY — redesigned with structured chips (SL 175.20) #}
-      {% if dash_live_event %}
+      {# LEFT: NEAREST OPPORTUNITY — must show DIFFERENT location from Tonight's Shot #}
+      {# If live event exists, show advisory (different location) or second location here #}
+      {% if dash_live_event and dash_advisory and dash_advisory.get('location_name') and dash_advisory.location_name != dash_live_event.location_name %}
+      {# Show advisory as nearby when live event is Tonight's Shot #}
+      <div style="background:var(--pista);border-radius:13px;border:0.5px solid var(--pista-b);padding:16px 18px;height:100%">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="ey" style="margin-bottom:0;color:#3A6B2A">Nearby Opportunity · Now</div>
+          {% if dash_advisory.get('genre') %}<span style="padding:2px 7px;border-radius:9px;border:1px solid var(--pista-b);font-size:13px;font-weight:600;color:#3A6B2A;background:#fff">{{ dash_advisory.genre|title }}</span>{% endif %}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#1A2A1A;margin-bottom:2px">{{ dash_advisory.location_name }}</div>
+        {% if dash_advisory.get('subject') %}<div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:6px">{{ dash_advisory.subject }}</div>{% endif %}
+        <div style="font-size:13px;color:#4A5A3A;line-height:1.6;margin-bottom:8px">{{ (dash_advisory.what_is_happening or '')[:120] }}{% if (dash_advisory.what_is_happening or '')|length > 120 %}…{% endif %}</div>
+        <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:#1A2A1A;color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:7px;text-decoration:none;display:inline-block;">📍 Get directions →</a>
+      </div>
+      {% elif dash_live_event and (not dash_advisory or not dash_advisory.get('location_name') or dash_advisory.location_name == dash_live_event.location_name) %}
+      {# Live event IS the nearby — show condensed version with different angle #}
       {# LIVE EVENT path — hero treatment matching Mentor Advice card #}
       {% set _le_shot_time = dash_live_event.get('shot_time') or dash_live_event.get('best_light_time') or '' %}
       {% set _le_tech = dash_live_event.get('technical_tip') or '' %}
@@ -904,7 +963,6 @@ body.page-dashboard #backToTop         { display:none !important }
           <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">Every evaluation trains your eye to see photographs the way a judge or editor sees them. When your rating matches the engine, you earn a credit and help another photographer receive feedback.</div>
           <span class="rm" onclick="toggleSpan('tye-exp','tye-rm')">View less →</span>
         </div>
-        <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:3px">2 minutes · +1 credit</div>
       </div>
       {% else %}
       {# STAGING PLACEHOLDER — remove _show_bottom before merge to main #}
@@ -921,7 +979,6 @@ body.page-dashboard #backToTop         { display:none !important }
           <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">Every evaluation trains your eye to see photographs the way a judge or editor sees them. When your rating matches the engine, you earn a credit and help another photographer receive feedback.</div>
           <span class="rm" onclick="toggleSpan('tye-stg-exp','tye-stg-rm')">View less →</span>
         </div>
-        <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:3px">2 minutes · +1 credit</div>
       </div>
       {% endif %}
       {% endif %}
@@ -934,58 +991,59 @@ body.page-dashboard #backToTop         { display:none !important }
   {# ── RIGHT PANEL ── #}
   <div class="rpanel">
 
-    {# RANK CARD — trophy or percentile state #}
-    <div class="rank-card rp-rank">
-      {% if aea_dash and aea_dash.league_rank and aea_dash.league_rank <= 50 %}
-      {# TROPHY STATE #}
-      <div class="rl" style="margin-bottom:10px">Your Standing<br><span style="font-size:13px;letter-spacing:0.5px">{{ 'Camera' if current_user.subscription_track == 'camera' else 'Mobile' }} League</span></div>
-      <div style="display:flex;align-items:flex-start;gap:1px;line-height:1;margin-bottom:4px">
-        <span style="font-size:20px;font-weight:600;color:var(--gold);padding-top:5px;opacity:0.7">'</span>
-        <span style="font-size:52px;font-weight:700;color:var(--gold);letter-spacing:-2px;line-height:1.5">{{ aea_dash.league_rank }}</span>
+    {# RANK CARD — AEA dark navy card (SL-176 restore) #}
+    <div style="background:#13254B;border-radius:13px;padding:14px 16px;margin-bottom:8px">
+
+      {# Header: trophy + title #}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid rgba(255,255,255,0.12)">
+        <img src="{{ url_for('static', filename='img/aea-badge.png') }}" width="36" height="36" alt="AEA" onerror="this.style.display='none'" style="border-radius:4px;flex-shrink:0">
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);line-height:1.2">Annual Excellence Award</div>
+          {% if aea_dash and aea_dash.qualified %}
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:1px">Qualified · Shutter League</div>
+          {% else %}
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:1px">Shutter League</div>
+          {% endif %}
+        </div>
       </div>
-      {% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
-      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:10px">
-        {% if progress_data.trend[-1].score > progress_data.trend[-2].score %}<span style="color:var(--green);font-weight:600">↑ climbing</span>{% else %}<span style="color:var(--muted)">→ steady</span>{% endif %} &nbsp; last month
+
+      {% if aea_dash and aea_dash.top6_avg %}
+      {# AEA score #}
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+        <span style="font-size:42px;font-weight:700;color:var(--gold);letter-spacing:-1.5px;line-height:1">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.3">AEA average evaluation</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.3">top 6 images · all interests</div>
+        </div>
       </div>
-      {% endif %}
-      <div style="height:0.5px;background:var(--border);margin-bottom:10px"></div>
-      {% elif aea_dash and aea_dash.percentile %}
-      {# PERCENTILE STATE — never show raw rank number #}
-      <div class="rl" style="margin-bottom:10px">Your Standing<br><span style="font-size:13px;letter-spacing:0.5px">{{ 'Camera' if current_user.subscription_track == 'camera' else 'Mobile' }} League</span></div>
-      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:4px">You are in the</div>
-      <div style="font-family:serif;font-size:38px;font-weight:700;color:var(--blue);letter-spacing:-1.5px;line-height:1.3">top {{ aea_dash.percentile }}%</div>
-      <div style="font-size:13px;font-weight:400;color:var(--muted);margin-top:5px;margin-bottom:10px;line-height:1.5">of photographers<br>on Shutter League</div>
-      <div style="height:0.5px;background:var(--border);margin-bottom:10px"></div>
-      {% else %}
-      {# NO RANK YET #}
-      <div class="rl" style="margin-bottom:10px">Annual Excellence Award</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px">Upload 6 evaluations across 3 months to qualify for the AEA standing.</div>
-      <div style="height:0.5px;background:var(--border);margin-bottom:10px"></div>
+
+      {# Rank #}
+      {% if aea_dash.league_rank %}
+      <div style="font-size:15px;font-weight:700;color:#4ACA7A;margin-bottom:2px">#{{ aea_dash.league_rank }} in Shutter League</div>
       {% endif %}
 
-      {# AEA average #}
-      {% if aea_dash and aea_dash.top6_avg %}
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
-        <div>
-          <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:1px">AEA average</div>
-          <div style="font-size:16px;font-weight:700;color:var(--blue);letter-spacing:-0.3px;line-height:1.5">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
-        </div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.4;white-space:nowrap">top 6 images</div>
+      {# Percentile + months #}
+      <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:10px">
+        {% if aea_dash.percentile %}Top {{ aea_dash.percentile }}% · {% endif %}{{ aea_dash.qualifying_months }} months active
       </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">{{ aea_dash.qualifying_months }} months active</div>
-      {% endif %}
 
       {# Top 6 thumbnails #}
-      {% if aea_dash and aea_dash.top6_list %}
-      <div style="display:flex;gap:3px;margin-bottom:8px">
+      {% if aea_dash.top6_list %}
+      <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap">
         {% for img in aea_dash.top6_list %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" style="width:24px;height:24px;border-radius:3px;overflow:hidden;display:block;" title="{{ '%.2f'|format(img.score) }}">
-          <img src="{{ img.thumb_url }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.background='#E8E4DA';this.removeAttribute('src')" alt="">
+        <a href="{{ url_for('image_detail', image_id=img.id) }}" style="width:44px;height:44px;border-radius:4px;overflow:hidden;display:block;border:0.5px solid rgba(255,255,255,0.15)">
+          <img src="{{ img.thumb_url }}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.background='#1A3A5A';this.removeAttribute('src')" alt="">
         </a>
         {% endfor %}
       </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.35)">Your top 6 images — tap to view</div>
       {% endif %}
-      <a href="{{ url_for('poty') }}" class="lnk">View your Award progress →</a>
+
+      {% else %}
+      {# Not yet qualified #}
+      <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6">Upload 6 evaluations across 3 months to qualify for the AEA standing.</div>
+      {% endif %}
+
     </div>
 
     {# MY STANDING — desktop only #}
@@ -1001,7 +1059,7 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
       <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">avg. {{ '%.2f'|format(progress_data.avg_score) }}</div>
       <div style="display:inline-flex;align-items:center;gap:3px;background:var(--cream);border:0.5px solid var(--border);border-radius:9px;padding:2px 7px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px">
-        {% if current_user.subscription_track == 'mobile' %}📱 Mobile League{% else %}📷 Camera League{% endif %}
+        {% if current_user.subscription_track == 'mobile' %}📱 Shutter League{% else %}📷 Shutter League{% endif %}
       </div>
       {% if progress_data.overall_pct %}
       <div style="font-size:13px;font-weight:400;color:var(--muted);margin-bottom:3px">You're in the <strong style="font-weight:600">top {{ progress_data.overall_pct }}%</strong> this month</div>
@@ -1425,7 +1483,6 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
       {% endif %}
       <a href="{{ url_for('rate') }}?assignment={{ _mob_pq.id }}" style="display:flex;align-items:center;justify-content:center;background:var(--dark);color:#fff;font-size:15px;font-weight:600;padding:14px;border-radius:10px;text-decoration:none;min-height:50px;">Rate this image →</a>
-      <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">2 minutes · +1 credit</div>
     </div>
     {% elif _show_bottom %}
     <div class="mob-card" style="margin-bottom:10px">
@@ -1435,7 +1492,6 @@ body.page-dashboard #backToTop         { display:none !important }
         <div style="padding:8px 12px;font-size:13px;color:#fff;background:rgba(15,42,34,0.85);width:100%;border-radius:0 0 10px 10px">Can you see the Disruption in this frame?</div>
       </div>
       <a href="{{ url_for('rate') }}" style="display:flex;align-items:center;justify-content:center;background:var(--dark);color:#fff;font-size:15px;font-weight:600;padding:14px;border-radius:10px;text-decoration:none;min-height:50px;">Rate this image →</a>
-      <div style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">2 minutes · +1 credit</div>
     </div>
     {% endif %}
 
