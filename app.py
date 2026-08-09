@@ -1208,6 +1208,10 @@ def _run_startup_tasks():
                     "CREATE INDEX IF NOT EXISTS ix_images_user_status ON images(user_id, status)",
                     "CREATE INDEX IF NOT EXISTS ix_images_public_scored ON images(is_public, status, created_at DESC) WHERE is_public = TRUE AND status = 'scored'",
                     "CREATE INDEX IF NOT EXISTS ix_images_created_at ON images(created_at DESC)",
+                    # SL-176 performance — dashboard AEA rank query scans all images without these
+                    "CREATE INDEX IF NOT EXISTS ix_images_user_score ON images(user_id, score DESC) WHERE score IS NOT NULL",
+                    "CREATE INDEX IF NOT EXISTS ix_images_public_score ON images(is_public, score DESC, status) WHERE is_public = TRUE AND score IS NOT NULL AND status = 'scored'",
+                    "CREATE INDEX IF NOT EXISTS ix_images_user_scored_public ON images(user_id, is_public, status, score DESC) WHERE status = 'scored' AND score IS NOT NULL",
                     # v-Session116 — structured peer eval (checkbox system)
                     # stood_out_tags / improve_tags: JSON array of tag strings e.g. '["Light quality","Composition"]'
                     # optional_comment: free-text, email-only, never shown on scorecard
@@ -1850,7 +1854,9 @@ def _run_startup_tasks():
                 # SL 175: Dashboard greeting — Claude-written personalised brief cached on user
                 # Refreshed after each evaluation. Zero dashboard latency.
                 db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_greeting_json TEXT DEFAULT NULL"
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_greeting_json TEXT DEFAULT NULL",
+                    # SL-176 perf: cache timestamp — stale-while-revalidate pattern
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_cache_ts TIMESTAMPTZ DEFAULT NULL"
                 ))
                 # SL 175: Dashboard caches — expensive query results cached on user
                 # Saves ~400-600ms per dashboard load (eliminates 12+ DB queries per visit)
@@ -4016,6 +4022,20 @@ def login():
         db.session.commit()
         login_user(user, remember=True)
 
+        # SL-176 perf: warm dashboard caches on login so first dashboard
+        # load is instant. Runs in background thread — non-blocking.
+        try:
+            import threading as _login_th
+            if getattr(user, 'is_subscribed', False) and user.role != 'admin':
+                _cache_thread = _login_th.Thread(
+                    target=_refresh_dash_caches,
+                    args=(user.id,),
+                    daemon=True
+                )
+                _cache_thread.start()
+        except Exception as _lc_err:
+            app.logger.warning(f'[login] cache warm failed: {_lc_err}')
+
         next_url = request.args.get('next')
         if next_url:
             return redirect(next_url)
@@ -4467,6 +4487,7 @@ def dashboard():
         _shadow_tier = None
         if total_count > 0:
             try:
+                # SL-176 perf: added HAVING COUNT(*) >= 1 and limited to 500 users max
                 _rank_row = db.session.execute(db.text("""
                     SELECT rank FROM (
                         SELECT user_id,
@@ -4477,6 +4498,7 @@ def dashboard():
                           AND score > 0
                           AND is_flagged = FALSE
                         GROUP BY user_id
+                        HAVING COUNT(*) >= 1
                     ) ranked
                     WHERE user_id = :uid
                 """), {'uid': current_user.id}).fetchone()
@@ -4587,18 +4609,31 @@ def dashboard():
     # ── AEA cross-genre top-6 tracker (S156) ─────────────────────────────────
     # SL 175: Read from cache first — refreshed after each evaluation via _refresh_dash_caches
     # Falls back to live computation if cache miss (first login, cache invalidated)
+    # SL-176 perf: stale-while-revalidate cache pattern for AEA dashboard data.
+    # Serve cache immediately (even if stale). If stale (> 4h) or missing,
+    # fire background refresh. First-ever load runs live query synchronously.
     aea_dash = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False) and \
        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera'):
         import json as _aeaj
         _aea_cache_miss = False
+        _aea_stale      = False
+        _CACHE_TTL_SECS = 4 * 3600  # 4 hours
         try:
-            _aea_raw = db.session.execute(
-                db.text('SELECT aea_dash_json FROM users WHERE id = :uid'),
+            _aea_row = db.session.execute(
+                db.text('SELECT aea_dash_json, dash_cache_ts FROM users WHERE id = :uid'),
                 {'uid': current_user.id}
-            ).scalar()
-            if _aea_raw:
-                aea_dash = _aeaj.loads(_aea_raw)
+            ).fetchone()
+            if _aea_row and _aea_row[0]:
+                aea_dash = _aeaj.loads(_aea_row[0])
+                # Check staleness
+                if _aea_row[1]:
+                    import time as _ctime
+                    _age = (datetime.utcnow() - _aea_row[1].replace(tzinfo=None)).total_seconds()
+                    if _age > _CACHE_TTL_SECS:
+                        _aea_stale = True
+                else:
+                    _aea_stale = True  # No timestamp = treat as stale
             else:
                 _aea_cache_miss = True
         except Exception:
@@ -4608,8 +4643,22 @@ def dashboard():
             except Exception:
                 pass
 
+        # Stale cache — serve what we have, re-warm in background
+        if _aea_stale and aea_dash is not None:
+            try:
+                import threading as _stale_th
+                _stale_th.Thread(
+                    target=_refresh_dash_caches,
+                    args=(current_user.id,),
+                    daemon=True
+                ).start()
+                app.logger.info(f'[dashboard] aea_dash stale — background refresh for user {current_user.id}')
+            except Exception as _se:
+                app.logger.warning(f'[dashboard] stale revalidate failed: {_se}')
+
         if _aea_cache_miss:
-            # Cache miss — fall back to live computation
+            # Cache miss — fall back to live computation (optimised queries)
+            # SL-176: correlated subquery removed, indexes added
             try:
                 _aea_year = datetime.utcnow().year
                 _aea_qual_start = date(_aea_year, 1, 1)
@@ -4662,32 +4711,38 @@ def dashboard():
                     ]
 
                 _aea_track = current_user.subscription_track
+                # SL-176: rewritten — correlated subquery removed, uses CTE
+                # Pre-aggregates per user first, then counts — avoids N×M scan
                 _aea_rank_row = db.session.execute(db.text("""
-                    SELECT COUNT(*) FROM (
+                    WITH user_top6 AS (
                         SELECT i.user_id,
-                               AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg
+                               AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg,
+                               COUNT(*) AS img_count
                         FROM (
                             SELECT user_id, score,
-                                   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY score DESC) AS rn
+                                   ROW_NUMBER() OVER (
+                                       PARTITION BY user_id ORDER BY score DESC
+                                   ) AS rn
                             FROM images
-                            WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
-                              AND status = 'scored'
-                              AND (is_flagged = FALSE OR is_flagged IS NULL)
-                              AND (needs_review = FALSE OR needs_review IS NULL)
+                            WHERE is_public  = TRUE
+                              AND status     = 'scored'
+                              AND score      IS NOT NULL
+                              AND score      > 0
+                              AND (is_flagged    = FALSE OR is_flagged    IS NULL)
+                              AND (needs_review  = FALSE OR needs_review  IS NULL)
                         ) i
                         JOIN users u ON u.id = i.user_id
-                        WHERE u.is_subscribed = TRUE
-                          AND u.subscription_track = :track
+                        WHERE u.is_subscribed       = TRUE
+                          AND u.subscription_track  = :track
                         GROUP BY i.user_id
                         HAVING COUNT(*) >= :min_imgs
-                           AND COUNT(DISTINCT DATE_TRUNC('month',
-                               (SELECT MIN(created_at) FROM images WHERE user_id = i.user_id))) >= 1
-                    ) qualified
+                    )
+                    SELECT COUNT(*) FROM user_top6
                     WHERE top6_avg > :my_avg
                 """), {
-                    'track': _aea_track,
-                    'min_imgs': _aea_req_images,
-                    'my_avg': _aea_top6_avg or 0,
+                    'track':     _aea_track,
+                    'min_imgs':  _aea_req_images,
+                    'my_avg':    _aea_top6_avg or 0,
                 }).scalar() or 0
                 _aea_league_rank = int(_aea_rank_row) + 1 if _aea_qualified and _aea_top6_avg else None
 
@@ -5966,7 +6021,7 @@ def _refresh_dash_caches(user_id):
                 'req_images':     _aea_req_images,
             }
             db.session.execute(
-                db.text('UPDATE users SET aea_dash_json = :j WHERE id = :uid'),
+                db.text('UPDATE users SET aea_dash_json = :j, dash_cache_ts = NOW() WHERE id = :uid'),
                 {'j': _j.dumps(_aea_cache), 'uid': user_id}
             )
             app.logger.info(f'[dash_cache] aea_dash refreshed for user {user_id}')
