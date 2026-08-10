@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1j (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 176.1l (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
 
 import os
 import re
@@ -6412,6 +6412,110 @@ Output as JSON with these keys:
                 db.session.commit()
                 app.logger.info(f'[evolving_eye] generated for user {user_id} at milestone {milestone}')
 
+                # ── Send advisory email to photographer ───────────────────
+                # SL-176.1k: Full advisory text in email body, not a link.
+                # Subject: "[First name] — your eye after [N] images"
+                try:
+                    _user_for_email = User.query.get(user_id)
+                    if _user_for_email and _user_for_email.email:
+                        _fname = (_user_for_email.full_name or '').split()[0] if _user_for_email.full_name else 'Photographer'
+                        _site  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        _subj  = f'{_fname} — your eye after {milestone} images'
+
+                        # Build HTML email from advisory content
+                        _genres_html = ''
+                        for _g in (_advisory.get('genres') or []):
+                            _genres_html += f'''
+                            <tr><td style="padding:14px 0;border-top:1px solid #E8E4DA;">
+                              <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A37B2C;margin-bottom:4px">{_g.get('name','')}</div>
+                              {f'<div style="font-size:15px;font-weight:600;color:#1A1814;margin-bottom:6px;font-style:italic">"{_g.get("key_line","")}"</div>' if _g.get('key_line') else ''}
+                              <div style="font-size:15px;color:#1A1814;line-height:1.8">{_g.get('insight','')}</div>
+                            </td></tr>'''
+
+                        _contests_html = ''
+                        for _c in (_advisory.get('contests') or [])[:3]:
+                            _contests_html += f'''
+                            <tr><td style="padding:10px 0;border-top:1px solid #E8E4DA;">
+                              <div style="font-size:15px;font-weight:600;color:#1A1814">{_c.get('name','')}</div>
+                              <div style="font-size:14px;color:#1A1814;line-height:1.65;margin:4px 0">{_c.get('why','')}</div>
+                              <div style="font-size:13px;color:#A37B2C">{'Free to enter' if _c.get('free') else 'Entry fee applies'}{' · ' + _c.get('deadline','') if _c.get('deadline') else ''}</div>
+                            </td></tr>'''
+
+                        _bow_frames_html = ''
+                        for _fi, _fr in enumerate((_advisory.get('bow_frames') or [])[:4], 1):
+                            _bow_frames_html += f'<div style="margin-bottom:12px;padding-left:14px;border-left:3px solid #D6A428"><strong style="color:#1A1814">Frame {_fi}</strong> — <span style="color:#1A1814">{_fr}</span></div>'
+
+                        _html = f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F6F2E9;font-family:Avenir Next,system-ui,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:16px;overflow:hidden">
+
+  <!-- Header -->
+  <tr><td style="background:#1A1814;padding:28px 32px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#D6A428;margin-bottom:8px">Shutter League</div>
+    <div style="font-size:24px;font-weight:700;color:#fff;line-height:1.3">{_fname} — your eye after {milestone} images</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:6px">{_total} images evaluated · avg {_avg:.2f}</div>
+  </td></tr>
+
+  <!-- What your images are telling us -->
+  <tr><td style="padding:28px 32px 0">
+    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:14px">What your images are telling us</div>
+    <div style="font-size:16px;color:#1A1814;line-height:1.85">{_advisory.get('trajectory_note','')}</div>
+  </td></tr>
+
+  <!-- Key insight -->
+  <tr><td style="padding:20px 32px">
+    <div style="border-left:4px solid #D6A428;padding:16px 20px;background:#FEF3C7;border-radius:0 8px 8px 0">
+      <div style="font-size:16px;font-weight:500;color:#1A1814;line-height:1.85">{_advisory.get('what_images_say','')}</div>
+    </div>
+  </td></tr>
+
+  <!-- Your eye by genre -->
+  {f'<tr><td style="padding:0 32px"><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:8px">Your eye by genre</div><table width="100%">{_genres_html}</table></td></tr>' if _genres_html else ''}
+
+  <!-- The one thing -->
+  <tr><td style="padding:24px 32px">
+    <div style="background:#FEF3C7;border:1.5px solid #D6A428;border-radius:12px;padding:20px 24px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A37B2C;margin-bottom:8px">The one thing</div>
+      <div style="font-size:17px;font-weight:600;color:#1A1814;line-height:1.75">{_advisory.get('one_thing','')}</div>
+    </div>
+  </td></tr>
+
+  <!-- Contests -->
+  {f'<tr><td style="padding:0 32px 24px"><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:8px">Open calls worth entering</div><table width="100%">{_contests_html}</table></td></tr>' if _contests_html else ''}
+
+  <!-- Body of work -->
+  {f"""<tr><td style="padding:0 32px 24px;background:#F6F2E9">
+    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:8px;padding-top:24px">Your next body of work</div>
+    <div style="font-size:18px;font-weight:700;color:#1A1814;margin-bottom:6px">{_advisory.get('bow_title','')}</div>
+    <div style="font-size:14px;color:#A37B2C;font-weight:600;margin-bottom:16px">{_advisory.get('bow_story','')}</div>
+    {_bow_frames_html}
+  </td></tr>""" if _advisory.get('bow_title') else ''}
+
+  <!-- CTA -->
+  <tr><td style="padding:28px 32px;text-align:center">
+    <a href="{_site}/my-eye" style="display:inline-block;background:#D6A428;color:#1A1814;font-size:15px;font-weight:700;padding:14px 32px;border-radius:9px;text-decoration:none">Read your full advisory →</a>
+    <div style="font-size:13px;color:#6B6B6B;margin-top:12px">Your 20-image advisory is next.</div>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#1A1814;padding:20px 32px;text-align:center">
+    <div style="font-size:12px;color:rgba(255,255,255,0.4)">Shutter League · Photography Assessment & Evolution Platform · Making Images Matter</div>
+  </td></tr>
+
+</table></td></tr></table>
+</body></html>'''
+
+                        send_email(
+                            to_addresses=_user_for_email.email,
+                            subject=_subj,
+                            html_body=_html
+                        )
+                        app.logger.info(f'[evolving_eye] advisory email sent to user {user_id} ({_user_for_email.email})')
+                except Exception as _ee_email_err:
+                    app.logger.warning(f'[evolving_eye] email failed for user {user_id}: {_ee_email_err}')
+
             except Exception as _ee_err:
                 app.logger.warning(f'[evolving_eye] failed for user {user_id}: {_ee_err}')
                 try: db.session.rollback()
@@ -12100,11 +12204,13 @@ def evolving_eye():
 @app.route('/admin/generate-evolving-eye/<int:user_id>', methods=['POST'])
 @login_required
 def admin_generate_evolving_eye(user_id):
-    """
-    SL-176: Admin trigger to manually generate evolving eye advisory.
-    Used to send advisory emails to photographers before milestone automation.
-    """
-    if current_user.role != 'admin':
+    """SL-176: Admin trigger to manually generate evolving eye advisory.
+    Also accepts ?token=ADMIN_SECRET for terminal/curl use without session cookie."""
+    # Allow token-based auth for curl/terminal access
+    _token = request.args.get('token', '')
+    _admin_secret = os.getenv('ADMIN_SECRET', '')
+    _token_ok = _admin_secret and _token == _admin_secret
+    if current_user.role != 'admin' and not _token_ok:
         abort(403)
     import json as _aej
 
@@ -12128,8 +12234,11 @@ def admin_generate_evolving_eye(user_id):
 @login_required
 def admin_refresh_dash_greeting(user_id):
     """SL-176.1f: Admin trigger to manually refresh Sonnet greeting + mentor advice.
-    Use when greeting cache is stale or after upgrading Haiku→Sonnet."""
-    if current_user.role != 'admin':
+    Also accepts ?token=ADMIN_SECRET for terminal/curl use."""
+    _token = request.args.get('token', '')
+    _admin_secret = os.getenv('ADMIN_SECRET', '')
+    _token_ok = _admin_secret and _token == _admin_secret
+    if current_user.role != 'admin' and not _token_ok:
         abort(403)
     import threading as _rgt
     def _run():
