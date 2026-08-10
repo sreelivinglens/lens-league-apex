@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1d (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
+# SL-VERSION: 176.1e (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
 
 import os
 import re
@@ -4955,10 +4955,13 @@ def dashboard():
             }
     # ── End Wallet HUD ────────────────────────────────────────────────────
 
-    # SL-176.1d: DDI Progress — cache-first from progress_data_json column
-    # Falls back to live computation on cache miss. Eliminates heaviest sync call.
+    # SL-176.1e: DDI Progress — cache-first ONLY. No synchronous fallback.
+    # On cache miss: return None (dashboard degrades gracefully) + fire background warm.
+    # This eliminates the 11-second synchronous hit. Cache warms in ~2s in background.
+    # Next dashboard load will have it. Photographers never wait for this computation.
     progress_data = None
     import json as _pdj2
+    _pd_cache_miss = False
     try:
         _pd_raw = db.session.execute(
             db.text('SELECT progress_data_json FROM users WHERE id = :uid'),
@@ -4967,24 +4970,24 @@ def dashboard():
         if _pd_raw:
             progress_data = _pdj2.loads(_pd_raw)
         else:
-            # Cache miss — live computation + warm cache in background
-            progress_data = _build_progress_data(current_user)
-            try:
-                import threading as _pd_th
-                _uid_pd = current_user.id
-                def _warm_pd():
-                    with app.app_context():
-                        _refresh_progress_data(_uid_pd)
-                _pd_th.Thread(target=_warm_pd, daemon=True).start()
-            except Exception:
-                pass
+            _pd_cache_miss = True
     except Exception as _pd_err:
-        app.logger.warning(f'[dashboard] progress_data cache: {_pd_err}')
+        app.logger.warning(f'[dashboard] progress_data cache read: {_pd_err}')
+        try: db.session.rollback()
+        except Exception: pass
+        _pd_cache_miss = True
+
+    # Fire background warm on miss — next load will be instant
+    if _pd_cache_miss:
         try:
-            db.session.rollback()
-            progress_data = _build_progress_data(current_user)
-        except Exception:
-            progress_data = None
+            import threading as _pd_th
+            _uid_pd = current_user.id
+            def _warm_pd():
+                with app.app_context():
+                    _refresh_progress_data(_uid_pd)
+            _pd_th.Thread(target=_warm_pd, daemon=True).start()
+        except Exception as _pdwe:
+            app.logger.warning(f'[dashboard] progress_data warm: {_pdwe}')
 
     # ── Photo School — curriculum lesson + weather ────────────────────────
     _lesson = None
