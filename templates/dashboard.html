@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 175.37 (Work on This: removed dim_avgs Your average/Strongest line — redundant with greeting card; session 175, 2026-08-08) #}
+{# SL-VERSION: 176.1 (Session 176, 2026-08-10 — Nav: Overall Standings + Recent Work + Get Reviewed; Evolving Eye countdown banner sub-10; AEA score nowrap fix; eval banner persistent on all pages; Continue to Dashboard click feedback) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -289,8 +289,9 @@ body.page-dashboard #backToTop         { display:none !important }
     <a class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
     <a class="nav-link {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="nav-link {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a>
-    <a class="nav-link {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
-    <a class="nav-link {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
+    <a class="nav-link {% if request.endpoint == 'recent_work' %}active{% endif %}" href="{{ url_for('recent_work') }}">Recent Work</a>
+    <a class="nav-link {% if request.endpoint == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}">Overall Standings</a>
+    <a class="nav-link {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Get Reviewed</a>
     <a class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profile</a>
   </div>
   <div class="nav-right">
@@ -308,14 +309,16 @@ body.page-dashboard #backToTop         { display:none !important }
     <a class="si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a>
     <a class="si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a>
     <a class="si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a>
+    <a class="si {% if request.endpoint == 'recent_work' %}active{% endif %}" href="{{ url_for('recent_work') }}">Recent Work</a>
+    <a class="si {% if request.endpoint == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}">Overall Standings</a>
+    <a class="si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Get Reviewed</a>
     <a class="si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a>
-    <a class="si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a>
     <a class="si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
     <div class="si-more">More</div>
-    <a class="si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a>
-    <a class="si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
+    <a class="si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Assignment</a>
     <a class="si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learning Library</a>
-    <a class="si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a>
+    <a class="si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Awards & Recognition</a>
+    <a class="si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profile & Settings</a>
     <a class="si" href="/contact">Help &amp; Support</a>
   </div>
 
@@ -498,16 +501,34 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _ev_tech = dash_live_event.get('technical_tip') or '' %}
         {% set _ev_pos = dash_live_event.get('position_tip') or '' %}
 
-        {# SL-176: My Evolving Eye — So Far banner #}
+        {# SL-176.1: My Evolving Eye — 3-state banner #}
+        {# State 1: Advisory ready — show gold banner with Read it button #}
         {% if current_user.evolving_eye_json %}
         {% set _eye = current_user.evolving_eye_json | from_json %}
         <div style="background:#FFF8EC;border-radius:13px;padding:14px 16px;margin-bottom:10px;border:1px solid #EDD89A;display:flex;align-items:center;gap:14px">
           <div style="width:38px;height:38px;background:#FEF0C7;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📈</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:15px;font-weight:600;color:#1A1814;margin-bottom:2px">Your {{ _eye.milestone }}-image advisory is ready</div>
-            <div style="font-size:13px;color:#6B6B6B;line-height:1.45">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:600">Next report at {{ _eye.milestone + 10 }} images →</span></div>
+            <div style="font-size:14px;color:#6B6B6B;line-height:1.5">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:600">Next report at {{ _eye.milestone + 10 }} images →</span></div>
           </div>
-          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap">Read it →</a>
+          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:14px;font-weight:700;padding:10px 16px;border-radius:8px;text-decoration:none;white-space:nowrap">Read it →</a>
+        </div>
+
+        {# State 2: Sub-10 images — show countdown banner #}
+        {% elif scored_count is defined and scored_count < 10 %}
+        {% set _images_needed = 10 - scored_count %}
+        <div style="background:#F6F2E9;border-radius:13px;padding:13px 16px;margin-bottom:10px;border:1px solid #E8E4DA;display:flex;align-items:center;gap:12px">
+          <div style="width:34px;height:34px;background:#EDE8DC;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">👁</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:600;color:#1A1814;margin-bottom:2px">Your Evolving Eye report</div>
+            <div style="font-size:14px;color:#6B6B6B;line-height:1.5">You are <strong style="color:#A37B2C">{{ _images_needed }} image{{ 's' if _images_needed != 1 else '' }}</strong> away from your first advisory. Keep shooting.</div>
+          </div>
+        </div>
+
+        {# State 3: Between milestones (10+ images, no new advisory yet) — quiet link only #}
+        {% elif scored_count is defined and scored_count >= 10 %}
+        <div style="text-align:right;margin-bottom:8px">
+          <a href="{{ url_for('evolving_eye') }}" style="font-size:13px;color:#A37B2C;font-weight:600;text-decoration:underline">My Evolving Eye →</a>
         </div>
         {% endif %}
 
@@ -519,7 +540,7 @@ body.page-dashboard #backToTop         { display:none !important }
             {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2C5F8A">{{ dash_live_event.genre }}</span>{% endif %}
           </div>
           {# Location #}
-          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:6px">📍 {{ dash_live_event.location_name }}</div>
+          <div style="font-size:14px;color:#2C5F8A;font-weight:500;margin-bottom:6px">📍 {{ dash_live_event.location_name }}</div>
           {# Subject — the action, bold and white #}
           <div style="font-size:16px;font-weight:700;color:#1A1814;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
           {# Chips — each on its own pill row #}
@@ -1010,7 +1031,7 @@ body.page-dashboard #backToTop         { display:none !important }
       {% if aea_dash and aea_dash.top6_avg %}
       {# AEA score #}
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-        <span style="font-size:42px;font-weight:700;color:var(--gold);letter-spacing:-1.5px;line-height:1">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
+        <span style="font-size:36px;font-weight:700;color:var(--gold);letter-spacing:-1px;line-height:1;white-space:nowrap;flex-shrink:0">{{ '%.2f'|format(aea_dash.top6_avg) }}</span>
         <div>
           <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.3">AEA average evaluation</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.3">top 6 images · all interests</div>
@@ -1542,36 +1563,17 @@ body.page-dashboard #backToTop         { display:none !important }
 <div class="mob-more-overlay" id="slMoreOverlay" onclick="slMoreClose()"></div>
 <div class="mob-more-drawer" id="slMoreDrawer">
   <div class="mob-more-handle"></div>
-  <a class="mob-more-item" href="{{ url_for('recent_work') }}">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    Explore
-  </a>
-  <a class="mob-more-item" href="{{ url_for('learning') }}">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-    Learn
-  </a>
-  <a class="mob-more-item" href="{{ url_for('mentors') }}">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-    Mentor Review
-  </a>
-  <a class="mob-more-item" href="{{ url_for('weekly_challenge') }}">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    Weekly Challenge
-  </a>
+  <a class="mob-more-item" href="{{ url_for('recent_work') }}">Recent Work</a>
+  <a class="mob-more-item" href="{{ url_for('leaderboard') }}">Overall Standings</a>
+  <a class="mob-more-item" href="{{ url_for('mentors') }}">Get Reviewed</a>
+  <a class="mob-more-item" href="{{ url_for('learning') }}">Learn</a>
+  <a class="mob-more-item" href="{{ url_for('weekly_challenge') }}">Weekly Assignment</a>
+  <a class="mob-more-item" href="{{ url_for('poty') }}">Awards &amp; Recognition</a>
   <div class="mob-more-divider"></div>
-  <a class="mob-more-item" href="{{ url_for('profile') }}">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Profile &amp; Settings
-  </a>
-  <a class="mob-more-item" href="/contact">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    Help &amp; Support
-  </a>
+  <a class="mob-more-item" href="{{ url_for('profile') }}">Profile &amp; Settings</a>
+  <a class="mob-more-item" href="/contact">Help &amp; Support</a>
   <div class="mob-more-divider"></div>
-  <a class="mob-more-item" href="{{ url_for('logout') }}" style="color:rgba(255,100,100,0.8)">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Log out
-  </a>
+  <a class="mob-more-item" href="{{ url_for('logout') }}" style="color:rgba(255,100,100,0.8)">Log out</a>
 </div>
 
 {# ── STANDING MODAL ── #}
@@ -1689,32 +1691,89 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') slMoreClose();
 });
 
-/* ── SL 175: EVAL PENDING POLL ──────────────────────────────
-   Handles both desktop (#sl175EvalBanner) and mobile (#sl175EvalBanner-mob).
+/* ── SL 176.1: EVAL PENDING POLL ─────────────────────────────
+   Handles desktop (#sl175EvalBanner) and mobile (#sl175EvalBanner-mob).
+   Persistent across page navigation via localStorage.
+   Activates from ?eval_pending= URL param OR from stored pending ID.
+   Banner stays visible until user manually closes it.
 ──────────────────────────────────────────────────────────── */
 (function(){
-  var params = new URLSearchParams(window.location.search);
-  var pendingId = params.get('eval_pending');
+  var SL_PENDING_KEY = 'sl_eval_pending_id';
+  var SL_READY_KEY   = 'sl_eval_ready_id';
+
+  /* Get pending ID — from URL param first, then localStorage */
+  var params    = new URLSearchParams(window.location.search);
+  var urlId     = params.get('eval_pending');
+  var storedId  = null;
+  try { storedId = localStorage.getItem(SL_PENDING_KEY); } catch(e) {}
+
+  /* If URL has a new ID, store it and clear any previous ready state */
+  if (urlId) {
+    try {
+      localStorage.setItem(SL_PENDING_KEY, urlId);
+      localStorage.removeItem(SL_READY_KEY);
+    } catch(e) {}
+    try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+  }
+
+  var pendingId = urlId || storedId;
   if (!pendingId) return;
 
-  /* Desktop banner elements */
-  var banner   = document.getElementById('sl175EvalBanner');
-  var msgEl    = document.getElementById('sl175EvalMsg');
-  var linkEl   = document.getElementById('sl175EvalLink');
-  var spinner  = document.getElementById('sl175EvalSpinner');
-  /* Mobile banner elements */
+  /* Don't re-poll if already marked ready in this session */
+  var alreadyReady = false;
+  try { alreadyReady = localStorage.getItem(SL_READY_KEY) === pendingId; } catch(e) {}
+
+  /* Banner elements — desktop */
+  var banner  = document.getElementById('sl175EvalBanner');
+  var msgEl   = document.getElementById('sl175EvalMsg');
+  var linkEl  = document.getElementById('sl175EvalLink');
+  var spinner = document.getElementById('sl175EvalSpinner');
+  /* Banner elements — mobile */
   var bannerM  = document.getElementById('sl175EvalBanner-mob');
   var msgElM   = document.getElementById('sl175EvalMsg-mob');
   var spinnerM = document.getElementById('sl175EvalSpinner-mob');
 
-  /* Show whichever banner is visible */
-  if (banner)  banner.style.display  = 'flex';
-  if (bannerM) bannerM.style.display = 'flex';
+  function showBanners() {
+    if (banner)  banner.style.display  = 'flex';
+    if (bannerM) bannerM.style.display = 'flex';
+  }
 
-  try {
-    window.history.replaceState({}, '', window.location.pathname);
-  } catch(e) {}
+  function markReady() {
+    try {
+      localStorage.setItem(SL_READY_KEY, pendingId);
+      localStorage.removeItem(SL_PENDING_KEY);
+    } catch(e) {}
+    if (spinner)  { spinner.style.animation  = 'none'; spinner.textContent  = '✓'; }
+    if (spinnerM) { spinnerM.style.animation = 'none'; spinnerM.textContent = '✓'; }
+    var readyMsg = 'Your evaluation is ready — tap to view.';
+    if (msgEl)  { msgEl.textContent  = readyMsg; msgEl.style.color  = '#D6A428'; }
+    if (msgElM) { msgElM.textContent = readyMsg; msgElM.style.color = '#D6A428'; }
+    if (linkEl) { linkEl.style.display = 'inline'; }
+    /* Sound + vibrate */
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [440,660,880].forEach(function(f,i){
+        var o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.frequency.value=f;
+        g.gain.setValueAtTime(0,ctx.currentTime+i*0.12);
+        g.gain.linearRampToValueAtTime(0.15,ctx.currentTime+i*0.12+0.05);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.6);
+        o.start(ctx.currentTime+i*0.12);o.stop(ctx.currentTime+i*0.12+0.6);
+      });
+    } catch(e) {}
+    try { if (navigator.vibrate) navigator.vibrate([100,50,100]); } catch(e) {}
+  }
 
+  /* Show banner immediately */
+  showBanners();
+
+  /* If already ready from a previous page visit, show ready state immediately */
+  if (alreadyReady) {
+    markReady();
+    return;
+  }
+
+  /* Poll until scored */
   var pollCount = 0;
   var maxPolls  = 90;
   var pollTimer = setInterval(function() {
@@ -1724,6 +1783,7 @@ document.addEventListener('keydown', function(e) {
       var msg = 'Evaluation taking longer than expected — check My Gallery shortly.';
       if (msgEl)  msgEl.textContent  = msg;
       if (msgElM) msgElM.textContent = msg;
+      try { localStorage.removeItem(SL_PENDING_KEY); } catch(e) {}
       return;
     }
     fetch('/score-status/' + pendingId, {credentials: 'same-origin'})
@@ -1731,26 +1791,10 @@ document.addEventListener('keydown', function(e) {
     .then(function(data) {
       if (data.status === 'ok') {
         clearInterval(pollTimer);
-        if (spinner)  { spinner.style.animation  = 'none'; spinner.textContent  = '✓'; }
-        if (spinnerM) { spinnerM.style.animation = 'none'; spinnerM.textContent = '✓'; }
-        var readyMsg = 'Your evaluation is ready — tap to view.';
-        if (msgEl)   { msgEl.textContent   = readyMsg; msgEl.style.color   = '#D6A428'; }
-        if (msgElM)  { msgElM.textContent  = readyMsg; msgElM.style.color  = '#D6A428'; }
-        if (linkEl)  { linkEl.style.display = 'inline'; }
-        try {
-          var ctx = new (window.AudioContext || window.webkitAudioContext)();
-          [440,660,880].forEach(function(f,i){
-            var o=ctx.createOscillator(),g=ctx.createGain();
-            o.connect(g);g.connect(ctx.destination);o.frequency.value=f;
-            g.gain.setValueAtTime(0,ctx.currentTime+i*0.12);
-            g.gain.linearRampToValueAtTime(0.15,ctx.currentTime+i*0.12+0.05);
-            g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.6);
-            o.start(ctx.currentTime+i*0.12);o.stop(ctx.currentTime+i*0.12+0.6);
-          });
-        } catch(e) {}
-        try { if (navigator.vibrate) navigator.vibrate([100,50,100]); } catch(e) {}
+        markReady();
       } else if (data.status === 'flagged' || data.status === 'error') {
         clearInterval(pollTimer);
+        try { localStorage.removeItem(SL_PENDING_KEY); } catch(e) {}
         var errMsg = data.message || 'Your image could not be evaluated — check My Gallery for details.';
         if (spinner)  { spinner.style.animation  = 'none'; spinner.textContent  = '⚠'; }
         if (spinnerM) { spinnerM.style.animation = 'none'; spinnerM.textContent = '⚠'; }
@@ -1761,6 +1805,16 @@ document.addEventListener('keydown', function(e) {
     })
     .catch(function(){});
   }, 2000);
+
+  /* Clear localStorage when user manually closes banner */
+  var closeBtn = banner  ? banner.querySelector('button')  : null;
+  var closeBtnM = bannerM ? bannerM.querySelector('button') : null;
+  function clearPending() {
+    try { localStorage.removeItem(SL_PENDING_KEY); localStorage.removeItem(SL_READY_KEY); } catch(e) {}
+    clearInterval(pollTimer);
+  }
+  if (closeBtn)  closeBtn.addEventListener('click',  clearPending);
+  if (closeBtnM) closeBtnM.addEventListener('click', clearPending);
 })();
 function toggleSpan(expId, rmId) {
   var exp = document.getElementById(expId);
