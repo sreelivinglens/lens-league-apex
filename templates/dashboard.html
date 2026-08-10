@@ -437,13 +437,9 @@ body.page-dashboard #backToTop         { display:none !important }
       {% endif %}
     </div>
 
-    {# ── DIRECTIVE BAR — always visible above the fold when user has images ── #}
-    {% if stats and stats.total > 0 %}
+    {# ── DIRECTIVE BAR — only weekly challenge and quota when relevant ── #}
+    {% if stats and stats.total > 0 and (active_challenge or (quota_status and not quota_status.is_unlimited and quota_status.remaining is defined and quota_status.remaining <= 3)) %}
     <div style="display:flex;flex-wrap:wrap;gap:8px;">
-      <a href="{{ url_for('mission') }}" style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:12px 14px;text-decoration:none;">
-        <span style="font-size:15px;font-weight:600;color:var(--dark);line-height:1.4;">Your next assignment is waiting</span>
-        <span style="font-size:15px;font-weight:700;color:var(--gold-dk);white-space:nowrap;">Begin →</span>
-      </a>
       {% if active_challenge %}
       <a href="{{ url_for('weekly_challenge') }}" style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-left:3px solid #27500A;border-radius:8px;padding:12px 14px;text-decoration:none;">
         <span style="font-size:15px;font-weight:600;color:var(--dark);line-height:1.4;">Weekly Assignment{% if active_challenge.closes_at %} · closes {{ active_challenge.closes_at.strftime('%d %b') }}{% endif %}</span>
@@ -480,13 +476,13 @@ body.page-dashboard #backToTop         { display:none !important }
       'aq':         'Before you press the shutter: name the feeling this frame creates. If you cannot name it, find the frame that creates a specific one.'
     } %}
     <div class="card" style="background:#F0F7EC;border:1.5px solid #C5E0BB;border-radius:13px;padding:18px 20px;border-left:4px solid #2A7A3A;">
-      <div style="font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#2A7A3A;margin-bottom:10px">Today's Mission</div>
+      <div style="font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#2A7A3A;margin-bottom:10px">Today's Challenge · based on your past images</div>
       <div style="font-size:19px;font-weight:700;color:var(--dark);line-height:1.35;margin-bottom:10px">{{ _mission_dim_titles.get(progress_data.weakest, 'Work on Your Eye') }}</div>
       <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Focus</div>
       <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:14px">{{ progress_data.weakest | replace('dod','Depth of Difficulty') | replace('disruption','Disruption') | replace('dm','Decisive Moment') | replace('wonder','WOW Factor') | replace('aq','Aesthetic Quality') }}</div>
       <div style="font-size:15px;color:var(--text);line-height:1.75;margin-bottom:16px">{{ _mission_dim_desc.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <a href="{{ url_for('mission') }}" style="background:#2A7A3A;color:#fff;font-size:15px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block;min-height:48px;line-height:24px">Begin Today's Practice →</a>
+        <a href="{{ url_for('mission') }}" style="background:#2A7A3A;color:#fff;font-size:15px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block;min-height:48px;line-height:24px">Begin Today's Challenge →</a>
         <form method="POST" action="{{ url_for('skip_mission') }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
           <button type="submit" style="background:none;border:none;font-size:14px;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0">or Skip for now</button>
