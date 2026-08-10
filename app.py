@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1i (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 176.1j (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
 
 import os
 import re
@@ -5447,15 +5447,20 @@ def dashboard():
         except Exception as _eje:
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
-    # SL 175: Load personalised dashboard greeting brief (cached, zero latency)
+    # SL-176.1i: Load dash_greeting_json via raw SQL — ORM object is stale after background refresh
     import json as _dg_json
     _dash_greeting = None
     try:
-        _dg_raw = getattr(current_user, 'dash_greeting_json', None)
+        _dg_raw = db.session.execute(
+            db.text('SELECT dash_greeting_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar()
         if _dg_raw:
             _dash_greeting = _dg_json.loads(_dg_raw)
     except Exception as _dge:
         app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
+        try: db.session.rollback()
+        except Exception: pass
 
     # SL-176.1f: Load mentor_advice_json via raw SQL
     _mentor_advice = None
