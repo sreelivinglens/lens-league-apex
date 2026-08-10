@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: evolving_eye-176.3 (2026-08-10 — dark bg fix, print CSS sidenav hide, font 70yr pass, auto-poll while generating) #}
+{# SL-VERSION: evolving_eye-176.4 (2026-08-10 — trajectory text dark+larger, section colour differentiation, accordion keyboard fix, 70yr font pass) #}
 {% block title %}My Evolving Eye — So Far · Shutter League{% endblock %}
 {% block body_class %}page-evolving-eye{% endblock %}
 
@@ -30,37 +30,37 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
 .ey-sv.green{color:var(--green)}
 .ey-ss{font-size:13px;color:var(--muted);margin-top:2px}
 .ey-card{background:#fff;border-radius:12px;border:0.5px solid var(--border);margin-bottom:10px;overflow:hidden}
-.ey-ch{padding:14px 18px 0}
-.ey-lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.ey-body-text{padding:0 18px 16px;font-size:15px;line-height:1.75;color:var(--text)}
+.ey-ch{padding:14px 18px 10px;border-bottom:0.5px solid var(--border);background:var(--cream)}
+.ey-lbl{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0}
+.ey-body-text{padding:0 18px 18px;font-size:15px;line-height:1.8;color:var(--dark)}
 .ey-body-text p{margin-bottom:10px}
 .ey-body-text p:last-child{margin-bottom:0}
 .ey-insight{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:10px;font-size:15px;font-weight:500;line-height:1.6}
-.ey-traj{background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.ey-traj{background:#EDE9DE;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;border:0.5px solid #D8D2C4}
 .ey-tnum{text-align:center}
 .ey-tn-val{font-size:22px;font-weight:700;color:var(--dark)}
 .ey-tn-val.down{color:#C05A1A}
 .ey-tn-val.up{color:var(--green)}
-.ey-tn-lbl{font-size:13px;color:var(--muted);margin-top:2px}
+.ey-tn-lbl{font-size:13px;font-weight:600;color:var(--muted);margin-top:2px}
 .ey-tn-div{width:0.5px;background:var(--border);align-self:stretch}
-.ey-tn-note{flex:1;min-width:140px;font-size:14px;color:var(--muted);line-height:1.65}
-.ey-acc-row{border-top:0.5px solid var(--border)}
-.ey-acc-head{display:flex;align-items:center;gap:10px;padding:12px 18px;cursor:pointer}
+.ey-tn-note{flex:1;min-width:140px;font-size:15px;color:var(--text);line-height:1.7}
+.ey-acc-row{border-top:0.5px solid var(--border);background:#fff;cursor:pointer}
+.ey-acc-head{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;min-height:56px}
 .ey-acc-head:hover{background:var(--cream)}
 .ey-acc-icon{width:32px;height:32px;border-radius:8px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--dark);flex-shrink:0}
 .ey-acc-col{flex:1;min-width:0}
-.ey-acc-name{font-size:14px;font-weight:600;color:var(--dark)}
-.ey-acc-meta{font-size:12px;color:var(--muted);margin-top:1px}
+.ey-acc-name{font-size:15px;font-weight:600;color:var(--dark)}
+.ey-acc-meta{font-size:13px;color:var(--muted);margin-top:2px}
 .ey-acc-score{font-size:18px;font-weight:700;color:var(--gold-dk);flex-shrink:0}
 .ey-acc-chev{font-size:18px;color:var(--muted);flex-shrink:0;transition:transform .2s}
 .ey-acc-row.open .ey-acc-chev{transform:rotate(180deg)}
-.ey-acc-body{display:none;padding:4px 18px 14px 60px;font-size:14px;line-height:1.75;border-top:0.5px solid var(--cream)}
+.ey-acc-body{display:none;padding:12px 18px 16px 60px;font-size:15px;line-height:1.8;color:var(--dark);border-top:0.5px solid var(--border);background:#FAFAF8}
 .ey-acc-row.open .ey-acc-body{display:block}
 .ey-acc-body p{margin-bottom:8px}
 .ey-acc-body p:last-child{margin-bottom:0}
-.one-thing{background:#FFF8EC;border:1px solid #EDD89A;border-radius:12px;padding:16px 18px;margin-bottom:10px}
+.one-thing{background:#FEF3C7;border:1.5px solid #D6A428;border-radius:12px;padding:18px 20px;margin-bottom:12px}
 .ot-lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dk);margin-bottom:7px}
-.ot-body{font-size:15px;font-weight:500;color:var(--dark);line-height:1.7}
+.ot-body{font-size:16px;font-weight:600;color:var(--dark);line-height:1.75}
 .sl-diff-hdr{background:var(--cream);padding:13px 18px;border-bottom:0.5px solid var(--border)}
 .sl-diff-title{font-size:14px;font-weight:700;color:var(--dark)}
 .sl-diff-sub{font-size:13px;color:var(--muted);margin-top:2px}
@@ -68,7 +68,7 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
 .diff-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
 .diff-row:last-child{margin-bottom:0}
 .diff-icon{width:26px;height:26px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.diff-text{font-size:13px;line-height:1.65}
+.diff-text{font-size:14px;line-height:1.7;color:var(--dark)}
 .diff-text strong{font-weight:600;color:var(--dark)}
 .contest-row{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 18px;border-top:0.5px solid var(--border);gap:10px}
 .ct-name{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px}
@@ -86,10 +86,10 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
 .fr{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
 .fr:last-child{margin-bottom:0}
 .fn{width:24px;height:24px;border-radius:50%;background:var(--cream);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;margin-top:2px}
-.ft{font-size:14px;line-height:1.65}
+.ft{font-size:15px;line-height:1.75;color:var(--dark)}
 .bow-footer-text{padding:13px 18px 15px;background:var(--cream);border-top:0.5px solid var(--border);font-size:14px;color:var(--muted);line-height:1.7;font-style:italic}
 .next-push{background:#E8F5E2;border:1px solid #C5E0BB;border-radius:12px;padding:14px 18px;margin-bottom:10px;display:flex;gap:12px}
-.np-text{font-size:14px;line-height:1.65}
+.np-text{font-size:15px;line-height:1.75;color:var(--dark)}
 .np-text strong{color:var(--green);font-weight:600}
 .no-advisory{text-align:center;padding:60px 20px}
 .no-adv-num{font-size:64px;font-weight:700;color:var(--border);line-height:1;margin-bottom:16px}
@@ -162,7 +162,7 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
   <div class="ey-card">
     <div class="ey-ch"><div class="ey-lbl">Your eye by genre — tap to read</div></div>
     {% for genre in advisory.genres %}
-    <div class="ey-acc-row">
+    <div class="ey-acc-row" onclick="this.classList.toggle('open')">
       <div class="ey-acc-head" onclick="this.closest('.ey-acc-row').classList.toggle('open')" role="button" tabindex="0">
         <div class="ey-acc-icon">{{ genre.name[:2].upper() }}</div>
         <div class="ey-acc-col">
