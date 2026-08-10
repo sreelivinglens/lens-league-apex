@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 176.2b (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
+{# SL-VERSION: 176.2c (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -541,10 +541,10 @@ body.page-dashboard #backToTop         { display:none !important }
       {# ── LAYER 2: Location advisory ── #}
       {% if _has_mentor_data %}
 
-        {# SL-176.2: My Evolving Eye — TOP LEVEL, not nested in live event ── #}
+        {# SL-176.2c: My Evolving Eye — uses evolving_eye_json passed from app.py, not ORM attr #}
         {# State 1: Advisory ready #}
-        {% if current_user.evolving_eye_json %}
-        {% set _eye = current_user.evolving_eye_json | from_json %}
+        {% if evolving_eye_json %}
+        {% set _eye = evolving_eye_json | from_json %}
         <div style="background:#FFF8EC;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid #EDD89A;display:flex;align-items:center;gap:14px">
           <div style="width:40px;height:40px;background:#FEF0C7;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">📈</div>
           <div style="flex:1;min-width:0">
