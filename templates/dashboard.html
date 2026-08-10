@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 176.1 (Session 176, 2026-08-10 — Nav: Overall Standings + Recent Work + Get Reviewed; Evolving Eye countdown banner sub-10; AEA score nowrap fix; eval banner persistent on all pages; Continue to Dashboard click feedback) #}
+{# SL-VERSION: 176.2 (Session 176, 2026-08-10 — Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -55,7 +55,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── SIDENAV ── */
 .sidenav{background:#fff;border-right:0.5px solid var(--border);padding:14px 0 !important;width:155px !important;flex-shrink:0 !important;flex-grow:0 !important;overflow:hidden !important;height:auto !important;position:static !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;backdrop-filter:none !important;z-index:auto !important}
-.si{display:block;padding:7px 14px 7px 12px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;line-height:1.5;word-break:break-word}
+.si{display:block;padding:7px 14px 7px 12px;font-size:14px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;line-height:1.5;word-break:break-word}
 .si.active{background:var(--cream);color:var(--dark);font-weight:600;border-left-color:var(--gold)}
 .si:hover:not(.active){color:var(--dark);background:#fafaf8}
 .si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
@@ -76,7 +76,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .insight-line3{font-size:15px;font-weight:600;color:var(--green);line-height:1.8;margin-top:2px;display:block;width:100%}
 
 /* ── READ MORE — MUST be span, never button ── */
-.rm{font-size:13px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px;background:none;border:none;padding:0}
+.rm{font-size:14px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px;background:none;border:none;padding:0}
 .lnk{font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
 .expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
 
@@ -90,8 +90,8 @@ body.page-dashboard #backToTop         { display:none !important }
 .et{flex:1;min-width:0}
 .eti{aspect-ratio:1;border-radius:6px;position:relative;margin-bottom:2px;overflow:hidden}
 .eti img{width:100%;height:100%;object-fit:cover;display:block}
-.escore{font-size:13px;font-weight:600;color:var(--dark);display:block;line-height:1.4;white-space:nowrap}
-.edate{font-size:13px;color:var(--muted);display:block;line-height:1.4;white-space:nowrap}
+.escore{font-size:14px;font-weight:600;color:var(--dark);display:block;line-height:1.4;white-space:nowrap}
+.edate{font-size:14px;color:var(--muted);display:block;line-height:1.4;white-space:nowrap}
 .et-desktop-only{display:flex}
 
 /* ── TRAIN YOUR EYE image container ── */
@@ -102,7 +102,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
 /* ── RIGHT PANEL ── */
 .rpanel{padding:14px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--border);background:#fff;width:220px;flex-shrink:0;flex-grow:0;min-width:220px;overflow:hidden;box-sizing:border-box}.rpanel *{min-width:0;max-width:100%;word-wrap:break-word;box-sizing:border-box}
-.rl{font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.rl{font-size:14px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 
 /* ── RANK CARD ── */
 .rank-card{background:#fff;border-radius:13px;border:0.5px solid var(--border);border-top:2.5px solid var(--gold);padding:14px;position:relative}
@@ -335,20 +335,45 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
     {% endif %}
 
+    {# ── FIRST VISIT WELCOME — shown only on visit 1 with no images ── #}
+    {% if dashboard_visit_count is defined and dashboard_visit_count == 1 and stats and stats.total == 0 %}
+    <div style="background:linear-gradient(135deg,#13254B 0%,#1A3460 100%);border-radius:14px;padding:20px 22px;color:#fff;margin-bottom:0;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(214,164,40,0.9);margin-bottom:8px;">Welcome to Shutter League</div>
+      <div style="font-size:18px;font-weight:700;line-height:1.35;margin-bottom:10px;">Your photography evaluation platform is ready.</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.65;margin-bottom:16px;">Upload a photograph and get a precise evaluation across five craft dimensions — Difficulty, Timing, Disruption, Wonder, and Visual Impact. See exactly where your photography sits and what to work on next.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{{ url_for('upload') }}" style="background:#D6A428;color:#0F2A22;font-size:15px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;">Upload your first photograph →</a>
+        <a href="{{ url_for('how_it_works') }}" style="background:rgba(255,255,255,0.12);color:#fff;font-size:15px;font-weight:600;padding:12px 20px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,0.2);">How scoring works</a>
+      </div>
+    </div>
+    {% endif %}
+
     {# ── CARD 1: GREETING — three human sentences ── #}
     <div class="card card-greeting">
-      <div class="greeting-name">{{ ns.greeting }}, {% if progress_data and progress_data.highest_tier %}<span style="font-size:20px;font-weight:600;color:var(--gold-dk);letter-spacing:0.3px;vertical-align:baseline;">{{ progress_data.highest_tier }}</span> {% endif %}{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
+      {# Header row — name + photo count chip #}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;">
+        <div class="greeting-name" style="margin-bottom:0;">{{ ns.greeting }}, {% if progress_data and progress_data.highest_tier %}<span style="font-size:20px;font-weight:600;color:var(--gold-dk);letter-spacing:0.3px;vertical-align:baseline;">{{ progress_data.highest_tier }}</span> {% endif %}{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.</div>
+        {% if stats and stats.total > 0 %}
+        <a href="{{ url_for('my_gallery') }}" style="display:flex;align-items:center;gap:6px;text-decoration:none;background:var(--cream);border:0.5px solid var(--border);border-radius:9px;padding:6px 10px;flex-shrink:0;">
+          <span style="font-size:18px;">📷</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--dark);line-height:1.2;">{{ stats.total }}</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.2;">View all →</div>
+          </div>
+        </a>
+        {% endif %}
+      </div>
 
       {% if _last and _last.score %}
       <div class="score-row">
         <span class="score-big">{{ '%.1f'|format(_last.score) }}</span>
-        {% if _last.tier %}<span style="font-size:13px;font-weight:600;color:var(--green)">{{ _last.tier }}</span>{% endif %}
+        {% if _last.tier %}<span style="font-size:14px;font-weight:600;color:var(--green)">{{ _last.tier }}</span>{% endif %}
         {% if progress_data and progress_data.count > 1 and progress_data.trend and progress_data.trend|length >= 2 %}
-          {% if progress_data.trend[-1].score > progress_data.trend[-2].score %}<span style="font-size:13px;color:var(--green)">↑</span>
-          {% elif progress_data.trend[-1].score < progress_data.trend[-2].score %}<span style="font-size:13px;color:#C05A1A">↓</span>
+          {% if progress_data.trend[-1].score > progress_data.trend[-2].score %}<span style="font-size:14px;color:var(--green)">↑</span>
+          {% elif progress_data.trend[-1].score < progress_data.trend[-2].score %}<span style="font-size:14px;color:#C05A1A">↓</span>
           {% endif %}
         {% endif %}
-        <span style="font-size:13px;font-weight:400;color:var(--muted)">last evaluation</span>
+        <span style="font-size:14px;font-weight:400;color:var(--muted)">last evaluation</span>
       </div>
       {% endif %}
 
@@ -416,6 +441,28 @@ body.page-dashboard #backToTop         { display:none !important }
       </div>
       {% endif %}
     </div>
+
+    {# ── DIRECTIVE BAR — always visible above the fold when user has images ── #}
+    {% if stats and stats.total > 0 %}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <a href="{{ url_for('mission') }}" style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:12px 14px;text-decoration:none;">
+        <span style="font-size:15px;font-weight:600;color:var(--dark);line-height:1.4;">Your next assignment is waiting</span>
+        <span style="font-size:15px;font-weight:700;color:var(--gold-dk);white-space:nowrap;">Begin →</span>
+      </a>
+      {% if active_challenge %}
+      <a href="{{ url_for('weekly_challenge') }}" style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-left:3px solid #27500A;border-radius:8px;padding:12px 14px;text-decoration:none;">
+        <span style="font-size:15px;font-weight:600;color:var(--dark);line-height:1.4;">Weekly Assignment{% if active_challenge.closes_at %} · closes {{ active_challenge.closes_at.strftime('%d %b') }}{% endif %}</span>
+        <span style="font-size:15px;font-weight:700;color:#27500A;white-space:nowrap;">Participate →</span>
+      </a>
+      {% endif %}
+      {% if quota_status and not quota_status.is_unlimited and quota_status.remaining is defined and quota_status.remaining <= 3 %}
+      <a href="{{ url_for('upload') }}" style="flex:1;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:8px;padding:12px 14px;text-decoration:none;">
+        <span style="font-size:15px;font-weight:600;color:var(--dark);line-height:1.4;">{{ quota_status.remaining }} evaluation{{ 's' if quota_status.remaining != 1 else '' }} remaining this cycle</span>
+        <span style="font-size:15px;font-weight:700;color:#2C3E6B;white-space:nowrap;">Upload now →</span>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
 
     {# ── CARD 2 DESKTOP / CARD 3 MOBILE: MENTOR ADVICE ── #}
     {% set _has_mentor_data = (dash_advisory and dash_advisory.get('location_name')) or dash_live_event %}
@@ -494,104 +541,125 @@ body.page-dashboard #backToTop         { display:none !important }
       {# ── LAYER 2: Location advisory ── #}
       {% if _has_mentor_data %}
 
-        {# ── LIVE EVENT: show shot prescription as hero ── #}
-        {% if dash_live_event %}
-        {# Shot prescription chips — from structured fields if available, else from best_light_time #}
-        {% set _ev_shot_time = dash_live_event.get('shot_time') or dash_live_event.get('best_light_time') or '' %}
-        {% set _ev_tech = dash_live_event.get('technical_tip') or '' %}
-        {% set _ev_pos = dash_live_event.get('position_tip') or '' %}
-
-        {# SL-176.1: My Evolving Eye — 3-state banner #}
-        {# State 1: Advisory ready — show gold banner with Read it button #}
+        {# SL-176.2: My Evolving Eye — TOP LEVEL, not nested in live event ── #}
+        {# State 1: Advisory ready #}
         {% if current_user.evolving_eye_json %}
         {% set _eye = current_user.evolving_eye_json | from_json %}
-        <div style="background:#FFF8EC;border-radius:13px;padding:14px 16px;margin-bottom:10px;border:1px solid #EDD89A;display:flex;align-items:center;gap:14px">
-          <div style="width:38px;height:38px;background:#FEF0C7;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📈</div>
+        <div style="background:#FFF8EC;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid #EDD89A;display:flex;align-items:center;gap:14px">
+          <div style="width:40px;height:40px;background:#FEF0C7;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">📈</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:600;color:#1A1814;margin-bottom:2px">Your {{ _eye.milestone }}-image advisory is ready</div>
-            <div style="font-size:14px;color:#6B6B6B;line-height:1.5">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:600">Next report at {{ _eye.milestone + 10 }} images →</span></div>
+            <div style="font-size:15px;font-weight:700;color:#1A1814;margin-bottom:3px">Your {{ _eye.milestone }}-image Evolving Eye advisory is ready</div>
+            <div style="font-size:14px;color:#6B6B6B;line-height:1.55">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:600">Next report at {{ _eye.milestone + 10 }} images.</span></div>
           </div>
-          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:14px;font-weight:700;padding:10px 16px;border-radius:8px;text-decoration:none;white-space:nowrap">Read it →</a>
+          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:14px;font-weight:700;padding:11px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;min-height:44px;display:flex;align-items:center;">Read it →</a>
         </div>
-
-        {# State 2: Sub-10 images — show countdown banner #}
+        {# State 2: Sub-10 images — countdown #}
         {% elif scored_count is defined and scored_count < 10 %}
         {% set _images_needed = 10 - scored_count %}
-        <div style="background:#F6F2E9;border-radius:13px;padding:13px 16px;margin-bottom:10px;border:1px solid #E8E4DA;display:flex;align-items:center;gap:12px">
-          <div style="width:34px;height:34px;background:#EDE8DC;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">👁</div>
+        <div style="background:#F6F2E9;border-radius:13px;padding:14px 16px;margin-bottom:10px;border:1px solid #E8E4DA;display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;background:#EDE8DC;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">👁</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:600;color:#1A1814;margin-bottom:2px">Your Evolving Eye report</div>
-            <div style="font-size:14px;color:#6B6B6B;line-height:1.5">You are <strong style="color:#A37B2C">{{ _images_needed }} image{{ 's' if _images_needed != 1 else '' }}</strong> away from your first advisory. Keep shooting.</div>
+            <div style="font-size:15px;font-weight:600;color:#1A1814;margin-bottom:3px">Your Evolving Eye report</div>
+            <div style="font-size:14px;color:#6B6B6B;line-height:1.55">You are <strong style="color:#A37B2C">{{ _images_needed }} image{{ 's' if _images_needed != 1 else '' }}</strong> away from your first advisory — an analysis of what is happening to your eye as a photographer.</div>
           </div>
         </div>
-
-        {# State 3: Between milestones (10+ images, no new advisory yet) — quiet link only #}
+        {# State 3: Between milestones — quiet link #}
         {% elif scored_count is defined and scored_count >= 10 %}
-        <div style="text-align:right;margin-bottom:8px">
-          <a href="{{ url_for('evolving_eye') }}" style="font-size:13px;color:#A37B2C;font-weight:600;text-decoration:underline">My Evolving Eye →</a>
+        <div style="text-align:right;margin-bottom:10px">
+          <a href="{{ url_for('evolving_eye') }}" style="font-size:14px;color:#A37B2C;font-weight:600;text-decoration:underline">My Evolving Eye →</a>
         </div>
         {% endif %}
 
-        {# Hero shot prescription block — redesigned to catch the eye (SL 175.21) #}
-        <div style="background:#EBF0F8;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid rgba(44,95,138,0.25);box-shadow:0 2px 8px rgba(44,95,138,0.08)">
-          {# Header row — gold label + location name #}
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)">Tonight's shot</div>
-            {% if dash_live_event.genre %}<span style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2C5F8A">{{ dash_live_event.genre }}</span>{% endif %}
+        {# ── LIVE EVENT — rich card from v171.9 ── #}
+        {% if dash_live_event %}
+        {% set _live_full = (dash_live_event.what_is_happening or '') ~ (' ' ~ dash_live_event.why_it_matters if dash_live_event.get('why_it_matters') else '') %}
+        <div style="background:linear-gradient(135deg,#FDF6DC 0%,#FFFDF5 100%);border:1px solid #E8C84A;border-radius:13px;overflow:hidden;margin-bottom:10px;">
+          <div style="background:#D6A428;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <div style="width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;animation:live-pulse 1.4s ease-in-out infinite;"></div>
+              <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;">Live Event · Now</span>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              {% if dash_live_event.deadline_label %}<span style="background:rgba(0,0,0,0.12);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.deadline_label }}</span>{% endif %}
+              {% if dash_live_event.genre %}<span style="background:rgba(255,255,255,0.4);color:#111;font-size:13px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ dash_live_event.genre|title }}</span>{% endif %}
+            </div>
           </div>
-          {# Location #}
-          <div style="font-size:14px;color:#2C5F8A;font-weight:500;margin-bottom:6px">📍 {{ dash_live_event.location_name }}</div>
-          {# Subject — the action, bold and white #}
-          <div style="font-size:16px;font-weight:700;color:#1A1814;line-height:1.45;margin-bottom:14px">{{ dash_live_event.subject or dash_live_event.location_name }}</div>
-          {# Chips — each on its own pill row #}
-          {% if _ev_shot_time or _ev_tech or _ev_pos %}
-          <div style="display:flex;flex-direction:column;gap:7px">
-            {% if _ev_shot_time %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
-              <span style="font-size:16px;flex-shrink:0;line-height:1.3">⏱</span>
-              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _ev_shot_time }}</span>
+          <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:16px;font-weight:700;color:var(--dark);margin-bottom:2px;">{{ dash_live_event.location_name }}{% if dash_live_event.get('state_country') %}, {{ dash_live_event.state_country }}{% endif %}</div>
+              {% if dash_live_event.subject %}<div style="font-size:15px;font-weight:700;color:#A37B2C;margin-bottom:8px;">{{ dash_live_event.subject }}</div>{% endif %}
+              <div id="live-body-short" style="font-size:15px;color:var(--dark);line-height:1.65;margin-bottom:6px;">
+                {% if _live_full|length > 220 %}{{ _live_full[:220].rsplit(' ',1)[0] }}… <button onclick="document.getElementById('live-body-short').style.display='none';document.getElementById('live-body-full').style.display='block';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _live_full }}{% endif %}
+              </div>
+              <div id="live-body-full" style="display:none;font-size:15px;color:var(--dark);line-height:1.65;margin-bottom:6px;">
+                {{ _live_full }}<button onclick="document.getElementById('live-body-short').style.display='block';document.getElementById('live-body-full').style.display='none';" style="background:none;border:none;color:#A37B2C;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
+              </div>
+              {% if progress_data and progress_data.weakest %}
+              {% set _dim_map = {'dod':'Difficulty','dm':'Timing','aq':'Visual Impact','wonder':'WOW Factor','disruption':'Disruption'} %}
+              <div style="font-size:14px;color:#A37B2C;font-weight:700;margin-top:4px;">Focus: {{ _dim_map.get(progress_data.weakest, progress_data.weakest) }}</div>
+              {% endif %}
+              <div style="font-size:14px;color:#A37B2C;font-weight:500;margin-top:6px;">
+                {% if dash_live_event.best_light_time %}⏱ {{ dash_live_event.best_light_time }}{% endif %}{% if dash_live_event.best_light_time and dash_live_event.get('access_notes') %} · {% endif %}{% if dash_live_event.get('access_notes') %}📌 {{ dash_live_event.access_notes[:40] }}{% if dash_live_event.access_notes|length > 40 %}…{% endif %}{% endif %}
+              </div>
             </div>
-            {% endif %}
-            {% if _ev_tech %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
-              <span style="font-size:16px;flex-shrink:0;line-height:1.3">📷</span>
-              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _ev_tech }}</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
+              <div style="width:48px;height:48px;border-radius:10px;background:rgba(214,164,40,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;">📍</div>
+              <a href="{{ dash_live_event.url }}" target="_blank" style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:8px 14px;border-radius:8px;min-height:44px;display:flex;align-items:center;">Get directions →</a>
+              <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'});}" style="font-size:14px;color:#A37B2C;text-decoration:underline;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;white-space:nowrap;">Change location →</button>
             </div>
-            {% endif %}
-            {% if _ev_pos %}
-            <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:8px;padding:9px 12px;border:0.5px solid rgba(44,95,138,0.15)">
-              <span style="font-size:16px;flex-shrink:0;line-height:1.3">📍</span>
-              <span style="font-size:14px;color:#1A2744;line-height:1.5;font-weight:500">{{ _ev_pos }}</span>
-            </div>
-            {% endif %}
           </div>
-          {% else %}
-          <div style="font-size:14px;color:#2A3A5A;line-height:1.7">{{ (dash_live_event.what_is_happening or '')[:160] }}{% if (dash_live_event.what_is_happening or '')|length > 160 %}…{% endif %}</div>
-          {% endif %}
+          <div style="padding:10px 18px 14px;border-top:1px solid #E8C84A;">
+            <a href="{{ url_for('upload') }}" style="font-size:14px;color:#A37B2C;font-weight:700;text-decoration:none;">📷 Photograph today → get your evaluation → tomorrow's brief builds on it →</a>
+          </div>
         </div>
+        <style>@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:0.35}}</style>
 
-        {# Link to full brief in Nearby Opportunity below — no duplication #}
-        <a href="#nearby-opportunity" style="font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:none;display:inline-block;margin-top:8px">Read full brief ↓</a>
-
-        {# ── STANDARD ADVISORY (no live event) ── #}
-        {% elif dash_advisory %}
-        <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px">📍 {{ dash_advisory.location_name }}</div>
-        {% if dash_advisory.get('best_light_time') %}<div style="font-size:14px;font-weight:600;color:var(--gold-dk);margin-bottom:5px">{{ dash_advisory.best_light_time }}</div>{% endif %}
-        {% set _adv_short = (dash_advisory.what_is_happening or dash_advisory.light_note or '') %}
-        <div class="body-text" style="margin-bottom:8px">{{ _adv_short[:140] }}{% if _adv_short|length > 140 %}…{% endif %}</div>
-        <span class="rm" id="ma-rm" onclick="toggleSpan('ma-exp','ma-rm')">Read more →</span>
-        <div class="expanded" id="ma-exp">
-          {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.light_note or '') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
-          <div class="body-text" style="margin-bottom:10px">{{ _adv_full }}</div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:14px;color:var(--muted)">
-            {% if dash_advisory.get('best_light_time') %}<span>⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
-            {% if weather and weather.condition %}<span>☁ {{ weather.condition }}</span>{% endif %}
+        {# ── NEARBY OPPORTUNITY — only when no live event OR different location ── #}
+        {% elif dash_advisory and dash_advisory.get('location_name') %}
+        {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.get('light_note') or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
+        <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:13px;overflow:hidden;margin-bottom:10px;">
+          <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:6px;height:6px;border-radius:50%;background:#2A7A3A;flex-shrink:0;"></div>
+                  <span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2A7A3A;">Nearby Opportunity · Now</span>
+                </div>
+                {% if dash_advisory.get('genre') %}<span style="background:#fff;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid #C8DDB8;">{{ dash_advisory.genre|title }}</span>{% endif %}
+              </div>
+              <div style="font-size:16px;font-weight:700;color:var(--dark);margin-bottom:2px;">{{ dash_advisory.location_name }}{% if dash_advisory.get('state_country') %}, {{ dash_advisory.state_country }}{% endif %}</div>
+              {% if dash_advisory.get('subject') %}<div style="font-size:15px;font-weight:600;color:#2A7A3A;margin-bottom:6px;">{{ dash_advisory.subject }}</div>{% endif %}
+              <div id="adv-body-short" style="font-size:15px;color:var(--dark);line-height:1.65;margin-bottom:6px;">
+                {% if _adv_full|length > 220 %}{{ _adv_full[:220].rsplit(' ',1)[0] }}… <button onclick="document.getElementById('adv-body-short').style.display='none';document.getElementById('adv-body-full').style.display='block';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:15px;cursor:pointer;padding:0;text-decoration:underline;">Read more</button>{% else %}{{ _adv_full }}{% endif %}
+              </div>
+              <div id="adv-body-full" style="display:none;font-size:15px;color:var(--dark);line-height:1.65;margin-bottom:6px;">
+                {{ _adv_full }}<button onclick="document.getElementById('adv-body-short').style.display='block';document.getElementById('adv-body-full').style.display='none';" style="background:none;border:none;color:#2A7A3A;font-weight:700;font-size:14px;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:4px;">Show less</button>
+              </div>
+              {% if weather and weather.state == 'red' %}
+              <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FDEAEA;border-radius:8px;color:#A32D2D;">⚠ {{ weather.message or 'Poor conditions today — check before heading out.' }}</div>
+              {% elif weather and weather.state == 'amber' %}
+              <div style="font-size:14px;font-weight:600;line-height:1.5;margin-top:6px;padding:8px 12px;background:#FEF3DC;border-radius:8px;color:#7A4A00;">⚡ {{ weather.message or 'Conditions are marginal — go early or plan for indoors.' }}</div>
+              {% endif %}
+              {% if progress_data and progress_data.weakest %}
+              {% set _dim_map2 = {'dod':'Difficulty','dm':'Timing','aq':'Visual Impact','wonder':'WOW Factor','disruption':'Disruption'} %}
+              <div style="font-size:14px;color:var(--green);font-weight:700;margin-top:6px;">Focus: {{ _dim_map2.get(progress_data.weakest, progress_data.weakest) }}</div>
+              {% endif %}
+              <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
+                {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:#2A7A3A;font-weight:600;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
+                {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
+                {% if weather and weather.condition %}<span style="font-size:14px;color:var(--muted);">☁ {{ weather.condition }}</span>{% endif %}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
+              <div style="width:52px;height:52px;border-radius:10px;background:rgba(42,122,58,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
+              <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:8px 14px;border-radius:8px;min-height:44px;display:flex;align-items:center;">Get directions →</a>
+              <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'});}" style="font-size:14px;color:#2A7A3A;text-decoration:underline;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;white-space:nowrap;">Change location →</button>
+            </div>
           </div>
-          <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="background:var(--dark);color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:7px;text-decoration:none;display:inline-block;margin-bottom:6px;">📍 Get directions →</a>
-          <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'})}" style="background:none;border:none;font-size:14px;color:var(--gold-dk);text-decoration:underline;cursor:pointer;display:block;margin-top:4px;">Change location →</button>
-          <span class="rm" onclick="toggleSpan('ma-exp','ma-rm')">Read less →</span>
         </div>
         {% endif %}
+
+        {# End location advisory layer #}
 
       {% elif _show_bottom %}
       {# STAGING PLACEHOLDER — location layer (remove _show_bottom before merge) #}
@@ -1130,17 +1198,118 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
     {% endif %}
 
-    {# GET EXPERT ADVICE #}
-    <div class="mcard rp-expert">
-      <div class="rl">Get Expert Advice</div>
-      <div style="font-size:14px;font-weight:400;color:var(--muted);line-height:1.6;margin-bottom:4px">Personal review from a Grandmaster mentor.</div>
-      <span class="rm" id="xrm" onclick="toggleSpan('xexp','xrm')">Read more →</span>
-      <div class="expanded" id="xexp">
-        <div style="font-size:13px;font-weight:400;color:var(--muted);line-height:1.5;margin-bottom:9px">Specific to your photograph — not generic advice. Direct, honest feedback from a Grandmaster.</div>
-        <a href="{{ url_for('mentors') }}" style="background:var(--gold);color:var(--dark);font-size:13px;font-weight:600;padding:8px 13px;border-radius:7px;text-decoration:none;display:inline-block;width:100%;text-align:center;">Request a review →</a>
-        <span class="rm" onclick="toggleSpan('xexp','xrm')">Read less →</span>
-      </div>
+    {# POINTS & REDEMPTIONS — from wallet_hud cache, zero DB cost #}
+    {% if wallet_hud and wallet_hud.points_balance is defined %}
+    <div class="wcard" style="border-left:3px solid #1A6B6B;">
+      <div class="rl">Points &amp; Redemptions</div>
+      <div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1;margin-bottom:8px;">{{ wallet_hud.points_balance|int }}</div>
+      <a href="{{ url_for('redeem') }}" style="font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
     </div>
+    {% elif current_user.points_balance %}
+    <div class="wcard" style="border-left:3px solid #1A6B6B;">
+      <div class="rl">Points &amp; Redemptions</div>
+      <div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1;margin-bottom:8px;">{{ (current_user.points_balance or 0)|int }}</div>
+      <a href="{{ url_for('redeem') }}" style="font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:none;">View &amp; Redeem →</a>
+    </div>
+    {% endif %}
+
+    {# MENTOR GUIDANCE — static content, zero DB cost #}
+    <div class="mcard" style="border-left:3px solid #2A7A3A;">
+      <div class="rl">Mentor Guidance</div>
+      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;text-decoration:none;">
+        <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+             onerror="this.style.background='#2C4A3A';this.removeAttribute('src')"
+             style="width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);object-fit:cover;flex-shrink:0;" alt="Ashok Kochhar">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--dark);line-height:1.3;">Ashok Kochhar</div>
+          <div style="font-size:13px;font-weight:600;color:var(--green);letter-spacing:0.3px;">Grandmaster</div>
+        </div>
+      </a>
+      <div style="font-size:14px;font-weight:400;color:var(--muted);line-height:1.65;font-style:italic;margin-bottom:10px;">"Patience is not about waiting. It's about how you observe while you wait."</div>
+      <a href="{{ url_for('mentors') }}" style="display:block;background:var(--gold);color:var(--dark);font-size:14px;font-weight:700;padding:10px 14px;border-radius:9px;text-decoration:none;text-align:center;min-height:44px;line-height:24px;">Review my Image →</a>
+    </div>
+
+    {# AEA CARD — 4 states with progress bars from v171.9 #}
+    {% if aea_dash %}
+      {% if aea_dash.qualified %}
+      {# State 1: Fully qualified #}
+      <div style="background:#1B4F72;border-radius:13px;padding:14px;border:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <img src="{{ url_for('static', filename='img/aea_badge.png') }}" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));" alt="AEA" onerror="this.style.display='none'">
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:2px;">Annual Excellence Award</div>
+            <div style="font-size:13px;font-weight:700;color:#FFFFFF;">Qualified · {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:6px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.12);margin-bottom:6px;">
+          <div style="font-size:30px;font-weight:700;color:#F5C518;line-height:1;white-space:nowrap;">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;">AEA average<br>top 6 images</div>
+        </div>
+        {% if aea_dash.league_rank %}<div style="font-size:13px;color:#7DCEA0;font-weight:600;">#{{ aea_dash.league_rank }} in {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>{% endif %}
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">Top {{ aea_dash.percentile }}% · {{ aea_dash.qualifying_months }} months active</div>
+        {% if aea_dash.top6_list %}
+        <div style="display:flex;gap:3px;margin-top:10px;flex-wrap:wrap;">
+          {% for img in aea_dash.top6_list %}
+          <a href="{{ url_for('image_detail', image_id=img.id) }}" style="width:40px;height:40px;border-radius:4px;overflow:hidden;display:block;border:1.5px solid rgba(245,197,24,0.4);">
+            <img src="{{ img.thumb_url }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.background='#1a2540';this.removeAttribute('src')" alt="">
+          </a>
+          {% endfor %}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:5px;">Your top 6 images — tap to view</div>
+        {% endif %}
+      </div>
+
+      {% elif aea_dash.qualifying_months >= aea_dash.required_months and aea_dash.total_images < aea_dash.required_images %}
+      {# State 2: Months met, images short #}
+      <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
+        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed to qualify.</div>
+        {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+      </div>
+
+      {% elif aea_dash.total_images >= aea_dash.required_images and aea_dash.qualifying_months < aea_dash.required_months %}
+      {# State 3: Images met, months short #}
+      <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
+        <div style="display:flex;gap:4px;margin-bottom:8px;">
+          {% for m in range(aea_dash.required_months) %}
+          <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+          {% endfor %}
+        </div>
+        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.</div>
+        {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+      </div>
+
+      {% else %}
+      {# State 4: Both short #}
+      <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
+        <div style="display:flex;gap:4px;margin-bottom:8px;">
+          {% for m in range(aea_dash.required_months) %}
+          <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+          {% endfor %}
+        </div>
+        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">
+          {% if aea_dash.months_needed > 0 and aea_dash.images_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} · {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
+          {% elif aea_dash.months_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.
+          {% else %}{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
+          {% endif %}
+        </div>
+        {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
+      </div>
+      {% endif %}
+
+    {% else %}
+    {# No AEA data — static fallback #}
+    <div style="background:#13254B;border-radius:13px;padding:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:4px;">Annual Excellence Award</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:10px;">Upload consistently and build your standing for the Annual Excellence Award.</div>
+      <a href="{{ url_for('poty') }}" style="font-size:14px;color:var(--gold);font-weight:600;text-decoration:none;">Learn more →</a>
+    </div>
+    {% endif %}
 
   </div>
 </div>
