@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1l (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 176.1p (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
 
 import os
 import re
@@ -6358,6 +6358,17 @@ STRUCTURE TO FOLLOW:
 6. Your next body of work (story title + 4 frames, each a different idea)
 7. Next milestone: {_next_milestone} images
 
+CONTEST RULES (critical):
+- ALWAYS list free-entry contests FIRST. At least 2 free contests before any paid ones.
+- NEVER list a contest with a vague deadline. Every contest must have a specific deadline date.
+- NEVER list a closed contest. Only contests currently accepting entries.
+- NEVER list BPOTY (Bird Photographer of the Year 2026) — closed Dec 2025.
+- If a photographer's genre has no matching open contest, suggest the closest genre match and explain why.
+- Use the LIVE CONTEST DATA provided at the end of this prompt — it was searched today and is current.
+- Match contests to the photographer's genre and actual scores. The "why" field must reference a specific image or pattern from their data.
+
+Match contests to the photographer's genre and scores. The "why" field must reference a specific image or pattern from their data — not generic praise.
+
 Output as JSON with these keys:
 {{
   "where_you_stand": "...",
@@ -6366,7 +6377,7 @@ Output as JSON with these keys:
   "genres": [{{"name": "...", "avg": ..., "count": ..., "insight": "...", "key_line": "..."}}],
   "one_thing": "...",
   "why_sl": "..." (only at milestone 10, else null),
-  "contests": [{{"name": "...", "url": "...", "why": "...", "free": true/false, "deadline": "..."}}],
+  "contests": [{{"name": "...", "url": "...", "why": "...", "free": true/false, "deadline": "specific month/date or open year-round"}}],
   "bow_title": "...",
   "bow_story": "...",
   "bow_frames": ["...", "...", "...", "..."],
@@ -6374,14 +6385,57 @@ Output as JSON with these keys:
   "next_milestone_note": "..."
 }}"""
 
+                # ── Live contest search — runs before Sonnet ─────────────
+                # SL-176.1o: Option B — search for current open contests
+                # specific to this photographer's genre before calling Sonnet.
+                # Replaces hardcoded contest list with live, accurate data.
+                _live_contests_context = ''
+                try:
+                    import anthropic as _ant_search
+                    _search_client = _ant_search.Anthropic()
+                    _primary_genre = _genres[0] if _genres else 'photography'
+                    _search_query = f"{_primary_genre} photography contest open submissions deadline 2026 2027 free entry"
+                    _search_resp = _search_client.messages.create(
+                        model='claude-sonnet-4-6',
+                        max_tokens=800,
+                        tools=[{"type": "web_search_20250305", "name": "web_search"}],
+                        messages=[{
+                            'role': 'user',
+                            'content': f"""Search for currently open photography contests for {_primary_genre} photographers as of today August 2026.
+Find 3-5 contests that are:
+1. Currently accepting entries (not closed)
+2. Have a specific deadline date (not "TBC" or vague)
+3. Mix of free and paid entry
+
+For each contest return: name, URL, deadline date, free or paid, entry fee if paid.
+Return ONLY a plain text list, no markdown. Be specific about deadlines."""
+                        }]
+                    )
+                    # Extract text from search response
+                    for _blk in _search_resp.content:
+                        if hasattr(_blk, 'type') and _blk.type == 'text':
+                            _live_contests_context = _blk.text
+                            break
+                    if _live_contests_context:
+                        app.logger.info(f'[evolving_eye] live contest search completed for user {user_id}')
+                except Exception as _cs_err:
+                    app.logger.warning(f'[evolving_eye] contest search failed: {_cs_err}')
+
                 # ── Call Sonnet ───────────────────────────────────────────
                 import anthropic as _ant
                 _client = _ant.Anthropic()
+
+                # Inject live contest data into prompt if search succeeded
+                _contest_injection = f"""
+LIVE CONTEST DATA (searched today — use these, prioritise over any other knowledge):
+{_live_contests_context}
+""" if _live_contests_context else ""
+
                 _resp = _client.messages.create(
                     model='claude-sonnet-4-6',
                     max_tokens=4000,
                     system=_system,
-                    messages=[{'role': 'user', 'content': _user_prompt}]
+                    messages=[{'role': 'user', 'content': _user_prompt + _contest_injection}]
                 )
                 _raw = _resp.content[0].text if _resp.content else ''
 
@@ -12228,6 +12282,42 @@ def admin_generate_evolving_eye(user_id):
     _generate_evolving_eye(user_id, _milestone)
 
     return {'status': 'generating', 'user_id': user_id, 'milestone': _milestone, 'total_images': _count}
+
+
+@app.route('/admin/view-evolving-eye/<int:user_id>', methods=['GET'])
+@login_required
+def admin_view_evolving_eye(user_id):
+    """SL-176.1l: Admin route to view any photographer's Evolving Eye advisory.
+    Renders evolving_eye.html for the given user — allows PDF generation without
+    switching accounts. Visit /admin/view-evolving-eye/41 for Mahesh, /13 for Unni etc.
+    Cmd+P → background graphics ON → Save as PDF."""
+    if current_user.role != 'admin':
+        abort(403)
+    import json as _ej
+    _user_row = db.session.execute(
+        db.text('SELECT id, full_name, username, evolving_eye_json, evolving_eye_milestone FROM users WHERE id = :uid'),
+        {'uid': user_id}
+    ).fetchone()
+    if not _user_row:
+        abort(404)
+    _advisory = None
+    if _user_row.evolving_eye_json:
+        _advisory = _ej.loads(_user_row.evolving_eye_json)
+    _scored_count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+        {'uid': user_id}
+    ).scalar() or 0
+    _next_milestone = ((_scored_count // 10) + 1) * 10
+    _display_name = _user_row.full_name or _user_row.username or f'Photographer {user_id}'
+    return render_template('evolving_eye.html',
+        advisory=_advisory,
+        milestone=_user_row.evolving_eye_milestone,
+        scored_count=_scored_count,
+        next_milestone=_next_milestone,
+        images_to_next=_next_milestone - _scored_count,
+        now=datetime.utcnow(),
+        admin_view_name=_display_name
+    )
 
 
 @app.route('/admin/refresh-dash-greeting/<int:user_id>', methods=['POST'])
