@@ -278,6 +278,27 @@ body.page-dashboard #backToTop         { display:none !important }
   <a id="sl175EvalLink" href="{{ url_for('my_gallery') }}" style="display:none;font-size:13px;font-weight:700;color:#D6A428;text-decoration:none;white-space:nowrap;margin-right:12px;">View in My Gallery →</a>
   <button onclick="document.getElementById('sl175EvalBanner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;">×</button>
 </div>
+
+{# ── EVOLVING EYE TOP BANNER — dismissible, shown when advisory ready ── #}
+{% if evolving_eye_data %}
+{% set _eye = evolving_eye_data %}
+<div id="slEyeBanner" style="background:#FEF3C7;border-bottom:2px solid #D6A428;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+  <div style="display:flex;align-items:center;gap:12px;flex:1">
+    <span style="font-size:20px;flex-shrink:0">📈</span>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#1A1814;">Your {{ _eye.milestone }}-image Evolving Eye advisory is ready</div>
+      <div style="font-size:13px;color:#6B6B6B;">Shutter League has been watching your work. Next report at {{ _eye.milestone + 10 }} images.</div>
+    </div>
+  </div>
+  <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:14px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;min-height:44px;display:flex;align-items:center;margin-right:8px;">Read it →</a>
+  <button onclick="document.getElementById('slEyeBanner').style.display='none';try{localStorage.setItem('sl_eye_banner_dismissed_{{ _eye.milestone }}','1')}catch(e){}" style="background:none;border:none;color:#A37B2C;font-size:22px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;min-width:32px;">×</button>
+</div>
+<script>
+(function(){
+  try{if(localStorage.getItem('sl_eye_banner_dismissed_{{ _eye.milestone }}')){document.getElementById('slEyeBanner').style.display='none';}}catch(e){}
+})();
+</script>
+{% endif %}
 {# ── TOPNAV ── #}
 <nav class="topnav">
   <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;" aria-label="Shutter League">
@@ -414,14 +435,14 @@ body.page-dashboard #backToTop         { display:none !important }
         {% endif %}
       {% endif %}
 
-      {# READ MORE — one block only, never both #}
+      {# READ MORE — strict mutual exclusion — only one block ever renders #}
       {% if dash_greeting and dash_greeting.get('expanded') %}
       <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
       <div class="expanded" id="gexp">
         <div class="body-text">{{ dash_greeting.expanded | safe }}</div>
         <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
       </div>
-      {% elif not (dash_greeting and dash_greeting.get('line1')) and progress_data and progress_data.strongest and progress_data.weakest %}
+      {% elif not dash_greeting and progress_data and progress_data.strongest and progress_data.weakest %}
       {% set _dim_labels = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'WOW Factor','disruption':'Disruption'} %}
       <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
       <div class="expanded" id="gexp">
@@ -491,7 +512,7 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
     {% endif %}
 
-    <div class="card card-mentor">
+    <div class="card card-mentor" style="background:#EBF0F8;border:0.5px solid #C5D5E8;">
       <div class="ey" style="margin-bottom:6px">Mentor Advice</div>
 
       {# ── LAYER 1: Weakest dimension — Sonnet-generated if available, fallback to template ── #}
@@ -529,20 +550,9 @@ body.page-dashboard #backToTop         { display:none !important }
       {# ── LAYER 2: Location advisory ── #}
       {% if _has_mentor_data %}
 
-        {# SL-176.2d: My Evolving Eye — uses evolving_eye_data pre-parsed dict from app.py #}
-        {# State 1: Advisory ready #}
-        {% if evolving_eye_data %}
-        {% set _eye = evolving_eye_data %}
-        <div style="background:#FEF3C7;border-radius:13px;padding:18px 20px;margin-bottom:12px;border:1.5px solid #D6A428;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(214,164,40,0.15)">
-          <div style="width:44px;height:44px;background:#FDE68A;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">📈</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:16px;font-weight:700;color:#1A1814;margin-bottom:4px">Your {{ _eye.milestone }}-image Evolving Eye advisory is ready</div>
-            <div style="font-size:15px;color:#6B6B6B;line-height:1.55">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:700">Next report at {{ _eye.milestone + 10 }} images.</span></div>
-          </div>
-          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:15px;font-weight:700;padding:12px 20px;border-radius:9px;text-decoration:none;white-space:nowrap;min-height:48px;display:flex;align-items:center;">Read it →</a>
-        </div>
-        {# State 2: Sub-10 images — countdown #}
-        {% elif scored_count is defined and scored_count < 10 %}
+        {# SL-176.2j: Evolving Eye State 1 moved to top banner above nav.
+           States 2 (countdown) and 3 (quiet link) remain here in mentor card. #}
+        {% if scored_count is defined and scored_count < 10 %}
         {% set _images_needed = 10 - scored_count %}
         <div style="background:#F6F2E9;border-radius:13px;padding:14px 16px;margin-bottom:10px;border:1px solid #E8E4DA;display:flex;align-items:center;gap:12px">
           <div style="width:38px;height:38px;background:#EDE8DC;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">👁</div>
@@ -551,8 +561,7 @@ body.page-dashboard #backToTop         { display:none !important }
             <div style="font-size:14px;color:#6B6B6B;line-height:1.55">You are <strong style="color:#A37B2C">{{ _images_needed }} image{{ 's' if _images_needed != 1 else '' }}</strong> away from your first advisory — an analysis of what is happening to your eye as a photographer.</div>
           </div>
         </div>
-        {# State 3: Between milestones — quiet link #}
-        {% elif scored_count is defined and scored_count >= 10 %}
+        {% elif scored_count is defined and scored_count >= 10 and not evolving_eye_data %}
         <div style="text-align:right;margin-bottom:10px">
           <a href="{{ url_for('evolving_eye') }}" style="font-size:14px;color:#A37B2C;font-weight:600;text-decoration:underline">My Evolving Eye →</a>
         </div>
