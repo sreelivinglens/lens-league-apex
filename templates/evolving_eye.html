@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: evolving_eye-176.6 (2026-08-10 — topbar cream not black, trajectory pastel blue+paras, insight gold block paras, footer dark kept) #}
+{# SL-VERSION: evolving_eye-176.7 (2026-08-10 — topbar cream not black, trajectory pastel blue+paras, insight gold block paras, footer dark kept) #}
 {% block title %}My Evolving Eye — So Far · Shutter League{% endblock %}
 {% block body_class %}page-evolving-eye{% endblock %}
 
@@ -148,11 +148,21 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
       <div class="ey-traj">
         <div class="ey-tnum"><div class="ey-tn-val">↑</div><div class="ey-tn-lbl">Trajectory</div></div>
         <div class="ey-tn-div"></div>
-        <div class="ey-tn-note">{{ advisory.trajectory_note | replace(". ", ".</p><p>") | safe }}</div>
+        <div class="ey-tn-note">
+          {% set _tn_sentences = advisory.trajectory_note.split('. ') %}
+          {% for i in range(0, _tn_sentences|length, 2) %}
+          <p style="margin-bottom:8px">{{ _tn_sentences[i:i+2]|join('. ') }}{% if not _tn_sentences[i:i+2][-1].endswith('.') %}.{% endif %}</p>
+          {% endfor %}
+        </div>
       </div>
       {% endif %}
       {% if advisory.what_images_say %}
-      <div class="ey-insight"><p>{{ advisory.what_images_say | replace(". ", ".</p><p>") | safe }}</p></div>
+      <div class="ey-insight">
+        {% set _ws_sentences = advisory.what_images_say.split('. ') %}
+        {% for i in range(0, _ws_sentences|length, 3) %}
+        <p style="margin-bottom:10px">{{ _ws_sentences[i:i+3]|join('. ') }}{% if not _ws_sentences[i:i+3][-1].endswith('.') %}.{% endif %}</p>
+        {% endfor %}
+      </div>
       {% endif %}
     </div>
   </div>
@@ -173,8 +183,16 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
         <span class="ey-acc-chev">⌄</span>
       </div>
       <div class="ey-acc-body">
-        {% if genre.key_line %}<div class="ey-insight" style="font-size:14px">{{ genre.key_line }}</div>{% endif %}
-        {% if genre.insight %}<p>{{ genre.insight }}</p>{% endif %}
+        {% if genre.key_line %}<div class="ey-insight" style="font-size:15px;font-weight:600;line-height:1.75;margin-bottom:12px">{{ genre.key_line }}</div>{% endif %}
+        {% if genre.insight %}
+        <div style="font-size:15px;color:var(--dark);line-height:1.85;">
+          {% set _sentences = genre.insight.split('. ') %}
+          {% set _para_size = 3 %}
+          {% for i in range(0, _sentences|length, _para_size) %}
+          <p style="margin-bottom:12px">{{ _sentences[i:i+_para_size]|join('. ') }}{% if not _sentences[i:i+_para_size][-1].endswith('.') %}.{% endif %}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
