@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1c (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
+# SL-VERSION: 176.1d (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
 
 import os
 import re
@@ -1875,7 +1875,11 @@ def _run_startup_tasks():
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_json TEXT DEFAULT NULL"
                 ))
                 db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL"
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL",
+                    # SL-176.1d: performance cache columns
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL"
                 ))
                 db.session.commit()
                 print('Location advisory link columns OK.')
@@ -4039,6 +4043,7 @@ def login():
                 def _warm_with_ctx():
                     with app.app_context():
                         _refresh_dash_caches(_uid_for_cache)
+                        _refresh_progress_data(_uid_for_cache)
                 _login_th.Thread(target=_warm_with_ctx, daemon=True).start()
         except Exception as _lc_err:
             app.logger.warning(f'[login] cache warm failed: {_lc_err}')
@@ -4950,8 +4955,36 @@ def dashboard():
             }
     # ── End Wallet HUD ────────────────────────────────────────────────────
 
-    # DDI Progress (same data as profile page)
-    progress_data = _build_progress_data(current_user)
+    # SL-176.1d: DDI Progress — cache-first from progress_data_json column
+    # Falls back to live computation on cache miss. Eliminates heaviest sync call.
+    progress_data = None
+    import json as _pdj2
+    try:
+        _pd_raw = db.session.execute(
+            db.text('SELECT progress_data_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar()
+        if _pd_raw:
+            progress_data = _pdj2.loads(_pd_raw)
+        else:
+            # Cache miss — live computation + warm cache in background
+            progress_data = _build_progress_data(current_user)
+            try:
+                import threading as _pd_th
+                _uid_pd = current_user.id
+                def _warm_pd():
+                    with app.app_context():
+                        _refresh_progress_data(_uid_pd)
+                _pd_th.Thread(target=_warm_pd, daemon=True).start()
+            except Exception:
+                pass
+    except Exception as _pd_err:
+        app.logger.warning(f'[dashboard] progress_data cache: {_pd_err}')
+        try:
+            db.session.rollback()
+            progress_data = _build_progress_data(current_user)
+        except Exception:
+            progress_data = None
 
     # ── Photo School — curriculum lesson + weather ────────────────────────
     _lesson = None
@@ -4964,10 +4997,25 @@ def dashboard():
             _lesson = _get_curriculum_lesson(current_user, progress_data)
         except Exception as _le:
             app.logger.warning(f'[curriculum_lesson] {_le}')
+        # SL-176.1d: Weather — session-cached 1h to eliminate external API calls
         try:
             _wx_city = getattr(current_user, 'city', '') or ''
             if _wx_city:
-                _weather = _get_weather(_wx_city)
+                _wx_cache_key = f'wx_{_wx_city}'
+                _wx_ts_key    = f'wx_ts_{_wx_city}'
+                _wx_ttl       = 3600  # 1 hour
+                import time as _wxt
+                if (session.get(_wx_ts_key) and
+                        _wxt.time() - session[_wx_ts_key] < _wx_ttl and
+                        session.get(_wx_cache_key)):
+                    _weather = session[_wx_cache_key]
+                else:
+                    _weather = _get_weather(_wx_city)
+                    try:
+                        session[_wx_cache_key] = _weather
+                        session[_wx_ts_key]    = _wxt.time()
+                    except Exception:
+                        pass
         except Exception as _we:
             app.logger.warning(f'[weather] {_we}')
         # Mission due — open mission upload within last 7 days still pending/processing
@@ -5263,79 +5311,99 @@ def dashboard():
     except Exception as _adv_err:
         app.logger.warning(f'[dashboard] advisory/live_event: {_adv_err}')
 
-    # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
+    # ── Peer evaluation queue for dashboard — session-cached 30 min ─────────────
+    # SL-176.1d: Was running 3 DB writes on every dashboard load.
+    # Now session-cached — DB writes only happen once per 30 minutes per user.
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
-        try:
-            from models import RatingAssignment as _RA
-            from datetime import timedelta as _td
-            from sqlalchemy import text as _sqlt
-            # Only exclude images the user has *submitted* a rating for.
-            # Expired/skipped assignments re-enter the pool — prevents depletion.
-            _already = db.session.query(_RA.image_id).filter(
-                _RA.rater_id == current_user.id,
-                _RA.status   == 'submitted'
-            )
-            _eligible = Image.query.join(
-                User, Image.user_id == User.id
-            ).filter(
-                Image.status      == 'scored',
-                Image.is_public   == True,
-                Image.is_flagged  == False,
-                Image.needs_review == False,
-                Image.score       != None,
-                Image.genre       != None,
-                Image.user_id     != current_user.id,
-                User.is_subscribed == True,
-                Image.id.notin_(_already),
-            ).order_by(
-                Image.peer_rating_count.asc().nullsfirst(),
-                db.func.random()   # tiebreak: shuffle within same rating count
-            ).limit(9).all()
-            for _img in _eligible[:3]:
-                try:
-                    # Reuse existing non-submitted assignment if present (unique constraint)
-                    _existing = _RA.query.filter_by(
-                        rater_id=current_user.id,
-                        image_id=_img.id
-                    ).first()
-                    if _existing:
-                        _existing.status     = 'started'
-                        _existing.started_at = datetime.utcnow()
-                        _existing.expires_at = datetime.utcnow() + _td(hours=72)
-                        db.session.flush()
-                        try:
-                            db.session.execute(db.text(
-                                "UPDATE rating_assignments SET genre=:g WHERE id=:id"
-                            ), {'g': _img.genre, 'id': _existing.id})
-                        except Exception:
-                            pass
-                        _peer_queue.append(_existing)
-                    else:
-                        _a = _RA(
-                            rater_id   = current_user.id,
-                            image_id   = _img.id,
-                            status     = 'started',
-                            tier_slot  = 'any',
-                            started_at = datetime.utcnow(),
-                            expires_at = datetime.utcnow() + _td(hours=72),
-                        )
-                        db.session.add(_a)
-                        db.session.flush()
-                        try:
-                            db.session.execute(db.text(
-                                "UPDATE rating_assignments SET genre=:g WHERE id=:id"
-                            ), {'g': _img.genre, 'id': _a.id})
-                        except Exception:
-                            pass
-                        _peer_queue.append(_a)
-                except Exception as _pq_assign_err:
-                    app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
-                    db.session.rollback()
-            if _peer_queue:
-                db.session.commit()
-        except Exception as _pqe:
-            app.logger.warning(f'[dashboard] peer queue: {_pqe}')
+        _pq_cache_key = f'pq_{current_user.id}'
+        _pq_ts_key    = f'pq_ts_{current_user.id}'
+        _pq_ttl       = 1800  # 30 minutes
+        import time as _pqt
+        _pq_cached = (session.get(_pq_ts_key) and
+                      _pqt.time() - session[_pq_ts_key] < _pq_ttl and
+                      session.get(_pq_cache_key))
+        if _pq_cached:
+            # Serve cached assignment IDs — re-fetch ORM objects (cheap, no writes)
+            try:
+                from models import RatingAssignment as _RA2
+                _cached_ids = session[_pq_cache_key]
+                _peer_queue = [_RA2.query.get(aid) for aid in _cached_ids if aid]
+                _peer_queue = [a for a in _peer_queue if a]
+            except Exception:
+                _peer_queue = []
+        else:
+            try:
+                from models import RatingAssignment as _RA
+                from datetime import timedelta as _td
+                _already = db.session.query(_RA.image_id).filter(
+                    _RA.rater_id == current_user.id,
+                    _RA.status   == 'submitted'
+                )
+                _eligible = Image.query.join(
+                    User, Image.user_id == User.id
+                ).filter(
+                    Image.status      == 'scored',
+                    Image.is_public   == True,
+                    Image.is_flagged  == False,
+                    Image.needs_review == False,
+                    Image.score       != None,
+                    Image.genre       != None,
+                    Image.user_id     != current_user.id,
+                    User.is_subscribed == True,
+                    Image.id.notin_(_already),
+                ).order_by(
+                    Image.peer_rating_count.asc().nullsfirst(),
+                    db.func.random()
+                ).limit(9).all()
+                for _img in _eligible[:3]:
+                    try:
+                        _existing = _RA.query.filter_by(
+                            rater_id=current_user.id,
+                            image_id=_img.id
+                        ).first()
+                        if _existing:
+                            _existing.status     = 'started'
+                            _existing.started_at = datetime.utcnow()
+                            _existing.expires_at = datetime.utcnow() + _td(hours=72)
+                            db.session.flush()
+                            try:
+                                db.session.execute(db.text(
+                                    "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                                ), {'g': _img.genre, 'id': _existing.id})
+                            except Exception:
+                                pass
+                            _peer_queue.append(_existing)
+                        else:
+                            _a = _RA(
+                                rater_id   = current_user.id,
+                                image_id   = _img.id,
+                                status     = 'started',
+                                tier_slot  = 'any',
+                                started_at = datetime.utcnow(),
+                                expires_at = datetime.utcnow() + _td(hours=72),
+                            )
+                            db.session.add(_a)
+                            db.session.flush()
+                            try:
+                                db.session.execute(db.text(
+                                    "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                                ), {'g': _img.genre, 'id': _a.id})
+                            except Exception:
+                                pass
+                            _peer_queue.append(_a)
+                    except Exception as _pq_assign_err:
+                        app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
+                        db.session.rollback()
+                if _peer_queue:
+                    db.session.commit()
+                    try:
+                        session[_pq_cache_key] = [a.id for a in _peer_queue if a.id]
+                        session[_pq_ts_key]    = _pqt.time()
+                    except Exception:
+                        pass
+            except Exception as _pqe:
+                app.logger.warning(f'[dashboard] peer queue: {_pqe}')
 
     # ── Eye of Judge — calibration trend (shows when ≥5 peer evals submitted) ──
     _eye_of_judge = None
@@ -6417,6 +6485,35 @@ def _refresh_dash_caches(user_id):
 
     except Exception as _dc_err:
         app.logger.warning(f'[dash_cache] non-fatal error: {_dc_err}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
+def _refresh_progress_data(user_id):
+    """SL-176.1d: Cache _build_progress_data result in progress_data_json column.
+    Called after every evaluation (in _score_in_background) and on login.
+    Eliminates the heaviest synchronous call on every dashboard load.
+    Non-fatal — any failure logs warning and returns gracefully."""
+    import json as _pdj
+    try:
+        with app.app_context():
+            _user = User.query.get(user_id)
+            if not _user:
+                return
+            _pd = _build_progress_data(_user)
+            if _pd is None:
+                return
+            # dim_sparklines contains nested dicts — serialisable
+            db.session.execute(
+                db.text('UPDATE users SET progress_data_json = :j WHERE id = :uid'),
+                {'j': _pdj.dumps(_pd), 'uid': user_id}
+            )
+            db.session.commit()
+            app.logger.info(f'[progress_data] cache refreshed for user {user_id}')
+    except Exception as _pde:
+        app.logger.warning(f'[progress_data] cache failed: {_pde}')
         try:
             db.session.rollback()
         except Exception:
@@ -9468,6 +9565,12 @@ def upload():
                                     _refresh_dash_caches(_img.user_id)
                                 except Exception as _dc_bg_err:
                                     app.logger.warning(f'[dash_cache] bg refresh failed: {_dc_bg_err}')
+
+                                # SL-176.1d: Refresh progress_data cache — eliminates heaviest sync call
+                                try:
+                                    _refresh_progress_data(_img.user_id)
+                                except Exception as _pd_bg_err:
+                                    app.logger.warning(f'[progress_data] bg refresh failed: {_pd_bg_err}')
 
                                 # SL-176: My Evolving Eye — fire at milestones 10/20/30...
                                 try:
