@@ -1947,6 +1947,19 @@ function toggleSpan(expId, rmId) {
   rm.textContent = open ? (prefix + ' more →') : (prefix + ' less →');
 }
 
+/* Reset all expanded sections on page load — prevents stale open state */
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.expanded').forEach(function(el){
+    el.style.display = 'none';
+  });
+  document.querySelectorAll('.rm').forEach(function(el){
+    if (el.textContent.indexOf('less') > -1) {
+      var prefix = el.textContent.indexOf('View') === 0 ? 'View' : 'Read';
+      el.textContent = prefix + ' more →';
+    }
+  });
+});
+
 /* Scroll to top */
 (function(){
   var btn = document.getElementById('scrollTop');
