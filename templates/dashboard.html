@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 176.2c (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
+{# SL-VERSION: 176.2d (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -385,8 +385,8 @@ body.page-dashboard #backToTop         { display:none !important }
       {% elif progress_data and progress_data.count > 0 and progress_data.strongest %}
         {% set _dim_human = {'dod':'technical precision','dm':'sense of timing','aq':'visual impact','wonder':'ability to find wonder','disruption':'disruptive composition'} %}
         {% set _dim_gap   = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
-        <div class="insight-line1">Your {{ _dim_human.get(progress_data.strongest,'eye') }} is your strongest asset — it shows consistently across your evaluations.</div>
-        <div class="insight-line2">The gap is in {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }} — this is what separates your current work from your best possible work.</div>
+        <div class="insight-line1">Across your {{ progress_data.count }} images, your {{ _dim_human.get(progress_data.strongest,'eye') }} scores consistently above your other dimensions.</div>
+        <div class="insight-line2">The gap your evaluations point to is {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }} — your personalised brief is being built from your actual images.</div>
         <div class="insight-line3">Your eye is ready. Go out and find the difficult shot while others wait.</div>
       {% elif stats and stats.total == 0 %}
         <div class="insight-line1">Your first photograph starts everything. The platform does not guess — it learns from what you actually shoot.</div>
@@ -615,7 +615,7 @@ body.page-dashboard #backToTop         { display:none !important }
         <style>@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:0.35}}</style>
 
         {# ── NEARBY OPPORTUNITY — only when no live event OR different location ── #}
-        {% elif dash_advisory and dash_advisory.get('location_name') %}
+        {% elif dash_advisory and dash_advisory.get('location_name') and (not dash_live_event or dash_advisory.location_name != dash_live_event.location_name) %}
         {% set _adv_full = (dash_advisory.what_is_happening or dash_advisory.get('light_note') or 'Good conditions for photography today.') ~ (' ' ~ dash_advisory.why_it_matters if dash_advisory.get('why_it_matters') else '') %}
         <div style="background:linear-gradient(135deg,#D4EED8 0%,#F0F8F2 100%);border:1px solid #A8CEB0;border-radius:13px;overflow:hidden;margin-bottom:10px;">
           <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:14px;">
