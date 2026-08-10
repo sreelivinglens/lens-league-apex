@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1 (Session 176, 2026-08-10 — Pass eval_pending to dashboard redirect; /standings alias for /leaderboard)
+# SL-VERSION: 176.1b (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
 
 import os
 import re
@@ -5427,12 +5427,7 @@ def dashboard():
                            dashboard_visit_count=_dash_visit_count,
                            aea_dash=aea_dash,
                            just_subscribed=session.pop('just_subscribed', None),
-                           quota_status=_get_quota_status(current_user),
-                           # SL-176.1: scored_count for Evolving Eye countdown banner
-                           scored_count=db.session.execute(
-                               db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
-                               {'uid': current_user.id}
-                           ).scalar() or 0)
+                           quota_status=_get_quota_status(current_user))
 
 
 # ---------------------------------------------------------------------------
@@ -6129,7 +6124,7 @@ Output as JSON with these keys:
                 _client = _ant.Anthropic()
                 _resp = _client.messages.create(
                     model='claude-sonnet-4-6',
-                    max_tokens=2000,
+                    max_tokens=4000,
                     system=_system,
                     messages=[{'role': 'user', 'content': _user_prompt}]
                 )
@@ -9936,8 +9931,7 @@ def upload():
         if next_page == 'challenge':
             return redirect(url_for('challenge_submit') + f'?highlight={img.id}')
         flash('Image uploaded — your score will appear shortly.', 'success')
-        # SL-176.1: Pass eval_pending so dashboard banner activates immediately
-        return redirect(url_for('dashboard', eval_pending=img.id))
+        return redirect(url_for('dashboard'))
 
     import json as _json
     _last_image = Image.query.filter(
@@ -12169,11 +12163,6 @@ def recent_work():
         filter_tiers  = _all_tiers,
     )
 
-
-@app.route('/standings')
-def standings_alias():
-    # SL-176.1: KYC-safe alias — /standings redirects to /leaderboard
-    return redirect(url_for('leaderboard'))
 
 @app.route('/leaderboard')
 def leaderboard():
