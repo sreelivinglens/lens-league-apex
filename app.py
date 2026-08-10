@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1f (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 176.1h (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
 
 import os
 import re
@@ -5995,7 +5995,7 @@ def _refresh_dash_mentor(user_id):
         if _practise:
             _practise_ctx = f"Last time they practised {_weakest_label}: scored {_practise.get('after', 0)} vs prior avg {_practise.get('before', 0)} (delta {_practise.get('delta', 0):+.1f})."
 
-        _prompt = f"""You are the Shutter League Sherpa writing the personalised "Work on This" mentor advice card for a photographer's dashboard.
+        _prompt = f"""You are the Shutter League Sherpa. You have watched every one of this photographer's {_count} images. You are writing the "Work on This" section of their dashboard — the one thing they should be thinking about before their next shoot.
 
 PHOTOGRAPHER DATA:
 - Images evaluated: {_count}
@@ -6005,22 +6005,25 @@ PHOTOGRAPHER DATA:
 - Weakest dimension: {_weakest_label} (avg {_weakest_avg:.2f})
 - Practice history: {_practise_ctx if _practise_ctx else 'No practice missions yet.'}
 
-Write the mentor advice card. Return ONLY raw JSON, no markdown.
+This photographer's strongest work comes from {_strongest_label}. The gap is in {_weakest_label}.
+
+Write the mentor advice. Return ONLY raw JSON, no markdown.
 
 {{
-  "work_on_label": "The human name of their weakest dimension. E.g. 'Visual Disruption' not 'disruption'.",
-  "title": "A specific photographic concept or technique to work on — not just the dimension name. E.g. 'The Geometry Before the Subject' or 'Staying One Second Longer'. 4-7 words.",
-  "action": "One sharp, concrete instruction. What to do BEFORE pressing the shutter. Specific to their genre and pattern. Not generic. 15-20 words.",
-  "detail": "2-3 sentences of deeper coaching. Reference their specific genre. Name what photographers who score highest in this dimension do differently. End with one observation specific to their data — their practise history or their strongest dimension bleeding into the weakest. 50-70 words."
+  "work_on_label": "{_weakest_label}",
+  "title": "A short, human observation — NOT a workshop title, NOT a technique name. Something a mentor would say looking at their images. E.g. 'Your eye sees it. Your angle doesn't yet.' or 'You find the moment. Now find the geometry.' 6-10 words. No jargon.",
+  "action": "One sentence. What to do differently on the NEXT shoot. Written as if speaking directly to the photographer. Use 'you' and 'your'. Reference their specific genre ({_top_genre}). Make it something they can act on today. Not abstract. 18-25 words.",
+  "detail": "2-3 sentences. A mentor observation about the pattern across their images. What are they doing that works? What is the one thing preventing their {_top_genre} work from reaching the level of their best frames? Be specific — reference the genre, the dimension, the gap between their {_strongest_label} strength and their {_weakest_label} gap. Sound like someone who has watched all {_count} images, not someone reading a definition. 60-80 words."
 }}
 
-RULES:
-- Never say 'score' — say 'evaluation'
-- Never mention AI, algorithm, or engine
-- Never mention other photographers by name
-- Sound like a mentor who has watched all {_count} of their images — not a textbook
-- The action must be immediately actionable in the field
-- The detail must feel personal to THIS photographer"""
+CRITICAL RULES:
+- No jargon. No workshop titles. No abstract concepts.
+- The title must sound like a person, not a system.
+- The action must be something they can literally do before the next shutter press.
+- The detail must name something specific about THEIR images — not general advice about the dimension.
+- Never say 'score' — say 'evaluation'.
+- Never mention AI, algorithm, engine, or Shutter League's technology.
+- Sherpa voice: warm, direct, specific. A trusted friend who is also a master photographer."""
 
         _api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if not _api_key:
@@ -12097,6 +12100,25 @@ def admin_generate_evolving_eye(user_id):
     _generate_evolving_eye(user_id, _milestone)
 
     return {'status': 'generating', 'user_id': user_id, 'milestone': _milestone, 'total_images': _count}
+
+
+@app.route('/admin/refresh-dash-greeting/<int:user_id>', methods=['POST'])
+@login_required
+def admin_refresh_dash_greeting(user_id):
+    """SL-176.1f: Admin trigger to manually refresh Sonnet greeting + mentor advice.
+    Use when greeting cache is stale or after upgrading Haiku→Sonnet."""
+    if current_user.role != 'admin':
+        abort(403)
+    import threading as _rgt
+    def _run():
+        with app.app_context():
+            _refresh_dash_greeting(user_id)
+            _refresh_dash_mentor(user_id)
+            _refresh_progress_data(user_id)
+    _rgt.Thread(target=_run, daemon=True).start()
+    return {'status': 'refreshing', 'user_id': user_id,
+            'functions': ['_refresh_dash_greeting (Sonnet)', '_refresh_dash_mentor (Sonnet)', '_refresh_progress_data']}
+
 
 
 @app.route('/image/<int:image_id>/score', methods=['POST'])
