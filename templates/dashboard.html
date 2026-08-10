@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 176.2 (Session 176, 2026-08-10 — Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
+{# SL-VERSION: 176.2a (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -14,7 +14,7 @@
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════
-   SHUTTER LEAGUE DASHBOARD — SL 175.1
+   SHUTTER LEAGUE DASHBOARD — v175.1
    CSS taken directly from dashboard_approved.html
    Do not edit without founder approval.
 ═══════════════════════════════════════════════════════ */
@@ -250,7 +250,7 @@ body.page-dashboard #backToTop         { display:none !important }
 {% endblock %}
 
 {% block content %}
-{# ── SL 175: Staging flag — remove before merge to main ── #}
+{# ── Staging flag — remove before merge to main ── #}
 {% set _show_bottom = true %}{# REMOVE BEFORE MERGE TO MAIN #}
 
 {# ── Time-based greeting ── #}
@@ -269,7 +269,7 @@ body.page-dashboard #backToTop         { display:none !important }
 <div class="sl-desktop">
 <div class="sl">
 
-{# ── SL 175: EVAL PENDING BANNER — shows when redirected from upload at 50-sec cutoff ── #}
+{# ── EVAL PENDING BANNER — shows when redirected from upload at 50-sec cutoff ── #}
 <div id="sl175EvalBanner" style="display:none;background:#0F2A22;border-bottom:2px solid #D6A428;padding:10px 20px;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;flex:1">
     <span id="sl175EvalSpinner" class="sl175-spin" style="font-size:16px">⏳</span>
@@ -485,9 +485,9 @@ body.page-dashboard #backToTop         { display:none !important }
       'aq':         'Before you press the shutter: name the feeling this frame creates. If you cannot name it, find the frame that creates a specific one.'
     } %}
     <div class="card" style="background:#1A2A1A;border:0.5px solid #2A4A2A;border-radius:13px;padding:18px 20px;">
-      <div style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Today's Mission</div>
+      <div style="font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Today's Mission</div>
       <div style="font-size:19px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:10px">{{ _mission_dim_titles.get(progress_data.weakest, 'Work on Your Eye') }}</div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Focus</div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Focus</div>
       <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:14px">{{ progress_data.weakest | replace('dod','Depth of Difficulty') | replace('disruption','Disruption') | replace('dm','Decisive Moment') | replace('wonder','WOW Factor') | replace('aq','Aesthetic Quality') }}</div>
       <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:16px">{{ _mission_dim_desc.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -916,7 +916,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {% endif %}
 
     {# ── BOTTOM ROW: Nearest Opportunity (left) + Train your eye (right) — 2 column ── #}
-    {# SL 175 STAGING NOTE: dash_advisory and peer_queue are None on staging — showing placeholders via _show_bottom set at top of block. Remove before merging to main. #}
+    {# STAGING NOTE: dash_advisory and peer_queue are None on staging — showing placeholders via _show_bottom set at top of block. Remove before merging to main. #}
     {% if (dash_advisory and dash_advisory.get('location_name')) or peer_queue or _show_bottom %}
     <div class="card-brhills card-train" id="nearby-opportunity" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;align-items:start">
 
@@ -1087,7 +1087,7 @@ body.page-dashboard #backToTop         { display:none !important }
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid rgba(255,255,255,0.12)">
         <img src="{{ url_for('static', filename='img/aea-badge.png') }}" width="36" height="36" alt="AEA" onerror="this.style.display='none'" style="border-radius:4px;flex-shrink:0">
         <div>
-          <div style="font-size:10px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);line-height:1.2">Annual Excellence Award</div>
+          <div style="font-size:12px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);line-height:1.2">Annual Excellence Award</div>
           {% if aea_dash and aea_dash.qualified %}
           <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:1px">Qualified · Shutter League</div>
           {% else %}
@@ -1229,15 +1229,23 @@ body.page-dashboard #backToTop         { display:none !important }
       <a href="{{ url_for('mentors') }}" style="display:block;background:var(--gold);color:var(--dark);font-size:14px;font-weight:700;padding:10px 14px;border-radius:9px;text-decoration:none;text-align:center;min-height:44px;line-height:24px;">Review my Image →</a>
     </div>
 
-    {# AEA CARD — 4 states with progress bars from v171.9 #}
+    {# AEA CARD — 4 states with progress bars #}
+    {# SL-176.2: safe key access — live cache uses required_months/required_images, _refresh_dash_caches uses req_months/req_images #}
     {% if aea_dash %}
+      {% set _aea_req_m = aea_dash.required_months if aea_dash.required_months is defined else (aea_dash.req_months if aea_dash.req_months is defined else 3) %}
+      {% set _aea_req_i = aea_dash.required_images if aea_dash.required_images is defined else (aea_dash.req_images if aea_dash.req_images is defined else 6) %}
+      {% set _aea_qual_m = aea_dash.qualifying_months if aea_dash.qualifying_months is defined else 0 %}
+      {% set _aea_total  = aea_dash.total_images if aea_dash.total_images is defined else 0 %}
+      {% set _aea_m_needed = aea_dash.months_needed if aea_dash.months_needed is defined else [0, _aea_req_m - _aea_qual_m]|max %}
+      {% set _aea_i_needed = aea_dash.images_needed if aea_dash.images_needed is defined else [0, _aea_req_i - _aea_total]|max %}
+
       {% if aea_dash.qualified %}
       {# State 1: Fully qualified #}
       <div style="background:#1B4F72;border-radius:13px;padding:14px;border:none;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <img src="{{ url_for('static', filename='img/aea_badge.png') }}" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));" alt="AEA" onerror="this.style.display='none'">
           <div>
-            <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:2px;">Annual Excellence Award</div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:2px;">Annual Excellence Award</div>
             <div style="font-size:13px;font-weight:700;color:#FFFFFF;">Qualified · {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>
           </div>
         </div>
@@ -1246,7 +1254,7 @@ body.page-dashboard #backToTop         { display:none !important }
           <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;">AEA average<br>top 6 images</div>
         </div>
         {% if aea_dash.league_rank %}<div style="font-size:13px;color:#7DCEA0;font-weight:600;">#{{ aea_dash.league_rank }} in {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>{% endif %}
-        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">Top {{ aea_dash.percentile }}% · {{ aea_dash.qualifying_months }} months active</div>
+        {% if aea_dash.percentile %}<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">Top {{ aea_dash.percentile }}% · {{ _aea_qual_m }} months active</div>{% endif %}
         {% if aea_dash.top6_list %}
         <div style="display:flex;gap:3px;margin-top:10px;flex-wrap:wrap;">
           {% for img in aea_dash.top6_list %}
@@ -1259,43 +1267,43 @@ body.page-dashboard #backToTop         { display:none !important }
         {% endif %}
       </div>
 
-      {% elif aea_dash.qualifying_months >= aea_dash.required_months and aea_dash.total_images < aea_dash.required_images %}
+      {% elif _aea_qual_m >= _aea_req_m and _aea_total < _aea_req_i %}
       {# State 2: Months met, images short #}
       <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
         <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
-        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed to qualify.</div>
+        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ _aea_i_needed }} more image{{ 's' if _aea_i_needed != 1 else '' }} needed to qualify.</div>
         {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
       </div>
 
-      {% elif aea_dash.total_images >= aea_dash.required_images and aea_dash.qualifying_months < aea_dash.required_months %}
+      {% elif _aea_total >= _aea_req_i and _aea_qual_m < _aea_req_m %}
       {# State 3: Images met, months short #}
       <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
         <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
         <div style="display:flex;gap:4px;margin-bottom:8px;">
-          {% for m in range(aea_dash.required_months) %}
-          <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+          {% for m in range(_aea_req_m) %}
+          <div style="flex:1;height:6px;border-radius:3px;background:{% if m < _aea_qual_m %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
           {% endfor %}
         </div>
-        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.</div>
+        <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ _aea_m_needed }} more month{{ 's' if _aea_m_needed != 1 else '' }} of uploads needed.</div>
         {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
       </div>
 
       {% else %}
       {# State 4: Both short #}
       <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
         <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
         <div style="display:flex;gap:4px;margin-bottom:8px;">
-          {% for m in range(aea_dash.required_months) %}
-          <div style="flex:1;height:6px;border-radius:3px;background:{% if m < aea_dash.qualifying_months %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
+          {% for m in range(_aea_req_m) %}
+          <div style="flex:1;height:6px;border-radius:3px;background:{% if m < _aea_qual_m %}#C8A84B{% else %}#A9CCE3{% endif %};"></div>
           {% endfor %}
         </div>
         <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">
-          {% if aea_dash.months_needed > 0 and aea_dash.images_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} · {{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
-          {% elif aea_dash.months_needed > 0 %}{{ aea_dash.months_needed }} more month{{ 's' if aea_dash.months_needed != 1 else '' }} of uploads needed.
-          {% else %}{{ aea_dash.images_needed }} more image{{ 's' if aea_dash.images_needed != 1 else '' }} needed.
+          {% if _aea_m_needed > 0 and _aea_i_needed > 0 %}{{ _aea_m_needed }} more month{{ 's' if _aea_m_needed != 1 else '' }} · {{ _aea_i_needed }} more image{{ 's' if _aea_i_needed != 1 else '' }} needed.
+          {% elif _aea_m_needed > 0 %}{{ _aea_m_needed }} more month{{ 's' if _aea_m_needed != 1 else '' }} of uploads needed.
+          {% else %}{{ _aea_i_needed }} more image{{ 's' if _aea_i_needed != 1 else '' }} needed.
           {% endif %}
         </div>
         {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
@@ -1305,7 +1313,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {% else %}
     {# No AEA data — static fallback #}
     <div style="background:#13254B;border-radius:13px;padding:14px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:4px;">Annual Excellence Award</div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:4px;">Annual Excellence Award</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:10px;">Upload consistently and build your standing for the Annual Excellence Award.</div>
       <a href="{{ url_for('poty') }}" style="font-size:14px;color:var(--gold);font-weight:600;text-decoration:none;">Learn more →</a>
     </div>
@@ -1839,7 +1847,7 @@ body.page-dashboard #backToTop         { display:none !important }
 <script>
 
 
-/* ── SL 175.12: More drawer ── */
+/* ── More drawer ── */
 function slMoreOpen() {
   var ov = document.getElementById('slMoreOverlay');
   var dr = document.getElementById('slMoreDrawer');
@@ -1860,7 +1868,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') slMoreClose();
 });
 
-/* ── SL 176.1: EVAL PENDING POLL ─────────────────────────────
+/* ── EVAL PENDING POLL ─────────────────────────────
    Handles desktop (#sl175EvalBanner) and mobile (#sl175EvalBanner-mob).
    Persistent across page navigation via localStorage.
    Activates from ?eval_pending= URL param OR from stored pending ID.
