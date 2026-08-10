@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1e (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
+# SL-VERSION: 176.1f (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
 
 import os
 import re
@@ -1879,7 +1879,9 @@ def _run_startup_tasks():
                     # SL-176.1d: performance cache columns
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL"
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL",
+                    # SL-176.1f: Sonnet-generated mentor advice cache
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS mentor_advice_json TEXT DEFAULT NULL"
                 ))
                 db.session.commit()
                 print('Location advisory link columns OK.')
@@ -5455,6 +5457,19 @@ def dashboard():
     except Exception as _dge:
         app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
 
+    # SL-176.1f: Load mentor_advice_json via raw SQL
+    _mentor_advice = None
+    try:
+        _ma_row = db.session.execute(
+            db.text('SELECT mentor_advice_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _ma_row and _ma_row[0]:
+            import json as _maj
+            _mentor_advice = _maj.loads(_ma_row[0])
+    except Exception as _ma_err:
+        app.logger.warning(f'[dashboard] mentor_advice_json fetch: {_ma_err}')
+
     # SL-176.1c: Load evolving_eye_json via raw SQL — not on ORM model
     _evolving_eye_json = None
     _evolving_eye_data = None
@@ -5515,6 +5530,7 @@ def dashboard():
                            just_subscribed=session.pop('just_subscribed', None),
                            evolving_eye_json=_evolving_eye_json,
                            evolving_eye_data=_evolving_eye_data,
+                           mentor_advice=_mentor_advice,
                            scored_count=db.session.execute(
                                db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
                                {'uid': current_user.id}
@@ -5817,15 +5833,10 @@ def _build_device_label(img) -> str:
 
 def _refresh_dash_greeting(user_id):
     """
-    SL 175 — Generate a personalised dashboard greeting brief using Claude.
+    SL-176.1f — Generate personalised dashboard greeting using Sonnet (upgraded from Haiku).
     Called after each successful evaluation (in _score_in_background).
     Stores result as JSON in users.dash_greeting_json — zero dashboard latency.
-
     Output JSON: {line1, line2, line3, expanded}
-    - line1: strongest dimension insight, specific to their image history
-    - line2: weakest dimension gap, honest and constructive
-    - line3: motivational closing line — "Go out and find the difficult shot while others wait."
-    - expanded: full paragraph coaching brief, 3-4 sentences, Sherpa voice
     """
     import json as _json
     import urllib.request as _ur
@@ -5847,44 +5858,54 @@ def _refresh_dash_greeting(user_id):
         _avg             = _pd.get('avg_score', 0)
         _tier            = _pd.get('highest_tier', '')
         _top_genre       = _pd.get('top_genre', 'Photography')
+        _dim_avgs        = _pd.get('dim_avgs', {})
+        _strongest_avg   = _dim_avgs.get(_pd.get('strongest', ''), 0)
+        _weakest_avg     = _dim_avgs.get(_pd.get('weakest', ''), 0)
 
-        _dim_avgs = _pd.get('dim_avgs', {})
-        _strongest_avg = _dim_avgs.get(_pd.get('strongest', ''), 0)
-        _weakest_avg   = _dim_avgs.get(_pd.get('weakest', ''), 0)
+        # Build trend context
+        _trend = _pd.get('trend', [])
+        _trend_dir = 'climbing' if len(_trend) >= 2 and _trend[-1]['score'] > _trend[0]['score'] else \
+                     'dipping' if len(_trend) >= 2 and _trend[-1]['score'] < _trend[0]['score'] else 'steady'
+        _first_5_avg = round(sum(t['score'] for t in _trend[:5]) / 5, 2) if len(_trend) >= 5 else None
+        _last_5_avg  = round(sum(t['score'] for t in _trend[-5:]) / 5, 2) if len(_trend) >= 5 else None
 
-        _prompt = f"""You are writing the personalised dashboard greeting for a photographer on Shutter League.
+        _prompt = f"""You are the Shutter League Sherpa — a warm, expert mentor writing a personalised dashboard greeting for a photographer.
 
-Photographer data:
-- Evaluated images: {_count}
-- Average evaluation: {_avg:.2f}
-- Highest tier: {_tier}
+PHOTOGRAPHER DATA:
+- Name: {_user.full_name.split()[0] if _user.full_name else 'Photographer'}
+- Images evaluated: {_count}
+- Highest tier reached: {_tier}
+- Average evaluation: {_avg:.2f}/10
 - Primary genre: {_top_genre}
-- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.1f})
-- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.1f})
+- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.2f})
+- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.2f})
+- Trajectory: {_trend_dir}{f" — first 5 avg {_first_5_avg}, last 5 avg {_last_5_avg}" if _first_5_avg else ""}
+- All dimension averages: {_dim_avgs}
 
-Write a personalised brief with exactly these four fields. Return ONLY raw JSON, no markdown, no preamble.
+Write a greeting with exactly these four fields. Return ONLY raw JSON, no markdown.
 
 {{
-  "line1": "One sentence naming their strongest dimension with a specific, warm observation. NOT generic. Reference the actual dimension name and what it means for their photography. 15-20 words.",
-  "line2": "One sentence naming the gap — what the weakest dimension means in practice. Honest, not harsh. 12-18 words.",
+  "line1": "One sentence. Name a specific pattern you see in their images — not just the dimension label, but what it MEANS about how they see. Reference their genre, their trajectory, or something specific. NOT 'Your WOW Factor is strong.' Instead: something like 'Across your 12 images, your eye consistently finds the frame other photographers walk past.' 18-22 words.",
+  "line2": "One sentence. Name the gap honestly — what is holding their best work back? Specific to their data. Not generic. 14-18 words.",
   "line3": "Go out and find the difficult shot while others wait.",
-  "expanded": "3-4 sentence coaching paragraph. Sherpa voice — warm, specific, expert. Name both dimensions. Reference the count of images. End with one concrete thing they can do in the next shoot to close the gap. 60-80 words."
+  "expanded": "3-4 sentences. Sherpa voice — warm, direct, expert. Start with an observation about their trajectory (climbing/steady/dipping). Name a specific strength and how it shows up in their work. Name the gap and give one concrete instruction for the next shoot. End with belief in them. 70-90 words. No generic advice. Sound like someone who has watched all {_count} of their images."
 }}
 
-Rules:
+RULES:
 - line3 must always be exactly: "Go out and find the difficult shot while others wait."
-- Never use the word 'score' or 'rank' — use 'evaluation' instead
-- Never mention competitors or other platforms
-- Sherpa voice: warm, specific, like a friend who is also a master photographer
-- The expanded paragraph must feel like it was written specifically for this photographer, not a template"""
+- Never use 'score' — use 'evaluation'
+- Never mention other photographers by name
+- Never mention AI, algorithm, or engine
+- Sherpa voice: warm, specific, expert — like a friend who is a master photographer
+- The expanded paragraph must feel written for THIS photographer specifically"""
 
         _api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if not _api_key:
             return
 
         _payload = _json.dumps({
-            'model': 'claude-haiku-4-5-20251001',
-            'max_tokens': 400,
+            'model': 'claude-sonnet-4-6',
+            'max_tokens': 600,
             'messages': [{'role': 'user', 'content': _prompt}]
         }).encode('utf-8')
 
@@ -5898,11 +5919,10 @@ Rules:
             },
             method='POST'
         )
-        with _ur.urlopen(_req, timeout=20) as _resp:
+        with _ur.urlopen(_req, timeout=30) as _resp:
             _result = _json.loads(_resp.read().decode())
 
         _raw = (_result.get('content') or [{}])[0].get('text', '').strip()
-        # Strip markdown fences if present
         if _raw.startswith('```'):
             _raw = _raw.split('```')[1]
             if _raw.startswith('json'):
@@ -5911,21 +5931,18 @@ Rules:
 
         _greeting = _json.loads(_raw)
 
-        # Validate required keys
         if not all(k in _greeting for k in ('line1', 'line2', 'line3', 'expanded')):
             app.logger.warning(f'[dash_greeting] missing keys for user {user_id}')
             return
 
-        # Enforce line3 always correct
         _greeting['line3'] = 'Go out and find the difficult shot while others wait.'
 
-        # Save to user
         db.session.execute(
             db.text('UPDATE users SET dash_greeting_json = :j WHERE id = :uid'),
             {'j': _json.dumps(_greeting), 'uid': user_id}
         )
         db.session.commit()
-        app.logger.info(f'[dash_greeting] refreshed for user {user_id}')
+        app.logger.info(f'[dash_greeting] refreshed for user {user_id} (Sonnet)')
 
     except Exception as _dg_err:
         app.logger.warning(f'[dash_greeting] non-fatal error for user {user_id}: {_dg_err}')
@@ -5935,7 +5952,128 @@ Rules:
             pass
 
 
-def _clean_audit(audit, img):
+def _refresh_dash_mentor(user_id):
+    """
+    SL-176.1f — Generate personalised Mentor Advice using Sonnet.
+    Called after each successful evaluation (in _score_in_background).
+    Stores result as JSON in users.mentor_advice_json — zero dashboard latency.
+
+    Output JSON: {title, action, detail, work_on_label}
+    - work_on_label: human name of weakest dimension
+    - title: the specific thing to work on (not just dimension name)
+    - action: one sharp instruction, specific to this photographer's pattern
+    - detail: 2-3 sentence expanded coaching, personal to their history
+    """
+    import json as _json
+    import urllib.request as _ur
+    try:
+        _user = User.query.get(user_id)
+        if not _user:
+            return
+        _pd = _build_progress_data(_user)
+        if not _pd:
+            return
+
+        _dim_labels = {
+            'dod': 'Depth of Difficulty', 'disruption': 'Visual Disruption',
+            'dm': 'The Moment Chosen', 'wonder': 'WOW Factor', 'aq': 'The Emotion It Creates'
+        }
+        _weakest        = _pd.get('weakest', '')
+        _weakest_label  = _dim_labels.get(_weakest, _weakest)
+        _strongest      = _pd.get('strongest', '')
+        _strongest_label = _dim_labels.get(_strongest, _strongest)
+        _count          = _pd.get('count', 0)
+        _top_genre      = _pd.get('top_genre', 'Photography')
+        _dim_avgs       = _pd.get('dim_avgs', {})
+        _weakest_avg    = _dim_avgs.get(_weakest, 0)
+        _strongest_avg  = _dim_avgs.get(_strongest, 0)
+        _trend          = _pd.get('trend', [])
+        _recent_genres  = list(set(t.get('genre', '') for t in _trend[-5:] if t.get('genre')))
+
+        _practise       = _pd.get('practise_feedback', {}).get(_weakest, {})
+        _practise_ctx   = ''
+        if _practise:
+            _practise_ctx = f"Last time they practised {_weakest_label}: scored {_practise.get('after', 0)} vs prior avg {_practise.get('before', 0)} (delta {_practise.get('delta', 0):+.1f})."
+
+        _prompt = f"""You are the Shutter League Sherpa writing the personalised "Work on This" mentor advice card for a photographer's dashboard.
+
+PHOTOGRAPHER DATA:
+- Images evaluated: {_count}
+- Primary genre: {_top_genre}
+- Recent genres shot: {', '.join(_recent_genres) if _recent_genres else _top_genre}
+- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.2f})
+- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.2f})
+- Practice history: {_practise_ctx if _practise_ctx else 'No practice missions yet.'}
+
+Write the mentor advice card. Return ONLY raw JSON, no markdown.
+
+{{
+  "work_on_label": "The human name of their weakest dimension. E.g. 'Visual Disruption' not 'disruption'.",
+  "title": "A specific photographic concept or technique to work on — not just the dimension name. E.g. 'The Geometry Before the Subject' or 'Staying One Second Longer'. 4-7 words.",
+  "action": "One sharp, concrete instruction. What to do BEFORE pressing the shutter. Specific to their genre and pattern. Not generic. 15-20 words.",
+  "detail": "2-3 sentences of deeper coaching. Reference their specific genre. Name what photographers who score highest in this dimension do differently. End with one observation specific to their data — their practise history or their strongest dimension bleeding into the weakest. 50-70 words."
+}}
+
+RULES:
+- Never say 'score' — say 'evaluation'
+- Never mention AI, algorithm, or engine
+- Never mention other photographers by name
+- Sound like a mentor who has watched all {_count} of their images — not a textbook
+- The action must be immediately actionable in the field
+- The detail must feel personal to THIS photographer"""
+
+        _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if not _api_key:
+            return
+
+        _payload = _json.dumps({
+            'model': 'claude-sonnet-4-6',
+            'max_tokens': 500,
+            'messages': [{'role': 'user', 'content': _prompt}]
+        }).encode('utf-8')
+
+        _req = _ur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': _api_key,
+                'anthropic-version': '2023-06-01'
+            },
+            method='POST'
+        )
+        with _ur.urlopen(_req, timeout=30) as _resp:
+            _result = _json.loads(_resp.read().decode())
+
+        _raw = (_result.get('content') or [{}])[0].get('text', '').strip()
+        if _raw.startswith('```'):
+            _raw = _raw.split('```')[1]
+            if _raw.startswith('json'):
+                _raw = _raw[4:]
+            _raw = _raw.strip().rstrip('`').strip()
+
+        _mentor = _json.loads(_raw)
+
+        if not all(k in _mentor for k in ('work_on_label', 'title', 'action', 'detail')):
+            app.logger.warning(f'[dash_mentor] missing keys for user {user_id}')
+            return
+
+        db.session.execute(
+            db.text('UPDATE users SET mentor_advice_json = :j WHERE id = :uid'),
+            {'j': _json.dumps(_mentor), 'uid': user_id}
+        )
+        db.session.commit()
+        app.logger.info(f'[dash_mentor] refreshed for user {user_id} (Sonnet)')
+
+    except Exception as _dm_err:
+        app.logger.warning(f'[dash_mentor] non-fatal error for user {user_id}: {_dm_err}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
+
     """
     SL-176: Post-process audit dict before saving to DB.
     Runs after build_audit_data(), before set_audit().
@@ -9560,11 +9698,17 @@ def upload():
                                 db.session.commit()
 
                                 # SL 175: Refresh personalised dashboard greeting brief
-                                # Non-fatal — uses Haiku, ~20s, runs in same background thread
+                                # SL-176.1f: Now uses Sonnet for richer Sherpa voice
                                 try:
                                     _refresh_dash_greeting(_img.user_id)
                                 except Exception as _dg_bg_err:
                                     app.logger.warning(f'[dash_greeting] bg refresh failed: {_dg_bg_err}')
+
+                                # SL-176.1f: Refresh personalised mentor advice (Sonnet)
+                                try:
+                                    _refresh_dash_mentor(_img.user_id)
+                                except Exception as _dm_bg_err:
+                                    app.logger.warning(f'[dash_mentor] bg refresh failed: {_dm_bg_err}')
 
                                 # SL 175: Refresh expensive dashboard caches (aea_dash, poty_tracker, wallet_hud)
                                 # Non-fatal — eliminates ~12 DB queries per dashboard load
