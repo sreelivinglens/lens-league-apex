@@ -512,21 +512,21 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
     {% endif %}
 
-    <div class="card card-mentor" style="background:#EBF0F8;border:0.5px solid #C5D5E8;">
+    <div class="card card-mentor" style="background:#F0F7F2;border:0.5px solid #C5DFC8;">
       <div class="ey" style="margin-bottom:6px">Mentor Advice</div>
 
       {# ── LAYER 1: Weakest dimension — Sonnet-generated if available, fallback to template ── #}
       {% if progress_data and progress_data.weakest %}
-      <div style="background:var(--cream);border-radius:9px;padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--gold)">
+      <div style="background:#fff;border-radius:9px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--gold)">
         <div style="font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:3px">Work on this</div>
 
         {% if mentor_advice %}
         {# Sonnet-generated — personal to this photographer #}
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">{{ mentor_advice.title }}</div>
-        <div style="font-size:15px;color:var(--text);line-height:1.75;margin-bottom:8px">{{ mentor_advice.action }}</div>
+        <div style="font-size:15px;color:#1A1814;line-height:1.75;margin-bottom:8px">{{ mentor_advice.action }}</div>
         <span class="rm" id="wot-rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">What this means →</span>
         <div class="expanded" id="wot-exp">
-          <div style="font-size:15px;color:var(--text);line-height:1.8;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">{{ mentor_advice.detail }}</div>
+          <div style="font-size:15px;color:#1A1814;line-height:1.85;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">{{ mentor_advice.detail }}</div>
           <span class="rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">View less →</span>
         </div>
 
@@ -536,10 +536,10 @@ body.page-dashboard #backToTop         { display:none !important }
         {% set _dim_action = {'dod':'Choose harder scenes. Move closer. Change your angle until the shot costs you something.','disruption':'Before pressing the shutter — ask: what breaks the expected geometry here? Find it. Shoot that.','dm':'Wait longer than feels comfortable. The frame worth making is usually one second after you\'d have shot.','wonder':'Look for the thing that doesn\'t belong. The unexpected detail is almost always there.','aq':'Ask what feeling this image creates. If you can\'t name it, the viewer won\'t feel it either.'} %}
         {% set _dim_detail = {'dod':'The photographers who score highest in Difficulty are those who put themselves in physically or socially demanding positions — closer, lower, inside the action, at the edge of the crowd. Your next shoot: find one moment that made you slightly uncomfortable to photograph. That discomfort is the score.','disruption':'The unexpected angle is almost always available — most photographers just do not look for it. Before every frame: walk past the obvious position. Stand lower, higher, behind a foreground element, or wait for an element to move into the geometry. The disruption is there.','dm':'The decisive moment is rarely where you first think it is. The approach, the gesture before the peak, the face one second after the action — these are the frames that carry emotional weight. Stay on the subject longer than feels necessary.','wonder':'The WOW Factor comes from surprise — the detail that does not belong, the relationship between two elements the viewer did not expect. Train yourself to ask: what in this frame will stop someone mid-scroll?','aq':'Aesthetic Quality is the invisible dimension — it measures whether the image creates a specific emotional response. Before uploading your next image, ask: what does this make someone feel? If the answer is nothing specific, look for the frame that creates a named feeling.'} %}
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
-        <div style="font-size:15px;color:var(--text);line-height:1.75;margin-bottom:8px">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
+        <div style="font-size:15px;color:var(--text);line-height:1.75;margin-bottom:8px;color:#1A1814">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
         <span class="rm" id="wot-rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">What this means →</span>
         <div class="expanded" id="wot-exp">
-          <div style="font-size:15px;color:var(--text);line-height:1.8;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">{{ _dim_detail.get(progress_data.weakest, 'Study your last five images in this dimension and identify the pattern.') }}</div>
+          <div style="font-size:15px;color:var(--text);line-height:1.85;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);color:#1A1814">{{ _dim_detail.get(progress_data.weakest, 'Study your last five images in this dimension and identify the pattern.') }}</div>
           <span class="rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">View less →</span>
         </div>
         {% endif %}
