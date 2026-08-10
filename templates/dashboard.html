@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 176.2d (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
+{# SL-VERSION: 176.2e (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -545,13 +545,13 @@ body.page-dashboard #backToTop         { display:none !important }
         {# State 1: Advisory ready #}
         {% if evolving_eye_data %}
         {% set _eye = evolving_eye_data %}
-        <div style="background:#FFF8EC;border-radius:13px;padding:16px 18px;margin-bottom:10px;border:1px solid #EDD89A;display:flex;align-items:center;gap:14px">
-          <div style="width:40px;height:40px;background:#FEF0C7;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">📈</div>
+        <div style="background:#FEF3C7;border-radius:13px;padding:18px 20px;margin-bottom:12px;border:1.5px solid #D6A428;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(214,164,40,0.15)">
+          <div style="width:44px;height:44px;background:#FDE68A;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">📈</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:700;color:#1A1814;margin-bottom:3px">Your {{ _eye.milestone }}-image Evolving Eye advisory is ready</div>
-            <div style="font-size:14px;color:#6B6B6B;line-height:1.55">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:600">Next report at {{ _eye.milestone + 10 }} images.</span></div>
+            <div style="font-size:16px;font-weight:700;color:#1A1814;margin-bottom:4px">Your {{ _eye.milestone }}-image Evolving Eye advisory is ready</div>
+            <div style="font-size:15px;color:#6B6B6B;line-height:1.55">Shutter League has been watching your work. <span style="color:#A37B2C;font-weight:700">Next report at {{ _eye.milestone + 10 }} images.</span></div>
           </div>
-          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:14px;font-weight:700;padding:11px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;min-height:44px;display:flex;align-items:center;">Read it →</a>
+          <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:15px;font-weight:700;padding:12px 20px;border-radius:9px;text-decoration:none;white-space:nowrap;min-height:48px;display:flex;align-items:center;">Read it →</a>
         </div>
         {# State 2: Sub-10 images — countdown #}
         {% elif scored_count is defined and scored_count < 10 %}
