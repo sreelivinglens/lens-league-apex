@@ -70,7 +70,9 @@ body.page-dashboard #backToTop         { display:none !important }
 .greeting-name{font-size:20px;font-weight:600;color:var(--dark);margin-bottom:10px;display:block;width:100%}
 .score-big{font-size:28px;font-weight:700;color:var(--dark);line-height:1.5}
 .score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;width:100%}
-.body-text{font-size:15px;font-weight:400;color:var(--text);line-height:1.85;text-align:left}
+.body-text{font-size:15px;font-weight:400;color:#1A1814;line-height:1.85;text-align:left}
+.body-text p{margin-bottom:14px}
+.body-text p:last-child{margin-bottom:0}
 .insight-line1{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;display:block;width:100%;margin-top:4px}
 .insight-line2{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;margin-top:2px;display:block;width:100%}
 .insight-line3{font-size:15px;font-weight:600;color:var(--green);line-height:1.8;margin-top:2px;display:block;width:100%}
@@ -439,7 +441,12 @@ body.page-dashboard #backToTop         { display:none !important }
       {% if dash_greeting and dash_greeting.get('expanded') %}
       <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
       <div class="expanded" id="gexp">
-        <div class="body-text">{{ dash_greeting.expanded | safe }}</div>
+        <div class="body-text">
+          {% set _exp_sentences = dash_greeting.expanded.split('. ') %}
+          {% for i in range(0, _exp_sentences|length, 2) %}
+          <p>{{ _exp_sentences[i:i+2]|join('. ') }}{% if not _exp_sentences[i:i+2][-1].endswith('.') %}.{% endif %}</p>
+          {% endfor %}
+        </div>
         <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
       </div>
       {% elif not dash_greeting and progress_data and progress_data.strongest and progress_data.weakest %}
@@ -526,7 +533,12 @@ body.page-dashboard #backToTop         { display:none !important }
         <div style="font-size:15px;color:#1A1814;line-height:1.75;margin-bottom:8px">{{ mentor_advice.action }}</div>
         <span class="rm" id="wot-rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">What this means →</span>
         <div class="expanded" id="wot-exp">
-          <div style="font-size:15px;color:#1A1814;line-height:1.85;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">{{ mentor_advice.detail }}</div>
+          <div style="font-size:15px;color:#1A1814;line-height:1.85;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">
+            {% set _md_sentences = mentor_advice.detail.split('. ') %}
+            {% for i in range(0, _md_sentences|length, 2) %}
+            <p style="margin-bottom:12px">{{ _md_sentences[i:i+2]|join('. ') }}{% if not _md_sentences[i:i+2][-1].endswith('.') %}.{% endif %}</p>
+            {% endfor %}
+          </div>
           <span class="rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">View less →</span>
         </div>
 
