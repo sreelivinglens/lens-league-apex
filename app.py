@@ -5454,6 +5454,7 @@ def dashboard():
 
     # SL-176.1c: Load evolving_eye_json via raw SQL — not on ORM model
     _evolving_eye_json = None
+    _evolving_eye_data = None
     try:
         _ee_row = db.session.execute(
             db.text('SELECT evolving_eye_json FROM users WHERE id = :uid'),
@@ -5461,6 +5462,8 @@ def dashboard():
         ).fetchone()
         if _ee_row and _ee_row[0]:
             _evolving_eye_json = _ee_row[0]
+            import json as _eej
+            _evolving_eye_data = _eej.loads(_ee_row[0])
     except Exception as _ee_dash_err:
         app.logger.warning(f'[dashboard] evolving_eye_json fetch: {_ee_dash_err}')
 
@@ -5508,6 +5511,7 @@ def dashboard():
                            aea_dash=aea_dash,
                            just_subscribed=session.pop('just_subscribed', None),
                            evolving_eye_json=_evolving_eye_json,
+                           evolving_eye_data=_evolving_eye_data,
                            scored_count=db.session.execute(
                                db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
                                {'uid': current_user.id}
