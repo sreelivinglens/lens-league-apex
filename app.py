@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1h (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 176.1i (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
 
 import os
 import re
@@ -5882,6 +5882,13 @@ PHOTOGRAPHER DATA:
 - Trajectory: {_trend_dir}{f" — first 5 avg {_first_5_avg}, last 5 avg {_last_5_avg}" if _first_5_avg else ""}
 - All dimension averages: {_dim_avgs}
 
+GESTALT PRINCIPLES FOR PHOTOGRAPHY — use ONE in the expanded paragraph ONLY if it precisely explains the gap:
+- Figure-Ground: the frame must decide what is foreground. If the subject doesn't separate from its ground, the eye has nowhere to land.
+- Proximity: elements close together are read as belonging. Grouping by light or tone creates visual logic.
+- Continuation: the eye follows lines. The frame should direct where to look next.
+- Closure: the viewer completes what the frame suggests. Partial subjects, implied motion — the imagination fills it.
+If using one, name it explicitly: "This is a Gestalt principle called [Name]." One sentence only. Don't force it.
+
 Write a greeting with exactly these four fields. Return ONLY raw JSON, no markdown.
 
 {{
@@ -6007,20 +6014,30 @@ PHOTOGRAPHER DATA:
 
 This photographer's strongest work comes from {_strongest_label}. The gap is in {_weakest_label}.
 
+GESTALT PRINCIPLES FOR PHOTOGRAPHY — draw from these when they explain the gap clearly:
+- Figure-Ground (Gestalt): the frame must decide what is foreground before the viewer can. If the subject doesn't separate from its ground through light, tone, or position, the eye has no place to land.
+- Proximity (Gestalt): elements close together are read as belonging together. In photography — grouping by light, shadow, or position creates visual logic. Without it, the frame feels scattered.
+- Similarity (Gestalt): repeated shapes, tones, or textures create rhythm. The eye expects the pattern. Breaking it deliberately creates the frame's strongest moment.
+- Continuation (Gestalt): the eye follows lines and edges. The frame should direct where to look next. Without a path, the eye wanders and leaves.
+- Closure (Gestalt): the viewer's eye completes what the frame suggests. A panning shot, a partial subject, a shape at the edge — the imagination fills it. This is power.
+- Common Fate (Gestalt): elements moving or pointing in the same direction feel like they belong. In wildlife — the direction a bird faces, the movement of a flock — these create or destroy cohesion.
+
+Use ONE Gestalt principle ONLY IF it precisely explains the gap for this photographer's genre and weakest dimension. Name it explicitly: "This is a Gestalt principle called [Name]." Then explain what it means for their specific images. Never force a principle that doesn't fit.
+
 Write the mentor advice. Return ONLY raw JSON, no markdown.
 
 {{
   "work_on_label": "{_weakest_label}",
-  "title": "A short, human observation — NOT a workshop title, NOT a technique name. Something a mentor would say looking at their images. E.g. 'Your eye sees it. Your angle doesn't yet.' or 'You find the moment. Now find the geometry.' 6-10 words. No jargon.",
-  "action": "One sentence. What to do differently on the NEXT shoot. Written as if speaking directly to the photographer. Use 'you' and 'your'. Reference their specific genre ({_top_genre}). Make it something they can act on today. Not abstract. 18-25 words.",
-  "detail": "2-3 sentences. A mentor observation about the pattern across their images. What are they doing that works? What is the one thing preventing their {_top_genre} work from reaching the level of their best frames? Be specific — reference the genre, the dimension, the gap between their {_strongest_label} strength and their {_weakest_label} gap. Sound like someone who has watched all {_count} images, not someone reading a definition. 60-80 words."
+  "title": "A short, human observation — NOT a workshop title, NOT a technique name. Something a mentor would say looking at their images. If using a Gestalt principle, name it: e.g. 'Figure-Ground: your frame isn't deciding yet.' 6-10 words. No jargon beyond the named principle.",
+  "action": "One sentence. What to do differently on the NEXT shoot. Written directly to the photographer. Reference their specific genre ({_top_genre}). If a Gestalt principle applies, state how to use it in the field. Make it something they can act on today. 18-25 words.",
+  "detail": "2-3 sentences. A mentor observation about the pattern across their images. What are they doing that works? What is the one thing preventing their {_top_genre} work from reaching the level of their best frames? If using a Gestalt principle, name it clearly and explain what it means for their images specifically. Reference the gap between their {_strongest_label} strength and their {_weakest_label} gap. Sound like someone who has watched all {_count} images, not someone reading a definition. 60-80 words."
 }}
 
 CRITICAL RULES:
-- No jargon. No workshop titles. No abstract concepts.
+- No jargon except named Gestalt principles.
 - The title must sound like a person, not a system.
 - The action must be something they can literally do before the next shutter press.
-- The detail must name something specific about THEIR images — not general advice about the dimension.
+- The detail must name something specific about THEIR images — not general advice.
 - Never say 'score' — say 'evaluation'.
 - Never mention AI, algorithm, engine, or Shutter League's technology.
 - Sherpa voice: warm, direct, specific. A trusted friend who is also a master photographer."""
