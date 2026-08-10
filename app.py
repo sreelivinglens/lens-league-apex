@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1b (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
+# SL-VERSION: 176.1c (Session 176, 2026-08-10 — evolving eye max_tokens 2000->4000; anthropic>=0.50.0) (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
 
 import os
 import re
@@ -5384,6 +5384,18 @@ def dashboard():
     except Exception as _dge:
         app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
 
+    # SL-176.1c: Load evolving_eye_json via raw SQL — not on ORM model
+    _evolving_eye_json = None
+    try:
+        _ee_row = db.session.execute(
+            db.text('SELECT evolving_eye_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _ee_row and _ee_row[0]:
+            _evolving_eye_json = _ee_row[0]
+    except Exception as _ee_dash_err:
+        app.logger.warning(f'[dashboard] evolving_eye_json fetch: {_ee_dash_err}')
+
     return render_template('dashboard.html', images=images, stats=stats,
                            all_masters=ALL_MASTERS,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
@@ -5427,6 +5439,11 @@ def dashboard():
                            dashboard_visit_count=_dash_visit_count,
                            aea_dash=aea_dash,
                            just_subscribed=session.pop('just_subscribed', None),
+                           evolving_eye_json=_evolving_eye_json,
+                           scored_count=db.session.execute(
+                               db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
+                               {'uid': current_user.id}
+                           ).scalar() or 0,
                            quota_status=_get_quota_status(current_user))
 
 
