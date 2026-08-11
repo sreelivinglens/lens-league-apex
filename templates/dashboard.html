@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 176.2e (Session 176, 2026-08-10 — font 10/11px→12px, SL comment cleanup; Rich central column restored from v171.9: photo count chip, directive bar, live event gold card, nearby opportunity with weather+focus, first-visit welcome; Right panel: Points & Redemptions, Mentor Guidance card with photo+quote+button, AEA 4-state with progress bars; Evolving Eye banner moved to top-level; font sizes 70yr pass; all cache-first zero new DB calls) #}
+{# SL-VERSION: 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -78,7 +78,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .insight-line3{font-size:15px;font-weight:600;color:var(--green);line-height:1.8;margin-top:2px;display:block;width:100%}
 
 /* ── READ MORE — MUST be span, never button ── */
-.rm{font-size:14px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px;background:none;border:none;padding:0}
+.rm{font-size:14px;color:var(--gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;display:block;text-align:right;margin-top:6px;background:none;border:none;padding:0;touch-action:manipulation} /* SL-178.1 */
 .lnk{font-size:14px;color:var(--gold-dk);font-weight:600;text-decoration:underline;cursor:pointer}
 .expanded{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
 
@@ -154,9 +154,10 @@ body.page-dashboard #backToTop         { display:none !important }
   display:flex;flex-direction:column;align-items:center;gap:2px;
   color:rgba(255,255,255,0.5);text-decoration:none;
   font-size:13px;font-weight:600;
-  min-width:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;
+  min-width:44px;min-height:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;
   background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation; /* SL-178.1: eliminates iOS 300ms tap delay — fixes More button and all nav icons */
 }
 .bn-tab span{display:block;font-size:13px;font-weight:600;line-height:1.2}
 .bn-tab svg{flex-shrink:0;width:18px;height:18px}
@@ -227,9 +228,9 @@ body.page-dashboard #backToTop         { display:none !important }
 .mob-score-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .mob-score-big{font-size:36px;font-weight:700;color:var(--dark);line-height:1}
 .mob-tier-badge{font-size:13px;font-weight:700;color:var(--green);letter-spacing:0.3px}
-.mob-upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--dark);font-size:15px;font-weight:700;padding:14px 20px;border-radius:11px;text-decoration:none;width:100%;margin-bottom:10px;min-height:52px}
+.mob-upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--dark);font-size:15px;font-weight:700;padding:14px 20px;border-radius:11px;text-decoration:none;width:100%;margin-bottom:10px;min-height:52px;touch-action:manipulation} /* SL-178.1 */
 .mob-quick-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.mob-quick-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;color:var(--dark);font-size:14px;font-weight:600;padding:13px 12px;border-radius:11px;text-decoration:none;border:0.5px solid var(--border);min-height:48px}
+.mob-quick-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;color:var(--dark);font-size:14px;font-weight:600;padding:13px 12px;border-radius:11px;text-decoration:none;border:0.5px solid var(--border);min-height:48px;touch-action:manipulation} /* SL-178.1 */
 .mob-standing-strip{background:#EBF0F8;border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid rgba(44,95,138,0.2)}
 .mob-work-on{background:var(--cream);border-radius:10px;padding:12px 14px;border-left:3px solid var(--gold);margin-bottom:10px}
 .mob-loc-chip{display:inline-flex;align-items:center;gap:5px;background:var(--pista);border:0.5px solid var(--pista-b);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;color:#3A6B2A;margin-bottom:8px}
@@ -245,7 +246,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .mob-more-drawer{position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,34px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
 .mob-more-drawer.open{transform:translateY(0)}
 .mob-more-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 16px}
-.mob-more-item{display:flex;align-items:center;gap:14px;padding:13px 24px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent}
+.mob-more-item{display:flex;align-items:center;gap:14px;padding:13px 24px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation} /* SL-178.1 */
 .mob-more-item:active,.mob-more-item:focus{background:rgba(255,255,255,0.06);outline:none}
 .mob-more-divider{height:0.5px;background:rgba(255,255,255,0.1);margin:6px 24px}</style>
 
