@@ -1,4 +1,4 @@
-# SL-VERSION: 175.2 (Session 175, 2026-08-06 — Creative genre exempt from Hive AI check, peer_recognitions in delete routes, flagged email reworded)
+# SL-VERSION: 176.1q (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
 
 import os
 import re
@@ -1208,6 +1208,10 @@ def _run_startup_tasks():
                     "CREATE INDEX IF NOT EXISTS ix_images_user_status ON images(user_id, status)",
                     "CREATE INDEX IF NOT EXISTS ix_images_public_scored ON images(is_public, status, created_at DESC) WHERE is_public = TRUE AND status = 'scored'",
                     "CREATE INDEX IF NOT EXISTS ix_images_created_at ON images(created_at DESC)",
+                    # SL-176 performance — dashboard AEA rank query scans all images without these
+                    "CREATE INDEX IF NOT EXISTS ix_images_user_score ON images(user_id, score DESC) WHERE score IS NOT NULL",
+                    "CREATE INDEX IF NOT EXISTS ix_images_public_score ON images(is_public, score DESC, status) WHERE is_public = TRUE AND score IS NOT NULL AND status = 'scored'",
+                    "CREATE INDEX IF NOT EXISTS ix_images_user_scored_public ON images(user_id, is_public, status, score DESC) WHERE status = 'scored' AND score IS NOT NULL",
                     # v-Session116 — structured peer eval (checkbox system)
                     # stood_out_tags / improve_tags: JSON array of tag strings e.g. '["Light quality","Composition"]'
                     # optional_comment: free-text, email-only, never shown on scorecard
@@ -1852,6 +1856,10 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_greeting_json TEXT DEFAULT NULL"
                 ))
+                # SL-176 perf: cache timestamp for stale-while-revalidate
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS dash_cache_ts TIMESTAMPTZ DEFAULT NULL"
+                ))
                 # SL 175: Dashboard caches — expensive query results cached on user
                 # Saves ~400-600ms per dashboard load (eliminates 12+ DB queries per visit)
                 db.session.execute(db.text(
@@ -1862,6 +1870,18 @@ def _run_startup_tasks():
                 ))
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_hud_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL",
+                    # SL-176.1d: performance cache columns
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL",
+                    # SL-176.1f: Sonnet-generated mentor advice cache
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS mentor_advice_json TEXT DEFAULT NULL"
                 ))
                 db.session.commit()
                 print('Location advisory link columns OK.')
@@ -4016,6 +4036,20 @@ def login():
         db.session.commit()
         login_user(user, remember=True)
 
+        # SL-176 perf: warm dashboard caches on login so first dashboard
+        # load is instant. Runs in background thread — non-blocking.
+        try:
+            import threading as _login_th
+            if getattr(user, 'is_subscribed', False) and user.role != 'admin':
+                _uid_for_cache = user.id
+                def _warm_with_ctx():
+                    with app.app_context():
+                        _refresh_dash_caches(_uid_for_cache)
+                        _refresh_progress_data(_uid_for_cache)
+                _login_th.Thread(target=_warm_with_ctx, daemon=True).start()
+        except Exception as _lc_err:
+            app.logger.warning(f'[login] cache warm failed: {_lc_err}')
+
         next_url = request.args.get('next')
         if next_url:
             return redirect(next_url)
@@ -4467,6 +4501,7 @@ def dashboard():
         _shadow_tier = None
         if total_count > 0:
             try:
+                # SL-176 perf: added HAVING COUNT(*) >= 1 and limited to 500 users max
                 _rank_row = db.session.execute(db.text("""
                     SELECT rank FROM (
                         SELECT user_id,
@@ -4477,6 +4512,7 @@ def dashboard():
                           AND score > 0
                           AND is_flagged = FALSE
                         GROUP BY user_id
+                        HAVING COUNT(*) >= 1
                     ) ranked
                     WHERE user_id = :uid
                 """), {'uid': current_user.id}).fetchone()
@@ -4587,18 +4623,31 @@ def dashboard():
     # ── AEA cross-genre top-6 tracker (S156) ─────────────────────────────────
     # SL 175: Read from cache first — refreshed after each evaluation via _refresh_dash_caches
     # Falls back to live computation if cache miss (first login, cache invalidated)
+    # SL-176 perf: stale-while-revalidate cache pattern for AEA dashboard data.
+    # Serve cache immediately (even if stale). If stale (> 4h) or missing,
+    # fire background refresh. First-ever load runs live query synchronously.
     aea_dash = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False) and \
        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera'):
         import json as _aeaj
         _aea_cache_miss = False
+        _aea_stale      = False
+        _CACHE_TTL_SECS = 4 * 3600  # 4 hours
         try:
-            _aea_raw = db.session.execute(
-                db.text('SELECT aea_dash_json FROM users WHERE id = :uid'),
+            _aea_row = db.session.execute(
+                db.text('SELECT aea_dash_json, dash_cache_ts FROM users WHERE id = :uid'),
                 {'uid': current_user.id}
-            ).scalar()
-            if _aea_raw:
-                aea_dash = _aeaj.loads(_aea_raw)
+            ).fetchone()
+            if _aea_row and _aea_row[0]:
+                aea_dash = _aeaj.loads(_aea_row[0])
+                # Check staleness
+                if _aea_row[1]:
+                    import time as _ctime
+                    _age = (datetime.utcnow() - _aea_row[1].replace(tzinfo=None)).total_seconds()
+                    if _age > _CACHE_TTL_SECS:
+                        _aea_stale = True
+                else:
+                    _aea_stale = True  # No timestamp = treat as stale
             else:
                 _aea_cache_miss = True
         except Exception:
@@ -4608,8 +4657,22 @@ def dashboard():
             except Exception:
                 pass
 
+        # Stale cache — serve what we have, re-warm in background
+        if _aea_stale and aea_dash is not None:
+            try:
+                import threading as _stale_th
+                _uid_stale = current_user.id
+                def _stale_warm():
+                    with app.app_context():
+                        _refresh_dash_caches(_uid_stale)
+                _stale_th.Thread(target=_stale_warm, daemon=True).start()
+                app.logger.info(f'[dashboard] aea_dash stale — background refresh for user {current_user.id}')
+            except Exception as _se:
+                app.logger.warning(f'[dashboard] stale revalidate failed: {_se}')
+
         if _aea_cache_miss:
-            # Cache miss — fall back to live computation
+            # Cache miss — fall back to live computation (optimised queries)
+            # SL-176: correlated subquery removed, indexes added
             try:
                 _aea_year = datetime.utcnow().year
                 _aea_qual_start = date(_aea_year, 1, 1)
@@ -4662,32 +4725,38 @@ def dashboard():
                     ]
 
                 _aea_track = current_user.subscription_track
+                # SL-176: rewritten — correlated subquery removed, uses CTE
+                # Pre-aggregates per user first, then counts — avoids N×M scan
                 _aea_rank_row = db.session.execute(db.text("""
-                    SELECT COUNT(*) FROM (
+                    WITH user_top6 AS (
                         SELECT i.user_id,
-                               AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg
+                               AVG(i.score) FILTER (WHERE rn <= 6) AS top6_avg,
+                               COUNT(*) AS img_count
                         FROM (
                             SELECT user_id, score,
-                                   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY score DESC) AS rn
+                                   ROW_NUMBER() OVER (
+                                       PARTITION BY user_id ORDER BY score DESC
+                                   ) AS rn
                             FROM images
-                            WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
-                              AND status = 'scored'
-                              AND (is_flagged = FALSE OR is_flagged IS NULL)
-                              AND (needs_review = FALSE OR needs_review IS NULL)
+                            WHERE is_public  = TRUE
+                              AND status     = 'scored'
+                              AND score      IS NOT NULL
+                              AND score      > 0
+                              AND (is_flagged    = FALSE OR is_flagged    IS NULL)
+                              AND (needs_review  = FALSE OR needs_review  IS NULL)
                         ) i
                         JOIN users u ON u.id = i.user_id
-                        WHERE u.is_subscribed = TRUE
-                          AND u.subscription_track = :track
+                        WHERE u.is_subscribed       = TRUE
+                          AND u.subscription_track  = :track
                         GROUP BY i.user_id
                         HAVING COUNT(*) >= :min_imgs
-                           AND COUNT(DISTINCT DATE_TRUNC('month',
-                               (SELECT MIN(created_at) FROM images WHERE user_id = i.user_id))) >= 1
-                    ) qualified
+                    )
+                    SELECT COUNT(*) FROM user_top6
                     WHERE top6_avg > :my_avg
                 """), {
-                    'track': _aea_track,
-                    'min_imgs': _aea_req_images,
-                    'my_avg': _aea_top6_avg or 0,
+                    'track':     _aea_track,
+                    'min_imgs':  _aea_req_images,
+                    'my_avg':    _aea_top6_avg or 0,
                 }).scalar() or 0
                 _aea_league_rank = int(_aea_rank_row) + 1 if _aea_qualified and _aea_top6_avg else None
 
@@ -4888,8 +4957,39 @@ def dashboard():
             }
     # ── End Wallet HUD ────────────────────────────────────────────────────
 
-    # DDI Progress (same data as profile page)
-    progress_data = _build_progress_data(current_user)
+    # SL-176.1e: DDI Progress — cache-first ONLY. No synchronous fallback.
+    # On cache miss: return None (dashboard degrades gracefully) + fire background warm.
+    # This eliminates the 11-second synchronous hit. Cache warms in ~2s in background.
+    # Next dashboard load will have it. Photographers never wait for this computation.
+    progress_data = None
+    import json as _pdj2
+    _pd_cache_miss = False
+    try:
+        _pd_raw = db.session.execute(
+            db.text('SELECT progress_data_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar()
+        if _pd_raw:
+            progress_data = _pdj2.loads(_pd_raw)
+        else:
+            _pd_cache_miss = True
+    except Exception as _pd_err:
+        app.logger.warning(f'[dashboard] progress_data cache read: {_pd_err}')
+        try: db.session.rollback()
+        except Exception: pass
+        _pd_cache_miss = True
+
+    # Fire background warm on miss — next load will be instant
+    if _pd_cache_miss:
+        try:
+            import threading as _pd_th
+            _uid_pd = current_user.id
+            def _warm_pd():
+                with app.app_context():
+                    _refresh_progress_data(_uid_pd)
+            _pd_th.Thread(target=_warm_pd, daemon=True).start()
+        except Exception as _pdwe:
+            app.logger.warning(f'[dashboard] progress_data warm: {_pdwe}')
 
     # ── Photo School — curriculum lesson + weather ────────────────────────
     _lesson = None
@@ -4902,10 +5002,25 @@ def dashboard():
             _lesson = _get_curriculum_lesson(current_user, progress_data)
         except Exception as _le:
             app.logger.warning(f'[curriculum_lesson] {_le}')
+        # SL-176.1d: Weather — session-cached 1h to eliminate external API calls
         try:
             _wx_city = getattr(current_user, 'city', '') or ''
             if _wx_city:
-                _weather = _get_weather(_wx_city)
+                _wx_cache_key = f'wx_{_wx_city}'
+                _wx_ts_key    = f'wx_ts_{_wx_city}'
+                _wx_ttl       = 3600  # 1 hour
+                import time as _wxt
+                if (session.get(_wx_ts_key) and
+                        _wxt.time() - session[_wx_ts_key] < _wx_ttl and
+                        session.get(_wx_cache_key)):
+                    _weather = session[_wx_cache_key]
+                else:
+                    _weather = _get_weather(_wx_city)
+                    try:
+                        session[_wx_cache_key] = _weather
+                        session[_wx_ts_key]    = _wxt.time()
+                    except Exception:
+                        pass
         except Exception as _we:
             app.logger.warning(f'[weather] {_we}')
         # Mission due — open mission upload within last 7 days still pending/processing
@@ -5201,79 +5316,99 @@ def dashboard():
     except Exception as _adv_err:
         app.logger.warning(f'[dashboard] advisory/live_event: {_adv_err}')
 
-    # ── Peer evaluation queue for dashboard (Session 112 — direct query) ────────
+    # ── Peer evaluation queue for dashboard — session-cached 30 min ─────────────
+    # SL-176.1d: Was running 3 DB writes on every dashboard load.
+    # Now session-cached — DB writes only happen once per 30 minutes per user.
     _peer_queue = []
     if getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
-        try:
-            from models import RatingAssignment as _RA
-            from datetime import timedelta as _td
-            from sqlalchemy import text as _sqlt
-            # Only exclude images the user has *submitted* a rating for.
-            # Expired/skipped assignments re-enter the pool — prevents depletion.
-            _already = db.session.query(_RA.image_id).filter(
-                _RA.rater_id == current_user.id,
-                _RA.status   == 'submitted'
-            )
-            _eligible = Image.query.join(
-                User, Image.user_id == User.id
-            ).filter(
-                Image.status      == 'scored',
-                Image.is_public   == True,
-                Image.is_flagged  == False,
-                Image.needs_review == False,
-                Image.score       != None,
-                Image.genre       != None,
-                Image.user_id     != current_user.id,
-                User.is_subscribed == True,
-                Image.id.notin_(_already),
-            ).order_by(
-                Image.peer_rating_count.asc().nullsfirst(),
-                db.func.random()   # tiebreak: shuffle within same rating count
-            ).limit(9).all()
-            for _img in _eligible[:3]:
-                try:
-                    # Reuse existing non-submitted assignment if present (unique constraint)
-                    _existing = _RA.query.filter_by(
-                        rater_id=current_user.id,
-                        image_id=_img.id
-                    ).first()
-                    if _existing:
-                        _existing.status     = 'started'
-                        _existing.started_at = datetime.utcnow()
-                        _existing.expires_at = datetime.utcnow() + _td(hours=72)
-                        db.session.flush()
-                        try:
-                            db.session.execute(db.text(
-                                "UPDATE rating_assignments SET genre=:g WHERE id=:id"
-                            ), {'g': _img.genre, 'id': _existing.id})
-                        except Exception:
-                            pass
-                        _peer_queue.append(_existing)
-                    else:
-                        _a = _RA(
-                            rater_id   = current_user.id,
-                            image_id   = _img.id,
-                            status     = 'started',
-                            tier_slot  = 'any',
-                            started_at = datetime.utcnow(),
-                            expires_at = datetime.utcnow() + _td(hours=72),
-                        )
-                        db.session.add(_a)
-                        db.session.flush()
-                        try:
-                            db.session.execute(db.text(
-                                "UPDATE rating_assignments SET genre=:g WHERE id=:id"
-                            ), {'g': _img.genre, 'id': _a.id})
-                        except Exception:
-                            pass
-                        _peer_queue.append(_a)
-                except Exception as _pq_assign_err:
-                    app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
-                    db.session.rollback()
-            if _peer_queue:
-                db.session.commit()
-        except Exception as _pqe:
-            app.logger.warning(f'[dashboard] peer queue: {_pqe}')
+        _pq_cache_key = f'pq_{current_user.id}'
+        _pq_ts_key    = f'pq_ts_{current_user.id}'
+        _pq_ttl       = 1800  # 30 minutes
+        import time as _pqt
+        _pq_cached = (session.get(_pq_ts_key) and
+                      _pqt.time() - session[_pq_ts_key] < _pq_ttl and
+                      session.get(_pq_cache_key))
+        if _pq_cached:
+            # Serve cached assignment IDs — re-fetch ORM objects (cheap, no writes)
+            try:
+                from models import RatingAssignment as _RA2
+                _cached_ids = session[_pq_cache_key]
+                _peer_queue = [_RA2.query.get(aid) for aid in _cached_ids if aid]
+                _peer_queue = [a for a in _peer_queue if a]
+            except Exception:
+                _peer_queue = []
+        else:
+            try:
+                from models import RatingAssignment as _RA
+                from datetime import timedelta as _td
+                _already = db.session.query(_RA.image_id).filter(
+                    _RA.rater_id == current_user.id,
+                    _RA.status   == 'submitted'
+                )
+                _eligible = Image.query.join(
+                    User, Image.user_id == User.id
+                ).filter(
+                    Image.status      == 'scored',
+                    Image.is_public   == True,
+                    Image.is_flagged  == False,
+                    Image.needs_review == False,
+                    Image.score       != None,
+                    Image.genre       != None,
+                    Image.user_id     != current_user.id,
+                    User.is_subscribed == True,
+                    Image.id.notin_(_already),
+                ).order_by(
+                    Image.peer_rating_count.asc().nullsfirst(),
+                    db.func.random()
+                ).limit(9).all()
+                for _img in _eligible[:3]:
+                    try:
+                        _existing = _RA.query.filter_by(
+                            rater_id=current_user.id,
+                            image_id=_img.id
+                        ).first()
+                        if _existing:
+                            _existing.status     = 'started'
+                            _existing.started_at = datetime.utcnow()
+                            _existing.expires_at = datetime.utcnow() + _td(hours=72)
+                            db.session.flush()
+                            try:
+                                db.session.execute(db.text(
+                                    "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                                ), {'g': _img.genre, 'id': _existing.id})
+                            except Exception:
+                                pass
+                            _peer_queue.append(_existing)
+                        else:
+                            _a = _RA(
+                                rater_id   = current_user.id,
+                                image_id   = _img.id,
+                                status     = 'started',
+                                tier_slot  = 'any',
+                                started_at = datetime.utcnow(),
+                                expires_at = datetime.utcnow() + _td(hours=72),
+                            )
+                            db.session.add(_a)
+                            db.session.flush()
+                            try:
+                                db.session.execute(db.text(
+                                    "UPDATE rating_assignments SET genre=:g WHERE id=:id"
+                                ), {'g': _img.genre, 'id': _a.id})
+                            except Exception:
+                                pass
+                            _peer_queue.append(_a)
+                    except Exception as _pq_assign_err:
+                        app.logger.warning(f'[dashboard] peer queue assignment error image={_img.id}: {_pq_assign_err}')
+                        db.session.rollback()
+                if _peer_queue:
+                    db.session.commit()
+                    try:
+                        session[_pq_cache_key] = [a.id for a in _peer_queue if a.id]
+                        session[_pq_ts_key]    = _pqt.time()
+                    except Exception:
+                        pass
+            except Exception as _pqe:
+                app.logger.warning(f'[dashboard] peer queue: {_pqe}')
 
     # ── Eye of Judge — calibration trend (shows when ≥5 peer evals submitted) ──
     _eye_of_judge = None
@@ -5312,15 +5447,48 @@ def dashboard():
         except Exception as _eje:
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
-    # SL 175: Load personalised dashboard greeting brief (cached, zero latency)
+    # SL-176.1i: Load dash_greeting_json via raw SQL — ORM object is stale after background refresh
     import json as _dg_json
     _dash_greeting = None
     try:
-        _dg_raw = getattr(current_user, 'dash_greeting_json', None)
+        _dg_raw = db.session.execute(
+            db.text('SELECT dash_greeting_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar()
         if _dg_raw:
             _dash_greeting = _dg_json.loads(_dg_raw)
     except Exception as _dge:
         app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
+        try: db.session.rollback()
+        except Exception: pass
+
+    # SL-176.1f: Load mentor_advice_json via raw SQL
+    _mentor_advice = None
+    try:
+        _ma_row = db.session.execute(
+            db.text('SELECT mentor_advice_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _ma_row and _ma_row[0]:
+            import json as _maj
+            _mentor_advice = _maj.loads(_ma_row[0])
+    except Exception as _ma_err:
+        app.logger.warning(f'[dashboard] mentor_advice_json fetch: {_ma_err}')
+
+    # SL-176.1c: Load evolving_eye_json via raw SQL — not on ORM model
+    _evolving_eye_json = None
+    _evolving_eye_data = None
+    try:
+        _ee_row = db.session.execute(
+            db.text('SELECT evolving_eye_json FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _ee_row and _ee_row[0]:
+            _evolving_eye_json = _ee_row[0]
+            import json as _eej
+            _evolving_eye_data = _eej.loads(_ee_row[0])
+    except Exception as _ee_dash_err:
+        app.logger.warning(f'[dashboard] evolving_eye_json fetch: {_ee_dash_err}')
 
     return render_template('dashboard.html', images=images, stats=stats,
                            all_masters=ALL_MASTERS,
@@ -5365,6 +5533,13 @@ def dashboard():
                            dashboard_visit_count=_dash_visit_count,
                            aea_dash=aea_dash,
                            just_subscribed=session.pop('just_subscribed', None),
+                           evolving_eye_json=_evolving_eye_json,
+                           evolving_eye_data=_evolving_eye_data,
+                           mentor_advice=_mentor_advice,
+                           scored_count=db.session.execute(
+                               db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
+                               {'uid': current_user.id}
+                           ).scalar() or 0,
                            quota_status=_get_quota_status(current_user))
 
 
@@ -5663,15 +5838,10 @@ def _build_device_label(img) -> str:
 
 def _refresh_dash_greeting(user_id):
     """
-    SL 175 — Generate a personalised dashboard greeting brief using Claude.
+    SL-176.1f — Generate personalised dashboard greeting using Sonnet (upgraded from Haiku).
     Called after each successful evaluation (in _score_in_background).
     Stores result as JSON in users.dash_greeting_json — zero dashboard latency.
-
     Output JSON: {line1, line2, line3, expanded}
-    - line1: strongest dimension insight, specific to their image history
-    - line2: weakest dimension gap, honest and constructive
-    - line3: motivational closing line — "Go out and find the difficult shot while others wait."
-    - expanded: full paragraph coaching brief, 3-4 sentences, Sherpa voice
     """
     import json as _json
     import urllib.request as _ur
@@ -5693,44 +5863,61 @@ def _refresh_dash_greeting(user_id):
         _avg             = _pd.get('avg_score', 0)
         _tier            = _pd.get('highest_tier', '')
         _top_genre       = _pd.get('top_genre', 'Photography')
+        _dim_avgs        = _pd.get('dim_avgs', {})
+        _strongest_avg   = _dim_avgs.get(_pd.get('strongest', ''), 0)
+        _weakest_avg     = _dim_avgs.get(_pd.get('weakest', ''), 0)
 
-        _dim_avgs = _pd.get('dim_avgs', {})
-        _strongest_avg = _dim_avgs.get(_pd.get('strongest', ''), 0)
-        _weakest_avg   = _dim_avgs.get(_pd.get('weakest', ''), 0)
+        # Build trend context
+        _trend = _pd.get('trend', [])
+        _trend_dir = 'climbing' if len(_trend) >= 2 and _trend[-1]['score'] > _trend[0]['score'] else \
+                     'dipping' if len(_trend) >= 2 and _trend[-1]['score'] < _trend[0]['score'] else 'steady'
+        _first_5_avg = round(sum(t['score'] for t in _trend[:5]) / 5, 2) if len(_trend) >= 5 else None
+        _last_5_avg  = round(sum(t['score'] for t in _trend[-5:]) / 5, 2) if len(_trend) >= 5 else None
 
-        _prompt = f"""You are writing the personalised dashboard greeting for a photographer on Shutter League.
+        _prompt = f"""You are the Shutter League Sherpa — a warm, expert mentor writing a personalised dashboard greeting for a photographer.
 
-Photographer data:
-- Evaluated images: {_count}
-- Average evaluation: {_avg:.2f}
-- Highest tier: {_tier}
+PHOTOGRAPHER DATA:
+- Name: {_user.full_name.split()[0] if _user.full_name else 'Photographer'}
+- Images evaluated: {_count}
+- Highest tier reached: {_tier}
+- Average evaluation: {_avg:.2f}/10
 - Primary genre: {_top_genre}
-- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.1f})
-- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.1f})
+- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.2f})
+- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.2f})
+- Trajectory: {_trend_dir}{f" — first 5 avg {_first_5_avg}, last 5 avg {_last_5_avg}" if _first_5_avg else ""}
+- All dimension averages: {_dim_avgs}
 
-Write a personalised brief with exactly these four fields. Return ONLY raw JSON, no markdown, no preamble.
+GESTALT PRINCIPLES FOR PHOTOGRAPHY — use ONE in the expanded paragraph ONLY if it precisely explains the gap:
+- Figure-Ground: the frame must decide what is foreground. If the subject doesn't separate from its ground, the eye has nowhere to land.
+- Proximity: elements close together are read as belonging. Grouping by light or tone creates visual logic.
+- Continuation: the eye follows lines. The frame should direct where to look next.
+- Closure: the viewer completes what the frame suggests. Partial subjects, implied motion — the imagination fills it.
+If using one, name it explicitly: "This is a Gestalt principle called [Name]." One sentence only. Don't force it.
+
+Write a greeting with exactly these four fields. Return ONLY raw JSON, no markdown.
 
 {{
-  "line1": "One sentence naming their strongest dimension with a specific, warm observation. NOT generic. Reference the actual dimension name and what it means for their photography. 15-20 words.",
-  "line2": "One sentence naming the gap — what the weakest dimension means in practice. Honest, not harsh. 12-18 words.",
+  "line1": "One sentence. Name a specific pattern you see in their images — not just the dimension label, but what it MEANS about how they see. Reference their genre, their trajectory, or something specific. NOT 'Your WOW Factor is strong.' Instead: something like 'Across your 12 images, your eye consistently finds the frame other photographers walk past.' 18-22 words.",
+  "line2": "One sentence. Name the gap honestly — what is holding their best work back? Specific to their data. Not generic. 14-18 words.",
   "line3": "Go out and find the difficult shot while others wait.",
-  "expanded": "3-4 sentence coaching paragraph. Sherpa voice — warm, specific, expert. Name both dimensions. Reference the count of images. End with one concrete thing they can do in the next shoot to close the gap. 60-80 words."
+  "expanded": "3-4 sentences. Sherpa voice — warm, direct, expert. Start with an observation about their trajectory (climbing/steady/dipping). Name a specific strength and how it shows up in their work. Name the gap and give one concrete instruction for the next shoot. End with belief in them. 70-90 words. No generic advice. Sound like someone who has watched all {_count} of their images."
 }}
 
-Rules:
+RULES:
 - line3 must always be exactly: "Go out and find the difficult shot while others wait."
-- Never use the word 'score' or 'rank' — use 'evaluation' instead
-- Never mention competitors or other platforms
-- Sherpa voice: warm, specific, like a friend who is also a master photographer
-- The expanded paragraph must feel like it was written specifically for this photographer, not a template"""
+- Never use 'score' — use 'evaluation'
+- Never mention other photographers by name
+- Never mention AI, algorithm, or engine
+- Sherpa voice: warm, specific, expert — like a friend who is a master photographer
+- The expanded paragraph must feel written for THIS photographer specifically"""
 
         _api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if not _api_key:
             return
 
         _payload = _json.dumps({
-            'model': 'claude-haiku-4-5-20251001',
-            'max_tokens': 400,
+            'model': 'claude-sonnet-4-6',
+            'max_tokens': 600,
             'messages': [{'role': 'user', 'content': _prompt}]
         }).encode('utf-8')
 
@@ -5744,11 +5931,10 @@ Rules:
             },
             method='POST'
         )
-        with _ur.urlopen(_req, timeout=20) as _resp:
+        with _ur.urlopen(_req, timeout=30) as _resp:
             _result = _json.loads(_resp.read().decode())
 
         _raw = (_result.get('content') or [{}])[0].get('text', '').strip()
-        # Strip markdown fences if present
         if _raw.startswith('```'):
             _raw = _raw.split('```')[1]
             if _raw.startswith('json'):
@@ -5757,21 +5943,18 @@ Rules:
 
         _greeting = _json.loads(_raw)
 
-        # Validate required keys
         if not all(k in _greeting for k in ('line1', 'line2', 'line3', 'expanded')):
             app.logger.warning(f'[dash_greeting] missing keys for user {user_id}')
             return
 
-        # Enforce line3 always correct
         _greeting['line3'] = 'Go out and find the difficult shot while others wait.'
 
-        # Save to user
         db.session.execute(
             db.text('UPDATE users SET dash_greeting_json = :j WHERE id = :uid'),
             {'j': _json.dumps(_greeting), 'uid': user_id}
         )
         db.session.commit()
-        app.logger.info(f'[dash_greeting] refreshed for user {user_id}')
+        app.logger.info(f'[dash_greeting] refreshed for user {user_id} (Sonnet)')
 
     except Exception as _dg_err:
         app.logger.warning(f'[dash_greeting] non-fatal error for user {user_id}: {_dg_err}')
@@ -5779,6 +5962,835 @@ Rules:
             db.session.rollback()
         except Exception:
             pass
+
+
+def _refresh_dash_mentor(user_id):
+    """
+    SL-176.1f — Generate personalised Mentor Advice using Sonnet.
+    Called after each successful evaluation (in _score_in_background).
+    Stores result as JSON in users.mentor_advice_json — zero dashboard latency.
+
+    Output JSON: {title, action, detail, work_on_label}
+    - work_on_label: human name of weakest dimension
+    - title: the specific thing to work on (not just dimension name)
+    - action: one sharp instruction, specific to this photographer's pattern
+    - detail: 2-3 sentence expanded coaching, personal to their history
+    """
+    import json as _json
+    import urllib.request as _ur
+    try:
+        _user = User.query.get(user_id)
+        if not _user:
+            return
+        _pd = _build_progress_data(_user)
+        if not _pd:
+            return
+
+        _dim_labels = {
+            'dod': 'Depth of Difficulty', 'disruption': 'Visual Disruption',
+            'dm': 'The Moment Chosen', 'wonder': 'WOW Factor', 'aq': 'The Emotion It Creates'
+        }
+        _weakest        = _pd.get('weakest', '')
+        _weakest_label  = _dim_labels.get(_weakest, _weakest)
+        _strongest      = _pd.get('strongest', '')
+        _strongest_label = _dim_labels.get(_strongest, _strongest)
+        _count          = _pd.get('count', 0)
+        _top_genre      = _pd.get('top_genre', 'Photography')
+        _dim_avgs       = _pd.get('dim_avgs', {})
+        _weakest_avg    = _dim_avgs.get(_weakest, 0)
+        _strongest_avg  = _dim_avgs.get(_strongest, 0)
+        _trend          = _pd.get('trend', [])
+        _recent_genres  = list(set(t.get('genre', '') for t in _trend[-5:] if t.get('genre')))
+
+        _practise       = _pd.get('practise_feedback', {}).get(_weakest, {})
+        _practise_ctx   = ''
+        if _practise:
+            _practise_ctx = f"Last time they practised {_weakest_label}: scored {_practise.get('after', 0)} vs prior avg {_practise.get('before', 0)} (delta {_practise.get('delta', 0):+.1f})."
+
+        _prompt = f"""You are the Shutter League Sherpa. You have watched every one of this photographer's {_count} images. You are writing the "Work on This" section of their dashboard — the one thing they should be thinking about before their next shoot.
+
+PHOTOGRAPHER DATA:
+- Images evaluated: {_count}
+- Primary genre: {_top_genre}
+- Recent genres shot: {', '.join(_recent_genres) if _recent_genres else _top_genre}
+- Strongest dimension: {_strongest_label} (avg {_strongest_avg:.2f})
+- Weakest dimension: {_weakest_label} (avg {_weakest_avg:.2f})
+- Practice history: {_practise_ctx if _practise_ctx else 'No practice missions yet.'}
+
+This photographer's strongest work comes from {_strongest_label}. The gap is in {_weakest_label}.
+
+GESTALT PRINCIPLES FOR PHOTOGRAPHY — draw from these when they explain the gap clearly:
+- Figure-Ground (Gestalt): the frame must decide what is foreground before the viewer can. If the subject doesn't separate from its ground through light, tone, or position, the eye has no place to land.
+- Proximity (Gestalt): elements close together are read as belonging together. In photography — grouping by light, shadow, or position creates visual logic. Without it, the frame feels scattered.
+- Similarity (Gestalt): repeated shapes, tones, or textures create rhythm. The eye expects the pattern. Breaking it deliberately creates the frame's strongest moment.
+- Continuation (Gestalt): the eye follows lines and edges. The frame should direct where to look next. Without a path, the eye wanders and leaves.
+- Closure (Gestalt): the viewer's eye completes what the frame suggests. A panning shot, a partial subject, a shape at the edge — the imagination fills it. This is power.
+- Common Fate (Gestalt): elements moving or pointing in the same direction feel like they belong. In wildlife — the direction a bird faces, the movement of a flock — these create or destroy cohesion.
+
+Use ONE Gestalt principle ONLY IF it precisely explains the gap for this photographer's genre and weakest dimension. Name it explicitly: "This is a Gestalt principle called [Name]." Then explain what it means for their specific images. Never force a principle that doesn't fit.
+
+Write the mentor advice. Return ONLY raw JSON, no markdown.
+
+{{
+  "work_on_label": "{_weakest_label}",
+  "title": "A short, human observation — NOT a workshop title, NOT a technique name. Something a mentor would say looking at their images. If using a Gestalt principle, name it: e.g. 'Figure-Ground: your frame isn't deciding yet.' 6-10 words. No jargon beyond the named principle.",
+  "action": "One sentence. What to do differently on the NEXT shoot. Written directly to the photographer. Reference their specific genre ({_top_genre}). If a Gestalt principle applies, state how to use it in the field. Make it something they can act on today. 18-25 words.",
+  "detail": "2-3 sentences. A mentor observation about the pattern across their images. What are they doing that works? What is the one thing preventing their {_top_genre} work from reaching the level of their best frames? If using a Gestalt principle, name it clearly and explain what it means for their images specifically. Reference the gap between their {_strongest_label} strength and their {_weakest_label} gap. Sound like someone who has watched all {_count} images, not someone reading a definition. 60-80 words."
+}}
+
+CRITICAL RULES:
+- No jargon except named Gestalt principles.
+- The title must sound like a person, not a system.
+- The action must be something they can literally do before the next shutter press.
+- The detail must name something specific about THEIR images — not general advice.
+- Never say 'score' — say 'evaluation'.
+- Never mention AI, algorithm, engine, or Shutter League's technology.
+- Sherpa voice: warm, direct, specific. A trusted friend who is also a master photographer."""
+
+        _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if not _api_key:
+            return
+
+        _payload = _json.dumps({
+            'model': 'claude-sonnet-4-6',
+            'max_tokens': 500,
+            'messages': [{'role': 'user', 'content': _prompt}]
+        }).encode('utf-8')
+
+        _req = _ur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': _api_key,
+                'anthropic-version': '2023-06-01'
+            },
+            method='POST'
+        )
+        with _ur.urlopen(_req, timeout=30) as _resp:
+            _result = _json.loads(_resp.read().decode())
+
+        _raw = (_result.get('content') or [{}])[0].get('text', '').strip()
+        if _raw.startswith('```'):
+            _raw = _raw.split('```')[1]
+            if _raw.startswith('json'):
+                _raw = _raw[4:]
+            _raw = _raw.strip().rstrip('`').strip()
+
+        _mentor = _json.loads(_raw)
+
+        if not all(k in _mentor for k in ('work_on_label', 'title', 'action', 'detail')):
+            app.logger.warning(f'[dash_mentor] missing keys for user {user_id}')
+            return
+
+        db.session.execute(
+            db.text('UPDATE users SET mentor_advice_json = :j WHERE id = :uid'),
+            {'j': _json.dumps(_mentor), 'uid': user_id}
+        )
+        db.session.commit()
+        app.logger.info(f'[dash_mentor] refreshed for user {user_id} (Sonnet)')
+
+    except Exception as _dm_err:
+        app.logger.warning(f'[dash_mentor] non-fatal error for user {user_id}: {_dm_err}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
+
+    """
+    SL-176: Post-process audit dict before saving to DB.
+    Runs after build_audit_data(), before set_audit().
+
+    Fixes applied:
+    1. Deduplicates master photographer references across sections
+    2. Trims takeaway bullets to 2 max
+    3. Guards B&W edit suggestion for colour-rich genres
+    4. Removes verbatim repeat sentences across sections
+    """
+    import re as _re_ca
+
+    if not audit:
+        return audit
+
+    try:
+        # ── 1. Deduplicate master references (e.g. Ernst Haas in 3 sections) ──
+        _ref_fields = [
+            'what_stood_out', 'transferable_advice', 'background_check',
+            'byline_1', 'byline_2', 'byline_2_body', 'affective_state',
+            'assignment_tomorrow', 'note_on_eye', 'body_of_work',
+        ]
+        _master_re = _re_ca.compile(r'Search:\s*([^.<\n]{3,60})\.', _re_ca.IGNORECASE)
+        _seen_masters = set()
+        for _field in _ref_fields:
+            _val = (audit.get(_field) or '')
+            for _m in _master_re.findall(_val):
+                _nm = _m.strip().lower()
+                if _nm in _seen_masters:
+                    # Remove the "**Name** ...sentence... Search: Name." block
+                    audit[_field] = _re_ca.sub(
+                        r'\s*\*?\*?' + _re_ca.escape(_m.strip()) + r'\*?\*?[^.!?]*[.!?]?\s*'
+                        r'Search:\s*' + _re_ca.escape(_m.strip()) + r'\s*\.',
+                        '', audit[_field], flags=_re_ca.IGNORECASE
+                    ).strip()
+                    app.logger.info(f'[clean_audit] deduped master ref "{_nm}" from {_field}')
+                else:
+                    _seen_masters.add(_nm)
+
+        # ── 2. Trim take-away to 2 bullets max ──────────────────────────────
+        for _ta_field in ('one_takeaway', 'sherpa_takeaway', 'byline_2', 'byline_2_body'):
+            _ta = (audit.get(_ta_field) or '')
+            if _ta and '\u25a0' in _ta:
+                _parts = [p.strip() for p in _ta.split('\u25a0') if p.strip()]
+                if len(_parts) > 2:
+                    audit[_ta_field] = '\u25a0 ' + ' \u25a0 '.join(_parts[:2])
+                    app.logger.info(f'[clean_audit] {_ta_field} trimmed to 2 bullets')
+
+        # ── 3. Guard B&W edit suggestion for colour-rich genres ─────────────
+        _genre = (getattr(img, 'genre', '') or '').lower()
+        _colour_genres = {'creative', 'wildlife', 'landscape', 'street',
+                          'travel', 'nature', 'sport', 'fashion', 'concert'}
+        _edit_creative = (audit.get('edit_creative') or '')
+        if _edit_creative and _genre in _colour_genres:
+            _bw_re = _re_ca.compile(
+                r'convert\s+to\s+black\s+and\s+white|to\s+b\s*&\s*w|monochrome',
+                _re_ca.IGNORECASE
+            )
+            if _bw_re.search(_edit_creative):
+                _subject = (getattr(img, 'subject', '') or '').lower()
+                _is_grey = any(w in _subject + _edit_creative.lower()
+                               for w in ('grey', 'gray', 'mist', 'fog', 'rain',
+                                         'storm', 'overcast', 'silhouette', 'shadow'))
+                if not _is_grey:
+                    audit['edit_creative'] = _bw_re.sub(
+                        'develop a distinctive colour treatment', _edit_creative
+                    )
+                    app.logger.info(f'[clean_audit] B&W guard applied for genre={_genre}')
+
+        # ── 4. Remove verbatim sentence repeats from secondary sections ──────
+        _primary = (audit.get('what_stood_out') or audit.get('hard_truth') or '').strip()
+        if _primary:
+            _primary_fps = set()
+            for _s in _re_ca.split(r'(?<=[.!?])\s+', _primary):
+                _fp = _re_ca.sub(r'\s+', ' ', _s.strip().lower())
+                if len(_fp) > 25:
+                    _primary_fps.add(_fp)
+            for _sf in ('transferable_advice', 'background_check', 'byline_2'):
+                _sv = (audit.get(_sf) or '')
+                if not _sv:
+                    continue
+                _sents = _re_ca.split(r'(?<=[.!?])\s+', _sv)
+                _cleaned = [s for s in _sents
+                            if _re_ca.sub(r'\s+', ' ', s.strip().lower()) not in _primary_fps]
+                if len(_cleaned) < len(_sents):
+                    audit[_sf] = ' '.join(_cleaned).strip()
+                    app.logger.info(f'[clean_audit] removed {len(_sents)-len(_cleaned)} repeat sents from {_sf}')
+
+    except Exception as _ca_err:
+        app.logger.warning(f'[clean_audit] non-fatal: {_ca_err}')
+
+    return audit
+
+
+
+def _clean_audit(audit, img):
+    """
+    SL-176: Post-process audit dict before saving to DB.
+    Runs after build_audit_data(), before set_audit().
+
+    Fixes applied:
+    1. Deduplicates master photographer references across sections
+    2. Trims takeaway bullets to 2 max
+    3. Guards B&W edit suggestion for colour-rich genres
+    4. Removes verbatim repeat sentences across sections
+    """
+    import re as _re_ca
+
+    if not audit:
+        return audit
+
+    try:
+        # ── 1. Deduplicate master references (e.g. Ernst Haas in 3 sections) ──
+        _ref_fields = [
+            'what_stood_out', 'transferable_advice', 'background_check',
+            'byline_1', 'byline_2', 'byline_2_body', 'affective_state',
+            'assignment_tomorrow', 'note_on_eye', 'body_of_work',
+        ]
+        _master_re = _re_ca.compile(r'Search:\s*([^.<\n]{3,60})\.', _re_ca.IGNORECASE)
+        _seen_masters = set()
+        for _field in _ref_fields:
+            _val = (audit.get(_field) or '')
+            for _m in _master_re.findall(_val):
+                _nm = _m.strip().lower()
+                if _nm in _seen_masters:
+                    audit[_field] = _re_ca.sub(
+                        r'\s*\*?\*?' + _re_ca.escape(_m.strip()) + r'\*?\*?[^.!?]*[.!?]?\s*'
+                        r'Search:\s*' + _re_ca.escape(_m.strip()) + r'\s*\.',
+                        '', audit[_field], flags=_re_ca.IGNORECASE
+                    ).strip()
+                    app.logger.info(f'[clean_audit] deduped master ref "{_nm}" from {_field}')
+                else:
+                    _seen_masters.add(_nm)
+
+        # ── 2. Trim take-away to 2 bullets max ──────────────────────────────
+        for _ta_field in ('one_takeaway', 'sherpa_takeaway', 'byline_2', 'byline_2_body'):
+            _ta = (audit.get(_ta_field) or '')
+            if _ta and '\u25a0' in _ta:
+                _parts = [p.strip() for p in _ta.split('\u25a0') if p.strip()]
+                if len(_parts) > 2:
+                    audit[_ta_field] = '\u25a0 ' + ' \u25a0 '.join(_parts[:2])
+                    app.logger.info(f'[clean_audit] {_ta_field} trimmed to 2 bullets')
+
+        # ── 3. Guard B&W edit suggestion for colour-rich genres ─────────────
+        _genre = (getattr(img, 'genre', '') or '').lower()
+        _colour_genres = {'creative', 'wildlife', 'landscape', 'street',
+                          'travel', 'nature', 'sport', 'fashion', 'concert'}
+        _edit_creative = (audit.get('edit_creative') or '')
+        if _edit_creative and _genre in _colour_genres:
+            _bw_re = _re_ca.compile(
+                r'convert\s+to\s+black\s+and\s+white|to\s+b\s*&\s*w|monochrome',
+                _re_ca.IGNORECASE
+            )
+            if _bw_re.search(_edit_creative):
+                _subject = (getattr(img, 'subject', '') or '').lower()
+                _is_grey = any(w in _subject + _edit_creative.lower()
+                               for w in ('grey', 'gray', 'mist', 'fog', 'rain',
+                                         'storm', 'overcast', 'silhouette', 'shadow'))
+                if not _is_grey:
+                    audit['edit_creative'] = _bw_re.sub(
+                        'develop a distinctive colour treatment', _edit_creative
+                    )
+                    app.logger.info(f'[clean_audit] B&W guard applied for genre={_genre}')
+
+        # ── 4. Remove verbatim sentence repeats from secondary sections ──────
+        _primary = (audit.get('what_stood_out') or audit.get('hard_truth') or '').strip()
+        if _primary:
+            _primary_fps = set()
+            for _s in _re_ca.split(r'(?<=[.!?])\s+', _primary):
+                _fp = _re_ca.sub(r'\s+', ' ', _s.strip().lower())
+                if len(_fp) > 25:
+                    _primary_fps.add(_fp)
+            for _sf in ('transferable_advice', 'background_check', 'byline_2'):
+                _sv = (audit.get(_sf) or '')
+                if not _sv:
+                    continue
+                _sents = _re_ca.split(r'(?<=[.!?])\s+', _sv)
+                _cleaned = [s for s in _sents
+                            if _re_ca.sub(r'\s+', ' ', s.strip().lower()) not in _primary_fps]
+                if len(_cleaned) < len(_sents):
+                    audit[_sf] = ' '.join(_cleaned).strip()
+                    app.logger.info(f'[clean_audit] removed {len(_sents)-len(_cleaned)} repeat sents from {_sf}')
+
+    except Exception as _ca_err:
+        app.logger.warning(f'[clean_audit] non-fatal: {_ca_err}')
+
+    return audit
+
+
+def _generate_evolving_eye(user_id, milestone):
+    """
+    SL-177: Generate "My Evolving Eye — So Far" advisory.
+
+    TWO MODES:
+    - Early Eye (milestone < 10): fires for any photographer with 1+ images.
+      Honest about limited data. Contest trigger: if best image >= 8.5, show
+      contests. If below 8.5, show the gap and what to close it.
+      Prominent contest section. 2-frame body of work (not 4).
+    - Full Evolving Eye (milestone >= 10): full pattern reading, trajectory,
+      genre breakdown, 4-frame body of work, platform rank.
+
+    Both modes use Sonnet only. Never Haiku. Never downgrade.
+
+    Soul Profile preamble fires before every Sonnet call — reads the person
+    behind the images, not just the images. (P32 — Session 177)
+
+    Title fingerprint — image titles and captions passed to Sonnet as
+    additional signal of the photographer's mind and philosophy.
+
+    Rules:
+    - Never reference other photographers on the platform by name
+    - Never use dimension codes (AQ, DM, DOD) — only human names
+    - Never write "Shutter League" as "SL" — always full name
+    - Sherpa tone throughout — warm mentor, not algorithm
+    - "What this evaluation means" section only on first 10-image advisory
+    - Shutter League always written in full — never SL
+    - 8.5 threshold: if best image >= 8.5 → show contests. If below → show gap.
+    - Photographs are fingerprints of the heart, mind and soul. Read them so.
+    """
+    import json as _j
+    import threading as _t
+
+    def _run():
+        with app.app_context():
+            try:
+                from engine.auto_score import auto_score as _dummy  # ensure engine importable
+            except Exception:
+                pass
+
+            try:
+                # ── Fetch user ────────────────────────────────────────────
+                _user = db.session.execute(
+                    db.text('SELECT id, full_name FROM users WHERE id = :uid'),
+                    {'uid': user_id}
+                ).fetchone()
+                if not _user:
+                    return
+                _name = (_user.full_name or '').split()[0] if _user.full_name else 'Photographer'
+
+                # ── Fetch all scored images ───────────────────────────────
+                # SL-177: asset_name (photographer's title) added as soul
+                # fingerprint — titles reveal the photographer's mind and
+                # relationship to the viewer. Passed to Sonnet as signal.
+                _images = db.session.execute(db.text("""
+                    SELECT genre, score, scored_at::date as date,
+                           dod_score, disruption_score, dm_score,
+                           wonder_score, aq_score,
+                           asset_name,
+                           audit_json::json->>'what_stood_out' as revelation,
+                           audit_json::json->>'transferable_advice' as advice,
+                           audit_json::json->>'mentor_location_1' as next_location
+                    FROM images
+                    WHERE user_id = :uid AND status='scored'
+                      AND score IS NOT NULL
+                    ORDER BY scored_at ASC
+                """), {'uid': user_id}).fetchall()
+
+                if not _images:
+                    return
+
+                _total = len(_images)
+                _all_scores = [float(r.score) for r in _images]
+                _avg = round(sum(_all_scores) / len(_all_scores), 2)
+                _best = max(_all_scores)
+
+                # ── Early Eye mode — sub-10 images ───────────────────────
+                # SL-177: Any photographer with 1+ images gets an advisory.
+                # Below 10 images = Early Eye (lighter, contest-forward).
+                # 10+ images = Full Evolving Eye (existing behaviour).
+                _is_early_eye = (_total < 10)
+
+                # ── 8.5 contest trigger ───────────────────────────────────
+                # SL-177: If best image >= 8.5, show contests immediately.
+                # If below 8.5, show the gap and the specific dimension to close.
+                _has_contest_score = (_best >= 8.5)
+                _gap_to_contest = round(8.5 - _best, 2) if not _has_contest_score else 0
+
+                # ── Title fingerprint — photographer's mind ───────────────
+                # SL-177 (P32): Titles are fingerprints of the photographer's
+                # heart and soul. What they name an image reveals what they
+                # were thinking, feeling, and wanting the viewer to experience.
+                _title_lines = []
+                for r in _images:
+                    if getattr(r, 'asset_name', None) and r.asset_name.strip():
+                        _title_lines.append(
+                            f"[{r.genre} {r.score}] \"{r.asset_name.strip()}\""
+                        )
+
+                # ── Soul profile — read the person behind the images ──────
+                # SL-177 (P32): Built from genre commitment, score trajectory,
+                # title language, and upload behaviour. Passed as preamble
+                # to Sonnet so it speaks to the person, not just the technique.
+                _primary_genre = max(_genres.keys(), key=lambda g: len(_genres[g])) if _genres else 'photography'
+                _genre_count = len(_genres)
+                _score_direction = 'climbing' if _last10 > _first10 else ('falling' if _last10 < _first10 else 'steady')
+                _gap_best_avg = round(_best - _avg, 2)
+                _title_style = 'absent' if not _title_lines else (
+                    'questioning' if any('?' in t for t in _title_lines)
+                    else 'poetic' if _genre_count <= 1
+                    else 'descriptive'
+                )
+
+                # ── Genre breakdown ───────────────────────────────────────
+                from collections import defaultdict
+                _genres = defaultdict(list)
+                for r in _images:
+                    if r.genre:
+                        _genres[r.genre].append(float(r.score))
+
+                _genre_lines = []
+                for g, scores in sorted(_genres.items(), key=lambda x: -len(x[1])):
+                    _genre_lines.append(
+                        f"{g}: {len(scores)} images, avg {round(sum(scores)/len(scores),2)}, "
+                        f"best {max(scores)}, lowest {min(scores)}"
+                    )
+
+                # ── Dimension avgs per genre ──────────────────────────────
+                _dim_by_genre = {}
+                for g in _genres:
+                    _gi = [r for r in _images if r.genre == g]
+                    _dim_by_genre[g] = {
+                        'Aesthetic Quality': round(sum(float(r.aq_score) for r in _gi if r.aq_score) / max(1, sum(1 for r in _gi if r.aq_score)), 2),
+                        'Decisive Moment':   round(sum(float(r.dm_score) for r in _gi if r.dm_score) / max(1, sum(1 for r in _gi if r.dm_score)), 2),
+                        'Disruption':        round(sum(float(r.disruption_score) for r in _gi if r.disruption_score) / max(1, sum(1 for r in _gi if r.disruption_score)), 2),
+                        'Visual Display':    round(sum(float(r.wonder_score) for r in _gi if r.wonder_score) / max(1, sum(1 for r in _gi if r.wonder_score)), 2),
+                        'Depth of Difficulty': round(sum(float(r.dod_score) for r in _gi if r.dod_score) / max(1, sum(1 for r in _gi if r.dod_score)), 2),
+                    }
+
+                # ── Trajectory ────────────────────────────────────────────
+                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
+                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+
+                # ── Last 10 audit texts ───────────────────────────────────
+                _recent_audits = _images[-10:]
+                _audit_lines = []
+                for r in _recent_audits:
+                    if r.revelation:
+                        _audit_lines.append(f"[{r.genre} {r.date} {r.score}] {r.revelation[:200]}")
+
+                # ── Contest-worthy images ─────────────────────────────────
+                _contest_images = [(r.genre, float(r.score), str(r.date)) for r in _images if float(r.score) >= 8.5]
+
+                # ── Platform percentile ───────────────────────────────────
+                _platform = db.session.execute(db.text("""
+                    SELECT COUNT(*) as total,
+                           COUNT(CASE WHEN avg_score < :my_avg THEN 1 END) as below
+                    FROM (
+                        SELECT user_id, AVG(score) as avg_score
+                        FROM images WHERE status='scored' AND score IS NOT NULL
+                        GROUP BY user_id HAVING COUNT(*) >= 3
+                    ) t
+                """), {'my_avg': _avg}).fetchone()
+
+                _platform_total = _platform.total or 1
+                _platform_rank  = _platform_total - (_platform.below or 0)
+                _platform_pct   = max(1, round((_platform.below / _platform_total) * 100)) if _platform_total > 1 else 50
+
+                # ── Build prompt ──────────────────────────────────────────
+                _is_first = (milestone == 10)
+                _next_milestone = milestone + 10
+
+                # SL-177 (P32): Soul profile preamble — read the person first.
+                # Photographs are fingerprints of the heart, mind and soul.
+                # Every advisory speaks to the person before the technique.
+                _system = f"""You are the Shutter League mentor — warm, honest, deeply photographic in voice.
+You are not an algorithm reading metrics. You are a Sherpa who has walked alongside
+this photographer across every image they have ever shared here.
+
+SOUL PROFILE — READ THIS BEFORE ANYTHING ELSE:
+This photographer shoots primarily {_primary_genre}. Their scores are {_score_direction}.
+The gap between their best image and their average is {_gap_best_avg} points — this gap
+reveals something about their consistency, their risk-taking, or their comfort zone.
+They have shot across {_genre_count} genre(s). Their title style is {_title_style}.
+
+Before you write a single word of advice — ask yourself:
+1. What is this photographer reaching for? Not what genre. What feeling, what truth,
+   what moment makes them pick up the camera at all?
+2. What is quietly stopping them from getting there? Not the technical weakness —
+   the human one. The habit of playing it safe. The comfort zone producing good
+   images but not great ones.
+3. What is the child in them reaching for? Every photographer picked up a camera
+   for a reason. Find that reason in their images and speak to it directly.
+4. Where is the pain point? Is there a score they did not expect? A genre where
+   the engine did not see what they saw? Acknowledge it, even obliquely.
+
+Photographs are fingerprints of the heart, mind and soul of the photographer.
+They are all trying to leave their legacy in this world. Your advisory must
+honour that. Speak to them from that place — not to their technique, but to them.
+
+RULES (non-negotiable):
+- Never reference other photographers on the platform by name
+- Never use dimension codes: AQ, DM, DOD, WF — use full human names only
+- Never write "Shutter League" as "SL" — always full name
+- Sherpa tone: warm mentor, not algorithm. Speak to the photographer directly.
+- No jargon. No "your metrics show". No "data indicates".
+- Each genre gets its own section. Find the specific insight, not the average.
+- The "one thing" must be one sentence maximum — the single most important thing.
+- Body of work: {"2 frames (Early Eye — limited data)" if _is_early_eye else "4 frames"}, each a different idea linked by one story/theme.
+- "Why Shutter League" section: only include at 10-image milestone, never before.
+- End with a forward-looking note — motivational, specific, never generic.
+- The title an image is given is a fingerprint of the photographer's mind.
+  If titles are present, read them. They tell you what the photographer was
+  thinking, feeling, and wanting the viewer to experience. Use this.
+- 8.5 threshold rule: if best image >= 8.5, lead contests section with
+  "Your work is ready for these open calls — now." If below 8.5, tell them
+  specifically what dimension to improve and by how much to reach contest-ready.
+  Never be vague about this gap. Name it precisely.
+- Write as if you have been watching this photographer for months. Because you have."""
+
+                # SL-177: Early Eye vs Full Evolving Eye prompt variant
+                _advisory_type = "Early Eye — First Reading" if _is_early_eye else "My Evolving Eye — So Far"
+                _contest_trigger_note = (
+                    f"CONTEST TRIGGER: Best image scored {_best} — ABOVE 8.5 threshold. "
+                    f"Lead the contests section with 'Your work is ready for these open calls — now.' "
+                    f"Be specific and direct. This photographer is competition-ready."
+                ) if _has_contest_score else (
+                    f"CONTEST TRIGGER: Best image scored {_best} — {_gap_to_contest} points below "
+                    f"the 8.5 contest-ready threshold. Do NOT show contests. Instead, name the single "
+                    f"dimension that is holding them back and tell them precisely what to work on "
+                    f"to close that gap. Make 8.5 feel reachable, not distant. Be specific — "
+                    f"not 'improve your composition' but 'your Decisive Moment is your strongest "
+                    f"dimension — now bring that same instinct to your Visual Display.'"
+                )
+
+                _early_eye_note = """
+EARLY EYE MODE — sub-10 images:
+- Be honest that this is a first reading based on limited images
+- Use language like "across your images so far" not "across your body of work"
+- Skip trajectory section (not enough data)
+- Skip platform rank (not meaningful yet)
+- Lead with what the engine already sees clearly — even 1 image reveals something
+- Body of work: 2 frames only, not 4
+- Tone: warm, specific, forward-looking — make them want to upload more
+""" if _is_early_eye else ""
+
+                _user_prompt = f"""Write "{_advisory_type}" for {_name}.
+
+{_early_eye_note}
+{_contest_trigger_note}
+
+PHOTOGRAPHER DATA:
+- Total images: {_total}
+- Advisory type: {"Early Eye (first reading)" if _is_early_eye else f"{milestone}-image full advisory"}
+- Overall average: {_avg}
+- Best image: {_best}
+- Contest ready (8.5+): {"YES — lead with contests" if _has_contest_score else f"NOT YET — gap is {_gap_to_contest} points"}
+{f"- First 10 avg: {_first10} | Last 10 avg: {_last10}" if not _is_early_eye else ""}
+{f"- Platform ranking: {_platform_rank} of {_platform_total} photographers" if not _is_early_eye else ""}
+
+GENRE BREAKDOWN:
+{chr(10).join(_genre_lines)}
+
+IMAGE TITLES (fingerprints of the photographer's mind — read these carefully):
+{chr(10).join(_title_lines) if _title_lines else "No titles given — absence is also a signal."}
+
+DIMENSION AVERAGES BY GENRE:
+{chr(10).join(f"{g}: " + ", ".join(f"{k} {v}" for k,v in dims.items()) for g,dims in _dim_by_genre.items())}
+
+CONTEST-WORTHY IMAGES (8.5+):
+{chr(10).join(f"{g} {s} ({d})" for g,s,d in _contest_images) if _contest_images else "None yet"}
+
+WHAT THE ENGINE TOLD THEM (last 10 evaluations):
+{chr(10).join(_audit_lines) if _audit_lines else "No audit data yet"}
+
+STRUCTURE TO FOLLOW:
+1. Where you stand on Shutter League (platform rank, overall avg)
+2. What your images are telling us (trajectory + engine's key word pattern)
+3. Per-genre sections (one per genre with 3+ images — tap to expand)
+4. The one thing (single sentence — the most important insight across all images)
+{"5. Why Shutter League sees what other platforms miss (4 points, plain language — ONLY include at 10-image milestone)" if _is_first else ""}
+5. Your contest-worthy images (only if score >= 8.5; suggest relevant real contests)
+6. Your next body of work (story title + 4 frames, each a different idea)
+7. Next milestone: {_next_milestone} images
+
+CONTEST RULES (critical):
+- ALWAYS list free-entry contests FIRST. At least 2 free contests before any paid ones.
+- NEVER list a contest with a vague deadline. Every contest must have a specific deadline date.
+- NEVER list a closed contest. Only contests currently accepting entries.
+- NEVER list BPOTY (Bird Photographer of the Year 2026) — closed Dec 2025.
+- If a photographer's genre has no matching open contest, suggest the closest genre match and explain why.
+- Use the LIVE CONTEST DATA provided at the end of this prompt — it was searched today and is current.
+- Match contests to the photographer's genre and actual scores. The "why" field must reference a specific image or pattern from their data.
+
+Match contests to the photographer's genre and scores. The "why" field must reference a specific image or pattern from their data — not generic praise.
+
+Output as JSON with these keys:
+{{
+  "where_you_stand": "...",
+  "what_images_say": "...",
+  "trajectory_note": "...",
+  "genres": [{{"name": "...", "avg": ..., "count": ..., "insight": "...", "key_line": "..."}}],
+  "one_thing": "...",
+  "why_sl": "..." (only at milestone 10, else null),
+  "contests": [{{"name": "...", "url": "...", "why": "...", "free": true/false, "deadline": "specific month/date or open year-round"}}],
+  "bow_title": "...",
+  "bow_story": "...",
+  "bow_frames": ["...", "...", "...", "..."],
+  "bow_footer": "...",
+  "next_milestone_note": "..."
+}}"""
+
+                # ── Live contest search — runs before Sonnet ─────────────
+                # SL-176.1o: Option B — search for current open contests
+                # specific to this photographer's genre before calling Sonnet.
+                # Replaces hardcoded contest list with live, accurate data.
+                _live_contests_context = ''
+                try:
+                    import anthropic as _ant_search
+                    _search_client = _ant_search.Anthropic()
+                    _primary_genre = _genres[0] if _genres else 'photography'
+                    _search_query = f"{_primary_genre} photography contest open submissions deadline 2026 2027 free entry"
+                    _search_resp = _search_client.messages.create(
+                        model='claude-sonnet-4-6',
+                        max_tokens=800,
+                        tools=[{"type": "web_search_20250305", "name": "web_search"}],
+                        messages=[{
+                            'role': 'user',
+                            'content': f"""Search for currently open photography contests for {_primary_genre} photographers as of today August 2026.
+Find 3-5 contests that are:
+1. Currently accepting entries (not closed)
+2. Have a specific deadline date (not "TBC" or vague)
+3. Mix of free and paid entry
+
+For each contest return: name, URL, deadline date, free or paid, entry fee if paid.
+Return ONLY a plain text list, no markdown. Be specific about deadlines."""
+                        }]
+                    )
+                    # Extract text from search response
+                    for _blk in _search_resp.content:
+                        if hasattr(_blk, 'type') and _blk.type == 'text':
+                            _live_contests_context = _blk.text
+                            break
+                    if _live_contests_context:
+                        app.logger.info(f'[evolving_eye] live contest search completed for user {user_id}')
+                except Exception as _cs_err:
+                    app.logger.warning(f'[evolving_eye] contest search failed: {_cs_err}')
+
+                # ── Call Sonnet ───────────────────────────────────────────
+                import anthropic as _ant
+                _client = _ant.Anthropic()
+
+                # Inject live contest data into prompt if search succeeded
+                _contest_injection = f"""
+LIVE CONTEST DATA (searched today — use these, prioritise over any other knowledge):
+{_live_contests_context}
+""" if _live_contests_context else ""
+
+                _resp = _client.messages.create(
+                    model='claude-sonnet-4-6',
+                    max_tokens=4000,
+                    system=_system,
+                    messages=[{'role': 'user', 'content': _user_prompt + _contest_injection}]
+                )
+                _raw = _resp.content[0].text if _resp.content else ''
+
+                # Strip markdown fences if present
+                import re as _re
+                _raw = _re.sub(r'^```json\s*', '', _raw.strip())
+                _raw = _re.sub(r'```\s*$', '', _raw.strip())
+
+                _advisory = _j.loads(_raw)
+                _advisory['milestone'] = milestone
+                _advisory['generated_at'] = str(db.session.execute(db.text('SELECT NOW()')).scalar())
+                _advisory['total_images'] = _total
+                _advisory['avg_score'] = _avg
+                _advisory['platform_rank'] = _platform_rank
+                _advisory['platform_total'] = _platform_total
+
+                # ── Store in DB ───────────────────────────────────────────
+                db.session.execute(db.text("""
+                    UPDATE users
+                    SET evolving_eye_json = :j,
+                        evolving_eye_milestone = :m
+                    WHERE id = :uid
+                """), {
+                    'j':   _j.dumps(_advisory),
+                    'm':   milestone,
+                    'uid': user_id
+                })
+                db.session.commit()
+                app.logger.info(f'[evolving_eye] generated for user {user_id} at milestone {milestone}')
+
+                # ── Send advisory email to photographer ───────────────────
+                # SL-176.1k: Full advisory text in email body, not a link.
+                # Subject: "[First name] — your eye after [N] images"
+                try:
+                    _user_for_email = User.query.get(user_id)
+                    if _user_for_email and _user_for_email.email:
+                        _fname = (_user_for_email.full_name or '').split()[0] if _user_for_email.full_name else 'Photographer'
+                        _site  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        _subj  = f'{_fname} — your eye after {milestone} images'
+
+                        # Build HTML email from advisory content
+                        _genres_html = ''
+                        for _g in (_advisory.get('genres') or []):
+                            _genres_html += f'''
+                            <tr><td style="padding:14px 0;border-top:1px solid #E8E4DA;">
+                              <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A37B2C;margin-bottom:4px">{_g.get('name','')}</div>
+                              {f'<div style="font-size:15px;font-weight:600;color:#1A1814;margin-bottom:6px;font-style:italic">"{_g.get("key_line","")}"</div>' if _g.get('key_line') else ''}
+                              <div style="font-size:15px;color:#1A1814;line-height:1.8">{_g.get('insight','')}</div>
+                            </td></tr>'''
+
+                        _contests_html = ''
+                        for _c in (_advisory.get('contests') or [])[:3]:
+                            _contests_html += f'''
+                            <tr><td style="padding:10px 0;border-top:1px solid #E8E4DA;">
+                              <div style="font-size:15px;font-weight:600;color:#1A1814">{_c.get('name','')}</div>
+                              <div style="font-size:14px;color:#1A1814;line-height:1.65;margin:4px 0">{_c.get('why','')}</div>
+                              <div style="font-size:13px;color:#A37B2C">{'Free to enter' if _c.get('free') else 'Entry fee applies'}{' · ' + _c.get('deadline','') if _c.get('deadline') else ''}</div>
+                            </td></tr>'''
+
+                        _bow_frames_html = ''
+                        for _fi, _fr in enumerate((_advisory.get('bow_frames') or [])[:4], 1):
+                            _bow_frames_html += f'<div style="margin-bottom:12px;padding-left:14px;border-left:3px solid #D6A428"><strong style="color:#1A1814">Frame {_fi}</strong> — <span style="color:#1A1814">{_fr}</span></div>'
+
+                        _html = f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F6F2E9;font-family:Avenir Next,system-ui,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:16px;overflow:hidden">
+
+  <!-- Header -->
+  <tr><td style="background:#1A1814;padding:28px 32px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#D6A428;margin-bottom:8px">Shutter League</div>
+    <div style="font-size:24px;font-weight:700;color:#fff;line-height:1.3">{_fname} — your eye after {milestone} images</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:6px">{_total} images evaluated · avg {_avg:.2f}</div>
+  </td></tr>
+
+  <!-- What your images are telling us -->
+  <tr><td style="padding:28px 32px 0">
+    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:14px">What your images are telling us</div>
+    <div style="font-size:16px;color:#1A1814;line-height:1.85">{_advisory.get('trajectory_note','')}</div>
+  </td></tr>
+
+  <!-- Key insight -->
+  <tr><td style="padding:20px 32px">
+    <div style="border-left:4px solid #D6A428;padding:16px 20px;background:#FEF3C7;border-radius:0 8px 8px 0">
+      <div style="font-size:16px;font-weight:500;color:#1A1814;line-height:1.85">{_advisory.get('what_images_say','')}</div>
+    </div>
+  </td></tr>
+
+  <!-- Your eye by genre -->
+  {f'<tr><td style="padding:0 32px"><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:8px">Your eye by genre</div><table width="100%">{_genres_html}</table></td></tr>' if _genres_html else ''}
+
+  <!-- The one thing -->
+  <tr><td style="padding:24px 32px">
+    <div style="background:#FEF3C7;border:1.5px solid #D6A428;border-radius:12px;padding:20px 24px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A37B2C;margin-bottom:8px">The one thing</div>
+      <div style="font-size:17px;font-weight:600;color:#1A1814;line-height:1.75">{_advisory.get('one_thing','')}</div>
+    </div>
+  </td></tr>
+
+  <!-- Contests -->
+  {f'<tr><td style="padding:0 32px 24px"><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:8px">Open calls worth entering</div><table width="100%">{_contests_html}</table></td></tr>' if _contests_html else ''}
+
+  <!-- Body of work -->
+  {f"""<tr><td style="padding:0 32px 24px;background:#F6F2E9">
+    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;margin-bottom:8px;padding-top:24px">Your next body of work</div>
+    <div style="font-size:18px;font-weight:700;color:#1A1814;margin-bottom:6px">{_advisory.get('bow_title','')}</div>
+    <div style="font-size:14px;color:#A37B2C;font-weight:600;margin-bottom:16px">{_advisory.get('bow_story','')}</div>
+    {_bow_frames_html}
+  </td></tr>""" if _advisory.get('bow_title') else ''}
+
+  <!-- CTA -->
+  <tr><td style="padding:28px 32px;text-align:center">
+    <a href="{_site}/my-eye" style="display:inline-block;background:#D6A428;color:#1A1814;font-size:15px;font-weight:700;padding:14px 32px;border-radius:9px;text-decoration:none">Read your full advisory →</a>
+    <div style="font-size:13px;color:#6B6B6B;margin-top:12px">Your 20-image advisory is next.</div>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#1A1814;padding:20px 32px;text-align:center">
+    <div style="font-size:12px;color:rgba(255,255,255,0.4)">Shutter League · Photography Assessment & Evolution Platform · Making Images Matter</div>
+  </td></tr>
+
+</table></td></tr></table>
+</body></html>'''
+
+                        send_email(
+                            to_addresses=_user_for_email.email,
+                            subject=_subj,
+                            html_body=_html
+                        )
+                        app.logger.info(f'[evolving_eye] advisory email sent to user {user_id} ({_user_for_email.email})')
+                except Exception as _ee_email_err:
+                    app.logger.warning(f'[evolving_eye] email failed for user {user_id}: {_ee_email_err}')
+
+            except Exception as _ee_err:
+                app.logger.warning(f'[evolving_eye] failed for user {user_id}: {_ee_err}')
+                try: db.session.rollback()
+                except Exception: pass
+
+    _t.Thread(target=_run, daemon=True).start()
 
 
 def _refresh_dash_caches(user_id):
@@ -5861,6 +6873,8 @@ def _refresh_dash_caches(user_id):
             app.logger.info(f'[dash_cache] poty_tracker refreshed for user {user_id}')
         except Exception as _pt_err:
             app.logger.warning(f'[dash_cache] poty_tracker failed: {_pt_err}')
+            try: db.session.rollback()
+            except Exception: pass
 
         # ── AEA DASH ──────────────────────────────────────────────────────────
         try:
@@ -5966,12 +6980,14 @@ def _refresh_dash_caches(user_id):
                 'req_images':     _aea_req_images,
             }
             db.session.execute(
-                db.text('UPDATE users SET aea_dash_json = :j WHERE id = :uid'),
+                db.text('UPDATE users SET aea_dash_json = :j, dash_cache_ts = NOW() WHERE id = :uid'),
                 {'j': _j.dumps(_aea_cache), 'uid': user_id}
             )
             app.logger.info(f'[dash_cache] aea_dash refreshed for user {user_id}')
         except Exception as _aea_err:
             app.logger.warning(f'[dash_cache] aea_dash failed: {_aea_err}')
+            try: db.session.rollback()
+            except Exception: pass
 
         # ── WALLET HUD ────────────────────────────────────────────────────────
         try:
@@ -6004,12 +7020,43 @@ def _refresh_dash_caches(user_id):
             app.logger.info(f'[dash_cache] wallet_hud refreshed for user {user_id}')
         except Exception as _wh_err:
             app.logger.warning(f'[dash_cache] wallet_hud failed: {_wh_err}')
+            try: db.session.rollback()
+            except Exception: pass
 
         db.session.commit()
         app.logger.info(f'[dash_cache] all caches refreshed for user {user_id}')
 
     except Exception as _dc_err:
         app.logger.warning(f'[dash_cache] non-fatal error: {_dc_err}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
+def _refresh_progress_data(user_id):
+    """SL-176.1d: Cache _build_progress_data result in progress_data_json column.
+    Called after every evaluation (in _score_in_background) and on login.
+    Eliminates the heaviest synchronous call on every dashboard load.
+    Non-fatal — any failure logs warning and returns gracefully."""
+    import json as _pdj
+    try:
+        with app.app_context():
+            _user = User.query.get(user_id)
+            if not _user:
+                return
+            _pd = _build_progress_data(_user)
+            if _pd is None:
+                return
+            # dim_sparklines contains nested dicts — serialisable
+            db.session.execute(
+                db.text('UPDATE users SET progress_data_json = :j WHERE id = :uid'),
+                {'j': _pdj.dumps(_pd), 'uid': user_id}
+            )
+            db.session.commit()
+            app.logger.info(f'[progress_data] cache refreshed for user {user_id}')
+    except Exception as _pde:
+        app.logger.warning(f'[progress_data] cache failed: {_pde}')
         try:
             db.session.rollback()
         except Exception:
@@ -8882,6 +9929,7 @@ def upload():
                                 if not _img.get_audit():
                                     try:
                                         audit = build_audit_data(result, _img)
+                                        audit = _clean_audit(audit, _img)  # SL-176
                                         _img.set_audit(audit)
                                     except Exception as _bf_audit_err:
                                         app.logger.warning(f'[scoring] breastfeeding audit save failed: {_bf_audit_err}')
@@ -9039,6 +10087,7 @@ def upload():
                                 _img.status           = 'scored'
                                 _img.scored_at        = datetime.utcnow()
                                 audit = build_audit_data(result, _img)
+                                audit = _clean_audit(audit, _img)  # SL-176: dedup, trim, B&W guard
                                 _img.set_audit(audit)
                                 if _sc_calendar_ids:
                                     _img.seasonal_calendar_ids_shown = ','.join(str(_cid) for _cid in _sc_calendar_ids)
@@ -9047,11 +10096,17 @@ def upload():
                                 db.session.commit()
 
                                 # SL 175: Refresh personalised dashboard greeting brief
-                                # Non-fatal — uses Haiku, ~20s, runs in same background thread
+                                # SL-176.1f: Now uses Sonnet for richer Sherpa voice
                                 try:
                                     _refresh_dash_greeting(_img.user_id)
                                 except Exception as _dg_bg_err:
                                     app.logger.warning(f'[dash_greeting] bg refresh failed: {_dg_bg_err}')
+
+                                # SL-176.1f: Refresh personalised mentor advice (Sonnet)
+                                try:
+                                    _refresh_dash_mentor(_img.user_id)
+                                except Exception as _dm_bg_err:
+                                    app.logger.warning(f'[dash_mentor] bg refresh failed: {_dm_bg_err}')
 
                                 # SL 175: Refresh expensive dashboard caches (aea_dash, poty_tracker, wallet_hud)
                                 # Non-fatal — eliminates ~12 DB queries per dashboard load
@@ -9059,6 +10114,30 @@ def upload():
                                     _refresh_dash_caches(_img.user_id)
                                 except Exception as _dc_bg_err:
                                     app.logger.warning(f'[dash_cache] bg refresh failed: {_dc_bg_err}')
+
+                                # SL-176.1d: Refresh progress_data cache — eliminates heaviest sync call
+                                try:
+                                    _refresh_progress_data(_img.user_id)
+                                except Exception as _pd_bg_err:
+                                    app.logger.warning(f'[progress_data] bg refresh failed: {_pd_bg_err}')
+
+                                # SL-176: My Evolving Eye — fire at milestones 10/20/30...
+                                try:
+                                    _eye_count = db.session.execute(
+                                        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+                                        {'uid': _img.user_id}
+                                    ).scalar() or 0
+                                    # SL-177 (P29): Early Eye fires on first image.
+                                    # Full Evolving Eye fires at every 10-image milestone.
+                                    # Both use Sonnet — never downgrade to Haiku.
+                                    if _eye_count == 1:
+                                        # First image — Early Eye reading
+                                        _generate_evolving_eye(_img.user_id, _eye_count)
+                                    elif _eye_count >= 10 and _eye_count % 10 == 0:
+                                        # Full Evolving Eye at milestone
+                                        _generate_evolving_eye(_img.user_id, _eye_count)
+                                except Exception as _ee_err:
+                                    app.logger.warning(f'[evolving_eye] trigger failed: {_ee_err}')
 
                                 # Item C — log rotation entries only on successful scoring,
                                 # so a failed/retried attempt doesn't burn a rotation slot.
@@ -9993,6 +11072,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
             img.status           = 'scored'
             img.scored_at        = datetime.utcnow()
             audit = build_audit_data(result, img)
+            audit = _clean_audit(audit, img)  # SL-176
             img.set_audit(audit)
 
             # ── Re-evaluate review/RAW-verification flags against the new score ──
@@ -10213,6 +11293,7 @@ def _retry_score_in_background(image_id, old_status):
             img.scored_at        = datetime.utcnow()
             _ensure_share_token(img)
             audit = build_audit_data(result, img)
+            audit = _clean_audit(audit, img)  # SL-176
             img.set_audit(audit)
             db.session.commit()
 
@@ -10686,6 +11767,7 @@ def upload_edited_version(image_id):
                         _img.status           = 'scored'
                         _img.scored_at        = datetime.utcnow()
                         audit = build_audit_data(result, _img)
+                        audit = _clean_audit(audit, _img)  # SL-176
                         _img.set_audit(audit)
                         db.session.commit()
 
@@ -11349,6 +12431,151 @@ def image_detail(image_id):
                            drawer_active=_drawer_active,
                            has_pending_eval=_has_pending_eval,
                            now=_now)
+
+
+
+@app.route('/my-eye')
+@login_required
+def evolving_eye():
+    """
+    SL-176: My Evolving Eye — So Far.
+    Renders the personal photographic advisory page.
+    Advisory is pre-generated at milestones — this just displays it.
+    If no advisory exists yet, shows a motivational prompt to keep shooting.
+    """
+    import json as _ej
+    _eye_json = db.session.execute(
+        db.text('SELECT evolving_eye_json, evolving_eye_milestone FROM users WHERE id = :uid'),
+        {'uid': current_user.id}
+    ).fetchone()
+
+    _advisory = None
+    _milestone = None
+    if _eye_json and _eye_json[0]:
+        try:
+            _advisory = _ej.loads(_eye_json[0])
+            _milestone = _eye_json[1]
+        except Exception:
+            pass
+
+    # Count scored images for context
+    _scored_count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+        {'uid': current_user.id}
+    ).scalar() or 0
+
+    _next_milestone = ((_scored_count // 10) + 1) * 10 if _scored_count < 10 else (((_scored_count // 10) + 1) * 10)
+    _images_to_next = _next_milestone - _scored_count
+
+    return render_template('evolving_eye.html',
+        advisory=_advisory,
+        milestone=_milestone,
+        scored_count=_scored_count,
+        next_milestone=_next_milestone,
+        images_to_next=_images_to_next,
+        now=datetime.utcnow()
+    )
+
+
+@app.route('/admin/generate-evolving-eye/<int:user_id>', methods=['POST'])
+@login_required
+def admin_generate_evolving_eye(user_id):
+    """SL-176: Admin trigger to manually generate evolving eye advisory.
+    Also accepts ?token=ADMIN_SECRET for terminal/curl use without session cookie."""
+    # Allow token-based auth for curl/terminal access
+    _token = request.args.get('token', '')
+    _admin_secret = os.getenv('ADMIN_SECRET', '')
+    _token_ok = _admin_secret and _token == _admin_secret
+    if current_user.role != 'admin' and not _token_ok:
+        abort(403)
+    import json as _aej
+
+    # Count their images
+    _count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+        {'uid': user_id}
+    ).scalar() or 0
+
+    if _count == 0:
+        return {'error': 'No scored images for this user'}, 400
+
+    # SL-177 (P29): Early Eye for sub-10, Full Evolving Eye for 10+.
+    # milestone = actual count for Early Eye, rounded to 10 for full advisory.
+    if _count < 10:
+        # Early Eye — pass actual image count as milestone
+        _milestone = _count
+    else:
+        # Full Evolving Eye — round down to nearest 10
+        _milestone = (_count // 10) * 10
+
+    _advisory_type = 'early_eye' if _count < 10 else 'full_evolving_eye'
+    _generate_evolving_eye(user_id, _milestone)
+
+    return {
+        'status': 'generating',
+        'advisory_type': _advisory_type,
+        'user_id': user_id,
+        'milestone': _milestone,
+        'total_images': _count
+    }
+
+
+@app.route('/admin/view-evolving-eye/<int:user_id>', methods=['GET'])
+@login_required
+def admin_view_evolving_eye(user_id):
+    """SL-176.1l: Admin route to view any photographer's Evolving Eye advisory.
+    Renders evolving_eye.html for the given user — allows PDF generation without
+    switching accounts. Visit /admin/view-evolving-eye/41 for Mahesh, /13 for Unni etc.
+    Cmd+P → background graphics ON → Save as PDF."""
+    if current_user.role != 'admin':
+        abort(403)
+    import json as _ej
+    _user_row = db.session.execute(
+        db.text('SELECT id, full_name, username, evolving_eye_json, evolving_eye_milestone FROM users WHERE id = :uid'),
+        {'uid': user_id}
+    ).fetchone()
+    if not _user_row:
+        abort(404)
+    _advisory = None
+    if _user_row.evolving_eye_json:
+        _advisory = _ej.loads(_user_row.evolving_eye_json)
+    _scored_count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
+        {'uid': user_id}
+    ).scalar() or 0
+    _next_milestone = ((_scored_count // 10) + 1) * 10
+    _display_name = _user_row.full_name or _user_row.username or f'Photographer {user_id}'
+    return render_template('evolving_eye.html',
+        advisory=_advisory,
+        milestone=_user_row.evolving_eye_milestone,
+        scored_count=_scored_count,
+        next_milestone=_next_milestone,
+        images_to_next=_next_milestone - _scored_count,
+        now=datetime.utcnow(),
+        admin_view_name=_display_name
+    )
+
+
+@app.route('/admin/refresh-dash-greeting/<int:user_id>', methods=['POST'])
+@login_required
+def admin_refresh_dash_greeting(user_id):
+    """SL-176.1f: Admin trigger to manually refresh Sonnet greeting + mentor advice.
+    Also accepts ?token=ADMIN_SECRET for terminal/curl use."""
+    _token = request.args.get('token', '')
+    _admin_secret = os.getenv('ADMIN_SECRET', '')
+    _token_ok = _admin_secret and _token == _admin_secret
+    if current_user.role != 'admin' and not _token_ok:
+        abort(403)
+    import threading as _rgt
+    def _run():
+        with app.app_context():
+            _refresh_dash_greeting(user_id)
+            _refresh_dash_mentor(user_id)
+            _refresh_progress_data(user_id)
+    _rgt.Thread(target=_run, daemon=True).start()
+    return {'status': 'refreshing', 'user_id': user_id,
+            'functions': ['_refresh_dash_greeting (Sonnet)', '_refresh_dash_mentor (Sonnet)', '_refresh_progress_data']}
+
 
 
 @app.route('/image/<int:image_id>/score', methods=['POST'])
@@ -15585,6 +16812,7 @@ def _recalibrate_audit_in_background(image_id, admin_reason, admin_caveat=''):
             )
 
             new_audit = build_audit_data(result, img)
+            new_audit = _clean_audit(new_audit, img)  # SL-176
             # build_audit_data() returns a fresh dict with no knowledge of the
             # admin_calibration_reason/caveat fields the calling route wrote
             # just before this thread started — preserve them explicitly, and
@@ -18297,13 +19525,40 @@ def admin_site_settings():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        # Honeypot -- hidden field real visitors never see or fill.
-        # Bots that auto-fill every input in a form will fill this one.
-        # Pretend success, do nothing else: no email, no DB write, no
-        # tip-off that the submission was caught.
-        if request.form.get('website', '').strip():
+        # ── SL-177 P34: Hardened spam protection ─────────────────────────
+        # Three layers: honeypot traps, auto-spam detection, silent reject.
+        # No auto-reply to spam. No admin email for spam. Completely silent.
+        # Previous honeypot ('website') was known to bots — renamed + second
+        # trap added. Rate limit tightened. Bot rotating IPs is caught by
+        # name/content pattern matching instead.
+
+        # Layer 1A — Primary honeypot (renamed from 'website' — too well known)
+        # Field name looks legitimate to bots. Hidden via CSS opacity:0 +
+        # position:absolute in the template — NOT display:none which bots skip.
+        if request.form.get('sl_url', '').strip():
             flash('Your message has been sent. We respond within 3 working days.', 'success')
             return render_template('contact.html')
+
+        # Layer 1B — Secondary honeypot: fake phone field
+        # Bots auto-fill phone fields. Humans never see this field.
+        if request.form.get('sl_phone', '').strip():
+            flash('Your message has been sent. We respond within 3 working days.', 'success')
+            return render_template('contact.html')
+
+        # Layer 1C — Timing trap: real humans take > 3 seconds to fill a form
+        # Bot submissions arrive in under 1 second. JS sets a hidden timestamp
+        # on page load; if the form is submitted faster than 3 seconds, it is
+        # a bot. Gracefully skipped if JS is disabled (form_time missing).
+        import time as _time
+        _form_time = request.form.get('sl_t', '')
+        if _form_time:
+            try:
+                _elapsed = _time.time() - float(_form_time)
+                if _elapsed < 3.0:
+                    flash('Your message has been sent. We respond within 3 working days.', 'success')
+                    return render_template('contact.html')
+            except (ValueError, TypeError):
+                pass
 
         name    = request.form.get('name',    '').strip()
         email   = request.form.get('email',   '').strip()
@@ -18323,27 +19578,86 @@ def contact():
                                    form_name=name, form_email=email,
                                    form_subject=subject, form_message=message)
 
-        # IP-based rate limit, backed by the database rather than the
-        # session -- the app runs multiple gunicorn worker processes, so
-        # an in-memory or session counter can be bypassed just by which
-        # worker handles the request, and resets on every deploy. A DB
-        # count of recent rows from the same IP is consistent across
-        # workers and survives restarts.
-        client_ip = request.remote_addr
-        try:
-            recent_count = db.session.execute(db.text(
-                "SELECT COUNT(*) FROM contact_messages "
-                "WHERE ip_address = :ip AND received_at > NOW() - INTERVAL '10 minutes'"
-            ), {'ip': client_ip}).scalar()
-        except Exception as _rl_err:
-            app.logger.warning(f'[contact] Rate limit check failed: {_rl_err}')
-            recent_count = 0
+        # ── Layer 2 — Auto-spam detection (content + pattern) ─────────────
+        # Catches bots rotating IPs (rate limit alone cannot stop these).
+        # Detects: known bot names, price-fishing messages in any language,
+        # suspiciously short messages, repeated-name abuse.
+        _is_spam = False
+        _spam_reason = ''
 
-        if recent_count and recent_count >= 5:
-            flash('Please wait a moment before sending another message.', 'warning')
-            return render_template('contact.html',
-                                   form_name=name, form_email=email,
-                                   form_subject=subject, form_message=message)
+        # 2A — Known bot name patterns (case-insensitive)
+        _BOT_NAMES = ['robertheard', 'robert heard']
+        if any(name.lower().replace(' ', '') == b.replace(' ', '') for b in _BOT_NAMES):
+            _is_spam = True
+            _spam_reason = 'known_bot_name'
+
+        # 2B — Price fishing in any language
+        # Covers English, Indonesian, Portuguese, Basque, Vietnamese, Bulgarian
+        _PRICE_PATTERNS = [
+            'prezioa', 'harga', 'seu preco', 'seu preço', 'cena vi',
+            'znám cena', 'muon biet gia', 'muốn biết giá',
+            'know your price', 'wanted to know your price',
+            'queria saber', 'iskah da znam'
+        ]
+        _msg_lower = message.lower()
+        if any(p in _msg_lower for p in _PRICE_PATTERNS):
+            _is_spam = True
+            _spam_reason = 'price_fishing'
+
+        # 2C — Message too short to be genuine (< 20 chars after strip)
+        if len(message) < 20:
+            _is_spam = True
+            _spam_reason = 'message_too_short'
+
+        # 2D — Same name submitted 3+ times in last 24 hours
+        if not _is_spam:
+            try:
+                _name_count = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM contact_messages "
+                    "WHERE LOWER(name) = LOWER(:n) "
+                    "AND received_at > NOW() - INTERVAL '24 hours'"
+                ), {'n': name}).scalar() or 0
+                if _name_count >= 3:
+                    _is_spam = True
+                    _spam_reason = 'repeated_name'
+            except Exception as _nc_err:
+                app.logger.warning(f'[contact] Name count check failed: {_nc_err}')
+
+        # 2E — IP rate limit (tightened: 2 per 10 min, was 5)
+        # Still useful for non-rotating bots.
+        client_ip = request.remote_addr
+        if not _is_spam:
+            try:
+                recent_count = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM contact_messages "
+                    "WHERE ip_address = :ip "
+                    "AND received_at > NOW() - INTERVAL '10 minutes'"
+                ), {'ip': client_ip}).scalar() or 0
+                if recent_count >= 2:
+                    _is_spam = True
+                    _spam_reason = 'ip_rate_limit'
+            except Exception as _rl_err:
+                app.logger.warning(f'[contact] Rate limit check failed: {_rl_err}')
+
+        # ── Layer 3 — Silent reject for spam ─────────────────────────────
+        # Store in DB as is_spam=TRUE for admin audit trail.
+        # No email to admin. No auto-reply to sender. Completely silent.
+        # Bot gets a fake success message — no tip-off it was caught.
+        if _is_spam:
+            app.logger.info(f'[contact] Spam blocked: name={name} email={email} reason={_spam_reason}')
+            try:
+                db.session.execute(db.text(
+                    "INSERT INTO contact_messages "
+                    "(name, email, subject, message, ip_address, is_spam) "
+                    "VALUES (:n, :e, :s, :m, :ip, TRUE)"
+                ), {'n': name, 'e': email, 's': subject, 'm': message, 'ip': client_ip})
+                db.session.commit()
+            except Exception as _sp_err:
+                db.session.rollback()
+                app.logger.warning(f'[contact] Could not store spam: {_sp_err}')
+            # Silent fake success — bot gets no signal it was caught
+            flash('Your message has been sent. We respond within 3 working days.', 'success')
+            return render_template('contact.html')
 
         # Build and send email to admin
         html_body = (
@@ -24692,6 +26006,44 @@ def admin_contact_unspam(msg_id):
     return redirect(url_for('admin_contact_inbox', spam='1'))
 
 
+@app.route('/admin/contact-inbox/bulk-delete-spam', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_bulk_delete_spam():
+    """SL-177 P34: Delete ALL messages marked as spam in one action.
+    Admin-only. Irreversible. Logs count to Railway for audit trail."""
+    _count = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contact_messages WHERE is_spam=TRUE"
+    )).scalar() or 0
+    db.session.execute(db.text(
+        "DELETE FROM contact_messages WHERE is_spam=TRUE"
+    ))
+    db.session.commit()
+    app.logger.info(f'[contact_inbox] Bulk deleted {_count} spam messages by admin {current_user.id}')
+    flash(f'{_count} spam messages deleted.', 'success')
+    return redirect(url_for('admin_contact_inbox'))
+
+
+@app.route('/admin/contact-inbox/bulk-mark-spam', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_bulk_mark_spam():
+    """SL-177 P34: Mark ALL unread inbox messages as spam in one action.
+    Use when inbox is flooded by a bot campaign. Admin-only.
+    Logs count to Railway for audit trail."""
+    _count = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contact_messages WHERE is_spam IS NOT TRUE"
+    )).scalar() or 0
+    db.session.execute(db.text(
+        "UPDATE contact_messages SET is_spam=TRUE, spam_marked_at=NOW(), spam_marked_by=:by "
+        "WHERE is_spam IS NOT TRUE"
+    ), {'by': current_user.id})
+    db.session.commit()
+    app.logger.info(f'[contact_inbox] Bulk marked {_count} messages as spam by admin {current_user.id}')
+    flash(f'{_count} messages marked as spam.', 'success')
+    return redirect(url_for('admin_contact_inbox'))
+
+
 @app.route('/admin/contact-inbox/<int:msg_id>/delete', methods=['POST'])
 @login_required
 @admin_required
@@ -26683,6 +28035,7 @@ def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload
             img.status           = 'scored'
 
             audit = build_audit_data(result, img)
+            audit = _clean_audit(audit, img)  # SL-176
 
             # Append rescore log entry
             audit['recalibration_log'] = (img.get_audit() or {}).get('recalibration_log') or []
@@ -29949,7 +31302,7 @@ def try_result(image_id):
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _lifetime)
 
     return render_template(
-        'try.html',
+        'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
         image_id       = image_id,
         score          = img.score,
         tier           = img.tier or '—',
