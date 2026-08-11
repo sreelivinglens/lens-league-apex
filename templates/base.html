@@ -1,4 +1,4 @@
-{# SL-VERSION: 178.5 (Session 178, 2026-08-11 — v178.4: P28 + touch-action; v178.5: More menu opens upward from bottom nav — was opening downward from top:68px; fixed bottom positioning, border, shadow, fade gradient) #}
+{# SL-VERSION: 178.6 (Session 178, 2026-08-11 — v178.5: More menu upward; v178.6: #backToTop pointer-events:none when hidden — was intercepting More button taps (z-index:999 > nav z-index:998); repositioned above bottom nav on mobile) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1969,11 +1969,22 @@ document.addEventListener('DOMContentLoaded', function() {
   border:none; cursor:pointer;
   font-size:18px; font-weight:700; line-height:44px; text-align:center;
   opacity:0; visibility:hidden;
+  pointer-events:none; /* SL-178.6: never intercept taps when hidden */
   transition:opacity 0.3s, visibility 0.3s, transform 0.2s;
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
 }
-#backToTop.btt-visible { opacity:1; visibility:visible; }
+#backToTop.btt-visible {
+  opacity:1; visibility:visible;
+  pointer-events:auto; /* SL-178.6: restore taps when visible */
+}
 #backToTop:hover { transform:translateY(-3px); }
+/* SL-178.6: on mobile, lift above bottom nav so it never overlaps More button */
+@media (max-width: 900px) {
+  #backToTop {
+    bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 12px);
+    right: 16px;
+  }
+}
 </style>
 <script>
 (function(){
