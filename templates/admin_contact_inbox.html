@@ -1,3 +1,10 @@
+{# SL-VERSION: admin_contact_inbox-v177.1 | Session 177 | 2026-08-11
+   P34: Added bulk action buttons
+   - "Mark All Spam" button in inbox header
+   - "Delete All Spam" button in spam folder header
+   Both have confirmation dialogs. Routes in app_v177_1.py.
+   KYC audit: PASS | Admin-only page
+#}
 {% extends "base.html" %}
 {% block title %}Contact Inbox — Admin{% endblock %}
 {% block extra_head %}
@@ -22,8 +29,24 @@
       <a href="{{ url_for('admin_contact_inbox', spam='1') }}" style="background:#4A4840;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;text-decoration:none;letter-spacing:1px;">
         🚫 Spam{% if spam_count > 0 %} ({{ spam_count }}){% endif %}
       </a>
+      {% if messages %}
+      <form method="POST" action="{{ url_for('admin_contact_bulk_mark_spam') }}" style="display:inline;"
+            onsubmit="return confirm('Mark ALL {{ messages|length }} inbox messages as spam? This cannot be undone.');">
+        <button type="submit" style="background:#B71C1C;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;border:none;cursor:pointer;white-space:nowrap;letter-spacing:1px;">
+          🚫 Mark All Spam
+        </button>
+      </form>
+      {% endif %}
       {% else %}
       <a href="{{ url_for('admin_contact_inbox') }}" style="background:#4A4840;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;text-decoration:none;letter-spacing:1px;">← Back to Inbox</a>
+      {% if messages %}
+      <form method="POST" action="{{ url_for('admin_contact_bulk_delete_spam') }}" style="display:inline;"
+            onsubmit="return confirm('Permanently delete ALL {{ messages|length }} spam messages? This cannot be undone.');">
+        <button type="submit" style="background:#B71C1C;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;border:none;cursor:pointer;white-space:nowrap;letter-spacing:1px;">
+          🗑 Delete All Spam
+        </button>
+      </form>
+      {% endif %}
       {% endif %}
     </div>
   </div>
