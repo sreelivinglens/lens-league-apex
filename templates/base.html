@@ -1,4 +1,4 @@
-{# SL-VERSION: 178.3 (Session 178, 2026-08-11 — v178.1: P28 cookie banner fix + touch-action:manipulation; v178.2: :active CSS attempt; v178.3: JS touchstart tap-feedback — .sl-nav-tapped class persists from tap until pagehide, fixes iOS Safari :active drop-on-lift; covers all bottom nav items + login) #}
+{# SL-VERSION: 178.4 (Session 178, 2026-08-11 — CLEAN: P28 cookie banner mobile fix + touch-action:manipulation on all nav tappables. JS tap-highlight removed — standard iOS behaviour retained.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -153,11 +153,8 @@ table { max-width: none; }
 }
 .sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
-/* SL-178.2: :active kept for non-iOS browsers */
-.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.85; transition: none; }
-/* SL-178.2: JS-driven tap class — persists from touchstart until pagehide.
-   Fixes iOS Safari :active dropping on finger-lift before navigation fires. */
-.sl-nav-tapped { color: #F4C20D !important; opacity: 0.85; }
+/* SL-178.1: touch-action:manipulation eliminates iOS 300ms tap delay on :active */
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.7; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
@@ -1897,38 +1894,6 @@ function dismissFlash(btn) {
   flash.classList.add('hiding');
   setTimeout(() => flash.remove(), 300);
 }
-
-/* SL-178.2 — Nav tap feedback
-   iOS Safari drops :active immediately on finger-lift, before navigation fires.
-   Fix: touchstart adds .sl-nav-tapped (gold colour) on the tapped item.
-   Class persists until pagehide fires (new page loads) — user sees gold the
-   entire time they wait, giving clear confirmation the tap registered.
-   Covers: bottom nav links, More button, top-nav login link. */
-(function(){
-  var TAP_CLASS = 'sl-nav-tapped';
-
-  function addTapFeedback(el) {
-    el.addEventListener('touchstart', function() {
-      /* Remove from any previously tapped item */
-      document.querySelectorAll('.' + TAP_CLASS).forEach(function(t) {
-        t.classList.remove(TAP_CLASS);
-      });
-      el.classList.add(TAP_CLASS);
-    }, { passive: true });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    /* Bottom nav links and More button */
-    document.querySelectorAll('.sl-bottom-nav .sl-nav-item, .sl-bottom-nav .sl-nav-more-btn, .sl-bottom-nav .sl-nav-fab, .nav-ml-login').forEach(addTapFeedback);
-  });
-
-  /* Clear on page unload — clean state if user presses back */
-  window.addEventListener('pagehide', function() {
-    document.querySelectorAll('.' + TAP_CLASS).forEach(function(t) {
-      t.classList.remove(TAP_CLASS);
-    });
-  });
-})();
 
 document.addEventListener('DOMContentLoaded', function() {
   var flashes = document.querySelectorAll('.flash');
