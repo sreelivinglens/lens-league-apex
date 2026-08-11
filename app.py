@@ -26006,6 +26006,44 @@ def admin_contact_unspam(msg_id):
     return redirect(url_for('admin_contact_inbox', spam='1'))
 
 
+@app.route('/admin/contact-inbox/bulk-delete-spam', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_bulk_delete_spam():
+    """SL-177 P34: Delete ALL messages marked as spam in one action.
+    Admin-only. Irreversible. Logs count to Railway for audit trail."""
+    _count = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contact_messages WHERE is_spam=TRUE"
+    )).scalar() or 0
+    db.session.execute(db.text(
+        "DELETE FROM contact_messages WHERE is_spam=TRUE"
+    ))
+    db.session.commit()
+    app.logger.info(f'[contact_inbox] Bulk deleted {_count} spam messages by admin {current_user.id}')
+    flash(f'{_count} spam messages deleted.', 'success')
+    return redirect(url_for('admin_contact_inbox'))
+
+
+@app.route('/admin/contact-inbox/bulk-mark-spam', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_bulk_mark_spam():
+    """SL-177 P34: Mark ALL unread inbox messages as spam in one action.
+    Use when inbox is flooded by a bot campaign. Admin-only.
+    Logs count to Railway for audit trail."""
+    _count = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contact_messages WHERE is_spam IS NOT TRUE"
+    )).scalar() or 0
+    db.session.execute(db.text(
+        "UPDATE contact_messages SET is_spam=TRUE, spam_marked_at=NOW(), spam_marked_by=:by "
+        "WHERE is_spam IS NOT TRUE"
+    ), {'by': current_user.id})
+    db.session.commit()
+    app.logger.info(f'[contact_inbox] Bulk marked {_count} messages as spam by admin {current_user.id}')
+    flash(f'{_count} messages marked as spam.', 'success')
+    return redirect(url_for('admin_contact_inbox'))
+
+
 @app.route('/admin/contact-inbox/<int:msg_id>/delete', methods=['POST'])
 @login_required
 @admin_required
