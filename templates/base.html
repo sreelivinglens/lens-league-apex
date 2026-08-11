@@ -1,4 +1,4 @@
-{# SL-VERSION: 178.4 (Session 178, 2026-08-11 — CLEAN: P28 cookie banner mobile fix + touch-action:manipulation on all nav tappables. JS tap-highlight removed — standard iOS behaviour retained.) #}
+{# SL-VERSION: 178.5 (Session 178, 2026-08-11 — v178.4: P28 + touch-action; v178.5: More menu opens upward from bottom nav — was opening downward from top:68px; fixed bottom positioning, border, shadow, fade gradient) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -197,16 +197,17 @@ table { max-width: none; }
 .sl-bottom-more-menu {
   display: none;
   position: fixed;
-  top: 68px;
+  bottom: calc(62px + env(safe-area-inset-bottom, 34px)); /* SL-178.5: opens upward from bottom nav */
+  top: auto;
   right: 0;
   width: auto;
   min-width: 200px;
   max-width: 80vw;
   background: #1A1A18;
   border-left: 1px solid rgba(245,197,24,0.15);
-  border-bottom: 1px solid rgba(245,197,24,0.25);
+  border-top: 1px solid rgba(245,197,24,0.25); /* SL-178.5: top border, not bottom */
   z-index: 1999;
-  box-shadow: -4px 0 32px rgba(0,0,0,0.60);
+  box-shadow: -4px -4px 32px rgba(0,0,0,0.60); /* SL-178.5: shadow upward */
 }
 .sl-bottom-more-menu.open { display: flex; flex-direction: column; }
 .sl-bottom-more-menu__list {
@@ -218,11 +219,13 @@ table { max-width: none; }
 }
 .sl-bottom-more-menu__fade {
   position: sticky;
-  bottom: 0;
+  top: 0; /* SL-178.5: fade at top since menu opens upward */
+  bottom: auto;
   height: 48px;
-  background: linear-gradient(to bottom, transparent, #1A1A18);
+  background: linear-gradient(to top, transparent, #1A1A18); /* SL-178.5: flipped */
   pointer-events: none;
-  margin-top: -48px;
+  margin-bottom: -48px;
+  margin-top: 0;
 }
 .sl-bottom-more-menu__pinned {
   border-top: 1px solid rgba(255,255,255,0.08);
