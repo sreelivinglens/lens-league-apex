@@ -6290,18 +6290,33 @@ def _clean_audit(audit, img):
 
 def _generate_evolving_eye(user_id, milestone):
     """
-    SL-176: Generate "My Evolving Eye — So Far" advisory at image milestones.
-    Fires at 10, 20, 30... images. Passes full genre breakdown + last 10 audit
-    texts + dimension history + platform percentile to Claude Sonnet.
-    Stores result in users.evolving_eye_json.
-    Cost: ~$0.02 per call (₹1.79). Fires once per milestone — not per page load.
+    SL-177: Generate "My Evolving Eye — So Far" advisory.
+
+    TWO MODES:
+    - Early Eye (milestone < 10): fires for any photographer with 1+ images.
+      Honest about limited data. Contest trigger: if best image >= 8.5, show
+      contests. If below 8.5, show the gap and what to close it.
+      Prominent contest section. 2-frame body of work (not 4).
+    - Full Evolving Eye (milestone >= 10): full pattern reading, trajectory,
+      genre breakdown, 4-frame body of work, platform rank.
+
+    Both modes use Sonnet only. Never Haiku. Never downgrade.
+
+    Soul Profile preamble fires before every Sonnet call — reads the person
+    behind the images, not just the images. (P32 — Session 177)
+
+    Title fingerprint — image titles and captions passed to Sonnet as
+    additional signal of the photographer's mind and philosophy.
 
     Rules:
-    - Never reference other photographers by name
+    - Never reference other photographers on the platform by name
     - Never use dimension codes (AQ, DM, DOD) — only human names
-    - Sherpa tone throughout — warm, honest, forward-looking
-    - "What this evaluation means" section only on first advisory (10-image)
+    - Never write "Shutter League" as "SL" — always full name
+    - Sherpa tone throughout — warm mentor, not algorithm
+    - "What this evaluation means" section only on first 10-image advisory
     - Shutter League always written in full — never SL
+    - 8.5 threshold: if best image >= 8.5 → show contests. If below → show gap.
+    - Photographs are fingerprints of the heart, mind and soul. Read them so.
     """
     import json as _j
     import threading as _t
@@ -6324,10 +6339,14 @@ def _generate_evolving_eye(user_id, milestone):
                 _name = (_user.full_name or '').split()[0] if _user.full_name else 'Photographer'
 
                 # ── Fetch all scored images ───────────────────────────────
+                # SL-177: asset_name (photographer's title) added as soul
+                # fingerprint — titles reveal the photographer's mind and
+                # relationship to the viewer. Passed to Sonnet as signal.
                 _images = db.session.execute(db.text("""
                     SELECT genre, score, scored_at::date as date,
                            dod_score, disruption_score, dm_score,
                            wonder_score, aq_score,
+                           asset_name,
                            audit_json::json->>'what_stood_out' as revelation,
                            audit_json::json->>'transferable_advice' as advice,
                            audit_json::json->>'mentor_location_1' as next_location
@@ -6344,6 +6363,43 @@ def _generate_evolving_eye(user_id, milestone):
                 _all_scores = [float(r.score) for r in _images]
                 _avg = round(sum(_all_scores) / len(_all_scores), 2)
                 _best = max(_all_scores)
+
+                # ── Early Eye mode — sub-10 images ───────────────────────
+                # SL-177: Any photographer with 1+ images gets an advisory.
+                # Below 10 images = Early Eye (lighter, contest-forward).
+                # 10+ images = Full Evolving Eye (existing behaviour).
+                _is_early_eye = (_total < 10)
+
+                # ── 8.5 contest trigger ───────────────────────────────────
+                # SL-177: If best image >= 8.5, show contests immediately.
+                # If below 8.5, show the gap and the specific dimension to close.
+                _has_contest_score = (_best >= 8.5)
+                _gap_to_contest = round(8.5 - _best, 2) if not _has_contest_score else 0
+
+                # ── Title fingerprint — photographer's mind ───────────────
+                # SL-177 (P32): Titles are fingerprints of the photographer's
+                # heart and soul. What they name an image reveals what they
+                # were thinking, feeling, and wanting the viewer to experience.
+                _title_lines = []
+                for r in _images:
+                    if getattr(r, 'asset_name', None) and r.asset_name.strip():
+                        _title_lines.append(
+                            f"[{r.genre} {r.score}] \"{r.asset_name.strip()}\""
+                        )
+
+                # ── Soul profile — read the person behind the images ──────
+                # SL-177 (P32): Built from genre commitment, score trajectory,
+                # title language, and upload behaviour. Passed as preamble
+                # to Sonnet so it speaks to the person, not just the technique.
+                _primary_genre = max(_genres.keys(), key=lambda g: len(_genres[g])) if _genres else 'photography'
+                _genre_count = len(_genres)
+                _score_direction = 'climbing' if _last10 > _first10 else ('falling' if _last10 < _first10 else 'steady')
+                _gap_best_avg = round(_best - _avg, 2)
+                _title_style = 'absent' if not _title_lines else (
+                    'questioning' if any('?' in t for t in _title_lines)
+                    else 'poetic' if _genre_count <= 1
+                    else 'descriptive'
+                )
 
                 # ── Genre breakdown ───────────────────────────────────────
                 from collections import defaultdict
@@ -6404,8 +6460,33 @@ def _generate_evolving_eye(user_id, milestone):
                 _is_first = (milestone == 10)
                 _next_milestone = milestone + 10
 
-                _system = """You are the Shutter League mentor — warm, honest, photographic in voice.
-Write "My Evolving Eye — So Far" advisory for a photographer.
+                # SL-177 (P32): Soul profile preamble — read the person first.
+                # Photographs are fingerprints of the heart, mind and soul.
+                # Every advisory speaks to the person before the technique.
+                _system = f"""You are the Shutter League mentor — warm, honest, deeply photographic in voice.
+You are not an algorithm reading metrics. You are a Sherpa who has walked alongside
+this photographer across every image they have ever shared here.
+
+SOUL PROFILE — READ THIS BEFORE ANYTHING ELSE:
+This photographer shoots primarily {_primary_genre}. Their scores are {_score_direction}.
+The gap between their best image and their average is {_gap_best_avg} points — this gap
+reveals something about their consistency, their risk-taking, or their comfort zone.
+They have shot across {_genre_count} genre(s). Their title style is {_title_style}.
+
+Before you write a single word of advice — ask yourself:
+1. What is this photographer reaching for? Not what genre. What feeling, what truth,
+   what moment makes them pick up the camera at all?
+2. What is quietly stopping them from getting there? Not the technical weakness —
+   the human one. The habit of playing it safe. The comfort zone producing good
+   images but not great ones.
+3. What is the child in them reaching for? Every photographer picked up a camera
+   for a reason. Find that reason in their images and speak to it directly.
+4. Where is the pain point? Is there a score they did not expect? A genre where
+   the engine did not see what they saw? Acknowledge it, even obliquely.
+
+Photographs are fingerprints of the heart, mind and soul of the photographer.
+They are all trying to leave their legacy in this world. Your advisory must
+honour that. Speak to them from that place — not to their technique, but to them.
 
 RULES (non-negotiable):
 - Never reference other photographers on the platform by name
@@ -6415,23 +6496,63 @@ RULES (non-negotiable):
 - No jargon. No "your metrics show". No "data indicates".
 - Each genre gets its own section. Find the specific insight, not the average.
 - The "one thing" must be one sentence maximum — the single most important thing.
-- Body of work: 4 frames, each a different idea linked by one story/theme.
-- "Why Shutter League" section: only include if milestone == 10 (first advisory).
-- End with next milestone tease — forward-looking, motivational.
+- Body of work: {"2 frames (Early Eye — limited data)" if _is_early_eye else "4 frames"}, each a different idea linked by one story/theme.
+- "Why Shutter League" section: only include at 10-image milestone, never before.
+- End with a forward-looking note — motivational, specific, never generic.
+- The title an image is given is a fingerprint of the photographer's mind.
+  If titles are present, read them. They tell you what the photographer was
+  thinking, feeling, and wanting the viewer to experience. Use this.
+- 8.5 threshold rule: if best image >= 8.5, lead contests section with
+  "Your work is ready for these open calls — now." If below 8.5, tell them
+  specifically what dimension to improve and by how much to reach contest-ready.
+  Never be vague about this gap. Name it precisely.
 - Write as if you have been watching this photographer for months. Because you have."""
 
-                _user_prompt = f"""Write "My Evolving Eye — So Far" for {_name}.
+                # SL-177: Early Eye vs Full Evolving Eye prompt variant
+                _advisory_type = "Early Eye — First Reading" if _is_early_eye else "My Evolving Eye — So Far"
+                _contest_trigger_note = (
+                    f"CONTEST TRIGGER: Best image scored {_best} — ABOVE 8.5 threshold. "
+                    f"Lead the contests section with 'Your work is ready for these open calls — now.' "
+                    f"Be specific and direct. This photographer is competition-ready."
+                ) if _has_contest_score else (
+                    f"CONTEST TRIGGER: Best image scored {_best} — {_gap_to_contest} points below "
+                    f"the 8.5 contest-ready threshold. Do NOT show contests. Instead, name the single "
+                    f"dimension that is holding them back and tell them precisely what to work on "
+                    f"to close that gap. Make 8.5 feel reachable, not distant. Be specific — "
+                    f"not 'improve your composition' but 'your Decisive Moment is your strongest "
+                    f"dimension — now bring that same instinct to your Visual Display.'"
+                )
+
+                _early_eye_note = """
+EARLY EYE MODE — sub-10 images:
+- Be honest that this is a first reading based on limited images
+- Use language like "across your images so far" not "across your body of work"
+- Skip trajectory section (not enough data)
+- Skip platform rank (not meaningful yet)
+- Lead with what the engine already sees clearly — even 1 image reveals something
+- Body of work: 2 frames only, not 4
+- Tone: warm, specific, forward-looking — make them want to upload more
+""" if _is_early_eye else ""
+
+                _user_prompt = f"""Write "{_advisory_type}" for {_name}.
+
+{_early_eye_note}
+{_contest_trigger_note}
 
 PHOTOGRAPHER DATA:
 - Total images: {_total}
-- Milestone: {milestone}-image advisory
+- Advisory type: {"Early Eye (first reading)" if _is_early_eye else f"{milestone}-image full advisory"}
 - Overall average: {_avg}
 - Best image: {_best}
-- First 10 avg: {_first10} | Last 10 avg: {_last10}
-- Platform ranking: {_platform_rank} of {_platform_total} photographers
+- Contest ready (8.5+): {"YES — lead with contests" if _has_contest_score else f"NOT YET — gap is {_gap_to_contest} points"}
+{f"- First 10 avg: {_first10} | Last 10 avg: {_last10}" if not _is_early_eye else ""}
+{f"- Platform ranking: {_platform_rank} of {_platform_total} photographers" if not _is_early_eye else ""}
 
 GENRE BREAKDOWN:
 {chr(10).join(_genre_lines)}
+
+IMAGE TITLES (fingerprints of the photographer's mind — read these carefully):
+{chr(10).join(_title_lines) if _title_lines else "No titles given — absence is also a signal."}
 
 DIMENSION AVERAGES BY GENRE:
 {chr(10).join(f"{g}: " + ", ".join(f"{k} {v}" for k,v in dims.items()) for g,dims in _dim_by_genre.items())}
@@ -10006,7 +10127,14 @@ def upload():
                                         db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL"),
                                         {'uid': _img.user_id}
                                     ).scalar() or 0
-                                    if _eye_count >= 10 and _eye_count % 10 == 0:
+                                    # SL-177 (P29): Early Eye fires on first image.
+                                    # Full Evolving Eye fires at every 10-image milestone.
+                                    # Both use Sonnet — never downgrade to Haiku.
+                                    if _eye_count == 1:
+                                        # First image — Early Eye reading
+                                        _generate_evolving_eye(_img.user_id, _eye_count)
+                                    elif _eye_count >= 10 and _eye_count % 10 == 0:
+                                        # Full Evolving Eye at milestone
                                         _generate_evolving_eye(_img.user_id, _eye_count)
                                 except Exception as _ee_err:
                                     app.logger.warning(f'[evolving_eye] trigger failed: {_ee_err}')
@@ -12371,11 +12499,25 @@ def admin_generate_evolving_eye(user_id):
     if _count == 0:
         return {'error': 'No scored images for this user'}, 400
 
-    # Use actual count as milestone
-    _milestone = max(10, (_count // 10) * 10) if _count >= 10 else _count
+    # SL-177 (P29): Early Eye for sub-10, Full Evolving Eye for 10+.
+    # milestone = actual count for Early Eye, rounded to 10 for full advisory.
+    if _count < 10:
+        # Early Eye — pass actual image count as milestone
+        _milestone = _count
+    else:
+        # Full Evolving Eye — round down to nearest 10
+        _milestone = (_count // 10) * 10
+
+    _advisory_type = 'early_eye' if _count < 10 else 'full_evolving_eye'
     _generate_evolving_eye(user_id, _milestone)
 
-    return {'status': 'generating', 'user_id': user_id, 'milestone': _milestone, 'total_images': _count}
+    return {
+        'status': 'generating',
+        'advisory_type': _advisory_type,
+        'user_id': user_id,
+        'milestone': _milestone,
+        'total_images': _count
+    }
 
 
 @app.route('/admin/view-evolving-eye/<int:user_id>', methods=['GET'])
@@ -19383,13 +19525,40 @@ def admin_site_settings():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        # Honeypot -- hidden field real visitors never see or fill.
-        # Bots that auto-fill every input in a form will fill this one.
-        # Pretend success, do nothing else: no email, no DB write, no
-        # tip-off that the submission was caught.
-        if request.form.get('website', '').strip():
+        # ── SL-177 P34: Hardened spam protection ─────────────────────────
+        # Three layers: honeypot traps, auto-spam detection, silent reject.
+        # No auto-reply to spam. No admin email for spam. Completely silent.
+        # Previous honeypot ('website') was known to bots — renamed + second
+        # trap added. Rate limit tightened. Bot rotating IPs is caught by
+        # name/content pattern matching instead.
+
+        # Layer 1A — Primary honeypot (renamed from 'website' — too well known)
+        # Field name looks legitimate to bots. Hidden via CSS opacity:0 +
+        # position:absolute in the template — NOT display:none which bots skip.
+        if request.form.get('sl_url', '').strip():
             flash('Your message has been sent. We respond within 3 working days.', 'success')
             return render_template('contact.html')
+
+        # Layer 1B — Secondary honeypot: fake phone field
+        # Bots auto-fill phone fields. Humans never see this field.
+        if request.form.get('sl_phone', '').strip():
+            flash('Your message has been sent. We respond within 3 working days.', 'success')
+            return render_template('contact.html')
+
+        # Layer 1C — Timing trap: real humans take > 3 seconds to fill a form
+        # Bot submissions arrive in under 1 second. JS sets a hidden timestamp
+        # on page load; if the form is submitted faster than 3 seconds, it is
+        # a bot. Gracefully skipped if JS is disabled (form_time missing).
+        import time as _time
+        _form_time = request.form.get('sl_t', '')
+        if _form_time:
+            try:
+                _elapsed = _time.time() - float(_form_time)
+                if _elapsed < 3.0:
+                    flash('Your message has been sent. We respond within 3 working days.', 'success')
+                    return render_template('contact.html')
+            except (ValueError, TypeError):
+                pass
 
         name    = request.form.get('name',    '').strip()
         email   = request.form.get('email',   '').strip()
@@ -19409,27 +19578,86 @@ def contact():
                                    form_name=name, form_email=email,
                                    form_subject=subject, form_message=message)
 
-        # IP-based rate limit, backed by the database rather than the
-        # session -- the app runs multiple gunicorn worker processes, so
-        # an in-memory or session counter can be bypassed just by which
-        # worker handles the request, and resets on every deploy. A DB
-        # count of recent rows from the same IP is consistent across
-        # workers and survives restarts.
-        client_ip = request.remote_addr
-        try:
-            recent_count = db.session.execute(db.text(
-                "SELECT COUNT(*) FROM contact_messages "
-                "WHERE ip_address = :ip AND received_at > NOW() - INTERVAL '10 minutes'"
-            ), {'ip': client_ip}).scalar()
-        except Exception as _rl_err:
-            app.logger.warning(f'[contact] Rate limit check failed: {_rl_err}')
-            recent_count = 0
+        # ── Layer 2 — Auto-spam detection (content + pattern) ─────────────
+        # Catches bots rotating IPs (rate limit alone cannot stop these).
+        # Detects: known bot names, price-fishing messages in any language,
+        # suspiciously short messages, repeated-name abuse.
+        _is_spam = False
+        _spam_reason = ''
 
-        if recent_count and recent_count >= 5:
-            flash('Please wait a moment before sending another message.', 'warning')
-            return render_template('contact.html',
-                                   form_name=name, form_email=email,
-                                   form_subject=subject, form_message=message)
+        # 2A — Known bot name patterns (case-insensitive)
+        _BOT_NAMES = ['robertheard', 'robert heard']
+        if any(name.lower().replace(' ', '') == b.replace(' ', '') for b in _BOT_NAMES):
+            _is_spam = True
+            _spam_reason = 'known_bot_name'
+
+        # 2B — Price fishing in any language
+        # Covers English, Indonesian, Portuguese, Basque, Vietnamese, Bulgarian
+        _PRICE_PATTERNS = [
+            'prezioa', 'harga', 'seu preco', 'seu preço', 'cena vi',
+            'znám cena', 'muon biet gia', 'muốn biết giá',
+            'know your price', 'wanted to know your price',
+            'queria saber', 'iskah da znam'
+        ]
+        _msg_lower = message.lower()
+        if any(p in _msg_lower for p in _PRICE_PATTERNS):
+            _is_spam = True
+            _spam_reason = 'price_fishing'
+
+        # 2C — Message too short to be genuine (< 20 chars after strip)
+        if len(message) < 20:
+            _is_spam = True
+            _spam_reason = 'message_too_short'
+
+        # 2D — Same name submitted 3+ times in last 24 hours
+        if not _is_spam:
+            try:
+                _name_count = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM contact_messages "
+                    "WHERE LOWER(name) = LOWER(:n) "
+                    "AND received_at > NOW() - INTERVAL '24 hours'"
+                ), {'n': name}).scalar() or 0
+                if _name_count >= 3:
+                    _is_spam = True
+                    _spam_reason = 'repeated_name'
+            except Exception as _nc_err:
+                app.logger.warning(f'[contact] Name count check failed: {_nc_err}')
+
+        # 2E — IP rate limit (tightened: 2 per 10 min, was 5)
+        # Still useful for non-rotating bots.
+        client_ip = request.remote_addr
+        if not _is_spam:
+            try:
+                recent_count = db.session.execute(db.text(
+                    "SELECT COUNT(*) FROM contact_messages "
+                    "WHERE ip_address = :ip "
+                    "AND received_at > NOW() - INTERVAL '10 minutes'"
+                ), {'ip': client_ip}).scalar() or 0
+                if recent_count >= 2:
+                    _is_spam = True
+                    _spam_reason = 'ip_rate_limit'
+            except Exception as _rl_err:
+                app.logger.warning(f'[contact] Rate limit check failed: {_rl_err}')
+
+        # ── Layer 3 — Silent reject for spam ─────────────────────────────
+        # Store in DB as is_spam=TRUE for admin audit trail.
+        # No email to admin. No auto-reply to sender. Completely silent.
+        # Bot gets a fake success message — no tip-off it was caught.
+        if _is_spam:
+            app.logger.info(f'[contact] Spam blocked: name={name} email={email} reason={_spam_reason}')
+            try:
+                db.session.execute(db.text(
+                    "INSERT INTO contact_messages "
+                    "(name, email, subject, message, ip_address, is_spam) "
+                    "VALUES (:n, :e, :s, :m, :ip, TRUE)"
+                ), {'n': name, 'e': email, 's': subject, 'm': message, 'ip': client_ip})
+                db.session.commit()
+            except Exception as _sp_err:
+                db.session.rollback()
+                app.logger.warning(f'[contact] Could not store spam: {_sp_err}')
+            # Silent fake success — bot gets no signal it was caught
+            flash('Your message has been sent. We respond within 3 working days.', 'success')
+            return render_template('contact.html')
 
         # Build and send email to admin
         html_body = (
