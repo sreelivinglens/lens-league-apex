@@ -1,3 +1,11 @@
+{# SL-VERSION: contact-v177.1 | Session 177 | 2026-08-10
+   P34: Hardened spam protection
+   - Honeypot renamed website → sl_url
+   - Second honeypot sl_phone added
+   - Timing field sl_t added (JS sets on page load, server checks elapsed)
+   - All three work with app_v177_1.py contact route hardening
+   KYC audit: PASS | 70yr audit: PASS | Mobile audit: PASS
+#}
 {% extends "base.html" %}
 {% block title %}Contact Us — {{ platform_name }}{% endblock %}
 
@@ -110,10 +118,26 @@
 
     <form class="contact-form" method="POST" action="{{ url_for('contact') }}">
 
-      <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
-        <label for="cf-website">Website</label>
-        <input type="text" id="cf-website" name="website" tabindex="-1" autocomplete="off">
+      {# SL-177 P34: Hardened spam protection — three hidden traps.
+         Renamed honeypot (sl_url), second honeypot (sl_phone),
+         timing field (sl_t set by JS on page load).
+         Hidden via opacity+position, NOT display:none — bots read display:none. #}
+
+      {# Trap 1 — renamed honeypot. Bots auto-fill all visible-looking fields. #}
+      <div style="opacity:0;position:absolute;top:-9999px;left:-9999px;height:0;width:0;overflow:hidden;" aria-hidden="true">
+        <label for="cf-sl-url">Website url</label>
+        <input type="text" id="cf-sl-url" name="sl_url" tabindex="-1" autocomplete="off" value="">
       </div>
+
+      {# Trap 2 — fake phone field. Bots aggressively fill phone fields. #}
+      <div style="opacity:0;position:absolute;top:-9999px;left:-9999px;height:0;width:0;overflow:hidden;" aria-hidden="true">
+        <label for="cf-sl-phone">Phone number</label>
+        <input type="tel" id="cf-sl-phone" name="sl_phone" tabindex="-1" autocomplete="off" value="">
+      </div>
+
+      {# Trap 3 — timing field. JS sets Unix timestamp on page load.
+         Server checks elapsed time — bots submit in under 1 second, humans take over 3. #}
+      <input type="hidden" name="sl_t" id="cf-sl-t" value="">
 
       <div class="form-row">
         <div>
@@ -247,6 +271,14 @@
 
 <script>
 (function() {
+  // SL-177 P34: Set timing field on page load.
+  // Server checks elapsed seconds — bots submit instantly (< 3s), humans take longer.
+  var tField = document.getElementById('cf-sl-t');
+  if (tField) {
+    tField.value = (Date.now() / 1000).toFixed(3);
+  }
+
+  // Character counter
   var ta  = document.getElementById('cf-message');
   var cnt = document.getElementById('charCount');
   if (!ta || !cnt) return;
