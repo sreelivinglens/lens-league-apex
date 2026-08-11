@@ -1,4 +1,4 @@
-{# SL-VERSION: 178.6 (Session 178, 2026-08-11 — v178.5: More menu upward; v178.6: #backToTop pointer-events:none when hidden — was intercepting More button taps (z-index:999 > nav z-index:998); repositioned above bottom nav on mobile) #}
+{# SL-VERSION: 178.7 (Session 178, 2026-08-11 — v178.7: nav bottom:0 flush to screen — was floating at env(safe-area-inset-bottom,34px) causing nav to appear detached; safe area now handled by padding-bottom inside bar; all calc() updated to match) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,10 +120,12 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
-  bottom: env(safe-area-inset-bottom, 34px);
+  bottom: 0; /* SL-178.7: flush to screen bottom — safe area handled by padding */
   left: 0; right: 0;
-  height: 62px;
-  background: #1A1A18;
+  height: auto; /* SL-178.7: auto height so padding-bottom adds to the 62px tap area */
+  min-height: 62px;
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* SL-178.7: safe area inside the bar */
+  background: #1A1814;
   border-top: 1px solid rgba(245,197,24,0.20);
   border-bottom: none;
   display: flex;
@@ -197,7 +199,7 @@ table { max-width: none; }
 .sl-bottom-more-menu {
   display: none;
   position: fixed;
-  bottom: calc(62px + env(safe-area-inset-bottom, 34px)); /* SL-178.5: opens upward from bottom nav */
+  bottom: calc(62px + env(safe-area-inset-bottom, 0px)); /* SL-178.7: matches new nav bottom:0 + padding */
   top: auto;
   right: 0;
   width: auto;
@@ -508,9 +510,9 @@ table { max-width: none; }
 
 /* Add padding so page content clears the bottom tab bar */
 @media (max-width: 899px) {
-  body:not(.page-home) { 
+  body:not(.page-home) {
     padding-top: 0;
-    padding-bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 10px); 
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 10px); /* SL-178.7: matches new nav height */
   }
 }
 @media (min-width: 900px) {
@@ -1437,7 +1439,7 @@ img {
   #cookie-banner {
     flex-direction: column;
     align-items: flex-start;
-    padding: 16px 16px calc(62px + env(safe-area-inset-bottom, 34px) + 14px) 16px;
+    padding: 16px 16px calc(62px + env(safe-area-inset-bottom, 0px) + 14px) 16px;
     gap: 12px;
   }
   .cb-text {
@@ -1978,10 +1980,10 @@ document.addEventListener('DOMContentLoaded', function() {
   pointer-events:auto; /* SL-178.6: restore taps when visible */
 }
 #backToTop:hover { transform:translateY(-3px); }
-/* SL-178.6: on mobile, lift above bottom nav so it never overlaps More button */
+/* SL-178.7: on mobile, lift above bottom nav — matches bottom:0 + safe area approach */
 @media (max-width: 900px) {
   #backToTop {
-    bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 12px);
+    bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 12px);
     right: 16px;
   }
 }
