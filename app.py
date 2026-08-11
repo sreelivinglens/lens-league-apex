@@ -1,4 +1,4 @@
-# SL-VERSION: 178.4 (Session 178, 2026-08-11 — DASHBOARD PERF: 10 separate users reads → 1 consolidated query; 4 stats queries → 1 aggregation; 3 peer counts → 1; dashboard_visit_count moved to background thread; referral_code cached; scored_count from stats query. Eliminates ~15 serial DB round trips per dashboard load.)
+# SL-VERSION: 178.5 (Session 178, 2026-08-11 — v178.4: dashboard perf (10 users reads→1, 4 stats→1, peer counts→1, bg visit count, referral cache); v178.5: proactive db.session.rollback() at dashboard route entry — fixes InFailedSqlTransaction poisoning workers from background tasks)
 
 import os
 import re
@@ -4431,6 +4431,16 @@ def dashboard():
         ).fetchone()
         if _jc:
             return redirect(url_for('judge_dashboard'))
+
+    # SL-178.5 PERF FIX: Proactive rollback at route entry.
+    # Background workers (city_event_scan, stock_images etc) can leave a worker's
+    # DB session in a failed transaction state. Without this rollback, ANY query
+    # in this route fails with InFailedSqlTransaction — causing blank inner pages.
+    try:
+        db.session.rollback()
+    except Exception:
+        pass
+
     # SL-178.4 PERF: Consolidate all users-table reads into ONE query at the top.
     # Previously: 10 separate SELECT FROM users WHERE id = :uid (10 DB round trips).
     # Now: 1 query fetches all columns needed by the entire dashboard route.
