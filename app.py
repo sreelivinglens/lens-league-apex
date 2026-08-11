@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1q (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 178.4 (Session 178, 2026-08-11 — DASHBOARD PERF: 10 separate users reads → 1 consolidated query; 4 stats queries → 1 aggregation; 3 peer counts → 1; dashboard_visit_count moved to background thread; referral_code cached; scored_count from stats query. Eliminates ~15 serial DB round trips per dashboard load.)
 
 import os
 import re
@@ -4431,6 +4431,36 @@ def dashboard():
         ).fetchone()
         if _jc:
             return redirect(url_for('judge_dashboard'))
+    # SL-178.4 PERF: Consolidate all users-table reads into ONE query at the top.
+    # Previously: 10 separate SELECT FROM users WHERE id = :uid (10 DB round trips).
+    # Now: 1 query fetches all columns needed by the entire dashboard route.
+    _uid = current_user.id
+    try:
+        _urow = db.session.execute(db.text("""
+            SELECT poty_tracker_json, aea_dash_json, dash_cache_ts,
+                   wallet_hud_json, progress_data_json, mission_skipped_date,
+                   referred_discount, upload_credits_balance,
+                   dash_greeting_json, mentor_advice_json, evolving_eye_json
+            FROM users WHERE id = :uid
+        """), {'uid': _uid}).fetchone()
+    except Exception as _urow_err:
+        app.logger.warning(f'[dashboard] users row fetch: {_urow_err}')
+        try: db.session.rollback()
+        except Exception: pass
+        _urow = None
+    # Unpack into named locals — used throughout the route in place of individual queries
+    _urow_poty_json      = _urow[0]  if _urow else None
+    _urow_aea_json       = _urow[1]  if _urow else None
+    _urow_dash_cache_ts  = _urow[2]  if _urow else None
+    _urow_wallet_json    = _urow[3]  if _urow else None
+    _urow_progress_json  = _urow[4]  if _urow else None
+    _urow_mission_skip   = _urow[5]  if _urow else None
+    _urow_ref_discount   = bool(_urow[6]) if _urow and _urow[6] else False
+    _urow_upload_credits = _urow[7]  if _urow else None
+    _urow_greeting_json  = _urow[8]  if _urow else None
+    _urow_mentor_json    = _urow[9]  if _urow else None
+    _urow_eye_json       = _urow[10] if _urow else None
+
     page  = request.args.get('page', 1, type=int)
     query = request.args.get('q', '').strip()
     if current_user.role == 'admin':
@@ -4450,29 +4480,58 @@ def dashboard():
         )
     images = (images_q.order_by(Image.created_at.desc())
               .paginate(page=page, per_page=12, error_out=False))
+
+    # SL-178.4 PERF: Consolidate 4 separate stats queries + scored_count (in render_template)
+    # into ONE single aggregation query — saves 4 DB round trips on every dashboard load.
     user_filter = {} if current_user.role == 'admin' else {'user_id': current_user.id}
-    stats = {
-        'total': total_images,
-        'scored': Image.query.filter_by(status='scored', **user_filter).count(),
-        'avg_score': db.session.query(db.func.avg(Image.score))
-                       .filter(Image.user_id==current_user.id, Image.score!=None).scalar() or 0,
-        'best_score': db.session.query(db.func.max(Image.score))
-                        .filter(Image.user_id==current_user.id).scalar() or 0,
-    }
+    try:
+        _stats_row = db.session.execute(db.text("""
+            SELECT
+                COUNT(*)                                                    AS total,
+                COUNT(*) FILTER (WHERE status = 'scored')                   AS scored,
+                AVG(score)  FILTER (WHERE score IS NOT NULL)                AS avg_score,
+                MAX(score)  FILTER (WHERE score IS NOT NULL)                AS best_score
+            FROM images
+            WHERE user_id = :uid AND is_admin_curation = FALSE
+        """), {'uid': _uid}).fetchone()
+        _scored_count_val = int(_stats_row[1] or 0)
+        stats = {
+            'total':      int(_stats_row[0] or 0),
+            'scored':     _scored_count_val,
+            'avg_score':  float(_stats_row[2] or 0),
+            'best_score': float(_stats_row[3] or 0),
+        }
+    except Exception as _se:
+        app.logger.warning(f'[dashboard] stats query: {_se}')
+        try: db.session.rollback()
+        except Exception: pass
+        _scored_count_val = 0
+        stats = {'total': total_images, 'scored': 0, 'avg_score': 0, 'best_score': 0}
     # Peer rating widget data
     rating_widget = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
         credits          = current_user.rating_credits or 0
         lifetime_given   = current_user.lifetime_ratings_given or 0
         unlocks_earned   = lifetime_given // 5
-        unlocks_used     = PeerPoolEntry.query.filter_by(user_id=current_user.id).count()
-        unlocks_pending  = unlocks_earned - unlocks_used  # earned but not yet assigned to an image
         credits_to_next  = 5 - (lifetime_given % 5) if lifetime_given % 5 != 0 else (0 if lifetime_given > 0 else 5)
-        images_in_pool   = Image.query.filter_by(user_id=current_user.id, is_in_peer_pool=True).count()
-        images_with_peer = Image.query.filter(
-            Image.user_id == current_user.id,
-            Image.peer_rating_count > 0
-        ).count()
+        # SL-178.4 PERF: 3 count queries → 1 consolidated query
+        try:
+            _peer_counts = db.session.execute(db.text("""
+                SELECT
+                    COUNT(*) FILTER (WHERE is_in_peer_pool = TRUE)   AS in_pool,
+                    COUNT(*) FILTER (WHERE peer_rating_count > 0)    AS with_peer
+                FROM images WHERE user_id = :uid AND is_admin_curation = FALSE
+            """), {'uid': _uid}).fetchone()
+            images_in_pool   = int(_peer_counts[0] or 0)
+            images_with_peer = int(_peer_counts[1] or 0)
+        except Exception:
+            images_in_pool   = 0
+            images_with_peer = 0
+        try:
+            unlocks_used = PeerPoolEntry.query.filter_by(user_id=current_user.id).count()
+        except Exception:
+            unlocks_used = 0
+        unlocks_pending  = unlocks_earned - unlocks_used
         # Best candidate for pool entry (highest DDI, not already in pool, scored)
         pool_candidate = None
         if unlocks_pending > 0:
@@ -4556,10 +4615,7 @@ def dashboard():
         import json as _ptj
         _pt_cache_miss = False
         try:
-            _pt_raw = db.session.execute(
-                db.text('SELECT poty_tracker_json FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).scalar()
+            _pt_raw = _urow_poty_json  # SL-178.4: from consolidated users row
             if _pt_raw:
                 poty_tracker = _ptj.loads(_pt_raw)
             else:
@@ -4646,20 +4702,16 @@ def dashboard():
         _aea_stale      = False
         _CACHE_TTL_SECS = 4 * 3600  # 4 hours
         try:
-            _aea_row = db.session.execute(
-                db.text('SELECT aea_dash_json, dash_cache_ts FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).fetchone()
-            if _aea_row and _aea_row[0]:
-                aea_dash = _aeaj.loads(_aea_row[0])
-                # Check staleness
-                if _aea_row[1]:
+            # SL-178.4: from consolidated users row
+            if _urow_aea_json:
+                aea_dash = _aeaj.loads(_urow_aea_json)
+                if _urow_dash_cache_ts:
                     import time as _ctime
-                    _age = (datetime.utcnow() - _aea_row[1].replace(tzinfo=None)).total_seconds()
+                    _age = (datetime.utcnow() - _urow_dash_cache_ts.replace(tzinfo=None)).total_seconds()
                     if _age > _CACHE_TTL_SECS:
                         _aea_stale = True
                 else:
-                    _aea_stale = True  # No timestamp = treat as stale
+                    _aea_stale = True
             else:
                 _aea_cache_miss = True
         except Exception:
@@ -4919,10 +4971,7 @@ def dashboard():
         import json as _whj
         _wh_cache_hit = False
         try:
-            _wh_raw = db.session.execute(
-                db.text('SELECT wallet_hud_json FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).scalar()
+            _wh_raw = _urow_wallet_json  # SL-178.4: from consolidated users row
             if _wh_raw:
                 wallet_hud = _whj.loads(_wh_raw)
                 if poty_tracker and poty_tracker.get('genre_rows'):
@@ -4977,10 +5026,7 @@ def dashboard():
     import json as _pdj2
     _pd_cache_miss = False
     try:
-        _pd_raw = db.session.execute(
-            db.text('SELECT progress_data_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).scalar()
+        _pd_raw = _urow_progress_json  # SL-178.4: from consolidated users row
         if _pd_raw:
             progress_data = _pdj2.loads(_pd_raw)
         else:
@@ -5094,11 +5140,8 @@ def dashboard():
     _show_mission = True
     try:
         _ist_today = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
-        _skipped_row = db.session.execute(
-            db.text('SELECT mission_skipped_date FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).fetchone()
-        if _skipped_row and _skipped_row[0] and _skipped_row[0] == _ist_today:
+        # SL-178.4: from consolidated users row
+        if _urow_mission_skip and _urow_mission_skip == _ist_today:
             _show_mission = False
     except Exception as _sm_err:
         app.logger.warning(f'[mission_skip_gate] {_sm_err}')
@@ -5125,14 +5168,8 @@ def dashboard():
         except Exception as _mre:
             app.logger.error(f'[dashboard_mentor_reviews] {_mre}')
 
-    # referred_discount is a migration-only column — not in ORM model, must read directly
-    try:
-        _ref_discount = db.session.execute(
-            db.text('SELECT referred_discount FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).scalar() or False
-    except Exception:
-        _ref_discount = False
+    # referred_discount — SL-178.4: from consolidated users row
+    _ref_discount = _urow_ref_discount
 
     # Fetch version numbers for all images on this page (migration-only column)
     _img_ids = [img.id for img in images.items]
@@ -5188,10 +5225,7 @@ def dashboard():
     # upload_credits_balance is a migration-only column (DEFAULT 0) — never backfilled
     # for users who joined before the column existed. If they still have remaining
     # free evaluations, set the column to the correct value and persist.
-    _ucb_val = db.session.execute(
-        db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
-        {'uid': current_user.id}
-    ).scalar()
+    _ucb_val = _urow_upload_credits  # SL-178.4: from consolidated users row
     if free_tier and (_ucb_val is None or _ucb_val == 0) and free_tier['remaining'] > 0:
         _ucb_val = free_tier['remaining']
         try:
@@ -5209,17 +5243,25 @@ def dashboard():
     # ── lighter single-match version for the sidebar widget. Falls back to  ──
     # ── the existing generic placeholder in dashboard.html if no match.     ──
     # ── Session 141 — increment dashboard visit count ──────────────────────
+    # SL-178.4 PERF: dashboard_visit_count UPDATE moved to background thread.
+    # Previously a synchronous DB write on every dashboard load — now fire-and-forget.
+    _dash_visit_count = (getattr(current_user, 'dashboard_visit_count', 0) or 0) + 1
     try:
-        db.session.execute(db.text(
-            "UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count,0)+1 "
-            "WHERE id = :uid"
-        ), {'uid': current_user.id})
-        db.session.commit()
-        _dash_visit_count = (getattr(current_user, 'dashboard_visit_count', 0) or 0) + 1
+        import threading as _dvc_th
+        def _bump_visit_count():
+            with app.app_context():
+                try:
+                    db.session.execute(db.text(
+                        "UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count,0)+1 "
+                        "WHERE id = :uid"
+                    ), {'uid': _uid})
+                    db.session.commit()
+                except Exception as _bvc_e:
+                    db.session.rollback()
+                    app.logger.warning(f'[dashboard] visit_count bg: {_bvc_e}')
+        _dvc_th.Thread(target=_bump_visit_count, daemon=True).start()
     except Exception as _dvc_err:
-        db.session.rollback()
-        _dash_visit_count = 1
-        app.logger.warning(f'[dashboard] visit_count: {_dvc_err}')
+        app.logger.warning(f'[dashboard] visit_count thread: {_dvc_err}')
 
     _dash_advisory = None
     _dash_live_event = None
@@ -5459,49 +5501,36 @@ def dashboard():
         except Exception as _eje:
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
-    # SL-176.1i: Load dash_greeting_json via raw SQL — ORM object is stale after background refresh
+    # SL-178.4 PERF: dash_greeting, mentor_advice, evolving_eye — all from consolidated users row.
     import json as _dg_json
     _dash_greeting = None
     try:
-        _dg_raw = db.session.execute(
-            db.text('SELECT dash_greeting_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).scalar()
-        if _dg_raw:
-            _dash_greeting = _dg_json.loads(_dg_raw)
+        if _urow_greeting_json:
+            _dash_greeting = _dg_json.loads(_urow_greeting_json)
     except Exception as _dge:
         app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
-        try: db.session.rollback()
-        except Exception: pass
 
-    # SL-176.1f: Load mentor_advice_json via raw SQL
     _mentor_advice = None
     try:
-        _ma_row = db.session.execute(
-            db.text('SELECT mentor_advice_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).fetchone()
-        if _ma_row and _ma_row[0]:
+        if _urow_mentor_json:
             import json as _maj
-            _mentor_advice = _maj.loads(_ma_row[0])
+            _mentor_advice = _maj.loads(_urow_mentor_json)
     except Exception as _ma_err:
         app.logger.warning(f'[dashboard] mentor_advice_json fetch: {_ma_err}')
 
-    # SL-176.1c: Load evolving_eye_json via raw SQL — not on ORM model
     _evolving_eye_json = None
     _evolving_eye_data = None
     try:
-        _ee_row = db.session.execute(
-            db.text('SELECT evolving_eye_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).fetchone()
-        if _ee_row and _ee_row[0]:
-            _evolving_eye_json = _ee_row[0]
+        if _urow_eye_json:
+            _evolving_eye_json = _urow_eye_json
             import json as _eej
-            _evolving_eye_data = _eej.loads(_ee_row[0])
+            _evolving_eye_data = _eej.loads(_urow_eye_json)
     except Exception as _ee_dash_err:
         app.logger.warning(f'[dashboard] evolving_eye_json fetch: {_ee_dash_err}')
 
+    # SL-178.4 PERF: referral_code cached — was called twice in render_template (2 DB calls → 1)
+    # scored_count uses _scored_count_val from consolidated stats query — removes 1 extra DB call
+    _referral_code = get_or_create_referral_code(current_user)
     return render_template('dashboard.html', images=images, stats=stats,
                            all_masters=ALL_MASTERS,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
@@ -5519,9 +5548,9 @@ def dashboard():
                            progress_data=progress_data,
                            show_portfolio_banner=show_portfolio_banner,
                            mentor_reviews=mentor_reviews,
-                           referral_code=get_or_create_referral_code(current_user),
+                           referral_code=_referral_code,
                            referral_stats=get_referral_stats(current_user),
-                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
+                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (_referral_code or '')),
                            referred_discount=_ref_discount,
                            _months_active=_months_active,
                            _season_start_label=_season_start_label,
@@ -5548,10 +5577,7 @@ def dashboard():
                            evolving_eye_json=_evolving_eye_json,
                            evolving_eye_data=_evolving_eye_data,
                            mentor_advice=_mentor_advice,
-                           scored_count=db.session.execute(
-                               db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
-                               {'uid': current_user.id}
-                           ).scalar() or 0,
+                           scored_count=_scored_count_val,
                            quota_status=_get_quota_status(current_user))
 
 
