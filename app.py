@@ -1874,13 +1874,25 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_json TEXT DEFAULT NULL"
                 ))
+                # SL-177 P41: Fixed — text() takes exactly 1 argument.
+                # Was passing 5 SQL statements as separate arguments — only
+                # the first was executing, silently dropping the other 4 columns.
+                # Split into individual execute calls.
                 db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL",
-                    # SL-176.1d: performance cache columns
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL",
-                    # SL-176.1f: Sonnet-generated mentor advice cache
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL"
+                ))
+                # SL-176.1d: performance cache columns
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL"
+                ))
+                # SL-176.1f: Sonnet-generated mentor advice cache
+                db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS mentor_advice_json TEXT DEFAULT NULL"
                 ))
                 db.session.commit()
