@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S169-r1 admin — Blocked IPs nav button + dashboard card added 2026-08-03 #}
+{# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -383,7 +383,7 @@
          Both show Force Rescore button. Collapsed by default if empty. #}
       {% if bot_count and bot_count > 0 %}
       <div style="background:#fff8f8;border:1px solid #e57373;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
           🤖 Suspected Bot Accounts
           <span style="font-family:monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:12px;background:#C62828;color:#fff;margin-left:6px;">{{ bot_count }}</span>
         </div>
@@ -392,7 +392,7 @@
       </div>
       {% endif %}
       <div style="background:#f3e5f5;border:1px solid #9C27B0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
           🚫 IP Block List
         </div>
         <div style="font-size:14px;color:#555;margin-bottom:10px;line-height:1.6;">Block bot-source IPs from registering or accessing the site. Takes effect immediately — no deploy needed.</div>
@@ -503,8 +503,9 @@
             <input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Select All
           </label>
           <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);" id="selectedCount">0 selected</span>
-          <button type="button" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;" onclick="adminBulkDelete()">🗑 Delete Selected</button>
+          <button type="button" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;" data-url="{{ url_for('admin_bulk_delete') }}" onclick="adminBulkDelete()">🗑 Delete Selected</button>
           <button type="button" id="bulkRawBtn" disabled
+                  data-url="{{ url_for('admin_bulk_request_raw') }}"
                   style="opacity:0.4; font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
                   onclick="bulkRequestRaw()">📂 Request RAW</button>
         </div>
@@ -1224,6 +1225,25 @@
         </div>
       </div>
 
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Live Event Data</div>
+
+      {# SL-180.3 — manual single-city event scan.
+         The scheduled city_event_scan cron is switched off on staging via
+         SL_DISABLE_AI_JOBS so unattended runs cost nothing. This control is the
+         deliberate counterpart and works on both staging and production.
+         Cost per run: 3 web searches + 1 extraction call, one city. #}
+      <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:20px;">
+        <div class="tool-label" style="margin-bottom:6px;">Run a Live Event Scan</div>
+        <div class="tool-desc" style="margin-bottom:12px;">Scans one city for photography events and writes them to the seasonal calendar, so the dashboard live event advisory has data to show. Takes up to a minute. On staging the scheduled scan is switched off, so use this when you need real event data for testing.</div>
+        <form method="POST" action="{{ url_for('admin_run_city_event_scan') }}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:160px;">
+            <label for="scan-city" style="display:block; font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">City</label>
+            <input type="text" id="scan-city" name="city" placeholder="Bengaluru" required autocomplete="off" class="tool-input">
+          </div>
+          <button type="submit" class="btn btn-solid" style="padding:9px 18px; font-size:13px;">Run scan &rarr;</button>
+        </form>
+      </div>
+
       <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Photographer &amp; Image Management</div>
 
       <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;">
@@ -1724,7 +1744,10 @@ function bulkRequestRaw() {
   if (!confirm('Request RAW verification from ' + ids.length + ' photographer(s)?')) return;
   const body = new URLSearchParams();
   ids.forEach(id => body.append('image_ids', id));
-  fetch('{{ url_for("admin_bulk_request_raw") | tojson }}', {
+  /* SL-180.3: URL read from the button's data-url attribute. Was inline Jinja
+     inside <script>, which trips the audit and, with | tojson inside single
+     quotes, produced a URL wrapped in literal double quotes. */
+  fetch(document.getElementById('bulkRawBtn').dataset.url, {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
@@ -1737,7 +1760,8 @@ function adminBulkDelete() {
   if (!confirm('Delete ' + ids.length + ' selected image(s)? This cannot be undone.')) return;
   const body = new URLSearchParams();
   ids.forEach(id => body.append('image_ids', id));
-  fetch('{{ url_for("admin_bulk_delete") }}', {
+  /* SL-180.3: URL read from the button's data-url attribute — no Jinja in JS. */
+  fetch(document.getElementById('bulkDeleteBtn').dataset.url, {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
