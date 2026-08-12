@@ -1,4 +1,4 @@
-# SL-VERSION: 176.1q (Session 176, 2026-08-10 — Sonnet greeting+mentor advice, progress_data cache, weather session cache, peer queue session cache, evolving eye max_tokens 4000, anthropic>=0.50.0, eval_pending dashboard fix, /standings alias)
+# SL-VERSION: 179.1 (Session 179, 2026-08-12 — Watermark prompt: graffiti/architectural text false positive fix + admin email on watermark flag)
 
 import os
 import re
@@ -9351,11 +9351,17 @@ def upload():
                                             'Does this photograph contain a photographer-added watermark, text overlay, '
                                             'studio logo, social media handle (@username), copyright text, or any branding '
                                             'embedded into the image by the photographer? '
-                                            'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                                            'Do NOT flag: image content (signs, billboards, labels, graffiti, or writing that is part of the physical scene), '
                                             'platform watermarks, natural scene text, '
                                             'or phone/camera app overlays (device name, date/time stamps, GPS coordinates, camera model text). '
+                                            'CRITICAL — DO NOT flag text or writing that appears ON physical surfaces (walls, stone, brick, paint, buildings, forts, '
+                                            'monuments, street surfaces) — this is graffiti or architectural text that is part of the scene the photographer captured, '
+                                            'not something the photographer added in post-processing. '
+                                            'A photographer watermark MUST be a semi-transparent or solid text/logo overlay that floats ON TOP of the image — '
+                                            'it will look distinctly separate from the scene, often with consistent opacity, font, or logo style. '
+                                            'If text is embedded in a physical surface being photographed, it is scene content — do NOT flag it. '
                                             'ONLY flag if the photographer deliberately added their own branding, studio logo, '
-                                            'social handle, or copyright text as a post-processing overlay. '
+                                            'social handle, or copyright text as a post-processing overlay on top of the image. '
                                             'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
                                         )}
                                     ]}]
@@ -9379,6 +9385,50 @@ def upload():
                                     _img.flagged_reason = f'Watermark detected: {_bgwm_data.get("description")}'
                                     _img.scoring_flash  = 'Your image was not accepted — it appears to contain a watermark or logo. Please upload the clean original without any text or branding overlays.'
                                     db.session.commit()
+                                    # ── SL-179.1: Admin email on watermark flag ──────────────────
+                                    # Non-fatal — wrapped in try/except. Does not touch DB session.
+                                    # Rejection and return proceed regardless of email success.
+                                    try:
+                                        _wm_u = User.query.get(_img.user_id)
+                                        _wm_site = os.getenv('SITE_URL', 'https://shutterleague.com')
+                                        _wm_review_url = f'{_wm_site}/admin/images/{image_id}'
+                                        _wm_desc = _bgwm_data.get('description') or 'Not specified'
+                                        send_email(
+                                            to_addresses=[ADMIN_EMAIL],
+                                            subject='[Admin] Watermark Flag — ' + (_img.asset_name or 'Untitled'),
+                                            html_body=(
+                                                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                                '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                                                '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;"><tr><td align="center">'
+                                                '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                                                '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                                                '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                                                '</td></tr><tr><td style="padding:24px;">'
+                                                '<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">Watermark Detected — Image Rejected</p>'
+                                                '<p style="margin:0 0 16px;font-size:15px;color:#4A4840;line-height:1.7;">An image was automatically rejected before scoring. Please review — if this is a false positive (e.g. graffiti or text on a physical surface), use Unflag in admin.</p>'
+                                                '<table style="margin:12px 0;border-collapse:collapse;width:100%;">'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;white-space:nowrap;vertical-align:top;">Image</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.asset_name or 'Untitled') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Detected</td><td style="padding:6px 0;font-size:15px;color:#C0392B;font-weight:600;">' + _wm_desc + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Photographer</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.photographer_name or 'Unknown') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">User</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_wm_u.email if _wm_u else 'unknown') + '</td></tr>'
+                                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Genre</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (_img.genre or '—') + '</td></tr>'
+                                                '</table>'
+                                                '<a href="' + _wm_review_url + '" style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;font-family:Inter,Arial,sans-serif;">Review Image &#8594;</a>'
+                                                '</td></tr></table></td></tr></table></body></html>'
+                                            ),
+                                            text_body=(
+                                                'Watermark flag — image rejected before scoring.\n'
+                                                'Image: ' + (_img.asset_name or 'Untitled') + '\n'
+                                                'Detected: ' + _wm_desc + '\n'
+                                                'Photographer: ' + (_img.photographer_name or 'Unknown') + '\n'
+                                                'User: ' + (_wm_u.email if _wm_u else 'unknown') + '\n'
+                                                'Review: ' + _wm_review_url
+                                            )
+                                        )
+                                        app.logger.info(f'[upload] watermark flag admin email sent: image={image_id}')
+                                    except Exception as _wm_mail_err:
+                                        app.logger.error(f'[upload] watermark flag admin email failed (non-fatal): {_wm_mail_err}')
                                     return  # stop — do not score a watermarked image
                             except Exception as _bgwm_err:
                                 app.logger.warning(f'[upload] bg watermark check failed (non-fatal): {_bgwm_err}')
