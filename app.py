@@ -1,4 +1,4 @@
-# SL-VERSION: 179.2-staging (Session 179, 2026-08-12 — 179.1: watermark prompt fix + admin email; 179.2: db.session.rollback() in email except blocks — prevents InFailedSqlTransaction worker poisoning. Dashboard route unchanged from v178.5.)
+# SL-VERSION: 180.1-staging (Session 180, 2026-08-12 — city_event_scan session isolation: cron wrapper now creates its own isolated session instead of passing db.session — prevents InFailedSqlTransaction worker poisoning when scan job fails mid-transaction. Dashboard get_live_event_advisory path unchanged — users continue receiving correct local advisories. Single change: _run_city_event_scan_job in scheduler block.)
 
 import os
 import re
@@ -30499,11 +30499,19 @@ if _sched_lock_held:
     # Session 140 — daily live event scan — 6am IST (00:30 UTC)
     # Scans all active cities for photography events via three-pass web+social search.
     # Runs at 6am IST so advisories are fresh when users open the app in the morning.
+    # SL-180.1: session isolation — scan job uses its own session, never db.session.
+    # This prevents InFailedSqlTransaction from poisoning gunicorn web workers when
+    # a web search times out mid-transaction. Dashboard get_live_event_advisory is
+    # a separate read path and is completely unaffected.
     def _run_city_event_scan_job():
         try:
             with app.app_context():
                 from engine.city_event_scan import run_city_event_scan
-                run_city_event_scan(db.session)
+                _scan_session = db.session.session_factory()
+                try:
+                    run_city_event_scan(_scan_session)
+                finally:
+                    _scan_session.close()
         except Exception as _cese:
             app.logger.warning(f'[city_event_scan_cron] error: {_cese}')
 
