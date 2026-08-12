@@ -1,3 +1,4 @@
+# SL-VERSION: stock_images 180.5 (Session 180, 2026-08-12 — min_score 8.5→7.5, max_candidates 8→4, plus [stock_images][cost] summary logging per attempt. At 8.5 nearly every genre/dimension combo scored all 8 candidates, cached nothing and fell into the 6-hour cooldown — paying for 8 Claude Vision calls per attempt while producing no images. Relevance is unchanged: it comes from _build_query() and the genre filter, not from min_score.)
 """
 Pixabay reference-image fallback for Mission lesson cards.
 
@@ -211,7 +212,7 @@ def get_cached_reference_image(db_session, genre: str, dimension: str,
 # ── Slow path — must run in a background thread, never inline ──────────────
 
 def refresh_reference_cache(db_session, genre: str, dimension: str,
-                             max_candidates: int = 8, min_score: float = 8.5):
+                             max_candidates: int = 4, min_score: float = 7.5):
     """
     Searches Pixabay for up to max_candidates results and runs each one
     through the real DDI engine (auto_score() — the same function that
@@ -246,6 +247,24 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
     candidates, none cleared min_score, already locked, in cooldown, or
     PIXABAY_API_KEY not set). Never raises — failures are logged and
     treated as "try again later".
+
+    SL-180.5 — min_score 8.5 -> 7.5, max_candidates 8 -> 4.
+
+    The 8.5 bar was set to match the community-benchmark query, but the two
+    are not comparable. A community benchmark says "a peer on this platform
+    achieved this" — 8.5 is right for that. A Pixabay image only has to
+    illustrate the lesson's principle competently. At 8.5 nearly every combo
+    ran all 8 candidates, cached nothing, and dropped into the 6-hour
+    cooldown — so the fallback produced no images at all while still paying
+    for 8 Claude Vision calls per attempt, per combo, every 6 hours.
+
+    Relevance is NOT controlled by min_score. It comes from _build_query()
+    and the genre passed in, both unchanged. A 7.5 Wildlife image is still a
+    Wildlife image returned by a Wildlife query — lowering the bar admits
+    less exceptional photographs, never less relevant ones.
+
+    max_candidates 8 -> 4 halves the Vision spend per attempt; with a
+    reachable bar, 4 is ample.
     """
     api_key = os.getenv('PIXABAY_API_KEY', '')
     if not api_key:
@@ -307,6 +326,14 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
         _release_lock(db_session, genre, dimension, failed=True)
         return False
 
+    # SL-180.5: track attempt cost so Vision spend on this path is countable
+    # from the logs. Each candidate below is one Claude Vision call (plus a
+    # species web search for Wildlife/Nature).
+    import time as _t
+    _t0 = _t.time()
+    _scored_count = 0
+    _best_score   = 0.0
+
     for hit in candidates:
         local_path = _download_to_temp(hit['largeImageURL'])
         if not local_path:
@@ -325,6 +352,9 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
         except Exception as e:
             print(f'[stock_images] auto_score failed for pixabay id={hit.get("id")}: {e}')
 
+        _scored_count += 1
+        if score > _best_score:
+            _best_score = score
         print(f'[stock_images] candidate pixabay id={hit.get("id")} for {genre}/{dimension} scored {score:.2f}')
 
         if score < min_score:
@@ -379,10 +409,14 @@ def refresh_reference_cache(db_session, genre: str, dimension: str,
             return False
 
         print(f'[stock_images] cached pixabay id={hit.get("id")} for {genre}/{dimension} — DDI score {score:.2f}')
+        print(f'[stock_images][cost] {genre}/{dimension}: {_scored_count} vision call(s), '
+              f'best {_best_score:.2f}, CACHED, {_t.time() - _t0:.1f}s')
         _release_lock(db_session, genre, dimension, failed=False)
         return True
 
     print(f'[stock_images] no candidate cleared {min_score} for {genre}/{dimension} out of {len(candidates)} tried')
+    print(f'[stock_images][cost] {genre}/{dimension}: {_scored_count} vision call(s), '
+          f'best {_best_score:.2f}, NO CACHE, {_t.time() - _t0:.1f}s')
     _release_lock(db_session, genre, dimension, failed=True)
     return False
 
