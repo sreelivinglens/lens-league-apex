@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.6 (Session 180, 2026-08-12 — Sitewide tap feedback: press-down scale on nav items, FAB, buttons, cards, gallery thumbs, cookie buttons; tint on menu/drawer rows; plus a navigation progress bar on every link tap and form submit so slow page loads show they are in flight. prefers-reduced-motion honoured. Retains 180.5 sl-bottom-nav top:auto fix.) #}
+{# SL-VERSION: 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -511,10 +511,19 @@ table { max-width: none; }
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* Add padding so page content clears the bottom tab bar */
+/* SL-180.7: driven by --sl-nav-h, measured from the live nav on load and
+   resize (see script at end of body). The hardcoded 72px guess left the
+   Upload button, mission cards and section headings clipped behind the bar
+   on multiple pages, because real nav height varies with label wrap and
+   safe-area inset. Fallback below covers the pre-JS paint. */
 @media (max-width: 899px) {
   body:not(.page-home) {
     padding-top: 0;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 10px); /* SL-179.2: 72px (was 62px) — extra clearance on all pages including login/upload */
+    padding-bottom: calc(var(--sl-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 24px);
+  }
+  /* Home has its own full-bleed layout but still needs bar clearance */
+  body.page-home {
+    padding-bottom: calc(var(--sl-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 8px);
   }
 }
 @media (min-width: 900px) {
@@ -1479,14 +1488,16 @@ input[type="submit"]:active,
 #sl-nav-progress {
   position: fixed;
   top: 0; left: 0;
-  height: 3px;
+  height: 5px; /* SL-180.7: 3px was invisible to the naked eye on Retina — a bar
+                  you only notice if you know to look for it does not stop the
+                  user tapping twice. 5px reads clearly without intruding. */
   width: 0;
-  background: #F5C518;
-  box-shadow: 0 0 8px rgba(245,197,24,0.60);
+  background: linear-gradient(90deg, #F5C518 0%, #FFD84D 60%, #FFE894 100%);
+  box-shadow: 0 0 12px rgba(245,197,24,0.95), 0 1px 4px rgba(0,0,0,0.30);
   z-index: 2147483647;
   opacity: 0;
   pointer-events: none;
-  transition: width .25s ease-out, opacity .2s ease-out;
+  transition: width .25s ease-out, opacity .15s ease-out;
 }
 #sl-nav-progress.sl-np-active { opacity: 1; }
 
@@ -2157,13 +2168,17 @@ document.addEventListener('DOMContentLoaded', function() {
   function start(){
     clearTimers();
     bar.classList.add('sl-np-active');
-    bar.style.width = '0';
-    // Force reflow so the width transition runs from 0
+    // SL-180.7: jump straight to 25% with no transition so there is an
+    // immediate visible mark. Growing from 0 meant the first moments showed
+    // only a hairline, which users did not register.
+    bar.style.transition = 'none';
+    bar.style.width = '25%';
     void bar.offsetWidth;
-    bar.style.width = '35%';
-    timers.push(setTimeout(function(){ bar.style.width = '65%'; }, 400));
-    timers.push(setTimeout(function(){ bar.style.width = '85%'; }, 1600));
-    timers.push(setTimeout(function(){ bar.style.width = '92%'; }, 4000));
+    bar.style.transition = '';
+    bar.style.width = '45%';
+    timers.push(setTimeout(function(){ bar.style.width = '68%'; }, 400));
+    timers.push(setTimeout(function(){ bar.style.width = '86%'; }, 1600));
+    timers.push(setTimeout(function(){ bar.style.width = '93%'; }, 4000));
   }
   function done(){
     clearTimers();
@@ -2200,6 +2215,32 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   // If the user cancels navigation, don't leave the bar stranded
   window.addEventListener('beforeunload', clearTimers);
+})();
+</script>
+
+<script>
+/* SL-180.7 — measure the real bottom-nav height and expose it as --sl-nav-h
+   so body padding always clears it exactly. A hardcoded value cannot be
+   correct across label wrap, safe-area insets and device widths — content
+   was being clipped behind the bar on Dashboard, Improve and Mentors. */
+(function(){
+  function setNavHeight(){
+    var nav = document.querySelector('.sl-bottom-nav');
+    if (!nav) return;
+    var h = Math.round(nav.getBoundingClientRect().height);
+    // Guard against the pre-paint 0 and against a runaway value
+    if (h > 0 && h < 200) {
+      document.documentElement.style.setProperty('--sl-nav-h', h + 'px');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setNavHeight);
+  } else {
+    setNavHeight();
+  }
+  window.addEventListener('load', setNavHeight);
+  window.addEventListener('resize', setNavHeight);
+  window.addEventListener('orientationchange', function(){ setTimeout(setNavHeight, 250); });
 })();
 </script>
 
