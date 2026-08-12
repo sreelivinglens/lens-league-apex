@@ -1,4 +1,4 @@
-{# SL-VERSION: 179.1 (Session 179, 2026-08-12 — Mobile nav fix: position:fixed bottom:0 on ALL pages. Body padding-bottom covers all authenticated pages including upload. Removed stacking context conflict. Comment corrected.) #}
+{# SL-VERSION: 179.2 (Session 179, 2026-08-12 — Mobile nav: removed transform:translateZ(0) risk; z-index 998→1200; body padding-bottom 62px→72px for clearance; min-height guard on main removed — was breaking Safari iOS fixed positioning) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,12 +131,9 @@ table { max-width: none; }
   display: flex;
   justify-content: space-around;
   align-items: flex-start;
-  z-index: 1200; /* SL-179.1: raised from 998 — ensures nav is above all page content including upload dropzone overlays */
+  z-index: 1200; /* SL-179.2: raised from 998 — nav above upload dropzone and page overlays */
   padding-top: 10px;
   overflow: visible;
-  isolation: isolate; /* SL-179.1: prevents parent stacking contexts from affecting fixed positioning */
-  transform: translateZ(0); /* SL-179.1: promotes to own compositing layer — fixes fixed positioning on pages with CSS transforms */
-  -webkit-transform: translateZ(0);
 }
 .sl-bottom-nav .sl-nav-item {
   display: flex;
@@ -511,17 +508,11 @@ table { max-width: none; }
    END SHARED HERO SYSTEM
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Add padding so page content clears the bottom tab bar — ALL pages on mobile */
-/* SL-179.1: covers body:not(.page-home) — upload, dashboard, gallery, all inner pages */
+/* Add padding so page content clears the bottom tab bar */
 @media (max-width: 899px) {
   body:not(.page-home) {
     padding-top: 0;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 10px); /* SL-179.1: 72px (was 62px) — extra clearance so content is never hidden behind nav on any page */
-  }
-  /* Ensure main content is always visible above the fixed bottom nav */
-  main {
-    min-height: calc(100dvh - 64px - 72px);
-    display: block;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 10px); /* SL-179.2: 72px (was 62px) — extra clearance on all pages including login/upload */
   }
 }
 @media (min-width: 900px) {
@@ -1751,7 +1742,7 @@ img {
 </main>{% if _show_sidenav %}</div>{% endif %}
 
 
-{# ── Mobile tab nav — position:fixed bottom:0 — appears at BOTTOM of viewport on all pages ── #}
+{# ── Mobile tab nav — position:fixed bottom:0 — sits at bottom of viewport on all pages ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
     {# SL 175.6 — Bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
