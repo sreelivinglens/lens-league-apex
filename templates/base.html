@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.2 (Session 180, 2026-08-12 — Black overlay fix: .nav-mobile on mobile gets visibility:hidden + pointer-events:none when closed — Safari iOS was painting the near-black nav-mobile backdrop over all page content despite display:none. Root cause of black screen on login/inner pages across 3+ sessions.) #}
+{# SL-VERSION: 180.3 (Session 180, 2026-08-12 — Root cause fix: sl-page-wrap min-height:auto on mobile — was calc(100vh - 64px) assuming desktop nav, broke flex layout causing black screens on all inner pages on staging.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1576,7 +1576,8 @@ img {
 .sl-si:hover:not(.active){color:#1A1A18;background:#fafaf8}
 .sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
 .sl-main-content{flex:1;min-width:0}
-@media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block}}
+@media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block;min-height:auto}}
+/* SL-180.3: min-height:auto on mobile — sl-page-wrap had min-height:calc(100vh - 64px) which assumed desktop nav height, broke flex layout on mobile causing black screens on all inner pages (mission, leaderboard, gallery etc). Production unaffected — no sl-page-wrap in production base.html. */
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
