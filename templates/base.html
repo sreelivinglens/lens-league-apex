@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.4 (Session 180, 2026-08-12 — html element background:#F7F5F2 — Safari iOS renders html bg black when body doesn't fill full viewport height, causing black above login form and on short pages.) #}
+{# SL-VERSION: 180.5 (Session 180, 2026-08-12 — ROOT CAUSE FIX: restored top:auto !important on .sl-bottom-nav. It is a <nav> element so the generic `nav` rule applied top:0; combined with bottom:0 and height:auto the bar stretched the full viewport (688px measured in DevTools), filling every page with #1A1814 and pinning nav items to the top. Guard existed in production v175.10, removed in SL-178.7 — cause of all black screens Sessions 178–180.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,6 +120,7 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
+  top: auto !important; /* SL-180.5: CRITICAL — .sl-bottom-nav is a <nav>, so the generic `nav` rule applies top:0. With top:0 + bottom:0 + height:auto the bar stretched the FULL viewport height (688px measured), filling the screen with #1A1814 and pinning nav items to the top. This guard existed in production v175.10 and was removed in SL-178.7 — that deletion caused every black screen from Session 178 onward. Do not remove. */
   bottom: 0; /* SL-178.7: flush to screen bottom — safe area handled by padding */
   left: 0; right: 0;
   height: auto; /* SL-178.7: auto height so padding-bottom adds to the 62px tap area */
