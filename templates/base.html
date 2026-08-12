@@ -1,4 +1,4 @@
-{# SL-VERSION: 179.2 (Session 179, 2026-08-12 — Mobile nav: removed transform:translateZ(0) risk; z-index 998→1200; body padding-bottom 62px→72px for clearance; min-height guard on main removed — was breaking Safari iOS fixed positioning) #}
+{# SL-VERSION: 180.1 (Session 180, 2026-08-12 — Mobile black void fix: .sl-top-nav default display:none — desktop nav never paints on mobile, eliminates black void above login/inner page content on iPhone Safari. Desktop restored via min-width:900px media query.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -520,6 +520,15 @@ table { max-width: none; }
 }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
+/* SL-180.1: mobile-first — desktop nav never paints on mobile.
+   Eliminates the black void that appeared above page content on iPhone Safari
+   because the nav rendered (dark bg, 64px height) before the media query hid it.
+   Restored explicitly for desktop via min-width:900px below. */
+.sl-top-nav { display: none; }
+@media (min-width: 900px) {
+  .sl-top-nav { display: flex !important; }
+}
+
 nav {
   background: rgba(26, 24, 20, 0.94);
   border-bottom: 1px solid rgba(245,197,24,0.15);
