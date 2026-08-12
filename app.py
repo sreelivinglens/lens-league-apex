@@ -1,4 +1,4 @@
-# SL-VERSION: 180.5-staging (Session 180, 2026-08-12 — Mission hero Tier 3.5: genre-locked fallback at score >= 6.5 when Tiers 1-3 and Pixabay all return nothing. Production's Tier 3 pool is only Wildlife 1 / Street 1 / People 1 / Creative 5, and every tier excludes the viewer's own work, so most genres always fell through to the dark placeholder. Genre is never dropped — a Wildlife lesson only ever shows Wildlife. Pairs with stock_images 180.5 (min_score 8.5→7.5). Retains 180.1 session isolation, 180.2 hero genre filter, 180.3 SL_DISABLE_AI_JOBS + admin city scan, 180.4 pool_recycle 1800.)
+# SL-VERSION: 180.6-staging (Session 180, 2026-08-12 — SL_ENABLE_PIXABAY flag, OFF by default on both environments. The Pixabay vetting pipeline measured 72.5s and ~3 Anthropic calls PER CANDIDATE (species research 4.1s + vision 12.8s + scoring 55.6s), so ~5 minutes and ~12 calls per genre/dimension combo, fired from page views and retried every 6 hours across up to 55 combos — while candidates scored 5.82 and "Species: Unknown" and never cleared the bar. Largest unattended API consumer, producing nothing. Cache reads still work; only the refresh pipeline is gated. Tier 3.5 (180.5) covers the gap with real community photographs at zero cost. Retains 180.1-180.5.)
 
 import os
 import re
@@ -62,6 +62,33 @@ load_dotenv()
 # Haiku, image scoring on upload, and the manual city scan at
 # /admin/run-city-event-scan all continue to work normally on staging.
 _AI_JOBS_DISABLED = os.environ.get('SL_DISABLE_AI_JOBS', '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+# ── SL-180.6 — SL_ENABLE_PIXABAY ─────────────────────────────────────────────
+# OFF by default, on both staging and production. Set to true only to
+# deliberately re-enable the Pixabay reference-image fallback.
+#
+# Measured cost per candidate (staging, 2026-08-12):
+#     species_research      4.08s
+#     vision_analyse       12.78s
+#     main scoring call    55.59s
+#     TOTAL auto_score     72.50s   — roughly 3 Anthropic calls
+#
+# At 4 candidates that is ~5 minutes and ~12 API calls per genre/dimension
+# combo, fired automatically from a page view, retried every 6 hours after
+# each failure, across up to 55 combos. Observed candidate scores were 5.82
+# and "Species: Unknown" — typical Pixabay stock does not clear the bar, so
+# the pipeline was spending continuously and caching nothing.
+#
+# The code is sound; the economics are not. Gated rather than deleted so it
+# can be switched back on if vetting ever becomes cheap enough.
+#
+# With this off the Mission hero chain is:
+#   Tier 1   genre + dimension + 8.5+
+#   Tier 3   genre + 8.0+
+#   Tier 3.5 genre + 6.5+          (SL-180.5)
+#   Tier 4   dark placeholder
+# All real community photographs, genre-locked, at zero API cost.
+_PIXABAY_ENABLED = os.environ.get('SL_ENABLE_PIXABAY', '').strip().lower() in ('1', 'true', 'yes', 'on')
 
 
 def _dash_loc():
@@ -4318,15 +4345,19 @@ def mission():
 
     if not _benchmark:
         try:
+            # SL-180.6: the cache READ stays unconditional and costs nothing —
+            # if a reference was cached previously it is still served.
             from engine.stock_images import get_cached_reference_image
             _pixabay_url = get_cached_reference_image(db.session, _genre, _focus_key)
-            if not _pixabay_url:
-                # No cached candidate yet — kick off the slow DDI-vetting
-                # pipeline in the background (it calls Claude Vision and can
-                # take several seconds per candidate, so it must never run
-                # inline here). This request still falls through to the
-                # next tier; the next request for this combo will see the
-                # cached result once the background thread finishes.
+            if not _pixabay_url and _PIXABAY_ENABLED:
+                # SL-180.6: the slow DDI-vetting pipeline now only runs when
+                # SL_ENABLE_PIXABAY is set. Measured at ~72s and ~3 Anthropic
+                # calls PER CANDIDATE (species research + vision + scoring),
+                # so ~5 minutes and ~12 calls per combo — fired from a page
+                # view, retried every 6 hours, across up to 55 combos, while
+                # typical Pixabay stock scored 5.82 and "Species: Unknown"
+                # and never cleared the bar. Tier 3.5 below covers this gap
+                # with real community photographs at no cost.
                 threading.Thread(
                     target=_refresh_pixabay_reference_in_background,
                     args=(_genre, _focus_key),
