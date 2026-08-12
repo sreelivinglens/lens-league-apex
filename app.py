@@ -1,4 +1,4 @@
-# SL-VERSION: 180.4-staging (Session 180, 2026-08-12 — pool_recycle 300→1800. The 5-minute recycle was a workaround for connections dropping over Railway's public TCP proxy; DATABASE_URL now resolves over the private network so that risk is gone. At 300s a low-traffic site discarded every connection between visits and each visitor paid full cold-start. pool_pre_ping still validates before checkout. Retains 180.1 session isolation, 180.2 hero genre filter removal, 180.3 SL_DISABLE_AI_JOBS + admin city scan.)
+# SL-VERSION: 180.5-staging (Session 180, 2026-08-12 — Mission hero Tier 3.5: genre-locked fallback at score >= 6.5 when Tiers 1-3 and Pixabay all return nothing. Production's Tier 3 pool is only Wildlife 1 / Street 1 / People 1 / Creative 5, and every tier excludes the viewer's own work, so most genres always fell through to the dark placeholder. Genre is never dropped — a Wildlife lesson only ever shows Wildlife. Pairs with stock_images 180.5 (min_score 8.5→7.5). Retains 180.1 session isolation, 180.2 hero genre filter, 180.3 SL_DISABLE_AI_JOBS + admin city scan, 180.4 pool_recycle 1800.)
 
 import os
 import re
@@ -4356,6 +4356,38 @@ def mission():
                           .first())
         except Exception as _bench2_err:
             app.logger.warning(f'[mission benchmark tier3] {_bench2_err}')
+
+    if not _benchmark and not _pixabay_url:
+        # SL-180.5 — Tier 3.5: still nothing. Relax the score to 6.5 while
+        # keeping the genre filter absolutely fixed.
+        #
+        # Why this tier exists: the Tier 3 pool on production is currently
+        # Wildlife 1, Street 1, People 1, Creative 5 — eight images across
+        # four genres, and each tier also excludes the viewer's own work.
+        # Every other genre (Landscape, Macro, Architecture, Nature...) has
+        # an empty pool, so those photographers always saw the dark panel.
+        #
+        # Genre is NEVER dropped. A Wildlife lesson only ever shows a
+        # Wildlife photograph. Dropping genre is what once put a street
+        # protest photo on a Wildlife lesson — the mistake this whole tier
+        # chain was built to prevent. If the genre pool is genuinely empty,
+        # Tier 4's dark panel remains the honest answer.
+        try:
+            _benchmark = (Image.query
+                          .filter_by(status='scored', is_public=True, is_flagged=False)
+                          .filter(Image.genre == _genre,
+                                  Image.score >= 6.5,
+                                  Image.user_id != current_user.id,
+                                  Image.thumb_url != None)
+                          .order_by(Image.score.desc())
+                          .first())
+            if _benchmark:
+                app.logger.info(
+                    f'[mission benchmark tier3.5] {_genre}: served '
+                    f'{_benchmark.score:.2f} (genre-matched, score relaxed to 6.5)'
+                )
+        except Exception as _bench35_err:
+            app.logger.warning(f'[mission benchmark tier3.5] {_bench35_err}')
 
     class _Assignment:
         title        = _title
