@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.3 (Session 180, 2026-08-12 — Root cause fix: sl-page-wrap min-height:auto on mobile — was calc(100vh - 64px) assuming desktop nav, broke flex layout causing black screens on all inner pages on staging.) #}
+{# SL-VERSION: 180.4 (Session 180, 2026-08-12 — html element background:#F7F5F2 — Safari iOS renders html bg black when body doesn't fill full viewport height, causing black above login form and on short pages.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,7 +92,7 @@
 /* Keyboard accessibility — visible focus ring for keyboard nav, hidden on mouse */
 :focus { outline: none; }
 :focus-visible { outline: 2px solid #F5C518; outline-offset: 3px; border-radius: 2px; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
+html { background: #F7F5F2; /* SL-180.4: Safari iOS shows html bg when body doesn't fill viewport — must match body bg */ scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
 body {
   background: #F7F5F2;
   color: var(--text-primary);
