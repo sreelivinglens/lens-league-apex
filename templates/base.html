@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.5 (Session 180, 2026-08-12 — ROOT CAUSE FIX: restored top:auto !important on .sl-bottom-nav. It is a <nav> element so the generic `nav` rule applied top:0; combined with bottom:0 and height:auto the bar stretched the full viewport (688px measured in DevTools), filling every page with #1A1814 and pinning nav items to the top. Guard existed in production v175.10, removed in SL-178.7 — cause of all black screens Sessions 178–180.) #}
+{# SL-VERSION: 180.6 (Session 180, 2026-08-12 — Sitewide tap feedback: press-down scale on nav items, FAB, buttons, cards, gallery thumbs, cookie buttons; tint on menu/drawer rows; plus a navigation progress bar on every link tap and form submit so slow page loads show they are in flight. prefers-reduced-motion honoured. Retains 180.5 sl-bottom-nav top:auto fix.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -157,7 +157,8 @@ table { max-width: none; }
 .sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
 /* SL-178.1: touch-action:manipulation eliminates iOS 300ms tap delay on :active */
-.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: 0.7; }
+/* SL-180.6: press-down feedback — see sitewide tap feedback block below */
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
@@ -1375,6 +1376,136 @@ footer {
   .stat-val { font-size: 28px; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   SL-180.6 — SITEWIDE TAP FEEDBACK
+   Every tappable element must confirm the tap within one frame. Pages can
+   take 2-13s to load; without instant feedback the user assumes the tap
+   missed and taps again. Press-down (scale 0.96) rather than grow — growing
+   pushes neighbouring items in the 5-across bottom nav and can overflow.
+   120ms, no bounce, no overshoot — readable for a 70-year-old without
+   feeling twitchy. Reduced-motion users get colour/tint only.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Bottom tab bar — nav items, logo, More button */
+.sl-bottom-nav .sl-nav-item,
+.sl-bottom-nav .sl-nav-more-btn,
+.sl-nav-logo {
+  transition: transform .12s ease-out, color .12s ease-out, background .12s ease-out;
+}
+.sl-bottom-nav .sl-nav-item:active,
+.sl-bottom-nav .sl-nav-more-btn:active,
+.sl-nav-logo:active {
+  transform: scale(0.94);
+  color: #F4C20D;
+}
+
+/* Upload FAB — the primary action, gets a firmer press */
+.sl-bottom-nav .sl-nav-fab__circle {
+  transition: transform .12s ease-out, box-shadow .12s ease-out;
+}
+.sl-bottom-nav .sl-nav-fab:active .sl-nav-fab__circle {
+  transform: scale(0.90);
+  box-shadow: 0 0 0 6px rgba(245,197,24,0.22);
+}
+
+/* Buttons — all variants */
+.btn, button, input[type="submit"], .sl-mob-cta-primary, .sl-mob-cta-secondary {
+  transition: transform .12s ease-out, background .12s ease-out,
+              box-shadow .12s ease-out, border-color .12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.btn:active,
+button:active,
+input[type="submit"]:active,
+.sl-mob-cta-primary:active,
+.sl-mob-cta-secondary:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 4px rgba(245,197,24,0.20);
+}
+/* Disabled buttons must not appear responsive */
+.btn:disabled:active, .btn[disabled]:active, button:disabled:active {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Cards, gallery items, image thumbnails */
+.card a:active,
+.img-thumb:active,
+.sl-mob-gallery-item:active,
+.sl-mob-imgcard:active,
+.sl-gallery-item:active {
+  transform: scale(0.98);
+  opacity: 0.92;
+}
+.img-thumb, .sl-mob-gallery-item, .sl-mob-imgcard, .sl-gallery-item {
+  transition: transform .12s ease-out, opacity .12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Menu and drawer links — tint, no scale (full-width rows) */
+.nav-mobile a:active,
+.sl-bottom-more-menu a:active,
+.sl-si:active {
+  background: rgba(245,197,24,0.18);
+  color: #FFFFFF;
+}
+.nav-mobile a, .sl-bottom-more-menu a, .sl-si {
+  transition: background .12s ease-out, color .12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Footer and text links */
+.footer-col-link:active, .cb-text a:active {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+/* Cookie banner buttons */
+#cb-accept, #cb-dismiss {
+  transition: transform .12s ease-out, box-shadow .12s ease-out;
+  touch-action: manipulation;
+}
+#cb-accept:active, #cb-dismiss:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 0 4px rgba(245,197,24,0.25);
+}
+
+/* ── Navigation progress bar — SL-180.6 ──────────────────────────────────
+   Tap feedback ends the moment the finger lifts, but the page may take
+   several seconds. Without an in-flight signal the user taps again. This
+   bar appears on any link tap or form submit and clears on page load. */
+#sl-nav-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0;
+  background: #F5C518;
+  box-shadow: 0 0 8px rgba(245,197,24,0.60);
+  z-index: 2147483647;
+  opacity: 0;
+  pointer-events: none;
+  transition: width .25s ease-out, opacity .2s ease-out;
+}
+#sl-nav-progress.sl-np-active { opacity: 1; }
+
+/* ── Reduced motion — colour and tint only, no movement ── */
+@media (prefers-reduced-motion: reduce) {
+  .sl-bottom-nav .sl-nav-item:active,
+  .sl-bottom-nav .sl-nav-more-btn:active,
+  .sl-nav-logo:active,
+  .sl-bottom-nav .sl-nav-fab:active .sl-nav-fab__circle,
+  .btn:active, button:active, input[type="submit"]:active,
+  .sl-mob-cta-primary:active, .sl-mob-cta-secondary:active,
+  .card a:active, .img-thumb:active, .sl-mob-gallery-item:active,
+  .sl-mob-imgcard:active, .sl-gallery-item:active,
+  #cb-accept:active, #cb-dismiss:active {
+    transform: none;
+  }
+  #sl-nav-progress { transition: opacity .2s ease-out; }
+}
+
 /* ── Image right-click protection — sitewide ─────────────────────────────── */
 img {
   -webkit-user-select: none;
@@ -2011,6 +2142,64 @@ document.addEventListener('DOMContentLoaded', function() {
   btt.addEventListener('click', function(){
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+})();
+</script>
+
+<!-- ── SL-180.6: navigation progress bar ─────────────────────────────────── -->
+<div id="sl-nav-progress" role="presentation" aria-hidden="true"></div>
+<script>
+(function(){
+  var bar = document.getElementById('sl-nav-progress');
+  if (!bar) return;
+  var timers = [];
+  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+
+  function start(){
+    clearTimers();
+    bar.classList.add('sl-np-active');
+    bar.style.width = '0';
+    // Force reflow so the width transition runs from 0
+    void bar.offsetWidth;
+    bar.style.width = '35%';
+    timers.push(setTimeout(function(){ bar.style.width = '65%'; }, 400));
+    timers.push(setTimeout(function(){ bar.style.width = '85%'; }, 1600));
+    timers.push(setTimeout(function(){ bar.style.width = '92%'; }, 4000));
+  }
+  function done(){
+    clearTimers();
+    bar.style.width = '100%';
+    timers.push(setTimeout(function(){
+      bar.classList.remove('sl-np-active');
+      timers.push(setTimeout(function(){ bar.style.width = '0'; }, 220));
+    }, 200));
+  }
+
+  // Any left-click on a real navigating link
+  document.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var href = a.getAttribute('href');
+    if (!href) return;
+    if (href.charAt(0) === '#') return;                    // in-page anchor
+    if (href.indexOf('javascript:') === 0) return;
+    if (href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (a.target && a.target !== '_self') return;          // new tab
+    if (a.hasAttribute('download')) return;
+    if (a.host && a.host !== window.location.host) return; // external
+    start();
+  }, true);
+
+  // Form submissions — upload, login, search, filters
+  document.addEventListener('submit', function(){ start(); }, true);
+
+  // Clear on load and on back/forward restore
+  window.addEventListener('load', done);
+  window.addEventListener('pageshow', function(ev){
+    if (ev.persisted) { clearTimers(); bar.classList.remove('sl-np-active'); bar.style.width = '0'; }
+  });
+  // If the user cancels navigation, don't leave the bar stranded
+  window.addEventListener('beforeunload', clearTimers);
 })();
 </script>
 
