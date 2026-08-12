@@ -1,4 +1,4 @@
-# SL-VERSION: 180.1-staging (Session 180, 2026-08-12 — city_event_scan session isolation: cron wrapper now creates its own isolated session instead of passing db.session — prevents InFailedSqlTransaction worker poisoning when scan job fails mid-transaction. Dashboard get_live_event_advisory path unchanged — users continue receiving correct local advisories. Single change: _run_city_event_scan_job in scheduler block.)
+# SL-VERSION: 180.2-staging (Session 180, 2026-08-12 — Hero banner fix: genre-based exclusion removed entirely from index() carousel query. Orientation is now determined solely by actual pixel dimensions via _is_landscape(), not guessed from genre. Any genre scoring 8.5+ at Master/Grandmaster/Legend tier can now be hero if landscape — Macro, Wildlife, Street, Creative all eligible. On staging both 8.5+ images were Creative, so the old filter returned an empty carousel, the hero rendered as a dark gradient, and every non-dashboard page appeared black. Retains 180.1 city_event_scan session isolation.)
 
 import os
 import re
@@ -3403,7 +3403,14 @@ def index():
         # Exclude portrait-heavy genres so hero image renders as landscape in 4/3 container
         # Hero carousel — Master/Grandmaster/Legend, score >= 8.5
         # Exclude portrait genres AND mentor profiles from appearing as hero
-        _portrait_genres = ['People', 'Fashion', 'Wedding', 'Portrait', 'Creative', 'Street']
+        # SL-180.2: genre-based exclusion removed entirely.
+        # Orientation must be determined from actual pixel dimensions, not
+        # guessed from genre. The _is_landscape() filter below already does
+        # this correctly (w > h and w >= 800). Excluding genres discarded
+        # high-scoring work for no reason — on staging both 8.5+ images were
+        # Creative, so the carousel returned empty and the hero rendered as a
+        # dark gradient, blanking every non-dashboard page. A 9.0 Macro,
+        # Wildlife or Street frame is equally valid as a hero if it is landscape.
         _mentor_user_ids = db.session.execute(
             db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
         ).scalars().all()
@@ -3411,8 +3418,7 @@ def index():
             Image.status=='scored', Image.score!=None,
             Image.is_public==True, Image.is_flagged==False,
             Image.tier.in_(['Legend','Grandmaster','Master']),
-            Image.score>=8.5,
-            ~Image.genre.in_(_portrait_genres)
+            Image.score>=8.5
         )
         if _mentor_user_ids:
             _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
