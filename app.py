@@ -1,4 +1,4 @@
-# SL-VERSION: 180.2-staging (Session 180, 2026-08-12 — Hero banner fix: genre-based exclusion removed entirely from index() carousel query. Orientation is now determined solely by actual pixel dimensions via _is_landscape(), not guessed from genre. Any genre scoring 8.5+ at Master/Grandmaster/Legend tier can now be hero if landscape — Macro, Wildlife, Street, Creative all eligible. On staging both 8.5+ images were Creative, so the old filter returned an empty carousel, the hero rendered as a dark gradient, and every non-dashboard page appeared black. Retains 180.1 city_event_scan session isolation.)
+# SL-VERSION: 180.3-staging (Session 180, 2026-08-12 — SL_DISABLE_AI_JOBS flag: when set (staging only) the two unattended Anthropic-calling cron jobs (city_event_scan, seasonal_discovery) are not registered, and the on-demand scan_city fired by a user location change is skipped. Root cause: staging had no Railway preDeployCommand so migrations never ran, city_event_scan_log was absent, dedup always failed, and every city was rescanned 4x/day with web_search billed. New admin route /admin/run-city-event-scan runs a single city on demand using an isolated session. Evolving Eye, Haiku, upload scoring unaffected. Retains 180.1 session isolation and 180.2 hero genre-filter removal.)
 
 import os
 import re
@@ -42,6 +42,27 @@ from location_data import (
 )
 
 load_dotenv()
+
+# ── SL-180.3 — SL_DISABLE_AI_JOBS ────────────────────────────────────────────
+# Set to true on STAGING ONLY. When on, the two unattended background jobs that
+# call the Anthropic API (city_event_scan, seasonal_discovery) are never
+# registered with the scheduler, and the on-demand scan that fires when a user
+# changes their location is skipped.
+#
+# Why: staging ran city_event_scan 4x/day against test data. Its dedup table
+# (city_event_scan_log) was never created, because staging had no Railway
+# preDeployCommand and therefore had never run a single migration. With the
+# table absent, _recently_scanned() always returned False and every city was
+# rescanned from scratch on every run — 4 Sonnet calls per city, three of them
+# with web_search billed on top. The failing INSERT in _log_scan also left the
+# DB session in InFailedSqlTransaction, poisoning gunicorn workers and blanking
+# pages (Session 179).
+#
+# This flag does NOT affect anything admin- or user-triggered. Evolving Eye,
+# Haiku, image scoring on upload, and the manual city scan at
+# /admin/run-city-event-scan all continue to work normally on staging.
+_AI_JOBS_DISABLED = os.environ.get('SL_DISABLE_AI_JOBS', '').strip().lower() in ('1', 'true', 'yes', 'on')
+
 
 def _dash_loc():
     """
@@ -7859,15 +7880,24 @@ def profile():
                                 # Session 139 — also scan for live events in the
                                 # new city immediately so the dashboard advisory
                                 # is populated without waiting for the daily cron.
-                                try:
-                                    from engine.city_event_scan import scan_city as _scan_city
-                                    _ev = _scan_city(db.session, _disc_city)
+                                # SL-180.3: skipped when SL_DISABLE_AI_JOBS is set.
+                                # On staging every test location change fired a
+                                # full 4-call scan_city with web_search billed.
+                                if _AI_JOBS_DISABLED:
                                     app.logger.info(
-                                        f'[update_location] live event scan '
-                                        f'({_disc_city}): {_ev} event(s)'
+                                        f'[update_location] live event scan skipped '
+                                        f'({_disc_city}) — SL_DISABLE_AI_JOBS set'
                                     )
-                                except Exception as _cese:
-                                    app.logger.warning(f'[update_location] live event scan: {_cese}')
+                                else:
+                                    try:
+                                        from engine.city_event_scan import scan_city as _scan_city
+                                        _ev = _scan_city(db.session, _disc_city)
+                                        app.logger.info(
+                                            f'[update_location] live event scan '
+                                            f'({_disc_city}): {_ev} event(s)'
+                                        )
+                                    except Exception as _cese:
+                                        app.logger.warning(f'[update_location] live event scan: {_cese}')
                         except Exception as _de:
                             app.logger.warning(f'[update_location] discovery thread: {_de}')
                     _t = _threading.Thread(target=_run_city_discovery, daemon=True)
@@ -15072,6 +15102,53 @@ def admin_run_seasonal_discovery():
     except Exception as e:
         flash(f'Discovery run error: {e}', 'error')
     return redirect(url_for('admin_seasonal_discovery_page'))
+
+
+@app.route('/admin/run-city-event-scan', methods=['POST'])
+@login_required
+@admin_required
+def admin_run_city_event_scan():
+    """
+    SL-180.3 — manually trigger a live event scan for ONE city.
+
+    The scheduled city_event_scan job is disabled on staging via
+    SL_DISABLE_AI_JOBS so unattended runs cost nothing. This route is the
+    deliberate counterpart: press the button and a single city is scanned so
+    the dashboard live-event advisory can be tested with real data.
+
+    Cost per run: 3 web_search calls + 1 extraction call (Sonnet). One city.
+
+    Deliberately ignores SL_DISABLE_AI_JOBS — an admin pressing this button
+    means it. Uses an isolated DB session for the same reason the cron wrapper
+    does (SL-180.1): a scan failure must never poison a web worker's session.
+    """
+    _city = (request.form.get('city') or '').strip()
+    if not _city:
+        flash('Enter a city name to scan.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    _scan_session = None
+    try:
+        from engine.city_event_scan import scan_city as _scan_city
+        _scan_session = db.session.session_factory()
+        _events = _scan_city(_scan_session, _city)
+        app.logger.info(f'[admin_city_scan] {_city}: {_events} event(s) written')
+        if _events:
+            flash(f'Live event scan complete for {_city} — {_events} event(s) written.', 'success')
+        else:
+            flash(f'Live event scan complete for {_city} — no events found. '
+                  f'Check the logs for search results.', 'success')
+    except Exception as _e:
+        app.logger.warning(f'[admin_city_scan] {_city} failed: {_e}')
+        flash(f'City event scan error: {_e}', 'error')
+    finally:
+        if _scan_session is not None:
+            try:
+                _scan_session.close()
+            except Exception:
+                pass
+
+    return redirect(url_for('admin_dashboard'))
 
 
 # ── Read-only check: user city + genre_interests (for seasonal context debugging) ──
@@ -30467,13 +30544,16 @@ if _sched_lock_held:
         replace_existing = True,
     )
     # Item D — seasonal auto-discovery — weekly, Sunday 04:00 UTC
-    _scheduler.add_job(
-        func             = run_seasonal_discovery_job,
-        trigger          = CronTrigger(day_of_week='sun', hour=4, minute=0, timezone='UTC'),
-        id               = 'seasonal_discovery',
-        name             = 'Weekly seasonal calendar auto-discovery (item D)',
-        replace_existing = True,
-    )
+    # SL-180.3: skipped entirely when SL_DISABLE_AI_JOBS is set (staging).
+    # Manual trigger remains available at /admin/run-seasonal-discovery.
+    if not _AI_JOBS_DISABLED:
+        _scheduler.add_job(
+            func             = run_seasonal_discovery_job,
+            trigger          = CronTrigger(day_of_week='sun', hour=4, minute=0, timezone='UTC'),
+            id               = 'seasonal_discovery',
+            name             = 'Weekly seasonal calendar auto-discovery (item D)',
+            replace_existing = True,
+        )
     # SESSION116 — peer eval digest — runs every hour at :00
     # Sends batched eval summaries for images where digest_pending=TRUE and digest_due_at <= now
     _scheduler.add_job(
@@ -30521,13 +30601,22 @@ if _sched_lock_held:
         except Exception as _cese:
             app.logger.warning(f'[city_event_scan_cron] error: {_cese}')
 
-    _scheduler.add_job(
-        func             = _run_city_event_scan_job,
-        trigger          = CronTrigger(hour='22,4,10,16', minute=30, timezone='UTC'),
-        id               = 'city_event_scan',
-        name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
-        replace_existing = True,
-    )
+    # SL-180.3: skipped entirely when SL_DISABLE_AI_JOBS is set (staging).
+    # Manual single-city trigger remains available at /admin/run-city-event-scan.
+    if not _AI_JOBS_DISABLED:
+        _scheduler.add_job(
+            func             = _run_city_event_scan_job,
+            trigger          = CronTrigger(hour='22,4,10,16', minute=30, timezone='UTC'),
+            id               = 'city_event_scan',
+            name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
+            replace_existing = True,
+        )
+    else:
+        app.logger.warning(
+            '[scheduler] SL_DISABLE_AI_JOBS is set — city_event_scan and '
+            'seasonal_discovery NOT registered. No unattended Anthropic API '
+            'calls will be made. Admin-triggered runs still work.'
+        )
 
     # SL 172.3 — Daily automated bot purge — 3:15 UTC (8:45 IST)
     # Deletes accounts with gibberish usernames, 0 images, incomplete onboarding,
