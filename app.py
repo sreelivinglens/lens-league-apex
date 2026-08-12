@@ -1,4 +1,4 @@
-# SL-VERSION: 179.1-staging (Session 179, 2026-08-12 — Watermark prompt: graffiti/architectural text false positive fix + admin email on watermark flag — single upload path + bulk upload path. Dashboard route unchanged from v178.5.)
+# SL-VERSION: 179.2-staging (Session 179, 2026-08-12 — 179.1: watermark prompt fix + admin email; 179.2: db.session.rollback() in email except blocks — prevents InFailedSqlTransaction worker poisoning. Dashboard route unchanged from v178.5.)
 
 import os
 import re
@@ -9477,6 +9477,8 @@ def upload():
                                         app.logger.info(f'[upload] watermark flag admin email sent: image={image_id}')
                                     except Exception as _wm_mail_err:
                                         app.logger.error(f'[upload] watermark flag admin email failed (non-fatal): {_wm_mail_err}')
+                                        try: db.session.rollback()  # SL-179.2: prevent InFailedSqlTransaction poisoning next web request on this worker
+                                        except Exception: pass
                                     return  # stop — do not score a watermarked image
                             except Exception as _bgwm_err:
                                 app.logger.warning(f'[upload] bg watermark check failed (non-fatal): {_bgwm_err}')
@@ -22293,6 +22295,8 @@ def bulk_upload_one():
                         app.logger.info(f'[bulk_upload_one] watermark flag admin email sent: uid={current_user.id}')
                     except Exception as _bwm_mail_err:
                         app.logger.error(f'[bulk_upload_one] watermark flag admin email failed (non-fatal): {_bwm_mail_err}')
+                        try: db.session.rollback()  # SL-179.2: prevent InFailedSqlTransaction poisoning next web request on this worker
+                        except Exception: pass
                     return jsonify({'filename': file.filename, 'status': 'rejected — watermark or logo detected. Please remove any added text or branding and re-upload the clean image.', 'score': None, 'tier': None}), 200
         except Exception as _bwm_err:
             app.logger.warning(f'[bulk_upload_one] watermark check failed (non-fatal): {_bwm_err}')
