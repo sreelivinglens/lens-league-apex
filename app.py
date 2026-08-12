@@ -1,4 +1,4 @@
-# SL-VERSION: 180.3-staging (Session 180, 2026-08-12 — SL_DISABLE_AI_JOBS flag: when set (staging only) the two unattended Anthropic-calling cron jobs (city_event_scan, seasonal_discovery) are not registered, and the on-demand scan_city fired by a user location change is skipped. Root cause: staging had no Railway preDeployCommand so migrations never ran, city_event_scan_log was absent, dedup always failed, and every city was rescanned 4x/day with web_search billed. New admin route /admin/run-city-event-scan runs a single city on demand using an isolated session. Evolving Eye, Haiku, upload scoring unaffected. Retains 180.1 session isolation and 180.2 hero genre-filter removal.)
+# SL-VERSION: 180.4-staging (Session 180, 2026-08-12 — pool_recycle 300→1800. The 5-minute recycle was a workaround for connections dropping over Railway's public TCP proxy; DATABASE_URL now resolves over the private network so that risk is gone. At 300s a low-traffic site discarded every connection between visits and each visitor paid full cold-start. pool_pre_ping still validates before checkout. Retains 180.1 session isolation, 180.2 hero genre filter removal, 180.3 SL_DISABLE_AI_JOBS + admin city scan.)
 
 import os
 import re
@@ -510,7 +510,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///shu
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping':  True,
-    'pool_recycle':   300,   # recycle connections every 5 mins (was 30 mins)
+    # SL-180.4: 300 → 1800. The 5-minute recycle was a workaround for
+    # connections dropping over Railway's public TCP proxy. DATABASE_URL now
+    # uses the private network (${{Postgres.DATABASE_URL}}), so that risk is
+    # gone. At 300s a quiet site discarded every connection between visits and
+    # each visitor paid full cold-start; at 1800s most reuse a warm connection.
+    # pool_pre_ping above still validates a connection before every checkout,
+    # so a stale one is detected and replaced rather than handed to a request.
+    'pool_recycle':   1800,  # 30 mins
     'pool_timeout':   10,    # fail fast if no connection available (was 30s)
     'pool_size':      2,     # 2 connections per worker × 4 workers = 8 total
     'max_overflow':   3,     # allow brief spikes up to 5 per worker
