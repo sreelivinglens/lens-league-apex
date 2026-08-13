@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail_haiku-176.1 (Free scorecard — same shell as image_detail 176.10, Haiku scores, 3-image nudge arc, no standings/AEA; session 176, 2026-08-09) #}
+{# SL-VERSION: image_detail_haiku-181.1 (SL-181.1: photo hero now renders the photographer's own image via thumb_url passed from try_result; dark placeholder retained as fallback. Was 176.1.)
+   Previous: image_detail_haiku-176.1 (Free scorecard — same shell as image_detail 176.10, Haiku scores, 3-image nudge arc, no standings/AEA; session 176, 2026-08-09) #}
 {#
   DISTINCTION — PERMANENT RULE (session 176):
   This file  = FREE scorecard  (Haiku, /try/result/<id>, max 3 images)
@@ -301,10 +302,23 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     {# ① PHOTO HERO — HUD pill #}
     <div class="hk-photo-hero">
       <div class="hk-photo-inner">
-        {# No thumb_url for haiku — show dark placeholder with genre label #}
+        {# SL-181.1: show the photographer's own photograph. The route now
+           passes thumb_url (it never did before, which is why this rendered as
+           a dark gradient with only the genre word on it — a score with no
+           image attached). Placeholder retained as the fallback so a missing
+           or broken thumb_url still renders cleanly rather than breaking. #}
+        {% if thumb_url %}
+        <img src="{{ thumb_url }}" alt="{{ asset_name or 'Your photograph' }}"
+             style="width:100%;height:280px;object-fit:cover;display:block"
+             onerror="this.style.display='none';document.getElementById('hkHeroFallback').style.display='flex'">
+        <div id="hkHeroFallback" style="display:none;width:100%;height:280px;background:linear-gradient(160deg,#0b1826 0%,#1a3a5c 40%,#0c2233 70%,#0b1826 100%);align-items:center;justify-content:center">
+          <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ genre }}</span>
+        </div>
+        {% else %}
         <div style="width:100%;height:280px;background:linear-gradient(160deg,#0b1826 0%,#1a3a5c 40%,#0c2233 70%,#0b1826 100%);display:flex;align-items:center;justify-content:center">
           <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ genre }}</span>
         </div>
+        {% endif %}
         <div class="hk-photo-exif">
           <span>Free Evaluation</span>
           <span>{{ genre }}</span>
