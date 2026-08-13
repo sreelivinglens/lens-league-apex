@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
+{# SL-VERSION: 180.8 (Session 182, 2026-08-13 — ONE LINE. The robots meta tag was hardcoded to "index, follow", so no page could opt out of search indexing. It is now {% block robots %}index, follow{% endblock %} — same default for every existing page, nothing changes unless a template overrides it. Needed so image_detail.html can declare noindex, nofollow: scorecards are private evaluations and must not appear in search results. Head-only, meta tag only — no CSS, no layout, no script. RETAINS 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 <title>{% block title %}Shutter League{% endblock %}</title>
 <meta name="description" content="{% block meta_description %}For 200 years, nobody built a system to tell photographers where they stand. Shutter League changes that. Honest evaluation across 5 dimensions. Free to start.{% endblock %}">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
 <link rel="canonical" href="{% block canonical %}https://shutterleague.com{% endblock %}">
 <!-- Open Graph -->
 <meta property="og:site_name" content="Shutter League">
