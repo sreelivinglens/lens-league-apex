@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 181.1 (Session 181, 2026-08-13 — free evaluation path. (1) location check now reads #location-hidden when the visible input has been hidden by the session-storage block, which was refusing every second upload in a session. (2) /try/upload success reply {image_id:N} is now handled — it has no status field, so it fell through to the error branch and printed 'Upload failed (200)' on a successful upload. Retains 175.8:) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1134,13 +1134,37 @@
       return;
     }
 
-    const locationInput = document.getElementById('location');
-    if (!locationInput || !locationInput.value.trim()) {
-      locationInput.focus();
-      locationInput.style.borderColor = 'var(--red)';
-      locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
-      showError('Please enter your current location.');
+    /* SL-181.1 — location check must read BOTH fields.
+       On the second upload in a session the block near the foot of this file
+       finds sl_last_location, hides the visible #location input, clears its
+       name so it stops submitting, shows the "Bangalore · Change in Profile"
+       pill, and writes the value into #location-hidden.
+       This check only ever looked at #location — the box that had just been
+       emptied and hidden — so it failed every time and blocked submission.
+       Result: the first upload in a session worked, every one after it was
+       refused with a message asking for a location already on screen. */
+    const locationInput  = document.getElementById('location');
+    const locationHidden = document.getElementById('location-hidden');
+    const _locVisible    = locationInput && locationInput.offsetParent !== null;
+    const _locValue      = (locationInput && locationInput.value.trim())
+                        || (locationHidden && locationHidden.value.trim())
+                        || '';
+    if (!_locValue) {
+      if (_locVisible) {
+        locationInput.focus();
+        locationInput.style.borderColor = 'var(--red)';
+        locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
+        showError('Please enter your current location.');
+      } else {
+        /* Field is hidden and the stored value is missing — recoverable only
+           by reloading, so say that rather than pointing at an invisible box. */
+        showError('Your location could not be read. Please reload the page and try again.');
+      }
       return;
+    }
+    /* Keep the hidden field authoritative for submission. */
+    if (locationHidden && !locationHidden.value.trim()) {
+      locationHidden.value = _locValue;
     }
 
     if (!document.querySelector('input[name="camera_track"]:checked')) {
@@ -1460,6 +1484,29 @@
           backWrap.style.display = 'block';
           // Store pending image so dashboard can show scoring status on arrival
           try { sessionStorage.setItem('sl_pending_score', resp.image_id); } catch(e) {}
+        }
+        _startPolling(resp.image_id, resp.next || '');
+        return;
+      }
+
+      /* SL-181.1 — the free evaluation path returned success and this line
+         called it a failure.
+         /upload replies {status:'processing', image_id:N} and is handled above.
+         /try/upload replies {image_id:N} with no status field, so that check
+         missed, execution fell through to here, and the page printed
+         "Upload failed (200)" while the server was already scoring the image.
+         A free user was told their upload failed when it had worked — and on
+         a 3-evaluation allowance, retrying costs them one.
+         Handle the trial reply explicitly before treating anything as an error. */
+      if (resp && resp.image_id && !resp.error) {
+        /* Look the form up directly rather than relying on the `uploadForm`
+           var declared further down this script — same defensive pattern
+           already used in the polling handler below. */
+        var _formEl     = document.getElementById('uploadForm');
+        var _resultBase = (_formEl && _formEl.dataset && _formEl.dataset.resultBase) || '';
+        if (_resultBase) {
+          window.location.href = _resultBase + resp.image_id;
+          return;
         }
         _startPolling(resp.image_id, resp.next || '');
         return;
