@@ -1,7 +1,20 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.6-staging
+{# SL-VERSION: image_detail-181.7-staging
    Session 182 — 2026-08-13
-   THREE CHANGES, all requested by the founder:
+   FOUR CHANGES, all requested by the founder:
+
+   -1. LONG-FORM TEXT NOW READABLE. The page's text renderer split on U+25A0
+       (BLACK SQUARE) but the scoring engine emits U+25AA (BLACK SMALL SQUARE).
+       Two different characters, so the split never matched: every long block
+       rendered as one unbroken slab with the markers stranded mid-sentence.
+       Measured on staging — querySelectorAll('.sc-render-text p') returned 0.
+       The email path already handled this correctly (app.py splits on U+25AA);
+       only this page was left behind. The renderer now accepts U+25A0, U+25AA
+       and U+2022, and multi-item text becomes a real <ul> with the marker in
+       the margin and a hanging indent, so wrapped lines align under the first
+       word instead of under the bullet. Spacing 10px to 14px desktop / 16px
+       mobile. Tested against the live 'White Dove' scorecard text.
+
 
    0. "Generate My Evolving Eye Report" REMOVED from the action bar. It was a
       link to /my-eye, not a generator — see the comment at the action bar.
@@ -271,6 +284,41 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ══════════════════════════════════
    IPAD 768-1023
 ══════════════════════════════════ */
+
+/* ── SL-181.7 — READABLE LONG-FORM TEXT ─────────────────────────────────────
+   Bullets are real list items now. The marker sits in the margin and the text
+   runs in its own column, so a wrapped line aligns under the first WORD, not
+   under the bullet — that hanging indent is the whole difference between a
+   list you can scan and a paragraph with squares in it.
+   Spacing was 10px between items, which read as one mass. Now 14px, with the
+   line-height already at 1.75. */
+.sc-render-text .sc-bullets{
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+.sc-render-text .sc-bullets li{
+  position:relative;
+  padding-left:22px;          /* the text column */
+  margin-bottom:14px;         /* air between points */
+  line-height:1.75;
+}
+.sc-render-text .sc-bullets li:last-child{margin-bottom:0}
+.sc-render-text .sc-bullets li::before{
+  content:"\25AA";            /* the marker, drawn by CSS not left in the text */
+  position:absolute;
+  left:4px;
+  top:0;
+  color:var(--sc-gold-dk);
+  font-size:15px;
+  line-height:1.75;
+}
+.sc-render-text p{
+  margin:0 0 14px;
+  line-height:1.75;
+}
+.sc-render-text p:last-child{margin-bottom:0}
+
 @media (max-width:1023px) and (min-width:769px){
   .sc-shell{grid-template-columns:1fr 200px}
   .sc-rpanel{width:200px}
@@ -281,6 +329,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 ══════════════════════════════════ */
 /* Mobile breakpoint: max-width: 768px (also covers max-width: 600px and max-width: 480px) */
 @media (max-width:768px){
+  /* SL-181.7 — tighter text column on a phone, but keep the hanging indent */
+  .sc-render-text .sc-bullets li{padding-left:18px;margin-bottom:16px}
+  .sc-render-text .sc-bullets li::before{left:2px}
+  .sc-render-text p{margin:0 0 16px}
+
   .sc-shell{display:block}
   .sc-rpanel{display:none}
   .sc-logo-text{display:none}
@@ -1070,18 +1123,51 @@ function scToggleDDI(col, idx) {
   }
 }
 
-/* ── Text rendering: ■ → paragraph, **bold** → <strong>, Search:X → link ── */
+/* ── Text rendering: bullets → real list items, **bold**, Search:X → link ──
+   SL-181.7 — THE BUG THIS FIXES.
+   This function split on U+25A0 (BLACK SQUARE, "■"). The scoring engine emits
+   U+25AA (BLACK SMALL SQUARE, "▪"). Two different characters, so the split
+   never matched: paragraphs stayed at zero and every marker was left sitting
+   mid-sentence. Every long block on this page rendered as one unbroken slab.
+   Confirmed live on staging: document.querySelectorAll('.sc-render-text p')
+   returned 0.
+
+   The email path already had this right — app.py's scorecard email splits on
+   U+25AA and wraps each part in its own paragraph (see the comment there).
+   Only this page was left behind, so emails read correctly and the page did
+   not.
+
+   Now: BOTH characters are accepted, plus "•", so a change of marker in the
+   engine cannot silently break the page again. Multi-item text becomes a real
+   <ul>: the marker sits in the margin and the text runs in its own column, so
+   a wrapped second line aligns under the first word rather than under the
+   bullet. Single-item text stays a plain paragraph — a list of one is noise. */
 function scRenderText() {
   var targets = document.querySelectorAll('.sc-render-text');
   targets.forEach(function (el) {
     if (el.dataset.rendered) return;
     el.dataset.rendered = '1';
     var raw = el.innerHTML;
-    /* Split on ■ bullet markers — each becomes a <p> */
-    var paras = raw.split('■').map(function(p){ return p.trim(); }).filter(Boolean);
-    if (paras.length > 1) {
-      raw = paras.map(function(p){ return '<p style="margin-bottom:10px">' + p + '</p>'; }).join('');
+
+    /* Accept every bullet marker the engine has used or might use. */
+    var parts = raw.split(/[\u25A0\u25AA\u2022]/)
+                   .map(function (p) { return p.trim(); })
+                   .filter(Boolean);
+
+    if (parts.length > 1) {
+      raw = '<ul class="sc-bullets">'
+          + parts.map(function (p) { return '<li>' + p + '</li>'; }).join('')
+          + '</ul>';
+    } else if (parts.length === 1) {
+      /* No markers. Break on blank lines if the engine sent any; otherwise
+         leave the text alone rather than guessing at sentence boundaries. */
+      var blocks = parts[0].split(/\n\s*\n/).map(function (b) { return b.trim(); })
+                           .filter(Boolean);
+      raw = blocks.length > 1
+          ? blocks.map(function (b) { return '<p>' + b + '</p>'; }).join('')
+          : '<p>' + parts[0] + '</p>';
     }
+
     /* **bold** → <strong> (short spans only) */
     raw = raw.replace(/\*\*([^*]{1,60})\*\*/g, '<strong>$1</strong>');
     /* Search: X. → Google Images link */
