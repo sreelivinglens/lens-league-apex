@@ -1,4 +1,4 @@
-# SL-VERSION: 181.1-staging (Session 181, 2026-08-13 — free evaluation path. (1) Haiku prompt calibrated: per-dimension score bands + real production distribution per genre (311 scored images) + tier map + anti-inflation discipline; genre-weighting block REMOVED because calculate_score() already applies GENRE_WEIGHTS downstream, so it was double-counted, and its guidance contradicted the real weights in 6 of 11 genres. Measured drift before fix: Haiku 8.77 vs Sonnet 8.10 on the same frame = 45 percentile points in the Creative pool, 62% of it from Wonder alone. (2) try_upload resolution check removed: it measured the RESIZED thumbnail returned by ingest_image() (long edge capped at THUMB_W=1500), so every landscape photograph failed a 1500px SHORT-side test that was arithmetically impossible to pass. ingest_image() already enforces the real minimum on the original and raises — now caught and surfaced. (3) try_result passes thumb_url/asset_name so the free scorecard shows the photograph instead of a dark placeholder. Retains 180.1-180.6.)
+# SL-VERSION: 181.2-staging (Session 181, 2026-08-13 — free evaluation path. 181.2: calibration anchors rewritten to the LOW end after measurement — 181.1 gave median/p75/p90 only and the model used the median as a floor (weak Street frame: Haiku 7.09 vs Sonnet 5.60, +1.49, no dimension below 5.8 where Sonnet reached 4.5). Now supplies lowest/p10/p25/median plus counts below 6.0 and 7.0, a hardened Wonder band (49% of the measured gap in both tests), and a coupling rule requiring the dimension named in the takeaway to be the lowest scored — Haiku already identifies the fault correctly in words, then declines to score it. 181.1 was: (1) Haiku prompt calibrated: per-dimension score bands + real production distribution per genre (311 scored images) + tier map + anti-inflation discipline; genre-weighting block REMOVED because calculate_score() already applies GENRE_WEIGHTS downstream, so it was double-counted, and its guidance contradicted the real weights in 6 of 11 genres. Measured drift before fix: Haiku 8.77 vs Sonnet 8.10 on the same frame = 45 percentile points in the Creative pool, 62% of it from Wonder alone. (2) try_upload resolution check removed: it measured the RESIZED thumbnail returned by ingest_image() (long edge capped at THUMB_W=1500), so every landscape photograph failed a 1500px SHORT-side test that was arithmetically impossible to pass. ingest_image() already enforces the real minimum on the original and raises — now caught and surfaced. (3) try_result passes thumb_url/asset_name so the free scorecard shows the photograph instead of a dark placeholder. Retains 180.1-180.6.)
 
 import os
 import re
@@ -31114,62 +31114,80 @@ def api_mim_ddi():
 
 _HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 
-# ── SL-181.1 — Platform calibration anchors ─────────────────────────────────
-# Real distribution of Sonnet-scored production images, measured 2026-08-13
-# across 311 scored photographs. Without these Haiku scores in a vacuum and
-# drifts high: measured 8.77 where Sonnet gave 8.10 on the same frame, which
-# in the Creative pool is the difference between the 27th and 72nd percentile.
+# ── SL-181.2 — Platform calibration anchors (LOW-END) ───────────────────────
+# Measured on production, 2026-08-13, across 311 Sonnet-scored photographs.
 #
-# Refresh when the pool has grown materially:
-#   SELECT genre, COUNT(*),
+# SL-181.1 supplied median/p75/p90 — three markers, all in the upper half. The
+# model treated the median as a floor rather than a midpoint. Measured result on
+# a weak Street frame: Haiku 7.09 where Sonnet gave 5.60 (+1.49, Contender ->
+# Maverick), with Wonder alone contributing 49% of the gap and no dimension
+# falling below 5.8 while Sonnet reached 4.5.
+#
+# 181.2 supplies the BOTTOM of the distribution instead: lowest, p10, p25,
+# median, and plain counts of how many photographs fall below 6.0 and 7.0.
+# Low scores have to be shown to be normal before a model will award them.
+#
+# Refresh with:
+#   SELECT genre, COUNT(*), MIN(score),
+#          PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY score),
+#          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY score),
 #          PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY score),
-#          PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY score),
-#          PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY score)
+#          COUNT(*) FILTER (WHERE score < 6.0),
+#          COUNT(*) FILTER (WHERE score < 7.0)
 #   FROM images WHERE status='scored' AND score IS NOT NULL
 #   GROUP BY genre HAVING COUNT(*) >= 8;
 #
-# (median, p75, p90, n)
+# (n, lowest, p10, p25, median, below_6, below_7)
 _TRY_GENRE_CALIBRATION = {
-    'Street':       (7.72, 8.52, 8.92, 76),
-    'Wildlife':     (7.92, 8.32, 8.65, 46),
-    'Creative':     (8.22, 8.84, 9.06, 45),
-    'Documentary':  (7.49, 8.31, 8.82, 44),
-    'People':       (7.15, 7.77, 8.49, 44),
-    'Landscape':    (7.12, 7.76, 8.24, 41),
-    'Nature':       (5.85, 7.20, 7.44,  8),
+    'Street':       (76, 4.90, 5.67, 6.89, 7.72,  9, 20),
+    'Wildlife':     (46, 5.90, 6.41, 7.14, 7.92,  1,  9),
+    'Creative':     (45, 6.72, 7.67, 8.09, 8.22,  0,  1),
+    'Documentary':  (44, 5.70, 6.41, 6.94, 7.49,  2, 12),
+    'People':       (43, 5.30, 6.32, 6.56, 7.18,  4, 15),
+    'Landscape':    (41, 4.30, 5.68, 6.42, 7.12,  8, 15),
+    'Nature':       ( 8, 4.18, 4.47, 4.83, 5.85,  4,  5),
 }
 
-# Genres with too few scored images to anchor individually fall back to the
-# platform-wide shape. Provisional by design — replace each with real figures
-# once that genre passes ~8 scored images.
-_TRY_CALIBRATION_FALLBACK = (7.50, 8.30, 8.80, 0)
+# Genres with too few scored images to anchor individually. Figures are the
+# pooled shape of the seven measured genres — provisional by design.
+_TRY_CALIBRATION_FALLBACK = (0, 4.30, 5.90, 6.80, 7.50, 28, 77)
 
 
 def _try_calibration_line(genre):
-    """SL-181.1 — build the calibration paragraph for the genre being scored."""
-    med, p75, p90, n = _TRY_GENRE_CALIBRATION.get(
+    """SL-181.2 — calibration paragraph, weighted towards the LOW end.
+
+    The purpose is to show the model that low scores are ordinary. Giving only
+    upper-half markers (181.1) made the median behave as a floor.
+    """
+    n, lo, p10, p25, med, b6, b7 = _TRY_GENRE_CALIBRATION.get(
         genre, _TRY_CALIBRATION_FALLBACK
     )
     if n:
-        pool = (f'Across {n} {genre} photographs already evaluated on Shutter '
+        head = (f'Across {n} {genre} photographs already evaluated on Shutter '
                 f'League by the full engine:')
+        counts = (f'  - {b6} of the {n} ({round(100*b6/n)}%) scored below 6.0\n'
+                  f'  - {b7} of the {n} ({round(100*b7/n)}%) scored below 7.0\n')
     else:
-        pool = ('Across all photographs already evaluated on Shutter League by '
-                'the full engine (this interest area has too few images to '
-                'anchor individually, so platform-wide figures apply):')
+        head = ('Across all photographs already evaluated on Shutter League by '
+                'the full engine (too few in this interest area to anchor '
+                'individually, so platform-wide figures apply):')
+        counts = ('  - roughly 1 in 11 scored below 6.0\n'
+                  '  - roughly 1 in 4 scored below 7.0\n')
     return (
-        f'{pool}\n'
-        f'  - half score below {med}\n'
-        f'  - only a quarter clear {p75}\n'
-        f'  - only the top tenth clear {p90}\n'
-        f'Your final score for this photograph must sit honestly against that '
-        f'distribution. A photograph you would call "above average" belongs '
-        f'near {med}, not near {p90}.\n\n'
+        f'{head}\n'
+        f'  - the lowest scored {lo}\n'
+        f'  - 1 in 10 scored below {p10}\n'
+        f'  - 1 in 4 scored below {p25}\n'
+        f'  - half scored below {med}\n'
+        f'{counts}'
+        f'\nLOW SCORES ARE NORMAL AND EXPECTED. A competent photograph of an '
+        f'ordinary subject belongs in the 5s and 6s. The figures above are not '
+        f'a floor to stay above — they describe a real distribution with real '
+        f'photographs at every level, including the bottom.\n\n'
         f'DIMENSION AVERAGES across all 311 evaluated photographs:\n'
         f'  dod 6.85 | disruption 6.70 | dm 6.96 | wonder 7.83 | aq 8.23\n'
-        f'dod, disruption and dm run near 6.8; wonder and aq run higher. Do not '
-        f'award 9+ on the technical three unless the achievement is genuinely '
-        f'exceptional.\n'
+        f'These are AVERAGES. Roughly half of all photographs score below each '
+        f'of them on each dimension.\n'
     )
 
 
@@ -31215,9 +31233,15 @@ _TRY_HAIKU_PROMPT = (
     "   6.5-7.9  Pleasing, atmospheric, but the find is available to others.\n"
     "   5.0-6.4  Pleasant. Does not linger.\n"
     "   Below 5  Nothing beyond the record.\n"
-    "   WONDER IS THE MOST OVER-SCORED DIMENSION. A striking colour, a dramatic "
-    "sky or an unusual technique is not by itself Wonder. Ask whether the "
-    "photograph reveals something, or only decorates.\n\n"
+    "   WONDER IS THE MOST OVER-SCORED DIMENSION BY A LARGE MARGIN. Measured "
+    "against the full engine it is where free evaluations drift highest, and it "
+    "carries the heaviest weight in most interest areas. A striking colour, a "
+    "dramatic sky, a charismatic animal or an unusual technique is NOT Wonder. "
+    "Wonder is whether the photograph reveals something the viewer could not "
+    "have found themselves. A well-made photograph of an ordinary scene scores "
+    "4-6 here, and that is the correct answer for most submissions. Before "
+    "awarding 7 or above, name to yourself what is actually being revealed. If "
+    "you cannot name it in one clause, score below 6.\n\n"
 
     "5. aq - Affective Quotient: is there soul in this frame? "
     "The intangible quality that makes it memorable.\n"
@@ -31238,8 +31262,18 @@ _TRY_HAIKU_PROMPT = (
     "Master and above is the top quarter of the platform. Treat it as such.\n\n"
 
     "SCORING DISCIPLINE:\n"
+    "- YOUR NUMBERS MUST AGREE WITH YOUR SENTENCE. Decide first what most "
+    "limits this photograph. Whatever you name in the takeaway as the "
+    "limitation MUST be your lowest-scoring dimension, and it must sit at "
+    "least 2.0 below your highest. Writing that a photograph lacks a decisive "
+    "moment and then scoring Decisive Moment 6.1 is a contradiction. If the "
+    "fault is real enough to name, it is real enough to score.\n"
     "- Do NOT default to the middle or the top of any band. A band of 8.0-8.9 "
     "means some photographs score 8.0 and some score 8.9. Choose honestly.\n"
+    "- Use the whole scale. Scores of 4 and 5 are ordinary, not insults. Most "
+    "photographs have at least one dimension in the 4s or 5s. A set of five "
+    "scores that all sit between 6 and 8 almost always means you have avoided "
+    "a judgement rather than made one.\n"
     "- Score each dimension independently. A photograph strong in one dimension "
     "is frequently ordinary in another, and saying so is the useful part.\n"
     "- A technically imperfect photograph with real emotional truth scores higher "
