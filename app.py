@@ -1,4 +1,4 @@
-# SL-VERSION: 180.6-staging (Session 180, 2026-08-12 — SL_ENABLE_PIXABAY flag, OFF by default on both environments. The Pixabay vetting pipeline measured 72.5s and ~3 Anthropic calls PER CANDIDATE (species research 4.1s + vision 12.8s + scoring 55.6s), so ~5 minutes and ~12 calls per genre/dimension combo, fired from page views and retried every 6 hours across up to 55 combos — while candidates scored 5.82 and "Species: Unknown" and never cleared the bar. Largest unattended API consumer, producing nothing. Cache reads still work; only the refresh pipeline is gated. Tier 3.5 (180.5) covers the gap with real community photographs at zero cost. Retains 180.1-180.5.)
+# SL-VERSION: 181.1-staging (Session 181, 2026-08-13 — free evaluation path. (1) Haiku prompt calibrated: per-dimension score bands + real production distribution per genre (311 scored images) + tier map + anti-inflation discipline; genre-weighting block REMOVED because calculate_score() already applies GENRE_WEIGHTS downstream, so it was double-counted, and its guidance contradicted the real weights in 6 of 11 genres. Measured drift before fix: Haiku 8.77 vs Sonnet 8.10 on the same frame = 45 percentile points in the Creative pool, 62% of it from Wonder alone. (2) try_upload resolution check removed: it measured the RESIZED thumbnail returned by ingest_image() (long edge capped at THUMB_W=1500), so every landscape photograph failed a 1500px SHORT-side test that was arithmetically impossible to pass. ingest_image() already enforces the real minimum on the original and raises — now caught and surfaced. (3) try_result passes thumb_url/asset_name so the free scorecard shows the photograph instead of a dark placeholder. Retains 180.1-180.6.)
 
 import os
 import re
@@ -31114,33 +31114,145 @@ def api_mim_ddi():
 
 _HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 
+# ── SL-181.1 — Platform calibration anchors ─────────────────────────────────
+# Real distribution of Sonnet-scored production images, measured 2026-08-13
+# across 311 scored photographs. Without these Haiku scores in a vacuum and
+# drifts high: measured 8.77 where Sonnet gave 8.10 on the same frame, which
+# in the Creative pool is the difference between the 27th and 72nd percentile.
+#
+# Refresh when the pool has grown materially:
+#   SELECT genre, COUNT(*),
+#          PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY score),
+#          PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY score),
+#          PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY score)
+#   FROM images WHERE status='scored' AND score IS NOT NULL
+#   GROUP BY genre HAVING COUNT(*) >= 8;
+#
+# (median, p75, p90, n)
+_TRY_GENRE_CALIBRATION = {
+    'Street':       (7.72, 8.52, 8.92, 76),
+    'Wildlife':     (7.92, 8.32, 8.65, 46),
+    'Creative':     (8.22, 8.84, 9.06, 45),
+    'Documentary':  (7.49, 8.31, 8.82, 44),
+    'People':       (7.15, 7.77, 8.49, 44),
+    'Landscape':    (7.12, 7.76, 8.24, 41),
+    'Nature':       (5.85, 7.20, 7.44,  8),
+}
+
+# Genres with too few scored images to anchor individually fall back to the
+# platform-wide shape. Provisional by design — replace each with real figures
+# once that genre passes ~8 scored images.
+_TRY_CALIBRATION_FALLBACK = (7.50, 8.30, 8.80, 0)
+
+
+def _try_calibration_line(genre):
+    """SL-181.1 — build the calibration paragraph for the genre being scored."""
+    med, p75, p90, n = _TRY_GENRE_CALIBRATION.get(
+        genre, _TRY_CALIBRATION_FALLBACK
+    )
+    if n:
+        pool = (f'Across {n} {genre} photographs already evaluated on Shutter '
+                f'League by the full engine:')
+    else:
+        pool = ('Across all photographs already evaluated on Shutter League by '
+                'the full engine (this interest area has too few images to '
+                'anchor individually, so platform-wide figures apply):')
+    return (
+        f'{pool}\n'
+        f'  - half score below {med}\n'
+        f'  - only a quarter clear {p75}\n'
+        f'  - only the top tenth clear {p90}\n'
+        f'Your final score for this photograph must sit honestly against that '
+        f'distribution. A photograph you would call "above average" belongs '
+        f'near {med}, not near {p90}.\n\n'
+        f'DIMENSION AVERAGES across all 311 evaluated photographs:\n'
+        f'  dod 6.85 | disruption 6.70 | dm 6.96 | wonder 7.83 | aq 8.23\n'
+        f'dod, disruption and dm run near 6.8; wonder and aq run higher. Do not '
+        f'award 9+ on the technical three unless the achievement is genuinely '
+        f'exceptional.\n'
+    )
+
+
 _TRY_HAIKU_PROMPT = (
     "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
     "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
-    "DIMENSIONS:\n"
-    "1. dod  - Depth of Difficulty: how hard was it to make this photograph? "
+
+    "DIMENSIONS AND WHAT EACH SCORE MEANS:\n\n"
+
+    "1. dod - Depth of Difficulty: how hard was it to make this photograph? "
     "Right time, right place, right conditions, physical effort.\n"
-    "2. vd   - Visual Disruption: does this image stop the viewer? "
+    "   9.0-9.5  Extraordinary access, conditions or physical achievement. Rare.\n"
+    "   8.0-8.9  Sharp subject AND deliberate technique simultaneously, or "
+    "difficult conditions handled well.\n"
+    "   6.5-7.9  Skilled single technique, or conditions requiring real patience.\n"
+    "   5.0-6.4  Competent capture in ordinary conditions.\n"
+    "   Below 5  Anyone standing there could have made this frame.\n\n"
+
+    "2. vd - Visual Disruption: does this image stop the viewer? "
     "Compositional decisions that break expectation.\n"
-    "3. dm   - Decisive Moment: was the trigger pulled at the right moment? "
+    "   9.0-9.5  A compositional decision almost no photographer would have made.\n"
+    "   8.0-8.9  Strong deliberate construction with clean separation.\n"
+    "   6.5-7.9  Considered composition, but within convention.\n"
+    "   5.0-6.4  Competent framing, no surprise.\n"
+    "   Below 5  Centred, expected, or accidental.\n\n"
+
+    "3. dm - Decisive Moment: was the trigger pulled at the right moment? "
     "Behaviour, expression, peak action, geometric alignment.\n"
-    "4. wf   - Wonder Factor: does this image make you feel something? "
+    "   9.0-9.5  The single unrepeatable instant. A frame earlier or later and "
+    "the photograph does not exist.\n"
+    "   8.0-8.9  Clear peak of action, expression or alignment.\n"
+    "   6.5-7.9  Good timing, but the moment would tolerate a second either way.\n"
+    "   5.0-6.4  Static subject, or timing not a factor.\n"
+    "   Below 5  Moment missed.\n\n"
+
+    "4. wf - Wonder Factor: does this image make you feel something? "
     "Emotional resonance, awe, curiosity.\n"
-    "5. aq   - Affective Quotient: is there soul in this frame? "
-    "The intangible quality that makes it memorable.\n\n"
+    "   9.5+     World Press Photo, IPA, Sony World Photography winner level. "
+    "Award this only for work of that standard.\n"
+    "   9.0-9.4  A singular find. The photograph could only exist because this "
+    "photographer was there and saw it.\n"
+    "   8.0-8.9  The discovery is complete and not easily repeated.\n"
+    "   6.5-7.9  Pleasing, atmospheric, but the find is available to others.\n"
+    "   5.0-6.4  Pleasant. Does not linger.\n"
+    "   Below 5  Nothing beyond the record.\n"
+    "   WONDER IS THE MOST OVER-SCORED DIMENSION. A striking colour, a dramatic "
+    "sky or an unusual technique is not by itself Wonder. Ask whether the "
+    "photograph reveals something, or only decorates.\n\n"
+
+    "5. aq - Affective Quotient: is there soul in this frame? "
+    "The intangible quality that makes it memorable.\n"
+    "   9.0-9.4  A specific, powerful emotion that is undeniable and lingers.\n"
+    "   8.0-8.9  A genuine emotional register, clearly present.\n"
+    "   6.5-7.9  Some feeling, but general rather than particular.\n"
+    "   5.0-6.4  Technically resolved, emotionally quiet.\n"
+    "   Below 4  Triggers the Humanity Check penalty. Use it when earned.\n\n"
+
     "INTEREST AREA: {genre}\n\n"
-    "GENRE WEIGHTING AWARENESS:\n"
-    "- Wildlife/Sports: weight dm highly - decisive moment is critical\n"
-    "- Landscape/Astro: weight wf and aq - wonder and atmosphere dominate\n"
-    "- Street/Documentary: weight dm and aq - moment and soul matter most\n"
-    "- People/Wedding: weight aq highly - emotional connection is primary\n"
-    "- Creative: weight vd and aq - disruption and artistic intent matter\n"
-    "- Architecture/Drone: weight vd and wf - visual impact and geometry\n\n"
+
+    "PLATFORM CALIBRATION - THIS IS THE STANDARD YOU ARE SCORING AGAINST:\n"
+    "{calibration}\n"
+
+    "TIERS the final weighted score falls into:\n"
+    "  Rookie 0-4 | Shooter 4-5 | Contender 5-6 | Craftsman 6-7 | "
+    "Maverick 7-8 | Master 8-9 | Grandmaster 9-9.7 | Legend 9.7+\n"
+    "Master and above is the top quarter of the platform. Treat it as such.\n\n"
+
+    "SCORING DISCIPLINE:\n"
+    "- Do NOT default to the middle or the top of any band. A band of 8.0-8.9 "
+    "means some photographs score 8.0 and some score 8.9. Choose honestly.\n"
+    "- Score each dimension independently. A photograph strong in one dimension "
+    "is frequently ordinary in another, and saying so is the useful part.\n"
+    "- A technically imperfect photograph with real emotional truth scores higher "
+    "than a technically perfect, emotionally empty one.\n"
+    "- Do not inflate to be encouraging. An honest 6.4 is more useful to a "
+    "photographer than a generous 8.2.\n\n"
+
     "TAKEAWAY:\n"
     "Write exactly one sentence (max 30 words) that names the single most "
     "important insight about this photograph. Name the specific dimension "
     "that most defines or limits this image and say precisely why. "
     "Be direct. Do not use the word score.\n\n"
+
     "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
     "\"takeaway\": \"<one sentence>\"}"
@@ -31162,7 +31274,10 @@ def _try_run_haiku(image_id, img_b64, genre):
         app.logger.error('[try_haiku] ANTHROPIC_API_KEY not set')
         return None
 
-    prompt = _TRY_HAIKU_PROMPT.replace('{genre}', genre or 'General')
+    # SL-181.1: genre placeholder plus platform calibration anchors
+    prompt = (_TRY_HAIKU_PROMPT
+              .replace('{genre}', genre or 'General')
+              .replace('{calibration}', _try_calibration_line(genre or '')))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
@@ -31392,25 +31507,33 @@ def try_upload():
         except Exception:
             pass
 
-        thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        # ── SL-181.1 — resolution enforcement ────────────────────────────────
+        # ingest_image() checks the ORIGINAL against min_short_side (default
+        # 1500) and raises ValueError if it falls short. It then resizes a
+        # working copy so the LONG edge is at most THUMB_W (1500) and returns
+        # THAT copy's w/h.
+        #
+        # The manual check that used to sit below this line tested those
+        # returned values against a 1500px SHORT-side minimum — a test no
+        # rectangular photograph can pass, because capping the long edge at
+        # 1500 always leaves the short edge below it. Every landscape frame was
+        # rejected with a message telling the photographer their original was
+        # too small when it was not. Portrait and square passed only because
+        # the resize sets width to exactly 1500 and leaves height larger.
+        #
+        # The same class of bug was found and fixed in Curator's Bench (see the
+        # comment at bulk_upload_one); this occurrence was missed.
+        #
+        # Catch the ValueError and surface its message, exactly as the main
+        # /upload route does. ingest_image() remains the single authority.
+        try:
+            thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        except ValueError as _res_err:
+            if os.path.exists(raw_path):
+                os.remove(raw_path)
+            return jsonify({'error': True, 'message': str(_res_err)}), 422
         if os.path.exists(raw_path):
             os.remove(raw_path)
-
-        # ── Resolution check — 1500px short side minimum ─────────────────────
-        # Matches the client-side check in upload.html.
-        # Server-side is authoritative — client check can be bypassed.
-        if w and h:
-            short_side = min(w, h)
-            if short_side < 1500:
-                if os.path.exists(thumb_path):
-                    os.remove(thumb_path)
-                return jsonify({
-                    'error':   True,
-                    'message': (
-                        f'This image is {w}×{h}px — the shorter side must be at least 1500px. '
-                        'Please upload the full-resolution original from your camera or phone gallery.'
-                    )
-                }), 422
 
         # ── Watermark check (Sonnet — same as main /upload route) ────────────
         # Runs before saving to images table — a watermarked image must never
@@ -31622,6 +31745,14 @@ def try_result(image_id):
     return render_template(
         'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
         image_id       = image_id,
+        # SL-181.1: the photographer's own photograph was never passed to the
+        # template, so the free scorecard rendered a dark gradient with the
+        # genre word on it — a score with no image attached. The paid scorecard
+        # leads with the photograph and the photographer's name; the free one
+        # showed neither. Template falls back to the placeholder if thumb_url
+        # is absent, so a missing image still renders cleanly.
+        thumb_url      = img.thumb_url,
+        asset_name     = img.asset_name or img.original_filename or '',
         score          = img.score,
         tier           = img.tier or '—',
         genre          = img.genre or '—',
