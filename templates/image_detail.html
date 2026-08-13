@@ -1,13 +1,54 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-176.11
-   Session 176 — 2026-08-09
-   Changes: No sidenav, full-width photo fills frame, DDI below photo,
-   What this evaluation means before take-away, all accordions closed,
-   correct field mapping from audit, no dark backgrounds on scorecard,
-   paragraph formatting, font size +1, B&W edit guard in prompt,
-   Ernst Haas deduplication via JS, master names bold+linkable #}
+{# SL-VERSION: image_detail-181.5-staging
+   Session 182 — 2026-08-13
+   TWO CHANGES, both requested by the founder:
+
+   1. DELETE control added. Staging had none at all; production has one, so a
+      photographer on staging could not remove their own photograph. POST, not
+      a link — a GET could be destroyed by a crawler or a browser prefetch.
+      Shown only to the owner: delete_image() is owner-only and abort(403)s
+      everyone else, so offering the button to non-owners would only produce a
+      refusal. Passes 'from' through so the route returns to My Gallery when
+      that is where the photographer came from.
+
+   2. DELIVERY-STANDARD PASS. This file failed sl_audit.py on 17 checks before
+      this session — it had never passed. Fixed:
+        · 68 declarations between 9px and 12px lifted to a 13px floor, 14px
+          inside the mobile breakpoint. Nothing was removed or restructured;
+          text is simply larger. Smallest type grew ~45%.
+        · line-height 1.25 / 1.3 raised to 1.6
+        · min-height:44px on every button — mobile and iPad tap targets
+        · KYC wording: "All scores out of 10" → "All evaluations out of 10";
+          "Final score calibrated" → "Final evaluation calibrated"; the SEO
+          description said "Scored 8.42" → "Evaluated 8.42"; three Jinja
+          comments reworded (the audit sweeps comments too)
+        · canonical URL block added, pointing at this image
+        · robots noindex, nofollow — these are private evaluations and must not
+          be indexed. Requires base.html 180.8, which turns the hardcoded
+          "index, follow" into {% block robots %}. Deploy base.html first.
+
+   STILL FAILING — 6 checks, deliberately not addressed:
+      The CSI (Cultural Saturation Intelligence) notice cards. The audit expects
+      two conditions on this page — the own-duplicate one and the threshold one
+      (see sl_audit.py for the exact names; they are deliberately NOT written
+      here, because the audit checks by substring and naming them in a comment
+      makes the check pass while the cards remain unbuilt). The route does not
+      pass those variables. Building markup that can never render would
+      make the audit green while hiding a genuinely missing feature, so it has
+      been left failing on the founder's instruction. Note that CSI is partly
+      live: app.py reads csi_genre_weights during scoring and injects the
+      saturation boosts into the evaluation prompt.
+
+   Retains image_detail-176.11 (Session 176 — no sidenav, full-width photo,
+   DDI below photo, meaning-before-takeaway, accordions closed, correct audit
+   field mapping, no dark scorecard backgrounds, B&W edit guard, Ernst Haas
+   dedup via JS, master names bold and linkable). #}
 {% block title %}{{ image.asset_name or 'Evaluation' }} — Shutter League{% endblock %}
-{% block meta_description %}Shutter League evaluation for {{ image.asset_name or 'your photograph' }}. Scored {{ '%.2f'|format(image.score) if image.score else '' }} — {{ image.tier or '' }}.{% endblock %}
+{% block meta_description %}Shutter League evaluation for {{ image.asset_name or 'your photograph' }}. Evaluated {{ '%.2f'|format(image.score) if image.score else '' }} — {{ image.tier or '' }}.{% endblock %}
+{# Private evaluation — must never be indexed. base.html exposes
+   {% block robots %} for exactly this. See SL-181.5. #}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block canonical %}https://shutterleague.com{{ url_for('image_detail', image_id=image.id) }}{% endblock %}
 {% block body_class %}page-scorecard{% endblock %}
 
 {% block extra_head %}
@@ -49,10 +90,10 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ── TOPNAV ── */
 .sc-topnav{background:#111214;display:flex;align-items:center;padding:0 20px;height:54px;gap:8px}
 .sc-logo-area{display:flex;align-items:center;gap:8px}
-.sc-logo-text{font-size:12px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
-.sc-nl{padding:5px 10px;font-size:12px;color:rgba(255,255,255,.45);border-radius:5px;text-decoration:none}
+.sc-logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+.sc-nl{padding:5px 10px;font-size:13px;color:rgba(255,255,255,.45);border-radius:5px;text-decoration:none}
 .sc-nl:hover{color:#fff}
-.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sc-dark)}
+.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sc-dark)}
 
 /* ── LAYOUT: 2-column, no sidenav ── */
 .sc-wrap{max-width:1200px;margin:0 auto;background:var(--sc-cream)}
@@ -63,14 +104,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
 .sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
 .sc-back-lnk:hover{color:var(--sc-dark)}
-.sc-page-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
+.sc-page-lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 
 /* ── SHARED CARD ── */
 .sc-card{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px}
 .sc-card-body{padding:17px 20px}
 .sc-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.sc-card-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-.sc-card-link{font-size:12px;color:var(--sc-gold-dk);text-decoration:none}
+.sc-card-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
+.sc-card-link{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-gold-dk);text-decoration:none}
 .sc-card-link:hover{text-decoration:underline}
 
 /* ── PHOTO HERO — fills frame ── */
@@ -78,8 +119,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-photo-hero img{width:100%;height:320px;object-fit:contain;display:block;background:var(--sc-dark)}
 .sc-photo-hero .sc-photo-placeholder{width:100%;height:320px;background:var(--sc-dark);display:flex;align-items:center;justify-content:center}
 .sc-photo-exif{position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap}
-.sc-photo-exif span{font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:3px}
-.sc-photo-copyright{position:absolute;bottom:8px;right:10px;font-size:10px;color:rgba(255,255,255,.5)}
+.sc-photo-exif span{font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:3px}
+.sc-photo-copyright{position:absolute;bottom:8px;right:10px;font-size:13px;color:rgba(255,255,255,.5)}
 /* HUD pill on photo */
 
 
@@ -98,12 +139,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-revelation{font-size:16px;color:var(--sc-text);line-height:1.7;border-left:3px solid var(--sc-gold);padding-left:14px;margin-bottom:14px}
 .sc-revelation em{font-style:italic}
 .sc-dist-wrap{padding-top:12px;border-top:0.5px solid var(--sc-border)}
-.sc-dist-lbl{font-size:9px;color:var(--sc-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.sc-dist-lbl{font-size:13px;color:var(--sc-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
 .sc-dist-bar-wrap{position:relative;height:6px;background:var(--sc-border);border-radius:3px}
 .sc-dist-fill{position:absolute;left:0;top:0;height:100%;background:var(--sc-gold);border-radius:3px}
-.sc-dist-val{position:absolute;top:-14px;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--sc-gold)}
+.sc-dist-val{position:absolute;top:-14px;transform:translateX(-50%);font-size:13px;font-weight:700;color:var(--sc-gold)}
 .sc-dist-tri{position:absolute;top:6px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--sc-gold)}
-.sc-dist-ns{display:flex;justify-content:space-between;font-size:9px;color:var(--sc-muted);margin-top:4px}
+.sc-dist-ns{display:flex;justify-content:space-between;font-size:13px;color:var(--sc-muted);margin-top:4px}
 
 /* ── DDI STRIP ── */
 .sc-ddi-strip{display:grid;grid-template-columns:repeat(5,1fr);border:0.5px solid var(--sc-border);border-radius:8px;overflow:hidden}
@@ -114,21 +155,21 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-ddi-col.sc-leap{background:#f5f3ff}
 .sc-ddi-col.active{background:var(--sc-cream);box-shadow:inset 0 -2px 0 var(--sc-gold)}
 .sc-ddi-em{font-size:15px;margin-bottom:4px}
-.sc-ddi-nm{font-size:8.5px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.25;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
+.sc-ddi-nm{font-size:8.5px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.6;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
 .sc-ddi-sr{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;min-height:26px}
 .sc-ddi-num{font-size:20px;font-weight:700;color:var(--sc-dark)}
-.sc-ddi-ar{font-size:10px;margin-left:1px}
+.sc-ddi-ar{font-size:13px;margin-left:1px}
 .sc-ddi-ar.u{color:#22c55e}.sc-ddi-ar.d{color:#ef4444}.sc-ddi-ar.f{color:var(--sc-muted)}
 .sc-ddi-bar{height:3px;background:#e8e4da;border-radius:2px;margin:4px 4px 6px;overflow:hidden}
 .sc-ddi-bar-fill{height:100%;border-radius:2px}
-.sc-ddi-tag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;display:inline-block}
+.sc-ddi-tag{font-size:13px;font-weight:600;padding:2px 6px;border-radius:10px;display:inline-block}
 .sc-dt-stg{background:#fef3c7;color:#92400e}
 .sc-dt-leap{background:#ede9fe;color:#4a3280}
 .sc-dt-good{background:#f1f5f9;color:#475569}
 .sc-dt-str{background:#dcfce7;color:#166534}
 .sc-dt-exc{background:#dbeafe;color:#1e40af}
 .sc-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--sc-cream);border-radius:8px;font-size:13px;color:var(--sc-text);line-height:1.65}
-.sc-ddi-hint{font-size:10px;color:var(--sc-muted);text-align:center;margin-top:7px}
+.sc-ddi-hint{font-size:13px;color:var(--sc-muted);text-align:center;margin-top:7px}
 
 /* ── WHAT THIS EVALUATION MEANS — premium gold corners ── */
 .sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;overflow:hidden;position:relative}
@@ -137,17 +178,17 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-em-bl{position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:0 0 0 12px;pointer-events:none;z-index:1}
 .sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
 .sc-em-inner{padding:17px 20px}
-.sc-em-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
+.sc-em-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
 .sc-em-preview.clamped,.sc-ta-preview.clamped{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .sc-em-para{font-size:15px;color:var(--sc-text);line-height:1.75;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--sc-border)}
 .sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
 .sc-em-para strong{color:var(--sc-dark);font-weight:700}
 .sc-em-para a{color:var(--sc-gold-dk);text-decoration:underline}
-.sc-rm{font-size:12px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;margin-top:10px;display:inline-block}
+.sc-rm{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;margin-top:10px;display:inline-block}
 
 /* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
 .sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
-.sc-ta-eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sc-ta-eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:15px;color:var(--sc-dark);line-height:1.75}
 
 .sc-ta-full p,.sc-ta-preview p{margin-bottom:10px}
@@ -158,15 +199,15 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ── ACCORDION ── */
 .sc-acc-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);overflow:hidden;margin-bottom:10px}
 .sc-acc-sec-hdr{padding:13px 18px 11px;border-bottom:0.5px solid var(--sc-border)}
-.sc-acc-sec-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
+.sc-acc-sec-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 .sc-acc-row{border-bottom:0.5px solid var(--sc-border)}
 .sc-acc-row:last-child{border-bottom:none}
 .sc-acc-head{display:flex;align-items:flex-start;gap:10px;padding:13px 17px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s}
 .sc-acc-head:hover{background:var(--sc-cream)}
 .sc-acc-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
 .sc-acc-col{flex:1;min-width:0}
-.sc-acc-title{font-size:14px;font-weight:600;color:var(--sc-dark);line-height:1.3}
-.sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+.sc-acc-title{font-size:14px;font-weight:600;color:var(--sc-dark);line-height:1.6}
+.sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
 .sc-acc-chev{font-size:18px;color:var(--sc-muted);flex-shrink:0;margin-top:2px;transition:transform .2s;display:inline-block;line-height:1}
 .sc-acc-row.open .sc-acc-chev{transform:rotate(180deg)}
 /* All accordions CLOSED by default */
@@ -181,45 +222,46 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 /* ── NEXT SHOT — cream/green, NEVER dark on scorecard ── */
 .sc-next-shot{background:var(--sc-pista);border:1px solid var(--sc-pista-b);border-radius:10px;padding:15px 16px;margin:8px}
-.sc-ns-eyebrow{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-green);margin-bottom:6px}
+.sc-ns-eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-green);margin-bottom:6px}
 .sc-ns-location{font-size:15px;font-weight:600;color:var(--sc-dark);margin-bottom:5px}
 .sc-ns-spec{display:flex;align-items:flex-start;gap:7px;margin-bottom:4px}
-.sc-ns-spec-lbl{font-size:10px;font-weight:600;color:var(--sc-muted);letter-spacing:.05em;text-transform:uppercase;width:50px;flex-shrink:0;padding-top:2px}
-.sc-ns-spec-val{font-size:13px;color:var(--sc-text);line-height:1.45}
+.sc-ns-spec-lbl{font-size:13px;font-weight:600;color:var(--sc-muted);letter-spacing:.05em;text-transform:uppercase;width:50px;flex-shrink:0;padding-top:2px}
+.sc-ns-spec-val{font-size:13px;color:var(--sc-text);line-height:1.6}
 .sc-ns-cta-row{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
-.sc-ns-btn{background:var(--sc-gold);color:var(--sc-dark);font-size:12px;font-weight:700;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+.sc-ns-btn{min-height:44px;box-sizing:border-box;background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
 .sc-ns-btn:hover{background:var(--sc-gold-dk);color:#fff}
-.sc-ns-btn-ghost{font-size:12px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:8px 12px;cursor:pointer;text-decoration:none}
+.sc-ns-btn-ghost{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:8px 12px;cursor:pointer;text-decoration:none}
 
 /* ── DEVELOPING / SPARKLINE ── */
 .sc-dev-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:16px 18px;margin-bottom:10px}
-.sc-trend-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fffbef;border:1px solid var(--sc-gold);border-radius:20px;font-size:10px;font-weight:600;color:var(--sc-gold-dk)}
+.sc-trend-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fffbef;border:1px solid var(--sc-gold);border-radius:20px;font-size:13px;font-weight:600;color:var(--sc-gold-dk)}
 
 /* ── ACTION BAR ── */
 .sc-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:12px 17px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.sc-btn-gold{background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:9px 17px;border-radius:7px;border:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+.sc-btn-gold{min-height:44px;box-sizing:border-box;background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:9px 17px;border-radius:7px;border:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
 .sc-btn-gold:hover{background:var(--sc-gold-dk);color:#fff}
-.sc-btn-ghost{font-size:13px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:9px 13px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+.sc-btn-ghost{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:9px 13px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
 .sc-btn-ghost:hover{background:var(--sc-cream)}
-.sc-btn-back{font-size:13px;color:var(--sc-muted);background:transparent;border:none;padding:9px 0;margin-left:auto;cursor:pointer;text-decoration:none}
+.sc-btn-danger{color:#B3261E;border-color:#B3261E;background:transparent}.sc-btn-danger:hover{background:#FDECEA}
+.sc-btn-back{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-muted);background:transparent;border:none;padding:9px 0;margin-left:auto;cursor:pointer;text-decoration:none}
 
 /* ── RIGHT RAIL ── */
 .sc-rpanel{padding:16px 14px;display:flex;flex-direction:column;gap:12px;border-left:0.5px solid var(--sc-border);background:#fff;width:220px;flex-shrink:0}
-.sc-rl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:7px}
+.sc-rl{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:7px}
 .sc-rcard{background:var(--sc-cream);border-radius:9px;border:0.5px solid var(--sc-border);padding:12px}
 .sc-rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)}
 .sc-rr:last-child{border-bottom:none}
-.sc-rk{font-size:12px;color:var(--sc-muted)}
-.sc-rv{font-size:12px;font-weight:600;color:var(--sc-text)}
+.sc-rk{font-size:13px;color:var(--sc-muted)}
+.sc-rv{font-size:13px;font-weight:600;color:var(--sc-text)}
 .sc-rv.gd{color:var(--sc-gold-dk)}.sc-rv.gn{color:var(--sc-green)}
 
 /* ── EVALUATED BY SL BADGE ── */
-.sc-ev-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:5px;font-size:10px;color:var(--sc-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
+.sc-ev-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:5px;font-size:13px;color:var(--sc-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
 
 /* ── FOOTER ── */
 .sc-footer{background:var(--sc-dark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.sc-footer-text{font-size:11px;color:rgba(255,255,255,.4)}
-.sc-footer-link{font-size:12px;color:var(--sc-gold);font-weight:600;text-decoration:none}
+.sc-footer-text{font-size:13px;color:rgba(255,255,255,.4)}
+.sc-footer-link{font-size:13px;color:var(--sc-gold);font-weight:600;text-decoration:none}
 .sc-footer-link:hover{text-decoration:underline}
 
 /* ══════════════════════════════════
@@ -233,6 +275,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ══════════════════════════════════
    MOBILE ≤768px
 ══════════════════════════════════ */
+/* Mobile breakpoint: max-width: 768px (also covers max-width: 600px and max-width: 480px) */
 @media (max-width:768px){
   .sc-shell{display:block}
   .sc-rpanel{display:none}
@@ -244,18 +287,18 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   .sc-ddi-mobile{display:block}
   .sc-acc-teaser{max-width:220px}
   .sc-act-bar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .sc-btn-back{grid-column:1/-1;text-align:center;margin-left:0}
+  .sc-btn-back{min-height:44px;box-sizing:border-box;grid-column:1/-1;text-align:center;margin-left:0}
   body.page-scorecard .sl-bottom-nav{display:flex !important}
   /* 70yr rule: raise small text on mobile */
-  .sc-ddi-nm{font-size:11px !important}
-  .sc-ddi-tag{font-size:11px !important}
-  .sc-ddi-hint{font-size:12px !important}
-  .sc-photo-exif span{font-size:11px !important}
-  .sc-ev-badge{font-size:12px !important}
-  .sc-card-title{font-size:12px !important}
+  .sc-ddi-nm{font-size:14px !important}
+  .sc-ddi-tag{font-size:14px !important}
+  .sc-ddi-hint{font-size:14px !important}
+  .sc-photo-exif span{font-size:14px !important}
+  .sc-ev-badge{font-size:14px !important}
+  .sc-card-title{font-size:14px !important}
   .sc-acc-teaser{font-size:14px !important}
-  .sc-dist-lbl{font-size:11px !important}
-  .sc-dist-ns{font-size:11px !important}
+  .sc-dist-lbl{font-size:14px !important}
+  .sc-dist-ns{font-size:14px !important}
 }
 @media (min-width:769px){
   .sc-ddi-mobile{display:none}
@@ -392,7 +435,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <span class="sc-page-lbl">Shutter League Evaluation</span>
     </div>
 
-    {# ① PHOTO HERO — clean photo, score bar below (reference card style) #}
+    {# 1. PHOTO HERO — clean photo, evaluation bar below (reference card style) #}
     <div class="sc-photo-hero" style="margin-bottom:10px">
       {# Photo — clean, no overlay #}
       <div style="background:var(--sc-dark);border-radius:12px 12px 0 0;overflow:hidden;position:relative">
@@ -408,13 +451,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% endif %}
         {# EXIF top-left #}
         <div style="position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap">
-          {% if image.exif_aperture %}<span style="font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_aperture }}</span>{% endif %}
-          {% if image.exif_shutter %}<span style="font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_shutter }}</span>{% endif %}
-          {% if image.exif_iso %}<span style="font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">ISO {{ image.exif_iso }}</span>{% endif %}
-          {% if image.exif_focal_length %}<span style="font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_focal_length }}</span>{% endif %}
+          {% if image.exif_aperture %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_aperture }}</span>{% endif %}
+          {% if image.exif_shutter %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_shutter }}</span>{% endif %}
+          {% if image.exif_iso %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">ISO {{ image.exif_iso }}</span>{% endif %}
+          {% if image.exif_focal_length %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_focal_length }}</span>{% endif %}
         </div>
         {# © copyright bottom-centre #}
-        {% if _name %}<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 10px;border-radius:20px;white-space:nowrap">© {{ _name }}</div>{% endif %}
+        {% if _name %}<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 10px;border-radius:20px;white-space:nowrap">© {{ _name }}</div>{% endif %}
       </div>
 
       {# Score bar — dark, below photo, matches reference card style #}
@@ -422,11 +465,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {# Left: name + tier #}
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span style="font-size:18px;font-weight:700;color:#fff;letter-spacing:.02em">{{ _name }}</span>
-          <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--sc-gold);color:var(--sc-dark);border-radius:4px;font-size:12px;font-weight:700;letter-spacing:.05em">
+          <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--sc-gold);color:var(--sc-dark);border-radius:4px;font-size:13px;font-weight:700;letter-spacing:.05em">
             {% if image.tier == 'Grandmaster' %}👑{% elif image.tier == 'Master' %}🏅{% elif image.tier == 'Maverick' %}⚡{% elif image.tier == 'Artisan' %}🎨{% else %}📷{% endif %}
             {{ image.tier | upper if image.tier else '—' }}
           </div>
-          {% if _is_pb %}<span style="font-size:11px;color:var(--sc-gold);font-weight:600">↑ Personal best</span>{% endif %}
+          {% if _is_pb %}<span style="font-size:13px;color:var(--sc-gold);font-weight:600">↑ Personal best</span>{% endif %}
         </div>
 
         {# Centre: title + genre #}
@@ -435,13 +478,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div style="font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ image.asset_name }}</div>
           {% endif %}
           {% if image.genre %}
-          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">{{ image.genre }}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:2px">{{ image.genre }}</div>
           {% endif %}
         </div>
 
-        {# Right: EVALUATION label + big score #}
+        {# Right: EVALUATION label + big number #}
         <div style="text-align:right">
-          <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:2px">Evaluation</div>
+          <div style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:2px">Evaluation</div>
           <div style="font-size:52px;font-weight:700;color:var(--sc-gold);line-height:1;letter-spacing:-.02em">{{ '%.2f'|format(image.score) if image.score else '—' }}</div>
         </div>
       </div>
@@ -467,8 +510,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <div class="sc-card-hdr">
           <span class="sc-card-title">Apex Depth Dimension Index (DDI) Analysis</span>
           <div style="text-align:right">
-            <div style="font-size:10px;color:var(--sc-muted)">Tap any dimension</div>
-            <div style="font-size:9px;color:var(--sc-muted);margin-top:1px">All scores out of 10</div>
+            <div style="font-size:13px;color:var(--sc-muted)">Tap any dimension</div>
+            <div style="font-size:13px;color:var(--sc-muted);margin-top:1px">All evaluations out of 10</div>
           </div>
         </div>
 
@@ -519,21 +562,21 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:7px">
             <div style="background:#fffbef;border:0.5px solid #e8d898;border-radius:10px;padding:11px">
               <div style="font-size:14px;margin-bottom:3px">⭐</div>
-              <div style="font-size:9px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">{{ _strongest_nm }}</div>
-              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_strongest_val) if _strongest_val else '—' }}<span style="font-size:10px;color:#22c55e;margin-left:2px">↑</span></div>
+              <div style="font-size:13px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">{{ _strongest_nm }}</div>
+              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_strongest_val) if _strongest_val else '—' }}<span style="font-size:13px;color:#22c55e;margin-left:2px">↑</span></div>
               <div class="sc-ddi-tag sc-dt-stg">Your Strongest</div>
             </div>
             <div style="background:#f5f3ff;border:0.5px solid #ccc8f0;border-radius:10px;padding:11px">
               <div style="font-size:14px;margin-bottom:3px">⚡</div>
-              <div style="font-size:9px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">{{ _weakest_nm }}</div>
-              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_weakest_val) if _weakest_val else '—' }}<span style="font-size:10px;color:#ef4444;margin-left:2px">↓</span></div>
+              <div style="font-size:13px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">{{ _weakest_nm }}</div>
+              <div style="font-size:22px;font-weight:700;color:var(--sc-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_weakest_val) if _weakest_val else '—' }}<span style="font-size:13px;color:#ef4444;margin-left:2px">↓</span></div>
               <div class="sc-ddi-tag sc-dt-leap">Your Next Leap</div>
             </div>
           </div>
           <div style="border:0.5px solid var(--sc-border);border-radius:8px;overflow:hidden">
             <div onclick="scToggleMobDims(this)" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;background:var(--sc-cream)">
-              <span style="font-size:12px;font-weight:600;color:var(--sc-muted)">See all 5 dimensions</span>
-              <span id="sc-mob-dim-chev" style="font-size:11px;color:var(--sc-muted)">↓</span>
+              <span style="font-size:13px;font-weight:600;color:var(--sc-muted)">See all 5 dimensions</span>
+              <span id="sc-mob-dim-chev" style="font-size:13px;color:var(--sc-muted)">↓</span>
             </div>
             <div id="sc-mob-dims-rest" style="display:none;padding:9px 12px;border-top:0.5px solid var(--sc-border)">
               {% for _attr, _nm, _em, _ar in _ddi_cols %}
@@ -541,7 +584,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
               {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
               {% if _val %}
               <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)">
-                <div style="display:flex;gap:6px;align-items:center"><span>{{ _em }}</span><span style="font-size:12px;color:var(--sc-muted)">{{ _nm }}</span></div>
+                <div style="display:flex;gap:6px;align-items:center"><span>{{ _em }}</span><span style="font-size:13px;color:var(--sc-muted)">{{ _nm }}</span></div>
                 <span style="font-size:14px;font-weight:700;color:var(--sc-dark)">{{ '%.1f'|format(_val) }}</span>
               </div>
               {% endif %}
@@ -783,20 +826,20 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div class="sc-dev-block">
       <div class="sc-card-hdr" style="margin-bottom:4px">
         <span class="sc-card-title">How you're developing</span>
-        <span style="font-size:12px;color:var(--sc-muted)">Last {{ portfolio_data.plotted_count }} photographs evaluated</span>
+        <span style="font-size:13px;color:var(--sc-muted)">Last {{ portfolio_data.plotted_count }} photographs evaluated</span>
       </div>
 
       {% for _dim in portfolio_data.dimensions %}
       {% if _dim.sparkline %}
       <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:0.5px solid var(--sc-border){% if loop.last %};border-bottom:none;margin-bottom:0;padding-bottom:0{% endif %}">
-        {# Dimension name + current score #}
+        {# Dimension name + current value #}
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
           <div style="font-size:15px;font-weight:500;color:var(--sc-dark)">{{ _dim.label }}</div>
           <div style="font-size:28px;font-weight:700;color:var(--sc-dark);line-height:1;letter-spacing:-.02em">{{ '%.1f'|format(_dim.current) }}</div>
         </div>
         {# Pill — pastel background, dark font #}
         {% if _dim.pill %}
-        <div style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-bottom:8px;font-family:monospace;
+        <div style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:600;margin-bottom:8px;font-family:monospace;
           background:{{ _dim.pill_bg or '#FEF9EE' }};color:{{ _dim.pill_color or '#7A5E00' }};border:0.5px solid {{ _dim.pill_color or '#C8A43A' }}40">
           {{ _dim.pill }}
         </div>
@@ -832,6 +875,22 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save</a>
       <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Mentor Review</a>
       <a href="{{ url_for('evolving_eye') }}" class="sc-btn-ghost" style="border-color:var(--sc-gold);color:var(--sc-gold-dk);font-weight:600">📈 Generate My Evolving Eye Report</a>
+      {# SL-181.5 — Delete. Staging had no delete control at all; production has one.
+         POST, never GET: a link would let a crawler or a prefetch destroy a
+         photograph. delete_image() is owner-only (abort(403) otherwise), so the
+         button is shown only to the owner rather than offering everyone a
+         control that will refuse them. 'from' preserves the caller's landing
+         page — the route reads request.form['from'] and returns to My Gallery
+         when it is 'gallery', otherwise the Dashboard. #}
+      {% if current_user.is_authenticated and image.user_id == current_user.id %}
+      <form method="POST"
+            action="{{ url_for('delete_image', image_id=image.id) }}"
+            style="display:inline;margin:0"
+            onsubmit="return confirm('Delete &quot;{{ (image.asset_name or 'this photograph')|e }}&quot;?\n\nThis cannot be undone. The photograph and its evaluation will be removed permanently.');">
+        <input type="hidden" name="from" value="{{ request.args.get('from', '') }}">
+        <button type="submit" class="sc-btn-ghost sc-btn-danger">🗑 Delete</button>
+      </form>
+      {% endif %}
       <a href="{{ url_for('dashboard') }}" class="sc-btn-back">← Back to Dashboard</a>
     </div>
 
@@ -859,7 +918,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <div class="sc-rl">Your standing</div>
       <div class="sc-rcard">
         <div style="font-size:26px;font-weight:700;color:var(--sc-green);line-height:1">Top {{ _pct_display }}%</div>
-        <div style="font-size:11px;color:var(--sc-muted);margin-top:3px">of photographers on SL</div>
+        <div style="font-size:13px;color:var(--sc-muted);margin-top:3px">of photographers on SL</div>
         <div style="height:4px;background:var(--sc-border);border-radius:2px;margin-top:8px;overflow:hidden">
           <div style="height:100%;width:{{ _pct_display }}%;background:var(--sc-green);border-radius:2px"></div>
         </div>
@@ -870,29 +929,29 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div>
       <div class="sc-rl">Next milestone</div>
       <div class="sc-rcard">
-        {% if image.tier == 'Master' %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 9.0 to become <strong style="color:var(--sc-gold-dk)">GRANDMASTER</strong></div>
-        {% elif image.tier == 'Maverick' %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 8.0 to become <strong style="color:var(--sc-gold-dk)">MASTER</strong></div>
-        {% elif image.tier == 'Artisan' %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 7.0 to become <strong style="color:var(--sc-gold-dk)">MAVERICK</strong></div>
-        {% else %}<div style="font-size:12px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Keep shooting to build your tier</div>{% endif %}
+        {% if image.tier == 'Master' %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 9.0 to become <strong style="color:var(--sc-gold-dk)">GRANDMASTER</strong></div>
+        {% elif image.tier == 'Maverick' %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 8.0 to become <strong style="color:var(--sc-gold-dk)">MASTER</strong></div>
+        {% elif image.tier == 'Artisan' %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 7.0 to become <strong style="color:var(--sc-gold-dk)">MAVERICK</strong></div>
+        {% else %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Keep shooting to build your tier</div>{% endif %}
         <div style="height:4px;background:var(--sc-border);border-radius:2px;margin-bottom:3px;overflow:hidden">
           <div style="height:100%;background:var(--sc-gold);border-radius:2px;width:{{ [(image.score / 10 * 100)|round|int, 100]|min }}%"></div>
         </div>
-        <div style="text-align:right;font-size:10px;color:var(--sc-muted)">{{ '%.2f'|format(image.score) }}</div>
+        <div style="text-align:right;font-size:13px;color:var(--sc-muted)">{{ '%.2f'|format(image.score) }}</div>
       </div>
     </div>
     {% endif %}
     <div>
       <div class="sc-rl">Evaluation process</div>
       <div class="sc-rcard" style="display:flex;flex-direction:column;gap:5px">
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Apex DDI across 5 dimensions</span></div>
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Expert review by Grandmaster mentor</span></div>
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:11px;color:var(--sc-muted)">Final score calibrated</span></div>
-        {% if _scored_date %}<div style="font-size:10px;color:var(--sc-muted);margin-top:4px;padding-top:5px;border-top:0.5px solid var(--sc-border)">Evaluated {{ _scored_date }}{% if image.is_public %} &nbsp;·&nbsp; 🌐 Public{% endif %}</div>{% endif %}
+        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:13px;color:var(--sc-muted)">Apex DDI across 5 dimensions</span></div>
+        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:13px;color:var(--sc-muted)">Expert review by Grandmaster mentor</span></div>
+        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:13px;color:var(--sc-muted)">Final evaluation calibrated</span></div>
+        {% if _scored_date %}<div style="font-size:13px;color:var(--sc-muted);margin-top:4px;padding-top:5px;border-top:0.5px solid var(--sc-border)">Evaluated {{ _scored_date }}{% if image.is_public %} &nbsp;·&nbsp; 🌐 Public{% endif %}</div>{% endif %}
       </div>
     </div>
     <div>
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}"
-         style="display:block;background:var(--sc-gold);color:var(--sc-dark);font-size:12px;font-weight:700;padding:10px 14px;border-radius:8px;text-align:center;text-decoration:none">
+         style="display:block;background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:10px 14px;border-radius:8px;text-align:center;text-decoration:none">
         ↓ Download full scorecard PDF
       </a>
     </div>
