@@ -1,4 +1,4 @@
-# SL-VERSION: 179.1 (Session 179, 2026-08-12 — Watermark prompt: graffiti/architectural text false positive fix + admin email on watermark flag)
+# SL-VERSION: 179.2 (Session 182, 2026-08-13 — SECURITY: edited-version route no longer accepts a flagged parent. upload_edited_version() only required status=='scored'; a Hive hard reject leaves status='scored' with is_flagged=True, so a rejected image passed that check, and this route never calls Hive (the Hive block is inside _score_in_background(), nested in upload()). Confirmed live: "Hamilton Gardens" hard-rejected Gemini3 100%, re-uploaded as V2, genre Street, evaluated 7.32 Maverick — the Creative exemption was not involved. Guard is on is_flagged only, NOT needs_review, which is also set for 9.0+ auto-review, the breastfeeding hold and the Hive amber band; both AI rejection paths set is_flagged. Checked on parent AND root so a V1(flagged)->V2->V3 chain cannot clear it. ONE CHANGE ONLY — no other line in this file differs from 179.1. Retains 179.1.)
 
 import os
 import re
@@ -11478,6 +11478,49 @@ def upload_edited_version(image_id):
     # Parent must be scored
     if parent.status != 'scored':
         flash('The original image must be scored before you can upload an edited version.', 'error')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    # ── SL-179.2 — a flagged photograph cannot spawn an edited version ───────
+    # WHY THIS EXISTS. A hard-rejected image (Hive AI detection at >= 0.90, or
+    # ai_suspicion >= 0.7) is left at status='scored' with score 0.0 and
+    # is_flagged=True. The status check immediately above therefore PASSES for
+    # a rejected image. This route never calls Hive — the Hive block lives only
+    # inside _score_in_background(), nested in upload(). So a rejected image
+    # could be re-admitted here as V2 and evaluated normally, with no AI check.
+    #
+    # Confirmed live on 13 Aug 2026: "Hamilton Gardens" was hard-rejected
+    # (Gemini3, 100% confidence), then re-uploaded through this route as
+    # "Hamilton Gardens (V2)", genre Street, and evaluated at 7.32 Maverick.
+    # Note the genre — the Creative exemption was not involved. This route
+    # skipped the check for every genre.
+    #
+    # GUARD ON is_flagged ONLY — deliberately NOT needs_review. needs_review is
+    # also set on entirely legitimate images (score >= 9.0 auto-review, the
+    # breastfeeding hold, and the Hive amber band at 0.70-0.89). Blocking on it
+    # would refuse edited versions to the platform's strongest work. Both AI
+    # rejection paths set is_flagged=True explicitly, so is_flagged is the
+    # precise signal.
+    #
+    # CHECKED ON BOTH parent AND root. A chain V1(flagged) -> V2 -> V3 would
+    # otherwise clear this guard at V3, because parent V2 is not itself flagged.
+    _blocked_on = None
+    if getattr(root, 'is_flagged', False):
+        _blocked_on = root
+    elif getattr(parent, 'is_flagged', False):
+        _blocked_on = parent
+
+    if _blocked_on is not None:
+        app.logger.warning(
+            '[upload_edit] BLOCKED — flagged photograph cannot spawn an edited '
+            f'version. requested_parent={parent.id} root={root_id} '
+            f'blocked_on={_blocked_on.id} user={current_user.id}'
+        )
+        flash(
+            'This photograph is being checked by our team, so a new version '
+            'cannot be added yet. Please reply to the review email with your '
+            'original camera file. We aim to come back to you within 48 hours.',
+            'error'
+        )
         return redirect(url_for('image_detail', image_id=image_id))
 
     if request.method == 'POST':
