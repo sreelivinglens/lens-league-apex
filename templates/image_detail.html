@@ -1,7 +1,11 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.5-staging
+{# SL-VERSION: image_detail-181.6-staging
    Session 182 — 2026-08-13
-   TWO CHANGES, both requested by the founder:
+   THREE CHANGES, all requested by the founder:
+
+   0. "Generate My Evolving Eye Report" REMOVED from the action bar. It was a
+      link to /my-eye, not a generator — see the comment at the action bar.
+
 
    1. DELETE control added. Staging had none at all; production has one, so a
       photographer on staging could not remove their own photograph. POST, not
@@ -874,7 +878,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <a href="{{ url_for('share_image', image_id=image.id) }}" class="sc-btn-gold" target="_blank">↑ Share Scorecard</a>
       <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save</a>
       <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Mentor Review</a>
-      <a href="{{ url_for('evolving_eye') }}" class="sc-btn-ghost" style="border-color:var(--sc-gold);color:var(--sc-gold-dk);font-weight:600">📈 Generate My Evolving Eye Report</a>
+      {# SL-181.6 — "Generate My Evolving Eye Report" removed on the founder's
+         instruction. It was a plain link to /my-eye and generated nothing:
+         evolving_eye() only displays an advisory that already exists, and the
+         advisory is created either by the scoring pipeline at a 10-image
+         milestone or by an admin trigger. A photographer below their next
+         milestone clicked "Generate" and was told to keep shooting. The
+         Evolving Eye remains reachable from the navigation; it does not
+         belong on an individual scorecard. #}
       {# SL-181.5 — Delete. Staging had no delete control at all; production has one.
          POST, never GET: a link would let a crawler or a prefetch destroy a
          photograph. delete_image() is owner-only (abort(403) otherwise), so the
