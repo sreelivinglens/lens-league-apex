@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
+{# SL-VERSION: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1473,6 +1473,48 @@ img {
 @media (max-width: 480px) {
   #cookie-banner { padding: 14px 16px; }
   .cb-text { font-size: 16px; }
+}
+
+/* ── SL-181.2 — cookie banner sits ON TOP OF the bottom nav on mobile ───────
+   Base rule is position:fixed / bottom:0 / z-index:900 with flex-wrap:wrap.
+   The bottom nav is bottom:env(safe-area-inset-bottom,34px), 62px tall,
+   z-index:998 — so it occupies the same bottom ~96px of the screen and wins
+   on z-index.
+
+   With flex-wrap:wrap the .cb-text takes the full width at 375px and pushes
+   .cb-actions onto a second row, which lands underneath the nav bar. The
+   Accept button and the × are therefore unreachable: the banner CANNOT be
+   dismissed on a phone. It has covered content for every mobile visitor since
+   launch, and on a KYC platform a consent notice that cannot be consented to
+   is worse than a cosmetic fault.
+
+   The only existing mobile rule (above) adjusts padding — nothing repositions
+   it. Fix: lift the banner to sit directly above the nav, stop the actions
+   wrapping away, and raise z-index above the nav so it can never be covered.
+   Once accepted, localStorage sl_cookie_ok hides it permanently and the space
+   is returned. */
+@media (max-width: 899px) {
+  #cookie-banner {
+    bottom: calc(62px + env(safe-area-inset-bottom, 34px));
+    z-index: 999;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(245,197,24,0.20);
+  }
+  #cookie-banner .cb-text {
+    font-size: 14px;
+    line-height: 1.45;
+    min-width: 0;
+  }
+  #cookie-banner .cb-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #cookie-banner #cb-accept { min-height: 44px; padding: 10px 18px; }
+  #cookie-banner #cb-dismiss { min-width: 44px; min-height: 44px; }
 }
 
 /* ── Accordion (sl-accordion) ───────────────────────────────────────────── */
