@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.1 (Session 181, 2026-08-13 — free evaluation path. (1) location check now reads #location-hidden when the visible input has been hidden by the session-storage block, which was refusing every second upload in a session. (2) /try/upload success reply {image_id:N} is now handled — it has no status field, so it fell through to the error branch and printed 'Upload failed (200)' on a successful upload. Retains 175.8:) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 181.2 (181.1 redirected to the result page before scoring finished — now polls first.) Previous: 181.1 (Session 181, 2026-08-13 — free evaluation path. (1) location check now reads #location-hidden when the visible input has been hidden by the session-storage block, which was refusing every second upload in a session. (2) /try/upload success reply {image_id:N} is now handled — it has no status field, so it fell through to the error branch and printed 'Upload failed (200)' on a successful upload. Retains 175.8:) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1499,15 +1499,15 @@
          a 3-evaluation allowance, retrying costs them one.
          Handle the trial reply explicitly before treating anything as an error. */
       if (resp && resp.image_id && !resp.error) {
-        /* Look the form up directly rather than relying on the `uploadForm`
-           var declared further down this script — same defensive pattern
-           already used in the polling handler below. */
-        var _formEl     = document.getElementById('uploadForm');
-        var _resultBase = (_formEl && _formEl.dataset && _formEl.dataset.resultBase) || '';
-        if (_resultBase) {
-          window.location.href = _resultBase + resp.image_id;
-          return;
-        }
+        /* SL-181.2 — poll, do NOT redirect straight away.
+           181.1 sent the browser to /try/result/<id> the moment the upload
+           returned. Measured on staging: the image was saved at 06:38:21 and
+           scored at 06:38:22.8 — so the result page was reached 1.6s early,
+           found status='processing', flashed "Your evaluation is still being
+           processed" and redirected back to /try. The user saw an empty form.
+           _startPolling waits for /score-status to report done and then sends
+           the browser to dataset.resultBase + id, which is the same
+           destination. Let it do its job. */
         _startPolling(resp.image_id, resp.next || '');
         return;
       }
