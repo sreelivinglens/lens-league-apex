@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
+{# SL-VERSION: 181.4 (back-to-top painted over the open More drawer: the drawer's z-index:1999 is trapped inside .sl-bottom-nav's z-index:998 stacking context, so #backToTop at 999 won. Button dropped to 997 on mobile and additionally hidden while the drawer is open.) Previous: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1908,10 +1908,14 @@ function toggleBottomMore(e) {
   e.stopPropagation();
   var menu = document.getElementById('slBottomMoreMenu');
   if (menu) menu.classList.toggle('open');
+  /* SL-181.4: mirror drawer state onto <body> so the back-to-top button can
+     be hidden while the drawer is open. See the CSS note above. */
+  if (menu) document.body.classList.toggle('sl-more-open', menu.classList.contains('open'));
 }
 function closeBottomMore() {
   var menu = document.getElementById('slBottomMoreMenu');
   if (menu) menu.classList.remove('open');
+  document.body.classList.remove('sl-more-open');
 }
 document.addEventListener('click', function(e) {
   var nm = document.getElementById('navMore');
@@ -1926,6 +1930,7 @@ document.addEventListener('click', function(e) {
   var wrap = document.getElementById('slNavMoreWrap');
   if (bm && bm.classList.contains('open') && wrap && !wrap.contains(e.target)) {
     bm.classList.remove('open');
+    document.body.classList.remove('sl-more-open');  /* SL-181.4 */
   }
   var nav = document.getElementById('navMobile');
   var toggle = document.querySelector('.nav-toggle');
@@ -2046,6 +2051,24 @@ document.addEventListener('DOMContentLoaded', function() {
     right: 16px;
   }
   #cookie-banner { z-index: 1000; }
+}
+
+/* ── SL-181.4 — back-to-top must not paint over the open More drawer ────────
+   .sl-bottom-more-menu carries z-index:1999, but it is a CHILD of
+   .sl-bottom-nav, which has z-index:998 and therefore creates its own
+   stacking context. The drawer's 1999 only ranks it inside that context; the
+   whole nav — drawer included — still competes with the rest of the page at
+   998. #backToTop is a root-level sibling at 999, so it paints over the open
+   drawer and covers the last item ("Help & Support").
+
+   Raising the drawer cannot fix this — the ceiling is the nav's 998. So drop
+   the button below it. 997 keeps it above ordinary page content while placing
+   it under the nav and anything the nav contains. Belt and braces: the
+   toggle also hides the button outright while the drawer is open, so it
+   cannot intercept a tap even if a future rule changes the stacking again. */
+@media (max-width: 899px) {
+  #backToTop { z-index: 997; }
+  body.sl-more-open #backToTop { opacity: 0 !important; visibility: hidden !important; }
 }
 </style>
 <script>
