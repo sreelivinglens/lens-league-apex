@@ -1,4 +1,4 @@
-# SL-VERSION: 181.3-staging (Session 182, 2026-08-13 — SECURITY: edited-version route no longer accepts a flagged parent. upload_edited_version() only required status=='scored'; a Hive hard reject leaves status='scored' with is_flagged=True, so a rejected image passed that check, and this route never calls Hive (the Hive block is inside _score_in_background(), nested in upload()). Confirmed live: "Hamilton Gardens" hard-rejected Gemini3 100%, re-uploaded as V2, genre Street, evaluated 7.32 Maverick — the Creative exemption was not involved. Guard is on is_flagged only, NOT needs_review, which is also set for 9.0+ auto-review, the breastfeeding hold and the Hive amber band; both AI rejection paths set is_flagged. Checked on parent AND root so a V1(flagged)->V2->V3 chain cannot clear it. ONE CHANGE ONLY — no other line in this file differs from 181.2-staging. Retains 181.2 and 180.1-180.6.)
+# SL-VERSION: 181.4-staging (Session 182, 2026-08-13 — FIX: dashboard pending-message block crashed on images with no score. An image rejected before evaluation (watermark reject, explicit-content reject) sets scoring_flash but never sets score or tier; the block formatted score with :.2f unconditionally, raising "unsupported format string passed to NoneType.__format__". Observed on production 13 Aug 17:37:58, image 1377, watermark reject. The exception fired inside the loop, so scoring_flash was never cleared and the commit never ran - the crash repeated on every dashboard load and ALL pending messages for that user were lost, not just the faulty one. Now: per-image try/finally so one bad row cannot silence the rest and is never retried; rejected or flagged images show the reason with no number, in the error style not the green success style; rollback added on the outer except to stop a failed commit poisoning later queries on the same worker. ONE CHANGE ONLY. Retains 181.3-staging.)
 
 import os
 import re
@@ -5060,15 +5060,51 @@ def dashboard():
                 Image.scoring_flash.isnot(None)
             ).all()
             for _fi in _flash_imgs:
-                flash(
-                    f'Your image "{_fi.asset_name or _fi.original_filename}" '
-                    f'evaluated {_fi.score:.2f} ({_fi.tier}) — {_fi.scoring_flash}',
-                    'success'
-                )
-                _fi.scoring_flash = None
+                # ── SL-181.4 — a pending message may have no score ────────────
+                # An image rejected BEFORE evaluation sets scoring_flash but
+                # never sets score or tier: the watermark reject and the
+                # explicit-content reject both do this. The previous version
+                # formatted score with :.2f unconditionally, so a NULL score
+                # raised
+                #   unsupported format string passed to NoneType.__format__
+                # Observed live on production 13 Aug 2026 at 17:37:58 for
+                # image 1377, rejected for a watermark.
+                #
+                # Worse than a cosmetic fault: the exception fired INSIDE the
+                # loop, so scoring_flash was never cleared and the commit never
+                # ran. The same crash then repeated on every dashboard load,
+                # and EVERY pending message for that user was lost - not only
+                # the faulty one. Hence the per-image try/finally below: one
+                # unrenderable row can no longer silence the rest, and a
+                # message that cannot be shown is never retried forever.
+                try:
+                    _fi_name = _fi.asset_name or _fi.original_filename or 'Untitled'
+                    _fi_msg  = _fi.scoring_flash or ''
+                    if _fi.score is None or _fi.is_flagged:
+                        # Rejected or held. No number exists, and it must not
+                        # be dressed as good news in the green success style.
+                        flash(f'Your image "{_fi_name}" — {_fi_msg}', 'error')
+                    else:
+                        flash(
+                            f'Your image "{_fi_name}" '
+                            f'evaluated {_fi.score:.2f} ({_fi.tier or "-"}) — {_fi_msg}',
+                            'success'
+                        )
+                except Exception as _fi_err:
+                    app.logger.error(
+                        f'[scoring_flash] image={getattr(_fi, "id", "?")} {_fi_err}'
+                    )
+                finally:
+                    _fi.scoring_flash = None
             if _flash_imgs:
                 db.session.commit()
         except Exception as _fle:
+            # Rollback added: a failed commit left the session in a failed
+            # transaction state, poisoning later queries on the same worker.
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             app.logger.error(f'[scoring_flash] {_fle}')
 
     # ── Wallet HUD (Sprint 4) ─────────────────────────────────────────────
