@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.2 (181.1 redirected to the result page before scoring finished — now polls first.) Previous: 181.1 (Session 181, 2026-08-13 — free evaluation path. (1) location check now reads #location-hidden when the visible input has been hidden by the session-storage block, which was refusing every second upload in a session. (2) /try/upload success reply {image_id:N} is now handled — it has no status field, so it fell through to the error branch and printed 'Upload failed (200)' on a successful upload. Retains 175.8:) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 181.3 (Session 184, 2026-08-14 — FIX: flagged status message now uses r.message from score-status API response instead of hardcoded generic text. Previously overriding server message with "heavily edited or stylised photographs" for all flagged types. Now: watermark shows watermark message, explicit shows explicit message, AI-generated shows AI message — each set correctly in app.py score-status endpoint. My Gallery link retained. RETAINS 181.2.) Previous: 181.2 (181.1 redirected to the result page before scoring finished — now polls first.)
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1587,8 +1587,8 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          /* Override server message — never accuse photographer of using AI */
-          var _flagMsg = 'Your image has been flagged for admin review before it can be evaluated.\n\nThis can happen with heavily edited or stylised photographs. Our team will review it shortly.\n\nYou can view the status and raise a query in My Gallery.';
+          /* Use server message — set specifically per rejection type in score-status endpoint */
+          var _flagMsg = r.message || 'Your image could not be accepted for evaluation. Please contact support@shutterleague.com if you believe this is an error.';
           showError(_flagMsg);
           /* Show My Gallery link below error — do NOT auto-redirect */
           var _galleryLink = document.createElement('a');
