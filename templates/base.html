@@ -1,4 +1,4 @@
-{# SL-VERSION: 180.8 (Session 182, 2026-08-13 — ONE LINE. The robots meta tag was hardcoded to "index, follow", so no page could opt out of search indexing. It is now {% block robots %}index, follow{% endblock %} — same default for every existing page, nothing changes unless a template overrides it. Needed so image_detail.html can declare noindex, nofollow: scorecards are private evaluations and must not appear in search results. Head-only, meta tag only — no CSS, no layout, no script. RETAINS 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
+{# SL-VERSION: 180.9 (Session 182, 2026-08-14 — MOBILE "MORE" SHEET. Staging had only the base rule for .sl-bottom-more-menu (position:fixed; right:0), so on a phone the sheet stretched across and down and swallowed the page, with the last item sliced by the bottom bar. Production base 181.3 carries a max-width:899px override that anchors it to the More button as a compact rounded popup; that block is ported here VERBATIM, plus max-height:58dvh on the list so nothing is cut off. CSS only, one media block, no markup change. NOT TOUCHED: .sl-bottom-nav and its top:auto !important - removing that in SL-178.7 caused the black inner pages of Sessions 178-180. RETAINS 180.8 (Session 182, 2026-08-13 — ONE LINE. The robots meta tag was hardcoded to "index, follow", so no page could opt out of search indexing. It is now {% block robots %}index, follow{% endblock %} — same default for every existing page, nothing changes unless a template overrides it. Needed so image_detail.html can declare noindex, nofollow: scorecards are private evaluations and must not appear in search results. Head-only, meta tag only — no CSS, no layout, no script. RETAINS 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -247,6 +247,45 @@ table { max-width: none; }
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
+
+/* ── SL-180.9 — MOBILE "MORE" SHEET: compact popup, not a full-screen panel ──
+   PORTED VERBATIM FROM PRODUCTION base 181.3, which has this override and
+   staging does not. Staging had only the base rule — position:fixed; right:0 —
+   so on a phone the sheet stretched across and down the screen and swallowed
+   the page. Production anchors it to the More button as a small rounded popup
+   sitting just above the bottom bar.
+
+   Also fixes the cut-off last item: max-height 58dvh on the list means the
+   sheet ends well clear of the bottom bar and the home indicator, so "Log out"
+   is no longer sliced in half.
+
+   NOT TOUCHED: .sl-bottom-nav and its `top: auto !important`. Removing that in
+   SL-178.7 is what caused the black inner pages of Sessions 178-180. Different
+   selector, left exactly as it is. */
+@media (max-width: 899px) {
+  .sl-bottom-more-menu {
+    position: absolute;
+    top: auto;
+    bottom: calc(100% + 10px);
+    right: -8px;
+    left: auto;
+    min-width: 208px;
+    max-width: 74vw;
+    border: 1px solid rgba(245,197,24,0.25);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 -6px 28px rgba(0,0,0,0.55);
+    z-index: 1999;
+  }
+  .sl-bottom-more-menu__list { max-height: 58dvh; }
+
+  /* Removes the ~300ms iOS tap delay on every bottom-nav control. */
+  .sl-bottom-nav .sl-nav-item,
+  .sl-bottom-nav .sl-nav-more-btn,
+  .sl-bottom-nav .sl-nav-fab,
+  .sl-bottom-more-menu a { touch-action: manipulation; }
+}
+
 .sl-bottom-more-menu a:hover,
 .sl-bottom-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
 /* Upload FAB */
