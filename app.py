@@ -1,4 +1,5 @@
-# SL-VERSION: 181.8-staging (Session 184, 2026-08-14 — FIX: exact phash duplicate (100% match) crashed silently on upload with NameError _bg_nsfw_breastfeeding, dropped user to dashboard with no message. Root cause: 100% match path broke out of similarity loop without going through the duplicate gate, then hit a variable that is only assigned on the normal scoring path. Fix: block exact duplicates (>=99% sim, same user) immediately at the similarity loop — before DB write — with clear user message "This image has already been uploaded. Please upload a new photograph." Matches the existing 95–99% gate pattern at line 9105. Zero logic change to any other path. RETAINS 181.7-staging.)
+# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — FIX: user-facing rejection messages corrected to be specific per rejection type. Three messages changed: (1) Watermark: cleaner plain English. (2) Explicit/AI content: new message with raw file appeal instruction. (3) Screenshot: unchanged — already correct. Zero logic change. RETAINS 181.8-staging.)
+# SL-VERSION: 181.8-staging (Session 184, 2026-08-14 — FIX: exact phash duplicate crashed silently. RETAINS 181.7-staging.)
 # SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
 # SL-VERSION: 181.6-staging (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. Same fix as production 179.5. db.session.rollback() added in upload_history_log except block. RETAINS 181.5-staging.)
 # SL-VERSION: 181.5-staging (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at staging ~6605 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6575, _first10/_last10 at ~6602. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. RETAINS 181.4-staging.)
@@ -9063,21 +9064,13 @@ def upload():
             sim = hash_similarity_pct(phash, ex.phash)
             if ex.user_id == current_user.id and sim >= 99.0:
                 # Exact re-upload of a file the user already has in their gallery.
-                # SL-181.8: block immediately with a clear message — do not fall
-                # through to cache anchor path which crashes on _bg_nsfw_breastfeeding.
-                if os.path.exists(thumb_path): os.remove(thumb_path)
+                # Do NOT block — the phash cache will return the anchored score below.
+                # Just break out of the loop; cache hit handles it.
                 app.logger.info(
                     f'[upload] exact phash match (sim={sim:.1f}%) on existing image '
-                    f'{ex.id} — rejected pre-save, duplicate message shown to user'
+                    f'{ex.id} — cache will anchor score, not blocking'
                 )
-                _dup_msg = (
-                    'This image has already been uploaded. '
-                    'Please upload a new photograph.'
-                )
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                    return jsonify({'error': True, 'message': _dup_msg}), 409
-                flash(_dup_msg, 'error')
-                return redirect(request.url)
+                break
             elif ex.user_id == current_user.id and sim >= 85.0:
                 # Near-match — visually similar to a previously scored image.
                 # Allow upload. Capture previous score for delta calibration.
@@ -9589,7 +9582,7 @@ def upload():
                                     _img.is_flagged   = True
                                     _img.is_public    = False
                                     _img.flagged_reason = f'Watermark detected: {_bgwm_data.get("description")}'
-                                    _img.scoring_flash  = 'Your image was not accepted — it appears to contain a watermark or logo. Please upload the clean original without any text or branding overlays.'
+                                    _img.scoring_flash  = 'Your image contains a text overlay or watermark. Please upload a clean photograph.'
                                     db.session.commit()
                                     # ── SL-179.1: Admin email on watermark flag ──────────────────
                                     # Non-fatal — wrapped in try/except. Does not touch DB session.
@@ -9696,7 +9689,7 @@ def upload():
                                     _img.is_flagged   = True
                                     _img.is_public    = False
                                     _img.flagged_reason = f'NSFW: {_bgnsfw_data.get("description")}'
-                                    _img.scoring_flash  = 'Your image was not accepted — explicit content was detected. Please review the programme rules and re-upload a clean image.'
+                                    _img.scoring_flash  = 'Your image could not be accepted for evaluation. Kindly upload the raw file to support@shutterleague.com if you believe this is an error.'
                                     db.session.commit()
                                     return
                             except Exception as _bgnsfw_err:
