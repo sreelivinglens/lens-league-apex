@@ -1,10 +1,5 @@
-# SL-VERSION: 171.8-staging (Session 184, 2026-08-14 — Prompt caching enabled on all 4 API calls.
-#   Adds cache_control: {"type": "ephemeral"} to system prompt block on every call.
-#   Adds anthropic-beta: prompt-caching-2024-07-31 header to every httpx.post.
-#   Zero logic change. SYSTEM_BRIEF and VISION_SYSTEM are now cached for 5 minutes
-#   after first call — subsequent calls within that window pay 90% less on those tokens.
-#   Retains 171.7.)
-# SL-VERSION: 171.7 (Session 171, 2026-08-03 — Version bump to force deploy. No logic change.)
+# SL-VERSION: 171.9-staging (Session 184, 2026-08-14 — Prompt caching fix: switched SYSTEM_BRIEF cache TTL from 5min to 1hr on Calls 2/3/4. 5min TTL was expiring between infrequent scoring calls so cache was written but never read. 1hr TTL matches SL scoring cadence. VISION_SYSTEM cache_control removed — 165 tokens is below Sonnet 4.6 minimum of 1024, was silently skipped every call. RETAINS 171.8-staging.)
+# SL-VERSION: 171.8-staging (Session 184, 2026-08-14 — Prompt caching enabled on all 4 API calls. Retains 171.7.)
 """
 Apex DDI Auto-Scoring Engine
 Apex DDI Engine — AI scoring for uploaded images
@@ -3308,7 +3303,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
         "model":       VISION_MODEL,
         "max_tokens":  1200,
         "temperature": 0.0,  # was 0.1 — lowered Session 124 alongside the main scoring call
-        "system": [{"type": "text", "text": VISION_SYSTEM, "cache_control": {"type": "ephemeral"}}],
+        "system": [{"type": "text", "text": VISION_SYSTEM}],
         "messages": [
             {
                 "role": "user",
@@ -4735,7 +4730,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                               # rescore variance observed. Anthropic's API is not fully
                               # deterministic even at temp=0, but this meaningfully tightens
                               # the range. No seed parameter exists on this API to combine with it.
-        "system": [{"type": "text", "text": effective_system, "cache_control": {"type": "ephemeral"}}],
+        "system": [{"type": "text", "text": effective_system, "cache_control": {"type": "ephemeral", "ttl": "1h"}}],
         "messages": [
             {
                 "role": "user",
@@ -5147,7 +5142,7 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
         "model":       MODEL,
         "max_tokens":  3000,
         "temperature": 0.2,
-        "system": [{"type": "text", "text": SYSTEM_BRIEF, "cache_control": {"type": "ephemeral"}}],
+        "system": [{"type": "text", "text": SYSTEM_BRIEF, "cache_control": {"type": "ephemeral", "ttl": "1h"}}],
         "messages": [
             {
                 "role": "user",
@@ -5515,7 +5510,7 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
                              # against that, not an invitation to use it —
                              # still far below the 4000 used for full auto_score().
         "temperature": 0.2,
-        "system": [{"type": "text", "text": SYSTEM_BRIEF, "cache_control": {"type": "ephemeral"}}],
+        "system": [{"type": "text", "text": SYSTEM_BRIEF, "cache_control": {"type": "ephemeral", "ttl": "1h"}}],
         "messages": [
             {
                 "role": "user",
