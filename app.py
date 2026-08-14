@@ -1,3 +1,4 @@
+# SL-VERSION: 181.6-staging (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. Same fix as production 179.5. db.session.rollback() added in upload_history_log except block. RETAINS 181.5-staging.)
 # SL-VERSION: 181.5-staging (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at staging ~6605 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6575, _first10/_last10 at ~6602. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. RETAINS 181.4-staging.)
 # SL-VERSION: 181.4-staging (Session 182, 2026-08-13 — FIX: dashboard pending-message block crashed on images with no score. An image rejected before evaluation (watermark reject, explicit-content reject) sets scoring_flash but never sets score or tier; the block formatted score with :.2f unconditionally, raising "unsupported format string passed to NoneType.__format__". Observed on production 13 Aug 17:37:58, image 1377, watermark reject. The exception fired inside the loop, so scoring_flash was never cleared and the commit never ran - the crash repeated on every dashboard load and ALL pending messages for that user were lost, not just the faulty one. Now: per-image try/finally so one bad row cannot silence the rest and is never retried; rejected or flagged images show the reason with no number, in the error style not the green success style; rollback added on the outer except to stop a failed commit poisoning later queries on the same worker. ONE CHANGE ONLY. Retains 181.3-staging.)
 
@@ -15787,6 +15788,7 @@ def delete_image(image_id):
         )
     except Exception as _log_err:
         app.logger.warning(f'[delete_image] upload_history_log write failed: {_log_err}')
+        db.session.rollback()  # Session 183: NULL score on flagged images poisons session
 
     # Direct SQL deletes — instant, no ORM cascade
     iid = image_id
