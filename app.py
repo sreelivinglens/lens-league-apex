@@ -1,4 +1,5 @@
-# SL-VERSION: 179.7 (Session 183, 2026-08-14 — FIX Item 31: five columns never created on production. evolving_eye_milestone, progress_data_json, weather_json, weather_cache_ts, mentor_advice_json were all passed as arguments to one db.text() call which takes one argument. Raised immediately, rolled back, columns never created on every boot. Fix: split into five individual execute calls. Boot log will now show Location advisory link columns OK instead of the warning. RETAINS 179.6.)
+# SL-VERSION: 179.8 (Session 184, 2026-08-14 — FIVE FIXES from staging v181.8–181.10: (1) Duplicate image upload (100% phash match) crashed silently — now hard-blocked pre-save with clear message. (2) Resolution preflight now catches ValueError from ingest_image and returns 422 — hard block instead of non-fatal warning. (3) Watermark scoring_flash message simplified. (4) Explicit/AI scoring_flash updated with raw file appeal instruction. (5) score-status flagged endpoint now reads flagged_reason and returns specific message per type — watermark/explicit/AI each show correct message. (6) Screenshot check _img_b64 NameError fixed — builds image from thumb_path/thumb_url inside the check block. RETAINS 179.7.)
+# SL-VERSION: 179.7 (Session 183, 2026-08-14 — FIX Item 31: five columns never created on production. RETAINS 179.6.)
 # SL-VERSION: 179.6 (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Added as Layer 3 between Hive check and Claude Vision. Uses Haiku to detect flat digital screenshots of apps, websites, scorecards. Allows graffiti, street art, billboards, signage, display windows, exhibition boards, venue signage, book pages as subjects, screens in real scenes. Rejects only flat UI screenshots with no real-world photographic context. Fails safe — if check errors, scoring continues normally. RETAINS 179.5.)
 # SL-VERSION: 179.5 (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. upload_history_log INSERT fails NOT NULL constraint on score column, except block logged warning but did not rollback — leaving session in InFailedSqlTransaction state. All subsequent DELETEs in the same route then silently failed. User saw no error, image remained. Fix: db.session.rollback() added in the except block after the warning log. One line. RETAINS 179.4.)
 # SL-VERSION: 179.4 (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at production ~6460 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6430, _first10/_last10 at ~6457. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. Critical path for the 19 Evolving Eye letters. RETAINS 179.3.)
@@ -8651,6 +8652,11 @@ def upload_preflight():
             )
             if _thumb_path and _os.path.exists(_thumb_path):
                 _os.remove(_thumb_path)
+        except ValueError as _res_err:
+            # Hard block — resolution too low. Return immediately.
+            if _os.path.exists(_tmp.name):
+                _os.remove(_tmp.name)
+            return jsonify({'error': True, 'message': str(_res_err)}), 422
         finally:
             if _os.path.exists(_tmp.name):
                 _os.remove(_tmp.name)
@@ -8921,13 +8927,21 @@ def upload():
             sim = hash_similarity_pct(phash, ex.phash)
             if ex.user_id == current_user.id and sim >= 99.0:
                 # Exact re-upload of a file the user already has in their gallery.
-                # Do NOT block — the phash cache will return the anchored score below.
-                # Just break out of the loop; cache hit handles it.
+                # SL-179.8: block immediately with a clear message — do not fall
+                # through to cache anchor path which crashes on _bg_nsfw_breastfeeding.
+                if os.path.exists(thumb_path): os.remove(thumb_path)
                 app.logger.info(
                     f'[upload] exact phash match (sim={sim:.1f}%) on existing image '
-                    f'{ex.id} — cache will anchor score, not blocking'
+                    f'{ex.id} — rejected pre-save, duplicate message shown to user'
                 )
-                break
+                _dup_msg = (
+                    'This image has already been uploaded. '
+                    'Please upload a new photograph.'
+                )
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                    return jsonify({'error': True, 'message': _dup_msg}), 409
+                flash(_dup_msg, 'error')
+                return redirect(request.url)
             elif ex.user_id == current_user.id and sim >= 85.0:
                 # Near-match — visually similar to a previously scored image.
                 # Allow upload. Capture previous score for delta calibration.
@@ -9439,7 +9453,7 @@ def upload():
                                     _img.is_flagged   = True
                                     _img.is_public    = False
                                     _img.flagged_reason = f'Watermark detected: {_bgwm_data.get("description")}'
-                                    _img.scoring_flash  = 'Your image was not accepted — it appears to contain a watermark or logo. Please upload the clean original without any text or branding overlays.'
+                                    _img.scoring_flash  = 'Your image contains a text overlay or watermark. Please upload a clean photograph.'
                                     db.session.commit()
                                     # ── SL-179.1: Admin email on watermark flag ──────────────────
                                     # Non-fatal — wrapped in try/except. Does not touch DB session.
@@ -9544,7 +9558,7 @@ def upload():
                                     _img.is_flagged   = True
                                     _img.is_public    = False
                                     _img.flagged_reason = f'NSFW: {_bgnsfw_data.get("description")}'
-                                    _img.scoring_flash  = 'Your image was not accepted — explicit content was detected. Please review the programme rules and re-upload a clean image.'
+                                    _img.scoring_flash  = 'Your image could not be accepted for evaluation. Kindly upload the raw file to support@shutterleague.com if you believe this is an error.'
                                     db.session.commit()
                                     return
                             except Exception as _bgnsfw_err:
@@ -9779,7 +9793,24 @@ def upload():
                         try:
                             import urllib.request as _sc_ureq
                             import json as _sc_json
+                            from PIL import Image as _SC_PIL
+                            import io as _sc_io
+                            import base64 as _sc_b64
                             _sc_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+                            # Build _img_b64 from thumb — same pattern as watermark check
+                            _sc_pil = None
+                            if _img.thumb_path and os.path.exists(_img.thumb_path or ''):
+                                _sc_pil = _SC_PIL.open(_img.thumb_path).convert('RGB')
+                            elif _img.thumb_url:
+                                with _sc_ureq.urlopen(_img.thumb_url, timeout=15) as _sc_fetch:
+                                    _sc_pil = _SC_PIL.open(_sc_io.BytesIO(_sc_fetch.read())).convert('RGB')
+                            if _sc_pil is None:
+                                raise ValueError('No thumb available for screenshot check')
+                            if max(_sc_pil.size) > 1024:
+                                _sc_pil.thumbnail((1024, 1024))
+                            _sc_buf = _sc_io.BytesIO()
+                            _sc_pil.save(_sc_buf, format='JPEG', quality=80)
+                            _img_b64 = _sc_b64.b64encode(_sc_buf.getvalue()).decode('utf-8')
                             _sc_check_prompt = (
                                 "Look at this image carefully. Answer with ONLY the word REJECT or PASS.\n\n"
                                 "REJECT if: This image is a screenshot of a digital interface — an app, website, "
@@ -10928,12 +10959,20 @@ def score_status(image_id):
         })
 
     if getattr(img, 'is_flagged', False):
+        _flagged_reason = getattr(img, 'flagged_reason', '') or ''
+        if _flagged_reason.lower().startswith('watermark'):
+            _flagged_msg = 'Your image contains a text overlay or watermark. Please upload a clean photograph.'
+        elif _flagged_reason.lower().startswith('nsfw') or 'explicit' in _flagged_reason.lower():
+            _flagged_msg = ('Your image could not be accepted for evaluation. '
+                            'Kindly upload the raw file to ' + CONTACT_EMAIL + ' if you believe this is an error.')
+        else:
+            _flagged_msg = ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
+                            'Only original photographs taken by you are accepted. '
+                            'If you believe this is an error, contact ' + CONTACT_EMAIL + '.')
         return jsonify({
             'status': 'flagged',
             'image_id': img.id,
-            'message': ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
-                        'Only original photographs taken by you are accepted. '
-                        'If you believe this is an error, contact ' + CONTACT_EMAIL + '.'),
+            'message': _flagged_msg,
             'redirect': url_for('dashboard')
         })
 
