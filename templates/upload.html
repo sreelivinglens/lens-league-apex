@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.3 (Session 184, 2026-08-14 — FIX: flagged status message now uses r.message from score-status API response instead of hardcoded generic text. Previously overriding server message with "heavily edited or stylised photographs" for all flagged types. Now: watermark shows watermark message, explicit shows explicit message, AI-generated shows AI message — each set correctly in app.py score-status endpoint. My Gallery link retained. RETAINS 181.2.) Previous: 181.2 (181.1 redirected to the result page before scoring finished — now polls first.)
+{# SL-VERSION: 181.3 (Session 184, 2026-08-14 — FIX: flagged status message now uses r.message from score-status API response instead of hardcoded generic text. Previously overriding server message with "heavily edited or stylised photographs" for all flagged types. Now: watermark/explicit/AI each show correct message. My Gallery link retained. RETAINS 181.2.) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
