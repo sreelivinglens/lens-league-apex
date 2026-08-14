@@ -1,6 +1,16 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.11-staging
-   Session 183 — 2026-08-14
+{# SL-VERSION: image_detail-181.12-staging
+   Session 183 — 2026-08-14 (second pass)
+   TYPOGRAPHY + LAYOUT PASS:
+   1. Body copy up 1pt: 15px->16px across em-para, takeaway, accordion body, location, bow
+   2. Line-height 1.75->1.85 throughout — more breathing room between lines
+   3. Para spacing increased: 14px->18-20px between paragraphs
+   4. Bullet spacing increased: 14px->18px between items
+   5. Action bar: 2-column grid -> single column rows, full width buttons, 14px font
+   6. Mobile accordion padding matched to desktop
+   RETAINS image_detail-181.11-staging (trust marks, score block, summary box,
+   dimension bars, location card, body of work, eval means open by default).
+
    SCORECARD REDESIGN — visual presentation layer only, zero data/logic change.
    Strategy: "One photograph shows us a moment. Your photographs show us how you see."
    Changes:
@@ -241,7 +251,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 
 /* ── REVELATION ── */
-.sc-revelation{font-size:16px;color:var(--sc-text);line-height:1.7;border-left:3px solid var(--sc-gold);padding-left:14px;margin-bottom:14px}
+.sc-revelation{font-size:16px;color:var(--sc-text);line-height:1.85;border-left:3px solid var(--sc-gold);padding-left:14px;margin-bottom:16px}
 .sc-revelation em{font-style:italic}
 .sc-dist-wrap{padding-top:12px;border-top:0.5px solid var(--sc-border)}
 .sc-dist-lbl{font-size:13px;color:var(--sc-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
@@ -285,7 +295,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-em-inner{padding:17px 20px}
 .sc-em-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
 .sc-em-preview.clamped,.sc-ta-preview.clamped{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.sc-em-para{font-size:15px;color:var(--sc-text);line-height:1.75;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--sc-border)}
+.sc-em-para{font-size:16px;color:var(--sc-text);line-height:1.85;margin-bottom:20px;padding-bottom:20px;border-bottom:0.5px solid var(--sc-border)}
 .sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
 .sc-em-para strong{color:var(--sc-dark);font-weight:700}
 .sc-em-para a{color:var(--sc-gold-dk);text-decoration:underline}
@@ -294,9 +304,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
 .sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
 .sc-ta-eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:15px;color:var(--sc-dark);line-height:1.75}
+.sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:16px;color:var(--sc-dark);line-height:1.85}
 
-.sc-ta-full p,.sc-ta-preview p{margin-bottom:10px}
+.sc-ta-full p,.sc-ta-preview p{margin-bottom:14px}
 .sc-ta-full p:last-child{margin-bottom:0}
 .sc-ta-full strong,.sc-ta-preview strong{font-weight:700;color:var(--sc-dark)}
 .sc-ta-full a,.sc-ta-preview a{color:var(--sc-gold-dk);text-decoration:underline}
@@ -316,14 +326,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-acc-chev{font-size:18px;color:var(--sc-muted);flex-shrink:0;margin-top:2px;transition:transform .2s;display:inline-block;line-height:1}
 .sc-acc-row.open .sc-acc-chev{transform:rotate(180deg)}
 /* All accordions CLOSED by default */
-.sc-acc-body{display:none;padding:4px 17px 15px 53px;font-size:15px;color:var(--sc-text);line-height:1.75}
+.sc-acc-body{display:none;padding:8px 17px 18px 53px;font-size:16px;color:var(--sc-text);line-height:1.85}
 .sc-acc-row.open .sc-acc-body{display:block}
-.sc-acc-body p{margin-bottom:10px}
+.sc-acc-body p{margin-bottom:14px}
 .sc-acc-body p:last-child{margin-bottom:0}
 .sc-acc-body strong{color:var(--sc-dark);font-weight:700}
 .sc-acc-body a{color:var(--sc-gold-dk);text-decoration:underline}
 .sc-acc-body ul{padding-left:18px;margin-top:6px;margin-bottom:8px}
-.sc-acc-body ul li{margin-bottom:5px;line-height:1.65}
+.sc-acc-body ul li{margin-bottom:10px;line-height:1.85}
 
 /* ── NEXT SHOT — cream/green, NEVER dark on scorecard ── */
 .sc-next-shot{background:var(--sc-pista);border:1px solid var(--sc-pista-b);border-radius:10px;padding:15px 16px;margin:8px}
@@ -342,13 +352,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-trend-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fffbef;border:1px solid var(--sc-gold);border-radius:20px;font-size:13px;font-weight:600;color:var(--sc-gold-dk)}
 
 /* ── ACTION BAR ── */
-.sc-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:12px 17px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.sc-btn-gold{min-height:44px;box-sizing:border-box;background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:9px 17px;border-radius:7px;border:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+.sc-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:12px 17px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.sc-btn-gold{min-height:44px;box-sizing:border-box;background:var(--sc-gold);color:var(--sc-dark);font-size:14px;font-weight:700;padding:11px 17px;border-radius:7px;border:none;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none;width:100%}
 .sc-btn-gold:hover{background:var(--sc-gold-dk);color:#fff}
-.sc-btn-ghost{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:9px 13px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+.sc-btn-ghost{min-height:44px;box-sizing:border-box;font-size:14px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none;width:100%}
 .sc-btn-ghost:hover{background:var(--sc-cream)}
 .sc-btn-danger{color:#B3261E;border-color:#B3261E;background:transparent}.sc-btn-danger:hover{background:#FDECEA}
-.sc-btn-back{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-muted);background:transparent;border:none;padding:9px 0;margin-left:auto;cursor:pointer;text-decoration:none}
+.sc-btn-back{min-height:44px;box-sizing:border-box;font-size:14px;color:var(--sc-muted);background:transparent;border:none;padding:11px 0;cursor:pointer;text-decoration:none;text-align:center;width:100%}
 
 /* ── RIGHT RAIL ── */
 .sc-rpanel{padding:16px 14px;display:flex;flex-direction:column;gap:12px;border-left:0.5px solid var(--sc-border);background:#fff;width:220px;flex-shrink:0}
@@ -390,7 +400,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 /* ── SL-181.11 SUMMARY BOX ── */
 .sc-summary-box{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.sc-summary-line{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.6;color:var(--sc-dark)}
+.sc-summary-line{display:flex;align-items:flex-start;gap:8px;font-size:15px;line-height:1.7;color:var(--sc-dark)}
 .sc-pill-strength{display:inline-block;background:#e8f5e2;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px}
 .sc-pill-leap{display:inline-block;background:#ede9fe;color:#4a3280;font-size:13px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px}
 .sc-summary-divider{height:0.5px;background:var(--sc-border)}
@@ -408,7 +418,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-location-card{background:#e8f5e2;border:1px solid var(--sc-pista-b);border-radius:12px;margin-bottom:10px;padding:15px 16px}
 .sc-location-eyebrow{font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--sc-green);margin-bottom:6px;display:flex;align-items:center;gap:5px}
 .sc-location-title{font-size:15px;font-weight:600;color:var(--sc-dark);margin-bottom:5px}
-.sc-location-body{font-size:13px;color:#1a3a1a;line-height:1.65}
+.sc-location-body{font-size:15px;color:#1a3a1a;line-height:1.8}
 .sc-location-cta{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:13px;font-weight:700;color:var(--sc-dark);background:var(--sc-gold);padding:8px 16px;border-radius:7px;text-decoration:none;min-height:44px;box-sizing:border-box}
 
 /* ── SL-181.11 BODY OF WORK (promoted) ── */
@@ -418,7 +428,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-bow-frames{display:flex;flex-direction:column;gap:10px}
 .sc-bow-frame{display:flex;gap:11px;align-items:flex-start}
 .sc-bow-num{font-size:13px;font-weight:700;color:#fff;background:var(--sc-gold-dk);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.sc-bow-text{font-size:13px;line-height:1.6;color:var(--sc-text)}
+.sc-bow-text{font-size:15px;line-height:1.8;color:var(--sc-text)}
 
 /* ══════════════════════════════════
    IPAD 768-1023
@@ -439,7 +449,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-render-text .sc-bullets li{
   position:relative;
   padding-left:22px;          /* the text column */
-  margin-bottom:14px;         /* air between points */
+  margin-bottom:18px;         /* air between points */
   line-height:1.75;
 }
 .sc-render-text .sc-bullets li:last-child{margin-bottom:0}
@@ -453,8 +463,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   line-height:1.75;
 }
 .sc-render-text p{
-  margin:0 0 14px;
-  line-height:1.75;
+  margin:0 0 16px;
+  line-height:1.85;
 }
 .sc-render-text p:last-child{margin-bottom:0}
 
@@ -519,9 +529,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* Mobile breakpoint: max-width: 768px (also covers max-width: 600px and max-width: 480px) */
 @media (max-width:768px){
   /* SL-181.7 — tighter text column on a phone, but keep the hanging indent */
-  .sc-render-text .sc-bullets li{padding-left:18px;margin-bottom:16px}
+  .sc-render-text .sc-bullets li{padding-left:18px;margin-bottom:20px}
   .sc-render-text .sc-bullets li::before{left:2px}
-  .sc-render-text p{margin:0 0 16px}
+  .sc-render-text p{margin:0 0 18px}
 
   .sc-shell{display:block}
   .sc-rpanel{display:none}
@@ -532,9 +542,10 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   .sc-ddi-strip-desktop{display:none}
   .sc-ddi-mobile{display:block}
   .sc-acc-teaser{max-width:220px}
-  .sc-act-bar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .sc-btn-back{min-height:44px;box-sizing:border-box;grid-column:1/-1;text-align:center;margin-left:0}
+  .sc-act-bar{gap:6px}
   body.page-scorecard .sl-bottom-nav{display:flex !important}
+  /* SL-181.11 — accordion body: reduce left indent on mobile so text has room */
+  .sc-acc-body{padding:8px 13px 18px 17px;font-size:16px}
   /* 70yr rule: raise small text on mobile */
   .sc-ddi-nm{font-size:14px !important}
   .sc-ddi-tag{font-size:14px !important}
@@ -1031,7 +1042,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% if _body_of_work %}
     <div class="sc-bow-card">
       <div class="sc-bow-hdr">Your next body of work</div>
-      <div class="sc-bow-frames sc-render-text">{{ _body_of_work | safe }}</div>
+      <div class="sc-bow-frames">{{ _body_of_work | safe }}</div>
     </div>
     {% endif %}
 
@@ -1306,9 +1317,9 @@ function scToggleTakeaway(hdr) {
 /* ── Clamp AFTER render-text processes content ── */
 document.addEventListener('DOMContentLoaded', function () {
   scRenderText();  /* ensure processed */
-  var em = document.getElementById('sc-em-preview-block');
+  /* SL-181.11: eval-means stays OPEN by default — first-time visitor should
+     read the evaluation immediately, not tap to expand */
   var ta = document.getElementById('sc-ta-preview-block');
-  if (em) em.classList.add('clamped');
   if (ta) ta.classList.add('clamped');
   /* Force all accordions closed */
   document.querySelectorAll('.sc-acc-row').forEach(function(r){ r.classList.remove('open'); });
