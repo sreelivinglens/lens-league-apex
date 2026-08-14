@@ -1,3 +1,9 @@
+# SL-VERSION: 171.8-staging (Session 184, 2026-08-14 — Prompt caching enabled on all 4 API calls.
+#   Adds cache_control: {"type": "ephemeral"} to system prompt block on every call.
+#   Adds anthropic-beta: prompt-caching-2024-07-31 header to every httpx.post.
+#   Zero logic change. SYSTEM_BRIEF and VISION_SYSTEM are now cached for 5 minutes
+#   after first call — subsequent calls within that window pay 90% less on those tokens.
+#   Retains 171.7.)
 # SL-VERSION: 171.7 (Session 171, 2026-08-03 — Version bump to force deploy. No logic change.)
 """
 Apex DDI Auto-Scoring Engine
@@ -3302,7 +3308,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
         "model":       VISION_MODEL,
         "max_tokens":  1200,
         "temperature": 0.0,  # was 0.1 — lowered Session 124 alongside the main scoring call
-        "system":      VISION_SYSTEM,
+        "system": [{"type": "text", "text": VISION_SYSTEM, "cache_control": {"type": "ephemeral"}}],
         "messages": [
             {
                 "role": "user",
@@ -3327,6 +3333,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
             headers={
                 "x-api-key":         ANTHROPIC_API_KEY,
                 "anthropic-version": "2023-06-01",
+                "anthropic-beta":    "prompt-caching-2024-07-31",
                 "content-type":      "application/json",
             },
             json=payload,
@@ -4728,7 +4735,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                               # rescore variance observed. Anthropic's API is not fully
                               # deterministic even at temp=0, but this meaningfully tightens
                               # the range. No seed parameter exists on this API to combine with it.
-        "system":      effective_system,
+        "system": [{"type": "text", "text": effective_system, "cache_control": {"type": "ephemeral"}}],
         "messages": [
             {
                 "role": "user",
@@ -4757,6 +4764,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 headers={
                     "x-api-key":         ANTHROPIC_API_KEY,
                     "anthropic-version": "2023-06-01",
+                    "anthropic-beta":    "prompt-caching-2024-07-31",
                     "content-type":      "application/json",
                 },
                 json=payload,
@@ -5139,7 +5147,7 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
         "model":       MODEL,
         "max_tokens":  3000,
         "temperature": 0.2,
-        "system":      SYSTEM_BRIEF,
+        "system": [{"type": "text", "text": SYSTEM_BRIEF, "cache_control": {"type": "ephemeral"}}],
         "messages": [
             {
                 "role": "user",
@@ -5163,6 +5171,7 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
                 headers={
                     "x-api-key":         ANTHROPIC_API_KEY,
                     "anthropic-version": "2023-06-01",
+                    "anthropic-beta":    "prompt-caching-2024-07-31",
                     "content-type":      "application/json",
                 },
                 json=payload,
@@ -5506,7 +5515,7 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
                              # against that, not an invitation to use it —
                              # still far below the 4000 used for full auto_score().
         "temperature": 0.2,
-        "system":      SYSTEM_BRIEF,
+        "system": [{"type": "text", "text": SYSTEM_BRIEF, "cache_control": {"type": "ephemeral"}}],
         "messages": [
             {
                 "role": "user",
@@ -5534,6 +5543,7 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
                 headers={
                     "x-api-key":         ANTHROPIC_API_KEY,
                     "anthropic-version": "2023-06-01",
+                    "anthropic-beta":    "prompt-caching-2024-07-31",
                     "content-type":      "application/json",
                 },
                 json=payload,
