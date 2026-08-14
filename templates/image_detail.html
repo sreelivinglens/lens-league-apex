@@ -1,7 +1,16 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.7-staging
-   Session 182 — 2026-08-13
-   FOUR CHANGES, all requested by the founder:
+{# SL-VERSION: image_detail-181.8-staging
+   Session 182 — 2026-08-14
+   FIVE CHANGES, all requested by the founder:
+
+   -2. ACCORDION PREVIEW LINES no longer show a stray bullet marker. The eight
+       teasers are truncated previews of text that carries markers, and they are
+       not .sc-render-text, so the JS never touched them — "What stood out ▪",
+       "Balanced · Light editing ▪". Measured after 181.7: 12 list items created
+       but 3 markers still on the page, all of them teasers. Markers are now
+       stripped in Jinja before truncate(90). Verified by rendering all three
+       marker characters plus clean text.
+
 
    -1. LONG-FORM TEXT NOW READABLE. The page's text renderer split on U+25A0
        (BLACK SQUARE) but the scoring engine emits U+25AA (BLACK SMALL SQUARE).
@@ -718,7 +727,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#ede9fe">✨</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">What stood out</div>
-            <div class="sc-acc-teaser">{{ _what_stood_out | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _what_stood_out | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -732,7 +741,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#e8f5e2">🏆</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">What you did that others didn't</div>
-            <div class="sc-acc-teaser">{{ _what_you_did | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _what_you_did | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -746,7 +755,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#fff8e6">👁️</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">What your eye read</div>
-            <div class="sc-acc-teaser">{{ _what_eye | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _what_eye | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -768,7 +777,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:var(--sc-pista)">📷</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Your assignment tomorrow</div>
-            <div class="sc-acc-teaser">{{ _assignment | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _assignment | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -820,7 +829,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#f0f0ff">✏️</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">A note on your eye</div>
-            <div class="sc-acc-teaser">{{ _note_on_eye | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _note_on_eye | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -834,7 +843,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#f0f4ff">📚</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Your next body of work sequence</div>
-            <div class="sc-acc-teaser">{{ _body_of_work | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _body_of_work | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -855,7 +864,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#fef3c7">⚙️</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Balanced · Light editing</div>
-            <div class="sc-acc-teaser">{{ _edit_base | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _edit_base | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
@@ -868,7 +877,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div class="sc-acc-icon" style="background:#fce7f3">🎨</div>
           <div class="sc-acc-col">
             <div class="sc-acc-title">Artistic · Heavy editing</div>
-            <div class="sc-acc-teaser">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | truncate(90) }}</div>
+            <div class="sc-acc-teaser">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
           </div>
           <span class="sc-acc-chev">⌄</span>
         </div>
