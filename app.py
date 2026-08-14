@@ -1,3 +1,4 @@
+# SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
 # SL-VERSION: 181.6-staging (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. Same fix as production 179.5. db.session.rollback() added in upload_history_log except block. RETAINS 181.5-staging.)
 # SL-VERSION: 181.5-staging (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at staging ~6605 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6575, _first10/_last10 at ~6602. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. RETAINS 181.4-staging.)
 # SL-VERSION: 181.4-staging (Session 182, 2026-08-13 — FIX: dashboard pending-message block crashed on images with no score. An image rejected before evaluation (watermark reject, explicit-content reject) sets scoring_flash but never sets score or tier; the block formatted score with :.2f unconditionally, raising "unsupported format string passed to NoneType.__format__". Observed on production 13 Aug 17:37:58, image 1377, watermark reject. The exception fired inside the loop, so scoring_flash was never cleared and the commit never ran - the crash repeated on every dashboard load and ALL pending messages for that user were lost, not just the faulty one. Now: per-image try/finally so one bad row cannot silence the rest and is never retried; rejected or flagged images show the reason with no number, in the error style not the green success style; rollback added on the outer except to stop a failed commit poisoning later queries on the same worker. ONE CHANGE ONLY. Retains 181.3-staging.)
@@ -9905,7 +9906,93 @@ def upload():
                                 )
                         # ── END Hive check ─────────────────────────────────
 
-                        # ── Sprint 2 — seasonal + portfolio context ───────────────────────────
+                        # ── LAYER 3: Screenshot / digital reproduction check ──
+                        # Session 183 — 2026-08-14
+                        # Rejects images that are screenshots of digital interfaces,
+                        # apps, websites, or scorecards. Does NOT reject:
+                        #   - Graffiti, street art, murals, signage, billboards
+                        #   - Display windows, exhibition boards, venue signage
+                        #   - Text on walls, forts, trains, archaeological sites
+                        #   - Photographs of books, bibles, printed pages as subjects
+                        #   - Billboards at sunset, neon signs, shop fronts
+                        #   - Screens visible as part of a real-world scene (control
+                        #     room, cinema, stock exchange floor)
+                        # Only rejects: flat digital UI screenshots where the
+                        # interface fills the frame with no real-world photographic
+                        # context (no depth, no lighting, no environment).
+                        try:
+                            import urllib.request as _sc_ureq
+                            import json as _sc_json
+                            _sc_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+                            _sc_check_prompt = (
+                                "Look at this image carefully. Answer with ONLY the word REJECT or PASS.\n\n"
+                                "REJECT if: This image is a screenshot of a digital interface — an app, website, "
+                                "scorecard, evaluation result, software UI, or any digital screen captured flat "
+                                "with no real-world photographic context. UI elements (buttons, nav bars, score "
+                                "numbers in a layout, menus, typed text blocks filling the frame) are the key signal.\n\n"
+                                "PASS if: This is a real photograph taken in the world — even if it contains "
+                                "text, numbers, screens, or printed material. Graffiti, street art, murals, "
+                                "billboards, signage, display windows, exhibition boards, venue displays, "
+                                "neon signs, shop fronts, book pages as photographic subjects, screens visible "
+                                "as part of a real scene — ALL PASS. The test is whether there is real-world "
+                                "photographic context: light, depth, environment, perspective, shadow.\n\n"
+                                "One word only: REJECT or PASS"
+                            )
+                            _sc_payload = _sc_json.dumps({
+                                'model': 'claude-haiku-4-5-20251001',
+                                'max_tokens': 10,
+                                'temperature': 0,
+                                'messages': [{'role': 'user', 'content': [
+                                    {'type': 'image', 'source': {
+                                        'type': 'base64',
+                                        'media_type': 'image/jpeg',
+                                        'data': _img_b64
+                                    }},
+                                    {'type': 'text', 'text': _sc_check_prompt}
+                                ]}]
+                            }).encode()
+                            _sc_req = _sc_ureq.Request(
+                                'https://api.anthropic.com/v1/messages',
+                                data=_sc_payload,
+                                headers={
+                                    'Content-Type': 'application/json',
+                                    'x-api-key': _sc_api_key,
+                                    'anthropic-version': '2023-06-01',
+                                },
+                                method='POST'
+                            )
+                            with _sc_ureq.urlopen(_sc_req, timeout=15) as _sc_r:
+                                _sc_resp = _sc_json.loads(_sc_r.read().decode())
+                            _sc_verdict = (_sc_resp.get('content', [{}])[0].get('text', '') or '').strip().upper()
+                            app.logger.info(f'[screenshot_check] image={image_id} verdict={_sc_verdict}')
+
+                            if 'REJECT' in _sc_verdict:
+                                _img.status         = 'flagged'
+                                _img.is_flagged     = True
+                                _img.is_public      = False
+                                _img.flagged_reason = (
+                                    'Screenshot detected: this appears to be a digital screenshot '
+                                    'rather than an original photograph. Only photographs taken in '
+                                    'the real world are accepted. Graffiti, signage, billboards, '
+                                    'and screens photographed as part of a real scene are welcome.'
+                                )
+                                _img.scoring_flash = (
+                                    'Your image was not accepted — it appears to be a screenshot '
+                                    'of a digital interface rather than an original photograph. '
+                                    'Please upload a real photograph. Street art, signage, and '
+                                    'billboards photographed in the world are welcome.'
+                                )
+                                db.session.commit()
+                                app.logger.info(f'[screenshot_check] REJECTED image={image_id}')
+                                return  # Stop — do not call Claude Vision
+                        except Exception as _sc_err:
+                            app.logger.warning(
+                                f'[screenshot_check] check failed for image={image_id}: '
+                                f'{_sc_err} — continuing to Claude Vision'
+                            )
+                        # ── END Screenshot check ────────────────────────────
+
+
                         try:
                             from engine.seasonal_calendar import build_seasonal_context, get_primary_genre
                             _u = User.query.get(_img.user_id)
