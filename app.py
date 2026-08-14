@@ -1,3 +1,4 @@
+# SL-VERSION: 179.7 (Session 183, 2026-08-14 — FIX Item 31: five columns never created on production. evolving_eye_milestone, progress_data_json, weather_json, weather_cache_ts, mentor_advice_json were all passed as arguments to one db.text() call which takes one argument. Raised immediately, rolled back, columns never created on every boot. Fix: split into five individual execute calls. Boot log will now show Location advisory link columns OK instead of the warning. RETAINS 179.6.)
 # SL-VERSION: 179.6 (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Added as Layer 3 between Hive check and Claude Vision. Uses Haiku to detect flat digital screenshots of apps, websites, scorecards. Allows graffiti, street art, billboards, signage, display windows, exhibition boards, venue signage, book pages as subjects, screens in real scenes. Rejects only flat UI screenshots with no real-world photographic context. Fails safe — if check errors, scoring continues normally. RETAINS 179.5.)
 # SL-VERSION: 179.5 (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. upload_history_log INSERT fails NOT NULL constraint on score column, except block logged warning but did not rollback — leaving session in InFailedSqlTransaction state. All subsequent DELETEs in the same route then silently failed. User saw no error, image remained. Fix: db.session.rollback() added in the except block after the warning log. One line. RETAINS 179.4.)
 # SL-VERSION: 179.4 (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at production ~6460 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6430, _first10/_last10 at ~6457. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. Critical path for the 19 Evolving Eye letters. RETAINS 179.3.)
@@ -1877,13 +1878,25 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_json TEXT DEFAULT NULL"
                 ))
+                # Item 31 fix (Session 183): Split into individual execute calls.
+                # Previously all five passed as arguments to one db.text() which
+                # takes exactly one positional argument — raised immediately and
+                # rolled back, so these five columns never existed on production.
                 db.session.execute(db.text(
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL",
-                    # SL-176.1d: performance cache columns
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL",
-                    # SL-176.1f: Sonnet-generated mentor advice cache
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL"
+                ))
+                # SL-176.1d: performance cache columns
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_data_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_json TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weather_cache_ts TIMESTAMPTZ DEFAULT NULL"
+                ))
+                # SL-176.1f: Sonnet-generated mentor advice cache
+                db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS mentor_advice_json TEXT DEFAULT NULL"
                 ))
                 db.session.commit()
