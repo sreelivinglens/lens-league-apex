@@ -1,4 +1,4 @@
-# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — FIX: user-facing rejection messages corrected to be specific per rejection type. Three messages changed: (1) Watermark: cleaner plain English. (2) Explicit/AI content: new message with raw file appeal instruction. (3) Screenshot: unchanged — already correct. Zero logic change. RETAINS 181.8-staging.)
+# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — FIX: user-facing rejection messages corrected to be specific per rejection type. Three changes: (1) scoring_flash watermark message simplified. (2) scoring_flash explicit/AI message updated with raw file appeal instruction. (3) score-status /score-status/<id> flagged response now returns specific message per flagged_reason — watermark, NSFW, and AI-generated each show a different message instead of the generic AI-flagged text. Zero logic change. RETAINS 181.8-staging.)
 # SL-VERSION: 181.8-staging (Session 184, 2026-08-14 — FIX: exact phash duplicate crashed silently. RETAINS 181.7-staging.)
 # SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
 # SL-VERSION: 181.6-staging (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. Same fix as production 179.5. db.session.rollback() added in upload_history_log except block. RETAINS 181.5-staging.)
@@ -11074,12 +11074,20 @@ def score_status(image_id):
         })
 
     if getattr(img, 'is_flagged', False):
+        _flagged_reason = getattr(img, 'flagged_reason', '') or ''
+        if _flagged_reason.lower().startswith('watermark'):
+            _flagged_msg = 'Your image contains a text overlay or watermark. Please upload a clean photograph.'
+        elif _flagged_reason.lower().startswith('nsfw') or 'explicit' in _flagged_reason.lower():
+            _flagged_msg = ('Your image could not be accepted for evaluation. '
+                            'Kindly upload the raw file to ' + CONTACT_EMAIL + ' if you believe this is an error.')
+        else:
+            _flagged_msg = ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
+                            'Only original photographs taken by you are accepted. '
+                            'If you believe this is an error, contact ' + CONTACT_EMAIL + '.')
         return jsonify({
             'status': 'flagged',
             'image_id': img.id,
-            'message': ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
-                        'Only original photographs taken by you are accepted. '
-                        'If you believe this is an error, contact ' + CONTACT_EMAIL + '.'),
+            'message': _flagged_msg,
             'redirect': url_for('dashboard')
         })
 
