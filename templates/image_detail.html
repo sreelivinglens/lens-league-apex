@@ -1,3 +1,4 @@
+{# SL-VERSION: 175.2 (Session 183, 2026-08-14 — FIX delete button: modal-based delete was not firing on production — onclick opened a modal that was not appearing. Replaced with direct form POST + browser confirm() dialog, same pattern as staging. Works for both owner delete and admin delete. RETAINS 175.1.) #}
 {# SL-VERSION: 175.1 (Under Review banner: warmer message — "Your evaluation is complete. This image will go public once our team completes a routine integrity check"; session 175, 2026-08-07) #}
 <!-- Version: Session 175 · 2026-08-07 -->
 {# SL-VERSION: 172.3 #}
@@ -383,7 +384,17 @@
       </script>
       {% endif %}
       {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
-      <button onclick="document.getElementById('delete-modal').classList.add('open')" class="btn btn-danger">Delete</button>
+      {% if current_user.role == 'admin' and image.user_id != current_user.id %}
+      <form method="POST" action="{{ url_for('admin_delete_image', image_id=image.id) }}" style="display:inline;margin:0" onsubmit="return confirm('Delete this photograph? This cannot be undone.');">
+        <input type="hidden" name="from" value="{{ request.args.get('from', '') }}">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="display:inline;margin:0" onsubmit="return confirm('Delete this photograph? This cannot be undone. The photograph and its evaluation will be removed permanently.');">
+        <input type="hidden" name="from" value="{{ request.args.get('from', '') }}">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+      {% endif %}
       {% endif %}
     </div>
   </div>
