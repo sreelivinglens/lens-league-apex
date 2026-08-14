@@ -1,7 +1,25 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.9-staging
+{# SL-VERSION: image_detail-181.10-staging
    Session 182 — 2026-08-14
-   EIGHT CHANGES, all requested by the founder:
+   NINE CHANGES, all requested by the founder:
+
+   -6. PERCENTILE COPY set to the founder's exact wording, after his own
+       research on how percentile is conventionally shown and what fits the
+       card's fixed footprint. There is no standard glyph for percentile (no
+       equivalent of "%"), so the ordinal carries it.
+         header   : "91st Percentile"   (capital P; ordinal, not "91% percentile",
+                                         which reads as "91 percent percentile")
+         sub-copy : "Higher than 91% of images in the League."
+       "images in the League" replaces "photographs evaluated on Shutter League"
+       — 15 characters shorter, holds to two lines on a phone, and stays inside
+       KYC (no "score", no "rank").
+       The hero line under the evaluation number now carries the same copy on one
+       line, so the two places on the page cannot drift apart again.
+       EDGE CASES, both live and both awkward — founder has not chosen wording:
+         top_pct 100 -> "0th Percentile / Higher than 0% of images in the League."
+         top_pct 0   -> "100th Percentile / Higher than 100% of images..." which
+                        is self-contradictory: it cannot be higher than itself.
+       Flagged, not fudged.
 
    -5. PERCENTILE NOW STATED THE STANDARD WAY. compute_percentile() returns
        top_pct = the share of the pool AT OR ABOVE this photograph, so LOWER is
@@ -682,7 +700,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           {% elif _diff < 0 %}<span style="font-size:13px;color:#fca5a5;font-weight:600">{{ '%+.2f'|format(_diff) }} vs your average</span>
           {% endif %}
         {% endif %}
-        {% if _beat_pct is not none %}<span style="font-size:13px;color:rgba(255,255,255,.55)">{{ _beat_pct }}{{ _pct_ord }} percentile — higher than {{ _beat_pct }}% of photographs evaluated</span>{% endif %}
+        {% if _beat_pct is not none %}<span style="font-size:13px;color:rgba(255,255,255,.55)">{{ _beat_pct }}{{ _pct_ord }} Percentile &middot; Higher than {{ _beat_pct }}% of images in the League</span>{% endif %}
       </div>
       {% endif %}
     </div>
@@ -1125,8 +1143,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
            drew a short bar — the opposite of what a bar means. Green is kept
            for the upper half only; below that it is neutral, because a 5th
            percentile should not be coloured like good news. #}
-        <div style="font-size:26px;font-weight:700;color:{% if _beat_pct >= 50 %}var(--sc-green){% else %}var(--sc-text){% endif %};line-height:1">{{ _beat_pct }}{{ _pct_ord }} percentile</div>
-        <div style="font-size:13px;color:var(--sc-muted);margin-top:3px">higher than {{ _beat_pct }}% of photographs evaluated on Shutter League</div>
+        <div style="font-size:26px;font-weight:700;color:{% if _beat_pct >= 50 %}var(--sc-green){% else %}var(--sc-text){% endif %};line-height:1">{{ _beat_pct }}{{ _pct_ord }} Percentile</div>
+        <div style="font-size:13px;color:var(--sc-muted);margin-top:3px">Higher than {{ _beat_pct }}% of images in the League.</div>
         <div style="height:6px;background:var(--sc-border);border-radius:2px;margin-top:10px;overflow:hidden">
           <div style="height:100%;width:{{ _beat_pct }}%;background:{% if _beat_pct >= 50 %}var(--sc-green){% else %}var(--sc-gold-dk){% endif %};border-radius:2px"></div>
         </div>
