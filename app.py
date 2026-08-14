@@ -1,5 +1,5 @@
-# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — THREE FIXES: (1) Rejection messages now specific per type — watermark, explicit/AI, screenshot each show correct message via score-status endpoint reading flagged_reason. (2) scoring_flash messages updated for watermark and explicit paths. (3) Resolution hard block — preflight route now catches ValueError from ingest_image and returns 422 with clear message instead of swallowing it as non-fatal. Main upload route already hard-blocked; preflight was the gap. RETAINS 181.8-staging.)
-# SL-VERSION: 181.8-staging (Session 184, 2026-08-14 — FIX: exact phash duplicate crashed silently. RETAINS 181.7-staging.)
+# SL-VERSION: 181.10-staging (Session 184, 2026-08-14 — FIX: screenshot_check NameError '_img_b64 is not defined'. Variable was scoped to preflight route, not background scoring thread. Fix: build _img_b64 from _img.thumb_path or _img.thumb_url inside the screenshot check block, matching watermark check pattern. Zero logic change to detection. RETAINS 181.9-staging.)
+# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — THREE FIXES: rejection messages specific per type, scoring_flash updated, resolution hard block on preflight. RETAINS 181.8-staging.)
 # SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
 # SL-VERSION: 181.6-staging (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. Same fix as production 179.5. db.session.rollback() added in upload_history_log except block. RETAINS 181.5-staging.)
 # SL-VERSION: 181.5-staging (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at staging ~6605 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6575, _first10/_last10 at ~6602. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. RETAINS 181.4-staging.)
@@ -9931,7 +9931,24 @@ def upload():
                         try:
                             import urllib.request as _sc_ureq
                             import json as _sc_json
+                            from PIL import Image as _SC_PIL
+                            import io as _sc_io
+                            import base64 as _sc_b64
                             _sc_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+                            # Build _img_b64 from thumb — same pattern as watermark check
+                            _sc_pil = None
+                            if _img.thumb_path and os.path.exists(_img.thumb_path or ''):
+                                _sc_pil = _SC_PIL.open(_img.thumb_path).convert('RGB')
+                            elif _img.thumb_url:
+                                with _sc_ureq.urlopen(_img.thumb_url, timeout=15) as _sc_fetch:
+                                    _sc_pil = _SC_PIL.open(_sc_io.BytesIO(_sc_fetch.read())).convert('RGB')
+                            if _sc_pil is None:
+                                raise ValueError('No thumb available for screenshot check')
+                            if max(_sc_pil.size) > 1024:
+                                _sc_pil.thumbnail((1024, 1024))
+                            _sc_buf = _sc_io.BytesIO()
+                            _sc_pil.save(_sc_buf, format='JPEG', quality=80)
+                            _img_b64 = _sc_b64.b64encode(_sc_buf.getvalue()).decode('utf-8')
                             _sc_check_prompt = (
                                 "Look at this image carefully. Answer with ONLY the word REJECT or PASS.\n\n"
                                 "REJECT if: This image is a screenshot of a digital interface — an app, website, "
