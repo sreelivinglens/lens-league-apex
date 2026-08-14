@@ -1,4 +1,4 @@
-# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — FIX: user-facing rejection messages corrected to be specific per rejection type. Three changes: (1) scoring_flash watermark message simplified. (2) scoring_flash explicit/AI message updated with raw file appeal instruction. (3) score-status /score-status/<id> flagged response now returns specific message per flagged_reason — watermark, NSFW, and AI-generated each show a different message instead of the generic AI-flagged text. Zero logic change. RETAINS 181.8-staging.)
+# SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — THREE FIXES: (1) Rejection messages now specific per type — watermark, explicit/AI, screenshot each show correct message via score-status endpoint reading flagged_reason. (2) scoring_flash messages updated for watermark and explicit paths. (3) Resolution hard block — preflight route now catches ValueError from ingest_image and returns 422 with clear message instead of swallowing it as non-fatal. Main upload route already hard-blocked; preflight was the gap. RETAINS 181.8-staging.)
 # SL-VERSION: 181.8-staging (Session 184, 2026-08-14 — FIX: exact phash duplicate crashed silently. RETAINS 181.7-staging.)
 # SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
 # SL-VERSION: 181.6-staging (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. Same fix as production 179.5. db.session.rollback() added in upload_history_log except block. RETAINS 181.5-staging.)
@@ -8794,6 +8794,12 @@ def upload_preflight():
             )
             if _thumb_path and _os.path.exists(_thumb_path):
                 _os.remove(_thumb_path)
+        except ValueError as _res_err:
+            # Hard block — resolution too low. Return immediately so the
+            # frontend shows the error before the user commits to the upload.
+            if _os.path.exists(_tmp.name):
+                _os.remove(_tmp.name)
+            return jsonify({'error': True, 'message': str(_res_err)}), 422
         finally:
             if _os.path.exists(_tmp.name):
                 _os.remove(_tmp.name)
