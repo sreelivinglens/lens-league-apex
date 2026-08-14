@@ -1,4 +1,4 @@
-{# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 175.9 (Session 184, 2026-08-14 — FIX: flagged status JS now uses r.message from score-status API instead of hardcoded generic text. Watermark, explicit, AI-generated each show correct specific message. My Gallery link retained. RETAINS 175.8.) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -1540,8 +1540,8 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          /* Override server message — never accuse photographer of using AI */
-          var _flagMsg = 'Your image has been flagged for admin review before it can be evaluated.\n\nThis can happen with heavily edited or stylised photographs. Our team will review it shortly.\n\nYou can view the status and raise a query in My Gallery.';
+          /* Use server message — set specifically per rejection type in score-status endpoint */
+          var _flagMsg = r.message || 'Your image could not be accepted for evaluation. Please contact support@shutterleague.com if you believe this is an error.';
           showError(_flagMsg);
           /* Show My Gallery link below error — do NOT auto-redirect */
           var _galleryLink = document.createElement('a');
