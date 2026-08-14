@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
+{# SL-VERSION: 178.2 (Session 182, 2026-08-14 — MOBILE "MORE" DRAWER restyled as a compact popup anchored right, matching production. NOTE FOR WHOEVER IS NEXT: the dashboard carries its OWN More drawer (#slMoreDrawer, .mob-more-*) which is SEPARATE from the one in base.html (#slBottomMoreMenu). base's has 8 items starting "Explore"; this one has 9 starting "Recent Work". Two different More menus on the same site — base 180.9 fixed base's and had no effect here, which is why the drawer still filled the screen. This was left:0;right:0;translateY(110%) — a full-bleed sheet from the bottom bar upward. Now right:8px, 208px min-width, rounded, gold hairline border, above the bar. THE GREEN #0F2A22 IS UNCHANGED — founder's instruction; only geometry moved. Grab handle hidden (it signals a draggable full-width sheet). Overlay kept for outside-tap close but made transparent, as production shows no dim. max-height 58dvh so the last item clears the bar and home indicator; items keep a 44px tap target. CSS only — no markup, no JS, no Jinja changed. slMoreOpen/slMoreClose verified working. RETAINS 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -242,13 +242,46 @@ body.page-dashboard #backToTop         { display:none !important }
 .mob-thumb-date{font-size:13px;color:var(--muted);text-align:center}
 
 /* ── MORE DRAWER — mobile only ── */
-.mob-more-overlay{display:none;position:fixed;inset:0;z-index:1998;background:rgba(0,0,0,0.5)}
-.mob-more-drawer{position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,34px));left:0;right:0;z-index:1999;background:#0F2A22;border-radius:18px 18px 0 0;padding:16px 0 12px;transform:translateY(110%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);max-height:70vh;overflow-y:auto}
-.mob-more-drawer.open{transform:translateY(0)}
-.mob-more-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 16px}
-.mob-more-item{display:flex;align-items:center;gap:14px;padding:13px 24px;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation} /* SL-178.1 */
+/* SL-178.2 — transparent: production shows no dim behind its More popup. The
+   element is kept because it is what catches an outside tap to close. */
+.mob-more-overlay{display:none;position:fixed;inset:0;z-index:1998;background:transparent}
+/* SL-178.2 — MORE DRAWER: compact popup anchored right, not a full-width sheet.
+   The dashboard carries its OWN More drawer, separate from the one in base.html
+   (#slBottomMoreMenu). base.html's has 8 items starting "Explore"; this one has
+   9 starting "Recent Work". Two different More menus on the same site.
+   This was a full-bleed sheet — left:0; right:0; translateY(110%) — so it
+   covered the screen from the bottom bar upward and swallowed the page.
+   Restyled to match production's popup: anchored to the right above the More
+   button, 208px wide, rounded, gold hairline border. THE GREEN (#0F2A22) IS
+   KEPT — founder's instruction. Only the geometry changes.
+   max-height 58dvh so the last item clears the bar and the home indicator. */
+.mob-more-drawer{
+  position:fixed;
+  bottom:calc(62px + env(safe-area-inset-bottom,34px) + 10px);
+  right:8px;
+  left:auto;
+  width:auto;
+  min-width:208px;
+  max-width:74vw;
+  z-index:1999;
+  background:#0F2A22;
+  border:1px solid rgba(245,197,24,0.25);
+  border-radius:10px;
+  padding:6px 0;
+  box-shadow:0 -6px 28px rgba(0,0,0,0.55);
+  transform:translateY(8px);
+  opacity:0;
+  pointer-events:none;
+  transition:transform .18s ease-out, opacity .18s ease-out;
+  max-height:58dvh;
+  overflow-y:auto;
+}
+.mob-more-drawer.open{transform:translateY(0);opacity:1;pointer-events:auto}
+/* SL-178.2 — hidden: a grab handle signals a draggable full-width sheet. This is now a popup. */
+.mob-more-handle{display:none}
+.mob-more-item{display:flex;align-items:center;gap:14px;padding:12px 18px;min-height:44px;box-sizing:border-box;font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation} /* SL-178.1 */
 .mob-more-item:active,.mob-more-item:focus{background:rgba(255,255,255,0.06);outline:none}
-.mob-more-divider{height:0.5px;background:rgba(255,255,255,0.1);margin:6px 24px}</style>
+.mob-more-divider{height:0.5px;background:rgba(255,255,255,0.1);margin:5px 18px}</style>
 
 {% endblock %}
 
