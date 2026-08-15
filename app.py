@@ -1,4 +1,3 @@
-# SL-VERSION: 181.12-staging (Session 186, 2026-08-15 — FREE_IMAGE_LIMIT raised from 3 to 10 — matches confirmed free tier architecture (10 lifetime Haiku images). Affects /try route only — Haiku free users. No impact on subscribed users or Sonnet pipeline. RETAINS 181.10-staging.)
 # SL-VERSION: 181.10-staging (Session 184, 2026-08-14 — FIX: screenshot_check NameError '_img_b64 is not defined'. Variable was scoped to preflight route, not background scoring thread. Fix: build _img_b64 from _img.thumb_path or _img.thumb_url inside the screenshot check block, matching watermark check pattern. Zero logic change to detection. RETAINS 181.9-staging.)
 # SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — THREE FIXES: rejection messages specific per type, scoring_flash updated, resolution hard block on preflight. RETAINS 181.8-staging.)
 # SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
@@ -517,7 +516,7 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
     return sent
 
 
-FREE_IMAGE_LIMIT = 10  # Lifetime Haiku free evaluations — confirmed free tier architecture (Session 186)
+FREE_IMAGE_LIMIT = 3  # Lifetime assessment images (Initial Assessment Phase — investor doc)
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 # ── Email allowlist — UAT/beta phase ─────────────────────────────────────────
@@ -3217,7 +3216,7 @@ def seed_master_references():
             ('GMB Akash','Street,Documentary','Bangladesh','Tier 2','Poverty and resilience in South Asia, emotional human narrative, WPP winner.','Human resilience, South Asian documentary, emotional depth','Wildlife,Fashion,Minimalist',False),
             ('Raghu Rai','Street,Documentary','India — Delhi','Tier 2','Indian political and social life, Indira Gandhi, Bhopal, five decades of Indian documentary.','Indian documentary, political moment, human dignity in India','Fashion,Wildlife,Minimalist',False),
             ('T.S. Satyan','Street,Documentary','India','Tier 2','India in the 1950s-70s, political portraits, independent India documentation.','Historical India, independence era, Indian political portrait','Wildlife,Fashion',False),
-            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India / New Zealand — Hamilton','Platform Mentor','Street photography (Indian cities and communities), people and portrait (Indian faces), landscape and nature (New Zealand — Waikato and beyond; Ladakh, Himalayas, Indian wilderness), wildlife and nature (South India — Kabini, Kerala). Think East and Capture philosophy — inner expression over technique. Based in Hamilton, New Zealand. Reference link: soulfulphotographer.com ONLY — never generate a custom search link. NEVER describe as architectural photographer. NEVER invent location-specific claims (Hampi, Khajuraho, Sun Temple, heritage structures, etc.). 25+ years experience, mentor and workshop leader across India and New Zealand.','Any genre where photographer is overthinking technique. Cross-genre work. Indian and New Zealand landscape and nature context. Street and people work.','Wedding,Fashion,Architecture',True),
+            ('Ashok Kochhar','Street,Portrait,Conceptual,Documentary,Maternity','India / New Zealand — Hamilton','Platform Mentor','Street photography (Indian cities and communities), people and portrait (Indian faces). Think East and Capture philosophy — inner expression over technique. Based in Hamilton, New Zealand. Reference link: soulfulphotographer.com ONLY — never generate a custom search link. NEVER describe as architectural photographer. NEVER reference for Nature, Wildlife, Landscape, Astrophotography, or Night Sky work. NEVER invent location-specific claims. 25+ years experience, mentor and workshop leader across India and New Zealand.','Street, Portrait, Conceptual, Documentary — only when genre matches. Do NOT reference for Nature, Wildlife, Landscape, Night Sky, Astrophotography, or outdoor natural phenomena.','Wedding,Fashion,Architecture,Nature,Wildlife,Landscape,Astrophotography',True),
             ('Nick Brandt','Wildlife,Conservation','UK / Africa','Tier 1','Large format B&W Africa wildlife, animal dignity, extinction themes.','Wildlife B&W, animal dignity, conservation framing, Africa','Street,Fashion,Colour landscape',False),
             ('Frans Lanting','Wildlife,Nature','Netherlands','Tier 1','Intimate animal behaviour, Africa and Amazon, colour and mood.','Animal behaviour, intimate wildlife, colour mood, environmental storytelling','Street,Fashion,Studio',False),
             ('Art Wolfe','Wildlife,Nature,Landscape','USA','Tier 1','Patterns in nature, aerial wildlife, camouflage. Migrations series.','Patterns in wildlife, geometric animal groupings, aerial perspective','Street,Fashion,Portrait',False),
@@ -20383,7 +20382,7 @@ MENTORS = {
         'price':       200,
         'points_cost': 2000,
         'photo':       'img/mentor_ashok.jpg',
-        'genres':      'Conceptual · Fashion · Street · Nature',
+        'genres':      'Conceptual · Fashion · Street · Portrait',
         'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
     },
 
