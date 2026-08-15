@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.4-staging (Session 186, 2026-08-15 — Warning/error colour fixes: .file-size-warning amber-dim/gold → --bg-warning/--text-warning/--border-warning 1.5px; .file-error #fdecea/#7a0000 → --bg-danger/--text-danger/--border-danger 1.5px; RAW info box gold-tint → --surface-1/--text-primary/--border-strong 1.5px; disputeBox + disputeLink + textarea + button + JS borderColor all → semantic CSS variables, 16px, WCAG AA. RETAINS 181.3.) #}
+{# SL-VERSION: 181.5-staging (Session 186, 2026-08-16 — Free evaluation count updated 3→10 to match FREE_IMAGE_LIMIT=10. STAGING ONLY. RETAINS 181.4-staging.)
 {# SL-VERSION: 181.3 (Session 184, 2026-08-14 — FIX: flagged status JS now uses r.message from score-status API instead of hardcoded generic text. Watermark, explicit, AI-generated each show correct specific message. My Gallery link retained. RETAINS 181.2.) Previous: 181.2 (181.1 redirected to the result page before scoring finished — now polls first.) Previous: 181.1 (Session 181, 2026-08-13 — free evaluation path. (1) location check now reads #location-hidden when the visible input has been hidden by the session-storage block, which was refusing every second upload in a session. (2) /try/upload success reply {image_id:N} is now handled — it has no status field, so it fell through to the error branch and printed 'Upload failed (200)' on a successful upload. Retains 175.8:) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
@@ -120,13 +120,13 @@
   /* size warning — soft, amber, not red */
   .file-size-warning {
     display: none; margin-top: 10px; padding: 12px 16px;
-    background: var(--bg-warning); border: 1.5px solid var(--border-warning);
-    border-radius: var(--radius-sm); color: var(--text-warning); font-size: 16px; line-height: 1.6;
+    background: var(--amber-dim); border: 1px solid var(--amber);
+    border-radius: var(--radius-sm); color: #F5C518; font-size: 16px; line-height: 1.6;
   }
   .file-error {
     display: none; margin-top: 10px; padding: 12px 16px;
-    background: var(--bg-danger); border: 1.5px solid var(--border-danger);
-    border-radius: var(--radius-sm); color: var(--text-danger); font-size: 16px; line-height: 1.6;
+    background: #fdecea; border: 1px solid #e53935;
+    border-radius: var(--radius-sm); color: #7a0000; font-size: 16px; line-height: 1.6;
   }
 
   /* ── PREFLIGHT MODAL ── similar-image warning + genre suggestion ── */
@@ -456,7 +456,7 @@
   </div>
   {% if is_trial %}
   <div style="background:#E8EAF6;border:1px solid #C5CAE9;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#1A1A18;line-height:1.5;">
-    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of 3</strong><br>
+    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of 10</strong><br>
     Every dimension is weighted for your interest area and benchmarked against a live calibration pool.
   </div>
   {% endif %}
@@ -578,8 +578,8 @@
       </div>
 
       <!-- Soft size warning — amber, not a block -->
-      <div style="margin-top:10px; padding:14px 16px; background:var(--surface-1); border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); font-size:16px; color:var(--text-primary); line-height:1.6;">
-        📂 <strong>Keep your original RAW file.</strong>
+      <div style="margin-top:10px; padding:10px 14px; background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark); border-radius:var(--radius-sm); font-size:16px; color:var(--text-muted); line-height:1.6;">
+        📂 <strong style="color:var(--text-primary);">Keep your original RAW file.</strong>
         Highly evaluated images may be selected for RAW verification — you may need to submit the original file from your camera.
       </div>
       <div class="file-size-warning" id="fileSizeWarning">
@@ -590,11 +590,11 @@
       <div class="file-error" id="fileError"></div>
 
       <!-- NSFW reject dispute — only shown when the server returns a dispute_id -->
-      <div id="disputeBox" style="display:none; margin-top:8px; padding:14px 16px; background:var(--bg-danger); border:1.5px solid var(--border-danger); border-radius:var(--radius-sm); font-size:16px; color:var(--text-danger); line-height:1.6;">
-        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:var(--text-danger); text-decoration:underline; font-weight:700;">Tell us →</a>
+      <div id="disputeBox" style="display:none; margin-top:8px; padding:12px 16px; background:#fdecea; border:1px solid #e53935; border-radius:var(--radius-sm); font-size:15px; color:#7a0000; line-height:1.6;">
+        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:#7a0000; text-decoration:underline; font-weight:700;">Tell us →</a>
           <div id="disputeReasonWrap" style="display:none; margin-top:10px;">
-            <textarea id="disputeReason" placeholder="Tell us why you think this was flagged incorrectly (required)" maxlength="500" style="width:100%; min-height:80px; padding:10px 12px; border:1.5px solid var(--border-danger); border-radius:6px; font-size:16px; font-family:inherit; color:var(--text-primary); background:var(--surface-2); resize:vertical; box-sizing:border-box;"></textarea>
-            <button id="disputeSubmitBtn" style="margin-top:8px; padding:10px 18px; background:var(--bg-danger); color:var(--text-danger); border:1.5px solid var(--border-danger); border-radius:6px; font-size:16px; font-weight:700; cursor:pointer;">Submit dispute</button>
+            <textarea id="disputeReason" placeholder="Tell us why you think this was flagged incorrectly (required)" maxlength="500" style="width:100%; min-height:80px; padding:8px 10px; border:1px solid #e53935; border-radius:6px; font-size:14px; font-family:inherit; color:#1a1a18; resize:vertical; box-sizing:border-box;"></textarea>
+            <button id="disputeSubmitBtn" style="margin-top:8px; padding:8px 18px; background:#e53935; color:#fff; border:none; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer;">Submit dispute</button>
           </div>
         </span>
         <span id="disputeConfirm" style="display:none;">✓ Sent to our team — we'll review and follow up by email.</span>
@@ -944,7 +944,7 @@
     submitBtn.onclick = function() {
       var reason = reasonInput.value.trim();
       if (!reason) {
-        reasonInput.style.borderColor = 'var(--border-danger)';
+        reasonInput.style.borderColor = '#e53935';
         reasonInput.placeholder = 'Please tell us why before submitting';
         reasonInput.focus();
         return;
