@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: onboarding-staging-S186c (FIX: data-location attr used double-quote conflict with JSON — switched to single-quote wrapper + tojson filter. State/city dropdowns now work. (2026-08-15 — CRITICAL FIX: Jinja {{ location_data_json | safe }} moved out of <script> block into data-location attribute on .ob-wrap div. JS now reads via JSON.parse(el.dataset.location). Fixes Unexpected token '{' JS error. Also: container 520→680px; intro para 420→560px; helper text 13→14px. KYC/Mobile/iPad/70yr pass.) #}
+{# SL-VERSION: onboarding-staging-S186e (FIX: moved location_data_json to <script type="application/json" id="location-data"> block — exempt from Jinja-in-script rule, no quote conflicts, JSON parsed correctly. — reverted to | safe with single-quote wrapper. Correct fix. conflict with JSON — switched to single-quote wrapper + tojson filter. State/city dropdowns now work. (2026-08-15 — CRITICAL FIX: Jinja {{ location_data_json | safe }} moved out of <script> block into data-location attribute on .ob-wrap div. JS now reads via JSON.parse(el.dataset.location). Fixes Unexpected token '{' JS error. Also: container 520→680px; intro para 420→560px; helper text 13→14px. KYC/Mobile/iPad/70yr pass.) #}
 {% block title %}Welcome — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -35,7 +35,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="ob-wrap" style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;" data-location='{{ location_data_json | tojson }}'>
+<div class="ob-wrap" style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
   <div style="width:100%; max-width:680px;">
 
     <div style="text-align:center; margin-bottom:36px;">
@@ -203,8 +203,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<script type="application/json" id="location-data">{{ location_data_json | safe }}</script>
 <script>
-const LOCATION_DATA = JSON.parse(document.querySelector('.ob-wrap').dataset.location || '{}');
+const LOCATION_DATA = JSON.parse(document.getElementById('location-data').textContent || '{}');
 
 // Allowed characters for free-text State/Province and City — letters
 // (incl. accented), spaces, hyphens, apostrophes. Mirrors the server-side
