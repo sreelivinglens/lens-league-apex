@@ -1,5 +1,4 @@
-# SL-VERSION: 179.9-main (Session 186, 2026-08-15 — Hive hard reject: (1) scoring_flash now set so dashboard message fires alongside email — previously email sent but dashboard showed nothing; (2) user email rewritten in Sherpa tone using _sl_member_email wrapper — no AI accusation, warm and specific, RAW appeal path clear; (3) admin email rebuilt with full decision-making context — image, user, confidence, generator, direct admin review link; (4) amber flag (0.70–0.89) now sends admin notification email — previously silent. RETAINS 179.8.)
-# SL-VERSION: 179.9-main (Session 186, 2026-08-15 — Hive hard reject: (1) scoring_flash now set so dashboard message fires — previously email sent but dashboard silent; (2) user email Sherpa tone, no AI accusation; (3) admin email full context with direct review link; (4) amber flag admin notification added — previously silent. RETAINS 179.8.)
+# SL-VERSION: 179.10-main (Session 186, 2026-08-15 — FIX: /try POST route now returns {status:'processing', image_id} instead of {image_id} alone. JS on upload.html checks resp.status==='processing' — without it the response fell through to the generic error handler showing "Upload failed (200)". One-line fix. RETAINS 179.8.)
 # SL-VERSION: 179.8 (Session 184, 2026-08-14 — FIVE FIXES from staging v181.8–181.10: (1) Duplicate image upload (100% phash match) crashed silently — now hard-blocked pre-save with clear message. (2) Resolution preflight now catches ValueError from ingest_image and returns 422 — hard block instead of non-fatal warning. (3) Watermark scoring_flash message simplified. (4) Explicit/AI scoring_flash updated with raw file appeal instruction. (5) score-status flagged endpoint now reads flagged_reason and returns specific message per type — watermark/explicit/AI each show correct message. (6) Screenshot check _img_b64 NameError fixed — builds image from thumb_path/thumb_url inside the check block. RETAINS 179.7.)
 # SL-VERSION: 179.7 (Session 183, 2026-08-14 — FIX Item 31: five columns never created on production. RETAINS 179.6.)
 # SL-VERSION: 179.6 (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Added as Layer 3 between Hive check and Claude Vision. Uses Haiku to detect flat digital screenshots of apps, websites, scorecards. Allows graffiti, street art, billboards, signage, display windows, exhibition boards, venue signage, book pages as subjects, screens in real scenes. Rejects only flat UI screenshots with no real-world photographic context. Fails safe — if check errors, scoring continues normally. RETAINS 179.5.)
@@ -9656,7 +9655,7 @@ def upload():
                                     )
                                     _img.flagged_at       = datetime.utcnow()
                                     db.session.commit()
-                                    # ── SL-179.9: Notify user (Sherpa tone) + admin (full context) ──
+                                    # Notify user and admin
                                     try:
                                         _u = User.query.get(_img.user_id)
                                         _uname = (
@@ -9664,118 +9663,88 @@ def upload():
                                             if _u else 'Photographer'
                                         )
                                         _gen_display = _hive_generator.replace('_', ' ').title()
-                                        _img_name    = _img.asset_name or 'Untitled'
-                                        _hive_site   = os.getenv('SITE_URL', 'https://shutterleague.com')
-
-                                        # ── FIX 1: scoring_flash — dashboard message ──────────────
-                                        # Previously missing: email fired but dashboard showed nothing.
-                                        _img.scoring_flash = (
-                                            'We need to take a closer look at this one before it goes live. '
-                                            'Check your email — we have sent you the next steps.'
-                                        )
-                                        db.session.commit()
-
-                                        # ── FIX 2: User email — Sherpa tone, no AI accusation ─────
-                                        _user_body = (
-                                            f'<p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1a1a18;">Hi {_uname},</p>'
-                                            f'<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">'
-                                            f'Your photograph <strong>{_img_name}</strong> has been paused before evaluation. '
-                                            f'We need to take a closer look at it first.</p>'
-                                            f'<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">'
-                                            f'This happens occasionally with photographs that have high-production finishing, '
-                                            f'heavy post-processing, or a rendering style that our system wants a human to confirm. '
-                                            f'It does not mean your photograph has been rejected.</p>'
-                                            f'<p style="margin:0 0 8px;font-size:16px;line-height:1.7;color:#4A4840;">'
-                                            f'If this is an original photograph taken by you, reply to this email with any of the following '
-                                            f'and we will clear it within 48 hours:</p>'
-                                            f'<ul style="margin:0 0 20px;padding-left:20px;font-size:16px;line-height:2;color:#4A4840;">'
-                                            f'<li>Your original RAW or unedited file</li>'
-                                            f'<li>A behind-the-scenes shot or camera metadata</li>'
-                                            f'<li>The camera and lens you used</li>'
-                                            f'</ul>'
-                                            f'<div style="margin:24px 0 8px;text-align:center;">'
-                                            f'<a href="mailto:{CONTACT_EMAIL}?subject=Appeal%20—%20{_img_name}" class="sl-ob-btn" '
-                                            f'style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;'
-                                            f'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;'
-                                            f'border-radius:4px;font-family:Inter,Arial,sans-serif;">Reply to Appeal &#8594;</a>'
-                                            f'</div>'
-                                            f'<p style="margin:20px 0 0;font-size:15px;line-height:1.7;color:#6a6458;">'
-                                            f'Your image goes live immediately once cleared. We will let you know either way.</p>'
-                                        )
+                                        # ── User email — no AI accusation, says flagged for review ──
                                         send_email(
                                             to_addresses=[_u.email] if _u else [],
-                                            subject=f'Your photograph is paused for review — {_img_name}',
-                                            html_body=_sl_member_email('SHUTTER LEAGUE', _user_body,
-                                                footer_note='You are receiving this because you uploaded a photograph to Shutter League.'),
+                                            subject='[Shutter League] Image held for review — ' + (_img.asset_name or 'Untitled'),
+                                            html_body=(
+                                                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                                '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                                                '<style>@media only screen and (max-width:600px){'
+                                                '.sl-ai-pad{padding:20px 16px!important;}'
+                                                '.sl-ai-btn{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}'
+                                                '}</style></head>'
+                                                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                                                '<tr><td align="center">'
+                                                '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                                                '<tr><td style="background:#1a1a18;padding:20px 28px;">'
+                                                '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                                                '</td></tr>'
+                                                '<tr><td class="sl-ai-pad" style="padding:28px 32px;">'
+                                                '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Your image is under review.</h2>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + _uname + ',</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Your photograph <strong>' + (_img.asset_name or 'Untitled') + '</strong> has been held for admin review before evaluation. This can happen with heavily edited, stylised, or high-production photographs that require manual verification.</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">If this is an original photograph taken by you, we want to clear it quickly. Please reply to this email with any of the following:</p>'
+                                                '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-left:4px solid #C8A84B;border-radius:4px;padding:16px 20px;margin:0 0 20px;">'
+                                                '<p style="margin:0 0 8px;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">To appeal, send us:</p>'
+                                                '<ul style="font-size:15px;line-height:2;color:#4A4840;margin:0;padding-left:20px;">'
+                                                '<li>Your original RAW or unedited file</li>'
+                                                '<li>Any behind-the-scenes photos or production notes</li>'
+                                                '<li>Camera and lens used</li>'
+                                                '</ul></div>'
+                                                '<p style="margin:0 0 20px;text-align:center;">'
+                                                '<a href="mailto:' + CONTACT_EMAIL + '" class="sl-ai-btn" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Appeal This Decision &#8594;</a>'
+                                                '</p>'
+                                                '<p style="font-size:15px;color:#6a6458;margin:0;line-height:1.7;">We aim to resolve reviews within 48 hours. Your image goes live immediately if cleared.</p>'
+                                                '</td></tr>'
+                                                '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                                                '<p style="margin:0;font-size:15px;color:#6a6458;">&#8212; Shutter League</p>'
+                                                '</td></tr>'
+                                                '</table></td></tr></table></body></html>'
+                                            ),
                                             text_body=(
-                                                f'Hi {_uname},\n\n'
-                                                f'Your photograph "{_img_name}" has been paused before evaluation. '
-                                                f'We need to take a closer look at it first.\n\n'
-                                                f'This happens with photographs that have high-production finishing or '
-                                                f'heavy post-processing. It does not mean your photograph has been rejected.\n\n'
-                                                f'To appeal, reply to this email with:\n'
-                                                f'  - Your original RAW or unedited file\n'
-                                                f'  - A behind-the-scenes shot or camera metadata\n'
-                                                f'  - The camera and lens you used\n\n'
-                                                f'We aim to clear it within 48 hours. Your image goes live immediately once cleared.\n\n'
-                                                f'-- Shutter League'
+                                                'Hi ' + _uname + ',\n\n'
+                                                'Your photograph "' +
+                                                (_img.asset_name or 'Untitled') +
+                                                '" has been held for admin review before evaluation.\n\n'
+                                                'This can happen with heavily edited, stylised, or high-production photographs.\n'
+                                                'If this is an original photograph, reply to this email with:\n'
+                                                '  - Your original RAW or unedited file\n'
+                                                '  - Any behind-the-scenes photos or production notes\n'
+                                                '  - Camera and lens used\n\n'
+                                                'We aim to resolve reviews within 48 hours.\n\n'
+                                                '-- Shutter League'
                                             )
-                                        )
-
-                                        # ── FIX 3: Admin email — full decision-making context ─────
-                                        _admin_body = (
-                                            f'<p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a18;">'
-                                            f'HIVE HARD REJECT — Claude Vision was NOT called. Image held pending your decision.</p>'
-                                            f'<table style="width:100%;border-collapse:collapse;font-size:15px;margin:0 0 20px;">'
-                                            f'<tr style="background:#F5F0E8;"><td style="padding:8px 12px;font-weight:700;width:160px;color:#1a1a18;">Image</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_img_name}</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Image ID</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{image_id}</td></tr>'
-                                            f'<tr style="background:#F5F0E8;"><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">User</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_uname} &lt;{_u.email if _u else "unknown"}&gt;</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">User ID</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_img.user_id}</td></tr>'
-                                            f'<tr style="background:#F5F0E8;"><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Hive Confidence</td>'
-                                            f'<td style="padding:8px 12px;font-weight:700;color:#b00000;">{_hive_ai_score:.0%}</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Detected Generator</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_gen_display}</td></tr>'
-                                            f'<tr style="background:#F5F0E8;"><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Genre Filed</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{getattr(_img, "genre", "—")}</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Flagged At</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}</td></tr>'
-                                            f'</table>'
-                                            f'<p style="margin:0 0 8px;font-size:14px;color:#6a6458;">'
-                                            f'Image is set to is_flagged=True, needs_review=True, is_public=False. '
-                                            f'User has been emailed. User has a dashboard message. No evaluation has run.</p>'
-                                            f'<div style="margin:20px 0;text-align:center;">'
-                                            f'<a href="{_hive_site}/admin/images/{image_id}" '
-                                            f'style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;'
-                                            f'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;'
-                                            f'font-family:Inter,Arial,sans-serif;">Review in Admin Panel &#8594;</a>'
-                                            f'</div>'
                                         )
                                         send_email(
                                             to_addresses=[ADMIN_EMAIL],
                                             subject=(
-                                                f'[HIVE REJECT] {_img_name} — '
-                                                f'{_gen_display} {_hive_ai_score:.0%} — '
-                                                f'{_uname}'
+                                                '[Admin] Hive Hard Reject — ' +
+                                                (_img.asset_name or 'Untitled') +
+                                                ' (' + _gen_display + ' ' +
+                                                f'{_hive_ai_score:.0%}' + ')'
                                             ),
-                                            html_body=_sl_member_email('ADMIN ALERT — HIVE REJECT', _admin_body,
-                                                footer_note='Shutter League admin notification. Action required.'),
+                                            html_body=(
+                                                '<p>Hive hard rejected an image — '
+                                                'Claude Vision was NOT called.</p>'
+                                                '<ul><li>Image: ' +
+                                                (_img.asset_name or 'Untitled') +
+                                                '</li><li>Generator: ' + _gen_display +
+                                                '</li><li>Confidence: ' +
+                                                f'{_hive_ai_score:.0%}' +
+                                                '</li><li>User: ' +
+                                                (_u.email if _u else 'unknown') +
+                                                '</li></ul>'
+                                            ),
                                             text_body=(
-                                                f'HIVE HARD REJECT — Claude Vision was NOT called.\n\n'
-                                                f'Image:      {_img_name}\n'
-                                                f'Image ID:   {image_id}\n'
-                                                f'User:       {_uname} <{_u.email if _u else "unknown"}>\n'
-                                                f'User ID:    {_img.user_id}\n'
-                                                f'Confidence: {_hive_ai_score:.0%}\n'
-                                                f'Generator:  {_gen_display}\n'
-                                                f'Genre:      {getattr(_img, "genre", "—")}\n'
-                                                f'Flagged at: {datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}\n\n'
-                                                f'Status: is_flagged=True, needs_review=True, is_public=False.\n'
-                                                f'User emailed. Dashboard message set. No evaluation run.\n\n'
-                                                f'Review: {_hive_site}/admin/images/{image_id}'
+                                                'Hive hard reject.\nImage: ' +
+                                                (_img.asset_name or 'Untitled') +
+                                                '\nGenerator: ' + _gen_display +
+                                                '\nConfidence: ' +
+                                                f'{_hive_ai_score:.0%}' +
+                                                '\nUser: ' +
+                                                (_u.email if _u else 'unknown')
                                             )
                                         )
                                     except Exception as _he:
@@ -9789,75 +9758,12 @@ def upload():
                                     # Medium confidence — score with Claude
                                     # but flag for admin review.
                                     # Creative genre exempt — see hard reject note above.
-                                    # SL-179.9: admin now notified. User sees nothing — image scores normally.
                                     _img.needs_review = True
                                     db.session.commit()
                                     app.logger.info(
                                         f'[hive] amber flag image={image_id} '
                                         f'score={_hive_ai_score:.3f}'
                                     )
-                                    # ── FIX 4: Admin amber flag notification ──────────────────────
-                                    try:
-                                        _u_amb    = User.query.get(_img.user_id)
-                                        _amb_site = os.getenv('SITE_URL', 'https://shutterleague.com')
-                                        _amb_name = _img.asset_name or 'Untitled'
-                                        _amb_gen  = _hive_generator.replace('_', ' ').title()
-                                        _amb_uname = (
-                                            (_u_amb.full_name or _u_amb.username)
-                                            if _u_amb else 'Unknown'
-                                        )
-                                        _amb_body = (
-                                            f'<p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a18;">'
-                                            f'HIVE AMBER FLAG — Image has been scored by Claude but needs your review.</p>'
-                                            f'<p style="margin:0 0 16px;font-size:14px;color:#4A4840;">'
-                                            f'Hive confidence was {_hive_ai_score:.0%} — below the 90% hard reject threshold. '
-                                            f'Evaluation ran normally. Review the result before it becomes public.</p>'
-                                            f'<table style="width:100%;border-collapse:collapse;font-size:15px;margin:0 0 20px;">'
-                                            f'<tr style="background:#FFF8E8;"><td style="padding:8px 12px;font-weight:700;width:160px;color:#1a1a18;">Image</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_amb_name}</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Image ID</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{image_id}</td></tr>'
-                                            f'<tr style="background:#FFF8E8;"><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">User</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_amb_uname} &lt;{_u_amb.email if _u_amb else "unknown"}&gt;</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Hive Confidence</td>'
-                                            f'<td style="padding:8px 12px;font-weight:700;color:#b05000;">{_hive_ai_score:.0%}</td></tr>'
-                                            f'<tr style="background:#FFF8E8;"><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Detected Generator</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{_amb_gen}</td></tr>'
-                                            f'<tr><td style="padding:8px 12px;font-weight:700;color:#1a1a18;">Genre Filed</td>'
-                                            f'<td style="padding:8px 12px;color:#4A4840;">{getattr(_img, "genre", "—")}</td></tr>'
-                                            f'</table>'
-                                            f'<div style="margin:20px 0;text-align:center;">'
-                                            f'<a href="{_amb_site}/admin/images/{image_id}" '
-                                            f'style="display:inline-block;background:#b05000;color:#ffffff;font-size:14px;font-weight:700;'
-                                            f'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;'
-                                            f'font-family:Inter,Arial,sans-serif;">Review Scored Image &#8594;</a>'
-                                            f'</div>'
-                                        )
-                                        send_email(
-                                            to_addresses=[ADMIN_EMAIL],
-                                            subject=(
-                                                f'[HIVE AMBER] {_amb_name} — '
-                                                f'{_amb_gen} {_hive_ai_score:.0%} — '
-                                                f'{_amb_uname}'
-                                            ),
-                                            html_body=_sl_member_email('ADMIN ALERT — HIVE AMBER', _amb_body,
-                                                footer_note='Shutter League admin notification. Review recommended.'),
-                                            text_body=(
-                                                f'HIVE AMBER FLAG — Image scored but needs review.\n\n'
-                                                f'Image:      {_amb_name}\n'
-                                                f'Image ID:   {image_id}\n'
-                                                f'User:       {_amb_uname} <{_u_amb.email if _u_amb else "unknown"}>\n'
-                                                f'Confidence: {_hive_ai_score:.0%}\n'
-                                                f'Generator:  {_amb_gen}\n'
-                                                f'Genre:      {getattr(_img, "genre", "—")}\n\n'
-                                                f'Evaluation ran normally. Review before image goes public.\n\n'
-                                                f'Review: {_amb_site}/admin/images/{image_id}'
-                                            )
-                                        )
-                                    except Exception as _amb_err:
-                                        app.logger.error(
-                                            f'[hive amber email error] {_amb_err}'
-                                        )
                                     # Continue to Claude Vision below
 
                             except Exception as _hive_err:
@@ -31601,7 +31507,7 @@ def try_upload():
         daemon=True
     ).start()
 
-    return jsonify({'image_id': image_id})
+    return jsonify({'status': 'processing', 'image_id': image_id})
 
 
 @app.route('/try/result/<int:image_id>')
