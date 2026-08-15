@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: onboarding-staging-S186b (2026-08-15 — CRITICAL FIX: Jinja {{ location_data_json | safe }} moved out of <script> block into data-location attribute on .ob-wrap div. JS now reads via JSON.parse(el.dataset.location). Fixes Unexpected token '{' JS error. Also: container 520→680px; intro para 420→560px; helper text 13→14px. KYC/Mobile/iPad/70yr pass.) #}
 {% block title %}Welcome — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -34,18 +35,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="ob-wrap" style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
-  <div style="width:100%; max-width:520px;">
+<div class="ob-wrap" style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;" data-location="{{ location_data_json | safe }}">
+  <div style="width:100%; max-width:680px;">
 
     <div style="text-align:center; margin-bottom:36px;">
       <div style="font-family:var(--font-mono); font-size: 14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">SHUTTER LEAGUE</div>
       <h1 style="font-size:clamp(22px,4vw,30px); font-weight:700; color:var(--text-primary); margin-bottom:12px;">
         Welcome, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.
       </h1>
-      <p style="font-size: 17px; color:var(--text-secondary); line-height: 1.7; max-width:420px; margin:0 auto;">
+      <p style="font-size: 17px; color:var(--text-secondary); line-height: 1.7; max-width:560px; margin:0 auto;">
         Upload any photograph. In 60 seconds you'll know exactly how it evaluates — across 5 dimensions — and one specific thing to work on next.
       </p>
-      <p style="font-size: 15px; color:var(--text-muted); line-height: 1.7; max-width:420px; margin:12px auto 0;">
+      <p style="font-size: 15px; color:var(--text-muted); line-height: 1.7; max-width:560px; margin:12px auto 0;">
         First 3 images are free. Fill in a few details below and you're in.
       </p>
     </div>
@@ -56,7 +57,7 @@
       <div style="font-size: 16px; color:#151515; line-height: 1.6;">
         Your first month is <strong style="color:#D9A900;">₹180</strong> <span style="color:#999990; text-decoration:line-through;">₹200</span> — Camera or Mobile League.
       </div>
-      <div style="font-size: 13px; color:#6B6B6B; margin-top:6px; line-height: 1.5;">Complete setup below — your discount will be on your dashboard.</div>
+      <div style="font-size: 14px; color:#6B6B6B; margin-top:6px; line-height: 1.5;">Complete setup below — your discount will be on your dashboard.</div>
     </div>
     {% endif %}
 
@@ -105,7 +106,7 @@
           </div>
         </div>
 
-        <p id="location-freetext-hint" style="display:none; font-size: 13px; color:var(--text-muted); margin-top:-16px; margin-bottom:24px; line-height: 1.5;">
+        <p id="location-freetext-hint" style="display:none; font-size: 14px; color:var(--text-muted); margin-top:-16px; margin-bottom:24px; line-height: 1.5;">
           We don't have a detailed list of states/cities for this country yet — please type your state/province and city above.
         </p>
 
@@ -117,8 +118,8 @@
                  style="width:100%;"
                  oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                  value="{{ request.form.get('phone', '') }}">
-          <p id="phone-error" style="font-size: 13px; color:var(--red); margin-top:6px; line-height: 1.5; display:none;"></p>
-          <p style="font-size: 13px; color:var(--text-muted); margin-top:6px; line-height: 1.5;">
+          <p id="phone-error" style="font-size: 14px; color:var(--red); margin-top:6px; line-height: 1.5; display:none;"></p>
+          <p style="font-size: 14px; color:var(--text-muted); margin-top:6px; line-height: 1.5;">
             India: 10 digits. Used only for account security — never shared, never shown publicly.
           </p>
         </div>
@@ -128,7 +129,7 @@
           <textarea id="address" name="address" required rows="3"
                     placeholder="House / flat no., street, area, pincode"
                     style="width:100%; resize:vertical;">{{ request.form.get('address', '') }}</textarea>
-          <p style="font-size: 13px; color:var(--text-muted); margin-top:6px; line-height: 1.5;">
+          <p style="font-size: 14px; color:var(--text-muted); margin-top:6px; line-height: 1.5;">
             If you win an award, we need somewhere to send it. Not shown on your profile.
           </p>
         </div>
@@ -203,7 +204,7 @@
 
 {% block extra_js %}
 <script>
-const LOCATION_DATA = {{ location_data_json | safe }};
+const LOCATION_DATA = JSON.parse(document.querySelector('.ob-wrap').dataset.location || '{}');
 
 // Allowed characters for free-text State/Province and City — letters
 // (incl. accented), spaces, hyphens, apostrophes. Mirrors the server-side
