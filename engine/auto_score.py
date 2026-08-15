@@ -1,3 +1,4 @@
+# SL-VERSION: 171.10-staging (Session 186, 2026-08-15 — FIX Ashok Kochhar genre: Platform Mentor rule tightened — ONLY Street/Fashion/Conceptual. Removed Nature, overthinking, cross-genre blanket triggers. RETAINS 171.9-staging.)
 # SL-VERSION: 171.9-staging (Session 184, 2026-08-14 — Prompt caching fix: switched SYSTEM_BRIEF cache TTL from 5min to 1hr on Calls 2/3/4. 5min TTL was expiring between infrequent scoring calls so cache was written but never read. 1hr TTL matches SL scoring cadence. VISION_SYSTEM cache_control removed — 165 tokens is below Sonnet 4.6 minimum of 1024, was silently skipped every call. RETAINS 171.8-staging.)
 # SL-VERSION: 171.8-staging (Session 184, 2026-08-14 — Prompt caching enabled on all 4 API calls. Retains 171.7.)
 """
@@ -652,8 +653,11 @@ ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
   One name. One card. No exceptions.
 - VARIETY RULE: If portfolio_context shows recent scorecards, do not repeat a master
   already used in the last 3 evaluations for this photographer.
-- PLATFORM MENTOR PRIORITY: If Ashok Kochhar is in the pool, reference him first
-  when the photographer is overthinking technique or working cross-genre.
+- PLATFORM MENTOR PRIORITY: If Ashok Kochhar is in the pool, reference him ONLY
+  when the genre is Street, Fashion, or Conceptual AND the image context matches
+  his known work in those genres. Do NOT reference Ashok Kochhar for Nature,
+  Wildlife, Landscape, Astrophotography, Night Sky, or any outdoor/natural
+  phenomenon genre. Do NOT use him as a blanket fallback for any other situation.
 - Indian photographers in the pool are weighted equally to international.
   Do not default to international names when an Indian master fits better.
 - {masters_pool_block}
@@ -4510,7 +4514,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             + ', '.join(_pool_names[:20])
             + (f" (+ {len(_pool_names)-20} more)" if len(_pool_names) > 20 else "")
             + ". Tier 1 = Grandmasters (canonical). Tier 2 = Working Masters Indian + global. "
-            + "Platform Mentor = Ashok Kochhar (reference first when genre matches or photographer is overthinking technique)."
+            + "Platform Mentor = Ashok Kochhar — reference ONLY for Street, Fashion, or Conceptual genre images. Do NOT reference for Nature, Wildlife, Landscape, Night Sky, or Astrophotography."
         )
     else:
         _fallback = _FALLBACK_MASTERS.get(genre, _FALLBACK_MASTERS.get('Street', ''))
