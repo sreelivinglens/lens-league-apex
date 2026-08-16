@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14d-staging (Session 186, 2026-08-16 — FIX: try_upload gate now counts only haiku_try images, matching try_result fix in 181.14c. Existing members with paid uploads no longer blocked from using free Haiku evaluations. RETAINS 181.14c-staging.)
 # SL-VERSION: 181.14c-staging (Session 186, 2026-08-16 — FIX: evals_used now counts only haiku_try source images from _audit_json, not total_uploads_ever. Prevents paid subscribers with 10+ uploads from seeing wrong CTAs on free scorecard. RETAINS 181.14b-staging.)
 # SL-VERSION: 181.14b-staging (Session 186, 2026-08-16 — ADD: /try/result/<id>/download route using reportlab. Clean one-page PDF scorecard: score, tier, ladder, 5 dimensions, impression, strength, next leap, master reference, SL branding. RETAINS 181.14-staging.)
 # SL-VERSION: 181.14-staging (Session 186, 2026-08-16 — HAIKU PROMPT EXPANSION: (1) FREE_IMAGE_LIMIT 3→10 staging only; (2) _TRY_HAIKU_PROMPT expanded — new JSON output fields: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why; (3) EXIF passed to prompt for device-aware advice; (4) max_tokens 200→700; (5) _try_run_haiku signature adds exif_data param; (6) _audit_json stores all new fields; (7) try_result reads and passes all new fields to template. STAGING ONLY. RETAINS 181.10-staging.)
@@ -31767,16 +31768,20 @@ def try_upload():
     import io as _io
 
     _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-    _lifetime = getattr(current_user, 'total_uploads_ever', None)
-    if _lifetime is None:
-        _lifetime = Image.query.filter_by(user_id=current_user.id).count()
-    _lifetime = int(_lifetime or 0)
+    # SL-181.14d: count only haiku_try images for the free eval gate
+    # total_uploads_ever counts ALL uploads including paid Sonnet evaluations
+    # which incorrectly blocks existing members from using free Haiku evals.
+    _haiku_count = Image.query.filter_by(
+        user_id=current_user.id, status='scored'
+    ).filter(
+        Image._audit_json.like('%"source": "haiku_try"%')
+    ).count()
 
-    if _lifetime >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
+    if _haiku_count >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
         return jsonify({
             'error':   True,
             'message': (
-                f'You have used all {FREE_IMAGE_LIMIT} free evaluations. '
+                f'You have used all {FREE_IMAGE_LIMIT} exploratory evaluations. '
                 'Subscribe now to continue.'
             )
         }), 403
