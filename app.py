@@ -1,3 +1,5 @@
+# SL-VERSION: 181.14h-staging (Session 186, 2026-08-16 — FIX: boot-time backfill patches NULL audit_json images to {source: haiku_try}. These were scored before 181.14g fixed the ORM write. Paid Sonnet images always have audit_json from scoring engine so only haiku images are NULL. RETAINS 181.14g-staging.)
+# SL-VERSION: 181.14g-staging (Session 186, 2026-08-16 — FIX: audit_json write now uses raw SQL UPDATE instead of img._audit_json ORM assignment. Python name mangling on _audit_json prevented ORM from writing to the audit_json column — source: haiku_try was never persisted to DB. All LIKE queries were returning 0 because the column was NULL. RETAINS 181.14f-staging.)
 # SL-VERSION: 181.14f-staging (Session 186, 2026-08-16 — FIX: score-status route trial detection now uses raw SQL matching 181.14e pattern. Also accepts ?next=try_result hint from upload page. Prevents race condition where haiku_try audit_json not yet written when poll fires. RETAINS 181.14e-staging.)
 # SL-VERSION: 181.14e-staging (Session 186, 2026-08-16 — FIX: replaced ORM .like() haiku_try query with raw SQL in both try_upload gate and try_result. ORM _audit_json attribute mapping was unreliable. Raw SQL queries audit_json column directly with both space variants. RETAINS 181.14d-staging.)
 # SL-VERSION: 181.14d-staging (Session 186, 2026-08-16 — FIX: try_upload gate now counts only haiku_try images, matching try_result fix in 181.14c. Existing members with paid uploads no longer blocked from using free Haiku evaluations. RETAINS 181.14c-staging.)
@@ -2274,6 +2276,34 @@ def _run_startup_tasks():
                     print('Admin account updated.')
                 conn.commit()
             print('Database ready.')
+
+            # SL-181.14g: Backfill NULL audit_json for old haiku images.
+            # Before 181.14g, _audit_json ORM assignment did not persist to DB.
+            # Paid Sonnet images always have audit_json from scoring engine.
+            # NULL audit_json + scored = haiku images scored before 181.14g.
+            try:
+                _null_rows = db.session.execute(
+                    db.text(
+                        "SELECT id FROM images "
+                        "WHERE audit_json IS NULL AND status='scored'"
+                    )
+                ).fetchall()
+                _npatched = 0
+                for (_nid,) in _null_rows:
+                    db.session.execute(
+                        db.text(
+                            "UPDATE images SET audit_json = :val "
+                            "WHERE id = :iid AND audit_json IS NULL"
+                        ),
+                        {'val': '{"source": "haiku_try"}', 'iid': _nid}
+                    )
+                    _npatched += 1
+                if _npatched:
+                    db.session.commit()
+                    print(f'[haiku_backfill] Patched {_npatched} NULL audit_json images.')
+            except Exception as _hbe:
+                print(f'[haiku_backfill] Non-fatal: {_hbe}')
+
 
             # Sprint 3 — one-time residency backfill for existing subscribers
             try:
@@ -31690,7 +31720,7 @@ def _try_run_haiku(image_id, img_b64, genre, exif_data=None):
             img.wonder_score     = wf
             img.aq_score         = aq
             import json as _j2
-            img._audit_json = _j2.dumps({
+            _audit_payload = _j2.dumps({
                 'source':        'haiku_try',
                 'model':         _HAIKU_MODEL,
                 'dod':           dod,
@@ -31709,6 +31739,12 @@ def _try_run_haiku(image_id, img_b64, genre, exif_data=None):
                 'master_why':    master_why,
                 'exif_data':     exif_data or {},
             })
+            # SL-181.14g: Write via raw SQL — img._audit_json ORM assignment
+            # does not persist to the audit_json column due to Python name mangling.
+            db.session.execute(
+                db.text('UPDATE images SET audit_json = :val WHERE id = :iid'),
+                {'val': _audit_payload, 'iid': image_id}
+            )
             db.session.commit()
             app.logger.info(
                 f'[try_haiku] scored image={image_id} score={final_score} '
