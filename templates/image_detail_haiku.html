@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail_haiku-181.3 (Session 186, 2026-08-16 — Download button now points to /try/result/<id>/download route. Toast notifications replace browser alerts. CTA3 feedback text added. Teaser bar removed, gate header added. RETAINS 181.2.)
 {# SL-VERSION: image_detail_haiku-181.2 (Session 186, 2026-08-16 — FULL REDESIGN from approved mock. New sections: tier ladder, impression/celebration, master reference early, strength with compositional principles, next leap, what_next with EXIF, social proof, accordion gate (3+3), Evolving Eye, League with accordion benefits, dynamic CTAs by evals_used, share card. All fields from expanded Haiku prompt. Aptos font, pastel colours, no dark backgrounds. Staging only. RETAINS 181.1.)
    Previous: image_detail_haiku-181.1 (SL-181.1: photo hero now renders the photographer's own image via thumb_url passed from try_result) #}
 {% block title %}Your Evaluation — Shutter League{% endblock %}
@@ -584,7 +585,7 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     <div class="hk-share-btns">
       <a href="https://www.instagram.com/" target="_blank" class="hk-share-btn">&#128247; Instagram</a>
       <a href="#" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href))" target="_blank" class="hk-share-btn">&#128100; Facebook</a>
-      <button class="hk-share-btn" onclick="showToast('Download will be available soon — your evaluation is saved in your gallery.')">&#8595; Download</button>
+      <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="hk-share-btn" download>&#8595; Download</a>
       <button class="hk-share-btn" onclick="navigator.clipboard.writeText(window.location.href).then(function(){ showToast('Link copied to clipboard'); })">&#128279; Copy link</button>
     </div>
   </div>
