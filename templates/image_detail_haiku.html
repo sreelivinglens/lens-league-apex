@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail_haiku-181.18 (Session 187, 2026-08-17 — Top nav restored. Underline removed from all CTAs. Primary CTA adds "Join the League of Photographers" as Option A second line. Back to My Gallery link added at bottom. RETAINS 181.15.)
 {# SL-VERSION: image_detail_haiku-181.15 (Session 187, 2026-08-16 — Milestone/Reduced upsell logic by evals_used. Eval 1: full Locked Gate + Evolving Eye + League + Conversion. Evals 2-4: Reduced block only. Evals 5-9: Milestone block with strongest dimension named. Eval 10: Final milestone block, Play tier CTA. All instances of "as a member" updated to "as a member of the League of Photographers". RETAINS 181.3e.)
 {# SL-VERSION: image_detail_haiku-181.3e (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14j deploy. RETAINS 181.3d.)
 {# SL-VERSION: image_detail_haiku-181.3d (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14d deploy. RETAINS 181.3c.)
@@ -17,7 +18,7 @@
 {% block extra_css %}
 <style>
 /* ── Reset page chrome for clean scorecard ── */
-body.page-haiku-scorecard .sl-top-nav        { display:none !important }
+/* 181.18: Top nav restored — founder requirement. Bottom nav, footer, mobile nav still hidden. */
 body.page-haiku-scorecard .sl-bottom-nav     { display:none !important }
 body.page-haiku-scorecard > footer           { display:none !important }
 body.page-haiku-scorecard .nav-mobile        { display:none !important }
@@ -211,10 +212,10 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
 /* ── CTAs ── */
 .hk-cta-sec { background:#FFFFFF; padding:26px 30px; border-bottom:1.5px solid var(--hk-border); }
 .hk-cta-header { font-size:14px; font-weight:500; color:var(--hk-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:16px; }
-.hk-cta-primary { display:block; width:100%; background:linear-gradient(135deg,#4A6FA5 0%,#3A5F95 100%); color:#FFFFFF; font-size:18px; font-weight:500; padding:22px 26px; border-radius:10px; text-align:left; border:2px solid #2A4F85; cursor:pointer; line-height:1.7; font-family:var(--hk-font); margin-bottom:12px; }
-.hk-cta-explore { display:block; width:100%; background:linear-gradient(135deg,#FFF8E0 0%,#F5E8B0 100%); color:#5A3800; font-size:16px; font-weight:500; padding:18px 26px; border-radius:10px; text-align:left; border:2px solid var(--hk-gold); cursor:pointer; line-height:1.7; font-family:var(--hk-font); margin-bottom:12px; }
+.hk-cta-primary { display:block; width:100%; background:linear-gradient(135deg,#4A6FA5 0%,#3A5F95 100%); color:#FFFFFF; font-size:18px; font-weight:500; padding:22px 26px; border-radius:10px; text-align:left; border:2px solid #2A4F85; cursor:pointer; line-height:1.7; font-family:var(--hk-font); margin-bottom:12px; text-decoration:none; }
+.hk-cta-explore { display:block; width:100%; background:linear-gradient(135deg,#FFF8E0 0%,#F5E8B0 100%); color:#5A3800; font-size:16px; font-weight:500; padding:18px 26px; border-radius:10px; text-align:left; border:2px solid var(--hk-gold); cursor:pointer; line-height:1.7; font-family:var(--hk-font); margin-bottom:12px; text-decoration:none; }
 .hk-cta-explore span { display:block; font-size:14px; font-weight:400; color:#8A6020; margin-top:4px; font-style:italic; }
-.hk-cta-exit { display:block; width:100%; background:transparent; color:var(--hk-muted); font-size:15px; font-weight:400; padding:12px 26px; text-align:center; border:none; cursor:pointer; font-family:var(--hk-font); text-decoration:underline; text-underline-offset:3px; }
+.hk-cta-exit { display:block; width:100%; background:transparent; color:var(--hk-muted); font-size:15px; font-weight:400; padding:12px 26px; text-align:center; border:none; cursor:pointer; font-family:var(--hk-font); text-decoration:none; }
 
 /* ── Share ── */
 .hk-share-sec { background:#FFFFFF; padding:26px 30px; }
@@ -608,7 +609,7 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     <div class="hk-cta-header">What would you like to do next?</div>
 
     {# Primary — always join the league #}
-    <a href="{{ url_for('pricing') }}" class="hk-cta-primary">Yes — I want to improve with every photograph, build my lessons, and earn my standing internationally &rarr;</a>
+    <a href="{{ url_for('pricing') }}" class="hk-cta-primary">Yes — I want to improve with every photograph, build my lessons, and earn my standing internationally &rarr;<span style="display:block;font-size:15px;font-weight:400;margin-top:8px;opacity:0.85">Join the League of Photographers &rarr;</span></a>
 
     {# Secondary — depends on state #}
     {% if _remaining > 0 %}
@@ -644,6 +645,11 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
       <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="hk-share-btn" download>&#8595; Download</a>
       <button class="hk-share-btn" onclick="navigator.clipboard.writeText(window.location.href).then(function(){ showToast('Link copied to clipboard'); })">&#128279; Copy link</button>
     </div>
+  </div>
+
+  {# ── BACK TO GALLERY ── #}
+  <div style="padding:16px 30px 32px;text-align:center;border-top:1px solid var(--hk-border)">
+    <a href="{{ url_for('my_gallery') }}" style="font-size:15px;color:var(--hk-muted);text-decoration:none;font-family:var(--hk-font)">&larr; Back to My Gallery</a>
   </div>
 
 </div>
