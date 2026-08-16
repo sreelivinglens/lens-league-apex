@@ -1,3 +1,5 @@
+# SL-VERSION: 181.14l-staging (Session 186, 2026-08-16 — FIX: backfill no longer uses IS NULL (was incorrectly flagging old paid images). Added correction to unflag paid images. try_page now passes evals_remaining and evals_limit. RETAINS 181.14k-staging.)
+# SL-VERSION: 181.14k-staging (Session 186, 2026-08-16 — FIX: try_page route now counts is_haiku_try images for evals_used, not total_uploads_ever. This was the root cause of the page-level gate blocking paid subscribers. RETAINS 181.14j-staging.)
 # SL-VERSION: 181.14j-staging (Session 186, 2026-08-16 — FIX: Replace all audit_json LIKE queries with dedicated is_haiku_try BOOLEAN column. Schema migration adds column. try_upload sets it TRUE immediately via ORM and raw SQL. Boot backfill sets TRUE for all existing haiku images (NULL audit_json or audit_json containing haiku_try). Eliminates all brittle string matching. RETAINS 181.14i-staging.)
 # SL-VERSION: 181.14i-staging (Session 186, 2026-08-16 — (1) History context passed to Haiku prompt — last 2 evaluations fetched before scoring, patterns named in Sherpa voice. (2) PDF download rebuilt — photograph + full letter + all fields + history thread + pattern observation in Sherpa voice. Matches on-screen scorecard depth. RETAINS 181.14h-staging.)
 # SL-VERSION: 181.14h-staging (Session 186, 2026-08-16 — FIX: boot-time backfill patches NULL audit_json images to {source: haiku_try}. These were scored before 181.14g fixed the ORM write. Paid Sonnet images always have audit_json from scoring engine so only haiku images are NULL. RETAINS 181.14g-staging.)
@@ -2287,8 +2289,14 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "UPDATE images SET is_haiku_try = TRUE "
                     "WHERE status='scored' AND is_haiku_try IS NOT TRUE "
-                    "AND (audit_json IS NULL "
-                    " OR audit_json LIKE '%haiku_try%')"
+                    "AND audit_json LIKE '%haiku_try%'"
+                ))
+                # Also correct any wrongly-flagged paid images
+                db.session.execute(db.text(
+                    "UPDATE images SET is_haiku_try = FALSE "
+                    "WHERE is_haiku_try = TRUE "
+                    "AND audit_json IS NOT NULL "
+                    "AND audit_json NOT LIKE '%haiku_try%'"
                 ))
                 db.session.commit()
                 print('[haiku_flag_backfill] is_haiku_try backfill complete.')
@@ -31816,11 +31824,18 @@ def try_page():
     """
     from engine.scoring import GENRE_CHOICES
 
-    _lifetime = getattr(current_user, 'total_uploads_ever', None)
-    if _lifetime is None:
-        _lifetime = Image.query.filter_by(user_id=current_user.id).count()
-
-    evals_used = int(_lifetime or 0)
+    # SL-181.14k: count only haiku_try images for the free eval display
+    try:
+        _haiku_used = db.session.execute(
+            db.text(
+                "SELECT COUNT(*) FROM images WHERE user_id=:uid "
+                "AND status='scored' AND is_haiku_try = TRUE"
+            ),
+            {'uid': current_user.id}
+        ).scalar()
+        evals_used = int(_haiku_used or 0)
+    except Exception:
+        evals_used = 0
 
     import json as _json
     from engine.scoring import SUBGENRE_MAP, GENRE_IDS
@@ -31831,10 +31846,15 @@ def try_page():
     ).order_by(Image.created_at.desc()).first()
     _last_location = (_last_image.location if _last_image else None) or current_user.city or ''
 
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    _haiku_limit = FREE_IMAGE_LIMIT + _bonus
+    _haiku_remaining = max(0, _haiku_limit - evals_used)
     return render_template(
         'upload.html',           # reuse main upload template — is_trial=True gates differences
         is_trial      = True,
         evals_used    = evals_used,
+        evals_remaining = _haiku_remaining,
+        evals_limit   = _haiku_limit,
         genres        = GENRE_IDS,
         genre_choices = GENRE_CHOICES,
         subgenre_map  = SUBGENRE_MAP,
