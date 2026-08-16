@@ -1,3 +1,5 @@
+# SL-VERSION: 181.22-staging (Session 187, 2026-08-17 — Option B: free users (not subscribed, not admin) redirected from /dashboard to /try. Keeps free users in the Haiku world — /try, /try/result, /try/gallery. Paid subscribers and admins unaffected. One line at top of dashboard route. Retains 181.21-staging.)
+# SL-VERSION: 181.21-staging (Session 187, 2026-08-17 — ADD: /try/gallery route (try_gallery) + try_gallery.html template. Haiku free-tier My Gallery — shows only is_haiku_try=TRUE images, links each card to /try/result/<id>, shows eval counter and remaining. Back to My Gallery link on Haiku scorecard updated to url_for(try_gallery). Retains 181.20-staging.)
 # SL-VERSION: 181.20-staging (Session 187, 2026-08-17 — FIX: _get_haiku_history_context fallback for pre-181.15 images. strength_name/next_leap_name only exist post-181.15. For older images, derives strongest/weakest from raw dod/vd/dm/wf/aq scores. Pattern detection now works on all Haiku history regardless of when scored. Retains 181.19-staging.)
 # SL-VERSION: 181.19-staging (Session 187, 2026-08-17 — THREE CHANGES: (1) Wonder prompt — added 8.0-8.5 band for technique-as-revelation (ICM, long exposure, abstraction). Removes "unusual technique is NOT Wonder" which was blocking correct scores. (2) Emotion prompt — added 7.5-8.5 band for atmosphere/colour/technique without human presence. (3) delete_image: from=haiku redirects to /try_page. Target: Haiku within ±0.3 of Sonnet on same image. Retains 181.18-staging.)
 # SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: (1) my_gallery excludes Haiku images from query, stats, and genres — Haiku world is separate, main gallery shows paid Sonnet images only. (2) poty/standings excludes Haiku images from hero, leaderboard, and photographer stats. (3) try_result splits display count (live images, decrements on delete) from gate count (log, permanent) — dots counter now shows correct remaining after delete. Retains 181.17-staging.)
@@ -4530,6 +4532,12 @@ def first_login_welcome():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # 181.22: Free Haiku users have no paid dashboard — redirect to /try world.
+    # A free user is defined as not subscribed and not admin.
+    # Their world is /try → upload → /try/result → /try/gallery.
+    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('try_page'))
+
     # Approved judges should not see the photographer dashboard
     if current_user.role != 'admin':
         _jc = db.session.execute(
@@ -31782,6 +31790,56 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
             except Exception:
                 pass
             return None
+
+
+@app.route('/try/gallery')
+@login_required
+def try_gallery():
+    """
+    GET /try/gallery — Haiku free-tier image gallery.
+    181.21: Shows only is_haiku_try=TRUE images for the current user.
+    Separate from main My Gallery which shows paid Sonnet images only.
+    Each card links to /try/result/<id>.
+    """
+    # Fetch all Haiku images for this user, newest first
+    _rows = db.session.execute(
+        db.text(
+            "SELECT id, asset_name, score, tier, genre, thumb_url, status, scored_at "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE "
+            "ORDER BY id DESC"
+        ),
+        {'uid': current_user.id}
+    ).fetchall()
+
+    _images = []
+    for _r in _rows:
+        _images.append({
+            'id':         _r[0],
+            'asset_name': _r[1] or 'Untitled',
+            'score':      float(_r[2]) if _r[2] else None,
+            'tier':       _r[3] or '',
+            'genre':      _r[4] or '',
+            'thumb_url':  _r[5] or '',
+            'status':     _r[6] or '',
+            'scored_at':  _r[7],
+        })
+
+    # Count from log (permanent gate count)
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    _gate_count = int(db.session.execute(
+        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        {'uid': current_user.id}
+    ).scalar() or 0)
+    _remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
+
+    return render_template(
+        'try_gallery.html',
+        images    = _images,
+        used      = _gate_count,
+        remaining = _remaining,
+        limit     = FREE_IMAGE_LIMIT + _bonus,
+    )
 
 
 @app.route('/try')
