@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14j-staging (Session 186, 2026-08-16 — FIX: Replace all audit_json LIKE queries with dedicated is_haiku_try BOOLEAN column. Schema migration adds column. try_upload sets it TRUE immediately via ORM and raw SQL. Boot backfill sets TRUE for all existing haiku images (NULL audit_json or audit_json containing haiku_try). Eliminates all brittle string matching. RETAINS 181.14i-staging.)
 # SL-VERSION: 181.14i-staging (Session 186, 2026-08-16 — (1) History context passed to Haiku prompt — last 2 evaluations fetched before scoring, patterns named in Sherpa voice. (2) PDF download rebuilt — photograph + full letter + all fields + history thread + pattern observation in Sherpa voice. Matches on-screen scorecard depth. RETAINS 181.14h-staging.)
 # SL-VERSION: 181.14h-staging (Session 186, 2026-08-16 — FIX: boot-time backfill patches NULL audit_json images to {source: haiku_try}. These were scored before 181.14g fixed the ORM write. Paid Sonnet images always have audit_json from scoring engine so only haiku images are NULL. RETAINS 181.14g-staging.)
 # SL-VERSION: 181.14g-staging (Session 186, 2026-08-16 — FIX: audit_json write now uses raw SQL UPDATE instead of img._audit_json ORM assignment. Python name mangling on _audit_json prevented ORM from writing to the audit_json column — source: haiku_try was never persisted to DB. All LIKE queries were returning 0 because the column was NULL. RETAINS 181.14f-staging.)
@@ -878,6 +879,7 @@ def _run_startup_tasks():
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_referral BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS camera_track VARCHAR(20) DEFAULT 'camera'",
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_haiku_try BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT TRUE",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_track VARCHAR(20)",
@@ -2277,6 +2279,21 @@ def _run_startup_tasks():
                     print('Admin account updated.')
                 conn.commit()
             print('Database ready.')
+
+            # SL-181.14j: Backfill is_haiku_try for existing haiku images.
+            # Set TRUE for: (a) NULL audit_json scored images (old haiku before 181.14g)
+            # and (b) any image where audit_json contains haiku_try text.
+            try:
+                db.session.execute(db.text(
+                    "UPDATE images SET is_haiku_try = TRUE "
+                    "WHERE status='scored' AND is_haiku_try IS NOT TRUE "
+                    "AND (audit_json IS NULL "
+                    " OR audit_json LIKE '%haiku_try%')"
+                ))
+                db.session.commit()
+                print('[haiku_flag_backfill] is_haiku_try backfill complete.')
+            except Exception as _hfbe:
+                print(f'[haiku_flag_backfill] Non-fatal: {_hfbe}')
 
             # SL-181.14g: Backfill NULL audit_json for old haiku images.
             # Before 181.14g, _audit_json ORM assignment did not persist to DB.
@@ -11178,8 +11195,7 @@ def score_status(image_id):
             _trial_row = db.session.execute(
                 db.text(
                     "SELECT COUNT(*) FROM images WHERE id=:iid "
-                    "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
-                    " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+                    "AND is_haiku_try = TRUE"
                 ),
                 {'iid': img.id}
             ).scalar()
@@ -12616,8 +12632,7 @@ def image_detail(image_id):
         _is_haiku = db.session.execute(
             db.text(
                 "SELECT COUNT(*) FROM images WHERE id=:iid "
-                "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
-                " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+                "AND is_haiku_try = TRUE"
             ),
             {'iid': image_id}
         ).scalar()
@@ -31850,9 +31865,7 @@ def try_upload():
     _haiku_row = db.session.execute(
         db.text(
             "SELECT COUNT(*) FROM images WHERE user_id=:uid "
-            "AND status='scored' "
-            "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
-            " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+            "AND status='scored' AND is_haiku_try = TRUE"
         ),
         {'uid': current_user.id}
     ).scalar()
@@ -32043,6 +32056,12 @@ def try_upload():
             legal_declaration = True,
             camera_track      = getattr(current_user, 'subscription_track', None),
         )
+        # SL-181.14j: mark as haiku_try immediately on save
+        # so the gate can use is_haiku_try column instead of brittle LIKE queries
+        try:
+            setattr(img, 'is_haiku_try', True)
+        except Exception:
+            pass
         db.session.add(img)
         db.session.execute(
             db.text(
@@ -32053,6 +32072,15 @@ def try_upload():
         )
         db.session.commit()
         image_id = img.id
+        # Belt-and-braces: set is_haiku_try via raw SQL in case ORM setattr failed
+        try:
+            db.session.execute(
+                db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+                {'iid': image_id}
+            )
+            db.session.commit()
+        except Exception:
+            pass
         app.logger.info(
             f'[try_upload] image saved: id={image_id} '
             f'user={current_user.id} genre={genre}'
@@ -32091,8 +32119,7 @@ def try_upload():
                     db.text(
                         "SELECT audit_json, genre, scored_at FROM images "
                         "WHERE user_id=:uid AND status='scored' AND id != :iid "
-                        "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
-                        " OR audit_json LIKE '%\"source\":\"haiku_try\"%') "
+                        "AND is_haiku_try = TRUE "
                         "ORDER BY scored_at DESC LIMIT 2"
                     ),
                     {'uid': uid, 'iid': iid}
@@ -32233,9 +32260,7 @@ def try_result(image_id):
     _haiku_row      = db.session.execute(
         db.text(
             "SELECT COUNT(*) FROM images WHERE user_id=:uid "
-            "AND status='scored' "
-            "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
-            " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+            "AND status='scored' AND is_haiku_try = TRUE"
         ),
         {'uid': current_user.id}
     ).scalar()
@@ -32347,8 +32372,7 @@ def try_result_download(image_id):
             db.text(
                 "SELECT audit_json, genre, scored_at FROM images "
                 "WHERE user_id=:uid AND status='scored' AND id != :iid "
-                "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
-                " OR audit_json LIKE '%\"source\":\"haiku_try\"%') "
+                "AND is_haiku_try = TRUE "
                 "ORDER BY scored_at DESC LIMIT 2"
             ),
             {'uid': current_user.id, 'iid': image_id}
