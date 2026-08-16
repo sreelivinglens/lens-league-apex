@@ -1,3 +1,4 @@
+# SL-VERSION: 181.20-staging (Session 187, 2026-08-17 — FIX: _get_haiku_history_context fallback for pre-181.15 images. strength_name/next_leap_name only exist post-181.15. For older images, derives strongest/weakest from raw dod/vd/dm/wf/aq scores. Pattern detection now works on all Haiku history regardless of when scored. Retains 181.19-staging.)
 # SL-VERSION: 181.19-staging (Session 187, 2026-08-17 — THREE CHANGES: (1) Wonder prompt — added 8.0-8.5 band for technique-as-revelation (ICM, long exposure, abstraction). Removes "unusual technique is NOT Wonder" which was blocking correct scores. (2) Emotion prompt — added 7.5-8.5 band for atmosphere/colour/technique without human presence. (3) delete_image: from=haiku redirects to /try_page. Target: Haiku within ±0.3 of Sonnet on same image. Retains 181.18-staging.)
 # SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: (1) my_gallery excludes Haiku images from query, stats, and genres — Haiku world is separate, main gallery shows paid Sonnet images only. (2) poty/standings excludes Haiku images from hero, leaderboard, and photographer stats. (3) try_result splits display count (live images, decrements on delete) from gate count (log, permanent) — dots counter now shows correct remaining after delete. Retains 181.17-staging.)
 # SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota now counted from upload_history_log not live images table. Deleting a Haiku image no longer restores an evaluation slot. is_haiku_try column added to upload_history_log. delete_image writes is_haiku_try=TRUE when deleting a Haiku image. All three /try gate counts switched to log table. Correct messaging on delete: Haiku delete shows remaining count and explains slot is used. Retains 181.16-staging.)
@@ -31351,11 +31352,37 @@ def _try_calibration_line(genre):
 
 def _get_haiku_history_context(user_id, exclude_image_id=None):
     """
-    181.15 — Fetch last 2 Haiku evaluations for this user to pass as history
-    context into the scoring prompt. Returns a formatted string for {history_context}
-    placeholder, or empty string if no prior evaluations exist.
-    Called synchronously inside _try_run_haiku before the API call.
+    181.20 — Fetch last 2 Haiku evaluations for history context in the scoring prompt.
+    181.15 original: read strength_name/next_leap_name from audit_json.
+    181.20 fix: those fields only exist post-181.15. For older images, derive
+    strength and weakness from raw dimension scores (dod/vd/dm/wf/aq) which are
+    always present. Ensures history context is useful even for pre-181.15 images.
     """
+    # Plain-English dimension names for prompt — no jargon
+    _DIM_NAMES = {
+        'dod': 'Depth of Difficulty',
+        'vd':  'Visual Disruption',
+        'dm':  'Decisive Moment',
+        'wf':  'Wonder Factor',
+        'aq':  'Authentic Quality',
+    }
+
+    def _derive_strength_weakness(audit):
+        """Derive strongest/weakest from raw scores when named fields absent."""
+        _scores = {}
+        for _k in ('dod', 'vd', 'dm', 'wf', 'aq'):
+            try:
+                _v = audit.get(_k)
+                if _v is not None:
+                    _scores[_k] = float(_v)
+            except Exception:
+                pass
+        if not _scores:
+            return '', ''
+        _strongest = max(_scores, key=_scores.get)
+        _weakest   = min(_scores, key=_scores.get)
+        return _DIM_NAMES.get(_strongest, ''), _DIM_NAMES.get(_weakest, '')
+
     try:
         import json as _hj
         _params = {'uid': user_id}
@@ -31374,17 +31401,28 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
             return ''
 
         _lines = []
+        _gaps  = []
         for _r in _rows:
             try:
                 _ha = _hj.loads(_r[3] or '{}')
-                _sn = _ha.get('strength_name', '')
-                _ln = _ha.get('next_leap_name', '')
-                _tk = _ha.get('takeaway', '')
+
+                # 181.20: prefer named fields; fall back to derived from raw scores
+                _sn = (_ha.get('strength_name') or '').strip()
+                _ln = (_ha.get('next_leap_name') or '').strip()
+                if not _sn or not _ln:
+                    _sn_d, _ln_d = _derive_strength_weakness(_ha)
+                    if not _sn:
+                        _sn = _sn_d
+                    if not _ln:
+                        _ln = _ln_d
+
+                _tk = (_ha.get('takeaway') or '').strip()
                 _line = f"  - {_r[0]} photograph · {float(_r[1]):.2f} · {_r[2]}"
                 if _sn:
                     _line += f" · Strongest: {_sn}"
                 if _ln:
                     _line += f" · Next leap: {_ln}"
+                    _gaps.append(_ln)
                 if _tk:
                     _line += f"\n    Takeaway: {_tk}"
                 _lines.append(_line)
@@ -31393,17 +31431,6 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
 
         if not _lines:
             return ''
-
-        # Detect repeating gap across history for pattern instruction
-        _gaps = []
-        for _r in _rows:
-            try:
-                _ha = _hj.loads(_r[3] or '{}')
-                _ln = _ha.get('next_leap_name', '')
-                if _ln:
-                    _gaps.append(_ln)
-            except Exception:
-                pass
 
         _pattern_instruction = ''
         if len(_gaps) >= 2 and len(set(_gaps)) == 1:
