@@ -89,10 +89,6 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
 .hk-dots-txt { font-size:14px; color:var(--hk-muted); margin-left:8px; }
 
 /* ── Teaser ── */
-.hk-teaser { background:#F5F0E8; padding:12px 30px; border-bottom:1.5px solid var(--hk-border); display:flex; align-items:center; justify-content:space-between; }
-.hk-teaser-txt { font-size:14px; color:var(--hk-muted); font-style:italic; }
-.hk-teaser-lnk { font-size:14px; color:#185FA5; font-weight:500; text-decoration:none; }
-
 /* ── Celebration ── */
 .hk-celebrate { background:linear-gradient(160deg,#FFFEF8 0%,#FFFCF0 100%); padding:38px 36px 30px; border-bottom:1.5px solid #EEE8D0; border-left:5px solid var(--hk-gold); }
 .hk-cel-hl { font-size:28px; font-weight:500; color:var(--hk-ink); line-height:1.5; margin-bottom:20px; }
@@ -225,6 +221,11 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
 .hk-share-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .hk-share-btn { display:flex; align-items:center; justify-content:center; gap:6px; background:#FFFFFF; border:1.5px solid var(--hk-border); border-radius:10px; padding:13px; font-size:14px; font-weight:500; color:var(--hk-ink-m); cursor:pointer; font-family:var(--hk-font); }
 
+
+/* ── Toast notification ── */
+.hk-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1E1A12; color:#C8A84B; font-size:15px; font-weight:500; padding:12px 24px; border-radius:8px; z-index:99999; opacity:0; pointer-events:none; transition:opacity .3s; white-space:nowrap; }
+.hk-toast.show { opacity:1; }
+
 /* ── Fullscreen overlay ── */
 .hk-fs-overlay { display:none; position:fixed; inset:0; background:#000; z-index:9999; cursor:pointer; }
 .hk-fs-overlay img { width:100%; height:100%; object-fit:contain; }
@@ -238,7 +239,6 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
   .hk-photo-foot,
   .hk-score-block,
   .hk-dots-row,
-  .hk-teaser,
   .hk-celebrate,
   .hk-master-early,
   .hk-trend-wrap,
@@ -357,12 +357,6 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     <span class="hk-dots-txt">{{ _remaining }} exploratory evaluation{{ 's' if _remaining != 1 else '' }} remaining</span>
   </div>
 
-  {# ── TEASER ── #}
-  <div class="hk-teaser">
-    <span class="hk-teaser-txt">This is your exploratory evaluation — a first reading of your eye.</span>
-    <a class="hk-teaser-lnk" href="#hk-gate">What a full evaluation adds &darr;</a>
-  </div>
-
   {# ── CELEBRATION ── #}
   <div class="hk-celebrate">
     {% if _impression %}
@@ -475,6 +469,11 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     <div class="hk-proof-attr"><strong>Mahesh Iyer</strong> &middot; Street photographer &middot; Standing 105 of 20,000 globally, PhotoCrowd &middot; Grandmaster, Shutter League</div>
   </div>
 
+  {# ── FULL EVAL HEADER ── #}
+  <div style="background:#F5F0E8;padding:16px 30px 4px;border-top:1px solid var(--hk-border)">
+    <div style="font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#8A7050">What a full evaluation gives you</div>
+  </div>
+
   {# ── LOCKED GATE ── #}
   <div class="hk-gate-sec" id="hk-gate">
     <div class="hk-gate-hdr">
@@ -570,7 +569,7 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     {% endif %}
 
     {# Tertiary — exit with feedback #}
-    <button class="hk-cta-exit" onclick="openFeedback()">I came to explore — I am happy with this for now</button>
+    <button class="hk-cta-exit" onclick="openFeedback()">I came to explore — I am happy with this for now. Your feedback is appreciated.</button>
   </div>
 
   {# ── SHARE ── #}
@@ -585,13 +584,15 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     <div class="hk-share-btns">
       <a href="https://www.instagram.com/" target="_blank" class="hk-share-btn">&#128247; Instagram</a>
       <a href="#" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href))" target="_blank" class="hk-share-btn">&#128100; Facebook</a>
-      <a href="#" class="hk-share-btn">&#8595; Download</a>
-      <button class="hk-share-btn" onclick="navigator.clipboard.writeText(window.location.href).then(function(){alert('Link copied!')})">&#128279; Copy link</button>
+      <button class="hk-share-btn" onclick="showToast('Download will be available soon — your evaluation is saved in your gallery.')">&#8595; Download</button>
+      <button class="hk-share-btn" onclick="navigator.clipboard.writeText(window.location.href).then(function(){ showToast('Link copied to clipboard'); })">&#128279; Copy link</button>
     </div>
   </div>
 
 </div>
 </div>
+
+<div class="hk-toast" id="hkToast"></div>
 
 {# ── Feedback modal (CTA 3) ── #}
 <div id="hkFeedbackModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;display:none;align-items:center;justify-content:center">
@@ -673,7 +674,7 @@ function submitFeedback() {
     })
   }).catch(function(){});
   closeFeedback();
-  alert('Received. Thank you. We read every response personally.');
+  showToast('Received. Thank you — we read every response personally.');
 }
 
 document.addEventListener('keydown', function(e) {
