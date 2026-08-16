@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail_haiku-181.19 (Session 187, 2026-08-17 — Delete button added to share section. from=haiku routes delete back to /try. RETAINS 181.18.)
 {# SL-VERSION: image_detail_haiku-181.18 (Session 187, 2026-08-17 — Top nav restored. Underline removed from all CTAs. Primary CTA adds "Join the League of Photographers" as Option A second line. Back to My Gallery link added at bottom. RETAINS 181.15.)
 {# SL-VERSION: image_detail_haiku-181.15 (Session 187, 2026-08-16 — Milestone/Reduced upsell logic by evals_used. Eval 1: full Locked Gate + Evolving Eye + League + Conversion. Evals 2-4: Reduced block only. Evals 5-9: Milestone block with strongest dimension named. Eval 10: Final milestone block, Play tier CTA. All instances of "as a member" updated to "as a member of the League of Photographers". RETAINS 181.3e.)
 {# SL-VERSION: image_detail_haiku-181.3e (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14j deploy. RETAINS 181.3d.)
@@ -645,6 +646,11 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
       <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="hk-share-btn" download>&#8595; Download</a>
       <button class="hk-share-btn" onclick="navigator.clipboard.writeText(window.location.href).then(function(){ showToast('Link copied to clipboard'); })">&#128279; Copy link</button>
     </div>
+    {# ── DELETE ── #}
+    <form method="POST" action="{{ url_for('delete_image', image_id=image_id) }}" onsubmit="return confirm('Remove this photograph? Your exploratory evaluation has been used and will not be restored.');" style="margin-top:12px">
+      <input type="hidden" name="from" value="haiku">
+      <button type="submit" style="width:100%;background:transparent;border:1.5px solid #D0C8B8;border-radius:10px;padding:13px;font-size:14px;font-weight:500;color:var(--hk-muted);cursor:pointer;font-family:var(--hk-font)">&#128465; Remove this photograph</button>
+    </form>
   </div>
 
   {# ── BACK TO GALLERY ── #}
