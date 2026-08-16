@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail_haiku-181.21 (Session 187, 2026-08-17 — Back to My Gallery now points to try_gallery route. RETAINS 181.19.)
 {# SL-VERSION: image_detail_haiku-181.19 (Session 187, 2026-08-17 — Delete button added to share section. from=haiku routes delete back to /try. RETAINS 181.18.)
 {# SL-VERSION: image_detail_haiku-181.18 (Session 187, 2026-08-17 — Top nav restored. Underline removed from all CTAs. Primary CTA adds "Join the League of Photographers" as Option A second line. Back to My Gallery link added at bottom. RETAINS 181.15.)
 {# SL-VERSION: image_detail_haiku-181.15 (Session 187, 2026-08-16 — Milestone/Reduced upsell logic by evals_used. Eval 1: full Locked Gate + Evolving Eye + League + Conversion. Evals 2-4: Reduced block only. Evals 5-9: Milestone block with strongest dimension named. Eval 10: Final milestone block, Play tier CTA. All instances of "as a member" updated to "as a member of the League of Photographers". RETAINS 181.3e.)
@@ -655,7 +656,7 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
 
   {# ── BACK TO GALLERY ── #}
   <div style="padding:16px 30px 32px;text-align:center;border-top:1px solid var(--hk-border)">
-    <a href="{{ url_for('my_gallery') }}" style="font-size:15px;color:var(--hk-muted);text-decoration:none;font-family:var(--hk-font)">&larr; Back to My Gallery</a>
+    <a href="{{ url_for('try_gallery') }}" style="font-size:15px;color:var(--hk-muted);text-decoration:none;font-family:var(--hk-font)">&larr; Back to My Gallery</a>
   </div>
 
 </div>
