@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14i-staging (Session 186, 2026-08-16 — (1) History context passed to Haiku prompt — last 2 evaluations fetched before scoring, patterns named in Sherpa voice. (2) PDF download rebuilt — photograph + full letter + all fields + history thread + pattern observation in Sherpa voice. Matches on-screen scorecard depth. RETAINS 181.14h-staging.)
 # SL-VERSION: 181.14h-staging (Session 186, 2026-08-16 — FIX: boot-time backfill patches NULL audit_json images to {source: haiku_try}. These were scored before 181.14g fixed the ORM write. Paid Sonnet images always have audit_json from scoring engine so only haiku images are NULL. RETAINS 181.14g-staging.)
 # SL-VERSION: 181.14g-staging (Session 186, 2026-08-16 — FIX: audit_json write now uses raw SQL UPDATE instead of img._audit_json ORM assignment. Python name mangling on _audit_json prevented ORM from writing to the audit_json column — source: haiku_try was never persisted to DB. All LIKE queries were returning 0 because the column was NULL. RETAINS 181.14f-staging.)
 # SL-VERSION: 181.14f-staging (Session 186, 2026-08-16 — FIX: score-status route trial detection now uses raw SQL matching 181.14e pattern. Also accepts ?next=try_result hint from upload page. Prevents race condition where haiku_try audit_json not yet written when poll fires. RETAINS 181.14e-staging.)
@@ -31558,10 +31559,17 @@ _TRY_HAIKU_PROMPT = (
     "EXIF CONTEXT (use to personalise advice):\n"
     "{exif_context}\n\n"
 
+    "PHOTOGRAPHER HISTORY:\n"
+    "{history_context}\n\n"
+
     "CELEBRATION (impression):\n"
     "Write 2-3 sentences in warm Sherpa tone that celebrate what this photographer "
     "noticed or achieved. Be specific to this image. Name the actual thing they saw "
-    "or did — not generic praise. Never use the word score. Max 60 words.\n\n"
+    "or did — not generic praise. Never use the word score. Max 60 words.\n"
+    "If PHOTOGRAPHER HISTORY is available and shows a pattern, weave one observation "
+    "into the impression — in plain English, as a wise photographer friend would say it. "
+    "Never say dimension, score, metric, DDI, or any technical label. "
+    "Say what you see: not what the number says.\n\n"
 
     "STRENGTH:\n"
     "Name the single strongest dimension (e.g. Emotion) and write one sentence "
@@ -31571,10 +31579,14 @@ _TRY_HAIKU_PROMPT = (
     "Name the single weakest dimension (e.g. Difficulty) and write one sentence "
     "explaining exactly what holds this score back. Specific. Max 30 words.\n\n"
 
-    "WHAT NEXT (device-aware improvement advice):\n"
+    "WHAT NEXT (device-aware, history-aware improvement advice):\n"
     "Write 2-3 sentences of specific actionable advice for the next opportunity. "
     "If the device is a phone, give phone-specific advice (Night mode, tap to focus, etc). "
-    "Never say go back tomorrow — say next opportunity. Max 60 words.\n\n"
+    "If PHOTOGRAPHER HISTORY shows the same gap repeating across uploads, name it directly "
+    "in plain language — no jargon. For example: if Difficulty keeps being the gap in action "
+    "genres, say: use burst mode, let the moment unfold, pick the frame after. "
+    "If they keep missing the decisive moment: tell them to step back, allow the scene, "
+    "use burst or higher fps. Speak as a Sherpa, not as an analyst. Max 80 words.\n\n"
 
     "MASTER REFERENCE:\n"
     "Name one real photographer whose body of work connects to what this photographer "
@@ -31594,7 +31606,7 @@ _TRY_HAIKU_PROMPT = (
 )
 
 
-def _try_run_haiku(image_id, img_b64, genre, exif_data=None):
+def _try_run_haiku(image_id, img_b64, genre, exif_data=None, history_context=None):
     """
     Single Haiku call: 5 DDI dimensions + takeaway.
     Writes results to images table. Called from background thread.
@@ -31621,10 +31633,12 @@ def _try_run_haiku(image_id, img_b64, genre, exif_data=None):
         _exif_ctx = ' | '.join(_parts) if _parts else 'Not available'
     else:
         _exif_ctx = 'Not available'
+    _history_ctx = history_context or 'No previous evaluations for this photographer yet.'
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
               .replace('{calibration}', _try_calibration_line(genre or ''))
-              .replace('{exif_context}', _exif_ctx))
+              .replace('{exif_context}', _exif_ctx)
+              .replace('{history_context}', _history_ctx))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
@@ -32048,7 +32062,7 @@ def try_upload():
         app.logger.error(f'[try_upload] DB insert failed: {e}')
         return jsonify({'error': True, 'message': 'Could not save your image. Please try again.'}), 500
 
-    def _haiku_thread(iid, b64, g):
+    def _haiku_thread(iid, b64, g, uid):
         with app.app_context():
             # Extract EXIF for device-aware prompt advice
             _exif = {}
@@ -32067,11 +32081,68 @@ def try_upload():
                 }
             except Exception:
                 pass
-            _try_run_haiku(iid, b64, g, exif_data=_exif)
+
+            # Fetch last 2 haiku evaluations for history context
+            _history_ctx = None
+            try:
+                import json as _hj
+                from datetime import datetime as _hdt
+                _prev_rows = db.session.execute(
+                    db.text(
+                        "SELECT audit_json, genre, scored_at FROM images "
+                        "WHERE user_id=:uid AND status='scored' AND id != :iid "
+                        "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
+                        " OR audit_json LIKE '%\"source\":\"haiku_try\"%') "
+                        "ORDER BY scored_at DESC LIMIT 2"
+                    ),
+                    {'uid': uid, 'iid': iid}
+                ).fetchall()
+
+                if _prev_rows:
+                    _hist_lines = []
+                    _str_names = []
+                    _leap_names = []
+                    _genres = []
+                    for _row in _prev_rows:
+                        _rj = _hj.loads(_row[0] or '{}')
+                        _rgenre = _row[1] or 'Unknown'
+                        _rdate = _row[2]
+                        _days_ago = ''
+                        try:
+                            _delta = _hdt.utcnow() - (_rdate if isinstance(_rdate, _hdt) else _hdt.fromisoformat(str(_rdate)))
+                            _days_ago = f'{_delta.days} day(s) ago'
+                        except Exception:
+                            pass
+                        _rscore = _rj.get('dod', 0)
+                        _str_name = _rj.get('strength_name', '')
+                        _leap_name = _rj.get('next_leap_name', '')
+                        if _str_name: _str_names.append(_str_name)
+                        if _leap_name: _leap_names.append(_leap_name)
+                        if _rgenre: _genres.append(_rgenre)
+                        _hist_lines.append(
+                            f"- {_days_ago} · {_rgenre} · Strongest: {_str_name or 'unknown'} · "
+                            f"Gap: {_leap_name or 'unknown'}"
+                        )
+
+                    _history_ctx = 'Previous evaluations (most recent first):\n'
+                    _history_ctx += '\n'.join(_hist_lines)
+
+                    # Name patterns in plain English for the prompt
+                    if len(set(_leap_names)) == 1 and _leap_names[0]:
+                        _history_ctx += f'\nPattern: The gap ({_leap_names[0]}) has appeared in every evaluation. Name this pattern directly in plain language — no jargon. Tell the photographer what you see, not what the number says.'
+                    if len(set(_str_names)) == 1 and _str_names[0]:
+                        _history_ctx += f'\nConsistency: Their strongest quality ({_str_names[0]}) has been consistent. Acknowledge this warmly — they have a natural instinct here.'
+                    if len(set(_genres)) == 1 and _genres[0]:
+                        _history_ctx += f'\nGenre: All evaluations so far are in {_genres[0]}. Their eye has a home. Reference this if relevant.'
+
+            except Exception as _he:
+                app.logger.warning(f'[try_haiku] history fetch failed (non-fatal): {_he}')
+
+            _try_run_haiku(iid, b64, g, exif_data=_exif, history_context=_history_ctx)
 
     threading.Thread(
         target=_haiku_thread,
-        args=(image_id, img_b64, genre),
+        args=(image_id, img_b64, genre, current_user.id),
         daemon=True
     ).start()
 
@@ -32213,175 +32284,292 @@ def try_result(image_id):
 def try_result_download(image_id):
     """
     GET /try/result/<id>/download
-    Generate and serve a PDF scorecard for a Haiku free evaluation.
-    SL-181.14: reportlab — clean one-page scorecard with score, tier, dimensions,
-    impression/takeaway, strength, next leap, and SL branding.
+    Full two-page PDF scorecard for a Haiku free evaluation.
+    SL-181.14h: reportlab — photograph + letter + full analysis + history thread.
+    Matches the depth of the on-screen scorecard.
     """
     import json as _j
+    import urllib.request as _ur
     from io import BytesIO
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
     from reportlab.lib.colors import HexColor, white, black
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
+    from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
+                                     HRFlowable, Image as RLImage, KeepTogether)
     from reportlab.lib.styles import ParagraphStyle
-    from reportlab.lib.enums import TA_LEFT, TA_CENTER
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
 
-    # Read audit JSON
     try:
         audit = _j.loads(img._audit_json or '{}')
     except Exception:
-        audit = {}
+        # Fallback: try raw SQL
+        try:
+            _raw = db.session.execute(
+                db.text('SELECT audit_json FROM images WHERE id=:iid'),
+                {'iid': image_id}
+            ).scalar()
+            audit = _j.loads(_raw or '{}')
+        except Exception:
+            audit = {}
 
-    score       = img.score or 0
-    tier        = img.tier or '—'
-    genre       = img.genre or '—'
-    takeaway    = audit.get('impression') or audit.get('takeaway') or ''
-    str_name    = audit.get('strength_name') or ''
-    str_obs     = audit.get('strength_obs') or ''
-    leap_name   = audit.get('next_leap_name') or ''
-    leap_obs    = audit.get('next_leap_obs') or ''
-    dod         = audit.get('dod') or 0
-    vd          = audit.get('vd') or 0
-    dm          = audit.get('dm') or 0
-    wf          = audit.get('wf') or 0
-    aq          = audit.get('aq') or 0
-    master_name = audit.get('master_name') or ''
-    master_why  = audit.get('master_why') or ''
+    score        = img.score or 0
+    tier         = img.tier or '—'
+    genre        = img.genre or '—'
+    photographer = current_user.full_name or current_user.username or ''
+    first_name   = photographer.split()[0] if photographer else 'Photographer'
+
+    impression   = audit.get('impression') or audit.get('takeaway') or ''
+    takeaway     = audit.get('takeaway') or ''
+    str_name     = audit.get('strength_name') or ''
+    str_obs      = audit.get('strength_obs') or ''
+    leap_name    = audit.get('next_leap_name') or ''
+    leap_obs     = audit.get('next_leap_obs') or ''
+    what_next    = audit.get('what_next') or ''
+    master_name  = audit.get('master_name') or ''
+    master_why   = audit.get('master_why') or ''
+    exif_data    = audit.get('exif_data') or {}
+    dod = audit.get('dod') or 0
+    vd  = audit.get('vd')  or 0
+    dm  = audit.get('dm')  or 0
+    wf  = audit.get('wf')  or 0
+    aq  = audit.get('aq')  or 0
+
+    # Fetch history for the history thread
+    history_lines = []
+    pattern_gap = ''
+    pattern_strength = ''
+    try:
+        _prev = db.session.execute(
+            db.text(
+                "SELECT audit_json, genre, scored_at FROM images "
+                "WHERE user_id=:uid AND status='scored' AND id != :iid "
+                "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
+                " OR audit_json LIKE '%\"source\":\"haiku_try\"%') "
+                "ORDER BY scored_at DESC LIMIT 2"
+            ),
+            {'uid': current_user.id, 'iid': image_id}
+        ).fetchall()
+        _gaps = []
+        _strs = []
+        for _row in _prev:
+            _rj = _j.loads(_row[0] or '{}')
+            _rgenre = _row[1] or ''
+            _rleap = _rj.get('next_leap_name', '')
+            _rstr = _rj.get('strength_name', '')
+            if _rleap: _gaps.append(_rleap)
+            if _rstr:  _strs.append(_rstr)
+            _rscore = round(((_rj.get('dod') or 0) + (_rj.get('vd') or 0) +
+                            (_rj.get('dm') or 0) + (_rj.get('wf') or 0) +
+                            (_rj.get('aq') or 0)) / 5, 1)
+            history_lines.append(f"{_rgenre} · {_rscore} · Strongest: {_rstr or '—'} · Gap: {_rleap or '—'}")
+        if len(set(_gaps)) == 1 and _gaps[0]:
+            pattern_gap = _gaps[0]
+        if len(set(_strs)) == 1 and _strs[0]:
+            pattern_strength = _strs[0]
+    except Exception:
+        pass
 
     # Colours
-    GOLD    = HexColor('#C8A84B')
-    INK     = HexColor('#1E1A12')
-    MUTED   = HexColor('#8A7050')
-    CREAM   = HexColor('#FFFCF0')
-    GREEN   = HexColor('#3B6D11')
-    AMBER   = HexColor('#C87800')
-    RED     = HexColor('#C83030')
-    TEAL    = HexColor('#0A7858')
-    BORDER  = HexColor('#DDD5C0')
+    GOLD   = HexColor('#C8A84B')
+    INK    = HexColor('#1E1A12')
+    MUTED  = HexColor('#8A7050')
+    CREAM  = HexColor('#FFFCF0')
+    GREEN  = HexColor('#3B6D11')
+    AMBER  = HexColor('#C87800')
+    RED    = HexColor('#C83030')
+    TEAL   = HexColor('#0A7858')
+    BORDER = HexColor('#DDD5C0')
+    SLATE  = HexColor('#4A6FA5')
 
     W, H = A4
     buf = BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4,
-        leftMargin=20*mm, rightMargin=20*mm,
-        topMargin=16*mm, bottomMargin=16*mm
+        leftMargin=18*mm, rightMargin=18*mm,
+        topMargin=14*mm, bottomMargin=14*mm
     )
 
-    def style(name='body', **kw):
-        defaults = dict(
-            fontName='Helvetica', fontSize=11, leading=16,
-            textColor=INK, alignment=TA_LEFT, spaceAfter=4
-        )
-        defaults.update(kw)
-        return ParagraphStyle(name, **defaults)
+    def sty(name='body', size=11, leading=17, color=INK, bold=False,
+             align=TA_LEFT, space_before=0, space_after=6):
+        return ParagraphStyle(name, fontName='Helvetica-Bold' if bold else 'Helvetica',
+                               fontSize=size, leading=leading, textColor=color,
+                               alignment=align, spaceBefore=space_before, spaceAfter=space_after)
+
+    def para(text, **kw): return Paragraph(text, sty(**kw))
+    def gap(h=6): return Spacer(1, h)
+    def rule(color=BORDER, t=0.5): return HRFlowable(width='100%', thickness=t, color=color, spaceAfter=8, spaceBefore=4)
 
     story = []
 
-    # Header bar
-    story.append(Paragraph(
-        '<font color="#C8A84B"><b>SHUTTER LEAGUE</b></font>'
-        f'<font color="#8A7050">  ·  Exploratory Evaluation</font>',
-        style('hdr', fontSize=13, leading=18, spaceAfter=8)
-    ))
-    story.append(HRFlowable(width='100%', thickness=2, color=GOLD, spaceAfter=12))
+    # ── PHOTOGRAPH ──────────────────────────────────────────────────────────
+    if img.thumb_url:
+        try:
+            _req = _ur.Request(img.thumb_url, headers={'User-Agent': 'ShutterLeague/1.0'})
+            with _ur.urlopen(_req, timeout=10) as _resp:
+                _img_data = _resp.read()
+            _img_buf = BytesIO(_img_data)
+            _rl_img = RLImage(_img_buf, width=W - 36*mm, height=80*mm)
+            _rl_img.hAlign = 'CENTER'
+            story.append(_rl_img)
+            story.append(gap(8))
+        except Exception:
+            pass  # Skip image gracefully if unavailable
 
-    # Score + tier
-    story.append(Paragraph(
-        f'<font size="42"><b>{score:.2f}</b></font>'
-        f'<font size="16" color="#8A7050"> /10</font>',
-        style('score', leading=52, spaceAfter=4)
+    # ── HEADER ───────────────────────────────────────────────────────────────
+    story.append(para(
+        f'<font color="#C8A84B"><b>SHUTTER LEAGUE</b></font>'
+        f'<font color="#8A7050">  ·  Exploratory Evaluation  ·  {genre}</font>',
+        size=12, leading=16, space_after=4
     ))
-    story.append(Paragraph(
-        f'<b>{tier}</b>  ·  {genre}',
-        style('tier', fontSize=13, leading=18, spaceAfter=14)
+    rule(GOLD, 2)
+    story.append(gap(4))
+
+    # ── SCORE + TIER ─────────────────────────────────────────────────────────
+    story.append(para(
+        f'<font size="52"><b>{score:.2f}</b></font>'
+        f'<font size="18" color="#8A7050"> /10  </font>'
+        f'<font size="16" color="#C8A84B"><b>{tier}</b></font>',
+        size=11, leading=58, space_after=4
     ))
 
     # Tier ladder
     tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
     ladder = '  ›  '.join(
-        f'<b><font color="#C8A84B">{t}</font></b>' if t == tier else f'<font color="#C0B898">{t}</font>'
+        f'<b><font color="#C8A84B">{t}</font></b>' if t == tier
+        else f'<font color="#C0B898">{t}</font>'
         for t in tiers
     )
-    story.append(Paragraph(ladder, style('ladder', fontSize=9, leading=14, spaceAfter=16)))
-    story.append(HRFlowable(width='100%', thickness=0.5, color=BORDER, spaceAfter=12))
+    story.append(para(ladder, size=9, leading=13, space_after=10))
+    rule()
 
-    # Dimensions
-    story.append(Paragraph('<b>Five Dimensions</b>', style('dims-hdr', fontSize=11, spaceAfter=6)))
+    # ── FIVE DIMENSIONS ──────────────────────────────────────────────────────
+    story.append(para('<b>Five Dimensions</b>', size=10, color=MUTED, space_after=4))
     dim_data = [
-        ('Difficulty', dod, RED),
-        ('Visual',     vd,  AMBER),
-        ('Moment',     dm,  AMBER),
-        ('Wow',        wf,  GREEN),
-        ('Emotion',    aq,  TEAL),
+        ('Difficulty', dod, RED,   'Next leap'  if dod == min(dod,vd,dm,wf,aq) else ''),
+        ('Visual',     vd,  AMBER, ''),
+        ('Moment',     dm,  AMBER, ''),
+        ('Wow',        wf,  GREEN, ''),
+        ('Emotion',    aq,  TEAL,  'Strongest'  if aq  == max(dod,vd,dm,wf,aq) else ''),
     ]
-    for dim_name, dim_val, col in dim_data:
-        tag = ''
-        if dim_val == min(dod, vd, dm, wf, aq):
-            tag = '  <font color="#C83030"><i>next leap</i></font>'
-        elif dim_val == max(dod, vd, dm, wf, aq):
-            tag = '  <font color="#0A7858"><i>strongest</i></font>'
-        story.append(Paragraph(
+    for dim_name, dim_val, col, tag in dim_data:
+        tag_txt = f'  <font color="#8A7050"><i>{tag}</i></font>' if tag else ''
+        story.append(para(
             f'<font color="#5A4A30">{dim_name:<12}</font>'
-            f'  <font color="{col.hexval()}"><b>{dim_val:.1f}</b></font>{tag}',
-            style(f'dim-{dim_name}', fontSize=11, leading=15, spaceAfter=3)
+            f'  <font color="{col.hexval()}"><b>{dim_val:.1f}</b></font>{tag_txt}',
+            size=11, leading=15, space_after=2
         ))
-    story.append(Spacer(1, 10))
-    story.append(HRFlowable(width='100%', thickness=0.5, color=BORDER, spaceAfter=12))
+    story.append(gap(8))
+    rule()
 
-    # What we saw
-    if takeaway:
-        story.append(Paragraph('<b>What we saw in this frame</b>', style('sec-hdr', fontSize=11, spaceAfter=6)))
-        story.append(Paragraph(takeaway, style('takeaway', fontSize=11, leading=17, textColor=HexColor('#3A3020'), spaceAfter=14)))
+    # ── CELEBRATION — the letter ──────────────────────────────────────────────
+    if impression:
+        story.append(para('<b>What we see in this photograph</b>', size=10, color=MUTED, space_after=6))
+        story.append(para(impression, size=12, leading=20, color=INK, space_after=10))
+        rule()
 
-    # Strength
+    # ── STRONGEST MOMENT ─────────────────────────────────────────────────────
     if str_name and str_obs:
-        story.append(Paragraph(
-            f'<font color="#3B6D11"><b>Your strongest moment</b></font>  ·  {str_name}',
-            style('str-hdr', fontSize=11, spaceAfter=4)
+        story.append(para(
+            f'<font color="#3B6D11"><b>Your strongest moment</b></font>'
+            f'<font color="#8A7050">  ·  {str_name}</font>',
+            size=11, space_after=4
         ))
-        story.append(Paragraph(str_obs, style('str-body', fontSize=11, leading=16, textColor=HexColor('#3A3020'), spaceAfter=12)))
+        story.append(para(str_obs, size=11, leading=17, color=HexColor('#3A3020'), space_after=8))
 
-    # Next leap
+    # ── NEXT LEAP ────────────────────────────────────────────────────────────
     if leap_name and leap_obs:
-        story.append(Paragraph(
-            f'<font color="#C87800"><b>Your next leap</b></font>  ·  {leap_name}',
-            style('leap-hdr', fontSize=11, spaceAfter=4)
+        story.append(para(
+            f'<font color="#C87800"><b>Your next leap</b></font>'
+            f'<font color="#8A7050">  ·  {leap_name}</font>',
+            size=11, space_after=4
         ))
-        story.append(Paragraph(leap_obs, style('leap-body', fontSize=11, leading=16, textColor=HexColor('#3A3020'), spaceAfter=12)))
+        story.append(para(leap_obs, size=11, leading=17, color=HexColor('#3A3020'), space_after=8))
 
-    # Master reference
+    # ── WHAT TO DO NEXT ──────────────────────────────────────────────────────
+    if what_next:
+        story.append(rule())
+        story.append(para('<b>What to do next</b>', size=10, color=MUTED, space_after=6))
+        # EXIF line if available
+        exif_parts = []
+        if exif_data.get('device'): exif_parts.append(exif_data['device'])
+        if exif_data.get('aperture'): exif_parts.append(f"f/{exif_data['aperture']}")
+        if exif_data.get('iso'): exif_parts.append(f"ISO {exif_data['iso']}")
+        if exif_data.get('shutter'): exif_parts.append(str(exif_data['shutter']))
+        if exif_parts:
+            story.append(para(
+                f'<font color="#4A6FA5">{" · ".join(exif_parts)}</font>',
+                size=10, leading=14, space_after=4
+            ))
+        story.append(para(what_next, size=11, leading=18, color=HexColor('#3A3020'), space_after=8))
+
+    # ── MASTER REFERENCE ─────────────────────────────────────────────────────
     if master_name and master_why:
-        story.append(HRFlowable(width='100%', thickness=0.5, color=BORDER, spaceAfter=10))
-        story.append(Paragraph(
-            f'<font color="#8A7050"><b>The eye behind this</b></font>  ·  {master_name}',
-            style('master-hdr', fontSize=11, spaceAfter=4)
+        story.append(rule())
+        story.append(para(
+            f'<font color="#8A7050"><b>The eye behind this</b></font>'
+            f'  ·  <b>{master_name}</b>',
+            size=11, space_after=4
         ))
-        story.append(Paragraph(master_why, style('master-body', fontSize=11, leading=16, textColor=HexColor('#5A4A30'), spaceAfter=14)))
+        story.append(para(master_why, size=11, leading=17,
+                           color=HexColor('#5A4A30'), space_after=8))
 
-    # Footer
-    story.append(HRFlowable(width='100%', thickness=1, color=GOLD, spaceAfter=8))
-    story.append(Paragraph(
-        f'<font color="#8A7050">This is an exploratory evaluation — a first reading of your eye.  '
-        f'shutterleague.com</font>',
-        style('footer', fontSize=9, leading=14, alignment=TA_CENTER)
+    # ── HISTORY THREAD ───────────────────────────────────────────────────────
+    if history_lines:
+        story.append(rule(GOLD))
+        story.append(para('<b>Across your evaluations</b>', size=10, color=MUTED, space_after=6))
+        for line in history_lines:
+            story.append(para(f'<font color="#8A7050">·  {line}</font>',
+                               size=10, leading=14, space_after=3))
+        story.append(gap(6))
+
+        # Pattern observation in Sherpa voice
+        if pattern_gap and pattern_strength:
+            story.append(para(
+                f'Your {pattern_strength.lower()} is consistent across every frame — '
+                f'that is already yours. The gap that keeps appearing is {pattern_gap.lower()}. '
+                f'That is not a weakness. It is the next thing to work on. '
+                f'And it is specific enough that you can close it.',
+                size=11, leading=18, color=INK, space_after=8
+            ))
+        elif pattern_gap:
+            story.append(para(
+                f'Across your evaluations, the same gap keeps appearing: {pattern_gap.lower()}. '
+                f'Name it, own it, and go out with the specific intention of changing it next time. '
+                f'That is how an eye develops.',
+                size=11, leading=18, color=INK, space_after=8
+            ))
+        elif pattern_strength:
+            story.append(para(
+                f'Your {pattern_strength.lower()} has been consistent across every evaluation. '
+                f'You find it naturally. Now build the rest of the frame around it.',
+                size=11, leading=18, color=INK, space_after=8
+            ))
+
+    # ── FOOTER ───────────────────────────────────────────────────────────────
+    story.append(rule(GOLD, 1.5))
+    story.append(para(
+        f'<font color="#C8A84B"><b>SHUTTER LEAGUE</b></font>'
+        f'<font color="#8A7050">  ·  Exploratory Evaluation  ·  {first_name}  ·  shutterleague.com</font>',
+        size=9, leading=13, align=TA_CENTER, space_after=0
     ))
 
     doc.build(story)
     buf.seek(0)
 
-    safe_name = (img.asset_name or f'evaluation_{image_id}').replace(' ', '_')[:40]
+    safe_name = (photographer.replace(' ', '_') or 'Evaluation')[:30]
+    safe_genre = genre.replace(' ', '_')[:20]
+    from datetime import datetime as _dtnow
+    date_str = _dtnow.utcnow().strftime('%d%b%Y')
     return send_file(
         buf,
         mimetype='application/pdf',
         as_attachment=True,
-        download_name=f'SL_Evaluation_{safe_name}.pdf'
+        download_name=f'SL_{safe_name}_{safe_genre}_{date_str}.pdf'
     )
-
-
 
 
 @app.route('/admin/resend-subscription-email/<int:user_id>', methods=['GET', 'POST'])
