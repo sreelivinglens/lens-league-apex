@@ -1,3 +1,4 @@
+# SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: (1) my_gallery excludes Haiku images from query, stats, and genres — Haiku world is separate, main gallery shows paid Sonnet images only. (2) poty/standings excludes Haiku images from hero, leaderboard, and photographer stats. (3) try_result splits display count (live images, decrements on delete) from gate count (log, permanent) — dots counter now shows correct remaining after delete. Retains 181.17-staging.)
 # SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota now counted from upload_history_log not live images table. Deleting a Haiku image no longer restores an evaluation slot. is_haiku_try column added to upload_history_log. delete_image writes is_haiku_try=TRUE when deleting a Haiku image. All three /try gate counts switched to log table. Correct messaging on delete: Haiku delete shows remaining count and explains slot is used. Retains 181.16-staging.)
 # SL-VERSION: 181.16-staging (Session 187, 2026-08-16 — PROMPT FIX: Haiku underscore on technique-driven images. Added principle-based guidance to DOD (7.5-8.5 band for deliberate in-camera technique) and DM (7.0-8.0 band for execution window on technique-driven images). Surgical fix — covers all technique genres, not ICM-specific. Retains 181.15-staging.)
 # SL-VERSION: 181.15-staging (Session 187, 2026-08-16 — FOUR CHANGES: (1) image_detail redirects Haiku images to /try/result/<id> so paid scorecard and wrong download button never shown. (2) _TRY_HAIKU_PROMPT expanded to all 10 fields per Session 186 handoff spec: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why added. History context (last 2 Haiku evals) passed into prompt before scoring so opening paragraph is history-aware from eval 2 onwards. max_tokens raised 200→800. (3) _try_run_haiku stores all 10 fields in audit_json and passes user_id for history fetch. (4) try_result and try_result_download pass milestone_strength to template for eval 5-9 milestone copy. Retains 181.14n-staging.)
@@ -5856,7 +5857,15 @@ def my_gallery():
     sort    = request.args.get('sort', 'newest').strip()
     track   = request.args.get('track', '').strip()
 
+    # 181.18: Haiku free-try images never appear in main My Gallery.
+    # The /try world is separate. Raw SQL used — is_haiku_try not yet an ORM column.
+    _haiku_ids = db.session.execute(
+        db.text("SELECT id FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        {'uid': current_user.id}
+    ).scalars().all()
     images_q = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False)
+    if _haiku_ids:
+        images_q = images_q.filter(Image.id.notin_(_haiku_ids))
 
     if query:
         images_q = images_q.filter(
@@ -5893,7 +5902,9 @@ def my_gallery():
             COALESCE(MAX(score), 0)                             AS best,
             COALESCE(AVG(score) FILTER (WHERE score IS NOT NULL), 0) AS avg
         FROM images
-        WHERE user_id = :uid AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+        WHERE user_id = :uid
+          AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+          AND is_haiku_try IS NOT TRUE
     """), {'uid': current_user.id}).fetchone()
 
     total  = int(_stat_row.total  or 0)
@@ -5907,6 +5918,7 @@ def my_gallery():
         WHERE user_id = :uid
           AND genre IS NOT NULL
           AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+          AND is_haiku_try IS NOT TRUE
         ORDER BY genre
     """), {'uid': current_user.id}).fetchall()
     genres = [r[0] for r in genre_rows if r[0]]
@@ -19215,6 +19227,11 @@ def poty():
         return q
 
     try:
+        # 181.18: Haiku images never appear in Standings.
+        _haiku_ids_poty = db.session.execute(
+            db.text("SELECT id FROM images WHERE is_haiku_try = TRUE")
+        ).scalars().all()
+        _haiku_excl = _haiku_ids_poty or [0]
         _ph_q     = Image.query.filter(
             Image.status == 'scored',
             Image.score != None,
@@ -19224,6 +19241,7 @@ def poty():
             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
             Image.score >= 8.0,
             Image.width > Image.height,
+            Image.id.notin_(_haiku_excl),
         )
         _ph_q     = _track_filter(_ph_q)
         poty_hero = _ph_q.order_by(db.func.random()).first()
@@ -19241,6 +19259,7 @@ def poty():
             Image.score >= 8.0,
             Image.id != exclude_id,
             Image.width > Image.height,
+            Image.id.notin_(_haiku_excl),
         )
         _lb_q   = _track_filter(_lb_q)
         lb_hero = _lb_q.order_by(db.func.random()).first()
@@ -19259,6 +19278,7 @@ def poty():
                     Image.score > 0,
                     Image.status == 'scored',
                     Image.is_public == True,
+                    Image.id.notin_(_haiku_excl),
                     db.or_(Image.is_flagged == False, Image.is_flagged == None))
         )
         _pg_q    = _track_filter(_pg_q)
@@ -32073,17 +32093,20 @@ def try_result(image_id):
     except Exception:
         pass
 
-    # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
-    # total_uploads_ever includes paid Sonnet evaluations and incorrectly
-    # blocked paid subscribers from using their free Haiku quota.
-    # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
-    _bonus          = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
-    _haiku_row      = db.session.execute(
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    # 181.18: TWO separate counts.
+    # Gate count (permanent — from log, never decrements on delete):
+    _gate_count = int(db.session.execute(
         db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
         {'uid': current_user.id}
-    ).scalar()
-    evals_used      = int(_haiku_row or 0)
-    evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - evals_used)
+    ).scalar() or 0)
+    # Display count (current reality — live scored images, decrements on delete):
+    _display_count = int(db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
+        {'uid': current_user.id}
+    ).scalar() or 0)
+    evals_used      = _display_count
+    evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
 
     # 181.15: milestone_strength — most common strength_name across history
     # used in eval 5-9 milestone copy in template. Zero API cost — DB only.
