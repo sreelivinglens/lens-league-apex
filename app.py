@@ -1,4 +1,6 @@
-# SL-VERSION: 181.14n-staging (Session 187, 2026-08-16 — ADD: /try/result/<id>/download route (try_result_download). Template called this endpoint but it was never built, causing 500 on every Haiku result page. Two-page A4 reportlab PDF per Session 186 handoff spec. Retains 181.14m-staging.)
+# SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota now counted from upload_history_log not live images table. Deleting a Haiku image no longer restores an evaluation slot. is_haiku_try column added to upload_history_log. delete_image writes is_haiku_try=TRUE when deleting a Haiku image. All three /try gate counts switched to log table. Correct messaging on delete: Haiku delete shows remaining count and explains slot is used. Retains 181.16-staging.)
+# SL-VERSION: 181.16-staging (Session 187, 2026-08-16 — PROMPT FIX: Haiku underscore on technique-driven images. Added principle-based guidance to DOD (7.5-8.5 band for deliberate in-camera technique) and DM (7.0-8.0 band for execution window on technique-driven images). Surgical fix — covers all technique genres, not ICM-specific. Retains 181.15-staging.)
+# SL-VERSION: 181.15-staging (Session 187, 2026-08-16 — FOUR CHANGES: (1) image_detail redirects Haiku images to /try/result/<id> so paid scorecard and wrong download button never shown. (2) _TRY_HAIKU_PROMPT expanded to all 10 fields per Session 186 handoff spec: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why added. History context (last 2 Haiku evals) passed into prompt before scoring so opening paragraph is history-aware from eval 2 onwards. max_tokens raised 200→800. (3) _try_run_haiku stores all 10 fields in audit_json and passes user_id for history fetch. (4) try_result and try_result_download pass milestone_strength to template for eval 5-9 milestone copy. Retains 181.14n-staging.)
 
 import os
 import re
@@ -1253,8 +1255,13 @@ def _run_startup_tasks():
                         asset_name   VARCHAR(180),
                         score        NUMERIC(4,2),
                         genre        VARCHAR(40),
-                        deleted_at   TIMESTAMP DEFAULT NOW()
+                        deleted_at   TIMESTAMP DEFAULT NOW(),
+                        is_haiku_try BOOLEAN DEFAULT FALSE
                     )""",
+                    # 181.17: add is_haiku_try to upload_history_log so Haiku
+                    # quota counts from delete log rather than live images table.
+                    # Prevents users restoring slots by deleting Haiku images.
+                    "ALTER TABLE upload_history_log ADD COLUMN IF NOT EXISTS is_haiku_try BOOLEAN DEFAULT FALSE",
                     "CREATE INDEX IF NOT EXISTS ix_upload_history_log_user ON upload_history_log(user_id)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS share_token VARCHAR(64)",
                     "CREATE UNIQUE INDEX IF NOT EXISTS ix_images_share_token ON images(share_token) WHERE share_token IS NOT NULL",
@@ -12436,6 +12443,19 @@ def public_card_download(token):
 @app.route('/image/<int:image_id>')
 def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
+
+    # 181.15: Haiku free-try images must never render on the paid scorecard.
+    # The paid template shows the wrong download button which hits download_card_pdf,
+    # which gates haiku_try source and redirects to pricing — confusing the user.
+    # Redirect to /try/result/<id> immediately, before any other processing.
+    try:
+        import json as _idj
+        _id_audit = _idj.loads(img._audit_json or '{}')
+        if _id_audit.get('source') == 'haiku_try':
+            return redirect(url_for('try_result', image_id=image_id))
+    except Exception:
+        pass
+
     # Public scored images are viewable by anyone
     # Private images require login and ownership
     if not getattr(img, 'is_public', False):
@@ -15774,11 +15794,22 @@ def delete_image(image_id):
     # the upload_history_log migration (v80) for why this exists. Runs in
     # the same session as the deletes below, so it commits atomically with
     # the real delete — if that fails and rolls back, this rolls back too.
+    # 181.17: detect Haiku image before delete so we can log is_haiku_try
+    # and show the correct message. Must read audit_json before DB delete.
+    _is_haiku_delete = False
+    try:
+        import json as _dj
+        _d_audit = _dj.loads(img._audit_json or '{}')
+        _is_haiku_delete = (_d_audit.get('source') == 'haiku_try')
+    except Exception:
+        pass
+
     try:
         db.session.execute(
-            db.text("""INSERT INTO upload_history_log (user_id, asset_name, score, genre)
-                       VALUES (:uid, :name, :score, :genre)"""),
-            {'uid': current_user.id, 'name': img.asset_name, 'score': img.score, 'genre': img.genre}
+            db.text("""INSERT INTO upload_history_log (user_id, asset_name, score, genre, is_haiku_try)
+                       VALUES (:uid, :name, :score, :genre, :iht)"""),
+            {'uid': current_user.id, 'name': img.asset_name, 'score': img.score,
+             'genre': img.genre, 'iht': _is_haiku_delete}
         )
     except Exception as _log_err:
         app.logger.warning(f'[delete_image] upload_history_log write failed: {_log_err}')
@@ -15836,7 +15867,31 @@ def delete_image(image_id):
                     pass
         threading.Thread(target=_cleanup, args=(r2_keys,), daemon=True).start()
 
-    flash('Image deleted. Your evaluation history has been updated.', 'warning')
+    # 181.17: right message for Haiku vs paid delete
+    if _is_haiku_delete:
+        # Count remaining Haiku evals from log (source of truth post-181.17)
+        try:
+            _bonus_del = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+            _used_log  = db.session.execute(
+                db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+                {'uid': current_user.id}
+            ).scalar() or 0
+            _remaining_del = max(0, (FREE_IMAGE_LIMIT + _bonus_del) - _used_log)
+            _rem_word = f'{_remaining_del} exploratory evaluation{"s" if _remaining_del != 1 else ""}'
+            flash(
+                f'Photograph removed. Your exploratory evaluation has been used — '
+                f'deleting a photograph does not restore your evaluation. '
+                f'{_rem_word} remaining.',
+                'warning'
+            )
+        except Exception:
+            flash(
+                'Photograph removed. Deleting a photograph does not restore your exploratory evaluation.',
+                'warning'
+            )
+    else:
+        flash('Image deleted. Your evaluation history has been updated.', 'warning')
+
     _from = request.form.get('from', '')
     return redirect(url_for('my_gallery') if _from == 'gallery' else url_for('dashboard'))
 
@@ -31270,6 +31325,87 @@ def _try_calibration_line(genre):
     )
 
 
+def _get_haiku_history_context(user_id, exclude_image_id=None):
+    """
+    181.15 — Fetch last 2 Haiku evaluations for this user to pass as history
+    context into the scoring prompt. Returns a formatted string for {history_context}
+    placeholder, or empty string if no prior evaluations exist.
+    Called synchronously inside _try_run_haiku before the API call.
+    """
+    try:
+        import json as _hj
+        _params = {'uid': user_id}
+        _sql = (
+            "SELECT genre, score, tier, audit_json "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"
+        )
+        if exclude_image_id:
+            _sql += " AND id != :iid"
+            _params['iid'] = exclude_image_id
+        _sql += " ORDER BY id DESC LIMIT 2"
+
+        _rows = db.session.execute(db.text(_sql), _params).fetchall()
+        if not _rows:
+            return ''
+
+        _lines = []
+        for _r in _rows:
+            try:
+                _ha = _hj.loads(_r[3] or '{}')
+                _sn = _ha.get('strength_name', '')
+                _ln = _ha.get('next_leap_name', '')
+                _tk = _ha.get('takeaway', '')
+                _line = f"  - {_r[0]} photograph · {float(_r[1]):.2f} · {_r[2]}"
+                if _sn:
+                    _line += f" · Strongest: {_sn}"
+                if _ln:
+                    _line += f" · Next leap: {_ln}"
+                if _tk:
+                    _line += f"\n    Takeaway: {_tk}"
+                _lines.append(_line)
+            except Exception:
+                pass
+
+        if not _lines:
+            return ''
+
+        # Detect repeating gap across history for pattern instruction
+        _gaps = []
+        for _r in _rows:
+            try:
+                _ha = _hj.loads(_r[3] or '{}')
+                _ln = _ha.get('next_leap_name', '')
+                if _ln:
+                    _gaps.append(_ln)
+            except Exception:
+                pass
+
+        _pattern_instruction = ''
+        if len(_gaps) >= 2 and len(set(_gaps)) == 1:
+            _pattern_instruction = (
+                f"\nPATTERN DETECTED: {_gaps[0]} has been the weakest dimension across "
+                f"the photographer's last {len(_gaps)} evaluations. In the impression field, "
+                f"name this pattern in plain English — no dimension names, no jargon. "
+                f"Example register: 'Three Wildlife frames. You find the subject. "
+                f"The frame is not yet asking the viewer to stop.' "
+                f"Do not use the words 'Depth of Difficulty', 'Visual Disruption', "
+                f"'Decisive Moment', 'Wonder Factor', or 'Affective Quotient'."
+            )
+
+        return (
+            "PHOTOGRAPHER HISTORY (last evaluations on this platform):\n"
+            + "\n".join(_lines)
+            + _pattern_instruction
+            + "\nOpen the impression field by acknowledging what you have already seen "
+            "from this photographer — one sentence referencing the pattern or progress "
+            "before moving to this specific photograph. Plain English. No jargon."
+        )
+    except Exception as _he:
+        app.logger.warning(f'[try_haiku] history fetch failed (non-fatal): {_he}')
+        return ''
+
+
 _TRY_HAIKU_PROMPT = (
     "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
     "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
@@ -31281,6 +31417,7 @@ _TRY_HAIKU_PROMPT = (
     "   9.0-9.5  Extraordinary access, conditions or physical achievement. Rare.\n"
     "   8.0-8.9  Sharp subject AND deliberate technique simultaneously, or "
     "difficult conditions handled well.\n"
+    "   7.5-8.5  Deliberate in-camera technique (intentional camera movement, long exposure, panning, multiple exposure, infrared) that requires precise execution and control. The harder the technique is to execute consistently, the higher the score. A well-controlled technique that most photographers could not replicate belongs here.\n"
     "   6.5-7.9  Skilled single technique, or conditions requiring real patience.\n"
     "   5.0-6.4  Competent capture in ordinary conditions.\n"
     "   Below 5  Anyone standing there could have made this frame.\n\n"
@@ -31298,8 +31435,9 @@ _TRY_HAIKU_PROMPT = (
     "   9.0-9.5  The single unrepeatable instant. A frame earlier or later and "
     "the photograph does not exist.\n"
     "   8.0-8.9  Clear peak of action, expression or alignment.\n"
+    "   7.0-8.0  For technique-driven images where subject behaviour is not the primary factor, DM measures the execution window — shutter speed selection, moment of movement initiation, precision of the gesture or pan. A well-controlled technique where the timing of the execution is deliberate and precise scores here. Do not score technique-driven images at 5.0-6.4 simply because there is no human subject — ask whether the technical moment was chosen correctly.\n"
     "   6.5-7.9  Good timing, but the moment would tolerate a second either way.\n"
-    "   5.0-6.4  Static subject, or timing not a factor.\n"
+    "   5.0-6.4  Static subject, or timing genuinely not a factor.\n"
     "   Below 5  Moment missed.\n\n"
 
     "4. wf - Wonder Factor: does this image make you feel something? "
@@ -31366,17 +31504,58 @@ _TRY_HAIKU_PROMPT = (
     "that most defines or limits this image and say precisely why. "
     "Be direct. Do not use the word score.\n\n"
 
+    "IMPRESSION:\n"
+    "2-3 sentences. Warm, specific, Sherpa tone — a senior photographer speaking "
+    "to someone they respect. If PHOTOGRAPHER HISTORY is provided above, open with "
+    "one sentence acknowledging what you have seen from them before, then move to "
+    "this photograph. If no history, open directly on this photograph. "
+    "Name what is genuinely strong. Do not use jargon. Do not use dimension names. "
+    "Do not mention the score. Max 60 words.\n\n"
+
+    "STRENGTH AND NEXT LEAP:\n"
+    "strength_name: The plain-English name of the strongest dimension "
+    "(e.g. 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', "
+    "'Depth of Difficulty', 'Authentic Quality').\n"
+    "strength_obs: One sentence (max 30 words) explaining specifically what "
+    "is working in this dimension for THIS photograph. Concrete. No jargon.\n"
+    "next_leap_name: The plain-English name of the weakest dimension.\n"
+    "next_leap_obs: One sentence (max 30 words) explaining specifically what "
+    "is limiting this dimension for THIS photograph. Honest. No jargon.\n\n"
+
+    "WHAT NEXT:\n"
+    "One actionable instruction the photographer can carry to their next session. "
+    "Device-aware if format is known. If the same gap appears in history, name "
+    "the pattern directly — what to watch for, not what to fix abstractly. "
+    "Plain English. No jargon. Max 80 words.\n\n"
+
+    "MASTER REFERENCE:\n"
+    "master_name: One photographer whose body of work is most relevant to this "
+    "image's strengths or genre. A real, well-known name. Not generic.\n"
+    "master_why: One sentence (max 25 words) connecting their work to what "
+    "this photographer is doing or reaching toward.\n\n"
+
+    "{history_context}\n\n"
+
     "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
-    "\"takeaway\": \"<one sentence>\"}"
+    "\"takeaway\": \"<one sentence>\", "
+    "\"impression\": \"<2-3 sentences>\", "
+    "\"strength_name\": \"<dimension name>\", "
+    "\"strength_obs\": \"<one sentence>\", "
+    "\"next_leap_name\": \"<dimension name>\", "
+    "\"next_leap_obs\": \"<one sentence>\", "
+    "\"what_next\": \"<max 80 words>\", "
+    "\"master_name\": \"<photographer name>\", "
+    "\"master_why\": \"<one sentence>\"}"
 )
 
 
-def _try_run_haiku(image_id, img_b64, genre):
+def _try_run_haiku(image_id, img_b64, genre, user_id=None):
     """
-    Single Haiku call: 5 DDI dimensions + takeaway.
+    Single Haiku call: all 10 DDI fields per Session 186 handoff spec.
+    181.15: expanded from 6 fields (dod/vd/dm/wf/aq/takeaway) to 10 fields.
+    History context fetched before API call and injected into prompt.
     Writes results to images table. Called from background thread.
-    SL 172.1 - Haiku only, no Hive, no Sherpa narrative.
     """
     import urllib.request as _ur
     import json as _json
@@ -31387,14 +31566,22 @@ def _try_run_haiku(image_id, img_b64, genre):
         app.logger.error('[try_haiku] ANTHROPIC_API_KEY not set')
         return None
 
+    # 181.15: fetch history context before building prompt
+    _history_ctx = ''
+    if user_id:
+        with app.app_context():
+            _history_ctx = _get_haiku_history_context(user_id, exclude_image_id=image_id)
+
     # SL-181.1: genre placeholder plus platform calibration anchors
+    # 181.15: also inject history context
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
-              .replace('{calibration}', _try_calibration_line(genre or '')))
+              .replace('{calibration}', _try_calibration_line(genre or ''))
+              .replace('{history_context}', _history_ctx))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 200,
+        'max_tokens': 800,
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -31451,7 +31638,15 @@ def _try_run_haiku(image_id, img_b64, genre):
     dm  = _clamp(d.get('dm',  5.0))
     wf  = _clamp(d.get('wf',  5.0))
     aq  = _clamp(d.get('aq',  5.0))
-    takeaway = (d.get('takeaway') or '').strip()[:300]
+    takeaway       = (d.get('takeaway')       or '').strip()[:300]
+    impression     = (d.get('impression')     or '').strip()[:400]
+    strength_name  = (d.get('strength_name')  or '').strip()[:80]
+    strength_obs   = (d.get('strength_obs')   or '').strip()[:200]
+    next_leap_name = (d.get('next_leap_name') or '').strip()[:80]
+    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:200]
+    what_next      = (d.get('what_next')      or '').strip()[:500]
+    master_name    = (d.get('master_name')    or '').strip()[:100]
+    master_why     = (d.get('master_why')     or '').strip()[:200]
 
     try:
         final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
@@ -31478,15 +31673,24 @@ def _try_run_haiku(image_id, img_b64, genre):
             img.wonder_score     = wf
             img.aq_score         = aq
             import json as _j2
+            # 181.15: store all 10 fields per Session 186 handoff spec
             img._audit_json = _j2.dumps({
-                'source':   'haiku_try',
-                'model':    _HAIKU_MODEL,
-                'dod':      dod,
-                'vd':       vd,
-                'dm':       dm,
-                'wf':       wf,
-                'aq':       aq,
-                'takeaway': takeaway,
+                'source':        'haiku_try',
+                'model':         _HAIKU_MODEL,
+                'dod':           dod,
+                'vd':            vd,
+                'dm':            dm,
+                'wf':            wf,
+                'aq':            aq,
+                'takeaway':      takeaway,
+                'impression':    impression,
+                'strength_name': strength_name,
+                'strength_obs':  strength_obs,
+                'next_leap_name': next_leap_name,
+                'next_leap_obs':  next_leap_obs,
+                'what_next':     what_next,
+                'master_name':   master_name,
+                'master_why':    master_why,
             })
             db.session.commit()
             app.logger.info(
@@ -31497,7 +31701,15 @@ def _try_run_haiku(image_id, img_b64, genre):
                 'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
                 'score': round(final_score, 2),
                 'tier': tier,
-                'takeaway': takeaway,
+                'takeaway':      takeaway,
+                'impression':    impression,
+                'strength_name': strength_name,
+                'strength_obs':  strength_obs,
+                'next_leap_name': next_leap_name,
+                'next_leap_obs':  next_leap_obs,
+                'what_next':     what_next,
+                'master_name':   master_name,
+                'master_why':    master_why,
             }
         except Exception as e:
             db.session.rollback()
@@ -31527,7 +31739,7 @@ def try_page():
     # blocked paid subscribers from using their free Haiku quota.
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _haiku_row = db.session.execute(
-        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
         {'uid': current_user.id}
     ).scalar()
     evals_used = int(_haiku_row or 0)
@@ -31576,7 +31788,7 @@ def try_upload():
     # blocked paid subscribers from using their free Haiku quota.
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _haiku_row = db.session.execute(
-        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
         {'uid': current_user.id}
     ).scalar()
     _lifetime = int(_haiku_row or 0)
@@ -31785,13 +31997,15 @@ def try_upload():
         app.logger.error(f'[try_upload] DB insert failed: {e}')
         return jsonify({'error': True, 'message': 'Could not save your image. Please try again.'}), 500
 
-    def _haiku_thread(iid, b64, g):
+    _uid_for_thread = current_user.id
+
+    def _haiku_thread(iid, b64, g, uid):
         with app.app_context():
-            _try_run_haiku(iid, b64, g)
+            _try_run_haiku(iid, b64, g, user_id=uid)
 
     threading.Thread(
         target=_haiku_thread,
-        args=(image_id, img_b64, genre),
+        args=(image_id, img_b64, genre, _uid_for_thread),
         daemon=True
     ).start()
 
@@ -31865,35 +32079,67 @@ def try_result(image_id):
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _bonus          = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     _haiku_row      = db.session.execute(
-        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
         {'uid': current_user.id}
     ).scalar()
     evals_used      = int(_haiku_row or 0)
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - evals_used)
 
+    # 181.15: milestone_strength — most common strength_name across history
+    # used in eval 5-9 milestone copy in template. Zero API cost — DB only.
+    _milestone_strength = ''
+    if evals_used >= 5:
+        try:
+            _ms_rows = db.session.execute(
+                db.text(
+                    "SELECT audit_json FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id DESC LIMIT 10"
+                ),
+                {'uid': current_user.id}
+            ).fetchall()
+            import json as _msj
+            from collections import Counter as _Ctr
+            _snames = []
+            for _mr in _ms_rows:
+                try:
+                    _ma = _msj.loads(_mr[0] or '{}')
+                    _sn = _ma.get('strength_name', '')
+                    if _sn:
+                        _snames.append(_sn)
+                except Exception:
+                    pass
+            if _snames:
+                _milestone_strength = _Ctr(_snames).most_common(1)[0][0]
+        except Exception as _mse:
+            app.logger.warning(f'[try_result] milestone_strength failed: {_mse}')
+
     return render_template(
         'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
-        image_id       = image_id,
-        # SL-181.1: the photographer's own photograph was never passed to the
-        # template, so the free scorecard rendered a dark gradient with the
-        # genre word on it — a score with no image attached. The paid scorecard
-        # leads with the photograph and the photographer's name; the free one
-        # showed neither. Template falls back to the placeholder if thumb_url
-        # is absent, so a missing image still renders cleanly.
-        thumb_url      = img.thumb_url,
-        asset_name     = img.asset_name or img.original_filename or '',
-        score          = img.score,
-        tier           = img.tier or '—',
-        genre          = img.genre or '—',
-        percentile     = percentile_data,
-        dod            = dims.get('dod'),
-        vd             = dims.get('vd'),
-        dm             = dims.get('dm'),
-        wf             = dims.get('wf'),
-        aq             = dims.get('aq'),
-        takeaway       = takeaway,
-        evals_used     = evals_used,
-        evals_remaining= evals_remaining,
+        image_id           = image_id,
+        thumb_url          = img.thumb_url,
+        asset_name         = img.asset_name or img.original_filename or '',
+        score              = img.score,
+        tier               = img.tier or '—',
+        genre              = img.genre or '—',
+        percentile         = percentile_data,
+        dod                = dims.get('dod'),
+        vd                 = dims.get('vd'),
+        dm                 = dims.get('dm'),
+        wf                 = dims.get('wf'),
+        aq                 = dims.get('aq'),
+        takeaway           = takeaway,
+        impression         = audit.get('impression', ''),
+        strength_name      = audit.get('strength_name', ''),
+        strength_obs       = audit.get('strength_obs', ''),
+        next_leap_name     = audit.get('next_leap_name', ''),
+        next_leap_obs      = audit.get('next_leap_obs', ''),
+        what_next          = audit.get('what_next', ''),
+        master_name        = audit.get('master_name', ''),
+        master_why         = audit.get('master_why', ''),
+        evals_used         = evals_used,
+        evals_remaining    = evals_remaining,
+        milestone_strength = _milestone_strength,
     )
 
 
