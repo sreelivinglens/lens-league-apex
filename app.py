@@ -1,3 +1,4 @@
+# SL-VERSION: 181.19-staging (Session 187, 2026-08-17 — THREE CHANGES: (1) Wonder prompt — added 8.0-8.5 band for technique-as-revelation (ICM, long exposure, abstraction). Removes "unusual technique is NOT Wonder" which was blocking correct scores. (2) Emotion prompt — added 7.5-8.5 band for atmosphere/colour/technique without human presence. (3) delete_image: from=haiku redirects to /try_page. Target: Haiku within ±0.3 of Sonnet on same image. Retains 181.18-staging.)
 # SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: (1) my_gallery excludes Haiku images from query, stats, and genres — Haiku world is separate, main gallery shows paid Sonnet images only. (2) poty/standings excludes Haiku images from hero, leaderboard, and photographer stats. (3) try_result splits display count (live images, decrements on delete) from gate count (log, permanent) — dots counter now shows correct remaining after delete. Retains 181.17-staging.)
 # SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota now counted from upload_history_log not live images table. Deleting a Haiku image no longer restores an evaluation slot. is_haiku_try column added to upload_history_log. delete_image writes is_haiku_try=TRUE when deleting a Haiku image. All three /try gate counts switched to log table. Correct messaging on delete: Haiku delete shows remaining count and explains slot is used. Retains 181.16-staging.)
 # SL-VERSION: 181.16-staging (Session 187, 2026-08-16 — PROMPT FIX: Haiku underscore on technique-driven images. Added principle-based guidance to DOD (7.5-8.5 band for deliberate in-camera technique) and DM (7.0-8.0 band for execution window on technique-driven images). Surgical fix — covers all technique genres, not ICM-specific. Retains 181.15-staging.)
@@ -15905,6 +15906,9 @@ def delete_image(image_id):
         flash('Image deleted. Your evaluation history has been updated.', 'warning')
 
     _from = request.form.get('from', '')
+    # 181.19: haiku delete returns to /try — user stays in the free world
+    if _from == 'haiku':
+        return redirect(url_for('try_page'))
     return redirect(url_for('my_gallery') if _from == 'gallery' else url_for('dashboard'))
 
 
@@ -31470,20 +31474,29 @@ _TRY_HAIKU_PROMPT = (
     "   6.5-7.9  Pleasing, atmospheric, but the find is available to others.\n"
     "   5.0-6.4  Pleasant. Does not linger.\n"
     "   Below 5  Nothing beyond the record.\n"
+    "   8.0-8.5  Deliberate technique that transforms a subject into something "
+    "the viewer could not have found without the photographer's intervention — "
+    "ICM that creates a colour field, long exposure that turns water to silk, "
+    "abstraction that reveals hidden structure. Test: could the viewer have "
+    "arrived at this vision themselves? If the answer is no, score 8.0-8.5.\n"
     "   WONDER IS THE MOST OVER-SCORED DIMENSION BY A LARGE MARGIN. Measured "
     "against the full engine it is where free evaluations drift highest, and it "
     "carries the heaviest weight in most interest areas. A striking colour, a "
-    "dramatic sky, a charismatic animal or an unusual technique is NOT Wonder. "
+    "dramatic sky, or a charismatic animal alone is NOT Wonder. "
     "Wonder is whether the photograph reveals something the viewer could not "
     "have found themselves. A well-made photograph of an ordinary scene scores "
-    "4-6 here, and that is the correct answer for most submissions. Before "
-    "awarding 7 or above, name to yourself what is actually being revealed. If "
-    "you cannot name it in one clause, score below 6.\n\n"
+    "4-6 here. Before awarding 7 or above, name what is actually being revealed. "
+    "If you cannot name it in one clause, score below 6.\n\n"
 
     "5. aq - Affective Quotient: is there soul in this frame? "
     "The intangible quality that makes it memorable.\n"
     "   9.0-9.4  A specific, powerful emotion that is undeniable and lingers.\n"
     "   8.0-8.9  A genuine emotional register, clearly present.\n"
+    "   7.5-8.5  Atmosphere, colour palette, and technique can carry genuine "
+    "emotional register without human presence. A photograph that creates mood — "
+    "melancholy, wonder, stillness, tension — through purely visual means scores "
+    "here. Do not require a human subject to score above 7. If the image makes "
+    "you feel something specific when you look at it, score accordingly.\n"
     "   6.5-7.9  Some feeling, but general rather than particular.\n"
     "   5.0-6.4  Technically resolved, emotionally quiet.\n"
     "   Below 4  Triggers the Humanity Check penalty. Use it when earned.\n\n"
