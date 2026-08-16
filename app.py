@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14e-staging (Session 186, 2026-08-16 — FIX: replaced ORM .like() haiku_try query with raw SQL in both try_upload gate and try_result. ORM _audit_json attribute mapping was unreliable. Raw SQL queries audit_json column directly with both space variants. RETAINS 181.14d-staging.)
 # SL-VERSION: 181.14d-staging (Session 186, 2026-08-16 — FIX: try_upload gate now counts only haiku_try images, matching try_result fix in 181.14c. Existing members with paid uploads no longer blocked from using free Haiku evaluations. RETAINS 181.14c-staging.)
 # SL-VERSION: 181.14c-staging (Session 186, 2026-08-16 — FIX: evals_used now counts only haiku_try source images from _audit_json, not total_uploads_ever. Prevents paid subscribers with 10+ uploads from seeing wrong CTAs on free scorecard. RETAINS 181.14b-staging.)
 # SL-VERSION: 181.14b-staging (Session 186, 2026-08-16 — ADD: /try/result/<id>/download route using reportlab. Clean one-page PDF scorecard: score, tier, ladder, 5 dimensions, impression, strength, next leap, master reference, SL branding. RETAINS 181.14-staging.)
@@ -31768,14 +31769,17 @@ def try_upload():
     import io as _io
 
     _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-    # SL-181.14d: count only haiku_try images for the free eval gate
-    # total_uploads_ever counts ALL uploads including paid Sonnet evaluations
-    # which incorrectly blocks existing members from using free Haiku evals.
-    _haiku_count = Image.query.filter_by(
-        user_id=current_user.id, status='scored'
-    ).filter(
-        Image._audit_json.like('%"source": "haiku_try"%')
-    ).count()
+    # SL-181.14e: raw SQL count — avoids ORM column mapping issues with _audit_json
+    _haiku_row = db.session.execute(
+        db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id=:uid "
+            "AND status='scored' "
+            "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
+            " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+        ),
+        {'uid': current_user.id}
+    ).scalar()
+    _haiku_count = int(_haiku_row or 0)
 
     if _haiku_count >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
         return jsonify({
@@ -32090,14 +32094,18 @@ def try_result(image_id):
     except Exception:
         pass
 
-    # SL-181.14b: count only Haiku /try uploads for the free eval counter,
-    # not total_uploads_ever which includes paid Sonnet evaluations.
+    # SL-181.14e: raw SQL count — avoids ORM column mapping issues with _audit_json
     _bonus          = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
-    _haiku_count    = Image.query.filter_by(
-        user_id=current_user.id, status='scored'
-    ).filter(
-        Image._audit_json.like('%"source": "haiku_try"%')
-    ).count()
+    _haiku_row      = db.session.execute(
+        db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id=:uid "
+            "AND status='scored' "
+            "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
+            " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+        ),
+        {'uid': current_user.id}
+    ).scalar()
+    _haiku_count    = int(_haiku_row or 0)
     evals_used      = _haiku_count
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _haiku_count)
 
