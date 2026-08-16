@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14f-staging (Session 186, 2026-08-16 — FIX: score-status route trial detection now uses raw SQL matching 181.14e pattern. Also accepts ?next=try_result hint from upload page. Prevents race condition where haiku_try audit_json not yet written when poll fires. RETAINS 181.14e-staging.)
 # SL-VERSION: 181.14e-staging (Session 186, 2026-08-16 — FIX: replaced ORM .like() haiku_try query with raw SQL in both try_upload gate and try_result. ORM _audit_json attribute mapping was unreliable. Raw SQL queries audit_json column directly with both space variants. RETAINS 181.14d-staging.)
 # SL-VERSION: 181.14d-staging (Session 186, 2026-08-16 — FIX: try_upload gate now counts only haiku_try images, matching try_result fix in 181.14c. Existing members with paid uploads no longer blocked from using free Haiku evaluations. RETAINS 181.14c-staging.)
 # SL-VERSION: 181.14c-staging (Session 186, 2026-08-16 — FIX: evals_used now counts only haiku_try source images from _audit_json, not total_uploads_ever. Prevents paid subscribers with 10+ uploads from seeing wrong CTAs on free scorecard. RETAINS 181.14b-staging.)
@@ -11135,14 +11136,25 @@ def score_status(image_id):
             'redirect': url_for('image_detail', image_id=img.id)
         })
 
-    # SL 172.3: trial images (haiku_try source) redirect to /try/result/<id>
+    # SL 181.14e: trial images (haiku_try source) redirect to /try/result/<id>
+    # Use raw SQL to avoid ORM _audit_json mapping issue.
+    # Also accept ?next=try_result as a hint from the upload page.
     _is_trial_img = False
-    try:
-        import json as _scj
-        _sc_audit = _scj.loads(img._audit_json or '{}')
-        _is_trial_img = _sc_audit.get('source') == 'haiku_try'
-    except Exception:
-        pass
+    if _next == 'try_result':
+        _is_trial_img = True
+    else:
+        try:
+            _trial_row = db.session.execute(
+                db.text(
+                    "SELECT COUNT(*) FROM images WHERE id=:iid "
+                    "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
+                    " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+                ),
+                {'iid': img.id}
+            ).scalar()
+            _is_trial_img = int(_trial_row or 0) > 0
+        except Exception:
+            pass
 
     if _is_trial_img:
         _redir = url_for('try_result', image_id=img.id)
@@ -12567,6 +12579,21 @@ def public_card_download(token):
 @app.route('/image/<int:image_id>')
 def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
+    # SL-181.14f: Haiku /try images must open the Haiku scorecard, not the paid scorecard.
+    # Check audit_json with raw SQL to avoid ORM mapping issues.
+    try:
+        _is_haiku = db.session.execute(
+            db.text(
+                "SELECT COUNT(*) FROM images WHERE id=:iid "
+                "AND (audit_json LIKE '%\"source\": \"haiku_try\"%' "
+                " OR audit_json LIKE '%\"source\":\"haiku_try\"%')"
+            ),
+            {'iid': image_id}
+        ).scalar()
+        if int(_is_haiku or 0) > 0:
+            return redirect(url_for('try_result', image_id=image_id))
+    except Exception:
+        pass
     # Public scored images are viewable by anyone
     # Private images require login and ownership
     if not getattr(img, 'is_public', False):
