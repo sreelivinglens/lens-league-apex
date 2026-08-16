@@ -1,4 +1,4 @@
-# SL-VERSION: 181.14m-staging (Session 187, 2026-08-16 — FIX: is_haiku_try gate blocking paid subscribers. All three /try routes (try_page, try_upload, try_result) were using total_uploads_ever to count evaluations used. This counts every image ever uploaded including paid Sonnet evaluations, so a paid subscriber with 2 paid images read evals_used=2, and 1 genuine Haiku image pushed the count to 3, firing the gate incorrectly. Fix: replaced total_uploads_ever with a direct DB count of is_haiku_try=TRUE images for the current user in all three routes. Also corrected FREE_IMAGE_LIMIT from 3 to 10 on staging. ONE CHANGE ONLY — three call sites, one constant. Retains 181.14l-staging.)
+# SL-VERSION: 181.14n-staging (Session 187, 2026-08-16 — ADD: /try/result/<id>/download route (try_result_download). Template called this endpoint but it was never built, causing 500 on every Haiku result page. Two-page A4 reportlab PDF per Session 186 handoff spec. Retains 181.14m-staging.)
 
 import os
 import re
@@ -31897,6 +31897,424 @@ def try_result(image_id):
     )
 
 
+
+
+@app.route('/try/result/<int:image_id>/download')
+@login_required
+def try_result_download(image_id):
+    """
+    GET /try/result/<id>/download
+    Two-page A4 PDF scorecard for Haiku free-try evaluations.
+    Session 187 / 181.14n-staging. Per Session 186 handoff spec Section 6.
+
+    Page 1: photograph, score (large), tier, tier ladder, five DDI dimensions
+            colour-coded, impression paragraph, strongest moment + obs,
+            next leap + obs, what_next + EXIF line.
+    Page 2: master reference + why, history thread (last 2 Haiku evals +
+            pattern observation), SL branding footer.
+
+    Filename: SL_[Name]_[Genre]_[YYYY-MM-DD].pdf
+    Owner-only gate — admin can download any image.
+    Self-contained reportlab build — no external engine file dependency.
+    """
+    import json as _pj
+    import io as _pio
+    import urllib.request as _ureq
+
+    img = Image.query.get_or_404(image_id)
+
+    # ── Owner / admin gate ────────────────────────────────────────────────
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    # ── Must be a scored Haiku image ──────────────────────────────────────
+    if img.status != 'scored' or not img.score:
+        return 'This evaluation is not yet complete.', 404
+
+    try:
+        _audit = _pj.loads(img._audit_json or '{}')
+    except Exception:
+        _audit = {}
+
+    if _audit.get('source') != 'haiku_try':
+        return 'This download is only available for free exploratory evaluations.', 400
+
+    # ── Pull all Haiku fields from audit_json ─────────────────────────────
+    _score          = float(img.score or 0)
+    _tier           = img.tier or ''
+    _genre          = img.genre or ''
+    _asset          = img.asset_name or img.original_filename or 'Untitled'
+    _name           = getattr(current_user, 'display_name', '') or current_user.username or ''
+    _impression     = _audit.get('impression', '')
+    _strength_name  = _audit.get('strength_name', '')
+    _strength_obs   = _audit.get('strength_obs', '')
+    _next_leap_name = _audit.get('next_leap_name', '')
+    _next_leap_obs  = _audit.get('next_leap_obs', '')
+    _what_next      = _audit.get('what_next', '')
+    _master_name    = _audit.get('master_name', '')
+    _master_why     = _audit.get('master_why', '')
+    _takeaway       = _audit.get('takeaway', '')
+
+    _dod = _audit.get('dod')
+    _vd  = _audit.get('vd')
+    _dm  = _audit.get('dm')
+    _wf  = _audit.get('wf')
+    _aq  = _audit.get('aq')
+
+    _eval_date = ''
+    _date_src = img.scored_at or img.created_at
+    if _date_src:
+        try:
+            _eval_date = _date_src.strftime('%-d %b %Y')
+        except Exception:
+            _eval_date = str(_date_src)[:10]
+
+    # ── EXIF / meta line ──────────────────────────────────────────────────
+    _exif_parts = [p for p in [_genre, img.format or '', img.location or ''] if p]
+    _exif_line  = '  ·  '.join(_exif_parts)
+
+    # ── Tier ladder ───────────────────────────────────────────────────────
+    _tier_order = ['Rookie', 'Shooter', 'Contender', 'Craftsman',
+                   'Maverick', 'Master', 'Grandmaster', 'Legend']
+
+    # ── History thread — last 2 previous Haiku evals for this user ────────
+    _history_rows = db.session.execute(
+        db.text(
+            "SELECT id, genre, score, tier, audit_json "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE AND id != :iid "
+            "  AND status = 'scored' "
+            "ORDER BY id DESC LIMIT 2"
+        ),
+        {'uid': current_user.id, 'iid': image_id}
+    ).fetchall()
+
+    _history = []
+    for _hr in _history_rows:
+        try:
+            _ha = _pj.loads(_hr[4] or '{}')
+            _history.append({
+                'genre':     _hr[1] or '',
+                'score':     float(_hr[2] or 0),
+                'tier':      _hr[3] or '',
+                'strength':  _ha.get('strength_name', ''),
+                'next_leap': _ha.get('next_leap_name', ''),
+                'takeaway':  _ha.get('takeaway', ''),
+            })
+        except Exception:
+            pass
+
+    # ── Pattern observation across history ────────────────────────────────
+    _pattern_note = ''
+    if len(_history) >= 2:
+        _gaps = [h['next_leap'] for h in _history if h['next_leap']]
+        if len(_gaps) >= 2 and _gaps[0] == _gaps[1] == _next_leap_name and _next_leap_name:
+            _pattern_note = (
+                f'Across your last three evaluations, {_next_leap_name} '
+                f'is the dimension that keeps calling for your attention. '
+                f'That is where your next leap lives.'
+            )
+
+    # ── Fetch photograph bytes from Cloudinary thumb_url ─────────────────
+    _photo_bytes = None
+    if img.thumb_url:
+        try:
+            _req = _ureq.Request(
+                img.thumb_url,
+                headers={'User-Agent': 'ShutterLeague-PDF/1.0'}
+            )
+            with _ureq.urlopen(_req, timeout=8) as _resp:
+                _photo_bytes = _resp.read()
+        except Exception as _fe:
+            app.logger.warning(f'[try_result_download] photo fetch failed: {_fe}')
+
+    # ── Reportlab PDF build ───────────────────────────────────────────────
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.lib import colors
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
+            Table, TableStyle, Image as RLImage
+        )
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+
+        # ── Colour palette — matches SL web tokens ────────────────────────
+        _C_SLATE    = colors.HexColor('#4A6FA5')   # primary slate blue
+        _C_AMBER    = colors.HexColor('#D4A843')   # amber accent
+        _C_DARK     = colors.HexColor('#1A1A2E')   # near-black text
+        _C_MID      = colors.HexColor('#555577')   # mid grey
+        _C_LIGHT    = colors.HexColor('#F5F5F0')   # off-white bg
+        _C_WHITE    = colors.white
+        _C_HIGH     = colors.HexColor('#2ECC71')   # high score green
+        _C_MED      = colors.HexColor('#F39C12')   # mid score amber
+        _C_LOW      = colors.HexColor('#E74C3C')   # low score red
+        _C_RULE     = colors.HexColor('#DDDDCC')   # divider
+
+        def _dim_colour(v):
+            if v is None:
+                return _C_MID
+            if v >= 7.5:
+                return _C_HIGH
+            if v >= 5.0:
+                return _C_MED
+            return _C_LOW
+
+        # ── Styles — Aptos-equivalent via Helvetica (PDF safe) ────────────
+        def _sty(name, font='Helvetica', size=10, leading=14,
+                 colour=None, align=TA_LEFT, bold=False, space_before=0, space_after=4):
+            return ParagraphStyle(
+                name,
+                fontName='Helvetica-Bold' if bold else font,
+                fontSize=size,
+                leading=leading,
+                textColor=colour or _C_DARK,
+                alignment=align,
+                spaceBefore=space_before,
+                spaceAfter=space_after,
+            )
+
+        _s_title    = _sty('title',    size=22, leading=26, colour=_C_SLATE,  bold=True,  align=TA_CENTER, space_after=2)
+        _s_sub      = _sty('sub',      size=11, leading=14, colour=_C_MID,    align=TA_CENTER, space_after=8)
+        _s_score    = _sty('score',    size=48, leading=52, colour=_C_SLATE,  bold=True,  align=TA_CENTER, space_after=0)
+        _s_tier     = _sty('tier',     size=16, leading=20, colour=_C_AMBER,  bold=True,  align=TA_CENTER, space_after=12)
+        _s_label    = _sty('label',    size=8,  leading=10, colour=_C_MID,    bold=True,  space_after=2)
+        _s_body     = _sty('body',     size=10, leading=15, colour=_C_DARK,   space_after=6)
+        _s_body_it  = _sty('bodyit',   size=10, leading=15, colour=_C_MID,    space_after=6)
+        _s_head2    = _sty('head2',    size=12, leading=16, colour=_C_SLATE,  bold=True,  space_before=10, space_after=4)
+        _s_foot     = _sty('foot',     size=8,  leading=10, colour=_C_MID,    align=TA_CENTER, space_after=0)
+        _s_hist_lbl = _sty('histlbl',  size=9,  leading=12, colour=_C_SLATE,  bold=True,  space_after=2)
+        _s_hist_bod = _sty('histbod',  size=9,  leading=13, colour=_C_DARK,   space_after=4)
+        _s_pattern  = _sty('pattern',  size=10, leading=15, colour=_C_AMBER,  space_before=6, space_after=6)
+        _s_takeaway = _sty('takeaway', size=11, leading=16, colour=_C_DARK,   space_before=4, space_after=8)
+
+        _buf  = _pio.BytesIO()
+        _W, _H = A4
+        _M    = 18 * mm
+
+        _doc = SimpleDocTemplate(
+            _buf,
+            pagesize=A4,
+            leftMargin=_M, rightMargin=_M,
+            topMargin=_M,  bottomMargin=_M,
+            title=f'Shutter League — {_asset}',
+            author='Shutter League',
+        )
+
+        _story = []
+
+        # ── PAGE 1 ────────────────────────────────────────────────────────
+
+        # Header
+        _story.append(Paragraph('SHUTTER LEAGUE', _s_title))
+        _story.append(Paragraph('Exploratory Evaluation', _s_sub))
+        _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=10))
+
+        # Photograph
+        if _photo_bytes:
+            try:
+                _img_buf = _pio.BytesIO(_photo_bytes)
+                _rl_img  = RLImage(_img_buf, width=_W - 2*_M, height=80*mm, kind='proportional')
+                _story.append(_rl_img)
+                _story.append(Spacer(1, 6))
+            except Exception as _ie:
+                app.logger.warning(f'[try_result_download] photo embed failed: {_ie}')
+
+        # Asset name + EXIF
+        _story.append(Paragraph(_asset, _s_head2))
+        if _exif_line:
+            _story.append(Paragraph(_exif_line, _s_body_it))
+
+        _story.append(Spacer(1, 4))
+
+        # Score + Tier
+        _story.append(Paragraph(f'{_score:.2f}', _s_score))
+        _story.append(Paragraph(_tier, _s_tier))
+
+        # Tier ladder
+        _ladder_cells = []
+        for _t in _tier_order:
+            _is_current = (_t == _tier)
+            _ladder_cells.append(_t)
+        _ladder_tbl = Table(
+            [_ladder_cells],
+            colWidths=[(_W - 2*_M) / len(_tier_order)] * len(_tier_order),
+        )
+        _ladder_style = [
+            ('FONTNAME',    (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE',    (0,0), (-1,-1), 7),
+            ('ALIGN',       (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',      (0,0), (-1,-1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0,0), (-1,-1), [_C_LIGHT]),
+            ('TEXTCOLOR',   (0,0), (-1,-1), _C_MID),
+            ('TOPPADDING',  (0,0), (-1,-1), 4),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 4),
+            ('BOX',         (0,0), (-1,-1), 0.3, _C_RULE),
+            ('INNERGRID',   (0,0), (-1,-1), 0.3, _C_RULE),
+        ]
+        # Highlight current tier
+        if _tier in _tier_order:
+            _ti = _tier_order.index(_tier)
+            _ladder_style += [
+                ('BACKGROUND',  (_ti,0), (_ti,0), _C_SLATE),
+                ('TEXTCOLOR',   (_ti,0), (_ti,0), _C_WHITE),
+                ('FONTNAME',    (_ti,0), (_ti,0), 'Helvetica-Bold'),
+            ]
+        _ladder_tbl.setStyle(TableStyle(_ladder_style))
+        _story.append(_ladder_tbl)
+        _story.append(Spacer(1, 10))
+
+        # Five dimensions
+        _dim_data = [
+            ('Depth of Difficulty',  _dod),
+            ('Visual Disruption',    _vd),
+            ('Decisive Moment',      _dm),
+            ('Wonder Factor',        _wf),
+            ('Authentic Quality',    _aq),
+        ]
+        _col_w = (_W - 2*_M) / len(_dim_data)
+        _dim_labels = [[Paragraph(f'<b>{n}</b>', _sty('dl', size=7, leading=9, colour=_C_WHITE, bold=True, align=TA_CENTER))
+                        for n, _ in _dim_data]]
+        _dim_scores = [[Paragraph(f'{v:.1f}' if v is not None else '—',
+                                  _sty('ds', size=13, leading=16, colour=_C_WHITE, bold=True, align=TA_CENTER))
+                        for _, v in _dim_data]]
+        _dim_tbl = Table(
+            _dim_labels + _dim_scores,
+            colWidths=[_col_w] * len(_dim_data),
+        )
+        _dim_style = [
+            ('ALIGN',        (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',       (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING',   (0,0), (-1,-1), 4),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 4),
+        ]
+        for _di, (_, _dv) in enumerate(_dim_data):
+            _bg = _dim_colour(_dv)
+            _dim_style.append(('BACKGROUND', (_di, 0), (_di, 1), _bg))
+        _dim_tbl.setStyle(TableStyle(_dim_style))
+        _story.append(_dim_tbl)
+        _story.append(Spacer(1, 10))
+
+        # Takeaway
+        if _takeaway:
+            _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=6))
+            _story.append(Paragraph(_takeaway, _s_takeaway))
+
+        # Impression (the letter)
+        if _impression:
+            _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=6))
+            _story.append(Paragraph('Your Evaluation', _s_head2))
+            _story.append(Paragraph(_impression, _s_body))
+
+        # Strongest moment
+        if _strength_name or _strength_obs:
+            _story.append(Paragraph(f'Strongest: {_strength_name}', _s_head2))
+            if _strength_obs:
+                _story.append(Paragraph(_strength_obs, _s_body))
+
+        # Next leap
+        if _next_leap_name or _next_leap_obs:
+            _story.append(Paragraph(f'Your Next Leap: {_next_leap_name}', _s_head2))
+            if _next_leap_obs:
+                _story.append(Paragraph(_next_leap_obs, _s_body))
+
+        # What next
+        if _what_next:
+            _story.append(Paragraph('What To Do Next', _s_head2))
+            _story.append(Paragraph(_what_next, _s_body))
+
+        # EXIF footer line on page 1
+        _story.append(Spacer(1, 6))
+        _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=4))
+        _story.append(Paragraph(
+            f'Evaluated {_eval_date}  ·  {_exif_line}  ·  shutter.league',
+            _s_foot
+        ))
+
+        # ── PAGE 2 ────────────────────────────────────────────────────────
+        from reportlab.platypus import PageBreak
+        _story.append(PageBreak())
+
+        _story.append(Paragraph('SHUTTER LEAGUE', _s_title))
+        _story.append(Paragraph('Your Journey So Far', _s_sub))
+        _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=10))
+
+        # Master reference
+        if _master_name or _master_why:
+            _story.append(Paragraph('Master Reference', _s_head2))
+            if _master_name:
+                _story.append(Paragraph(_master_name, _sty('mn', size=12, leading=16, colour=_C_AMBER, bold=True, space_after=2)))
+            if _master_why:
+                _story.append(Paragraph(_master_why, _s_body))
+            _story.append(Spacer(1, 8))
+
+        # History thread
+        _story.append(Paragraph('Your Evaluation History', _s_head2))
+
+        if _history:
+            for _hi, _hitem in enumerate(_history):
+                _story.append(Paragraph(
+                    f'Evaluation {len(_history) - _hi}  ·  {_hitem["genre"]}  ·  {_hitem["score"]:.2f}  ·  {_hitem["tier"]}',
+                    _s_hist_lbl
+                ))
+                if _hitem['strength']:
+                    _story.append(Paragraph(f'Strongest: {_hitem["strength"]}', _s_hist_bod))
+                if _hitem['next_leap']:
+                    _story.append(Paragraph(f'Next leap: {_hitem["next_leap"]}', _s_hist_bod))
+                if _hitem['takeaway']:
+                    _story.append(Paragraph(_hitem['takeaway'], _s_hist_bod))
+                _story.append(Spacer(1, 4))
+        else:
+            _story.append(Paragraph(
+                'This is your first exploratory evaluation. Your history will build from here.',
+                _s_body_it
+            ))
+
+        # Pattern observation
+        if _pattern_note:
+            _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=6))
+            _story.append(Paragraph(_pattern_note, _s_pattern))
+
+        # Branding footer
+        _story.append(Spacer(1, 16))
+        _story.append(HRFlowable(width='100%', thickness=1, color=_C_SLATE, spaceAfter=6))
+        _story.append(Paragraph(
+            'Shutter League  ·  shutter.league  ·  Annual Excellence Award — 31 December 2026',
+            _s_foot
+        ))
+        _story.append(Paragraph(
+            'This evaluation was generated by the Shutter League exploratory evaluation engine. '
+            'It does not contribute to your League standing, Annual Excellence Award, or Body of Work.',
+            _s_foot
+        ))
+
+        _doc.build(_story)
+        _pdf_bytes = _buf.getvalue()
+
+    except Exception as _rle:
+        app.logger.error(f'[try_result_download] PDF build failed: {_rle}')
+        return 'PDF generation failed. Please try again.', 500
+
+    # ── Filename: SL_[Name]_[Genre]_[Date].pdf ───────────────────────────
+    import re as _re
+    _safe_name  = _re.sub(r'[^A-Za-z0-9]+', '_', _name)[:30].strip('_') or 'Photographer'
+    _safe_genre = _re.sub(r'[^A-Za-z0-9]+', '_', _genre)[:20].strip('_') or 'General'
+    _safe_date  = (_eval_date or '').replace(' ', '-').replace('/', '-')[:12] or '2026'
+    _filename   = f'SL_{_safe_name}_{_safe_genre}_{_safe_date}.pdf'
+
+    from flask import Response as _Resp
+    return _Resp(
+        _pdf_bytes,
+        headers={
+            'Content-Type':           'application/pdf',
+            'Content-Disposition':    f'attachment; filename="{_filename}"',
+            'Content-Length':         str(len(_pdf_bytes)),
+            'Cache-Control':          'no-store, no-cache, must-revalidate',
+            'Pragma':                 'no-cache',
+            'X-Content-Type-Options': 'nosniff',
+        }
+    )
 
 
 @app.route('/admin/resend-subscription-email/<int:user_id>', methods=['GET', 'POST'])
