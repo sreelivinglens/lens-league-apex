@@ -32084,10 +32084,16 @@ def try_result(image_id):
     except Exception:
         pass
 
-    _lifetime       = int(getattr(current_user, 'total_uploads_ever', 0) or 0)
+    # SL-181.14b: count only Haiku /try uploads for the free eval counter,
+    # not total_uploads_ever which includes paid Sonnet evaluations.
     _bonus          = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
-    evals_used      = _lifetime
-    evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _lifetime)
+    _haiku_count    = Image.query.filter_by(
+        user_id=current_user.id, status='scored'
+    ).filter(
+        Image._audit_json.like('%"source": "haiku_try"%')
+    ).count()
+    evals_used      = _haiku_count
+    evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _haiku_count)
 
     return render_template(
         'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
