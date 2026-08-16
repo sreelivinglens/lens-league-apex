@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14b-staging (Session 186, 2026-08-16 — ADD: /try/result/<id>/download route using reportlab. Clean one-page PDF scorecard: score, tier, ladder, 5 dimensions, impression, strength, next leap, master reference, SL branding. RETAINS 181.14-staging.)
 # SL-VERSION: 181.14-staging (Session 186, 2026-08-16 — HAIKU PROMPT EXPANSION: (1) FREE_IMAGE_LIMIT 3→10 staging only; (2) _TRY_HAIKU_PROMPT expanded — new JSON output fields: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why; (3) EXIF passed to prompt for device-aware advice; (4) max_tokens 200→700; (5) _try_run_haiku signature adds exif_data param; (6) _audit_json stores all new fields; (7) try_result reads and passes all new fields to template. STAGING ONLY. RETAINS 181.10-staging.)
 # SL-VERSION: 181.10-staging (Session 184, 2026-08-14 — FIX: screenshot_check NameError '_img_b64 is not defined'. Variable was scoped to preflight route, not background scoring thread. Fix: build _img_b64 from _img.thumb_path or _img.thumb_url inside the screenshot check block, matching watermark check pattern. Zero logic change to detection. RETAINS 181.9-staging.)
 # SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — THREE FIXES: rejection messages specific per type, scoring_flash updated, resolution hard block on preflight. RETAINS 181.8-staging.)
@@ -32120,6 +32121,181 @@ def try_result(image_id):
         exif_data      = exif_data,
         evals_used     = evals_used,
         evals_remaining= evals_remaining,
+    )
+
+
+
+@app.route('/try/result/<int:image_id>/download')
+@login_required
+def try_result_download(image_id):
+    """
+    GET /try/result/<id>/download
+    Generate and serve a PDF scorecard for a Haiku free evaluation.
+    SL-181.14: reportlab — clean one-page scorecard with score, tier, dimensions,
+    impression/takeaway, strength, next leap, and SL branding.
+    """
+    import json as _j
+    from io import BytesIO
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib.colors import HexColor, white, black
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER
+
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    # Read audit JSON
+    try:
+        audit = _j.loads(img._audit_json or '{}')
+    except Exception:
+        audit = {}
+
+    score       = img.score or 0
+    tier        = img.tier or '—'
+    genre       = img.genre or '—'
+    takeaway    = audit.get('impression') or audit.get('takeaway') or ''
+    str_name    = audit.get('strength_name') or ''
+    str_obs     = audit.get('strength_obs') or ''
+    leap_name   = audit.get('next_leap_name') or ''
+    leap_obs    = audit.get('next_leap_obs') or ''
+    dod         = audit.get('dod') or 0
+    vd          = audit.get('vd') or 0
+    dm          = audit.get('dm') or 0
+    wf          = audit.get('wf') or 0
+    aq          = audit.get('aq') or 0
+    master_name = audit.get('master_name') or ''
+    master_why  = audit.get('master_why') or ''
+
+    # Colours
+    GOLD    = HexColor('#C8A84B')
+    INK     = HexColor('#1E1A12')
+    MUTED   = HexColor('#8A7050')
+    CREAM   = HexColor('#FFFCF0')
+    GREEN   = HexColor('#3B6D11')
+    AMBER   = HexColor('#C87800')
+    RED     = HexColor('#C83030')
+    TEAL    = HexColor('#0A7858')
+    BORDER  = HexColor('#DDD5C0')
+
+    W, H = A4
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=20*mm, rightMargin=20*mm,
+        topMargin=16*mm, bottomMargin=16*mm
+    )
+
+    def style(name='body', **kw):
+        defaults = dict(
+            fontName='Helvetica', fontSize=11, leading=16,
+            textColor=INK, alignment=TA_LEFT, spaceAfter=4
+        )
+        defaults.update(kw)
+        return ParagraphStyle(name, **defaults)
+
+    story = []
+
+    # Header bar
+    story.append(Paragraph(
+        '<font color="#C8A84B"><b>SHUTTER LEAGUE</b></font>'
+        f'<font color="#8A7050">  ·  Exploratory Evaluation</font>',
+        style('hdr', fontSize=13, leading=18, spaceAfter=8)
+    ))
+    story.append(HRFlowable(width='100%', thickness=2, color=GOLD, spaceAfter=12))
+
+    # Score + tier
+    story.append(Paragraph(
+        f'<font size="42"><b>{score:.2f}</b></font>'
+        f'<font size="16" color="#8A7050"> /10</font>',
+        style('score', leading=52, spaceAfter=4)
+    ))
+    story.append(Paragraph(
+        f'<b>{tier}</b>  ·  {genre}',
+        style('tier', fontSize=13, leading=18, spaceAfter=14)
+    ))
+
+    # Tier ladder
+    tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
+    ladder = '  ›  '.join(
+        f'<b><font color="#C8A84B">{t}</font></b>' if t == tier else f'<font color="#C0B898">{t}</font>'
+        for t in tiers
+    )
+    story.append(Paragraph(ladder, style('ladder', fontSize=9, leading=14, spaceAfter=16)))
+    story.append(HRFlowable(width='100%', thickness=0.5, color=BORDER, spaceAfter=12))
+
+    # Dimensions
+    story.append(Paragraph('<b>Five Dimensions</b>', style('dims-hdr', fontSize=11, spaceAfter=6)))
+    dim_data = [
+        ('Difficulty', dod, RED),
+        ('Visual',     vd,  AMBER),
+        ('Moment',     dm,  AMBER),
+        ('Wow',        wf,  GREEN),
+        ('Emotion',    aq,  TEAL),
+    ]
+    for dim_name, dim_val, col in dim_data:
+        tag = ''
+        if dim_val == min(dod, vd, dm, wf, aq):
+            tag = '  <font color="#C83030"><i>next leap</i></font>'
+        elif dim_val == max(dod, vd, dm, wf, aq):
+            tag = '  <font color="#0A7858"><i>strongest</i></font>'
+        story.append(Paragraph(
+            f'<font color="#5A4A30">{dim_name:<12}</font>'
+            f'  <font color="{col.hexval()}"><b>{dim_val:.1f}</b></font>{tag}',
+            style(f'dim-{dim_name}', fontSize=11, leading=15, spaceAfter=3)
+        ))
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width='100%', thickness=0.5, color=BORDER, spaceAfter=12))
+
+    # What we saw
+    if takeaway:
+        story.append(Paragraph('<b>What we saw in this frame</b>', style('sec-hdr', fontSize=11, spaceAfter=6)))
+        story.append(Paragraph(takeaway, style('takeaway', fontSize=11, leading=17, textColor=HexColor('#3A3020'), spaceAfter=14)))
+
+    # Strength
+    if str_name and str_obs:
+        story.append(Paragraph(
+            f'<font color="#3B6D11"><b>Your strongest moment</b></font>  ·  {str_name}',
+            style('str-hdr', fontSize=11, spaceAfter=4)
+        ))
+        story.append(Paragraph(str_obs, style('str-body', fontSize=11, leading=16, textColor=HexColor('#3A3020'), spaceAfter=12)))
+
+    # Next leap
+    if leap_name and leap_obs:
+        story.append(Paragraph(
+            f'<font color="#C87800"><b>Your next leap</b></font>  ·  {leap_name}',
+            style('leap-hdr', fontSize=11, spaceAfter=4)
+        ))
+        story.append(Paragraph(leap_obs, style('leap-body', fontSize=11, leading=16, textColor=HexColor('#3A3020'), spaceAfter=12)))
+
+    # Master reference
+    if master_name and master_why:
+        story.append(HRFlowable(width='100%', thickness=0.5, color=BORDER, spaceAfter=10))
+        story.append(Paragraph(
+            f'<font color="#8A7050"><b>The eye behind this</b></font>  ·  {master_name}',
+            style('master-hdr', fontSize=11, spaceAfter=4)
+        ))
+        story.append(Paragraph(master_why, style('master-body', fontSize=11, leading=16, textColor=HexColor('#5A4A30'), spaceAfter=14)))
+
+    # Footer
+    story.append(HRFlowable(width='100%', thickness=1, color=GOLD, spaceAfter=8))
+    story.append(Paragraph(
+        f'<font color="#8A7050">This is an exploratory evaluation — a first reading of your eye.  '
+        f'shutterleague.com</font>',
+        style('footer', fontSize=9, leading=14, alignment=TA_CENTER)
+    ))
+
+    doc.build(story)
+    buf.seek(0)
+
+    safe_name = (img.asset_name or f'evaluation_{image_id}').replace(' ', '_')[:40]
+    return send_file(
+        buf,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'SL_Evaluation_{safe_name}.pdf'
     )
 
 
