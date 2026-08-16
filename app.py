@@ -1,3 +1,4 @@
+# SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — no longer a fixed verbatim template. Replaced MANDATORY OPENING SENTENCE (single fixed structure, reads as bot) with HISTORY OPENING INSTRUCTION giving Haiku the raw materials (photograph names, consistent strength, prior pattern) and instructing it to write in Sherpa voice with varied structure each time. Forbidden phrases: "consistent strength", "that thread runs through". Example registers provided. Retains 181.25-staging.)
 # SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE on the images row. ORM Image() constructor cannot set unmapped columns. Every Haiku image was saved with is_haiku_try=FALSE, making all world-separation filters (Recent Work, My Gallery, Standings) blind to them. Fixed: raw SQL UPDATE images SET is_haiku_try=TRUE WHERE id=:iid runs immediately after insert commit in try_upload. DB backfill required: UPDATE images SET is_haiku_try=TRUE WHERE audit_json::text LIKE '%haiku_try%' AND is_haiku_try IS NOT TRUE. Retains 181.24-staging.)
 # SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. Added AND i.is_haiku_try IS NOT TRUE to _base_q in recent_work route. Haiku images must never appear in the paid community feed. Retains 181.23-staging.)
 # SL-VERSION: 181.23-staging (Session 187, 2026-08-17 — TWO FIXES: (1) _get_haiku_history_context rebuilt — SQL now fetches asset_name. Pre-builds mandatory opening sentence in Python naming actual photographs ("The flamingo pan, the flower frame..."). Haiku instructed to use verbatim as first sentence of impression. Consistent strength computed as most common strongest dimension. Average weakness computed across all history. Pattern instruction moved to what_next. (2) Gate/display count fixed — was log-only (missed non-deleted images). Now combined: COUNT(live images is_haiku_try=TRUE) + COUNT(log is_haiku_try=TRUE). Dots counter now shows correct remaining. Retains 181.22-staging.)
@@ -31487,29 +31488,43 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
             _consistent_weakness_key   = min(_avg_scores, key=_avg_scores.get)
             _consistent_weakness_plain = _DIM_PLAIN.get(_consistent_weakness_key, '')
 
-        # ── Build mandatory opening sentence ─────────────────────────────
-        # Specific, named, Python-built — Haiku must use this verbatim.
+        # ── Build history opening instruction ────────────────────────────
+        # 181.26: Instead of one fixed verbatim sentence (which reads as a bot),
+        # give the prompt the raw materials and let Haiku write the opening
+        # in Sherpa voice. Vary the structure based on eval count and pattern.
+        # The instruction names photographs, strength, and progression explicitly
+        # so the opening is specific — but the wording changes every time.
         _opening = ''
         _n = len(_image_names)
 
         if _n >= 2 and _consistent_strength_name:
-            # Name the photographs and the consistent thread
-            _named = ' and '.join(
-                [f'"{n}"' for n in _image_names[:2]]
-            )
+            _named_list = ', '.join([f'"{nm}"' for nm in _image_names[:3]])
             _opening = (
-                f"MANDATORY OPENING SENTENCE — use this verbatim as the first sentence "
-                f"of the impression field, then continue with 1-2 sentences on this "
-                f"specific photograph: \"{_named} — across both, {_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')} "
-                f"has been your most consistent strength. That thread runs through everything you have shown us.\""
+                f"HISTORY OPENING INSTRUCTION — the impression field MUST open with "
+                f"one sentence that references the photographer's prior work. "
+                f"You have seen: {_named_list}. "
+                f"Across these, {_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')} "
+                f"has been their most consistent strength. "
+                f"Write the opening sentence in warm Sherpa voice — specific, varied, never formulaic. "
+                f"Do NOT use the phrase 'consistent strength' or 'that thread runs through'. "
+                f"Vary the structure each time — sometimes name the photographs, sometimes name the pattern, "
+                f"sometimes note the progression, sometimes ask a quiet question. "
+                f"Examples of register (do not copy verbatim): "
+                f"'Three very different subjects — and in each one, the emotional weight lands.' / "
+                f"'You keep finding the feeling before you find the frame.' / "
+                f"'There is something you do with atmosphere that we are beginning to recognise.' / "
+                f"'Each photograph you have shown us has made the viewer feel something. That is not an accident.' "
+                f"Then continue with 1-2 sentences specific to THIS photograph."
             )
         elif _n == 1 and _consistent_strength_name:
             _opening = (
-                f"MANDATORY OPENING SENTENCE — use this verbatim as the first sentence "
-                f"of the impression field, then continue with 1-2 sentences on this "
-                f"specific photograph: \"{_image_names[0]} — your first frame showed us "
-                f"{_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')}. "
-                f"We are watching to see if this carries.\""
+                f"HISTORY OPENING INSTRUCTION — the impression field MUST open with "
+                f"one sentence that references the photographer's first photograph: \"{_image_names[0]}\". "
+                f"It showed us {_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')}. "
+                f"Write one warm Sherpa sentence acknowledging what that first frame revealed, "
+                f"then move directly to this photograph. "
+                f"Do not be generic. Name what you saw in that first frame. "
+                f"Then continue with 1-2 sentences specific to THIS photograph."
             )
 
         # ── Pattern instruction for repeating weakness ────────────────────
