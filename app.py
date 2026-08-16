@@ -1,3 +1,5 @@
+# SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. Added AND i.is_haiku_try IS NOT TRUE to _base_q in recent_work route. Haiku images must never appear in the paid community feed. Retains 181.23-staging.)
+# SL-VERSION: 181.23-staging (Session 187, 2026-08-17 — TWO FIXES: (1) _get_haiku_history_context rebuilt — SQL now fetches asset_name. Pre-builds mandatory opening sentence in Python naming actual photographs ("The flamingo pan, the flower frame..."). Haiku instructed to use verbatim as first sentence of impression. Consistent strength computed as most common strongest dimension. Average weakness computed across all history. Pattern instruction moved to what_next. (2) Gate/display count fixed — was log-only (missed non-deleted images). Now combined: COUNT(live images is_haiku_try=TRUE) + COUNT(log is_haiku_try=TRUE). Dots counter now shows correct remaining. Retains 181.22-staging.)
 # SL-VERSION: 181.22-staging (Session 187, 2026-08-17 — Option B: free users (not subscribed, not admin) redirected from /dashboard to /try. Keeps free users in the Haiku world — /try, /try/result, /try/gallery. Paid subscribers and admins unaffected. One line at top of dashboard route. Retains 181.21-staging.)
 # SL-VERSION: 181.21-staging (Session 187, 2026-08-17 — ADD: /try/gallery route (try_gallery) + try_gallery.html template. Haiku free-tier My Gallery — shows only is_haiku_try=TRUE images, links each card to /try/result/<id>, shows eval counter and remaining. Back to My Gallery link on Haiku scorecard updated to url_for(try_gallery). Retains 181.20-staging.)
 # SL-VERSION: 181.20-staging (Session 187, 2026-08-17 — FIX: _get_haiku_history_context fallback for pre-181.15 images. strength_name/next_leap_name only exist post-181.15. For older images, derives strongest/weakest from raw dod/vd/dm/wf/aq scores. Pattern detection now works on all Haiku history regardless of when scored. Retains 181.19-staging.)
@@ -13181,6 +13183,7 @@ def recent_work():
             " AND (i.needs_review = FALSE OR i.needs_review IS NULL)"
             " AND (i.raw_disqualified = FALSE OR i.raw_disqualified IS NULL)"
             " AND i.thumb_url IS NOT NULL"
+            " AND i.is_haiku_try IS NOT TRUE"
         )
 
         def _fetch_and_cap(since):
@@ -15895,7 +15898,7 @@ def delete_image(image_id):
         try:
             _bonus_del = getattr(current_user, 'referral_bonus_uploads', 0) or 0
             _used_log  = db.session.execute(
-                db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+                db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
                 {'uid': current_user.id}
             ).scalar() or 0
             _remaining_del = max(0, (FREE_IMAGE_LIMIT + _bonus_del) - _used_log)
@@ -31360,13 +31363,17 @@ def _try_calibration_line(genre):
 
 def _get_haiku_history_context(user_id, exclude_image_id=None):
     """
-    181.20 — Fetch last 2 Haiku evaluations for history context in the scoring prompt.
-    181.15 original: read strength_name/next_leap_name from audit_json.
-    181.20 fix: those fields only exist post-181.15. For older images, derive
-    strength and weakness from raw dimension scores (dod/vd/dm/wf/aq) which are
-    always present. Ensures history context is useful even for pre-181.15 images.
+    181.23 — History context for Haiku scoring prompt.
+    Key changes from 181.20:
+    - SQL now fetches asset_name so image names can be used in the opening sentence.
+    - Pre-builds a mandatory opening sentence in Python (specific, named, guaranteed).
+      Haiku is instructed to use it verbatim as the first sentence of impression.
+      This prevents Haiku from skipping the history reference or making it generic.
+    - Computes consistent_strength across all history (most common strongest dimension).
+    - Consistent weakness computed as average lowest dimension across history.
+    - Opening sentence names actual photographs by title — "The flamingo pan, the
+      flower frame" — so the user feels remembered, not processed.
     """
-    # Plain-English dimension names for prompt — no jargon
     _DIM_NAMES = {
         'dod': 'Depth of Difficulty',
         'vd':  'Visual Disruption',
@@ -31374,9 +31381,16 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
         'wf':  'Wonder Factor',
         'aq':  'Authentic Quality',
     }
+    # Plain English — what each dimension means without jargon
+    _DIM_PLAIN = {
+        'dod': 'the difficulty of what you chose to make',
+        'vd':  'the visual surprise in your frame',
+        'dm':  'the timing of the moment',
+        'wf':  'the sense of wonder you create',
+        'aq':  'the emotional atmosphere you build',
+    }
 
     def _derive_strength_weakness(audit):
-        """Derive strongest/weakest from raw scores when named fields absent."""
         _scores = {}
         for _k in ('dod', 'vd', 'dm', 'wf', 'aq'):
             try:
@@ -31386,51 +31400,66 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
             except Exception:
                 pass
         if not _scores:
-            return '', ''
+            return '', '', {}
         _strongest = max(_scores, key=_scores.get)
         _weakest   = min(_scores, key=_scores.get)
-        return _DIM_NAMES.get(_strongest, ''), _DIM_NAMES.get(_weakest, '')
+        return _DIM_NAMES.get(_strongest, ''), _DIM_NAMES.get(_weakest, ''), _scores
 
     try:
         import json as _hj
+        from collections import Counter as _Ctr
         _params = {'uid': user_id}
+        # 181.23: add asset_name to SQL so we can name images in the opening
         _sql = (
-            "SELECT genre, score, tier, audit_json "
+            "SELECT genre, score, tier, audit_json, asset_name "
             "FROM images "
             "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"
         )
         if exclude_image_id:
             _sql += " AND id != :iid"
             _params['iid'] = exclude_image_id
-        _sql += " ORDER BY id DESC LIMIT 2"
+        _sql += " ORDER BY id DESC LIMIT 5"  # up to 5 for pattern strength
 
         _rows = db.session.execute(db.text(_sql), _params).fetchall()
         if not _rows:
             return ''
 
-        _lines = []
-        _gaps  = []
+        _lines        = []
+        _strengths    = []  # strongest dimension key per eval
+        _weaknesses   = []  # weakest dimension key per eval
+        _image_names  = []  # cleaned asset names for opening sentence
+        _all_scores   = {}  # dim → list of scores across history
+
         for _r in _rows:
             try:
                 _ha = _hj.loads(_r[3] or '{}')
+                _asset = (_r[4] or '').replace('_', ' ').replace('-', ' ').strip()
+                if _asset:
+                    _image_names.append(_asset)
 
-                # 181.20: prefer named fields; fall back to derived from raw scores
                 _sn = (_ha.get('strength_name') or '').strip()
                 _ln = (_ha.get('next_leap_name') or '').strip()
-                if not _sn or not _ln:
-                    _sn_d, _ln_d = _derive_strength_weakness(_ha)
-                    if not _sn:
-                        _sn = _sn_d
-                    if not _ln:
-                        _ln = _ln_d
+                _sn_d, _ln_d, _scores_d = _derive_strength_weakness(_ha)
+                if not _sn:
+                    _sn = _sn_d
+                if not _ln:
+                    _ln = _ln_d
 
-                _tk = (_ha.get('takeaway') or '').strip()
-                _line = f"  - {_r[0]} photograph · {float(_r[1]):.2f} · {_r[2]}"
+                # Accumulate per-dimension scores for average weakness
+                for _dk, _dv in _scores_d.items():
+                    _all_scores.setdefault(_dk, []).append(_dv)
+
+                # Track strongest/weakest by key for pattern analysis
+                if _scores_d:
+                    _strengths.append(max(_scores_d, key=_scores_d.get))
+                    _weaknesses.append(min(_scores_d, key=_scores_d.get))
+
+                _tk   = (_ha.get('takeaway') or '').strip()
+                _line = f"  - {_r[0]} · {_asset or 'Untitled'} · {float(_r[1]):.2f} · {_r[2]}"
                 if _sn:
                     _line += f" · Strongest: {_sn}"
                 if _ln:
-                    _line += f" · Next leap: {_ln}"
-                    _gaps.append(_ln)
+                    _line += f" · Gap: {_ln}"
                 if _tk:
                     _line += f"\n    Takeaway: {_tk}"
                 _lines.append(_line)
@@ -31440,25 +31469,63 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
         if not _lines:
             return ''
 
+        # ── Compute consistent strength and average weakness ──────────────
+        _consistent_strength_key  = ''
+        _consistent_weakness_key  = ''
+        _consistent_strength_name = ''
+        _consistent_weakness_plain = ''
+
+        if _strengths:
+            _sc = _Ctr(_strengths)
+            _consistent_strength_key  = _sc.most_common(1)[0][0]
+            _consistent_strength_name = _DIM_NAMES.get(_consistent_strength_key, '')
+
+        if _all_scores:
+            # Average score per dimension across all history
+            _avg_scores = {k: sum(v)/len(v) for k, v in _all_scores.items()}
+            _consistent_weakness_key   = min(_avg_scores, key=_avg_scores.get)
+            _consistent_weakness_plain = _DIM_PLAIN.get(_consistent_weakness_key, '')
+
+        # ── Build mandatory opening sentence ─────────────────────────────
+        # Specific, named, Python-built — Haiku must use this verbatim.
+        _opening = ''
+        _n = len(_image_names)
+
+        if _n >= 2 and _consistent_strength_name:
+            # Name the photographs and the consistent thread
+            _named = ' and '.join(
+                [f'"{n}"' for n in _image_names[:2]]
+            )
+            _opening = (
+                f"MANDATORY OPENING SENTENCE — use this verbatim as the first sentence "
+                f"of the impression field, then continue with 1-2 sentences on this "
+                f"specific photograph: \"{_named} — across both, {_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')} "
+                f"has been your most consistent strength. That thread runs through everything you have shown us.\""
+            )
+        elif _n == 1 and _consistent_strength_name:
+            _opening = (
+                f"MANDATORY OPENING SENTENCE — use this verbatim as the first sentence "
+                f"of the impression field, then continue with 1-2 sentences on this "
+                f"specific photograph: \"{_image_names[0]} — your first frame showed us "
+                f"{_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')}. "
+                f"We are watching to see if this carries.\""
+            )
+
+        # ── Pattern instruction for repeating weakness ────────────────────
         _pattern_instruction = ''
-        if len(_gaps) >= 2 and len(set(_gaps)) == 1:
+        if len(_weaknesses) >= 2 and len(set(_weaknesses[:2])) == 1:
+            _wk_plain = _DIM_PLAIN.get(_weaknesses[0], '')
             _pattern_instruction = (
-                f"\nPATTERN DETECTED: {_gaps[0]} has been the weakest dimension across "
-                f"the photographer's last {len(_gaps)} evaluations. In the impression field, "
-                f"name this pattern in plain English — no dimension names, no jargon. "
-                f"Example register: 'Three Wildlife frames. You find the subject. "
-                f"The frame is not yet asking the viewer to stop.' "
-                f"Do not use the words 'Depth of Difficulty', 'Visual Disruption', "
-                f"'Decisive Moment', 'Wonder Factor', or 'Affective Quotient'."
+                f"\nPATTERN: {_wk_plain} has been the recurring gap across the last "
+                f"{len(_weaknesses)} evaluations. Weave this into the what_next field "
+                f"in plain English — name it as a pattern without using dimension names."
             )
 
         return (
-            "PHOTOGRAPHER HISTORY (last evaluations on this platform):\n"
+            f"{_opening}\n\n"
+            f"PHOTOGRAPHER HISTORY (last {len(_lines)} evaluated photograph{'s' if len(_lines) > 1 else ''}):\n"
             + "\n".join(_lines)
             + _pattern_instruction
-            + "\nOpen the impression field by acknowledging what you have already seen "
-            "from this photographer — one sentence referencing the pattern or progress "
-            "before moving to this specific photograph. Plain English. No jargon."
         )
     except Exception as _he:
         app.logger.warning(f'[try_haiku] history fetch failed (non-fatal): {_he}')
@@ -31828,7 +31895,7 @@ def try_gallery():
     # Count from log (permanent gate count)
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     _gate_count = int(db.session.execute(
-        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
         {'uid': current_user.id}
     ).scalar() or 0)
     _remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
@@ -31857,7 +31924,7 @@ def try_page():
     # blocked paid subscribers from using their free Haiku quota.
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _haiku_row = db.session.execute(
-        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
         {'uid': current_user.id}
     ).scalar()
     evals_used = int(_haiku_row or 0)
@@ -31906,7 +31973,7 @@ def try_upload():
     # blocked paid subscribers from using their free Haiku quota.
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _haiku_row = db.session.execute(
-        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
         {'uid': current_user.id}
     ).scalar()
     _lifetime = int(_haiku_row or 0)
@@ -32195,7 +32262,7 @@ def try_result(image_id):
     # 181.18: TWO separate counts.
     # Gate count (permanent — from log, never decrements on delete):
     _gate_count = int(db.session.execute(
-        db.text("SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
         {'uid': current_user.id}
     ).scalar() or 0)
     # Display count (current reality — live scored images, decrements on delete):
