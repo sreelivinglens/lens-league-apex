@@ -1,3 +1,4 @@
+# SL-VERSION: 181.14-staging (Session 186, 2026-08-16 — HAIKU PROMPT EXPANSION: (1) FREE_IMAGE_LIMIT 3→10 staging only; (2) _TRY_HAIKU_PROMPT expanded — new JSON output fields: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why; (3) EXIF passed to prompt for device-aware advice; (4) max_tokens 200→700; (5) _try_run_haiku signature adds exif_data param; (6) _audit_json stores all new fields; (7) try_result reads and passes all new fields to template. STAGING ONLY. RETAINS 181.10-staging.)
 # SL-VERSION: 181.10-staging (Session 184, 2026-08-14 — FIX: screenshot_check NameError '_img_b64 is not defined'. Variable was scoped to preflight route, not background scoring thread. Fix: build _img_b64 from _img.thumb_path or _img.thumb_url inside the screenshot check block, matching watermark check pattern. Zero logic change to detection. RETAINS 181.9-staging.)
 # SL-VERSION: 181.9-staging (Session 184, 2026-08-14 — THREE FIXES: rejection messages specific per type, scoring_flash updated, resolution hard block on preflight. RETAINS 181.8-staging.)
 # SL-VERSION: 181.7-staging (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Same as production 179.6. RETAINS 181.6-staging.)
@@ -31493,13 +31494,46 @@ _TRY_HAIKU_PROMPT = (
     "that most defines or limits this image and say precisely why. "
     "Be direct. Do not use the word score.\n\n"
 
+    "EXIF CONTEXT (use to personalise advice):\n"
+    "{exif_context}\n\n"
+
+    "CELEBRATION (impression):\n"
+    "Write 2-3 sentences in warm Sherpa tone that celebrate what this photographer "
+    "noticed or achieved. Be specific to this image. Name the actual thing they saw "
+    "or did — not generic praise. Never use the word score. Max 60 words.\n\n"
+
+    "STRENGTH:\n"
+    "Name the single strongest dimension (e.g. Emotion) and write one sentence "
+    "explaining exactly why this image excels there. Specific. Max 30 words.\n\n"
+
+    "NEXT LEAP:\n"
+    "Name the single weakest dimension (e.g. Difficulty) and write one sentence "
+    "explaining exactly what holds this score back. Specific. Max 30 words.\n\n"
+
+    "WHAT NEXT (device-aware improvement advice):\n"
+    "Write 2-3 sentences of specific actionable advice for the next opportunity. "
+    "If the device is a phone, give phone-specific advice (Night mode, tap to focus, etc). "
+    "Never say go back tomorrow — say next opportunity. Max 60 words.\n\n"
+
+    "MASTER REFERENCE:\n"
+    "Name one real photographer whose body of work connects to what this photographer "
+    "is doing. One name. One sentence explaining the connection. Max 25 words.\n\n"
+
     "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
-    "\"takeaway\": \"<one sentence>\"}"
+    "\"takeaway\": \"<one sentence>\", "
+    "\"impression\": \"<2-3 sentences>\", "
+    "\"strength_name\": \"<dimension name>\", "
+    "\"strength_obs\": \"<one sentence>\", "
+    "\"next_leap_name\": \"<dimension name>\", "
+    "\"next_leap_obs\": \"<one sentence>\", "
+    "\"what_next\": \"<2-3 sentences>\", "
+    "\"master_name\": \"<photographer name>\", "
+    "\"master_why\": \"<one sentence>\"}"
 )
 
 
-def _try_run_haiku(image_id, img_b64, genre):
+def _try_run_haiku(image_id, img_b64, genre, exif_data=None):
     """
     Single Haiku call: 5 DDI dimensions + takeaway.
     Writes results to images table. Called from background thread.
@@ -31514,14 +31548,26 @@ def _try_run_haiku(image_id, img_b64, genre):
         app.logger.error('[try_haiku] ANTHROPIC_API_KEY not set')
         return None
 
-    # SL-181.1: genre placeholder plus platform calibration anchors
+    # SL-181.14: genre, calibration, and EXIF context for device-aware advice
+    _exif_ctx = ''
+    if exif_data:
+        _parts = []
+        if exif_data.get('device'): _parts.append(f"Device: {exif_data['device']}")
+        if exif_data.get('focal'):  _parts.append(f"Focal length: {exif_data['focal']}")
+        if exif_data.get('aperture'): _parts.append(f"Aperture: {exif_data['aperture']}")
+        if exif_data.get('iso'):    _parts.append(f"ISO: {exif_data['iso']}")
+        if exif_data.get('shutter'): _parts.append(f"Shutter: {exif_data['shutter']}")
+        _exif_ctx = ' | '.join(_parts) if _parts else 'Not available'
+    else:
+        _exif_ctx = 'Not available'
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
-              .replace('{calibration}', _try_calibration_line(genre or '')))
+              .replace('{calibration}', _try_calibration_line(genre or ''))
+              .replace('{exif_context}', _exif_ctx))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 200,
+        'max_tokens': 700,
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -31578,7 +31624,15 @@ def _try_run_haiku(image_id, img_b64, genre):
     dm  = _clamp(d.get('dm',  5.0))
     wf  = _clamp(d.get('wf',  5.0))
     aq  = _clamp(d.get('aq',  5.0))
-    takeaway = (d.get('takeaway') or '').strip()[:300]
+    takeaway      = (d.get('takeaway')      or '').strip()[:300]
+    impression    = (d.get('impression')    or '').strip()[:400]
+    strength_name = (d.get('strength_name') or '').strip()[:80]
+    strength_obs  = (d.get('strength_obs')  or '').strip()[:200]
+    next_leap_name= (d.get('next_leap_name')or '').strip()[:80]
+    next_leap_obs = (d.get('next_leap_obs') or '').strip()[:200]
+    what_next     = (d.get('what_next')     or '').strip()[:400]
+    master_name   = (d.get('master_name')   or '').strip()[:100]
+    master_why    = (d.get('master_why')    or '').strip()[:200]
 
     try:
         final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
@@ -31606,14 +31660,23 @@ def _try_run_haiku(image_id, img_b64, genre):
             img.aq_score         = aq
             import json as _j2
             img._audit_json = _j2.dumps({
-                'source':   'haiku_try',
-                'model':    _HAIKU_MODEL,
-                'dod':      dod,
-                'vd':       vd,
-                'dm':       dm,
-                'wf':       wf,
-                'aq':       aq,
-                'takeaway': takeaway,
+                'source':        'haiku_try',
+                'model':         _HAIKU_MODEL,
+                'dod':           dod,
+                'vd':            vd,
+                'dm':            dm,
+                'wf':            wf,
+                'aq':            aq,
+                'takeaway':      takeaway,
+                'impression':    impression,
+                'strength_name': strength_name,
+                'strength_obs':  strength_obs,
+                'next_leap_name':next_leap_name,
+                'next_leap_obs': next_leap_obs,
+                'what_next':     what_next,
+                'master_name':   master_name,
+                'master_why':    master_why,
+                'exif_data':     exif_data or {},
             })
             db.session.commit()
             app.logger.info(
@@ -31622,9 +31685,17 @@ def _try_run_haiku(image_id, img_b64, genre):
             )
             return {
                 'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
-                'score': round(final_score, 2),
-                'tier': tier,
-                'takeaway': takeaway,
+                'score':         round(final_score, 2),
+                'tier':          tier,
+                'takeaway':      takeaway,
+                'impression':    impression,
+                'strength_name': strength_name,
+                'strength_obs':  strength_obs,
+                'next_leap_name':next_leap_name,
+                'next_leap_obs': next_leap_obs,
+                'what_next':     what_next,
+                'master_name':   master_name,
+                'master_why':    master_why,
             }
         except Exception as e:
             db.session.rollback()
@@ -31905,7 +31976,24 @@ def try_upload():
 
     def _haiku_thread(iid, b64, g):
         with app.app_context():
-            _try_run_haiku(iid, b64, g)
+            # Extract EXIF for device-aware prompt advice
+            _exif = {}
+            try:
+                import json as _ej
+                _audit = _ej.loads(_img_obj._audit_json or '{}')
+                _es = _audit.get('exif_settings', {})
+                if isinstance(_es, str):
+                    _es = _ej.loads(_es)
+                _exif = {
+                    'device':   _audit.get('camera_make', '') or _es.get('Make', ''),
+                    'focal':    _es.get('FocalLength', ''),
+                    'aperture': _es.get('FNumber', ''),
+                    'iso':      _es.get('ISOSpeedRatings', ''),
+                    'shutter':  _es.get('ExposureTime', ''),
+                }
+            except Exception:
+                pass
+            _try_run_haiku(iid, b64, g, exif_data=_exif)
 
     threading.Thread(
         target=_haiku_thread,
@@ -31961,8 +32049,17 @@ def try_result(image_id):
         except Exception as _pe:
             app.logger.warning(f'[try_result] percentile failed: {_pe}')
 
-    dims     = {}
-    takeaway = ''
+    dims          = {}
+    takeaway      = ''
+    impression    = ''
+    strength_name = ''
+    strength_obs  = ''
+    next_leap_name= ''
+    next_leap_obs = ''
+    what_next     = ''
+    master_name   = ''
+    master_why    = ''
+    exif_data     = {}
     try:
         audit = _j.loads(img._audit_json or '{}')
         if audit.get('source') == 'haiku_try':
@@ -31973,7 +32070,16 @@ def try_result(image_id):
                 'wf':  audit.get('wf'),
                 'aq':  audit.get('aq'),
             }
-            takeaway = audit.get('takeaway', '')
+            takeaway       = audit.get('takeaway', '')
+            impression     = audit.get('impression', '')
+            strength_name  = audit.get('strength_name', '')
+            strength_obs   = audit.get('strength_obs', '')
+            next_leap_name = audit.get('next_leap_name', '')
+            next_leap_obs  = audit.get('next_leap_obs', '')
+            what_next      = audit.get('what_next', '')
+            master_name    = audit.get('master_name', '')
+            master_why     = audit.get('master_why', '')
+            exif_data      = audit.get('exif_data', {})
     except Exception:
         pass
 
@@ -32003,6 +32109,15 @@ def try_result(image_id):
         wf             = dims.get('wf'),
         aq             = dims.get('aq'),
         takeaway       = takeaway,
+        impression     = impression,
+        strength_name  = strength_name,
+        strength_obs   = strength_obs,
+        next_leap_name = next_leap_name,
+        next_leap_obs  = next_leap_obs,
+        what_next      = what_next,
+        master_name    = master_name,
+        master_why     = master_why,
+        exif_data      = exif_data,
         evals_used     = evals_used,
         evals_remaining= evals_remaining,
     )
