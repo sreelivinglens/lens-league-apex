@@ -1,699 +1,683 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail_haiku-181.1 (SL-181.1: photo hero now renders the photographer's own image via thumb_url passed from try_result; dark placeholder retained as fallback. Was 176.1.)
-   Previous: image_detail_haiku-176.1 (Free scorecard — same shell as image_detail 176.10, Haiku scores, 3-image nudge arc, no standings/AEA; session 176, 2026-08-09) #}
-{#
-  DISTINCTION — PERMANENT RULE (session 176):
-  This file  = FREE scorecard  (Haiku, /try/result/<id>, max 3 images)
-  image_detail.html = PAID scorecard (Sonnet, /image/<id>/, unlimited)
-  Same look & feel. Different content. Never mix.
-#}
+{# SL-VERSION: image_detail_haiku-181.2 (Session 186, 2026-08-16 — FULL REDESIGN from approved mock. New sections: tier ladder, impression/celebration, master reference early, strength with compositional principles, next leap, what_next with EXIF, social proof, accordion gate (3+3), Evolving Eye, League with accordion benefits, dynamic CTAs by evals_used, share card. All fields from expanded Haiku prompt. Aptos font, pastel colours, no dark backgrounds. Staging only. RETAINS 181.1.)
+   Previous: image_detail_haiku-181.1 (SL-181.1: photo hero now renders the photographer's own image via thumb_url passed from try_result) #}
 {% block title %}Your Evaluation — Shutter League{% endblock %}
-{% block meta_description %}Your free Shutter League evaluation. Scored {{ '%.2f'|format(score) if score else '' }} — {{ tier }}.{% endblock %}
-{% block body_class %}page-dashboard page-scorecard page-haiku-scorecard{% endblock %}
-
 {% block extra_head %}
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-store">
+<link rel="canonical" href="{{ request.url }}">
+<meta name="robots" content="noindex,nofollow">
 {% endblock %}
+{% block meta_description %}Your exploratory evaluation. Evaluation {{ '%.2f'|format(score) if score else '' }} — {{ tier }}.{% endblock %}
+{% block body_class %}page-dashboard page-scorecard page-haiku-scorecard{% endblock %}
 
 {% block extra_css %}
 <style>
-/* =====================================================
-   SHUTTER LEAGUE — image_detail_haiku.html
-   SL-VERSION: haiku-176.1 LOCKED
-   Free scorecard. Same shell as image_detail 176.10.
-   DO NOT add standings, AEA eligibility, or contest
-   recommendations to this file.
-===================================================== */
-
-/* ── SUPPRESS BASE CHROME (same as paid) ── */
+/* ── Reset page chrome for clean scorecard ── */
 body.page-haiku-scorecard .sl-top-nav        { display:none !important }
 body.page-haiku-scorecard .sl-bottom-nav     { display:none !important }
 body.page-haiku-scorecard > footer           { display:none !important }
 body.page-haiku-scorecard .nav-mobile        { display:none !important }
 body.page-haiku-scorecard .flash-container   { display:none !important }
-body.page-haiku-scorecard > main             { padding:0 !important; max-width:none !important; margin:0 !important; background:var(--hk-cream) !important }
-body.page-haiku-scorecard                    { padding-top:0 !important; background:var(--hk-cream) !important; margin-top:0 !important }
+body.page-haiku-scorecard > main             { padding:0 !important; max-width:none !important; margin:0 !important; background:#FFFFFF !important }
+body.page-haiku-scorecard                    { padding-top:0 !important; background:#FFFFFF !important; margin-top:0 !important }
 body.page-haiku-scorecard #backToTop         { display:none !important }
 
-/* ── TOKENS — same warm palette as paid ── */
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Avenir Next',system-ui,sans-serif}
-:root{
-  --hk-gold:#D6A428;--hk-gold-dk:#A37B2C;--hk-dark:#1A1814;--hk-cream:#F6F2E9;
-  --hk-border:#E8E4DA;--hk-muted:#6B6B6B;--hk-green:#2A7A3A;--hk-text:#1A1A18;
-  --hk-blue:#2C5F8A;--hk-blue-lt:#E8F0F8;--hk-pista:#E8F5E2;--hk-pista-b:#C5E0BB;
+/* ── Variables ── */
+:root {
+  --hk-gold:   #C8A84B;
+  --hk-gold-d: #A88830;
+  --hk-ink:    #1E1A12;
+  --hk-ink-m:  #3A3020;
+  --hk-ink-l:  #5A4A30;
+  --hk-muted:  #8A7050;
+  --hk-border: #DDD5C0;
+  --hk-font:   'Aptos','Aptos Display',Calibri,'Trebuchet MS',sans-serif;
 }
 
-/* ── SHELL — identical to paid ── */
-.hk-wrap{max-width:1280px;margin:0 auto;background:var(--hk-cream)}
-.hk-topnav{background:#111214;display:flex;align-items:center;padding:0 20px;height:54px;gap:8px}
-.hk-logo-area{display:flex;align-items:center;gap:8px}
-.hk-logo-text{font-size:12px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
-.hk-nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
-.hk-av{width:26px;height:26px;border-radius:50%;background:var(--hk-gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--hk-dark)}
-.hk-shell{display:grid;grid-template-columns:155px 1fr 212px;background:var(--hk-cream)}
-.hk-sidenav{background:#fff;border-right:0.5px solid var(--hk-border);padding:12px 0;width:155px;flex-shrink:0}
-.hk-si{display:block;padding:7px 14px 7px 12px;font-size:13px;color:var(--hk-muted);border-left:3px solid transparent;line-height:1.5;text-decoration:none}
-.hk-si.active{background:var(--hk-cream);color:var(--hk-dark);font-weight:600;border-left-color:var(--hk-gold)}
-.hk-si:hover:not(.active){color:var(--hk-dark);background:#fafaf8}
-.hk-si-lbl{font-size:10px;font-weight:600;letter-spacing:2px;color:#bbb;padding:10px 14px 3px;text-transform:uppercase;display:block}
-.hk-centre{padding:16px 17px;display:flex;flex-direction:column;min-width:0}
+/* ── Base ── */
+.hk-wrap { max-width:820px; margin:0 auto; padding:32px 20px 80px; font-family:var(--hk-font); }
+.hk-card { background:#FFFFFF; border:1.5px solid var(--hk-border); border-radius:16px; overflow:hidden; }
+.hk-p { font-size:16px; line-height:1.9; color:var(--hk-ink-l); margin-bottom:14px; }
+.hk-p:last-child { margin-bottom:0; }
+.hk-p strong { font-weight:500; color:var(--hk-ink-m); }
+.hk-eyebrow { font-size:14px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--hk-muted); margin-bottom:5px; }
+.hk-eyebrow-gold { color:var(--hk-gold-d); }
 
-/* ── SHARED CARD ── */
-.hk-card{background:#fff;border-radius:12px;border:0.5px solid var(--hk-border);margin-bottom:10px}
-.hk-card-body{padding:16px 18px}
-.hk-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
-.hk-card-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hk-muted)}
+/* ── Photo ── */
+.hk-photo-wrap { background:#EDE8DE; }
+.hk-photo-frame { width:100%; height:320px; background:linear-gradient(160deg,#C8BEA8,#B0A898); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; cursor:pointer; }
+.hk-photo-frame img { width:100%; height:100%; object-fit:cover; display:block; }
+.hk-expand-btn { position:absolute; bottom:14px; right:14px; background:rgba(255,255,255,0.95); border:1.5px solid var(--hk-border); border-radius:8px; padding:8px 16px; font-size:14px; font-weight:500; color:var(--hk-ink-m); cursor:pointer; font-family:var(--hk-font); }
+.hk-photo-foot { padding:12px 28px; display:flex; align-items:center; justify-content:space-between; }
+.hk-photo-meta { font-size:14px; color:var(--hk-muted); }
+.hk-action-row { display:flex; gap:8px; }
+.hk-action-btn { background:#FFFFFF; border:1.5px solid var(--hk-border); border-radius:8px; padding:7px 16px; font-size:14px; font-weight:500; color:var(--hk-ink-m); cursor:pointer; font-family:var(--hk-font); }
 
-/* ── FREE EVAL BADGE — differentiates from paid ── */
-.hk-free-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:var(--hk-blue-lt);border:1px solid var(--hk-blue);color:var(--hk-blue);border-radius:20px;font-size:11px;font-weight:600}
+/* ── Score block ── */
+.hk-score-block { background:#FFFCF0; padding:26px 30px 22px; border-top:4px solid var(--hk-gold); border-bottom:1.5px solid #EEE0B0; }
+.hk-score-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+.hk-score-num { font-size:76px; font-weight:500; color:var(--hk-ink); line-height:1; letter-spacing:-.02em; }
+.hk-score-denom { font-size:22px; color:var(--hk-muted); margin-left:4px; }
+.hk-tier-pill { background:var(--hk-gold); color:#2A1800; font-size:14px; font-weight:500; padding:8px 20px; border-radius:6px; letter-spacing:.04em; display:inline-block; margin-top:6px; }
+.hk-score-here { font-size:14px; color:var(--hk-muted); margin-top:5px; text-align:right; }
+.hk-score-genre { font-size:14px; color:var(--hk-muted); margin-top:4px; }
 
-/* ── PROGRESS DOTS ── */
-.hk-progress{display:flex;align-items:center;gap:6px}
-.hk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.hk-dot.done{background:var(--hk-blue)}
-.hk-dot.current{background:var(--hk-gold);box-shadow:0 0 0 2px rgba(214,164,40,.3)}
-.hk-dot.empty{background:var(--hk-border)}
+/* ── Tier ladder ── */
+.hk-tier-label { font-size:14px; color:var(--hk-muted); margin:14px 0 6px; }
+.hk-tier-ladder { display:flex; align-items:center; border-radius:8px; overflow:hidden; border:1px solid var(--hk-border); }
+.hk-tier-step { flex:1; text-align:center; padding:7px 3px; font-size:14px; color:var(--hk-muted); border-right:1px solid var(--hk-border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hk-tier-step:last-child { border-right:none; }
+.hk-tier-step.active { background:var(--hk-gold); color:#2A1800; font-weight:500; }
 
-/* ── PHOTO HERO — HUD pill (same as paid, always legible) ── */
-.hk-photo-hero{width:100%;border-radius:12px;overflow:hidden;position:relative;margin-bottom:10px}
-.hk-photo-inner{width:100%;position:relative;display:block;background:var(--hk-dark)}
-.hk-photo-inner img{width:100%;height:280px;object-fit:cover;display:block}
-.hk-photo-exif{position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap}
-.hk-photo-exif span{font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:3px}
-.hk-hud{position:absolute;bottom:0;left:0;right:0;padding:0 16px 14px}
-.hk-hud-pill{background:rgba(180,175,168,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:12px 16px;border:0.5px solid rgba(255,255,255,.18)}
-.hk-hud-top{display:flex;align-items:flex-end;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.hk-hud-score{font-size:54px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.025em}
-.hk-hud-denom{font-size:20px;font-weight:400;color:rgba(255,255,255,.45);margin-bottom:5px}
-.hk-hud-right{display:flex;flex-direction:column;gap:4px;margin-bottom:4px}
-.hk-hud-tier{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--hk-gold);color:var(--hk-dark);border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.05em;width:fit-content}
-.hk-hud-meta{font-size:10px;color:rgba(255,255,255,.5)}
-.hk-hud-bot{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.hk-hud-pct{font-size:11px;color:rgba(255,255,255,.45)}
+/* ── Percentile ── */
+.hk-pct-block { background:linear-gradient(135deg,#FFF8E0 0%,#FFF0C0 100%); border:2px solid var(--hk-gold); border-radius:10px; padding:14px 18px; margin:16px 0 20px; }
+.hk-pct-text { font-size:18px; font-weight:500; color:#5A3800; }
 
-/* ── APEX DDI ANALYSIS STRIP — same as paid ── */
-.hk-ddi-strip{display:grid;grid-template-columns:repeat(5,1fr);border:0.5px solid var(--hk-border);border-radius:8px;overflow:hidden}
-.hk-ddi-col{padding:10px 6px;text-align:center;border-right:0.5px solid var(--hk-border);cursor:pointer;transition:background .12s}
-.hk-ddi-col:last-child{border-right:none}
-.hk-ddi-col:hover{background:var(--hk-cream)}
-.hk-ddi-col.active{background:var(--hk-cream);box-shadow:inset 0 -2px 0 var(--hk-gold)}
-.hk-ddi-em{font-size:15px;margin-bottom:4px}
-.hk-ddi-nm{font-size:8.5px;color:var(--hk-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.25;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
-.hk-ddi-sr{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;min-height:26px}
-.hk-ddi-num{font-size:20px;font-weight:700;color:var(--hk-dark);line-height:1}
-.hk-ddi-bar{height:3px;background:#e8e4da;border-radius:2px;margin:4px 4px 6px;overflow:hidden}
-.hk-ddi-bar-fill{height:100%;border-radius:2px}
-.hk-ddi-tag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;display:inline-block}
-.hk-dt-stg{background:#fef3c7;color:#92400e}
-.hk-dt-leap{background:#ede9fe;color:#4a3280}
-.hk-dt-good{background:#f1f5f9;color:#475569}
-.hk-dt-str{background:#dcfce7;color:#166534}
-.hk-dt-exc{background:#dbeafe;color:#1e40af}
-.hk-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--hk-cream);border-radius:8px;font-size:12px;color:var(--hk-text);line-height:1.6}
-.hk-ddi-hint{font-size:10px;color:var(--hk-muted);text-align:center;margin-top:7px}
+/* ── Dimensions ── */
+.hk-dims-wrap { display:flex; flex-direction:column; gap:11px; }
+.hk-dim-row { display:flex; align-items:center; gap:12px; }
+.hk-dim-name { font-size:14px; color:var(--hk-ink-l); width:80px; flex-shrink:0; }
+.hk-bar-bg { flex:1; height:9px; background:#E8E0D0; border-radius:5px; overflow:hidden; }
+.hk-bar-fill { height:100%; border-radius:5px; }
+.hk-dim-val { font-size:14px; font-weight:500; width:34px; text-align:right; flex-shrink:0; }
+.hk-dim-tag { font-size:14px; font-weight:500; padding:3px 9px; border-radius:4px; white-space:nowrap; }
+.hk-dims-hint { font-size:14px; color:var(--hk-muted); margin-top:12px; }
 
-/* ── TAKEAWAY — warm, same as paid ── */
-.hk-takeaway{background:#fffbef;border-radius:12px;border:0.5px solid #f0e8c8;padding:16px 18px;margin-bottom:10px}
-.hk-ta-eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--hk-gold-dk);margin-bottom:6px}
-.hk-ta-headline{font-size:16px;font-weight:500;color:var(--hk-dark);line-height:1.55;margin-bottom:6px}
-.hk-ta-body{font-size:13px;color:var(--hk-muted);line-height:1.6}
+/* ── Dots ── */
+.hk-dots-row { background:#F8F4EC; padding:12px 30px; border-bottom:1.5px solid var(--hk-border); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.hk-dot { width:10px; height:10px; border-radius:50%; background:#D8CEB8; flex-shrink:0; }
+.hk-dot.used { background:var(--hk-gold); }
+.hk-dots-txt { font-size:14px; color:var(--hk-muted); margin-left:8px; }
 
-/* ── LOCKED SECTIONS — shows what's behind the gate ── */
-.hk-locked-block{background:#fff;border-radius:12px;border:0.5px solid var(--hk-border);overflow:hidden;margin-bottom:10px}
-.hk-locked-hdr{padding:12px 16px;border-bottom:0.5px solid var(--hk-border);display:flex;align-items:center;justify-content:space-between}
-.hk-locked-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hk-muted)}
-.hk-locked-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:0.5px solid var(--hk-border);opacity:.45}
-.hk-locked-item:last-child{border-bottom:none}
-.hk-lock-icon{font-size:13px;flex-shrink:0}
-.hk-lock-label{font-size:13px;font-weight:600;color:var(--hk-muted)}
-.hk-lock-desc{font-size:11px;color:var(--hk-muted);margin-top:1px}
+/* ── Teaser ── */
+.hk-teaser { background:#F5F0E8; padding:12px 30px; border-bottom:1.5px solid var(--hk-border); display:flex; align-items:center; justify-content:space-between; }
+.hk-teaser-txt { font-size:14px; color:var(--hk-muted); font-style:italic; }
+.hk-teaser-lnk { font-size:14px; color:#185FA5; font-weight:500; text-decoration:none; }
 
-/* ── NUDGE BLOCK — 3-image arc ── */
-.hk-nudge{background:var(--hk-dark);border-radius:12px;padding:20px 22px;margin-bottom:10px;color:#fff}
-.hk-nudge-eyebrow{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hk-gold);margin-bottom:10px}
-.hk-nudge-headline{font-size:16px;font-weight:500;color:#fff;line-height:1.55;margin-bottom:8px}
-.hk-nudge-body{font-size:13px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:16px}
-.hk-nudge-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-.hk-nudge-step{display:flex;align-items:flex-start;gap:10px}
-.hk-step-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--hk-gold);flex-shrink:0;margin-top:1px}
-.hk-step-text{font-size:12px;color:rgba(255,255,255,.65);line-height:1.5}
-.hk-step-text strong{color:#fff;font-weight:600}
-.hk-nudge-cta{display:block;background:var(--hk-gold);color:var(--hk-dark);font-size:13px;font-weight:700;padding:12px 20px;border-radius:8px;text-align:center;text-decoration:none;border:none;cursor:pointer;width:100%}
-.hk-nudge-cta:hover{background:#c8961f}
+/* ── Celebration ── */
+.hk-celebrate { background:linear-gradient(160deg,#FFFEF8 0%,#FFFCF0 100%); padding:38px 36px 30px; border-bottom:1.5px solid #EEE8D0; border-left:5px solid var(--hk-gold); }
+.hk-cel-hl { font-size:28px; font-weight:500; color:var(--hk-ink); line-height:1.5; margin-bottom:20px; }
+.hk-cel-body { font-size:17px; line-height:1.9; color:var(--hk-ink-m); }
+.hk-cel-body p { font-size:17px; color:var(--hk-ink-m); margin-bottom:16px; }
+.hk-cel-sub { font-size:14px; color:var(--hk-muted); margin-top:16px; font-style:italic; border-top:1px solid #EEE8D0; padding-top:14px; }
 
-/* ── AEA MISSING — what they're not getting ── */
-.hk-aea-block{background:#fff;border-radius:12px;border:0.5px solid var(--hk-border);padding:16px 18px;margin-bottom:10px}
-.hk-aea-hdr{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hk-muted);margin-bottom:12px}
-.hk-aea-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
-.hk-aea-row:last-child{margin-bottom:0}
-.hk-aea-x{font-size:13px;color:#C0392B;flex-shrink:0;margin-top:1px}
-.hk-aea-text{font-size:12px;color:var(--hk-muted);line-height:1.5}
-.hk-aea-text strong{color:var(--hk-text)}
+/* ── Master — early ── */
+.hk-master-early { background:linear-gradient(135deg,#FAF8F4 0%,#F2EDE4 100%); padding:22px 30px; border-bottom:1.5px solid var(--hk-border); border-left:4px solid #B0A080; display:flex; align-items:flex-start; gap:16px; }
+.hk-master-avatar { width:44px; height:44px; border-radius:50%; background:#E0D8C8; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+.hk-master-name { font-size:15px; font-weight:500; color:var(--hk-ink); margin-bottom:4px; }
+.hk-master-body { font-size:14px; line-height:1.75; color:var(--hk-ink-l); }
+.hk-master-link { display:inline-flex; align-items:center; gap:4px; margin-top:8px; font-size:14px; color:#185FA5; text-decoration:underline; font-weight:500; }
 
-/* ── ACTION BAR ── */
-.hk-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--hk-border);padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.hk-btn-gold{background:var(--hk-gold);color:var(--hk-dark);font-size:12px;font-weight:700;padding:9px 17px;border-radius:7px;border:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
-.hk-btn-ghost{font-size:12px;color:var(--hk-text);background:transparent;border:1px solid var(--hk-border);border-radius:7px;padding:9px 13px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;text-decoration:none}
+/* ── Trend ── */
+.hk-trend-wrap { padding:14px 30px; background:#F5F0E8; border-bottom:1.5px solid var(--hk-border); }
+.hk-trend-pill { font-size:15px; color:var(--hk-ink-l); font-style:italic; line-height:1.65; }
 
-/* ── RIGHT RAIL ── */
-.hk-rpanel{padding:16px 13px;display:flex;flex-direction:column;gap:11px;border-left:0.5px solid var(--hk-border);background:#fff;width:212px;flex-shrink:0}
-.hk-rl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hk-muted);margin-bottom:6px}
-.hk-rcard{background:var(--hk-cream);border-radius:9px;border:0.5px solid var(--hk-border);padding:11px}
-.hk-rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--hk-border)}
-.hk-rr:last-child{border-bottom:none}
-.hk-rk{font-size:12px;color:var(--hk-muted)}
-.hk-rv{font-size:12px;font-weight:600;color:var(--hk-text)}
-.hk-rv.gd{color:var(--hk-gold-dk)}
+/* ── Coloured sections ── */
+.hk-sec { padding:26px 30px; border-bottom:1.5px solid var(--hk-border); }
+.hk-sec-green { background:linear-gradient(135deg,#F2FAE8 0%,#EAFADE 100%); border-left:4px solid #7ABE48; }
+.hk-sec-amber { background:linear-gradient(135deg,#FFFAEE 0%,#FFF3D0 100%); border-left:4px solid #D89820; }
+.hk-sec-blue  { background:linear-gradient(135deg,#F0F5FF 0%,#E8EEFF 100%); border-left:4px solid #4878C8; }
 
-/* ── FOOTER ── */
-.hk-footer{background:var(--hk-dark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.hk-footer-text{font-size:11px;color:rgba(255,255,255,.4)}
-.hk-footer-link{font-size:12px;color:var(--hk-gold);font-weight:600;text-decoration:none}
+.hk-sec-hdr { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.hk-sec-ic { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px; font-weight:700; }
+.hk-ic-g { background:#7ABE48; color:#FFF; }
+.hk-ic-a { background:#D89820; color:#FFF; }
+.hk-ic-b { background:#4878C8; color:#FFF; }
+.hk-sec-lbl { font-size:14px; font-weight:500; letter-spacing:.09em; text-transform:uppercase; }
+.hk-lbl-g { color:#5A9820; } .hk-lbl-a { color:#A87010; } .hk-lbl-b { color:#3060B8; }
+.hk-sec-dim { font-size:15px; font-weight:500; margin-top:2px; }
+.hk-val-g { color:#2A6008; } .hk-val-a { color:#785010; } .hk-val-b { color:#284890; }
+.hk-sec-body { font-size:16px; line-height:1.85; color:var(--hk-ink-m); }
+.hk-sec-body p { color:var(--hk-ink-m); margin-bottom:14px; }
+.hk-sec-body p:last-child { margin-bottom:0; }
 
-/* ══════════════════════════════════════════
-   IPAD
-══════════════════════════════════════════ */
-@media (max-width:1023px) and (min-width:769px){
-  .hk-shell{grid-template-columns:0 1fr 0}
-  .hk-sidenav{display:none}
-  .hk-rpanel{display:none}
-}
+/* ── Principle box ── */
+.hk-principle-box { margin-top:18px; border-radius:9px; overflow:hidden; border:1px solid #D8E8C8; }
+.hk-pb-row { display:flex; align-items:flex-start; gap:10px; padding:14px 16px; }
+.hk-pb-w { background:#EAF8DC; border-bottom:1px solid #C8E8A8; }
+.hk-pb-o { background:#FFF3D0; }
+.hk-pb-badge { font-size:14px; font-weight:500; padding:3px 9px; border-radius:5px; white-space:nowrap; flex-shrink:0; margin-top:2px; }
+.hk-badge-w { background:#6AA838; color:#FFF; }
+.hk-badge-o { background:#C08818; color:#FFF; }
+.hk-pb-text { font-size:14px; line-height:1.7; color:var(--hk-ink); }
 
-/* ══════════════════════════════════════════
-   MOBILE
-══════════════════════════════════════════ */
-@media (max-width:768px){
-  .hk-shell{display:block}
-  .hk-sidenav{display:none}
-  .hk-rpanel{display:none}
-  .hk-logo-text{display:none}
-  .hk-centre{padding:11px 11px 80px}
-  .hk-photo-inner img{height:210px}
-  .hk-hud{padding:0 10px 10px}
-  .hk-hud-pill{background:rgba(15,20,18,.80)}
-  .hk-hud-score{font-size:46px}
-  .hk-hud-denom{font-size:17px;margin-bottom:4px}
-  .hk-ddi-strip{display:none}
-  .hk-ddi-mobile{display:block}
-  .hk-nudge{padding:16px}
-  body.page-haiku-scorecard .sl-bottom-nav{display:flex !important}
-}
-@media (min-width:769px){
-  .hk-ddi-mobile{display:none}
+/* ── EXIF ── */
+.hk-exif-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:16px; padding-top:16px; border-top:1px solid #B8C8E8; }
+.hk-exif-tag { background:#FFFFFF; color:#284890; font-size:14px; font-weight:500; padding:4px 10px; border-radius:5px; border:1px solid #A8C0E8; }
+.hk-device-note { font-size:14px; color:#3060B8; margin-top:10px; line-height:1.65; font-style:italic; }
+
+/* ── Social proof ── */
+.hk-proof-block { background:linear-gradient(135deg,#FAFAF8 0%,#F5F0E8 100%); padding:26px 30px; border-bottom:1.5px solid var(--hk-border); border-left:4px solid var(--hk-gold); }
+.hk-proof-quote { font-size:17px; line-height:1.8; color:var(--hk-ink-m); font-style:italic; margin-bottom:10px; padding-left:22px; position:relative; }
+.hk-proof-quote::before { content:'\201C'; position:absolute; left:0; top:-4px; font-size:30px; color:var(--hk-gold); line-height:1; }
+.hk-proof-attr { font-size:14px; color:var(--hk-muted); padding-left:22px; }
+
+/* ── Locked gate ── */
+.hk-gate-sec { background:#F8F6F2; border-bottom:1.5px solid var(--hk-border); }
+.hk-gate-hdr { padding:16px 30px; border-bottom:1.5px solid var(--hk-border); display:flex; align-items:center; gap:10px; background:#F2EDE4; }
+.hk-gate-hdr-txt { font-size:14px; font-weight:500; color:var(--hk-ink-m); }
+.hk-gate-item { display:flex; align-items:flex-start; gap:14px; padding:18px 30px; border-bottom:1px solid #EEE8D8; position:relative; overflow:hidden; }
+.hk-gate-item:last-child { border-bottom:none; }
+.hk-gate-item::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,rgba(248,246,242,0) 40%,rgba(248,246,242,0.95) 100%); pointer-events:none; }
+.hk-gate-ic { color:var(--hk-gold); font-size:18px; margin-top:2px; flex-shrink:0; }
+.hk-gate-title { font-size:16px; font-weight:500; color:var(--hk-ink-m); margin-bottom:6px; }
+.hk-gate-blur { font-size:14px; color:#B0A890; line-height:1.65; filter:blur(4.5px); user-select:none; }
+.hk-gate-more-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:#F5F0E8; border:none; border-top:1px solid var(--hk-border); padding:15px 30px; font-size:15px; font-weight:500; color:var(--hk-gold-d); cursor:pointer; font-family:var(--hk-font); }
+.hk-gate-more-btn:hover { background:#EDE8DA; }
+
+/* ── Evolving Eye ── */
+.hk-eye-sec { background:linear-gradient(160deg,#FFFCF0 0%,#FFF8E0 100%); padding:34px 34px; border-top:3px solid var(--hk-gold); border-bottom:1.5px solid #EEE0B0; }
+.hk-eye-hl { font-size:23px; font-weight:500; color:var(--hk-ink); margin-bottom:16px; line-height:1.7; }
+.hk-eye-note { font-size:14px; color:var(--hk-gold-d); margin-top:16px; font-style:italic; border-top:1px solid #EEE0B0; padding-top:14px; }
+
+/* ── League ── */
+.hk-league-sec { background:#FFFFFF; padding:30px 30px; border-bottom:1.5px solid var(--hk-border); }
+.hk-league-hl { font-size:26px; font-weight:500; color:var(--hk-ink); line-height:1.7; margin-bottom:6px; }
+.hk-league-bridge { font-size:15px; color:var(--hk-muted); margin-bottom:22px; font-weight:500; }
+.hk-cred-block { background:linear-gradient(135deg,#FFFEF8 0%,#FFFCF0 100%); border:2px solid var(--hk-gold); border-radius:12px; padding:20px 22px; margin-bottom:24px; }
+.hk-cred-item { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #EEE8C8; }
+.hk-cred-item:last-child { border-bottom:none; }
+.hk-cred-ic { color:var(--hk-gold); font-size:18px; flex-shrink:0; margin-top:2px; }
+.hk-cred-text { font-size:15px; line-height:1.7; color:var(--hk-ink-m); }
+
+/* ── Benefit grid ── */
+.hk-benefit-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.hk-benefit-item { display:flex; align-items:flex-start; gap:12px; padding:16px; background:linear-gradient(135deg,#FDFCFA 0%,#F8F3EC 100%); border-radius:10px; border:1px solid #E0D8C8; }
+.hk-benefit-ic { width:36px; height:36px; border-radius:9px; background:#EDE0C8; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#7A5020; font-size:18px; }
+.hk-benefit-title { font-size:15px; font-weight:500; color:var(--hk-ink); margin-bottom:4px; }
+.hk-benefit-body { font-size:14px; color:#6A5A40; line-height:1.65; }
+.hk-benefit-body strong { color:var(--hk-ink-m); }
+
+/* ── Accordion ── */
+.hk-acc-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px; background:#FFFFFF; border:2px solid var(--hk-gold); border-radius:10px; padding:16px 24px; font-size:17px; font-weight:500; color:var(--hk-gold-d); cursor:pointer; font-family:var(--hk-font); }
+.hk-acc-btn:hover { background:#FFFCF0; }
+.hk-acc-arrow { font-size:20px; transition:transform .25s; display:inline-block; }
+.hk-acc-arrow.open { transform:rotate(180deg); }
+.hk-acc-extra { display:none; }
+.hk-acc-extra.open { display:block; padding-top:14px; }
+
+/* ── Conversion ── */
+.hk-conv-sec { background:linear-gradient(160deg,#FFFEF8 0%,#FFFCEE 100%); padding:30px 30px; border-top:3px solid var(--hk-gold); border-bottom:1.5px solid #EEE0B0; }
+.hk-conv-hl { font-size:24px; font-weight:500; color:var(--hk-ink); line-height:1.7; margin-bottom:12px; }
+.hk-conv-body { font-size:16px; color:var(--hk-ink-l); line-height:1.85; margin-bottom:22px; }
+.hk-conv-body strong { color:var(--hk-ink); }
+.hk-tracks { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.hk-track { border-radius:10px; padding:16px; }
+.hk-track-camera { background:linear-gradient(135deg,#EEF4FF 0%,#E0EAFF 100%); border:2px solid #6090D8; }
+.hk-track-mobile { background:linear-gradient(135deg,#EEFAE4 0%,#E0F5D0 100%); border:2px solid #70B840; }
+.hk-track-name { font-size:16px; font-weight:500; margin-bottom:3px; }
+.hk-track-sub { font-size:14px; }
+
+/* ── CTAs ── */
+.hk-cta-sec { background:#FFFFFF; padding:26px 30px; border-bottom:1.5px solid var(--hk-border); }
+.hk-cta-header { font-size:14px; font-weight:500; color:var(--hk-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:16px; }
+.hk-cta-primary { display:block; width:100%; background:linear-gradient(135deg,#4A6FA5 0%,#3A5F95 100%); color:#FFFFFF; font-size:18px; font-weight:500; padding:22px 26px; border-radius:10px; text-align:left; border:2px solid #2A4F85; cursor:pointer; line-height:1.7; font-family:var(--hk-font); margin-bottom:12px; }
+.hk-cta-explore { display:block; width:100%; background:linear-gradient(135deg,#FFF8E0 0%,#F5E8B0 100%); color:#5A3800; font-size:16px; font-weight:500; padding:18px 26px; border-radius:10px; text-align:left; border:2px solid var(--hk-gold); cursor:pointer; line-height:1.7; font-family:var(--hk-font); margin-bottom:12px; }
+.hk-cta-explore span { display:block; font-size:14px; font-weight:400; color:#8A6020; margin-top:4px; font-style:italic; }
+.hk-cta-exit { display:block; width:100%; background:transparent; color:var(--hk-muted); font-size:15px; font-weight:400; padding:12px 26px; text-align:center; border:none; cursor:pointer; font-family:var(--hk-font); text-decoration:underline; text-underline-offset:3px; }
+
+/* ── Share ── */
+.hk-share-sec { background:#FFFFFF; padding:26px 30px; }
+.hk-share-preview { background:linear-gradient(160deg,#FFFEF8 0%,#FFFCF0 100%); border:2px solid var(--hk-gold); border-radius:14px; padding:22px; text-align:center; margin-bottom:16px; }
+.hk-sc-num { font-size:54px; font-weight:500; color:var(--hk-ink); line-height:1; }
+.hk-sc-tier { font-size:15px; color:var(--hk-gold-d); font-weight:500; margin-top:5px; }
+.hk-sc-genre { font-size:14px; color:var(--hk-muted); margin-top:4px; }
+.hk-sc-logo { font-size:14px; letter-spacing:.12em; text-transform:uppercase; color:#A09070; margin-top:14px; }
+.hk-share-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.hk-share-btn { display:flex; align-items:center; justify-content:center; gap:6px; background:#FFFFFF; border:1.5px solid var(--hk-border); border-radius:10px; padding:13px; font-size:14px; font-weight:500; color:var(--hk-ink-m); cursor:pointer; font-family:var(--hk-font); }
+
+/* ── Fullscreen overlay ── */
+.hk-fs-overlay { display:none; position:fixed; inset:0; background:#000; z-index:9999; cursor:pointer; }
+.hk-fs-overlay img { width:100%; height:100%; object-fit:contain; }
+.hk-fs-overlay.active { display:flex; align-items:center; justify-content:center; }
+
+/* ── Mobile ── */
+@media (max-width:600px) {
+  .hk-wrap { padding:0 0 80px; }
+  .hk-card { border-radius:0; border-left:none; border-right:none; }
+  .hk-photo-frame { height:240px; }
+  .hk-photo-foot,
+  .hk-score-block,
+  .hk-dots-row,
+  .hk-teaser,
+  .hk-celebrate,
+  .hk-master-early,
+  .hk-trend-wrap,
+  .hk-sec,
+  .hk-proof-block,
+  .hk-gate-sec .hk-gate-hdr,
+  .hk-gate-item,
+  .hk-eye-sec,
+  .hk-league-sec,
+  .hk-conv-sec,
+  .hk-cta-sec,
+  .hk-share-sec { padding-left:16px; padding-right:16px; }
+  .hk-score-num { font-size:58px; }
+  .hk-cel-hl { font-size:22px; }
+  .hk-cel-body,
+  .hk-cel-body p { font-size:15px; }
+  .hk-benefit-grid { grid-template-columns:1fr; }
+  .hk-tracks { grid-template-columns:1fr 1fr; gap:8px; }
+  .hk-cta-primary { font-size:16px; padding:18px 18px; }
+  .hk-league-hl { font-size:22px; }
+  .hk-conv-hl { font-size:20px; }
+  .hk-celebrate { padding:24px 18px 20px; }
+  .hk-acc-btn { font-size:15px; padding:14px 16px; }
 }
 </style>
+
+<!-- Fullscreen image overlay -->
+<div class="hk-fs-overlay" id="hkFsOverlay" onclick="closeFs()">
+  <img id="hkFsImg" src="" alt="Full view">
+</div>
 {% endblock %}
 
+{% set _eval_num    = evals_used if evals_used else 1 %}
+{% set _remaining   = evals_remaining if evals_remaining is defined else 0 %}
+{% set _top_pct     = percentile.top_pct if percentile else none %}
+{% set _impression  = impression if impression else '' %}
+{% set _str_name    = strength_name if strength_name else (tier ~ ' · Strongest') %}
+{% set _str_obs     = strength_obs if strength_obs else '' %}
+{% set _leap_name   = next_leap_name if next_leap_name else '' %}
+{% set _leap_obs    = next_leap_obs if next_leap_obs else '' %}
+{% set _what_next   = what_next if what_next else '' %}
+{% set _master_name = master_name if master_name else '' %}
+{% set _master_why  = master_why if master_why else '' %}
+
 {% block content %}
+<div class="hk-wrap" data-image-id="{{ image_id }}" data-thumb="{{ thumb_url or '' }}">
+<div class="hk-card">
 
-{# ── Image count context ── #}
-{% set _eval_num = evals_used if evals_used else 1 %}
-{% set _remaining = evals_remaining if evals_remaining is defined else 0 %}
-{% set _is_last_free = (_remaining == 0) %}
-{% set _is_first = (_eval_num == 1) %}
-{% set _is_second = (_eval_num == 2) %}
-{% set _is_third_plus = (_eval_num >= 3) %}
-
-{# ── Percentile ── #}
-{% set _top_pct = percentile.top_pct if percentile else none %}
-{% set _pool_size = percentile.total_images if percentile else 0 %}
-{% set _pct_display = _top_pct if (_pool_size and _pool_size >= 100) else none %}
-
-{# ── Score distribution position ── #}
-{% if score %}
-  {% set _dist_pct = [(score / 10 * 100)|round|int, 2]|max %}
-  {% set _dist_pct = [_dist_pct, 98]|min %}
-{% else %}
-  {% set _dist_pct = 50 %}
-{% endif %}
-
-{# ── Photographer first name ── #}
-{% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) if current_user.is_authenticated else '' %}
-
-{# ── DDI strongest and weakest ── #}
-{% set _dims_vals = {'Difficulty': dod, 'Visual Display': vd, 'Decisive Moment': dm, 'WOW Factor': wf, 'Affective Q.': aq} %}
-{% set _strongest_name = '' %}
-{% set _strongest_val = 0 %}
-{% set _weakest_name = '' %}
-{% set _weakest_val = 10 %}
-{% for _dn, _dv in _dims_vals.items() %}
-  {% if _dv %}
-    {% if _dv > _strongest_val %}{% set _strongest_val = _dv %}{% set _strongest_name = _dn %}{% endif %}
-    {% if _dv < _weakest_val %}{% set _weakest_val = _dv %}{% set _weakest_name = _dn %}{% endif %}
-  {% endif %}
-{% endfor %}
-
-<div class="hk-wrap">
-
-{# ── TOPNAV — identical to paid ── #}
-<nav class="hk-topnav">
-  <div class="hk-logo-area">
-    <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none">
-      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-           alt="Shutter League" style="height:30px;width:auto;display:block"
-           onerror="this.style.display='none'">
-      <span class="hk-logo-text">SHUTTER LEAGUE</span>
-    </a>
-  </div>
-  <div class="hk-nav-right">
-    {# Progress dots — how many free evals used #}
-    <div class="hk-progress" title="Your free evaluations">
-      {% for i in range(3) %}
-        {% if i < _eval_num %}
-          <div class="hk-dot {% if i == _eval_num - 1 %}current{% else %}done{% endif %}"></div>
-        {% else %}
-          <div class="hk-dot empty"></div>
-        {% endif %}
-      {% endfor %}
-      <span style="font-size:11px;color:rgba(255,255,255,.4);margin-left:4px">{{ _eval_num }}/3</span>
-    </div>
-    {% if current_user.is_authenticated %}
-    <div class="hk-av">{{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}</div>
-    {% endif %}
-    <a href="{{ url_for('logout') }}" style="font-size:11px;color:rgba(255,255,255,.5);text-decoration:none;padding:4px 8px;border:1px solid rgba(255,255,255,.2);border-radius:5px;">Log out</a>
-  </div>
-</nav>
-
-<div class="hk-shell">
-
-  {# ── SIDENAV (same as paid, limited items) ── #}
-  <nav class="hk-sidenav">
-    <span class="hk-si-lbl">Menu</span>
-    <a class="hk-si active" href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a class="hk-si" href="{{ url_for('try_page') }}">Upload</a>
-    <a class="hk-si" href="{{ url_for('learning') }}">Learn</a>
-    <span class="hk-si-lbl">Upgrade</span>
-    <a class="hk-si" href="{{ url_for('pricing') }}" style="color:var(--hk-gold-dk);font-weight:600">Camera League →</a>
-    <a class="hk-si" href="{{ url_for('science') }}">How it works</a>
-  </nav>
-
-  {# ── MAIN CENTRE ── #}
-  <main class="hk-centre">
-
-    {# Back row + free badge #}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-      <a href="{{ url_for('dashboard') }}" style="font-size:12px;color:var(--hk-muted);text-decoration:none">← Back</a>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="hk-free-badge">Free Evaluation {{ _eval_num }} of 3</div>
-      </div>
-    </div>
-
-    {# ① PHOTO HERO — HUD pill #}
-    <div class="hk-photo-hero">
-      <div class="hk-photo-inner">
-        {# SL-181.1: show the photographer's own photograph. The route now
-           passes thumb_url (it never did before, which is why this rendered as
-           a dark gradient with only the genre word on it — a score with no
-           image attached). Placeholder retained as the fallback so a missing
-           or broken thumb_url still renders cleanly rather than breaking. #}
-        {% if thumb_url %}
-        <img src="{{ thumb_url }}" alt="{{ asset_name or 'Your photograph' }}"
-             style="width:100%;height:280px;object-fit:cover;display:block"
-             onerror="this.style.display='none';document.getElementById('hkHeroFallback').style.display='flex'">
-        <div id="hkHeroFallback" style="display:none;width:100%;height:280px;background:linear-gradient(160deg,#0b1826 0%,#1a3a5c 40%,#0c2233 70%,#0b1826 100%);align-items:center;justify-content:center">
-          <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ genre }}</span>
-        </div>
-        {% else %}
-        <div style="width:100%;height:280px;background:linear-gradient(160deg,#0b1826 0%,#1a3a5c 40%,#0c2233 70%,#0b1826 100%);display:flex;align-items:center;justify-content:center">
-          <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ genre }}</span>
-        </div>
-        {% endif %}
-        <div class="hk-photo-exif">
-          <span>Free Evaluation</span>
-          <span>{{ genre }}</span>
-        </div>
-        {# HUD PILL #}
-        <div class="hk-hud">
-          <div class="hk-hud-pill">
-            <div class="hk-hud-top">
-              <span class="hk-hud-score">{{ '%.2f'|format(score) if score else '—' }}</span>
-              <span class="hk-hud-denom">/10</span>
-              <div class="hk-hud-right">
-                <div class="hk-hud-tier">
-                  {% if tier == 'Grandmaster' %}👑{% elif tier == 'Master' %}🏅{% elif tier == 'Maverick' %}⚡{% elif tier == 'Artisan' %}🎨{% else %}📷{% endif %}
-                  {{ tier }}
-                </div>
-                <div class="hk-hud-meta">
-                  {{ _name }}{% if _name %} &nbsp;·&nbsp; {% endif %}Evaluation {{ _eval_num }} of 3
-                </div>
-              </div>
-            </div>
-            <div class="hk-hud-bot">
-              {% if _pct_display %}
-              <span class="hk-hud-pct">Top {{ _pct_display }}% of {{ '{:,}'.format(_pool_size) }} images evaluated on SL</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {# ② SCORE DISTRIBUTION #}
-    <div class="hk-card">
-      <div class="hk-card-body">
-        <div style="font-size:9px;color:var(--hk-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px">SL Score Distribution</div>
-        <div style="position:relative;height:6px;background:var(--hk-border);border-radius:3px">
-          <div style="position:absolute;left:0;top:0;height:100%;width:{{ _dist_pct }}%;background:var(--hk-gold);border-radius:3px"></div>
-          <div style="position:absolute;top:-14px;left:{{ _dist_pct }}%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--hk-gold)">{{ '%.2f'|format(score) if score else '' }}</div>
-          <div style="position:absolute;top:6px;left:{{ _dist_pct }}%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--hk-gold)"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--hk-muted);margin-top:4px"><span>0</span><span>5</span><span>8.5</span><span>10</span></div>
-        {% if percentile and percentile.context %}
-        <div style="font-size:12px;color:var(--hk-muted);margin-top:10px;padding-top:10px;border-top:0.5px solid var(--hk-border);line-height:1.55">{{ percentile.context }}</div>
-        {% endif %}
-      </div>
-    </div>
-
-    {# ③ YOUR ONE TAKE-AWAY #}
-    {% if takeaway %}
-    <div class="hk-takeaway">
-      <div class="hk-ta-eyebrow">⭐ Your one take-away</div>
-      <div class="hk-ta-headline">{{ takeaway }}</div>
-      <div class="hk-ta-body">
-        {% if _is_first %}
-        This is what SL sees in your eye — instinctively, from one image.
-        {% elif _is_second %}
-        Both your evaluations point to the same strength. That's not coincidence — that's how you see.
-        {% else %}
-        Across your evaluations, this pattern keeps appearing. It's your signature.
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    {# ④ APEX DDI ANALYSIS #}
-    {% if dod or vd or dm or wf or aq %}
-    <div class="hk-card">
-      <div class="hk-card-body">
-        <div class="hk-card-hdr">
-          <span class="hk-card-title">Apex Depth Dimension Index (DDI) Analysis</span>
-          <div style="text-align:right">
-            <div style="font-size:10px;color:var(--hk-muted)">Tap any dimension</div>
-            <div style="font-size:9px;color:var(--hk-muted);margin-top:1px">All scores out of 10</div>
-          </div>
-        </div>
-
-        {# Desktop 5-column strip #}
-        <div class="hk-ddi-strip" id="hk-ddi-strip">
-          {% set _ddi_cols = [
-            ('dod', dod, 'Difficulty',      '🏔️', 'f', 'hk-dt-str',  'Strong'),
-            ('vd',  vd,  'Visual Display',  '⭐',  'u', 'hk-dt-stg',  'Your Strongest'),
-            ('dm',  dm,  'Decisive Moment', '🎯',  'u', 'hk-dt-exc',  'Excellent'),
-            ('wf',  wf,  'WOW Factor',      '✨',  'u', 'hk-dt-stg',  'Your Strongest'),
-            ('aq',  aq,  'Affective Q.',    '❤️',  'f', 'hk-dt-good', 'Good'),
-          ] %}
-          {% for _key, _val, _nm, _em, _ar, _tag_cls, _tag_lbl in _ddi_cols %}
-          {% if _val %}
-          {% set _pct = (_val / 10 * 100)|round|int %}
-          {% set _is_strongest = (_val == _strongest_val and _nm == _strongest_name) %}
-          {% set _is_weakest = (_val == _weakest_val and _nm == _weakest_name) %}
-          <div class="hk-ddi-col {% if _is_strongest %}strongest{% elif _is_weakest %}leap{% endif %}"
-               onclick="hkToggleDDI(this, {{ loop.index0 }})">
-            <div class="hk-ddi-em">{{ _em }}</div>
-            <div class="hk-ddi-nm">{{ _nm }}</div>
-            <div class="hk-ddi-sr">
-              <span class="hk-ddi-num">{{ '%.1f'|format(_val) }}</span>
-              <span style="font-size:10px;margin-left:1px;{% if _is_strongest %}color:#22c55e{% elif _is_weakest %}color:#ef4444{% else %}color:var(--hk-muted){% endif %}">
-                {% if _is_strongest %}↑{% elif _is_weakest %}↓{% else %}—{% endif %}
-              </span>
-            </div>
-            <div class="hk-ddi-bar">
-              <div class="hk-ddi-bar-fill" style="width:{{ _pct }}%;background:{% if _is_weakest %}#94a3b8{% else %}var(--hk-gold){% endif %}"></div>
-            </div>
-            <div class="hk-ddi-tag {% if _is_strongest %}hk-dt-stg{% elif _is_weakest %}hk-dt-leap{% else %}hk-dt-good{% endif %}">
-              {% if _is_strongest %}Your Strongest{% elif _is_weakest %}Your Next Leap{% else %}{{ '%.1f'|format(_val) }}{% endif %}
-            </div>
-          </div>
-          {% endif %}
-          {% endfor %}
-        </div>
-
-        <div class="hk-ddi-detail" id="hk-ddi-detail">
-          <strong id="hk-ddi-title" style="display:block;margin-bottom:4px;color:var(--hk-dark)"></strong>
-          <span id="hk-ddi-text"></span>
-        </div>
-        <div class="hk-ddi-hint">Tap a dimension to see the engine's reasoning</div>
-
-        {# Mobile 2-hero + rest #}
-        <div class="hk-ddi-mobile">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:7px">
-            <div style="background:#fffbef;border:0.5px solid #e8d898;border-radius:10px;padding:11px">
-              <div style="font-size:14px;margin-bottom:3px">⭐</div>
-              <div style="font-size:9px;color:var(--hk-muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em;margin-bottom:3px">{{ _strongest_name }}</div>
-              <div style="font-size:22px;font-weight:700;color:var(--hk-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_strongest_val) if _strongest_val else '—' }}<span style="font-size:10px;color:#22c55e;margin-left:2px">↑</span></div>
-              <div class="hk-ddi-tag hk-dt-stg">Your Strongest</div>
-            </div>
-            <div style="background:#f5f3ff;border:0.5px solid #ccc8f0;border-radius:10px;padding:11px">
-              <div style="font-size:14px;margin-bottom:3px">⚡</div>
-              <div style="font-size:9px;color:var(--hk-muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em;margin-bottom:3px">{{ _weakest_name }}</div>
-              <div style="font-size:22px;font-weight:700;color:var(--hk-dark);line-height:1;margin-bottom:3px">{{ '%.1f'|format(_weakest_val) if _weakest_val else '—' }}<span style="font-size:10px;color:#ef4444;margin-left:2px">↓</span></div>
-              <div class="hk-ddi-tag hk-dt-leap">Your Next Leap</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
-    {# ⑤ LOCKED SECTIONS — show what's behind the gate #}
-    <div class="hk-locked-block">
-      <div class="hk-locked-hdr">
-        <span class="hk-locked-title">Full evaluation — available on subscription</span>
-        <span style="font-size:11px;color:var(--hk-gold-dk)">See what you're missing →</span>
-      </div>
-      <div class="hk-locked-item">
-        <span class="hk-lock-icon">🔒</span>
-        <div><div class="hk-lock-label">What stood out in your photograph</div><div class="hk-lock-desc">What SL's engine specifically saw — the moment, the geometry, the instinct</div></div>
-      </div>
-      <div class="hk-locked-item">
-        <span class="hk-lock-icon">🔒</span>
-        <div><div class="hk-lock-label">What your eye read</div><div class="hk-lock-desc">The visual relationship you understood before you pressed the shutter</div></div>
-      </div>
-      <div class="hk-locked-item">
-        <span class="hk-lock-icon">🔒</span>
-        <div><div class="hk-lock-label">Mentor advice for this photograph</div><div class="hk-lock-desc">Specific guidance from a Grandmaster on what to do next</div></div>
-      </div>
-      <div class="hk-locked-item">
-        <span class="hk-lock-icon">🔒</span>
-        <div><div class="hk-lock-label">Your next shot — bookmarked location</div><div class="hk-lock-desc">Where to go, when to go, and exactly what to look for</div></div>
-      </div>
-      <div class="hk-locked-item">
-        <span class="hk-lock-icon">🔒</span>
-        <div><div class="hk-lock-label">Body of work sequence</div><div class="hk-lock-desc">Three frames that would build on this photograph into a cohesive series</div></div>
-      </div>
-    </div>
-
-    {# ⑥ NUDGE — 3-image arc, never mentions the free limit #}
-    <div class="hk-nudge">
-      <div class="hk-nudge-eyebrow">
-        {% if _is_first %}Your journey starts here
-        {% elif _is_second %}SL is building a picture of your eye
-        {% else %}This is what 3 evaluations tells us
-        {% endif %}
-      </div>
-
-      {% if _is_first %}
-      <div class="hk-nudge-headline">One image shows your instinct.</div>
-      <div class="hk-nudge-body">SL has seen what your eye does. Now here's what becomes possible as you go deeper:</div>
-      <div class="hk-nudge-steps">
-        <div class="hk-nudge-step"><div class="hk-step-num">6</div><div class="hk-step-text"><strong>6 images:</strong> SL sees how consistently you shoot — your patterns, your genre, your recurring strengths and gaps.</div></div>
-        <div class="hk-nudge-step"><div class="hk-step-num">10</div><div class="hk-step-text"><strong>10 images:</strong> SL builds your personalised brief — what to shoot next, where, and why it will push your scores higher.</div></div>
-        <div class="hk-nudge-step"><div class="hk-step-num">20+</div><div class="hk-step-text"><strong>20 images:</strong> SL tracks your photographic identity across time. This is where Making Images Matter begins.</div></div>
-      </div>
-
-      {% elif _is_second %}
-      <div class="hk-nudge-headline">Both your images point to the same strength.</div>
-      <div class="hk-nudge-body">That's not coincidence — that's how you see. SL is building a picture of your eye. Here's what the full programme unlocks:</div>
-      <div class="hk-nudge-steps">
-        <div class="hk-nudge-step"><div class="hk-step-num">6</div><div class="hk-step-text"><strong>6 images:</strong> SL can tell you which specific habit is holding your {{ _weakest_name }} score back — and the exact technique to fix it.</div></div>
-        <div class="hk-nudge-step"><div class="hk-step-num">10</div><div class="hk-step-text"><strong>10 images:</strong> Your personalised brief — assignments built around your eye, not generic exercises.</div></div>
-        <div class="hk-nudge-step"><div class="hk-step-num">∞</div><div class="hk-step-text"><strong>Unlimited:</strong> Your scores enter the Official Standing. Your best work counts toward the Annual Excellence Award.</div></div>
-      </div>
-
+  {# ── PHOTOGRAPH ── #}
+  <div class="hk-photo-wrap">
+    <div class="hk-photo-frame" onclick="openFs()" title="Click to expand">
+      {% if thumb_url %}
+        <img src="{{ thumb_url }}" alt="{{ asset_name or 'Your photograph' }}" loading="eager">
       {% else %}
-      {# Image 3 — the conversion moment — identity statement #}
-      <div class="hk-nudge-headline">Here is what SL has learned about your eye.</div>
-      <div class="hk-nudge-body">Across your 3 evaluations:</div>
-      <div class="hk-nudge-steps">
-        <div class="hk-nudge-step"><div class="hk-step-num">①</div><div class="hk-step-text">Your <strong>{{ _strongest_name }}</strong> is consistently your highest dimension — you have a natural eye for it.</div></div>
-        <div class="hk-nudge-step"><div class="hk-step-num">②</div><div class="hk-step-text">Your <strong>{{ _weakest_name }}</strong> is where the gap lives. That gap has a name and a fix — but it takes more data to diagnose.</div></div>
-        <div class="hk-nudge-step"><div class="hk-step-num">③</div><div class="hk-step-text">This is <strong>3 images of data</strong>. At 6, SL starts seeing patterns. At 10, it builds your programme. At 20, it tracks your identity across time.</div></div>
-      </div>
+        <div style="color:#8A8070;font-size:14px;text-align:center;line-height:1.7">Your photograph<br><span style="font-size:14px">tap to expand</span></div>
       {% endif %}
-
-      <a href="{{ url_for('pricing') }}" class="hk-nudge-cta">Continue your journey — Rs. 4,000/year →</a>
+      <button class="hk-expand-btn" onclick="event.stopPropagation();openFs()">&#x26F6; Full view</button>
     </div>
-
-    {# ⑦ WHAT YOU'RE NOT GETTING — AEA section #}
-    <div class="hk-aea-block">
-      <div class="hk-aea-hdr">What your free evaluations don't count toward</div>
-      <div class="hk-aea-row">
-        <span class="hk-aea-x">✗</span>
-        <div class="hk-aea-text"><strong>Official Programme Standing</strong> — where you rank among all photographers on SL. Your {{ tier }} score here is real, but it's not in the standings.</div>
-      </div>
-      <div class="hk-aea-row">
-        <span class="hk-aea-x">✗</span>
-        <div class="hk-aea-text"><strong>Annual Excellence Award (AEA)</strong> — requires 6 evaluated images across 3 calendar months in 2026. Three free evaluations won't qualify you.</div>
-      </div>
-      <div class="hk-aea-row">
-        <span class="hk-aea-x">✗</span>
-        <div class="hk-aea-text"><strong>Tier progression</strong> — your {{ tier }} result here doesn't move your official standing. That only happens with a subscription.</div>
-      </div>
-      <div class="hk-aea-row">
-        <span class="hk-aea-x">✗</span>
-        <div class="hk-aea-text"><strong>Pattern analysis</strong> — SL can't build your photographic identity from 3 images. The programme starts at 6.</div>
-      </div>
-      <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--hk-border);font-size:12px;color:var(--hk-muted);line-height:1.55">
-        A <strong style="color:var(--hk-dark)">{{ tier }}</strong> result on a free evaluation is a signal.
-        Most photographers who reach this level go on to build a body of work that qualifies for the AEA.
+    <div class="hk-photo-foot">
+      <span class="hk-photo-meta">{{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }} &middot; {{ genre }}</span>
+      <div class="hk-action-row">
+        <a href="#" onclick="navigator.share ? navigator.share({url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" class="hk-action-btn">&#8679; Share</a>
+        <a href="#" class="hk-action-btn">&#8595; Save</a>
       </div>
     </div>
+  </div>
 
-    {# ⑧ ACTIONS #}
-    <div class="hk-act-bar">
-      {% if _remaining > 0 %}
-      <a href="{{ url_for('try_page') }}" class="hk-btn-gold">Upload another photograph →</a>
-      {% endif %}
-      <a href="{{ url_for('pricing') }}" class="hk-btn-ghost" style="border-color:var(--hk-gold-dk);color:var(--hk-gold-dk)">See full programme →</a>
-      <a href="{{ url_for('science') }}" class="hk-btn-ghost">How SL works →</a>
-    </div>
-
-    {# Sample evaluation teaser #}
-    <div style="background:var(--hk-cream);border-radius:12px;border:0.5px solid var(--hk-border);padding:14px 16px;margin-bottom:10px;text-align:center">
-      <div style="font-size:12px;color:var(--hk-muted);margin-bottom:8px">See what a full evaluation looks like</div>
-      <div style="font-size:11px;color:var(--hk-muted);margin-bottom:10px;line-height:1.5">Mentor advice · Location Advisory · Master Reference · Body of Work · Official Standing</div>
-      <a href="{{ url_for('try_page') }}#sample" style="font-size:12px;color:var(--hk-blue);font-weight:600;text-decoration:underline">Show sample evaluation →</a>
-    </div>
-
-    {# FAQ #}
-    <div class="hk-card">
-      <div class="hk-card-body">
-        <div class="hk-card-hdr"><span class="hk-card-title">Questions</span></div>
-        {% for _q, _a in [
-          ('How is this different from other AI tools?', 'SL uses the Apex Depth Dimension Index (DDI) — a proprietary 5-dimension evaluation framework built for photographers, not a generic image rating. Your score is calibrated against every image evaluated on the platform.'),
-          ('What does the DDI measure?', 'Five dimensions weighted for your genre: Depth of Difficulty, Visual Display (WOW Factor), Decisive Moment, Disruption/Uniqueness, and Affective Quotient. Each dimension has a different weight depending on what you shoot.'),
-          ('What do I receive with a subscription?', 'Unlimited evaluations, full 5-dimension breakdown with reasoning, mentor advice, location advisory, body of work sequence, official standing, streak tracking, and eligibility for the Annual Excellence Award.'),
-          ('How much does the programme cost?', 'Rs. 4,000/year for Camera League or Mobile League. One evaluation per upload, unlimited uploads.'),
-        ] %}
-        <div style="border-bottom:0.5px solid var(--hk-border);padding:10px 0" onclick="this.querySelector('.hk-faq-ans').style.display=this.querySelector('.hk-faq-ans').style.display==='none'?'block':'none'">
-          <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-            <span style="font-size:13px;font-weight:500;color:var(--hk-dark)">{{ _q }}</span>
-            <span style="font-size:12px;color:var(--hk-muted);flex-shrink:0;margin-left:8px">+</span>
-          </div>
-          <div class="hk-faq-ans" style="display:none;font-size:12px;color:var(--hk-muted);line-height:1.6;margin-top:8px">{{ _a }}</div>
-        </div>
-        {% endfor %}
+  {# ── SCORE + TIER LADDER + DIMENSIONS ── #}
+  <div class="hk-score-block">
+    <div class="hk-score-top">
+      <div>
+        <div><span class="hk-score-num">{{ '%.2f'|format(score) if score else '—' }}</span><span class="hk-score-denom">/10</span></div>
+        <div class="hk-score-genre">{{ genre }}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="hk-tier-pill">{{ tier }}</div>
+        <div class="hk-score-here">You are here &darr;</div>
       </div>
     </div>
-
-  </main>
-
-  {# ── RIGHT RAIL ── #}
-  <aside class="hk-rpanel">
-    <div>
-      <div class="hk-rl">This evaluation</div>
-      <div class="hk-rcard">
-        <div class="hk-rr"><span class="hk-rk">Score</span><span class="hk-rv gd">{{ '%.2f'|format(score) if score else '—' }}/10</span></div>
-        <div class="hk-rr"><span class="hk-rk">Tier</span><span class="hk-rv">{{ tier }}</span></div>
-        <div class="hk-rr"><span class="hk-rk">Genre</span><span class="hk-rv">{{ genre }}</span></div>
-        {% if _pct_display %}
-        <div class="hk-rr"><span class="hk-rk">Percentile</span><span class="hk-rv">Top {{ _pct_display }}%</span></div>
-        {% endif %}
-        <div class="hk-rr"><span class="hk-rk">Evaluation</span><span class="hk-rv">{{ _eval_num }} of 3 free</span></div>
-      </div>
+    <div class="hk-tier-label">Eight tiers — from your first upload to the top of the league</div>
+    <div class="hk-tier-ladder">
+      {% for t in ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+        <div class="hk-tier-step{% if t == tier %} active{% endif %}">{{ t }}</div>
+      {% endfor %}
     </div>
-
-    {# DDI summary in rail #}
-    {% if dod or vd or dm or wf or aq %}
-    <div>
-      <div class="hk-rl">DDI Breakdown</div>
-      <div class="hk-rcard" style="display:flex;flex-direction:column;gap:5px">
-        {% for _nm, _val in [('Difficulty', dod), ('Visual', vd), ('Moment', dm), ('WOW', wf), ('AQ', aq)] %}
-        {% if _val %}
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:11px;color:var(--hk-muted)">{{ _nm }}</span>
-          <div style="display:flex;align-items:center;gap:5px">
-            <div style="width:50px;height:3px;background:var(--hk-border);border-radius:2px;overflow:hidden"><div style="height:100%;width:{{ (_val/10*100)|round|int }}%;background:var(--hk-gold);border-radius:2px"></div></div>
-            <span style="font-size:11px;font-weight:600;color:var(--hk-dark)">{{ '%.1f'|format(_val) }}</span>
-          </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-      </div>
+    {% if _top_pct %}
+    <div class="hk-pct-block">
+      <div class="hk-pct-text">Higher than {{ _top_pct }}% of exploratory evaluations</div>
     </div>
     {% endif %}
-
-    {# Upgrade CTA in rail #}
-    <div>
-      <div class="hk-rl">Camera League</div>
-      <div style="background:var(--hk-dark);border-radius:9px;padding:14px">
-        <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:5px;line-height:1.4">Unlimited evaluations. Official Standing. Full analysis.</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:12px;line-height:1.5">Rs. 4,000/year</div>
-        <a href="{{ url_for('pricing') }}" style="display:block;background:var(--hk-gold);color:var(--hk-dark);font-size:12px;font-weight:700;padding:8px;border-radius:6px;text-align:center;text-decoration:none">Continue your journey →</a>
+    <div class="hk-dims-wrap">
+      {% set _dims = [
+        ('Difficulty', dod, '#D03030', '#E05040', '#901818', '#FFE0DC', '#801010', 'Next leap' if (dod and dod == [dod,vd,dm,wf,aq]|min) else ''),
+        ('Visual',     vd,  '#C87800', '#D89820', '#805000', '', '', ''),
+        ('Moment',     dm,  '#C87800', '#D89820', '#805000', '', '', ''),
+        ('Wow',        wf,  '#3A8820', '#5AAA30', '#205800', '', '', ''),
+        ('Emotion',    aq,  '#0A7858', '#1A9870', '#024030', '#C0F0E0', '#024030', 'Strongest' if (aq and aq == [dod,vd,dm,wf,aq]|max) else ''),
+      ] %}
+      {% for dim_name, dim_val, c1, c2, txt_c, tag_bg, tag_c, tag_lbl in _dims %}
+      {% if dim_val is not none %}
+      <div class="hk-dim-row">
+        <span class="hk-dim-name">{{ dim_name }}</span>
+        <div class="hk-bar-bg"><div class="hk-bar-fill" style="width:{{ (dim_val/10*100)|round|int }}%;background:linear-gradient(90deg,{{ c1 }},{{ c2 }})"></div></div>
+        <span class="hk-dim-val" style="color:{{ txt_c }}">{{ '%.1f'|format(dim_val) }}</span>
+        {% if tag_lbl %}<span class="hk-dim-tag" style="background:{{ tag_bg }};color:{{ tag_c }}">{{ tag_lbl }}</span>{% endif %}
       </div>
+      {% endif %}
+      {% endfor %}
     </div>
+    <div class="hk-dims-hint">Tap any dimension to understand what it measures</div>
+  </div>
 
-    {# Why photographers subscribe #}
-    <div>
-      <div class="hk-rl">Why photographers subscribe</div>
-      <div class="hk-rcard">
-        <div style="font-size:12px;color:var(--hk-text);line-height:1.65;margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid var(--hk-border)">"The platform told me to go to Nandi Hills for the marathon. I went. Best shoot of the year."<div style="font-size:11px;color:var(--hk-muted);margin-top:3px">— Mahesh, Camera League</div></div>
-        <div style="font-size:12px;color:var(--hk-text);line-height:1.65">"I hit 9.0 in Street and became a finalist. I didn't believe I was ready until SL told me I was."<div style="font-size:11px;color:var(--hk-muted);margin-top:3px">— Sudhir, Camera League</div></div>
+  {# ── EVALUATION COUNTER ── #}
+  <div class="hk-dots-row">
+    {% for i in range(10) %}<div class="hk-dot{% if i < _eval_num %} used{% endif %}"></div>{% endfor %}
+    <span class="hk-dots-txt">{{ _remaining }} exploratory evaluation{{ 's' if _remaining != 1 else '' }} remaining</span>
+  </div>
+
+  {# ── TEASER ── #}
+  <div class="hk-teaser">
+    <span class="hk-teaser-txt">This is your exploratory evaluation — a first reading of your eye.</span>
+    <a class="hk-teaser-lnk" href="#hk-gate">What a full evaluation adds &darr;</a>
+  </div>
+
+  {# ── CELEBRATION ── #}
+  <div class="hk-celebrate">
+    {% if _impression %}
+      {# Split impression into first sentence (headline) and rest (body) #}
+      {% set _sentences = _impression.split('. ') %}
+      <div class="hk-cel-hl">{{ _sentences[0] }}{% if _sentences|length > 1 %}.{% endif %}</div>
+      {% if _sentences|length > 1 %}
+      <div class="hk-cel-body">
+        {% for s in _sentences[1:] %}<p>{{ s }}{% if not s.endswith('.') %}.{% endif %}</p>{% endfor %}
       </div>
+      {% endif %}
+    {% else %}
+      <div class="hk-cel-hl">Not many photographers would have noticed what you noticed here.</div>
+    {% endif %}
+    <div class="hk-cel-sub">This is what we see in your eye — from one photograph.</div>
+  </div>
+
+  {# ── MASTER REFERENCE — early ── #}
+  {% if _master_name %}
+  <div class="hk-master-early">
+    <div class="hk-master-avatar">&#127760;</div>
+    <div>
+      <div class="hk-eyebrow">The eye behind this</div>
+      <div class="hk-master-name">{{ _master_name }}</div>
+      <div class="hk-master-body">{{ _master_why }}</div>
+      <a class="hk-master-link" href="https://www.google.com/search?q={{ _master_name|urlencode }}+photography" target="_blank" rel="noopener">See their work &#8599;</a>
     </div>
-
-  </aside>
-
-</div>{# /hk-shell #}
-
-{# FOOTER #}
-<div class="hk-footer">
-  <span class="hk-footer-text">Evaluation {{ _eval_num }} of 3 free.
-    {% if _remaining > 0 %}{{ _remaining }} remaining.{% else %}All 3 used.{% endif %}
-  </span>
-  {% if _remaining > 0 %}
-  <a href="{{ url_for('try_page') }}" class="hk-footer-link">Upload your next image →</a>
-  {% else %}
-  <a href="{{ url_for('pricing') }}" class="hk-footer-link">Continue your journey →</a>
+  </div>
   {% endif %}
+
+  {# ── TREND ── #}
+  <div class="hk-trend-wrap">
+    {% if _eval_num == 1 %}
+    <div class="hk-trend-pill">&ldquo;One photograph tells us what you made. Keep uploading — we will begin to see how you see.&rdquo;</div>
+    {% elif _eval_num <= 4 %}
+    <div class="hk-trend-pill">&ldquo;{{ _eval_num }} photographs in. Something is beginning to form in how you see — keep going.&rdquo;</div>
+    {% else %}
+    <div class="hk-trend-pill">&ldquo;Across your last {{ _eval_num }} uploads, a pattern is forming. Your eye has a direction. We are watching it.&rdquo;</div>
+    {% endif %}
+  </div>
+
+  {# ── STRONGEST MOMENT ── #}
+  {% if _str_name %}
+  <div class="hk-sec hk-sec-green">
+    <div class="hk-sec-hdr">
+      <div class="hk-sec-ic hk-ic-g">&#8593;</div>
+      <div>
+        <div class="hk-sec-lbl hk-lbl-g">Your strongest moment</div>
+        <div class="hk-sec-dim hk-val-g">{{ _str_name }}{% if aq %} &middot; {{ '%.1f'|format(aq) }}{% endif %}</div>
+      </div>
+    </div>
+    <div class="hk-sec-body">
+      {% if _str_obs %}<p>{{ _str_obs }}</p>{% endif %}
+    </div>
+    <div class="hk-principle-box">
+      <div class="hk-pb-row hk-pb-w">
+        <span class="hk-pb-badge hk-badge-w">Working for you</span>
+        <span class="hk-pb-text">{{ takeaway }}</span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── NEXT LEAP ── #}
+  {% if _leap_name %}
+  <div class="hk-sec hk-sec-amber">
+    <div class="hk-sec-hdr">
+      <div class="hk-sec-ic hk-ic-a">&#8594;</div>
+      <div>
+        <div class="hk-sec-lbl hk-lbl-a">Your next leap</div>
+        <div class="hk-sec-dim hk-val-a">{{ _leap_name }}{% if dod %} &middot; {{ '%.1f'|format(dod) }}{% endif %}</div>
+      </div>
+    </div>
+    <div class="hk-sec-body">
+      {% if _leap_obs %}<p>{{ _leap_obs }}</p>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── WHAT NEXT ── #}
+  {% if _what_next %}
+  <div class="hk-sec hk-sec-blue">
+    <div class="hk-sec-hdr">
+      <div class="hk-sec-ic hk-ic-b">&#9679;</div>
+      <div>
+        <div class="hk-sec-lbl hk-lbl-b">What you can do next to improve</div>
+        <div class="hk-sec-dim hk-val-b">The next opportunity</div>
+      </div>
+    </div>
+    <div class="hk-sec-body">
+      {% for sentence in _what_next.split('. ') %}
+        {% if sentence %}<p>{{ sentence }}{% if not sentence.endswith('.') %}.{% endif %}</p>{% endif %}
+      {% endfor %}
+    </div>
+    {% if exif_data %}
+    <div class="hk-exif-row">
+      {% if exif_data.device %}<span class="hk-exif-tag">{{ exif_data.device }}</span>{% endif %}
+      {% if exif_data.focal %}<span class="hk-exif-tag">{{ exif_data.focal }}</span>{% endif %}
+      {% if exif_data.aperture %}<span class="hk-exif-tag">f/{{ exif_data.aperture }}</span>{% endif %}
+      {% if exif_data.iso %}<span class="hk-exif-tag">ISO {{ exif_data.iso }}</span>{% endif %}
+      {% if exif_data.shutter %}<span class="hk-exif-tag">{{ exif_data.shutter }}</span>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── SOCIAL PROOF ── #}
+  <div class="hk-proof-block">
+    <div class="hk-proof-quote">I had never seen a photograph described technically like this. It told me exactly what I was doing right and what I was missing. After 20 years of photography, that is not an easy thing to say.</div>
+    <div class="hk-proof-attr"><strong>Mahesh Iyer</strong> &middot; Street photographer &middot; Standing 105 of 20,000 globally, PhotoCrowd &middot; Grandmaster, Shutter League</div>
+  </div>
+
+  {# ── LOCKED GATE ── #}
+  <div class="hk-gate-sec" id="hk-gate">
+    <div class="hk-gate-hdr">
+      <span style="color:var(--hk-gold);font-size:20px">&#128274;</span>
+      <span class="hk-gate-hdr-txt">The following evaluation is available for subscribed members</span>
+    </div>
+    <div class="hk-gate-item"><div class="hk-gate-ic">&#9670;</div><div><div class="hk-gate-title">Where to go next — location advisory</div><div class="hk-gate-blur">A specific location in your city matched to this genre — where to stand, when to arrive, what alignment to wait for to push your next leap dimension above 7.0.</div></div></div>
+    <div class="hk-gate-item"><div class="hk-gate-ic">&#9670;</div><div><div class="hk-gate-title">Our mentor advises on this photograph</div><div class="hk-gate-blur">Two specific adjustments — in the field and in the edit — that would lift this from {{ tier }} toward the next tier. Specific to this frame, this light, this device. Not generic advice.</div></div></div>
+    <div class="hk-gate-item"><div class="hk-gate-ic">&#9670;</div><div><div class="hk-gate-title">Lessons built from your photographs</div><div class="hk-gate-blur">Nobody in the world today can curate lessons from your own photographs — identifying your weakness across a body of work and helping you overcome it at your pace. Even a human mentor has a limitation. This does not.</div></div></div>
+    <button class="hk-gate-more-btn" id="hkGateBtn" onclick="toggleGate()" aria-expanded="false">
+      <span id="hkGateLbl">Read more — 3 further sections included</span>
+      <span class="hk-acc-arrow" id="hkGateArrow">&#8964;</span>
+    </button>
+    <div id="hkGateExtra" style="display:none">
+      <div class="hk-gate-item"><div class="hk-gate-ic">&#9670;</div><div><div class="hk-gate-title">What your eye read before the shutter</div><div class="hk-gate-blur">The visual relationship you understood before you pressed — the geometry of the subject, the way the light creates contrast. This is where your instinct lives and where we build from.</div></div></div>
+      <div class="hk-gate-item"><div class="hk-gate-ic">&#9670;</div><div><div class="hk-gate-title">Edit directions for this photograph</div><div class="hk-gate-blur">Two tonal moves that separate the strongest element from the background and reduce the competing elements without losing the ambient mood you built in camera.</div></div></div>
+      <div class="hk-gate-item"><div class="hk-gate-ic">&#9670;</div><div><div class="hk-gate-title">Your calibrated standing in the league</div><div class="hk-gate-blur">Where this photograph places you among every evaluated photographer. Your tier, your progress toward the Annual Excellence Award, what consistent improvement looks like from {{ tier }}.</div></div></div>
+    </div>
+  </div>
+
+  {# ── EVOLVING EYE ── #}
+  <div class="hk-eye-sec">
+    <div class="hk-eyebrow hk-eyebrow-gold">The Evolving Eye</div>
+    <div class="hk-eye-hl">Other platforms evaluate this photograph.<br>Shutter League learns how you see — and remembers.</div>
+    <p class="hk-p">Across every photograph you upload, the Evolving Eye builds a picture of your instincts, your patterns, your recurring strengths, and the gaps that keep appearing. At 5 uploads it names a pattern. At 10 it begins to see your eye as distinct from every other photographer on the platform.</p>
+    <p class="hk-p">No human mentor can hold 100 photographs in memory and synthesise them. No other platform does this. The Evolving Eye is the only system in the world that reads a body of photographic work and tells you what it means — not what each photograph evaluates to, but what your photographs together reveal about how you see.</p>
+    <div class="hk-eye-note">Your Evolving Eye begins with your first subscribed evaluation.</div>
+  </div>
+
+  {# ── LEAGUE ── #}
+  <div class="hk-league-sec">
+    <div class="hk-eyebrow hk-eyebrow-gold">The Shutter League</div>
+    <div class="hk-league-hl">A credential. Not a number.<br>A standard that follows you.</div>
+    <div class="hk-league-bridge">What a Full Evaluation gives you access to</div>
+    <div class="hk-cred-block">
+      <div class="hk-cred-item"><span class="hk-cred-ic">&#10003;</span><span class="hk-cred-text"><strong>Client-ready.</strong> The first photography credential that holds up in an editorial brief, a gallery application, an exhibition pitch.</span></div>
+      <div class="hk-cred-item"><span class="hk-cred-ic">&#10003;</span><span class="hk-cred-text"><strong>Your standing travels with you.</strong> Bengaluru. Mumbai. Paris. New York. Dubai. Brilliant work now has an international market.</span></div>
+      <div class="hk-cred-item"><span class="hk-cred-ic">&#10003;</span><span class="hk-cred-text"><strong>Built on the same principles as the world's leading photography institutions.</strong> Calibrated. Consistent. Verifiable.</span></div>
+      <div class="hk-cred-item"><span class="hk-cred-ic">&#10003;</span><span class="hk-cred-text"><strong>Tomorrow, photographers will be asked: what is your Shutter League standing?</strong></span></div>
+    </div>
+    <div class="hk-benefit-grid">
+      <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9733;</div><div><div class="hk-benefit-title">Annual Excellence Award</div><div class="hk-benefit-body">Your work before a jury, <strong>31 December 2026.</strong> The first credential built on a full year. <strong>Grants, exhibitions, commissions follow.</strong></div></div></div>
+      <div class="hk-benefit-item"><div class="hk-benefit-ic">&#8593;</div><div><div class="hk-benefit-title">Official standing — eight tiers</div><div class="hk-benefit-body">Rookie to Legend. <strong>Consistency wins — not one great shot.</strong> Follows you into every professional conversation.</div></div></div>
+      <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9889;</div><div><div class="hk-benefit-title">Lessons built from your photographs</div><div class="hk-benefit-body">Nobody today can do this. <strong>Even a human mentor has a limitation. This does not.</strong></div></div></div>
+      <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9654;</div><div><div class="hk-benefit-title">Weekly Challenges</div><div class="hk-benefit-body">One theme, one week. <strong>Every challenge is part of the credential.</strong></div></div></div>
+    </div>
+    <button class="hk-acc-btn" id="hkAccBtn" onclick="toggleAcc()" aria-expanded="false">
+      <span id="hkAccLbl">See all 6 further benefits</span>
+      <span class="hk-acc-arrow" id="hkAccArrow">&#8964;</span>
+    </button>
+    <div class="hk-acc-extra" id="hkAccExtra">
+      <div class="hk-benefit-grid">
+        <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9786;</div><div><div class="hk-benefit-title">Grandmaster mentor access</div><div class="hk-benefit-body">World Press and international award recipients. <strong>Now in your reach.</strong></div></div></div>
+        <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9634;</div><div><div class="hk-benefit-title">Print sales</div><div class="hk-benefit-body"><strong>Your prints in Bengaluru, London, New York.</strong> Your work. Your price.</div></div></div>
+        <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9679;</div><div><div class="hk-benefit-title">Commissioned projects</div><div class="hk-benefit-body">At a certain standing, paid work comes to you. <strong>We bring the work — you make the images.</strong></div></div></div>
+        <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9632;</div><div><div class="hk-benefit-title">Your portfolio page</div><div class="hk-benefit-body">Permanent. Public. Every photograph carries its evaluation.</div></div></div>
+        <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9670;</div><div><div class="hk-benefit-title">Points — earned through the work</div><div class="hk-benefit-body">Every evaluation earns points. Redeem for evaluations, subscriptions, or mentor access.</div></div></div>
+        <div class="hk-benefit-item"><div class="hk-benefit-ic">&#9728;</div><div><div class="hk-benefit-title">See how others grow</div><div class="hk-benefit-body"><strong>The journey from Craftsman to Master — visible.</strong></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  {# ── CONVERSION ── #}
+  <div class="hk-conv-sec">
+    <div class="hk-conv-hl">One photograph shows us a moment.<br>Your photographs show us how you see.</div>
+    <div class="hk-conv-body">Your exploratory evaluations are a beginning. Your standing, your Annual Excellence Award qualification, your calibrated Evolving Eye — none of these have started yet. <strong>They start with your next photograph as a member.</strong></div>
+    <div class="hk-tracks">
+      <div class="hk-track hk-track-camera"><div class="hk-track-name" style="color:#1840A0">Camera League</div><div class="hk-track-sub" style="color:#4070C0">DSLR &middot; Mirrorless &middot; Film</div></div>
+      <div class="hk-track hk-track-mobile"><div class="hk-track-name" style="color:#1E5808">Mobile League</div><div class="hk-track-sub" style="color:#3A8020">iPhone &middot; Android &middot; Smartphone</div></div>
+    </div>
+  </div>
+
+  {# ── CTAs — dynamic by evals_used ── #}
+  <div class="hk-cta-sec">
+    <div class="hk-cta-header">What would you like to do next?</div>
+
+    {# Primary — always join the league #}
+    <a href="{{ url_for('pricing') }}" class="hk-cta-primary">Yes — I want to improve with every photograph, build my lessons, and earn my standing internationally &rarr;</a>
+
+    {# Secondary — depends on state #}
+    {% if _remaining > 0 %}
+      {# Still has free evaluations — offer next upload #}
+      <a href="{{ url_for('try_page') }}" class="hk-cta-explore">
+        Upload your next photograph &rarr;
+        <span>{{ _remaining }} exploratory evaluation{{ 's' if _remaining != 1 else '' }} remaining</span>
+      </a>
+    {% elif _eval_num == 10 %}
+      {# Just used all 10 free — offer Play tier #}
+      <a href="{{ url_for('pricing') }}" class="hk-cta-explore">
+        I want to keep exploring — 100 more evaluations &rarr;
+        <span>&ldquo;I want to play around a little bit more.&rdquo;</span>
+      </a>
+    {% endif %}
+
+    {# Tertiary — exit with feedback #}
+    <button class="hk-cta-exit" onclick="openFeedback()">I came to explore — I am happy with this for now</button>
+  </div>
+
+  {# ── SHARE ── #}
+  <div class="hk-share-sec">
+    <div class="hk-eyebrow" style="margin-bottom:14px">Celebrate this evaluation</div>
+    <div class="hk-share-preview">
+      <div class="hk-sc-num">{{ '%.2f'|format(score) if score else '—' }}</div>
+      <div class="hk-sc-tier">{{ tier }}</div>
+      <div class="hk-sc-genre">{{ genre }}{% if _top_pct %} &middot; Higher than {{ _top_pct }}% of exploratory evaluations{% endif %}</div>
+      <div class="hk-sc-logo">Shutter League</div>
+    </div>
+    <div class="hk-share-btns">
+      <a href="https://www.instagram.com/" target="_blank" class="hk-share-btn">&#128247; Instagram</a>
+      <a href="#" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href))" target="_blank" class="hk-share-btn">&#128100; Facebook</a>
+      <a href="#" class="hk-share-btn">&#8595; Download</a>
+      <button class="hk-share-btn" onclick="navigator.clipboard.writeText(window.location.href).then(function(){alert('Link copied!')})">&#128279; Copy link</button>
+    </div>
+  </div>
+
+</div>
 </div>
 
-</div>{# /hk-wrap #}
+{# ── Feedback modal (CTA 3) ── #}
+<div id="hkFeedbackModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;display:none;align-items:center;justify-content:center">
+  <div style="background:#FFFFFF;border-radius:16px;padding:32px;max-width:480px;width:90%;margin:auto">
+    <h3 style="font-size:20px;font-weight:500;color:#1E1A12;margin-bottom:8px">Thank you for spending time with us.</h3>
+    <p style="font-size:15px;color:#5A4A30;margin-bottom:20px;line-height:1.7">Before you go — two minutes of your thoughts would mean a great deal. Every voice shapes what we build next.</p>
+    <label style="font-size:14px;font-weight:500;color:#3A3020;display:block;margin-bottom:6px">What brought you here today?</label>
+    <textarea id="hkFb1" style="width:100%;padding:10px 12px;border:1.5px solid #DDD5C0;border-radius:8px;font-size:15px;font-family:inherit;resize:vertical;min-height:80px;margin-bottom:14px"></textarea>
+    <label style="font-size:14px;font-weight:500;color:#3A3020;display:block;margin-bottom:6px">What would make Shutter League feel right for you?</label>
+    <textarea id="hkFb2" style="width:100%;padding:10px 12px;border:1.5px solid #DDD5C0;border-radius:8px;font-size:15px;font-family:inherit;resize:vertical;min-height:80px;margin-bottom:20px"></textarea>
+    <p style="font-size:14px;color:#8A7050;margin-bottom:14px">If you know a photographer who would love this — share it with them.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <a href="#" onclick="window.open('https://wa.me/?text='+encodeURIComponent(window.location.href))" target="_blank" style="flex:1;background:#25D366;color:#FFF;padding:11px;border-radius:8px;text-align:center;font-size:14px;font-weight:500;text-decoration:none">Share on WhatsApp</a>
+      <button onclick="navigator.clipboard.writeText(window.location.href)" style="flex:1;background:#F5F0E8;border:1.5px solid #DDD5C0;color:#3A3020;padding:11px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">Copy link</button>
+    </div>
+    <button onclick="submitFeedback()" style="width:100%;background:#1E1A12;color:#C8A84B;padding:14px;border-radius:8px;font-size:16px;font-weight:500;border:none;cursor:pointer;font-family:inherit;margin-bottom:8px">Send this to the team &rarr;</button>
+    <button onclick="closeFeedback()" style="width:100%;background:transparent;color:#8A7050;padding:10px;border:none;cursor:pointer;font-size:14px;font-family:inherit;text-decoration:underline">Close</button>
+  </div>
+</div>
+{% endblock %}
 
-<!-- DDI data island — Jinja2 renders to JSON, browser reads as data -->
-<script type="application/json" id="hk-ddi-data">
-[
-  {% if dod %}{"t": "Depth of Difficulty \u2014 {{ '%.1f'|format(dod) }}", "tx": "How technically demanding this photograph was to make — lighting conditions, timing, equipment control."},{% endif %}
-  {% if vd %}{"t": "Visual Display (WOW Factor) \u2014 {{ '%.1f'|format(vd) }}", "tx": "The visual impact, drama and mood of your photograph. What stops the scroll."},{% endif %}
-  {% if dm %}{"t": "Decisive Moment \u2014 {{ '%.1f'|format(dm) }}", "tx": "How well you timed the capture of the peak moment — the fraction of a second that makes this image."},{% endif %}
-  {% if wf %}{"t": "WOW Factor \u2014 {{ '%.1f'|format(wf) }}", "tx": "The wonder, beauty and emotional pull your photograph creates in the viewer."},{% endif %}
-  {% if aq %}{"t": "Affective Quotient \u2014 {{ '%.1f'|format(aq) }}", "tx": "The emotional resonance your photograph creates. Does it make the viewer feel something?"},{% endif %}
-  null
-]
-</script>
-
+{% block extra_js %}
 <script>
-/* SL Haiku Scorecard v176.1 — no Jinja2 in this block */
-var hkDDIData = (function () {
-  try {
-    return JSON.parse(document.getElementById('hk-ddi-data').textContent).filter(Boolean);
-  } catch (e) { return []; }
-})();
-function hkToggleDDI(col, idx) {
-  var det = document.getElementById('hk-ddi-detail');
-  var cols = col.parentElement.querySelectorAll('.hk-ddi-col');
-  var isActive = col.classList.contains('active');
-  cols.forEach(function (c) { c.classList.remove('active'); });
-  if (isActive) { if (det) det.style.display = 'none'; return; }
-  col.classList.add('active');
-  var d = hkDDIData[idx];
-  if (d && det) {
-    document.getElementById('hk-ddi-title').textContent = d.t;
-    document.getElementById('hk-ddi-text').textContent = d.tx;
-    det.style.display = 'block';
-  }
-}
-</script>
+var _wrap = document.querySelector('.hk-wrap');
+const thumbUrl = _wrap ? _wrap.getAttribute('data-thumb') || null : null;
 
+function openFs() {
+  if (!thumbUrl) return;
+  document.getElementById('hkFsImg').src = thumbUrl;
+  document.getElementById('hkFsOverlay').classList.add('active');
+}
+function closeFs() {
+  document.getElementById('hkFsOverlay').classList.remove('active');
+}
+
+function toggleAcc() {
+  var extra = document.getElementById('hkAccExtra');
+  var arrow = document.getElementById('hkAccArrow');
+  var lbl   = document.getElementById('hkAccLbl');
+  var btn   = document.getElementById('hkAccBtn');
+  var open  = extra.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open);
+  lbl.textContent = open ? 'Show fewer benefits' : 'See all 6 further benefits';
+}
+
+function toggleGate() {
+  var extra = document.getElementById('hkGateExtra');
+  var arrow = document.getElementById('hkGateArrow');
+  var lbl   = document.getElementById('hkGateLbl');
+  var btn   = document.getElementById('hkGateBtn');
+  var open  = extra.style.display === 'block';
+  extra.style.display = open ? 'none' : 'block';
+  arrow.classList.toggle('open', !open);
+  btn.setAttribute('aria-expanded', !open);
+  lbl.textContent = open ? 'Read more — 3 further sections included' : 'Show fewer sections';
+}
+
+function openFeedback() {
+  var m = document.getElementById('hkFeedbackModal');
+  m.style.display = 'flex';
+}
+function closeFeedback() {
+  var m = document.getElementById('hkFeedbackModal');
+  m.style.display = 'none';
+}
+
+function submitFeedback() {
+  var fb1 = document.getElementById('hkFb1').value.trim();
+  var fb2 = document.getElementById('hkFb2').value.trim();
+  fetch('/api/feedback', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      source: 'haiku_exit',
+      image_id: parseInt((_wrap || document.querySelector('.hk-wrap')).getAttribute('data-image-id') || '0'),
+      q1: fb1,
+      q2: fb2
+    })
+  }).catch(function(){});
+  closeFeedback();
+  alert('Received. Thank you. We read every response personally.');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeFs(); closeFeedback(); }
+});
+</script>
 {% endblock %}
