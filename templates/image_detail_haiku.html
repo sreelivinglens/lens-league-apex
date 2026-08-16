@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail_haiku-181.15 (Session 187, 2026-08-16 — Milestone/Reduced upsell logic by evals_used. Eval 1: full Locked Gate + Evolving Eye + League + Conversion. Evals 2-4: Reduced block only. Evals 5-9: Milestone block with strongest dimension named. Eval 10: Final milestone block, Play tier CTA. All instances of "as a member" updated to "as a member of the League of Photographers". RETAINS 181.3e.)
 {# SL-VERSION: image_detail_haiku-181.3e (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14j deploy. RETAINS 181.3d.)
 {# SL-VERSION: image_detail_haiku-181.3d (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14d deploy. RETAINS 181.3c.)
 {# SL-VERSION: image_detail_haiku-181.3c (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14c deploy. RETAINS 181.3.)
@@ -473,6 +474,14 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     <div class="hk-proof-attr"><strong>Mahesh Iyer</strong> &middot; Street photographer &middot; Standing 105 of 20,000 globally, PhotoCrowd &middot; Grandmaster, Shutter League</div>
   </div>
 
+  {# ── UPSELL BLOCK — conditional by eval number ── #}
+  {# Eval 1: full gate + Evolving Eye + League + Conversion #}
+  {# Evals 2-4: reduced single paragraph #}
+  {# Evals 5-9: milestone paragraph with strongest dimension #}
+  {# Eval 10: final milestone paragraph #}
+
+  {% if _eval_num == 1 %}
+
   {# ── FULL EVAL HEADER ── #}
   <div style="background:#F5F0E8;padding:16px 30px 4px;border-top:1px solid var(--hk-border)">
     <div style="font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#8A7050">What a full evaluation gives you</div>
@@ -540,15 +549,59 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
     </div>
   </div>
 
-  {# ── CONVERSION ── #}
+  {# ── CONVERSION — EVAL 1 ── #}
   <div class="hk-conv-sec">
     <div class="hk-conv-hl">One photograph shows us a moment.<br>Your photographs show us how you see.</div>
-    <div class="hk-conv-body">Your exploratory evaluations are a beginning. Your standing, your Annual Excellence Award qualification, your calibrated Evolving Eye — none of these have started yet. <strong>They start with your next photograph as a member.</strong></div>
+    <div class="hk-conv-body">Your exploratory evaluations are a beginning. Your standing, your Annual Excellence Award qualification, your calibrated Evolving Eye — none of these have started yet. <strong>They start with your next photograph as a member of the League of Photographers.</strong></div>
     <div class="hk-tracks">
       <div class="hk-track hk-track-camera"><div class="hk-track-name" style="color:#1840A0">Camera League</div><div class="hk-track-sub" style="color:#4070C0">DSLR &middot; Mirrorless &middot; Film</div></div>
       <div class="hk-track hk-track-mobile"><div class="hk-track-name" style="color:#1E5808">Mobile League</div><div class="hk-track-sub" style="color:#3A8020">iPhone &middot; Android &middot; Smartphone</div></div>
     </div>
   </div>
+
+  {% elif _eval_num >= 2 and _eval_num <= 4 %}
+
+  {# ── REDUCED — EVALS 2-4 ── #}
+  <div class="hk-conv-sec">
+    <div class="hk-conv-body" style="font-size:17px;line-height:1.9">Your standing hasn&rsquo;t started yet. Your Annual Excellence Award qualification, your calibrated Evolving Eye, your lessons built from your photographs — none of these have started. <strong>They start with your next photograph as a member of the League of Photographers.</strong></div>
+    <div class="hk-tracks" style="margin-top:18px">
+      <div class="hk-track hk-track-camera"><div class="hk-track-name" style="color:#1840A0">Camera League</div><div class="hk-track-sub" style="color:#4070C0">DSLR &middot; Mirrorless &middot; Film</div></div>
+      <div class="hk-track hk-track-mobile"><div class="hk-track-name" style="color:#1E5808">Mobile League</div><div class="hk-track-sub" style="color:#3A8020">iPhone &middot; Android &middot; Smartphone</div></div>
+    </div>
+  </div>
+
+  {% elif _eval_num >= 5 and _eval_num <= 9 %}
+
+  {# ── MILESTONE — EVALS 5-9 ── #}
+  <div class="hk-conv-sec">
+    <div class="hk-conv-hl">{{ _eval_num }} photographs.</div>
+    <div class="hk-conv-body" style="font-size:17px;line-height:1.9">
+      {% if milestone_strength %}
+      Across everything you have uploaded, <strong>{{ milestone_strength }}</strong> has been your most consistent strength. Your eye has a direction. We are watching it.
+      {% else %}
+      Across your {{ _eval_num }} uploads, a pattern is forming. Your eye has a direction.
+      {% endif %}
+      Your standing hasn&rsquo;t started yet — <strong>it starts with your next photograph as a member of the League of Photographers.</strong>
+    </div>
+    <div class="hk-tracks" style="margin-top:18px">
+      <div class="hk-track hk-track-camera"><div class="hk-track-name" style="color:#1840A0">Camera League</div><div class="hk-track-sub" style="color:#4070C0">DSLR &middot; Mirrorless &middot; Film</div></div>
+      <div class="hk-track hk-track-mobile"><div class="hk-track-name" style="color:#1E5808">Mobile League</div><div class="hk-track-sub" style="color:#3A8020">iPhone &middot; Android &middot; Smartphone</div></div>
+    </div>
+  </div>
+
+  {% else %}
+
+  {# ── FINAL MILESTONE — EVAL 10 ── #}
+  <div class="hk-conv-sec">
+    <div class="hk-conv-hl">Ten photographs.</div>
+    <div class="hk-conv-body" style="font-size:17px;line-height:1.9">We know something real about how you see. But none of it is in the Shutter League record yet. Your standing, your AEA qualification, your Evolving Eye — <strong>they start with your next photograph as a member of the League of Photographers.</strong></div>
+    <div class="hk-tracks" style="margin-top:18px">
+      <div class="hk-track hk-track-camera"><div class="hk-track-name" style="color:#1840A0">Camera League</div><div class="hk-track-sub" style="color:#4070C0">DSLR &middot; Mirrorless &middot; Film</div></div>
+      <div class="hk-track hk-track-mobile"><div class="hk-track-name" style="color:#1E5808">Mobile League</div><div class="hk-track-sub" style="color:#3A8020">iPhone &middot; Android &middot; Smartphone</div></div>
+    </div>
+  </div>
+
+  {% endif %}
 
   {# ── CTAs — dynamic by evals_used ── #}
   <div class="hk-cta-sec">
@@ -564,8 +617,8 @@ body.page-haiku-scorecard #backToTop         { display:none !important }
         Upload your next photograph &rarr;
         <span>{{ _remaining }} exploratory evaluation{{ 's' if _remaining != 1 else '' }} remaining</span>
       </a>
-    {% elif _eval_num == 10 %}
-      {# Just used all 10 free — offer Play tier #}
+    {% elif _eval_num >= 10 %}
+      {# Used all 10 free — offer Play tier #}
       <a href="{{ url_for('pricing') }}" class="hk-cta-explore">
         I want to keep exploring — 100 more evaluations &rarr;
         <span>&ldquo;I want to play around a little bit more.&rdquo;</span>
