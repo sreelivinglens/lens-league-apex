@@ -1,3 +1,4 @@
+# SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE on the images row. ORM Image() constructor cannot set unmapped columns. Every Haiku image was saved with is_haiku_try=FALSE, making all world-separation filters (Recent Work, My Gallery, Standings) blind to them. Fixed: raw SQL UPDATE images SET is_haiku_try=TRUE WHERE id=:iid runs immediately after insert commit in try_upload. DB backfill required: UPDATE images SET is_haiku_try=TRUE WHERE audit_json::text LIKE '%haiku_try%' AND is_haiku_try IS NOT TRUE. Retains 181.24-staging.)
 # SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. Added AND i.is_haiku_try IS NOT TRUE to _base_q in recent_work route. Haiku images must never appear in the paid community feed. Retains 181.23-staging.)
 # SL-VERSION: 181.23-staging (Session 187, 2026-08-17 — TWO FIXES: (1) _get_haiku_history_context rebuilt — SQL now fetches asset_name. Pre-builds mandatory opening sentence in Python naming actual photographs ("The flamingo pan, the flower frame..."). Haiku instructed to use verbatim as first sentence of impression. Consistent strength computed as most common strongest dimension. Average weakness computed across all history. Pattern instruction moved to what_next. (2) Gate/display count fixed — was log-only (missed non-deleted images). Now combined: COUNT(live images is_haiku_try=TRUE) + COUNT(log is_haiku_try=TRUE). Dots counter now shows correct remaining. Retains 181.22-staging.)
 # SL-VERSION: 181.22-staging (Session 187, 2026-08-17 — Option B: free users (not subscribed, not admin) redirected from /dashboard to /try. Keeps free users in the Haiku world — /try, /try/result, /try/gallery. Paid subscribers and admins unaffected. One line at top of dashboard route. Retains 181.21-staging.)
@@ -32173,6 +32174,16 @@ def try_upload():
         )
         db.session.commit()
         image_id = img.id
+        # 181.25: set is_haiku_try=TRUE immediately after insert.
+        # The ORM Image() constructor cannot set this column because it is not
+        # a mapped field. Without this UPDATE every Haiku image was saved with
+        # is_haiku_try=FALSE, making all filters (Recent Work, My Gallery,
+        # Standings) invisible to them. Belt-and-braces raw SQL after commit.
+        db.session.execute(
+            db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+            {'iid': image_id}
+        )
+        db.session.commit()
         app.logger.info(
             f'[try_upload] image saved: id={image_id} '
             f'user={current_user.id} genre={genre}'
