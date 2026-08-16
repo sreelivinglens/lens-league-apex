@@ -31525,10 +31525,12 @@ def try_page():
     # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
     # total_uploads_ever includes paid Sonnet evaluations and incorrectly
     # blocked paid subscribers from using their free Haiku quota.
-    evals_used = Image.query.filter_by(
-        user_id=current_user.id,
-        is_haiku_try=True
-    ).count()
+    # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
+    _haiku_row = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        {'uid': current_user.id}
+    ).scalar()
+    evals_used = int(_haiku_row or 0)
 
     import json as _json
     from engine.scoring import SUBGENRE_MAP, GENRE_IDS
@@ -31572,10 +31574,12 @@ def try_upload():
     # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
     # total_uploads_ever includes paid Sonnet evaluations and incorrectly
     # blocked paid subscribers from using their free Haiku quota.
-    _lifetime = Image.query.filter_by(
-        user_id=current_user.id,
-        is_haiku_try=True
-    ).count()
+    # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
+    _haiku_row = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        {'uid': current_user.id}
+    ).scalar()
+    _lifetime = int(_haiku_row or 0)
 
     if _lifetime >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
         return jsonify({
@@ -31858,11 +31862,13 @@ def try_result(image_id):
     # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
     # total_uploads_ever includes paid Sonnet evaluations and incorrectly
     # blocked paid subscribers from using their free Haiku quota.
+    # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _bonus          = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
-    evals_used      = Image.query.filter_by(
-        user_id=current_user.id,
-        is_haiku_try=True
-    ).count()
+    _haiku_row      = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        {'uid': current_user.id}
+    ).scalar()
+    evals_used      = int(_haiku_row or 0)
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - evals_used)
 
     return render_template(
