@@ -1,4 +1,5 @@
-# SL-VERSION: 181.29-staging (Session 189, 2026-08-17 — HOTFIX: ghost thumb_url records. DB rows where thumb_url is non-null but the R2 file was deleted return 404. Fix: added Image.thumb_url.like('https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev%') to both carousel and recent_images queries — only confirmed R2-hosted thumbnails qualify. Applied to both queries so gallery tiles get same protection. RETAINS 181.28-staging.)
+# SL-VERSION: 181.30-staging (Session 189, 2026-08-18 — ROOT FIX: both carousel and recent_images queries converted to raw SQL. ORM Image.thumb_url.like() was silently throwing AttributeError (thumb_url not a mapped db.Column), caught by except Exception, blanking all images. Project rule is raw SQL for unmapped columns. Raw SQL LIKE :r2 now correctly filters to real R2-hosted thumbnails. Both queries parameterised safely. RETAINS 181.29-staging.)
+# SL-VERSION: 181.29-staging (Session 189, 2026-08-17 — HOTFIX: ghost thumb_url records. DB rows where thumb_url is non-null but the R2 file was deleted return 404. Fix: added Image.thumb_url.like() to both carousel and recent_images queries. RETAINS 181.28-staging.)
 # SL-VERSION: 181.28-staging (Session 189, 2026-08-17 — HOTFIX: _mentor_user_ids fetch was removed in 181.27 but still referenced at line 3482. This threw NameError at runtime, caught by except Exception, blanking carousel_images AND recent_images — no images showed on the homepage. Fix: restored the raw SQL fetch of _mentor_user_ids before the carousel query. Also removed two stale comment lines left over from the old block. RETAINS 181.27-staging.)
 # SL-VERSION: 181.27-staging (Session 189, 2026-08-17 — index() hero carousel query: changed tier filter to score>=8.5, added thumb_url!=None requirement, removed landscape filter and unchecked fallback. Aligns homepage hero with founder's "any image scoring 8.5 or above, with a real thumbnail." See Session 189 for rationale and risk discussion. RETAINS 181.26-staging.)
 # SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — no longer a fixed verbatim template. Replaced MANDATORY OPENING SENTENCE (single fixed structure, reads as bot) with HISTORY OPENING INSTRUCTION giving Haiku the raw materials (photograph names, consistent strength, prior pattern) and instructing it to write in Sherpa voice with varied structure each time. Forbidden phrases: "consistent strength", "that thread runs through". Example registers provided. Retains 181.25-staging.)
@@ -3457,40 +3458,51 @@ def run_reengagement_emailer():
 @app.route('/')
 def index():
     try:
-        # Recent public scored images for bottom strips — R2 domain required
-        _R2_DOMAIN = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev'
-        _recent_raw = (Image.query
-                         .filter(Image.status=='scored', Image.score!=None,
-                                 Image.is_public==True, Image.is_flagged==False,
-                                 Image.thumb_url!=None,
-                                 Image.thumb_url.like(f'{_R2_DOMAIN}%'))
-                         .order_by(Image.scored_at.desc())
-                         .limit(36).all())
-        # Deduplicate — max 1 image per photographer, max 6 total
+        # Recent + hero — raw SQL throughout (ORM thumb_url.like() silently fails;
+        # project rule: raw SQL only for unmapped columns)
+        _R2 = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev%'
+        _recent_rows = db.session.execute(db.text(
+            "SELECT id, user_id, thumb_url, tier, genre, score, scored_at, photographer_name "
+            "FROM images "
+            "WHERE status='scored' AND score IS NOT NULL "
+            "  AND is_public=true AND is_flagged=false "
+            "  AND thumb_url LIKE :r2 "
+            "ORDER BY scored_at DESC LIMIT 36"
+        ), {'r2': _R2}).fetchall()
         _seen_users = set()
         recent_images = []
-        for _ri in _recent_raw:
+        for _ri in _recent_rows:
             if _ri.user_id not in _seen_users:
                 _seen_users.add(_ri.user_id)
                 recent_images.append(_ri)
                 if len(recent_images) == 6:
                     break
-        # Hero carousel — any image scoring 8.5 or above, with a real thumbnail
-        # thumb_url must start with the R2 CDN domain — rules out ghost records
-        # where the file was deleted from R2 but the DB column still has a value
-        _R2_DOMAIN = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev'
-        _mentor_user_ids = db.session.execute(
+        # Hero carousel — score >= 8.5, real R2 thumbnail, exclude mentors
+        _mentor_ids = db.session.execute(
             db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
         ).scalars().all()
-        _carousel_q = Image.query.filter(
-            Image.status=='scored', Image.score!=None, Image.score>=8.5,
-            Image.is_public==True, Image.is_flagged==False,
-            Image.thumb_url!=None,
-            Image.thumb_url.like(f'{_R2_DOMAIN}%')
-        )
-        if _mentor_user_ids:
-            _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
-        carousel_images = _carousel_q.order_by(db.func.random()).limit(12).all()
+        if _mentor_ids:
+            _carousel_rows = db.session.execute(db.text(
+                "SELECT id, user_id, thumb_url, tier, genre, score, photographer_name, "
+                "       width, height, exif_original_width, exif_original_height "
+                "FROM images "
+                "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
+                "  AND is_public=true AND is_flagged=false "
+                "  AND thumb_url LIKE :r2 "
+                "  AND user_id != ALL(:mids) "
+                "ORDER BY RANDOM() LIMIT 12"
+            ), {'r2': _R2, 'mids': list(_mentor_ids)}).fetchall()
+        else:
+            _carousel_rows = db.session.execute(db.text(
+                "SELECT id, user_id, thumb_url, tier, genre, score, photographer_name, "
+                "       width, height, exif_original_width, exif_original_height "
+                "FROM images "
+                "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
+                "  AND is_public=true AND is_flagged=false "
+                "  AND thumb_url LIKE :r2 "
+                "ORDER BY RANDOM() LIMIT 12"
+            ), {'r2': _R2}).fetchall()
+        carousel_images = _carousel_rows
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
