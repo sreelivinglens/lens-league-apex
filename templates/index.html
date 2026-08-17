@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 182.2-staging (Session 189, 2026-08-17 — MOBILE NAV: replaced the top hamburger with the site's standard bottom nav (base.html .sl-bottom-nav, anonymous branch: Home · Upload · Log In) so the homepage matches every other page on mobile, per founder. Removed .navtoggle button, #sl188-menu dropdown and its toggle JS. Stopped suppressing .sl-bottom-nav (base still hides it >=900px, so desktop unaffected). Removed the padding-bottom:0 override so base's page-home bottom-bar clearance applies and the footer clears the fixed bar. Hid top-nav Login <900px to avoid duplicating the bottom nav's Log In — mobile top nav is now brand + Start, which also fixes the cramped header. Desktop nav unchanged. RETAINS 182.1. #}
+{# SL-VERSION: 182.5-staging (Session 189, 2026-08-17 — HERO GALLERY-MAT: the hero photo is now shown WHOLE, never cropped (object-fit:contain, centred, with a mat), on the dark left panel — a landscape rests with dark space above/below like a matted print, a portrait nearly fills the panel. Solves the founder's real-world point: ~90% of photographs are landscape and a photographer must never see theirs side-cropped. Because nothing is cropped, the orientation gate is DROPPED — hero = first route-gated (score>=8.5) image with a real thumbnail, any orientation; more likely to show a real photo on staging. Name · tier · score caption unchanged (gallery label at panel bottom). Considered but rejected: expand-icon (still shows the crop first). Fallback if founder finds the desktop mat too empty: full-width landscape hero with headline below (Option 2) — bigger redesign, not done. Template-only, NO app.py change. RETAINS 182.4. #}
 {# SL-VERSION: 182.1-staging (Session 189, 2026-08-17 — FRESH HOMEPAGE. Full rebuild from SL_188M.html (approved 188M design language) as a Jinja template extending base.html. Replaces homepage v5.0 (Avenir/Leica mock). Aptos font, 188M design tokens, editorial layout. Extends base — inherits favicon, OG/Twitter share tags, cookie consent. Suppresses base top/bottom/mobile nav + base footer for body.page-home; renders 188M's own nav + dark 5-column footer inside content. Real League images wired to hero + gallery via carousel_images/recent_images (.thumb_url/.tier/.genre/.score) with gradient fallback — same route contract as v5.0, NO app.py change. Founder photo at static/img/Sreekumar.png in founder section. CTAs login-aware: anon -> register, authed -> dashboard. Locked copy verbatim incl. hero CTA "Show me what I'm missing" (founder-confirmed Session 189 over Master-Doc "Show me"). FIXES vs raw 188M: (1) mobile menu — 188M hid all nav links <=960px leaving no Login; added toggle keeping Login+Start reachable. (2) tap targets >=44px on nav, mobile menu, footer links. (3) reading text lifted to >=16px (nav links, micronote, founder credential list, footer links); only true metadata labels (eyebrows, badges, legal line) remain 12-13px per 70yr rule. Staging copy: "10 free evaluations" — production is still 3; must be checked before any production merge. RETAINS homepage v5.0. #}
 {% block title %}Shutter League — What if you could see how good you could become?{% endblock %}
 {% block meta_description %}Shutter League is photography's honest mirror — a calibrated evaluation of how you see, remembered across every photograph you make. Your first 10 evaluations are free.{% endblock %}
@@ -78,7 +78,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
 /* ── HERO ── */
 .sl188 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 76px);min-height:calc(100dvh - 76px);align-items:stretch}
 .sl188 .hero-photograph{background:var(--dark);position:relative;overflow:hidden;min-height:560px}
-.sl188 .hero-photograph-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl188 .hero-photograph-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;padding:clamp(20px,3.5vh,44px);box-sizing:border-box}
 .sl188 .hero-photograph-fill{
   position:absolute;inset:0;
   background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%);
@@ -246,8 +246,29 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
 {% endblock %}
 
 {% block content %}
-{% set hero = carousel_images[0] if carousel_images else none %}
-{% set gallery_pool = (recent_images or []) + (carousel_images[1:] if carousel_images and carousel_images|length > 1 else []) %}
+{# ── HERO IMAGE SELECTION ──
+   The hero photo is shown WHOLE (matted on the dark panel), never cropped — 90% of
+   real photographs are landscape and must not be side-cropped. So orientation no
+   longer matters: pick the first image the route already gated to score >= 8.5 that
+   has a real thumbnail. A landscape rests with dark space above/below (gallery mat);
+   a portrait nearly fills the panel. No qualifying photo -> clean dark gradient. #}
+{% set ns = namespace(hero=none) %}
+{% for img in (carousel_images or []) %}
+  {% if ns.hero is none and img.thumb_url %}
+    {% set ns.hero = img %}
+  {% endif %}
+{% endfor %}
+{% set hero = ns.hero %}
+
+{# Gallery tiles are cover-cropped, so any orientation is fine there. Require a
+   thumbnail, exclude the hero image, and de-duplicate. #}
+{% set gp = namespace(items=[]) %}
+{% for img in ((recent_images or []) + (carousel_images or [])) %}
+  {% if img.thumb_url and (hero is none or img is not sameas hero) and img not in gp.items %}
+    {% set gp.items = gp.items + [img] %}
+  {% endif %}
+{% endfor %}
+{% set gallery_pool = gp.items %}
 {% set moment_img = gallery_pool[0] if gallery_pool|length > 0 else none %}
 
 <div class="sl188">
@@ -284,7 +305,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     {% endif %}
     <div class="hero-photograph-fill"></div>
     <div class="hero-photograph-meta">
-      <span class="hero-photograph-caption">From the League</span>
+      <span class="hero-photograph-caption">{% if hero and hero.photographer_name %}{{ hero.photographer_name }}{% else %}From the League{% endif %}</span>
       {% if hero and hero.tier and hero.score %}
         <span class="hero-photograph-badge">{{ hero.tier|upper }} · {{ '%.1f'|format(hero.score) }}</span>
       {% else %}
