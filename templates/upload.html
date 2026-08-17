@@ -1,3 +1,4 @@
+{# SL-VERSION: 175.14 (Session 188, 2026-08-17 — FIX: browser Back from scorecard replayed scoring animation (bfcache restore). Added pageshow.persisted guard — redirects to /dashboard immediately on bfcache restore, never replays scoring overlay. RETAINS 175.13.) #}
 {# SL-VERSION: 175.13 (Session 188, 2026-08-17 — Advisory red line also added to location session pill (shown on 2nd+ uploads in same session). RETAINS 175.12.) #}
 {# SL-VERSION: 175.12 (Session 188, 2026-08-17 — Location field: label changed from "Current Location" to "Where was this photograph taken?"; helper text added clarifying scorecard-only use; red advisory line added directing users to Profile → Address for city advisory. RETAINS 175.11.) #}
 {# SL-VERSION: 175.11 (Session 186, 2026-08-15 — FIX: dispute form hardcoded colours replaced with CSS variables: disputeLink color:#7a0000 → var(--text-danger); disputeReason textarea border:#e53935 → var(--border-danger), font-size 14px → 16px, color:#1a1a18 → var(--text-primary), bg → var(--surface-2); disputeSubmitBtn bg:#e53935 → var(--bg-danger), color:#fff → var(--text-danger), border added, font-size 14px → 16px; JS borderColor:#e53935 → var(--border-danger). All dispute form elements now 16px, semantic variables, WCAG AA compliant. RETAINS 175.10.) #}
@@ -1869,6 +1870,18 @@
     }
   });
   obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
+
+  // ── SL-175.14: Back-button / bfcache guard ──────────────────────────────
+  // When a user presses Back from a scorecard (/image/<id>), the browser may
+  // restore this page from bfcache with the scoring overlay still active and
+  // the poll JS resuming. Detect bfcache restore via pageshow.persisted and
+  // redirect immediately to dashboard — never replay scoring animation.
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      // Page restored from bfcache — scoring already done, redirect immediately
+      window.location.replace('/dashboard');
+    }
+  });
 
 })();
 
