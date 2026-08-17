@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: 182.2-staging (Session 189, 2026-08-17 — MOBILE NAV: replaced the top hamburger with the site's standard bottom nav (base.html .sl-bottom-nav, anonymous branch: Home · Upload · Log In) so the homepage matches every other page on mobile, per founder. Removed .navtoggle button, #sl188-menu dropdown and its toggle JS. Stopped suppressing .sl-bottom-nav (base still hides it >=900px, so desktop unaffected). Removed the padding-bottom:0 override so base's page-home bottom-bar clearance applies and the footer clears the fixed bar. Hid top-nav Login <900px to avoid duplicating the bottom nav's Log In — mobile top nav is now brand + Start, which also fixes the cramped header. Desktop nav unchanged. RETAINS 182.1. #}
 {# SL-VERSION: 182.1-staging (Session 189, 2026-08-17 — FRESH HOMEPAGE. Full rebuild from SL_188M.html (approved 188M design language) as a Jinja template extending base.html. Replaces homepage v5.0 (Avenir/Leica mock). Aptos font, 188M design tokens, editorial layout. Extends base — inherits favicon, OG/Twitter share tags, cookie consent. Suppresses base top/bottom/mobile nav + base footer for body.page-home; renders 188M's own nav + dark 5-column footer inside content. Real League images wired to hero + gallery via carousel_images/recent_images (.thumb_url/.tier/.genre/.score) with gradient fallback — same route contract as v5.0, NO app.py change. Founder photo at static/img/Sreekumar.png in founder section. CTAs login-aware: anon -> register, authed -> dashboard. Locked copy verbatim incl. hero CTA "Show me what I'm missing" (founder-confirmed Session 189 over Master-Doc "Show me"). FIXES vs raw 188M: (1) mobile menu — 188M hid all nav links <=960px leaving no Login; added toggle keeping Login+Start reachable. (2) tap targets >=44px on nav, mobile menu, footer links. (3) reading text lifted to >=16px (nav links, micronote, founder credential list, footer links); only true metadata labels (eyebrows, badges, legal line) remain 12-13px per 70yr rule. Staging copy: "10 free evaluations" — production is still 3; must be checked before any production merge. RETAINS homepage v5.0. #}
 {% block title %}Shutter League — What if you could see how good you could become?{% endblock %}
 {% block meta_description %}Shutter League is photography's honest mirror — a calibrated evaluation of how you see, remembered across every photograph you make. Your first 10 evaluations are free.{% endblock %}
@@ -28,7 +29,6 @@
    avoid a double nav. Bottom padding base reserves for its
    bar is also removed since the bar is hidden. */
 body.page-home-188m .sl-top-nav,
-body.page-home-188m .sl-bottom-nav,
 body.page-home-188m .nav-mobile,
 body.page-home-188m > footer,
 body.page-home-188m .flash-container{ display:none !important; }
@@ -37,9 +37,6 @@ body.page-home-188m{
   padding:0 !important; margin:0 !important;
   font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;
   font-size:17px; line-height:1.65;
-}
-@media (max-width:899px){
-  body.page-home-188m{ padding-bottom:0 !important; }
 }
 body.page-home-188m main,
 body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:none !important; }
@@ -50,7 +47,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
 .sl188 img{display:block}
 .sl188{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 .sl188 a,.sl188 button{-webkit-tap-highlight-color:rgba(44,62,107,.18)}
-.sl188 .bigbtn,.sl188 .navstart,.sl188 .navtoggle,.sl188 .navlinks a,.sl188 .footer-col a,.sl188 .footer-bottom-links a{cursor:pointer}
+.sl188 .bigbtn,.sl188 .navstart,.sl188 .navlinks a,.sl188 .footer-col a,.sl188 .footer-bottom-links a{cursor:pointer}
 .sl188 a:focus-visible,.sl188 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 /* ── NAV ── */
@@ -75,11 +72,8 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   font-size:16px;font-weight:600;letter-spacing:.2px;
 }
 .sl188 .navlogin{color:var(--blue);font-weight:600;font-size:16px;min-height:44px;display:inline-flex;align-items:center}
-/* Mobile menu toggle — hidden on desktop */
-.sl188 .navtoggle{display:none;background:transparent;border:1px solid var(--line);border-radius:2px;
-  width:44px;height:44px;align-items:center;justify-content:center;color:var(--blue)}
-.sl188 .navtoggle svg{width:22px;height:22px}
-.sl188 #sl188-menu{display:none}
+/* Below 900px the site's bottom nav appears (Home · Upload · Log In); hide the top Login to avoid duplication */
+@media (max-width: 899px){ .sl188 .navlogin{display:none} }
 
 /* ── HERO ── */
 .sl188 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 76px);min-height:calc(100dvh - 76px);align-items:stretch}
@@ -208,12 +202,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
 @media (max-width: 960px){
   .sl188 .nav{padding:0 22px}
   .sl188 .byline{display:none}
-  .sl188 .navlinks .navsection{display:none}      /* section links collapse into menu */
-  .sl188 .navtoggle{display:inline-flex}
-  .sl188 #sl188-menu.open{display:block;position:fixed;top:76px;left:0;right:0;z-index:49;
-    background:var(--cream);border-bottom:1px solid var(--line);box-shadow:0 8px 24px rgba(15,31,61,.12)}
-  .sl188 #sl188-menu.open a{display:flex;align-items:center;min-height:52px;padding:0 22px;
-    font-size:17px;color:var(--blue);border-top:1px solid var(--line)}
+  .sl188 .navlinks .navsection{display:none}      /* sections reached by scroll; primary actions in bottom nav */
   .sl188 .hero{grid-template-columns:1fr}
   .sl188 .hero-photograph{height:56vw;min-height:280px}
   .sl188 .hero-text{padding:44px 24px 64px}
@@ -281,16 +270,8 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
       <a href="{{ url_for('login') }}" class="navlogin">Login</a>
       <a href="{{ url_for('register') }}" class="navstart">Start</a>
     {% endif %}
-    <button class="navtoggle" aria-label="Menu" aria-expanded="false" onclick="sl188Menu(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
   </div>
 </nav>
-<div id="sl188-menu">
-  <a href="#why">Why</a>
-  <a href="#league">The League</a>
-  <a href="#about">About</a>
-</div>
 
 <!-- ═══════════════ HERO ═══════════════ -->
 <section class="hero">
@@ -494,19 +475,4 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
 
 </div><!-- .sl188 -->
 
-<script>
-function sl188Menu(btn){
-  var m = document.getElementById('sl188-menu');
-  var open = m.classList.toggle('open');
-  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-}
-document.querySelectorAll('#sl188-menu a').forEach(function(a){
-  a.addEventListener('click', function(){
-    var m = document.getElementById('sl188-menu');
-    m.classList.remove('open');
-    var t = document.querySelector('.sl188 .navtoggle');
-    if(t) t.setAttribute('aria-expanded','false');
-  });
-});
-</script>
 {% endblock %}
