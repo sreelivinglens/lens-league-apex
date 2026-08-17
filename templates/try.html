@@ -1,3 +1,4 @@
+{# SL-VERSION: 172.4 (Session 188, 2026-08-17 — KYC fixes: (1) eval counter "of 3" → uses evals_limit variable (10 on staging); (2) "Depth Dimension Index (DDI) Evaluation" → "Photography Evaluation"; (3) FAQ question DDI reference removed; (4) dimension abbreviations DoD/VD/DM/WF/AQ removed from user-facing dim-abbr spans. RETAINS 172.3.) #}
 {# SL-VERSION: 172.3 #}
 {% extends "base.html" %}
 {% block title %}Your Evaluation — Shutter League{% endblock %}
@@ -376,14 +377,14 @@
     {% for i in range(3) %}
       <div class="eval-pip {% if i < evals_used %}used{% elif i == evals_used %}active{% endif %}"></div>
     {% endfor %}
-    <span class="eval-counter-label">Evaluation {{ evals_used }} of 3</span>
+    <span class="eval-counter-label">Evaluation {{ evals_used }} of {{ evals_limit }}</span>
   </div>
 
   {# ── RESULT CARD ── #}
   <div class="result-card" id="resultCard">
 
     <div class="result-header-band">
-      <div class="result-eval-label">Depth Dimension Index (DDI) Evaluation</div>
+      <div class="result-eval-label">Photography Evaluation</div>
       <div class="result-score">
         {{ "%.2f"|format(score) }}<span class="result-score-denom"> /10</span>
       </div>
@@ -406,15 +407,15 @@
     <div class="dimensions-section">
       <div class="dimensions-title">Five Dimensions — Weighted for Your Interest Area</div>
       {% set dims_list = [
-        ('Depth of Difficulty', 'DoD', dod),
-        ('Visual Disruption',   'VD',  vd),
-        ('Timing &amp; Moment', 'DM',  dm),
-        ('Emotional Impact',    'WF',  wf),
-        ('Affective Quotient',  'AQ',  aq),
+        ('Depth of Difficulty', '', dod),
+        ('Visual Disruption',   '', vd),
+        ('Timing &amp; Moment', '', dm),
+        ('Emotional Impact',    '', wf),
+        ('Affective Quotient',  '', aq),
       ] %}
       {% for label, abbr, val in dims_list %}
       <div class="dimension-row">
-        <div class="dim-label">{{ label|safe }}<span class="dim-abbr">{{ abbr }}</span></div>
+        <div class="dim-label">{{ label|safe }}{% if abbr %}<span class="dim-abbr">{{ abbr }}</span>{% endif %}</div>
         <div class="dim-bar-wrap">
           <div class="dim-bar" style="width: {{ ((val or 0) / 10 * 100)|round(1) }}%"></div>
         </div>
@@ -517,7 +518,7 @@
   <div class="standing-advisory">
     <strong>About the Official Standing</strong>
     <p style="margin:0;font-size:16px;line-height:1.7;color:var(--sl-black);">
-      You are on evaluation <strong style="color:var(--ind);">{{ evals_used }}</strong> of 3.
+      You are on evaluation <strong style="color:var(--ind);">{{ evals_used }}</strong> of {{ evals_limit }}.
       The Official Standing and Annual Excellence Award (AEA) open on 1 September 2026.
       To be eligible, you need a minimum of 6 evaluated images across any 3 calendar months this year.
       Three free evaluations won't get you there — but they tell you whether your eye is already
@@ -559,13 +560,13 @@
     </div>
 
     <div class="faq-item">
-      <button class="faq-q">What does the Depth Dimension Index (DDI) measure?<span class="faq-q-icon">+</span></button>
+      <button class="faq-q">What does the evaluation measure?<span class="faq-q-icon">+</span></button>
       <div class="faq-a">
-        <p><strong>Depth of Difficulty (DoD)</strong> — How hard was it to make this photograph? Right time, right place, right conditions.</p>
-        <p><strong>Visual Disruption (VD)</strong> — Does this image stop the viewer? Compositional decisions that break expectation.</p>
-        <p><strong>Timing &amp; Moment (DM)</strong> — Was the trigger pulled at the right moment? Behaviour, expression, peak action.</p>
-        <p><strong>Emotional Impact (WF)</strong> — Does this image make you feel something? Emotional resonance, awe, curiosity.</p>
-        <p><strong>Affective Quotient (AQ)</strong> — Is there soul in this frame? The intangible quality that makes it memorable.</p>
+        <p><strong>Depth of Difficulty</strong> — How hard was it to make this photograph? Right time, right place, right conditions.</p>
+        <p><strong>Visual Disruption</strong> — Does this image stop the viewer? Compositional decisions that break expectation.</p>
+        <p><strong>Timing &amp; Moment</strong> — Was the trigger pulled at the right moment? Behaviour, expression, peak action.</p>
+        <p><strong>Emotional Impact</strong> — Does this image make you feel something? Emotional resonance, awe, curiosity.</p>
+        <p><strong>Affective Quotient</strong> — Is there soul in this frame? The intangible quality that makes it memorable.</p>
       </div>
     </div>
 
