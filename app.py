@@ -1,3 +1,4 @@
+# SL-VERSION: 181.27-staging (Session 189, 2026-08-17 — index() hero carousel query: changed tier filter to score>=8.5, added thumb_url!=None requirement, removed landscape filter and unchecked fallback. Aligns homepage hero with founder's "any image scoring 8.5 or above, with a real thumbnail." See Session 189 for rationale and risk discussion. RETAINS 181.26-staging.)
 # SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — no longer a fixed verbatim template. Replaced MANDATORY OPENING SENTENCE (single fixed structure, reads as bot) with HISTORY OPENING INSTRUCTION giving Haiku the raw materials (photograph names, consistent strength, prior pattern) and instructing it to write in Sherpa voice with varied structure each time. Forbidden phrases: "consistent strength", "that thread runs through". Example registers provided. Retains 181.25-staging.)
 # SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE on the images row. ORM Image() constructor cannot set unmapped columns. Every Haiku image was saved with is_haiku_try=FALSE, making all world-separation filters (Recent Work, My Gallery, Standings) blind to them. Fixed: raw SQL UPDATE images SET is_haiku_try=TRUE WHERE id=:iid runs immediately after insert commit in try_upload. DB backfill required: UPDATE images SET is_haiku_try=TRUE WHERE audit_json::text LIKE '%haiku_try%' AND is_haiku_try IS NOT TRUE. Retains 181.24-staging.)
 # SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. Added AND i.is_haiku_try IS NOT TRUE to _base_q in recent_work route. Haiku images must never appear in the paid community feed. Retains 181.23-staging.)
@@ -3472,38 +3473,15 @@ def index():
                     break
         # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
         # Exclude portrait-heavy genres so hero image renders as landscape in 4/3 container
-        # Hero carousel — Master/Grandmaster/Legend, score >= 8.5
-        # Exclude portrait genres AND mentor profiles from appearing as hero
-        # SL-180.2: genre-based exclusion removed entirely.
-        # Orientation must be determined from actual pixel dimensions, not
-        # guessed from genre. The _is_landscape() filter below already does
-        # this correctly (w > h and w >= 800). Excluding genres discarded
-        # high-scoring work for no reason — on staging both 8.5+ images were
-        # Creative, so the carousel returned empty and the hero rendered as a
-        # dark gradient, blanking every non-dashboard page. A 9.0 Macro,
-        # Wildlife or Street frame is equally valid as a hero if it is landscape.
-        _mentor_user_ids = db.session.execute(
-            db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
-        ).scalars().all()
+        # Hero carousel — any image scoring 8.5 or above, with a real thumbnail 
         _carousel_q = Image.query.filter(
-            Image.status=='scored', Image.score!=None,
+            Image.status=='scored', Image.score!=None, Image.score>=8.5,
             Image.is_public==True, Image.is_flagged==False,
-            Image.tier.in_(['Legend','Grandmaster','Master']),
-            Image.score>=8.5
+            Image.thumb_url!=None
         )
         if _mentor_user_ids:
             _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
-        _raw_carousel = _carousel_q.order_by(db.func.random()).limit(24).all()
-        # Filter to landscape images using whichever dimension fields are populated
-        def _is_landscape(img):
-            w = img.width or img.exif_original_width
-            h = img.height or img.exif_original_height
-            if w and h:
-                return w > h and w >= 800
-            return True  # include if no dimension data
-        carousel_images = [img for img in _raw_carousel if _is_landscape(img)][:12]
-        if not carousel_images:
-            carousel_images = _raw_carousel[:12]
+        carousel_images = _carousel_q.order_by(db.func.random()).limit(12).all()
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
