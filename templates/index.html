@@ -1,829 +1,512 @@
 {% extends "base.html" %}
-{% block title %}Shutter League — Know if you're getting better.{% endblock %}
-{% block meta_description %}Shutter League is an AI-powered photography skill assessment and training platform. Submit your photograph, receive a structured evaluation across five dimensions, and track your improvement over time. Separate leagues for camera and smartphone photographers.{% endblock %}
+{# SL-VERSION: 182.1-staging (Session 189, 2026-08-17 — FRESH HOMEPAGE. Full rebuild from SL_188M.html (approved 188M design language) as a Jinja template extending base.html. Replaces homepage v5.0 (Avenir/Leica mock). Aptos font, 188M design tokens, editorial layout. Extends base — inherits favicon, OG/Twitter share tags, cookie consent. Suppresses base top/bottom/mobile nav + base footer for body.page-home; renders 188M's own nav + dark 5-column footer inside content. Real League images wired to hero + gallery via carousel_images/recent_images (.thumb_url/.tier/.genre/.score) with gradient fallback — same route contract as v5.0, NO app.py change. Founder photo at static/img/Sreekumar.png in founder section. CTAs login-aware: anon -> register, authed -> dashboard. Locked copy verbatim incl. hero CTA "Show me what I'm missing" (founder-confirmed Session 189 over Master-Doc "Show me"). FIXES vs raw 188M: (1) mobile menu — 188M hid all nav links <=960px leaving no Login; added toggle keeping Login+Start reachable. (2) tap targets >=44px on nav, mobile menu, footer links. (3) reading text lifted to >=16px (nav links, micronote, founder credential list, footer links); only true metadata labels (eyebrows, badges, legal line) remain 12-13px per 70yr rule. Staging copy: "10 free evaluations" — production is still 3; must be checked before any production merge. RETAINS homepage v5.0. #}
+{% block title %}Shutter League — What if you could see how good you could become?{% endblock %}
+{% block meta_description %}Shutter League is photography's honest mirror — a calibrated evaluation of how you see, remembered across every photograph you make. Your first 10 evaluations are free.{% endblock %}
 {% block canonical %}https://shutterleague.com{% endblock %}
-{% block og_title %}Shutter League — Know if you're getting better.{% endblock %}
-{% block og_description %}A platform that remembers every image you make — and guides what you make next. Photography's independent evolution platform. Camera League and Mobile League.{% endblock %}
+{% block og_title %}What if you could see how good you could become? — Shutter League{% endblock %}
+{% block og_description %}An honest evaluation of your photography that remembers every image and shows you what to work on next. Making Images Matter.{% endblock %}
 {% block og_url %}https://shutterleague.com{% endblock %}
 
-{% block extra_head %}
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="keywords" content="photography assessment, photography training, AI photo evaluation, photography skill development, photography platform India, photo critique, photography improvement, camera league, mobile photography">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  "name": "Shutter League",
-  "alternateName": "Shutter League Photography Assessment Platform",
-  "url": "https://shutterleague.com",
-  "logo": "https://shutterleague.com/static/img/sl-logo.png",
-  "description": "Shutter League is an AI-powered photography skill assessment and training platform. Photographers submit images for structured evaluation across five dimensions — Depth of Difficulty, Disruption, Decisive Moment, Wonder, and Affective Quality — and receive actionable feedback to track improvement over time.",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Bengaluru",
-    "addressRegion": "Karnataka",
-    "addressCountry": "IN"
-  },
-  "sameAs": [
-    "https://www.instagram.com/shutterleague"
-  ],
-  "offers": [
-    {
-      "@type": "Offer",
-      "name": "Camera League — Monthly",
-      "description": "Monthly photography skill assessment subscription for DSLR and mirrorless camera photographers. Includes AI-powered image evaluations, mission assignments, peer evaluation, and platform standings.",
-      "price": "200",
-      "priceCurrency": "INR",
-      "billingDuration": "P1M",
-      "category": "Photography Training Subscription"
-    },
-    {
-      "@type": "Offer",
-      "name": "Mobile League — Monthly",
-      "description": "Monthly photography skill assessment subscription for smartphone photographers. Calibrated scoring for mobile photography with separate league standings.",
-      "price": "200",
-      "priceCurrency": "INR",
-      "billingDuration": "P1M",
-      "category": "Photography Training Subscription"
-    }
-  ],
-  "hasOfferCatalog": {
-    "@type": "OfferCatalog",
-    "name": "Photography Skill Assessment Plans",
-    "itemListElement": [
-      {
-        "@type": "OfferCatalog",
-        "name": "Camera League",
-        "description": "Photography assessment and training for DSLR, mirrorless, and medium format photographers"
-      },
-      {
-        "@type": "OfferCatalog",
-        "name": "Mobile League",
-        "description": "Photography assessment and training for smartphone photographers"
-      }
-    ]
-  }
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Shutter League",
-  "url": "https://shutterleague.com",
-  "description": "Photography Assessment and Evolution Platform. AI-powered skill evaluation for photographers.",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://shutterleague.com/recent-work?q={search_term_string}",
-    "query-input": "required name=search_term_string"
-  }
-}
-</script>
-{% endblock %}
+{% block body_class %}page-home page-home-188m{% endblock %}
 
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════
-   SHUTTER LEAGUE — HOMEPAGE v5.0
-   Design tokens: #F6F2E9 bg · #0F2A22 dark · #D6A428 gold
-   Avenir Next · Leica × Apple × MasterClass
-   Built from SL_Homepage_Mock.html — single source of truth
+   SHUTTER LEAGUE — HOMEPAGE 182.1-staging
+   Source of truth: SL_188M.html (approved 188M design)
+   Design tokens locked (Founding Master Document, Part 9)
 ═══════════════════════════════════════════════════════ */
 
-/* ── Reset main container for full-bleed hero ── */
-body.page-home main,
-body.page-home #main {
-  padding: 0 !important;
-  margin: 0 !important;
-  max-width: none !important;
-}
-body.page-home {
-  padding-top: 0 !important;
+:root{
+  --cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;--gold:#D4A428;
+  --ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;--dark:#0F1F3D;
 }
 
-/* ── HERO — full viewport, image bleeds edge to edge ── */
-.sl-hero {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  min-height: -webkit-fill-available;
-  min-height: 600px;
-  overflow: hidden;
+/* ── Suppress base chrome on the 188M homepage ──
+   188M carries its own nav + dark footer, so base's top nav,
+   bottom bar, mobile nav and base footer are hidden here to
+   avoid a double nav. Bottom padding base reserves for its
+   bar is also removed since the bar is hidden. */
+body.page-home-188m .sl-top-nav,
+body.page-home-188m .sl-bottom-nav,
+body.page-home-188m .nav-mobile,
+body.page-home-188m > footer,
+body.page-home-188m .flash-container{ display:none !important; }
+body.page-home-188m{
+  background:var(--cream) !important; color:var(--ink);
+  padding:0 !important; margin:0 !important;
+  font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;
+  font-size:17px; line-height:1.65;
 }
+@media (max-width:899px){
+  body.page-home-188m{ padding-bottom:0 !important; }
+}
+body.page-home-188m main,
+body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:none !important; }
 
-/* The <a> that wraps the hero (links to photo detail) */
-.sl-hero-link {
-  display: block;
-  position: absolute;
-  inset: 0;
-  text-decoration: none;
-  color: inherit;
-  z-index: 0;
-}
+.sl188 *{box-sizing:border-box;margin:0;padding:0}
+.sl188 a{text-decoration:none;color:inherit}
+.sl188 button{font:inherit;cursor:pointer}
+.sl188 img{display:block}
+.sl188{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.sl188 a,.sl188 button{-webkit-tap-highlight-color:rgba(44,62,107,.18)}
+.sl188 .bigbtn,.sl188 .navstart,.sl188 .navtoggle,.sl188 .navlinks a,.sl188 .footer-col a,.sl188 .footer-bottom-links a{cursor:pointer}
+.sl188 a:focus-visible,.sl188 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
-.sl-hero-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 20%;
-  display: block;
-  z-index: 1;
+/* ── NAV ── */
+.sl188 .nav{
+  height:76px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;border-bottom:1px solid var(--line);
+  background:var(--cream);position:sticky;top:0;z-index:50;
 }
+.sl188 .brand{display:flex;align-items:center;gap:11px;color:var(--blue)}
+.sl188 .crest{
+  width:30px;height:30px;border:1.5px solid currentColor;border-radius:50%;
+  display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0;letter-spacing:.5px;
+}
+.sl188 .brandword{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.sl188 .byline{font-size:13px;color:var(--muted);margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
+.sl188 .navlinks{display:flex;gap:24px;align-items:center;color:var(--muted);font-size:16px}
+.sl188 .navlinks a{transition:color .15s;display:inline-flex;align-items:center;min-height:44px}
+.sl188 .navlinks a:hover{color:var(--blue)}
+.sl188 .navstart{
+  background:var(--blue);color:#fff;border:none;border-radius:2px;
+  padding:0 22px;min-height:44px;display:inline-flex;align-items:center;
+  font-size:16px;font-weight:600;letter-spacing:.2px;
+}
+.sl188 .navlogin{color:var(--blue);font-weight:600;font-size:16px;min-height:44px;display:inline-flex;align-items:center}
+/* Mobile menu toggle — hidden on desktop */
+.sl188 .navtoggle{display:none;background:transparent;border:1px solid var(--line);border-radius:2px;
+  width:44px;height:44px;align-items:center;justify-content:center;color:var(--blue)}
+.sl188 .navtoggle svg{width:22px;height:22px}
+.sl188 #sl188-menu{display:none}
 
-/* Bottom-heavy + left-heavy gradient so copy always reads */
-.sl-hero-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background:
-    linear-gradient(
-      to top,
-      rgba(0,0,0,0.78) 0%,
-      rgba(0,0,0,0.48) 28%,
-      rgba(0,0,0,0.10) 55%,
-      transparent 75%
-    ),
-    linear-gradient(
-      to right,
-      rgba(0,0,0,0.68) 0%,
-      rgba(0,0,0,0.40) 30%,
-      rgba(0,0,0,0.10) 55%,
-      transparent 75%
-    );
+/* ── HERO ── */
+.sl188 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 76px);min-height:calc(100dvh - 76px);align-items:stretch}
+.sl188 .hero-photograph{background:var(--dark);position:relative;overflow:hidden;min-height:560px}
+.sl188 .hero-photograph-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl188 .hero-photograph-fill{
+  position:absolute;inset:0;
+  background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%);
 }
+.sl188 .hero-photograph-fill::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 70% at 30% 40%,rgba(212,164,40,.07) 0%,transparent 70%),
+             radial-gradient(ellipse 40% 50% at 70% 60%,rgba(255,255,255,.03) 0%,transparent 60%);
+}
+.sl188 .hero-photograph-meta{
+  position:absolute;left:0;right:0;bottom:0;padding:20px 24px;z-index:2;
+  background:linear-gradient(to top,rgba(6,14,28,.9) 0%,transparent 100%);
+  display:flex;justify-content:space-between;align-items:flex-end;
+}
+.sl188 .hero-photograph-caption{font-size:12px;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase}
+.sl188 .hero-photograph-badge{
+  background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.5);
+  color:var(--gold);font-size:13px;font-weight:700;padding:6px 14px;letter-spacing:.5px;
+}
+.sl188 .hero-text{display:flex;flex-direction:column;justify-content:center;padding:8vh 7vw 8vh 6vw}
+.sl188 .kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:32px;font-weight:600}
+.sl188 .hero-h1{font-size:clamp(52px,6.5vw,88px);line-height:.92;letter-spacing:-.065em;color:var(--blue);font-weight:600;margin-bottom:32px;text-shadow: none}
+.sl188 .hero-lead{font-size:20px;line-height:1.65;color:var(--muted);font-style:italic;margin-bottom:14px;max-width:460px}
+.sl188 .hero-solve{font-size:22px;font-weight:600;color:var(--blue);margin-bottom:40px}
+.sl188 .bigbtn{
+  background:var(--blue);color:#fff;border:none;padding:17px 28px;min-height:44px;
+  font-size:17px;font-weight:600;letter-spacing:.2px;border-radius:2px;display:inline-block;
+}
+.sl188 .micronote{font-size:16px;color:var(--muted);margin-top:14px}
 
-/* All copy and UI elements sit above overlay */
-.sl-hero-content {
-  position: absolute;
-  bottom: 48px;
-  left: 0;
-  z-index: 10;
-  padding: 0 48px;
-  max-width: 500px;
-  pointer-events: none; /* let clicks pass through to the link */
-}
-.sl-hero-content a,
-.sl-hero-content button {
-  pointer-events: auto;
-}
+/* ── SECTIONS ── */
+.sl188 .section{padding:13vw 9vw;border-top:1px solid var(--line)}
+.sl188 .statement{font-size:clamp(44px,6vw,80px);line-height:.98;letter-spacing:-.06em;color:var(--blue);font-weight:600;max-width:960px}
+.sl188 .statement em{font-style:normal;color:var(--ink)}
+.sl188 .section-body{font-size:19px;line-height:1.8;color:var(--muted);max-width:600px;margin-top:28px}
 
-.sl-hero-h1 {
-  font-size: 38px;
-  font-weight: 600;
-  color: #F6F2E9;
-  line-height: 1.5;
-  letter-spacing: -0.5px;
-  margin-bottom: 10px;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.65), 0 1px 4px rgba(0,0,0,0.5);
-}
+/* ── MOMENT ── */
+.sl188 .moment-wrap{display:grid;grid-template-columns:.55fr 1.45fr;gap:7vw;align-items:center;max-width:1040px;margin:0 auto}
+.sl188 .moment-img{aspect-ratio:3/4;background:linear-gradient(155deg,#1a2030 0%,#2a3540 40%,#1a2535 100%);position:relative;overflow:hidden}
+.sl188 .moment-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl188 .moment-img::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 40% 50%,rgba(212,164,40,.06) 0%,transparent 70%)}
+.sl188 .moment-kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:24px;font-weight:600}
+.sl188 .moment-copy p{font-size:22px;line-height:1.7;color:var(--muted);margin-bottom:22px}
+.sl188 .moment-copy p:last-child{margin-bottom:0}
+.sl188 .moment-copy p strong{color:var(--ink);font-weight:600}
 
-.sl-hero-tagline {
-  font-size: 15px;
-  font-weight: 400;
-  color: #D6A428;
-  margin-bottom: 10px;
-  letter-spacing: 0.2px;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
-}
+/* ── FOUNDER ── */
+.sl188 .founder{padding:12vw 9vw;border-top:1px solid var(--line);background:var(--paper)}
+.sl188 .founder-inner{display:grid;grid-template-columns:.8fr 1.2fr;gap:8vw;align-items:start;max-width:1040px;margin:0 auto}
+.sl188 .founder-img{position:sticky;top:100px;aspect-ratio:3/4;background:linear-gradient(150deg,#1a2030 0%,#2d3848 50%,#1a2535 100%);position:relative;overflow:hidden}
+.sl188 .founder-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl188 .founder-img-cap{position:absolute;left:14px;bottom:14px;font-size:12px;color:rgba(255,255,255,.65);letter-spacing:1px;text-transform:uppercase;z-index:2}
+.sl188 .founder-kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:24px;font-weight:600}
+.sl188 .founder-copy p{font-size:19px;line-height:1.8;color:var(--muted);margin-bottom:18px}
+.sl188 .founder-copy p strong{color:var(--ink);font-weight:600}
+.sl188 .founder-cred{margin-top:28px;padding-top:22px;border-top:1px solid var(--line);font-size:16px;color:var(--muted);line-height:2.1}
+.sl188 .founder-cred b{color:var(--blue);font-weight:600}
 
-.sl-hero-divider {
-  width: 30px;
-  height: 1px;
-  background: rgba(214,164,40,0.5);
-  margin-bottom: 10px;
-}
+/* ── PULL DARK ── */
+.sl188 .pull{background:var(--dark);padding:14vw 9vw}
+.sl188 .goldbar{width:52px;height:5px;background:var(--gold);margin-bottom:32px}
+.sl188 .pull .statement{color:#fff}
+.sl188 .pull .section-body{color:rgba(255,255,255,.62)}
+.sl188 .progress-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:72px;border-top:1px solid rgba(255,255,255,.1)}
+.sl188 .progress-item{padding:28px 20px 0;border-right:1px solid rgba(255,255,255,.08)}
+.sl188 .progress-item:last-child{border:0}
+.sl188 .progress-label{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:700}
+.sl188 .progress-text{font-size:18px;line-height:1.6;color:rgba(255,255,255,.85)}
 
-.sl-hero-arc {
-  font-size: 15px;
-  font-weight: 400;
-  color: rgba(246,242,233,0.82);
-  line-height: 1.55;
-  margin-bottom: 10px;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-}
-
-.sl-hero-philosophy {
-  font-size: 17px;
-  font-weight: 400;
-  color: #F6F2E9;
-  letter-spacing: -0.1px;
-  margin-bottom: 22px;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-}
-
-.sl-hero-below-cta {
-  font-size: 13px;
-  color: rgba(246,242,233,0.50);
-  line-height: 1.6;
-  margin-bottom: 14px;
-}
-
-.sl-hero-ctas {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.sl-cta-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #D6A428;
-  color: #111111;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 0 24px;
-  height: 48px;
-  border-radius: 9px;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-.sl-cta-primary:hover { background: #C89418; }
-
-.sl-cta-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: transparent;
-  color: #F6F2E9;
-  font-size: 15px;
-  font-weight: 400;
-  padding: 0 22px;
-  height: 48px;
-  border-radius: 9px;
-  border: 1.5px solid rgba(246,242,233,0.4);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: border-color 0.2s;
-}
-.sl-cta-secondary:hover { border-color: rgba(246,242,233,0.8); }
-
-/* Mentor avatars strip — bottom of hero copy */
-.sl-hero-mentors {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.sl-hero-mentor-avatars {
-  display: flex;
-}
-.sl-hero-mentor-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid #F6F2E9;
-  background: #2C4A3A;
-  margin-left: -9px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.sl-hero-mentor-avatar:first-child { margin-left: 0; }
-.sl-hero-mentor-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.sl-hero-mentor-text {
-  font-size: 13px;
-  color: rgba(246,242,233,0.65);
-}
-
-/* Photo credit — bottom right */
-.sl-hero-credit {
-  position: absolute;
-  bottom: 20px;
-  right: 24px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  pointer-events: none;
-}
-.sl-hero-credit-score {
-  font-size: 14px;
-  font-weight: 600;
-  color: #D6A428;
-}
-.sl-hero-credit-sep {
-  font-size: 14px;
-  color: rgba(255,255,255,0.55);
-}
-.sl-hero-credit-tier {
-  font-size: 14px;
-  color: rgba(255,255,255,0.5);
-}
-.sl-hero-credit-by {
-  font-size: 14px;
-  color: rgba(255,255,255,0.65);
-}
-
-/* Scroll cue */
-.sl-hero-scroll-cue {
-  position: absolute;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  opacity: 0.4;
-  animation: sl-nudge 2s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes sl-nudge {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%       { transform: translateX(-50%) translateY(5px); }
-}
-
-/* ── QUOTE ── */
-.sl-quote-strip {
-  background: #F6F2E9;
-  padding: 64px 48px 48px;
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  max-width: 720px;
-  margin: 0 auto;
-}
-.sl-quote-mark {
-  font-size: 48px;
-  color: #D6A428;
-  line-height: 1;
-  font-family: Georgia, serif;
-  flex-shrink: 0;
-  margin-top: -6px;
-  opacity: 0.7;
-}
-.sl-quote-text {
-  font-size: 22px;
-  font-style: italic;
-  font-weight: 300;
-  color: #2A2A2A;
-  line-height: 1.55;
-  margin-bottom: 10px;
-}
-.sl-quote-author {
-  font-size: 14px;
-  color: #B68C2C;
-  font-weight: 400;
-}
-
-/* ── BELIEF ── */
-.sl-belief {
-  text-align: center;
-  padding: 16px 48px 52px;
-  background: #F6F2E9;
-}
-.sl-belief-headline {
-  font-size: 38px;
-  font-weight: 500;
-  color: #1A1A1A;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-.sl-belief-sub {
-  font-size: 22px;
-  color: #B68C2C;
-  font-weight: 400;
-  letter-spacing: 3px;
-}
+/* ── REVEAL ── */
+.sl188 .reveal{padding:13vw 9vw;border-top:1px solid var(--line)}
+.sl188 .mahesh-wrap{max-width:800px;margin:64px auto 0;border-left:5px solid var(--gold);padding-left:32px}
+.sl188 .mahesh-q{font-size:26px;line-height:1.5;color:var(--ink);font-style:italic;margin-bottom:16px}
+.sl188 .mahesh-attr{font-size:16px;color:var(--muted);line-height:1.9}
+.sl188 .mahesh-attr b{color:var(--blue);font-weight:600}
+.sl188 .calibration{max-width:800px;margin:24px auto 0;padding-left:37px;font-size:16px;color:var(--muted);line-height:1.75}
 
 /* ── GALLERY ── */
-.sl-gallery-section {
-  padding: 0 48px 56px;
-  background: #F6F2E9;
-}
-.sl-gallery-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.sl-gallery-label {
-  font-size: 14px;
-  color: #9A8A6A;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-.sl-gallery-link {
-  font-size: 14px;
-  color: #1D2D22;
-  text-decoration: none;
-  font-weight: 500;
-}
-.sl-gallery-link:hover { color: #D6A428; }
+.sl188 .gallery{padding:11vw 6vw;border-top:1px solid var(--line)}
+.sl188 .gallery-head{display:flex;justify-content:space-between;align-items:flex-end;max-width:1200px;margin:0 auto 44px;gap:24px}
+.sl188 .gallery-h2{font-size:clamp(40px,5vw,60px);letter-spacing:-.05em;color:var(--blue);font-weight:600}
+.sl188 .gallery-sub{font-size:16px;color:var(--muted);max-width:280px;line-height:1.7}
+.sl188 .photos{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.6fr .9fr .9fr;grid-template-rows:240px 240px;gap:6px}
+.sl188 .ph{position:relative;overflow:hidden}
+.sl188 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl188 .ph:nth-child(1){grid-row:1/3;background:linear-gradient(155deg,#1a2530 0%,#2a3540 50%,#0f1820 100%)}
+.sl188 .ph:nth-child(2){background:linear-gradient(135deg,#2a3020 0%,#1a2015 100%)}
+.sl188 .ph:nth-child(3){background:linear-gradient(135deg,#301a20 0%,#200f15 100%)}
+.sl188 .ph:nth-child(4){background:linear-gradient(135deg,#1a2530 0%,#0f1820 100%)}
+.sl188 .ph:nth-child(5){background:linear-gradient(135deg,#2a2515 0%,#1a1808 100%)}
+.sl188 .ph::before{content:'';position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 60% 60% at 40% 40%,rgba(255,255,255,.04) 0%,transparent 70%)}
+.sl188 .ph-badge{position:absolute;left:14px;bottom:14px;z-index:2;background:rgba(6,14,28,.85);color:var(--gold);font-size:13px;font-weight:700;padding:7px 12px;letter-spacing:.5px}
+.sl188 .aea-strip{max-width:1200px;margin:28px auto 0;padding:22px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.sl188 .aea-strip p{font-size:16px;color:var(--muted);max-width:580px;line-height:1.7}
+.sl188 .aea-strip p strong{color:var(--blue);font-weight:600}
+.sl188 .aea-date{font-size:16px;color:var(--muted);white-space:nowrap}
 
-.sl-gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 16px;
-}
-.sl-gallery-item {
-  height: 200px;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  display: block;
-  text-decoration: none;
-  background: #E0D8C8;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.sl-gallery-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
-}
-.sl-gallery-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s ease;
-}
-.sl-gallery-item:hover img { transform: scale(1.04); }
-.sl-gallery-item-score {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  background: rgba(0,0,0,0.60);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 5px;
-}
+/* ── END CTA ── */
+.sl188 .end{padding:16vw 9vw;text-align:center;border-top:1px solid var(--line)}
+.sl188 .end-h2{font-size:clamp(48px,6.5vw,84px);line-height:.95;letter-spacing:-.065em;color:var(--blue);font-weight:600;max-width:860px;margin:0 auto 20px}
+.sl188 .end-sub{font-size:19px;color:var(--muted);margin-bottom:36px}
 
-/* ── MOBILE — hero redesign ── */
-/* On mobile: hide desktop full-bleed hero, show content-first layout */
-.sl-mob-hero { display: none; }
+/* ── FOOTER (dark, 5-column) ── */
+.sl188 .footer{background:var(--dark);padding:56px 48px 28px}
+.sl188 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sl188 .footer-brand .brand{color:#fff;margin-bottom:12px}
+.sl188 .footer-brand .crest{border-color:rgba(255,255,255,.3);color:var(--gold)}
+.sl188 .footer-brand .brandword{font-size:12px;letter-spacing:2px;color:#fff}
+.sl188 .footer-tagline{font-size:16px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:16px}
+.sl188 .footer-email{font-size:16px;color:rgba(255,255,255,.6)}
+.sl188 .footer-email a{color:var(--gold)}
+.sl188 .footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px}
+.sl188 .footer-col a{display:flex;align-items:center;min-height:44px;color:rgba(255,255,255,.62);font-size:16px;transition:color .15s}
+.sl188 .footer-col a:hover{color:#fff}
+.sl188 .footer-bottom{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:rgba(255,255,255,.4)}
+.sl188 .footer-bottom-links{display:flex;gap:20px}
+.sl188 .footer-bottom-links a{color:rgba(255,255,255,.4);font-size:13px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
+.sl188 .footer-bottom-links a:hover{color:rgba(255,255,255,.8)}
 
-@media (max-width: 768px) {
-  /* Hide desktop hero */
-  .sl-hero { display: none !important; }
-
-  /* Show mobile hero */
-  .sl-mob-hero {
-    display: block;
-    background: #F6F2E9;
-  }
-
-  /* Top nav on mobile uses the base.html nav which is already on the page */
-  /* Mobile hero copy area */
-  .sl-mob-copy {
-    padding: calc(68px + env(safe-area-inset-top, 0px) + 20px) 20px 0;
-    background: #F6F2E9;
-  }
-  .sl-mob-h1 {
-    font-size: 36px;
-    font-weight: 700;
-    color: #1A1A18;
-    line-height: 1.5;
-    letter-spacing: -1px;
-    margin-bottom: 12px;
-  }
-  .sl-mob-tagline {
-    font-size: 15px;
-    color: #6B6B6B;
-    line-height: 1.5;
-    margin-bottom: 10px;
-  }
-  .sl-mob-philosophy {
-    font-size: 18px;
-    font-weight: 600;
-    color: #A37B2C;
-    margin-bottom: 20px;
-  }
-  /* Hero image card */
-  .sl-mob-imgcard {
-    margin: 0 20px;
-    border-radius: 16px;
-    overflow: hidden;
-    aspect-ratio: 4/3;
-    background: #1A2A1A;
-    margin-bottom: 6px;
-  }
-  .sl-mob-imgcard img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .sl-mob-imgcredit {
-    font-size: 14px;
-    color: #8A7A5A;
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 20px 16px;
-  }
-  /* CTAs */
-  .sl-mob-ctas {
-    padding: 0 20px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: #F6F2E9;
-  }
-  .sl-mob-cta-primary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: #D6A428;
-    color: #111;
-    font-size: 16px;
-    font-weight: 700;
-    height: 56px;
-    border-radius: 12px;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .sl-mob-cta-secondary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    color: #1A1A18;
-    font-size: 16px;
-    font-weight: 500;
-    height: 52px;
-    border-radius: 12px;
-    border: 1.5px solid #C8C0A8;
-    text-decoration: none;
-  }
-  /* Mobile gallery — horizontal scroll strip */
-  .sl-mob-gallery {
-    padding: 8px 20px 0;
-    background: #F6F2E9;
-  }
-  .sl-mob-gallery-hdr {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  .sl-mob-gallery-label {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #8A7A5A;
-  }
-  .sl-mob-gallery-link {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1A1A18;
-    text-decoration: none;
-  }
-  .sl-mob-gallery-scroll {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 20px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .sl-mob-gallery-scroll::-webkit-scrollbar { display: none; }
-  .sl-mob-gallery-item {
-    width: 100px;
-    height: 100px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #2A3A2A;
-    position: relative;
-    display: block;
-    text-decoration: none;
-  }
-  .sl-mob-gallery-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .sl-mob-gallery-item-score {
-    position: absolute;
-    bottom: 4px;
-    left: 4px;
-    background: rgba(0,0,0,0.65);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 4px;
-  }
-  /* Hide desktop sections on mobile */
-  .sl-quote-strip,
-  .sl-belief,
-  .sl-gallery-section { display: none !important; }
+/* ── RESPONSIVE ── */
+@media (max-width: 960px){
+  .sl188 .nav{padding:0 22px}
+  .sl188 .byline{display:none}
+  .sl188 .navlinks .navsection{display:none}      /* section links collapse into menu */
+  .sl188 .navtoggle{display:inline-flex}
+  .sl188 #sl188-menu.open{display:block;position:fixed;top:76px;left:0;right:0;z-index:49;
+    background:var(--cream);border-bottom:1px solid var(--line);box-shadow:0 8px 24px rgba(15,31,61,.12)}
+  .sl188 #sl188-menu.open a{display:flex;align-items:center;min-height:52px;padding:0 22px;
+    font-size:17px;color:var(--blue);border-top:1px solid var(--line)}
+  .sl188 .hero{grid-template-columns:1fr}
+  .sl188 .hero-photograph{height:56vw;min-height:280px}
+  .sl188 .hero-text{padding:44px 24px 64px}
+  .sl188 .hero-h1{font-size:clamp(44px,11vw,68px)}
+  .sl188 .moment-wrap{grid-template-columns:1fr}
+  .sl188 .moment-img{aspect-ratio:16/9;min-height:220px}
+  .sl188 .founder-inner{grid-template-columns:1fr}
+  .sl188 .founder-img{aspect-ratio:16/9;min-height:220px;position:relative;top:0}
+  .sl188 .progress-grid{grid-template-columns:1fr 1fr}
+  .sl188 .progress-item{border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:22px}
+  .sl188 .photos{grid-template-columns:1fr 1fr;grid-template-rows:180px 140px 140px}
+  .sl188 .ph:nth-child(1){grid-row:auto;grid-column:1/3}
+  .sl188 .gallery-head{flex-direction:column;gap:14px}
+  .sl188 .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+  .sl188 .footer-brand{grid-column:1/3}
+  .sl188 .section,.sl188 .founder,.sl188 .reveal,.sl188 .gallery,.sl188 .end,.sl188 .pull{padding:18vw 22px}
+  .sl188 .footer{padding:44px 22px 24px}
+  .sl188 .footer-bottom{flex-direction:column;gap:8px;text-align:center}
+  .sl188 .footer-bottom-links{justify-content:center;flex-wrap:wrap}
 }
-
-/* ── Tablet ── */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .sl-hero { height: 70vh; min-height: 500px; }
-  .sl-hero-h1 { font-size: 28px; }
-  .sl-hero-content { padding: 0 32px; bottom: 36px; }
-  .sl-gallery-grid { grid-template-columns: repeat(3, 1fr); }
-  .sl-gallery-section { padding: 0 32px 48px; }
-  .sl-quote-strip { padding: 48px 32px 36px; }
-  .sl-belief { padding: 12px 32px 44px; }
+@media (max-width: 640px){
+  .sl188 .hero-h1{font-size:clamp(40px,12vw,60px)}
+  .sl188 .footer-grid{grid-template-columns:1fr}
+  .sl188 .footer-brand{grid-column:auto}
 }
-@media (max-width: 600px) {
-  .sl-hero-h1 { font-size: 28px; }
+/* Explicit iPad breakpoint (768px portrait) — gallery to 2 columns, hero single */
+@media (max-width: 768px){
+  .sl188 .hero{grid-template-columns:1fr}
+  .sl188 .photos{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  .sl188 .ph:nth-child(1){grid-row:auto;grid-column:1/3}
+}
+/* Explicit phone breakpoint (600px) — everything single column; larger gallery tiles are easier to read */
+@media (max-width: 600px){
+  .sl188 .hero{grid-template-columns:1fr}
+  .sl188 .moment-wrap,.sl188 .founder-inner,.sl188 .progress-grid,.sl188 .footer-grid{grid-template-columns:1fr}
+  .sl188 .photos{grid-template-columns: 1fr !important;grid-template-rows:auto}
+  .sl188 .ph{min-height:200px}
+  .sl188 .ph:nth-child(1){grid-column:auto}
 }
 </style>
 {% endblock %}
 
-{% block body_class %}page-home{% endblock %}
-
 {% block content %}
 {% set hero = carousel_images[0] if carousel_images else none %}
-{% set gallery_imgs = recent_images if recent_images else (carousel_images[1:] if carousel_images|length > 1 else []) %}
+{% set gallery_pool = (recent_images or []) + (carousel_images[1:] if carousel_images and carousel_images|length > 1 else []) %}
+{% set moment_img = gallery_pool[0] if gallery_pool|length > 0 else none %}
 
-<!-- ━━ DESKTOP HERO — full viewport ━━ -->
-<section class="sl-hero">
-  {% if hero and hero.thumb_url %}
-  <img class="sl-hero-img"
-       src="{{ hero.thumb_url }}"
-       alt="{{ hero.genre or 'Photography' }} — Shutter League"
-       loading="eager"
-       fetchpriority="high"
-       onerror="this.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:linear-gradient(135deg,#0A1A0E 0%,#1A3020 40%,#2A4A28 70%,#0E1E0C 100%)';this.removeAttribute('src')">
-  {% else %}
-  <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0A1A0E 0%,#1A3020 40%,#2A4A28 70%,#0E1E0C 100%);"></div>
-  {% endif %}
+<div class="sl188">
 
-  <div class="sl-hero-overlay"></div>
-
-  <!-- Copy — bottom left, above overlay -->
-  <div class="sl-hero-content">
-    <h1 class="sl-hero-h1">Know if you&rsquo;re<br>getting better.</h1>
-    <p class="sl-hero-tagline">Photography Assessment &amp; Evolution Platform</p>
-    <div class="sl-hero-divider"></div>
-    {# POST-KYC NOTE: Once KYC is approved, remove the tagline above and the divider,
-       and change class="sl-hero-arc" to class="sl-hero-tagline" on the line below.
-       Option B: new line alone carries the full weight without the category descriptor. #}
-    <p class="sl-hero-arc">A platform that remembers every image &mdash; and guides what you make next.</p>
-    <p class="sl-hero-philosophy">Making Images Matter.</p>
-    <div class="sl-hero-ctas">
-      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-         class="sl-cta-primary">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <polyline points="16 16 12 12 8 16"/>
-          <line x1="12" y1="12" x2="12" y2="21"/>
-          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-        </svg>
-        Upload Your Photograph
-      </a>
-      <a href="{{ url_for('how_it_works') }}" class="sl-cta-secondary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
-        </svg>
-        How it works
-      </a>
-    </div>
-    <p class="sl-hero-below-cta">Not a one-time evaluation. A record of how your seeing evolves.</p>
-    <div class="sl-hero-mentors">
-      <div class="sl-hero-mentor-avatars">
-        <div class="sl-hero-mentor-avatar">
-          <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" onerror="this.style.display='none'">
-        </div>
-        <div class="sl-hero-mentor-avatar">
-          <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar" onerror="this.style.display='none'">
-        </div>
-      </div>
-      <span class="sl-hero-mentor-text">Guided by accomplished photographers.</span>
-    </div>
-  </div>
-
-  <!-- Photo credit — bottom right -->
-  {% if hero and hero.score %}
-  <div class="sl-hero-credit">
-    <span class="sl-hero-credit-score">{{ '%.2f'|format(hero.score) }}</span>
-    <span class="sl-hero-credit-sep">&middot;</span>
-    <span class="sl-hero-credit-tier">{{ hero.tier or '' }}</span>
-    <span class="sl-hero-credit-sep">&middot;</span>
-    <span class="sl-hero-credit-by">&copy; {{ hero.photographer_name or '' }}</span>
-  </div>
-  {% endif %}
-
-  <!-- If there's a hero image, whole section links to it -->
-  {% if hero and hero.id %}
-  <a href="{{ url_for('image_detail', image_id=hero.id) }}"
-     class="sl-hero-link"
-     aria-label="View this photograph by {{ hero.photographer_name or 'community member' }}"></a>
-  {% endif %}
-
-  <!-- Scroll cue -->
-  <div class="sl-hero-scroll-cue" aria-hidden="true">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F6F2E9" stroke-width="2">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-  </div>
-</section>
-
-<!-- ━━ MOBILE HERO — content-first layout ━━ -->
-<div class="sl-mob-hero">
-  <div class="sl-mob-copy">
-    <h1 class="sl-mob-h1">Know if you&rsquo;re<br>getting better.</h1>
-    <p class="sl-mob-tagline">Photography Assessment<br>&amp; Evolution Platform.</p>
-    <p class="sl-mob-philosophy" style="font-size:15px;color:rgba(26,26,24,0.72);font-weight:400;margin-bottom:6px;">A platform that remembers every image &mdash; and guides what you make next.</p>
-    <p class="sl-mob-philosophy">Making Images Matter.</p>
-  </div>
-
-  {% if hero and hero.thumb_url %}
-  <a href="{{ url_for('image_detail', image_id=hero.id) if hero and hero.id else '#' }}"
-     class="sl-mob-imgcard" aria-label="View photograph">
-    <img src="{{ hero.thumb_url }}"
-         alt="{{ hero.genre or 'Photography' }}"
-         loading="eager"
-         onerror="this.style.background='#1A2A1A';this.remove()">
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav class="nav">
+  <a href="{{ url_for('index') }}" class="brand">
+    <div class="crest">SL</div>
+    <span class="brandword">Shutter League</span>
+    <span class="byline">Making Images Matter</span>
   </a>
-  <div class="sl-mob-imgcredit">
-    {% if hero.score %}
-    <span style="font-weight:700;color:#1A1A18;">{{ '%.1f'|format(hero.score) }} &middot; {{ hero.tier or '' }}</span>
+  <div class="navlinks">
+    <a href="#why" class="navsection">Why</a>
+    <a href="#league" class="navsection">The League</a>
+    <a href="#about" class="navsection">About</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="navlogin">My dashboard</a>
+      <a href="{{ url_for('dashboard') }}" class="navstart">Dashboard →</a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="navlogin">Login</a>
+      <a href="{{ url_for('register') }}" class="navstart">Start</a>
     {% endif %}
-    <span>&copy; {{ hero.photographer_name or '' }}</span>
+    <button class="navtoggle" aria-label="Menu" aria-expanded="false" onclick="sl188Menu(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </div>
-  {% endif %}
-
-  <div class="sl-mob-ctas">
-    <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-       class="sl-mob-cta-primary">
-      &#8593; Upload Your Photograph
-    </a>
-    <a href="{{ url_for('how_it_works') }}" class="sl-mob-cta-secondary">How it works</a>
-  </div>
-
-  <p style="font-size:13px;color:#6B6B6B;line-height:1.6;padding:0 20px 12px;margin:0;">Not a one-time evaluation. A record of how your seeing evolves.</p>
-
-  {% if gallery_imgs %}
-  <div class="sl-mob-gallery">
-    <div class="sl-mob-gallery-hdr">
-      <span class="sl-mob-gallery-label">From our community</span>
-      <a href="{{ url_for('leaderboard') }}" class="sl-mob-gallery-link">View All &rarr;</a>
-    </div>
-    <div class="sl-mob-gallery-scroll">
-      {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}"
-         class="sl-mob-gallery-item">
-        <img src="{{ img.thumb_url }}"
-             alt="{{ img.genre or 'Photography' }}"
-             loading="lazy"
-             onerror="this.style.display='none'">
-        {% if img.score %}
-        <span class="sl-mob-gallery-item-score">{{ '%.1f'|format(img.score) }}</span>
-        {% endif %}
-      </a>
-      {% endif %}{% endfor %}
-    </div>
-  </div>
-  {% endif %}
+</nav>
+<div id="sl188-menu">
+  <a href="#why">Why</a>
+  <a href="#league">The League</a>
+  <a href="#about">About</a>
 </div>
 
-<!-- ━━ DESKTOP SECTIONS — Quote · Belief · Gallery ━━ -->
-<div class="sl-quote-strip">
-  <div class="sl-quote-mark">&ldquo;</div>
-  <div>
-    <p class="sl-quote-text">You don&rsquo;t take a photograph, you make it.</p>
-    <p class="sl-quote-author">&mdash; Ansel Adams</p>
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero">
+  <div class="hero-photograph">
+    {% if hero and hero.thumb_url %}
+      <img class="hero-photograph-img" src="{{ hero.thumb_url }}"
+           alt="{{ hero.genre or 'Photography' }} — from the League"
+           loading="eager" fetchpriority="high"
+           onerror="this.style.display='none'">
+    {% endif %}
+    <div class="hero-photograph-fill"></div>
+    <div class="hero-photograph-meta">
+      <span class="hero-photograph-caption">From the League</span>
+      {% if hero and hero.tier and hero.score %}
+        <span class="hero-photograph-badge">{{ hero.tier|upper }} · {{ '%.1f'|format(hero.score) }}</span>
+      {% else %}
+        <span class="hero-photograph-badge">MASTER · 8.6</span>
+      {% endif %}
+    </div>
   </div>
-</div>
-
-<section class="sl-belief">
-  <h2 class="sl-belief-headline">Great photographers aren&rsquo;t born.<br>They evolve.</h2>
-  <p class="sl-belief-sub">See. &nbsp; Shoot. &nbsp; Reflect. &nbsp; Evolve.</p>
+  <div class="hero-text">
+    <div class="kicker">For people who still want to get better</div>
+    <h1 class="hero-h1">What if you could see how good you could become?</h1>
+    <p class="hero-lead">You've probably looked at one of your photographs and thought: <em>if only I had waited. Moved. Looked again.</em></p>
+    <p class="hero-solve">How do I solve the what if?</p>
+    <a class="bigbtn" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}">Show me what I'm missing →</a>
+    <div class="micronote">Your first 10 evaluations are free. No subscription needed.</div>
+  </div>
 </section>
 
-{% if gallery_imgs %}
-<div class="sl-gallery-section">
-  <div class="sl-gallery-header">
-    <span class="sl-gallery-label">From our community</span>
-    <a href="{{ url_for('leaderboard') }}" class="sl-gallery-link">View gallery &rarr;</a>
+<!-- ═══════════════ THE QUESTION ═══════════════ -->
+<section class="section" id="why">
+  <div style="max-width:960px;margin:0 auto">
+    <p class="statement">You don't need another person<br>to tell you a photograph is <em>good.</em></p>
+    <p class="section-body">You need someone to help you understand why it worked — and why the next one didn't. That honest answer is the thing photography has never had. Until now.</p>
   </div>
-  <div class="sl-gallery-grid">
-    {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
-    <a href="{{ url_for('image_detail', image_id=img.id) }}"
-       class="sl-gallery-item">
-      <img src="{{ img.thumb_url }}"
-           alt="{{ img.genre or 'Photography' }}"
-           loading="lazy"
-           onerror="this.parentNode.style.background='#1A3020';this.remove()">
-      {% if img.score %}
-      <span class="sl-gallery-item-score">{{ '%.1f'|format(img.score) }}</span>
-      {% endif %}
-    </a>
-    {% endif %}{% endfor %}
-  </div>
-</div>
-{% endif %}
+</section>
 
+<!-- ═══════════════ KNEELING LINE ═══════════════ -->
+<section class="section">
+  <div class="moment-wrap">
+    <div class="moment-img">
+      {% if moment_img and moment_img.thumb_url %}
+        <img src="{{ moment_img.thumb_url }}" alt="{{ moment_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.style.display='none'">
+      {% endif %}
+    </div>
+    <div class="moment-copy">
+      <div class="moment-kicker">The little things that matter</div>
+      <p>Sometimes the photograph is already there.</p>
+      <p><strong>You are just one small thing away from it.</strong></p>
+      <p>A little more patience. A different position. Waiting for the person to enter the frame. Getting down on your knees. Seeing the light before it disappears.</p>
+      <p>We want to help you find those moments — in this photograph, and in the ones that follow.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FOUNDER ═══════════════ -->
+<section class="founder" id="about">
+  <div class="founder-inner">
+    <div class="founder-img">
+      <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar Krishnan, founder of Shutter League" loading="lazy" onerror="this.style.display='none'">
+      <span class="founder-img-cap">Sreekumar Krishnan</span>
+    </div>
+    <div class="founder-copy">
+      <div class="founder-kicker">Why this was built</div>
+      <p>I have been making photographs for twenty-five years.</p>
+      <p>For most of that time, I received two kinds of feedback: people who liked my work, and people who said nothing.</p>
+      <p><strong>Neither made me better.</strong></p>
+      <p>I built Shutter League because photography has never had a global standard to help photographers understand where they stand — or how to get better. The lessons I have learned, and continue to learn, are what I want every photographer to benefit from.</p>
+      <p>Shutter League remembers your photographs, sees what you consistently do well, shows you what you consistently miss — and helps you understand what to work on next.</p>
+      <p>A standard to grow towards. Internationally. Finally.</p>
+      <p>What Michelin is for restaurants. What ICC rankings are for cricket. What FIDE is for chess. Shutter League is that for photography.</p>
+      <div class="founder-cred">
+        <b>Sreekumar Krishnan</b><br>
+        IPPAWARDS 2019 — Global Winner · Shot on iPhone 6s<br>
+        Featured: Times of India · Deccan Herald · National Geographic<br>
+        Exhibited at the Louvre, Paris · Abu Dhabi 2025 alongside UNESCO<br>
+        B&amp;W Spider Awards · 2019 onwards<br>
+        Photography teacher · Meditation guide · Bengaluru
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PULL DARK ═══════════════ -->
+<section class="pull" id="league">
+  <div style="max-width:1040px;margin:0 auto">
+    <div class="goldbar"></div>
+    <p class="statement">And then, something wonderful<br>starts to happen.</p>
+    <p class="section-body">After enough photographs, you start to see yourself more clearly.</p>
+    <div class="progress-grid">
+      <div class="progress-item"><span class="progress-label">You see</span><span class="progress-text">what comes naturally to you</span></div>
+      <div class="progress-item"><span class="progress-label">You notice</span><span class="progress-text">what you keep missing</span></div>
+      <div class="progress-item"><span class="progress-label">You work</span><span class="progress-text">on what will make the difference</span></div>
+      <div class="progress-item"><span class="progress-label">You reach</span><span class="progress-text">for a level you did not know you could touch</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ REVEAL ═══════════════ -->
+<section class="reveal">
+  <div style="max-width:960px;margin:0 auto">
+    <p class="statement">One photograph can surprise you.<br><em>Several can reveal you.</em></p>
+    <p class="section-body">Not because a machine has learned who you are. Because you finally have enough of your own work in front of you to recognise the patterns — what your eye consistently finds, and what it consistently misses.</p>
+  </div>
+  <div class="mahesh-wrap">
+    <p class="mahesh-q">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
+    <div class="mahesh-attr"><b>Mahesh Iyer</b> · Street photographer · Grandmaster, Shutter League<br>Rank 105 of 20,000 globally on PhotoCrowd · 37 evaluations, self-motivated</div>
+  </div>
+  <div class="calibration">The evaluation engine was calibrated through live blind sessions — Making Images Matter — where serious photographers evaluated work without knowing whose it was. 312 photographs. That standard exists nowhere else.</div>
+</section>
+
+<!-- ═══════════════ GALLERY ═══════════════ -->
+<section class="gallery">
+  <div class="gallery-head">
+    <div>
+      <div class="kicker">The League</div>
+      <h2 class="gallery-h2">People who keep looking.</h2>
+    </div>
+    <p class="gallery-sub">Different cameras. Different ages. Different ways of seeing. One shared ambition: to make the next photograph matter more than the last.</p>
+  </div>
+  <div class="photos">
+    {% set fallbacks = [
+      ('MASTER','Wildlife'),('LEGEND','Street'),('GRANDMASTER','Documentary'),
+      ('MAVERICK','Landscape'),('MASTER','People') ] %}
+    {% for i in range(5) %}
+      {% set gi = gallery_pool[i] if gallery_pool|length > i else none %}
+      <div class="ph">
+        {% if gi and gi.thumb_url %}
+          <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.style.display='none'">
+          <span class="ph-badge">{{ (gi.tier or fallbacks[i][0])|upper }} · {{ (gi.genre or fallbacks[i][1])|title }}</span>
+        {% else %}
+          <span class="ph-badge">{{ fallbacks[i][0] }} · {{ fallbacks[i][1] }}</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="aea-strip">
+    <p>At the end of every year, the most consistent work in the League is recognised by the <strong>Annual Excellence Award</strong> — the first photography credential in the world built on twelve months of honest evaluation, not a single submission.</p>
+    <span class="aea-date">Award date: 31 December 2026</span>
+  </div>
+</section>
+
+<!-- ═══════════════ END CTA ═══════════════ -->
+<section class="end">
+  <h2 class="end-h2">We think you're capable of more.</h2>
+  <p class="end-sub">Come see what your photographs say.</p>
+  <a class="bigbtn" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}">Show me what I'm missing →</a>
+  <div class="micronote" style="margin-top:16px">10 free evaluations. No subscription.</div>
+</section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="brand" style="margin-bottom:12px">
+        <div class="crest">SL</div>
+        <span class="brandword">SHUTTER LEAGUE</span>
+      </div>
+      <div class="footer-tagline">Photography Assessment<br>&amp; Evolution Platform<br><em>Making Images Matter</em></div>
+      <div class="footer-email" style="margin-top:14px">support: <a href="mailto:support@shutterleague.com">support@shutterleague.com</a></div>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="/about">About Us</a>
+      <a href="/contact">Contact Us</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/faq">FAQ</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/refund-policy">Refund Policy</a>
+      <a href="/shipping-policy">Shipping &amp; Returns</a>
+    </div>
+    <div class="footer-col">
+      <h4>Programmes</h4>
+      <a href="/poty">Annual Excellence Award</a>
+      <a href="/programme-rules">Programme Rules</a>
+      <a href="/challenge">Weekly Challenge</a>
+      <a href="/mentors">Mentor Guidelines</a>
+    </div>
+    <div class="footer-col">
+      <h4>Learn</h4>
+      <a href="/science">Science</a>
+      <a href="/learning">Lessons</a>
+      <a href="/mentors">Mentor Review</a>
+      <a href="/challenge">Assignments</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© {{ now.year if now else 2026 }} Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/refund-policy">Refund Policy</a>
+    </div>
+  </div>
+</footer>
+
+</div><!-- .sl188 -->
+
+<script>
+function sl188Menu(btn){
+  var m = document.getElementById('sl188-menu');
+  var open = m.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.querySelectorAll('#sl188-menu a').forEach(function(a){
+  a.addEventListener('click', function(){
+    var m = document.getElementById('sl188-menu');
+    m.classList.remove('open');
+    var t = document.querySelector('.sl188 .navtoggle');
+    if(t) t.setAttribute('aria-expanded','false');
+  });
+});
+</script>
 {% endblock %}
-<!-- SL Homepage v5.0 | 2026-07-06 | Clean rebuild from mock -->
-<!-- SL-DASHBOARD: 161.2 | Session 161 | 2026-07-26 | KYC fix: removed "Score" label from mobile gallery strip (line 750) -->
