@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.6-staging (Session 189, 2026-08-18 — FULL AUDIT PASS. All 5 standing checks run: KYC clean (score/submission/winner/ranking are route variables or founder-locked copy; POTY is a URL path not user copy); mobile bottom nav not suppressed, tap targets >=44px, phone 600px + iPad 768px breakpoints present, iOS dvh fallback present, Safari font-smoothing confirmed at line 51, keyboard focus rings present; 70yr rule — all sub-16px fonts are true metadata labels (ALL CAPS eyebrow kickers, monogram, gallery badges, footer headings, legal line) correctly exempt; version chain 182.1-182.6 intact; render passes anon/authed/empty; Python syntax clean; audit tool 18 remaining flags are all checker expecting old homepage or false positives documented in Session 189. RETAINS 182.5. #}
 {# SL-VERSION: 182.5-staging (Session 189, 2026-08-17 — HERO GALLERY-MAT: the hero photo is now shown WHOLE, never cropped (object-fit:contain, centred, with a mat), on the dark left panel — a landscape rests with dark space above/below like a matted print, a portrait nearly fills the panel. Solves the founder's real-world point: ~90% of photographs are landscape and a photographer must never see theirs side-cropped. Because nothing is cropped, the orientation gate is DROPPED — hero = first route-gated (score>=8.5) image with a real thumbnail, any orientation; more likely to show a real photo on staging. Name · tier · score caption unchanged (gallery label at panel bottom). Considered but rejected: expand-icon (still shows the crop first). Fallback if founder finds the desktop mat too empty: full-width landscape hero with headline below (Option 2) — bigger redesign, not done. Template-only, NO app.py change. RETAINS 182.4. #}
 {% extends "base.html" %}
 {# SL-VERSION: 182.4-staging (Session 189, 2026-08-17 — HERO OVERLAY: hero now carries photographer name (bottom-left caption, falls back to "From the League" when absent) alongside tier + score (bottom-right badge), per founder — every hero photo shows score, tier and photographer name. Added object-position:center. Split-hero landscape-crop concern logged. RETAINS 182.3.) #}
@@ -48,8 +49,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
 .sl188 a{text-decoration:none;color:inherit}
 .sl188 button{font:inherit;cursor:pointer}
 .sl188 img{display:block}
-.sl188{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-.sl188 a,.sl188 button{-webkit-tap-highlight-color:rgba(44,62,107,.18)}
+.sl188{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.sl188 a,.sl188 button{-webkit-tap-highlight-color:rgba(44,62,107,.18)}
 .sl188 .bigbtn,.sl188 .navstart,.sl188 .navlinks a,.sl188 .footer-col a,.sl188 .footer-bottom-links a{cursor:pointer}
 .sl188 a:focus-visible,.sl188 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
