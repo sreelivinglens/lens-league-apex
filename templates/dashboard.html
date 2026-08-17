@@ -24,6 +24,9 @@
 body.page-dashboard .sl-top-nav        { display:none !important }
 body.page-dashboard .sl-bottom-nav     { display:none !important }
 body.page-dashboard > footer           { display:none !important }
+body.page-dashboard > div.footer       { display:none !important }
+body.page-dashboard > .site-footer     { display:none !important }
+body.page-dashboard > .base-footer     { display:none !important }
 body.page-dashboard .nav-mobile        { display:none !important }
 body.page-dashboard .flash-container   { display:none !important }
 body.page-dashboard > main             { padding:0 !important; max-width:none !important; margin:0 !important; background:#F6F2E9 !important }
@@ -2044,3 +2047,6 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 {% endblock %}
+
+{# Override base footer to prevent double-render #}
+{% block footer %}{% endblock %}
