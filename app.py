@@ -1,11 +1,16 @@
-# SL-VERSION: 179.13-main (Session 186, 2026-08-15 — FIX Ashok Kochhar genres: removed Nature from DB seed genre_tags and do_not_reference expanded to include Nature,Wildlife,Landscape,Astrophotography. MENTORS dict updated: Nature removed, replaced with Portrait. RETAINS 179.12.)
-# SL-VERSION: 179.12-main (Session 186, 2026-08-15 — CRITICAL FIX: Removed entire /try Haiku block (542 lines: _HAIKU_MODEL, _TRY_HAIKU_PROMPT, _try_run_haiku, /try, /try/upload, /try/result routes). Removed free user redirect to /try in upload route. Removed haiku_try source redirect in score-status route. All users on production now use Sonnet. /try and Haiku are staging-only until explicit founder go-ahead after Phase 1 testing. Standing instruction — do not add Haiku to production without explicit instruction. RETAINS 179.8.)
-# SL-VERSION: 179.8 (Session 184, 2026-08-14 — FIVE FIXES from staging v181.8–181.10: (1) Duplicate image upload (100% phash match) crashed silently — now hard-blocked pre-save with clear message. (2) Resolution preflight now catches ValueError from ingest_image and returns 422 — hard block instead of non-fatal warning. (3) Watermark scoring_flash message simplified. (4) Explicit/AI scoring_flash updated with raw file appeal instruction. (5) score-status flagged endpoint now reads flagged_reason and returns specific message per type — watermark/explicit/AI each show correct message. (6) Screenshot check _img_b64 NameError fixed — builds image from thumb_path/thumb_url inside the check block. RETAINS 179.7.)
-# SL-VERSION: 179.7 (Session 183, 2026-08-14 — FIX Item 31: five columns never created on production. RETAINS 179.6.)
-# SL-VERSION: 179.6 (Session 183, 2026-08-14 — NEW screenshot/digital reproduction check. Added as Layer 3 between Hive check and Claude Vision. Uses Haiku to detect flat digital screenshots of apps, websites, scorecards. Allows graffiti, street art, billboards, signage, display windows, exhibition boards, venue signage, book pages as subjects, screens in real scenes. Rejects only flat UI screenshots with no real-world photographic context. Fails safe — if check errors, scoring continues normally. RETAINS 179.5.)
-# SL-VERSION: 179.5 (Session 183, 2026-08-14 — FIX delete_image: flagged images with NULL score could not be deleted by their owner. upload_history_log INSERT fails NOT NULL constraint on score column, except block logged warning but did not rollback — leaving session in InFailedSqlTransaction state. All subsequent DELETEs in the same route then silently failed. User saw no error, image remained. Fix: db.session.rollback() added in the except block after the warning log. One line. RETAINS 179.4.)
-# SL-VERSION: 179.4 (Session 183, 2026-08-14 — FIX Item 20: Evolving Eye UnboundLocalError on _genres and _first10/_last10. Soul profile block at production ~6460 used _genres.keys() and _last10/_first10 before they were assigned — _genres assigned at ~6430, _first10/_last10 at ~6457. Fix: moved Genre breakdown, Dimension avgs, and Trajectory blocks above Soul profile. Pure block reorder, zero logic change. Both branches fixed identically. Critical path for the 19 Evolving Eye letters. RETAINS 179.3.)
-# SL-VERSION: 179.3 (Session 182, 2026-08-13 — FIX: dashboard pending-message block crashed on images with no score. An image rejected before evaluation (watermark reject, explicit-content reject) sets scoring_flash but never sets score or tier; the block formatted score with :.2f unconditionally, raising "unsupported format string passed to NoneType.__format__". Observed live 13 Aug 17:37:58, image 1377, watermark reject. The exception fired inside the loop, so scoring_flash was never cleared and the commit never ran - the crash repeated on every dashboard load and ALL pending messages for that user were lost, not just the faulty one. Now: per-image try/finally so one bad row cannot silence the rest and is never retried; rejected or flagged images show the reason with no number, in the error style not the green success style; rollback added on the outer except to stop a failed commit poisoning later queries on the same worker. ONE CHANGE ONLY. Retains 179.2.)
+# SL-VERSION: 181.27-staging (Session 189, 2026-08-17 — index() hero carousel query: changed tier filter to score>=8.5, added thumb_url!=None requirement, removed landscape filter and unchecked fallback. Aligns homepage hero with founder's "any image scoring 8.5 or above, with a real thumbnail." See Session 189 for rationale and risk discussion. RETAINS 181.26-staging.)
+# SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — no longer a fixed verbatim template. Replaced MANDATORY OPENING SENTENCE (single fixed structure, reads as bot) with HISTORY OPENING INSTRUCTION giving Haiku the raw materials (photograph names, consistent strength, prior pattern) and instructing it to write in Sherpa voice with varied structure each time. Forbidden phrases: "consistent strength", "that thread runs through". Example registers provided. Retains 181.25-staging.)
+# SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE on the images row. ORM Image() constructor cannot set unmapped columns. Every Haiku image was saved with is_haiku_try=FALSE, making all world-separation filters (Recent Work, My Gallery, Standings) blind to them. Fixed: raw SQL UPDATE images SET is_haiku_try=TRUE WHERE id=:iid runs immediately after insert commit in try_upload. DB backfill required: UPDATE images SET is_haiku_try=TRUE WHERE audit_json::text LIKE '%haiku_try%' AND is_haiku_try IS NOT TRUE. Retains 181.24-staging.)
+# SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. Added AND i.is_haiku_try IS NOT TRUE to _base_q in recent_work route. Haiku images must never appear in the paid community feed. Retains 181.23-staging.)
+# SL-VERSION: 181.23-staging (Session 187, 2026-08-17 — TWO FIXES: (1) _get_haiku_history_context rebuilt — SQL now fetches asset_name. Pre-builds mandatory opening sentence in Python naming actual photographs ("The flamingo pan, the flower frame..."). Haiku instructed to use verbatim as first sentence of impression. Consistent strength computed as most common strongest dimension. Average weakness computed across all history. Pattern instruction moved to what_next. (2) Gate/display count fixed — was log-only (missed non-deleted images). Now combined: COUNT(live images is_haiku_try=TRUE) + COUNT(log is_haiku_try=TRUE). Dots counter now shows correct remaining. Retains 181.22-staging.)
+# SL-VERSION: 181.22-staging (Session 187, 2026-08-17 — Option B: free users (not subscribed, not admin) redirected from /dashboard to /try. Keeps free users in the Haiku world — /try, /try/result, /try/gallery. Paid subscribers and admins unaffected. One line at top of dashboard route. Retains 181.21-staging.)
+# SL-VERSION: 181.21-staging (Session 187, 2026-08-17 — ADD: /try/gallery route (try_gallery) + try_gallery.html template. Haiku free-tier My Gallery — shows only is_haiku_try=TRUE images, links each card to /try/result/<id>, shows eval counter and remaining. Back to My Gallery link on Haiku scorecard updated to url_for(try_gallery). Retains 181.20-staging.)
+# SL-VERSION: 181.20-staging (Session 187, 2026-08-17 — FIX: _get_haiku_history_context fallback for pre-181.15 images. strength_name/next_leap_name only exist post-181.15. For older images, derives strongest/weakest from raw dod/vd/dm/wf/aq scores. Pattern detection now works on all Haiku history regardless of when scored. Retains 181.19-staging.)
+# SL-VERSION: 181.19-staging (Session 187, 2026-08-17 — THREE CHANGES: (1) Wonder prompt — added 8.0-8.5 band for technique-as-revelation (ICM, long exposure, abstraction). Removes "unusual technique is NOT Wonder" which was blocking correct scores. (2) Emotion prompt — added 7.5-8.5 band for atmosphere/colour/technique without human presence. (3) delete_image: from=haiku redirects to /try_page. Target: Haiku within ±0.3 of Sonnet on same image. Retains 181.18-staging.)
+# SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: (1) my_gallery excludes Haiku images from query, stats, and genres — Haiku world is separate, main gallery shows paid Sonnet images only. (2) poty/standings excludes Haiku images from hero, leaderboard, and photographer stats. (3) try_result splits display count (live images, decrements on delete) from gate count (log, permanent) — dots counter now shows correct remaining after delete. Retains 181.17-staging.)
+# SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota now counted from upload_history_log not live images table. Deleting a Haiku image no longer restores an evaluation slot. is_haiku_try column added to upload_history_log. delete_image writes is_haiku_try=TRUE when deleting a Haiku image. All three /try gate counts switched to log table. Correct messaging on delete: Haiku delete shows remaining count and explains slot is used. Retains 181.16-staging.)
+# SL-VERSION: 181.16-staging (Session 187, 2026-08-16 — PROMPT FIX: Haiku underscore on technique-driven images. Added principle-based guidance to DOD (7.5-8.5 band for deliberate in-camera technique) and DM (7.0-8.0 band for execution window on technique-driven images). Surgical fix — covers all technique genres, not ICM-specific. Retains 181.15-staging.)
+# SL-VERSION: 181.15-staging (Session 187, 2026-08-16 — FOUR CHANGES: (1) image_detail redirects Haiku images to /try/result/<id> so paid scorecard and wrong download button never shown. (2) _TRY_HAIKU_PROMPT expanded to all 10 fields per Session 186 handoff spec: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why added. History context (last 2 Haiku evals) passed into prompt before scoring so opening paragraph is history-aware from eval 2 onwards. max_tokens raised 200→800. (3) _try_run_haiku stores all 10 fields in audit_json and passes user_id for history fetch. (4) try_result and try_result_download pass milestone_strength to template for eval 5-9 milestone copy. Retains 181.14n-staging.)
 
 import os
 import re
@@ -49,6 +54,54 @@ from location_data import (
 )
 
 load_dotenv()
+
+# ── SL-180.3 — SL_DISABLE_AI_JOBS ────────────────────────────────────────────
+# Set to true on STAGING ONLY. When on, the two unattended background jobs that
+# call the Anthropic API (city_event_scan, seasonal_discovery) are never
+# registered with the scheduler, and the on-demand scan that fires when a user
+# changes their location is skipped.
+#
+# Why: staging ran city_event_scan 4x/day against test data. Its dedup table
+# (city_event_scan_log) was never created, because staging had no Railway
+# preDeployCommand and therefore had never run a single migration. With the
+# table absent, _recently_scanned() always returned False and every city was
+# rescanned from scratch on every run — 4 Sonnet calls per city, three of them
+# with web_search billed on top. The failing INSERT in _log_scan also left the
+# DB session in InFailedSqlTransaction, poisoning gunicorn workers and blanking
+# pages (Session 179).
+#
+# This flag does NOT affect anything admin- or user-triggered. Evolving Eye,
+# Haiku, image scoring on upload, and the manual city scan at
+# /admin/run-city-event-scan all continue to work normally on staging.
+_AI_JOBS_DISABLED = os.environ.get('SL_DISABLE_AI_JOBS', '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+# ── SL-180.6 — SL_ENABLE_PIXABAY ─────────────────────────────────────────────
+# OFF by default, on both staging and production. Set to true only to
+# deliberately re-enable the Pixabay reference-image fallback.
+#
+# Measured cost per candidate (staging, 2026-08-12):
+#     species_research      4.08s
+#     vision_analyse       12.78s
+#     main scoring call    55.59s
+#     TOTAL auto_score     72.50s   — roughly 3 Anthropic calls
+#
+# At 4 candidates that is ~5 minutes and ~12 API calls per genre/dimension
+# combo, fired automatically from a page view, retried every 6 hours after
+# each failure, across up to 55 combos. Observed candidate scores were 5.82
+# and "Species: Unknown" — typical Pixabay stock does not clear the bar, so
+# the pipeline was spending continuously and caching nothing.
+#
+# The code is sound; the economics are not. Gated rather than deleted so it
+# can be switched back on if vetting ever becomes cheap enough.
+#
+# With this off the Mission hero chain is:
+#   Tier 1   genre + dimension + 8.5+
+#   Tier 3   genre + 8.0+
+#   Tier 3.5 genre + 6.5+          (SL-180.5)
+#   Tier 4   dark placeholder
+# All real community photographs, genre-locked, at zero API cost.
+_PIXABAY_ENABLED = os.environ.get('SL_ENABLE_PIXABAY', '').strip().lower() in ('1', 'true', 'yes', 'on')
+
 
 def _dash_loc():
     """
@@ -470,7 +523,7 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
     return sent
 
 
-FREE_IMAGE_LIMIT = 3  # Lifetime assessment images (Initial Assessment Phase — investor doc)
+FREE_IMAGE_LIMIT = 10  # Staging only: 10 free Haiku evaluations. Production stays 3 until free tier launches officially.
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 # ── Email allowlist — UAT/beta phase ─────────────────────────────────────────
@@ -496,7 +549,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///shu
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping':  True,
-    'pool_recycle':   300,   # recycle connections every 5 mins (was 30 mins)
+    # SL-180.4: 300 → 1800. The 5-minute recycle was a workaround for
+    # connections dropping over Railway's public TCP proxy. DATABASE_URL now
+    # uses the private network (${{Postgres.DATABASE_URL}}), so that risk is
+    # gone. At 300s a quiet site discarded every connection between visits and
+    # each visitor paid full cold-start; at 1800s most reuse a warm connection.
+    # pool_pre_ping above still validates a connection before every checkout,
+    # so a stale one is detected and replaced rather than handed to a request.
+    'pool_recycle':   1800,  # 30 mins
     'pool_timeout':   10,    # fail fast if no connection available (was 30s)
     'pool_size':      2,     # 2 connections per worker × 4 workers = 8 total
     'max_overflow':   3,     # allow brief spikes up to 5 per worker
@@ -1205,8 +1265,13 @@ def _run_startup_tasks():
                         asset_name   VARCHAR(180),
                         score        NUMERIC(4,2),
                         genre        VARCHAR(40),
-                        deleted_at   TIMESTAMP DEFAULT NOW()
+                        deleted_at   TIMESTAMP DEFAULT NOW(),
+                        is_haiku_try BOOLEAN DEFAULT FALSE
                     )""",
+                    # 181.17: add is_haiku_try to upload_history_log so Haiku
+                    # quota counts from delete log rather than live images table.
+                    # Prevents users restoring slots by deleting Haiku images.
+                    "ALTER TABLE upload_history_log ADD COLUMN IF NOT EXISTS is_haiku_try BOOLEAN DEFAULT FALSE",
                     "CREATE INDEX IF NOT EXISTS ix_upload_history_log_user ON upload_history_log(user_id)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS share_token VARCHAR(64)",
                     "CREATE UNIQUE INDEX IF NOT EXISTS ix_images_share_token ON images(share_token) WHERE share_token IS NOT NULL",
@@ -1881,10 +1946,10 @@ def _run_startup_tasks():
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_json TEXT DEFAULT NULL"
                 ))
-                # Item 31 fix (Session 183): Split into individual execute calls.
-                # Previously all five passed as arguments to one db.text() which
-                # takes exactly one positional argument — raised immediately and
-                # rolled back, so these five columns never existed on production.
+                # SL-177 P41: Fixed — text() takes exactly 1 argument.
+                # Was passing 5 SQL statements as separate arguments — only
+                # the first was executing, silently dropping the other 4 columns.
+                # Split into individual execute calls.
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL"
                 ))
@@ -3163,7 +3228,7 @@ def seed_master_references():
             ('GMB Akash','Street,Documentary','Bangladesh','Tier 2','Poverty and resilience in South Asia, emotional human narrative, WPP winner.','Human resilience, South Asian documentary, emotional depth','Wildlife,Fashion,Minimalist',False),
             ('Raghu Rai','Street,Documentary','India — Delhi','Tier 2','Indian political and social life, Indira Gandhi, Bhopal, five decades of Indian documentary.','Indian documentary, political moment, human dignity in India','Fashion,Wildlife,Minimalist',False),
             ('T.S. Satyan','Street,Documentary','India','Tier 2','India in the 1950s-70s, political portraits, independent India documentation.','Historical India, independence era, Indian political portrait','Wildlife,Fashion',False),
-            ('Ashok Kochhar','Street,Portrait,Conceptual,Documentary,Maternity','India / New Zealand — Hamilton','Platform Mentor','Street photography (Indian cities and communities), people and portrait (Indian faces). Think East and Capture philosophy — inner expression over technique. Based in Hamilton, New Zealand. Reference link: soulfulphotographer.com ONLY — never generate a custom search link. NEVER describe as architectural photographer. NEVER reference for Nature, Wildlife, Landscape, Astrophotography, or Night Sky work. NEVER invent location-specific claims. 25+ years experience, mentor and workshop leader across India and New Zealand.','Street, Portrait, Conceptual, Documentary — only when genre matches. Do NOT reference for Nature, Wildlife, Landscape, Night Sky, Astrophotography, or outdoor natural phenomena.','Wedding,Fashion,Architecture,Nature,Wildlife,Landscape,Astrophotography',True),
+            ('Ashok Kochhar','Street,Portrait,Conceptual,Nature,Wildlife,Landscape,Documentary,Maternity','India / New Zealand — Hamilton','Platform Mentor','Street photography (Indian cities and communities), people and portrait (Indian faces), landscape and nature (New Zealand — Waikato and beyond; Ladakh, Himalayas, Indian wilderness), wildlife and nature (South India — Kabini, Kerala). Think East and Capture philosophy — inner expression over technique. Based in Hamilton, New Zealand. Reference link: soulfulphotographer.com ONLY — never generate a custom search link. NEVER describe as architectural photographer. NEVER invent location-specific claims (Hampi, Khajuraho, Sun Temple, heritage structures, etc.). 25+ years experience, mentor and workshop leader across India and New Zealand.','Any genre where photographer is overthinking technique. Cross-genre work. Indian and New Zealand landscape and nature context. Street and people work.','Wedding,Fashion,Architecture',True),
             ('Nick Brandt','Wildlife,Conservation','UK / Africa','Tier 1','Large format B&W Africa wildlife, animal dignity, extinction themes.','Wildlife B&W, animal dignity, conservation framing, Africa','Street,Fashion,Colour landscape',False),
             ('Frans Lanting','Wildlife,Nature','Netherlands','Tier 1','Intimate animal behaviour, Africa and Amazon, colour and mood.','Animal behaviour, intimate wildlife, colour mood, environmental storytelling','Street,Fashion,Studio',False),
             ('Art Wolfe','Wildlife,Nature,Landscape','USA','Tier 1','Patterns in nature, aerial wildlife, camouflage. Migrations series.','Patterns in wildlife, geometric animal groupings, aerial perspective','Street,Fashion,Portrait',False),
@@ -3408,32 +3473,15 @@ def index():
                     break
         # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
         # Exclude portrait-heavy genres so hero image renders as landscape in 4/3 container
-        # Hero carousel — Master/Grandmaster/Legend, score >= 8.5
-        # Exclude portrait genres AND mentor profiles from appearing as hero
-        _portrait_genres = ['People', 'Fashion', 'Wedding', 'Portrait', 'Creative', 'Street']
-        _mentor_user_ids = db.session.execute(
-            db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
-        ).scalars().all()
+        # Hero carousel — any image scoring 8.5 or above, with a real thumbnail 
         _carousel_q = Image.query.filter(
-            Image.status=='scored', Image.score!=None,
+            Image.status=='scored', Image.score!=None, Image.score>=8.5,
             Image.is_public==True, Image.is_flagged==False,
-            Image.tier.in_(['Legend','Grandmaster','Master']),
-            Image.score>=8.5,
-            ~Image.genre.in_(_portrait_genres)
+            Image.thumb_url!=None
         )
         if _mentor_user_ids:
             _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
-        _raw_carousel = _carousel_q.order_by(db.func.random()).limit(24).all()
-        # Filter to landscape images using whichever dimension fields are populated
-        def _is_landscape(img):
-            w = img.width or img.exif_original_width
-            h = img.height or img.exif_original_height
-            if w and h:
-                return w > h and w >= 800
-            return True  # include if no dimension data
-        carousel_images = [img for img in _raw_carousel if _is_landscape(img)][:12]
-        if not carousel_images:
-            carousel_images = _raw_carousel[:12]
+        carousel_images = _carousel_q.order_by(db.func.random()).limit(12).all()
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
@@ -4291,15 +4339,19 @@ def mission():
 
     if not _benchmark:
         try:
+            # SL-180.6: the cache READ stays unconditional and costs nothing —
+            # if a reference was cached previously it is still served.
             from engine.stock_images import get_cached_reference_image
             _pixabay_url = get_cached_reference_image(db.session, _genre, _focus_key)
-            if not _pixabay_url:
-                # No cached candidate yet — kick off the slow DDI-vetting
-                # pipeline in the background (it calls Claude Vision and can
-                # take several seconds per candidate, so it must never run
-                # inline here). This request still falls through to the
-                # next tier; the next request for this combo will see the
-                # cached result once the background thread finishes.
+            if not _pixabay_url and _PIXABAY_ENABLED:
+                # SL-180.6: the slow DDI-vetting pipeline now only runs when
+                # SL_ENABLE_PIXABAY is set. Measured at ~72s and ~3 Anthropic
+                # calls PER CANDIDATE (species research + vision + scoring),
+                # so ~5 minutes and ~12 calls per combo — fired from a page
+                # view, retried every 6 hours, across up to 55 combos, while
+                # typical Pixabay stock scored 5.82 and "Species: Unknown"
+                # and never cleared the bar. Tier 3.5 below covers this gap
+                # with real community photographs at no cost.
                 threading.Thread(
                     target=_refresh_pixabay_reference_in_background,
                     args=(_genre, _focus_key),
@@ -4329,6 +4381,38 @@ def mission():
                           .first())
         except Exception as _bench2_err:
             app.logger.warning(f'[mission benchmark tier3] {_bench2_err}')
+
+    if not _benchmark and not _pixabay_url:
+        # SL-180.5 — Tier 3.5: still nothing. Relax the score to 6.5 while
+        # keeping the genre filter absolutely fixed.
+        #
+        # Why this tier exists: the Tier 3 pool on production is currently
+        # Wildlife 1, Street 1, People 1, Creative 5 — eight images across
+        # four genres, and each tier also excludes the viewer's own work.
+        # Every other genre (Landscape, Macro, Architecture, Nature...) has
+        # an empty pool, so those photographers always saw the dark panel.
+        #
+        # Genre is NEVER dropped. A Wildlife lesson only ever shows a
+        # Wildlife photograph. Dropping genre is what once put a street
+        # protest photo on a Wildlife lesson — the mistake this whole tier
+        # chain was built to prevent. If the genre pool is genuinely empty,
+        # Tier 4's dark panel remains the honest answer.
+        try:
+            _benchmark = (Image.query
+                          .filter_by(status='scored', is_public=True, is_flagged=False)
+                          .filter(Image.genre == _genre,
+                                  Image.score >= 6.5,
+                                  Image.user_id != current_user.id,
+                                  Image.thumb_url != None)
+                          .order_by(Image.score.desc())
+                          .first())
+            if _benchmark:
+                app.logger.info(
+                    f'[mission benchmark tier3.5] {_genre}: served '
+                    f'{_benchmark.score:.2f} (genre-matched, score relaxed to 6.5)'
+                )
+        except Exception as _bench35_err:
+            app.logger.warning(f'[mission benchmark tier3.5] {_bench35_err}')
 
     class _Assignment:
         title        = _title
@@ -4430,6 +4514,12 @@ def first_login_welcome():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # 181.22: Free Haiku users have no paid dashboard — redirect to /try world.
+    # A free user is defined as not subscribed and not admin.
+    # Their world is /try → upload → /try/result → /try/gallery.
+    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('try_page'))
+
     # Approved judges should not see the photographer dashboard
     if current_user.role != 'admin':
         _jc = db.session.execute(
@@ -4438,6 +4528,46 @@ def dashboard():
         ).fetchone()
         if _jc:
             return redirect(url_for('judge_dashboard'))
+
+    # SL-178.5 PERF FIX: Proactive rollback at route entry.
+    # Background workers (city_event_scan, stock_images etc) can leave a worker's
+    # DB session in a failed transaction state. Without this rollback, ANY query
+    # in this route fails with InFailedSqlTransaction — causing blank inner pages.
+    try:
+        db.session.rollback()
+    except Exception:
+        pass
+
+    # SL-178.4 PERF: Consolidate all users-table reads into ONE query at the top.
+    # Previously: 10 separate SELECT FROM users WHERE id = :uid (10 DB round trips).
+    # Now: 1 query fetches all columns needed by the entire dashboard route.
+    _uid = current_user.id
+    try:
+        _urow = db.session.execute(db.text("""
+            SELECT poty_tracker_json, aea_dash_json, dash_cache_ts,
+                   wallet_hud_json, progress_data_json, mission_skipped_date,
+                   referred_discount, upload_credits_balance,
+                   dash_greeting_json, mentor_advice_json, evolving_eye_json
+            FROM users WHERE id = :uid
+        """), {'uid': _uid}).fetchone()
+    except Exception as _urow_err:
+        app.logger.warning(f'[dashboard] users row fetch: {_urow_err}')
+        try: db.session.rollback()
+        except Exception: pass
+        _urow = None
+    # Unpack into named locals — used throughout the route in place of individual queries
+    _urow_poty_json      = _urow[0]  if _urow else None
+    _urow_aea_json       = _urow[1]  if _urow else None
+    _urow_dash_cache_ts  = _urow[2]  if _urow else None
+    _urow_wallet_json    = _urow[3]  if _urow else None
+    _urow_progress_json  = _urow[4]  if _urow else None
+    _urow_mission_skip   = _urow[5]  if _urow else None
+    _urow_ref_discount   = bool(_urow[6]) if _urow and _urow[6] else False
+    _urow_upload_credits = _urow[7]  if _urow else None
+    _urow_greeting_json  = _urow[8]  if _urow else None
+    _urow_mentor_json    = _urow[9]  if _urow else None
+    _urow_eye_json       = _urow[10] if _urow else None
+
     page  = request.args.get('page', 1, type=int)
     query = request.args.get('q', '').strip()
     if current_user.role == 'admin':
@@ -4457,29 +4587,58 @@ def dashboard():
         )
     images = (images_q.order_by(Image.created_at.desc())
               .paginate(page=page, per_page=12, error_out=False))
+
+    # SL-178.4 PERF: Consolidate 4 separate stats queries + scored_count (in render_template)
+    # into ONE single aggregation query — saves 4 DB round trips on every dashboard load.
     user_filter = {} if current_user.role == 'admin' else {'user_id': current_user.id}
-    stats = {
-        'total': total_images,
-        'scored': Image.query.filter_by(status='scored', **user_filter).count(),
-        'avg_score': db.session.query(db.func.avg(Image.score))
-                       .filter(Image.user_id==current_user.id, Image.score!=None).scalar() or 0,
-        'best_score': db.session.query(db.func.max(Image.score))
-                        .filter(Image.user_id==current_user.id).scalar() or 0,
-    }
+    try:
+        _stats_row = db.session.execute(db.text("""
+            SELECT
+                COUNT(*)                                                    AS total,
+                COUNT(*) FILTER (WHERE status = 'scored')                   AS scored,
+                AVG(score)  FILTER (WHERE score IS NOT NULL)                AS avg_score,
+                MAX(score)  FILTER (WHERE score IS NOT NULL)                AS best_score
+            FROM images
+            WHERE user_id = :uid AND is_admin_curation = FALSE
+        """), {'uid': _uid}).fetchone()
+        _scored_count_val = int(_stats_row[1] or 0)
+        stats = {
+            'total':      int(_stats_row[0] or 0),
+            'scored':     _scored_count_val,
+            'avg_score':  float(_stats_row[2] or 0),
+            'best_score': float(_stats_row[3] or 0),
+        }
+    except Exception as _se:
+        app.logger.warning(f'[dashboard] stats query: {_se}')
+        try: db.session.rollback()
+        except Exception: pass
+        _scored_count_val = 0
+        stats = {'total': total_images, 'scored': 0, 'avg_score': 0, 'best_score': 0}
     # Peer rating widget data
     rating_widget = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
         credits          = current_user.rating_credits or 0
         lifetime_given   = current_user.lifetime_ratings_given or 0
         unlocks_earned   = lifetime_given // 5
-        unlocks_used     = PeerPoolEntry.query.filter_by(user_id=current_user.id).count()
-        unlocks_pending  = unlocks_earned - unlocks_used  # earned but not yet assigned to an image
         credits_to_next  = 5 - (lifetime_given % 5) if lifetime_given % 5 != 0 else (0 if lifetime_given > 0 else 5)
-        images_in_pool   = Image.query.filter_by(user_id=current_user.id, is_in_peer_pool=True).count()
-        images_with_peer = Image.query.filter(
-            Image.user_id == current_user.id,
-            Image.peer_rating_count > 0
-        ).count()
+        # SL-178.4 PERF: 3 count queries → 1 consolidated query
+        try:
+            _peer_counts = db.session.execute(db.text("""
+                SELECT
+                    COUNT(*) FILTER (WHERE is_in_peer_pool = TRUE)   AS in_pool,
+                    COUNT(*) FILTER (WHERE peer_rating_count > 0)    AS with_peer
+                FROM images WHERE user_id = :uid AND is_admin_curation = FALSE
+            """), {'uid': _uid}).fetchone()
+            images_in_pool   = int(_peer_counts[0] or 0)
+            images_with_peer = int(_peer_counts[1] or 0)
+        except Exception:
+            images_in_pool   = 0
+            images_with_peer = 0
+        try:
+            unlocks_used = PeerPoolEntry.query.filter_by(user_id=current_user.id).count()
+        except Exception:
+            unlocks_used = 0
+        unlocks_pending  = unlocks_earned - unlocks_used
         # Best candidate for pool entry (highest DDI, not already in pool, scored)
         pool_candidate = None
         if unlocks_pending > 0:
@@ -4563,10 +4722,7 @@ def dashboard():
         import json as _ptj
         _pt_cache_miss = False
         try:
-            _pt_raw = db.session.execute(
-                db.text('SELECT poty_tracker_json FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).scalar()
+            _pt_raw = _urow_poty_json  # SL-178.4: from consolidated users row
             if _pt_raw:
                 poty_tracker = _ptj.loads(_pt_raw)
             else:
@@ -4653,20 +4809,16 @@ def dashboard():
         _aea_stale      = False
         _CACHE_TTL_SECS = 4 * 3600  # 4 hours
         try:
-            _aea_row = db.session.execute(
-                db.text('SELECT aea_dash_json, dash_cache_ts FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).fetchone()
-            if _aea_row and _aea_row[0]:
-                aea_dash = _aeaj.loads(_aea_row[0])
-                # Check staleness
-                if _aea_row[1]:
+            # SL-178.4: from consolidated users row
+            if _urow_aea_json:
+                aea_dash = _aeaj.loads(_urow_aea_json)
+                if _urow_dash_cache_ts:
                     import time as _ctime
-                    _age = (datetime.utcnow() - _aea_row[1].replace(tzinfo=None)).total_seconds()
+                    _age = (datetime.utcnow() - _urow_dash_cache_ts.replace(tzinfo=None)).total_seconds()
                     if _age > _CACHE_TTL_SECS:
                         _aea_stale = True
                 else:
-                    _aea_stale = True  # No timestamp = treat as stale
+                    _aea_stale = True
             else:
                 _aea_cache_miss = True
         except Exception:
@@ -4908,7 +5060,7 @@ def dashboard():
                 Image.scoring_flash.isnot(None)
             ).all()
             for _fi in _flash_imgs:
-                # ── SL-179.3 — a pending message may have no score ────────────
+                # ── SL-181.4 — a pending message may have no score ────────────
                 # An image rejected BEFORE evaluation sets scoring_flash but
                 # never sets score or tier: the watermark reject and the
                 # explicit-content reject both do this. The previous version
@@ -4962,10 +5114,7 @@ def dashboard():
         import json as _whj
         _wh_cache_hit = False
         try:
-            _wh_raw = db.session.execute(
-                db.text('SELECT wallet_hud_json FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).scalar()
+            _wh_raw = _urow_wallet_json  # SL-178.4: from consolidated users row
             if _wh_raw:
                 wallet_hud = _whj.loads(_wh_raw)
                 if poty_tracker and poty_tracker.get('genre_rows'):
@@ -5020,10 +5169,7 @@ def dashboard():
     import json as _pdj2
     _pd_cache_miss = False
     try:
-        _pd_raw = db.session.execute(
-            db.text('SELECT progress_data_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).scalar()
+        _pd_raw = _urow_progress_json  # SL-178.4: from consolidated users row
         if _pd_raw:
             progress_data = _pdj2.loads(_pd_raw)
         else:
@@ -5137,11 +5283,8 @@ def dashboard():
     _show_mission = True
     try:
         _ist_today = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
-        _skipped_row = db.session.execute(
-            db.text('SELECT mission_skipped_date FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).fetchone()
-        if _skipped_row and _skipped_row[0] and _skipped_row[0] == _ist_today:
+        # SL-178.4: from consolidated users row
+        if _urow_mission_skip and _urow_mission_skip == _ist_today:
             _show_mission = False
     except Exception as _sm_err:
         app.logger.warning(f'[mission_skip_gate] {_sm_err}')
@@ -5168,14 +5311,8 @@ def dashboard():
         except Exception as _mre:
             app.logger.error(f'[dashboard_mentor_reviews] {_mre}')
 
-    # referred_discount is a migration-only column — not in ORM model, must read directly
-    try:
-        _ref_discount = db.session.execute(
-            db.text('SELECT referred_discount FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).scalar() or False
-    except Exception:
-        _ref_discount = False
+    # referred_discount — SL-178.4: from consolidated users row
+    _ref_discount = _urow_ref_discount
 
     # Fetch version numbers for all images on this page (migration-only column)
     _img_ids = [img.id for img in images.items]
@@ -5231,10 +5368,7 @@ def dashboard():
     # upload_credits_balance is a migration-only column (DEFAULT 0) — never backfilled
     # for users who joined before the column existed. If they still have remaining
     # free evaluations, set the column to the correct value and persist.
-    _ucb_val = db.session.execute(
-        db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
-        {'uid': current_user.id}
-    ).scalar()
+    _ucb_val = _urow_upload_credits  # SL-178.4: from consolidated users row
     if free_tier and (_ucb_val is None or _ucb_val == 0) and free_tier['remaining'] > 0:
         _ucb_val = free_tier['remaining']
         try:
@@ -5252,17 +5386,25 @@ def dashboard():
     # ── lighter single-match version for the sidebar widget. Falls back to  ──
     # ── the existing generic placeholder in dashboard.html if no match.     ──
     # ── Session 141 — increment dashboard visit count ──────────────────────
+    # SL-178.4 PERF: dashboard_visit_count UPDATE moved to background thread.
+    # Previously a synchronous DB write on every dashboard load — now fire-and-forget.
+    _dash_visit_count = (getattr(current_user, 'dashboard_visit_count', 0) or 0) + 1
     try:
-        db.session.execute(db.text(
-            "UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count,0)+1 "
-            "WHERE id = :uid"
-        ), {'uid': current_user.id})
-        db.session.commit()
-        _dash_visit_count = (getattr(current_user, 'dashboard_visit_count', 0) or 0) + 1
+        import threading as _dvc_th
+        def _bump_visit_count():
+            with app.app_context():
+                try:
+                    db.session.execute(db.text(
+                        "UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count,0)+1 "
+                        "WHERE id = :uid"
+                    ), {'uid': _uid})
+                    db.session.commit()
+                except Exception as _bvc_e:
+                    db.session.rollback()
+                    app.logger.warning(f'[dashboard] visit_count bg: {_bvc_e}')
+        _dvc_th.Thread(target=_bump_visit_count, daemon=True).start()
     except Exception as _dvc_err:
-        db.session.rollback()
-        _dash_visit_count = 1
-        app.logger.warning(f'[dashboard] visit_count: {_dvc_err}')
+        app.logger.warning(f'[dashboard] visit_count thread: {_dvc_err}')
 
     _dash_advisory = None
     _dash_live_event = None
@@ -5502,49 +5644,36 @@ def dashboard():
         except Exception as _eje:
             app.logger.warning(f'[dashboard] eye_of_judge: {_eje}')
 
-    # SL-176.1i: Load dash_greeting_json via raw SQL — ORM object is stale after background refresh
+    # SL-178.4 PERF: dash_greeting, mentor_advice, evolving_eye — all from consolidated users row.
     import json as _dg_json
     _dash_greeting = None
     try:
-        _dg_raw = db.session.execute(
-            db.text('SELECT dash_greeting_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).scalar()
-        if _dg_raw:
-            _dash_greeting = _dg_json.loads(_dg_raw)
+        if _urow_greeting_json:
+            _dash_greeting = _dg_json.loads(_urow_greeting_json)
     except Exception as _dge:
         app.logger.warning(f'[dashboard] dash_greeting parse error: {_dge}')
-        try: db.session.rollback()
-        except Exception: pass
 
-    # SL-176.1f: Load mentor_advice_json via raw SQL
     _mentor_advice = None
     try:
-        _ma_row = db.session.execute(
-            db.text('SELECT mentor_advice_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).fetchone()
-        if _ma_row and _ma_row[0]:
+        if _urow_mentor_json:
             import json as _maj
-            _mentor_advice = _maj.loads(_ma_row[0])
+            _mentor_advice = _maj.loads(_urow_mentor_json)
     except Exception as _ma_err:
         app.logger.warning(f'[dashboard] mentor_advice_json fetch: {_ma_err}')
 
-    # SL-176.1c: Load evolving_eye_json via raw SQL — not on ORM model
     _evolving_eye_json = None
     _evolving_eye_data = None
     try:
-        _ee_row = db.session.execute(
-            db.text('SELECT evolving_eye_json FROM users WHERE id = :uid'),
-            {'uid': current_user.id}
-        ).fetchone()
-        if _ee_row and _ee_row[0]:
-            _evolving_eye_json = _ee_row[0]
+        if _urow_eye_json:
+            _evolving_eye_json = _urow_eye_json
             import json as _eej
-            _evolving_eye_data = _eej.loads(_ee_row[0])
+            _evolving_eye_data = _eej.loads(_urow_eye_json)
     except Exception as _ee_dash_err:
         app.logger.warning(f'[dashboard] evolving_eye_json fetch: {_ee_dash_err}')
 
+    # SL-178.4 PERF: referral_code cached — was called twice in render_template (2 DB calls → 1)
+    # scored_count uses _scored_count_val from consolidated stats query — removes 1 extra DB call
+    _referral_code = get_or_create_referral_code(current_user)
     return render_template('dashboard.html', images=images, stats=stats,
                            all_masters=ALL_MASTERS,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
@@ -5562,9 +5691,9 @@ def dashboard():
                            progress_data=progress_data,
                            show_portfolio_banner=show_portfolio_banner,
                            mentor_reviews=mentor_reviews,
-                           referral_code=get_or_create_referral_code(current_user),
+                           referral_code=_referral_code,
                            referral_stats=get_referral_stats(current_user),
-                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
+                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (_referral_code or '')),
                            referred_discount=_ref_discount,
                            _months_active=_months_active,
                            _season_start_label=_season_start_label,
@@ -5591,10 +5720,7 @@ def dashboard():
                            evolving_eye_json=_evolving_eye_json,
                            evolving_eye_data=_evolving_eye_data,
                            mentor_advice=_mentor_advice,
-                           scored_count=db.session.execute(
-                               db.text("SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"),
-                               {'uid': current_user.id}
-                           ).scalar() or 0,
+                           scored_count=_scored_count_val,
                            quota_status=_get_quota_status(current_user))
 
 
@@ -5723,7 +5849,15 @@ def my_gallery():
     sort    = request.args.get('sort', 'newest').strip()
     track   = request.args.get('track', '').strip()
 
+    # 181.18: Haiku free-try images never appear in main My Gallery.
+    # The /try world is separate. Raw SQL used — is_haiku_try not yet an ORM column.
+    _haiku_ids = db.session.execute(
+        db.text("SELECT id FROM images WHERE user_id = :uid AND is_haiku_try = TRUE"),
+        {'uid': current_user.id}
+    ).scalars().all()
     images_q = Image.query.filter_by(user_id=current_user.id, is_admin_curation=False)
+    if _haiku_ids:
+        images_q = images_q.filter(Image.id.notin_(_haiku_ids))
 
     if query:
         images_q = images_q.filter(
@@ -5760,7 +5894,9 @@ def my_gallery():
             COALESCE(MAX(score), 0)                             AS best,
             COALESCE(AVG(score) FILTER (WHERE score IS NOT NULL), 0) AS avg
         FROM images
-        WHERE user_id = :uid AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+        WHERE user_id = :uid
+          AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+          AND is_haiku_try IS NOT TRUE
     """), {'uid': current_user.id}).fetchone()
 
     total  = int(_stat_row.total  or 0)
@@ -5774,6 +5910,7 @@ def my_gallery():
         WHERE user_id = :uid
           AND genre IS NOT NULL
           AND (is_admin_curation = FALSE OR is_admin_curation IS NULL)
+          AND is_haiku_try IS NOT TRUE
         ORDER BY genre
     """), {'uid': current_user.id}).fetchall()
     genres = [r[0] for r in genre_rows if r[0]]
@@ -6442,9 +6579,21 @@ def _generate_evolving_eye(user_id, milestone):
                             f"[{r.genre} {r.score}] \"{r.asset_name.strip()}\""
                         )
 
+                # ── Soul profile — read the person behind the images ──────
+                # SL-177 (P32): Built from genre commitment, score trajectory,
+                # title language, and upload behaviour. Passed as preamble
+                # to Sonnet so it speaks to the person, not just the technique.
+                _primary_genre = max(_genres.keys(), key=lambda g: len(_genres[g])) if _genres else 'photography'
+                _genre_count = len(_genres)
+                _score_direction = 'climbing' if _last10 > _first10 else ('falling' if _last10 < _first10 else 'steady')
+                _gap_best_avg = round(_best - _avg, 2)
+                _title_style = 'absent' if not _title_lines else (
+                    'questioning' if any('?' in t for t in _title_lines)
+                    else 'poetic' if _genre_count <= 1
+                    else 'descriptive'
+                )
+
                 # ── Genre breakdown ───────────────────────────────────────
-                # Item 20 fix (Session 183): moved above Soul profile so
-                # _genres is assigned before first use at _primary_genre.
                 from collections import defaultdict
                 _genres = defaultdict(list)
                 for r in _images:
@@ -6471,24 +6620,8 @@ def _generate_evolving_eye(user_id, milestone):
                     }
 
                 # ── Trajectory ────────────────────────────────────────────
-                # Item 20 fix (Session 183): moved above Soul profile so
-                # _first10/_last10 are assigned before use at _score_direction.
                 _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
                 _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
-
-                # ── Soul profile — read the person behind the images ──────
-                # SL-177 (P32): Built from genre commitment, score trajectory,
-                # title language, and upload behaviour. Passed as preamble
-                # to Sonnet so it speaks to the person, not just the technique.
-                _primary_genre = max(_genres.keys(), key=lambda g: len(_genres[g])) if _genres else 'photography'
-                _genre_count = len(_genres)
-                _score_direction = 'climbing' if _last10 > _first10 else ('falling' if _last10 < _first10 else 'steady')
-                _gap_best_avg = round(_best - _avg, 2)
-                _title_style = 'absent' if not _title_lines else (
-                    'questioning' if any('?' in t for t in _title_lines)
-                    else 'poetic' if _genre_count <= 1
-                    else 'descriptive'
-                )
 
                 # ── Last 10 audit texts ───────────────────────────────────
                 _recent_audits = _images[-10:]
@@ -7864,15 +7997,24 @@ def profile():
                                 # Session 139 — also scan for live events in the
                                 # new city immediately so the dashboard advisory
                                 # is populated without waiting for the daily cron.
-                                try:
-                                    from engine.city_event_scan import scan_city as _scan_city
-                                    _ev = _scan_city(db.session, _disc_city)
+                                # SL-180.3: skipped when SL_DISABLE_AI_JOBS is set.
+                                # On staging every test location change fired a
+                                # full 4-call scan_city with web_search billed.
+                                if _AI_JOBS_DISABLED:
                                     app.logger.info(
-                                        f'[update_location] live event scan '
-                                        f'({_disc_city}): {_ev} event(s)'
+                                        f'[update_location] live event scan skipped '
+                                        f'({_disc_city}) — SL_DISABLE_AI_JOBS set'
                                     )
-                                except Exception as _cese:
-                                    app.logger.warning(f'[update_location] live event scan: {_cese}')
+                                else:
+                                    try:
+                                        from engine.city_event_scan import scan_city as _scan_city
+                                        _ev = _scan_city(db.session, _disc_city)
+                                        app.logger.info(
+                                            f'[update_location] live event scan '
+                                            f'({_disc_city}): {_ev} event(s)'
+                                        )
+                                    except Exception as _cese:
+                                        app.logger.warning(f'[update_location] live event scan: {_cese}')
                         except Exception as _de:
                             app.logger.warning(f'[update_location] discovery thread: {_de}')
                     _t = _threading.Thread(target=_run_city_discovery, daemon=True)
@@ -8654,11 +8796,6 @@ def upload_preflight():
             )
             if _thumb_path and _os.path.exists(_thumb_path):
                 _os.remove(_thumb_path)
-        except ValueError as _res_err:
-            # Hard block — resolution too low. Return immediately.
-            if _os.path.exists(_tmp.name):
-                _os.remove(_tmp.name)
-            return jsonify({'error': True, 'message': str(_res_err)}), 422
         finally:
             if _os.path.exists(_tmp.name):
                 _os.remove(_tmp.name)
@@ -8843,9 +8980,18 @@ def upload():
         session['post_login_next'] = request.url
         return redirect(url_for('onboarding_interests'))
 
-    # Free users proceed through the standard Sonnet upload route.
-    # /try (Haiku) is staging-only — not active on production.
-    # Standing instruction: all production users use Sonnet until explicit go-ahead.
+    # ── SL 172.2: Free user redirect to /try ─────────────────────────────────
+    # Free users (is_subscribed=False, not admin/beta/uat) use /try for Haiku
+    # evaluations. Clicking "Upload" in the nav sends them to /try, not here.
+    # Subscribed users, admin, beta, and uat plans proceed to the full upload.
+    _plan_check = getattr(current_user, 'subscription_plan', None) or ''
+    _is_free_user = (
+        not getattr(current_user, 'is_subscribed', False) and
+        current_user.role != 'admin' and
+        _plan_check not in ('beta', 'uat')
+    )
+    if _is_free_user and request.method == 'GET':
+        return redirect(url_for('try_page'))
 
     # Quota check — runs for GET and POST alike, so a free user who's out of
     # quota gets stopped the moment they click "Upload" anywhere on the site,
@@ -8920,21 +9066,13 @@ def upload():
             sim = hash_similarity_pct(phash, ex.phash)
             if ex.user_id == current_user.id and sim >= 99.0:
                 # Exact re-upload of a file the user already has in their gallery.
-                # SL-179.8: block immediately with a clear message — do not fall
-                # through to cache anchor path which crashes on _bg_nsfw_breastfeeding.
-                if os.path.exists(thumb_path): os.remove(thumb_path)
+                # Do NOT block — the phash cache will return the anchored score below.
+                # Just break out of the loop; cache hit handles it.
                 app.logger.info(
                     f'[upload] exact phash match (sim={sim:.1f}%) on existing image '
-                    f'{ex.id} — rejected pre-save, duplicate message shown to user'
+                    f'{ex.id} — cache will anchor score, not blocking'
                 )
-                _dup_msg = (
-                    'This image has already been uploaded. '
-                    'Please upload a new photograph.'
-                )
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                    return jsonify({'error': True, 'message': _dup_msg}), 409
-                flash(_dup_msg, 'error')
-                return redirect(request.url)
+                break
             elif ex.user_id == current_user.id and sim >= 85.0:
                 # Near-match — visually similar to a previously scored image.
                 # Allow upload. Capture previous score for delta calibration.
@@ -9446,7 +9584,7 @@ def upload():
                                     _img.is_flagged   = True
                                     _img.is_public    = False
                                     _img.flagged_reason = f'Watermark detected: {_bgwm_data.get("description")}'
-                                    _img.scoring_flash  = 'Your image contains a text overlay or watermark. Please upload a clean photograph.'
+                                    _img.scoring_flash  = 'Your image was not accepted — it appears to contain a watermark or logo. Please upload the clean original without any text or branding overlays.'
                                     db.session.commit()
                                     # ── SL-179.1: Admin email on watermark flag ──────────────────
                                     # Non-fatal — wrapped in try/except. Does not touch DB session.
@@ -9492,6 +9630,8 @@ def upload():
                                         app.logger.info(f'[upload] watermark flag admin email sent: image={image_id}')
                                     except Exception as _wm_mail_err:
                                         app.logger.error(f'[upload] watermark flag admin email failed (non-fatal): {_wm_mail_err}')
+                                        try: db.session.rollback()  # SL-179.2: prevent InFailedSqlTransaction poisoning next web request on this worker
+                                        except Exception: pass
                                     return  # stop — do not score a watermarked image
                             except Exception as _bgwm_err:
                                 app.logger.warning(f'[upload] bg watermark check failed (non-fatal): {_bgwm_err}')
@@ -9551,7 +9691,7 @@ def upload():
                                     _img.is_flagged   = True
                                     _img.is_public    = False
                                     _img.flagged_reason = f'NSFW: {_bgnsfw_data.get("description")}'
-                                    _img.scoring_flash  = 'Your image could not be accepted for evaluation. Kindly upload the raw file to support@shutterleague.com if you believe this is an error.'
+                                    _img.scoring_flash  = 'Your image was not accepted — explicit content was detected. Please review the programme rules and re-upload a clean image.'
                                     db.session.commit()
                                     return
                             except Exception as _bgnsfw_err:
@@ -9769,108 +9909,6 @@ def upload():
                                     f'{_hive_err} body={_err_body} — continuing to Claude Vision'
                                 )
                         # ── END Hive check ─────────────────────────────────
-
-                        # ── LAYER 3: Screenshot / digital reproduction check ──
-                        # Session 183 — 2026-08-14
-                        # Rejects images that are screenshots of digital interfaces,
-                        # apps, websites, or scorecards. Does NOT reject:
-                        #   - Graffiti, street art, murals, signage, billboards
-                        #   - Display windows, exhibition boards, venue signage
-                        #   - Text on walls, forts, trains, archaeological sites
-                        #   - Photographs of books, bibles, printed pages as subjects
-                        #   - Billboards at sunset, neon signs, shop fronts
-                        #   - Screens visible as part of a real-world scene
-                        # Only rejects: flat digital UI screenshots where the
-                        # interface fills the frame with no real-world photographic
-                        # context (no depth, no lighting, no environment).
-                        try:
-                            import urllib.request as _sc_ureq
-                            import json as _sc_json
-                            from PIL import Image as _SC_PIL
-                            import io as _sc_io
-                            import base64 as _sc_b64
-                            _sc_api_key = os.getenv('ANTHROPIC_API_KEY', '')
-                            # Build _img_b64 from thumb — same pattern as watermark check
-                            _sc_pil = None
-                            if _img.thumb_path and os.path.exists(_img.thumb_path or ''):
-                                _sc_pil = _SC_PIL.open(_img.thumb_path).convert('RGB')
-                            elif _img.thumb_url:
-                                with _sc_ureq.urlopen(_img.thumb_url, timeout=15) as _sc_fetch:
-                                    _sc_pil = _SC_PIL.open(_sc_io.BytesIO(_sc_fetch.read())).convert('RGB')
-                            if _sc_pil is None:
-                                raise ValueError('No thumb available for screenshot check')
-                            if max(_sc_pil.size) > 1024:
-                                _sc_pil.thumbnail((1024, 1024))
-                            _sc_buf = _sc_io.BytesIO()
-                            _sc_pil.save(_sc_buf, format='JPEG', quality=80)
-                            _img_b64 = _sc_b64.b64encode(_sc_buf.getvalue()).decode('utf-8')
-                            _sc_check_prompt = (
-                                "Look at this image carefully. Answer with ONLY the word REJECT or PASS.\n\n"
-                                "REJECT if: This image is a screenshot of a digital interface — an app, website, "
-                                "scorecard, evaluation result, software UI, or any digital screen captured flat "
-                                "with no real-world photographic context. UI elements (buttons, nav bars, score "
-                                "numbers in a layout, menus, typed text blocks filling the frame) are the key signal.\n\n"
-                                "PASS if: This is a real photograph taken in the world — even if it contains "
-                                "text, numbers, screens, or printed material. Graffiti, street art, murals, "
-                                "billboards, signage, display windows, exhibition boards, venue displays, "
-                                "neon signs, shop fronts, book pages as photographic subjects, screens visible "
-                                "as part of a real scene — ALL PASS. The test is whether there is real-world "
-                                "photographic context: light, depth, environment, perspective, shadow.\n\n"
-                                "One word only: REJECT or PASS"
-                            )
-                            _sc_payload = _sc_json.dumps({
-                                'model': 'claude-haiku-4-5-20251001',
-                                'max_tokens': 10,
-                                'temperature': 0,
-                                'messages': [{'role': 'user', 'content': [
-                                    {'type': 'image', 'source': {
-                                        'type': 'base64',
-                                        'media_type': 'image/jpeg',
-                                        'data': _img_b64
-                                    }},
-                                    {'type': 'text', 'text': _sc_check_prompt}
-                                ]}]
-                            }).encode()
-                            _sc_req = _sc_ureq.Request(
-                                'https://api.anthropic.com/v1/messages',
-                                data=_sc_payload,
-                                headers={
-                                    'Content-Type': 'application/json',
-                                    'x-api-key': _sc_api_key,
-                                    'anthropic-version': '2023-06-01',
-                                },
-                                method='POST'
-                            )
-                            with _sc_ureq.urlopen(_sc_req, timeout=15) as _sc_r:
-                                _sc_resp = _sc_json.loads(_sc_r.read().decode())
-                            _sc_verdict = (_sc_resp.get('content', [{}])[0].get('text', '') or '').strip().upper()
-                            app.logger.info(f'[screenshot_check] image={image_id} verdict={_sc_verdict}')
-
-                            if 'REJECT' in _sc_verdict:
-                                _img.status         = 'flagged'
-                                _img.is_flagged     = True
-                                _img.is_public      = False
-                                _img.flagged_reason = (
-                                    'Screenshot detected: this appears to be a digital screenshot '
-                                    'rather than an original photograph. Only photographs taken in '
-                                    'the real world are accepted. Graffiti, signage, billboards, '
-                                    'and screens photographed as part of a real scene are welcome.'
-                                )
-                                _img.scoring_flash = (
-                                    'Your image was not accepted — it appears to be a screenshot '
-                                    'of a digital interface rather than an original photograph. '
-                                    'Please upload a real photograph. Street art, signage, and '
-                                    'billboards photographed in the world are welcome.'
-                                )
-                                db.session.commit()
-                                app.logger.info(f'[screenshot_check] REJECTED image={image_id}')
-                                return  # Stop — do not call Claude Vision
-                        except Exception as _sc_err:
-                            app.logger.warning(
-                                f'[screenshot_check] check failed for image={image_id}: '
-                                f'{_sc_err} — continuing to Claude Vision'
-                            )
-                        # ── END Screenshot check ────────────────────────────
 
                         # ── Sprint 2 — seasonal + portfolio context ───────────────────────────
                         try:
@@ -10952,20 +10990,12 @@ def score_status(image_id):
         })
 
     if getattr(img, 'is_flagged', False):
-        _flagged_reason = getattr(img, 'flagged_reason', '') or ''
-        if _flagged_reason.lower().startswith('watermark'):
-            _flagged_msg = 'Your image contains a text overlay or watermark. Please upload a clean photograph.'
-        elif _flagged_reason.lower().startswith('nsfw') or 'explicit' in _flagged_reason.lower():
-            _flagged_msg = ('Your image could not be accepted for evaluation. '
-                            'Kindly upload the raw file to ' + CONTACT_EMAIL + ' if you believe this is an error.')
-        else:
-            _flagged_msg = ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
-                            'Only original photographs taken by you are accepted. '
-                            'If you believe this is an error, contact ' + CONTACT_EMAIL + '.')
         return jsonify({
             'status': 'flagged',
             'image_id': img.id,
-            'message': _flagged_msg,
+            'message': ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
+                        'Only original photographs taken by you are accepted. '
+                        'If you believe this is an error, contact ' + CONTACT_EMAIL + '.'),
             'redirect': url_for('dashboard')
         })
 
@@ -10985,7 +11015,18 @@ def score_status(image_id):
             'redirect': url_for('image_detail', image_id=img.id)
         })
 
-    if _next == 'challenge':
+    # SL 172.3: trial images (haiku_try source) redirect to /try/result/<id>
+    _is_trial_img = False
+    try:
+        import json as _scj
+        _sc_audit = _scj.loads(img._audit_json or '{}')
+        _is_trial_img = _sc_audit.get('source') == 'haiku_try'
+    except Exception:
+        pass
+
+    if _is_trial_img:
+        _redir = url_for('try_result', image_id=img.id)
+    elif _next == 'challenge':
         _redir = url_for('challenge_submit') + f'?highlight={img.id}'
     else:
         _redir = url_for('image_detail', image_id=img.id)
@@ -11642,7 +11683,7 @@ def upload_edited_version(image_id):
         flash('The original image must be scored before you can upload an edited version.', 'error')
         return redirect(url_for('image_detail', image_id=image_id))
 
-    # ── SL-179.2 — a flagged photograph cannot spawn an edited version ───────
+    # ── SL-181.3 — a flagged photograph cannot spawn an edited version ───────
     # WHY THIS EXISTS. A hard-rejected image (Hive AI detection at >= 0.90, or
     # ai_suspicion >= 0.7) is left at status='scored' with score 0.0 and
     # is_flagged=True. The status check immediately above therefore PASSES for
@@ -12406,6 +12447,19 @@ def public_card_download(token):
 @app.route('/image/<int:image_id>')
 def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
+
+    # 181.15: Haiku free-try images must never render on the paid scorecard.
+    # The paid template shows the wrong download button which hits download_card_pdf,
+    # which gates haiku_try source and redirects to pricing — confusing the user.
+    # Redirect to /try/result/<id> immediately, before any other processing.
+    try:
+        import json as _idj
+        _id_audit = _idj.loads(img._audit_json or '{}')
+        if _id_audit.get('source') == 'haiku_try':
+            return redirect(url_for('try_result', image_id=image_id))
+    except Exception:
+        pass
+
     # Public scored images are viewable by anyone
     # Private images require login and ownership
     if not getattr(img, 'is_public', False):
@@ -13109,6 +13163,7 @@ def recent_work():
             " AND (i.needs_review = FALSE OR i.needs_review IS NULL)"
             " AND (i.raw_disqualified = FALSE OR i.raw_disqualified IS NULL)"
             " AND i.thumb_url IS NOT NULL"
+            " AND i.is_haiku_try IS NOT TRUE"
         )
 
         def _fetch_and_cap(since):
@@ -15223,6 +15278,53 @@ def admin_run_seasonal_discovery():
     return redirect(url_for('admin_seasonal_discovery_page'))
 
 
+@app.route('/admin/run-city-event-scan', methods=['POST'])
+@login_required
+@admin_required
+def admin_run_city_event_scan():
+    """
+    SL-180.3 — manually trigger a live event scan for ONE city.
+
+    The scheduled city_event_scan job is disabled on staging via
+    SL_DISABLE_AI_JOBS so unattended runs cost nothing. This route is the
+    deliberate counterpart: press the button and a single city is scanned so
+    the dashboard live-event advisory can be tested with real data.
+
+    Cost per run: 3 web_search calls + 1 extraction call (Sonnet). One city.
+
+    Deliberately ignores SL_DISABLE_AI_JOBS — an admin pressing this button
+    means it. Uses an isolated DB session for the same reason the cron wrapper
+    does (SL-180.1): a scan failure must never poison a web worker's session.
+    """
+    _city = (request.form.get('city') or '').strip()
+    if not _city:
+        flash('Enter a city name to scan.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    _scan_session = None
+    try:
+        from engine.city_event_scan import scan_city as _scan_city
+        _scan_session = db.session.session_factory()
+        _events = _scan_city(_scan_session, _city)
+        app.logger.info(f'[admin_city_scan] {_city}: {_events} event(s) written')
+        if _events:
+            flash(f'Live event scan complete for {_city} — {_events} event(s) written.', 'success')
+        else:
+            flash(f'Live event scan complete for {_city} — no events found. '
+                  f'Check the logs for search results.', 'success')
+    except Exception as _e:
+        app.logger.warning(f'[admin_city_scan] {_city} failed: {_e}')
+        flash(f'City event scan error: {_e}', 'error')
+    finally:
+        if _scan_session is not None:
+            try:
+                _scan_session.close()
+            except Exception:
+                pass
+
+    return redirect(url_for('admin_dashboard'))
+
+
 # ── Read-only check: user city + genre_interests (for seasonal context debugging) ──
 @app.route('/admin/check-user-location')
 @login_required
@@ -15697,15 +15799,25 @@ def delete_image(image_id):
     # the upload_history_log migration (v80) for why this exists. Runs in
     # the same session as the deletes below, so it commits atomically with
     # the real delete — if that fails and rolls back, this rolls back too.
+    # 181.17: detect Haiku image before delete so we can log is_haiku_try
+    # and show the correct message. Must read audit_json before DB delete.
+    _is_haiku_delete = False
+    try:
+        import json as _dj
+        _d_audit = _dj.loads(img._audit_json or '{}')
+        _is_haiku_delete = (_d_audit.get('source') == 'haiku_try')
+    except Exception:
+        pass
+
     try:
         db.session.execute(
-            db.text("""INSERT INTO upload_history_log (user_id, asset_name, score, genre)
-                       VALUES (:uid, :name, :score, :genre)"""),
-            {'uid': current_user.id, 'name': img.asset_name, 'score': img.score, 'genre': img.genre}
+            db.text("""INSERT INTO upload_history_log (user_id, asset_name, score, genre, is_haiku_try)
+                       VALUES (:uid, :name, :score, :genre, :iht)"""),
+            {'uid': current_user.id, 'name': img.asset_name, 'score': img.score,
+             'genre': img.genre, 'iht': _is_haiku_delete}
         )
     except Exception as _log_err:
         app.logger.warning(f'[delete_image] upload_history_log write failed: {_log_err}')
-        db.session.rollback()  # Session 183: NULL score on flagged images poisons session
 
     # Direct SQL deletes — instant, no ORM cascade
     iid = image_id
@@ -15760,8 +15872,35 @@ def delete_image(image_id):
                     pass
         threading.Thread(target=_cleanup, args=(r2_keys,), daemon=True).start()
 
-    flash('Image deleted. Your evaluation history has been updated.', 'warning')
+    # 181.17: right message for Haiku vs paid delete
+    if _is_haiku_delete:
+        # Count remaining Haiku evals from log (source of truth post-181.17)
+        try:
+            _bonus_del = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+            _used_log  = db.session.execute(
+                db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+                {'uid': current_user.id}
+            ).scalar() or 0
+            _remaining_del = max(0, (FREE_IMAGE_LIMIT + _bonus_del) - _used_log)
+            _rem_word = f'{_remaining_del} exploratory evaluation{"s" if _remaining_del != 1 else ""}'
+            flash(
+                f'Photograph removed. Your exploratory evaluation has been used — '
+                f'deleting a photograph does not restore your evaluation. '
+                f'{_rem_word} remaining.',
+                'warning'
+            )
+        except Exception:
+            flash(
+                'Photograph removed. Deleting a photograph does not restore your exploratory evaluation.',
+                'warning'
+            )
+    else:
+        flash('Image deleted. Your evaluation history has been updated.', 'warning')
+
     _from = request.form.get('from', '')
+    # 181.19: haiku delete returns to /try — user stays in the free world
+    if _from == 'haiku':
+        return redirect(url_for('try_page'))
     return redirect(url_for('my_gallery') if _from == 'gallery' else url_for('dashboard'))
 
 
@@ -19084,6 +19223,11 @@ def poty():
         return q
 
     try:
+        # 181.18: Haiku images never appear in Standings.
+        _haiku_ids_poty = db.session.execute(
+            db.text("SELECT id FROM images WHERE is_haiku_try = TRUE")
+        ).scalars().all()
+        _haiku_excl = _haiku_ids_poty or [0]
         _ph_q     = Image.query.filter(
             Image.status == 'scored',
             Image.score != None,
@@ -19093,6 +19237,7 @@ def poty():
             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
             Image.score >= 8.0,
             Image.width > Image.height,
+            Image.id.notin_(_haiku_excl),
         )
         _ph_q     = _track_filter(_ph_q)
         poty_hero = _ph_q.order_by(db.func.random()).first()
@@ -19110,6 +19255,7 @@ def poty():
             Image.score >= 8.0,
             Image.id != exclude_id,
             Image.width > Image.height,
+            Image.id.notin_(_haiku_excl),
         )
         _lb_q   = _track_filter(_lb_q)
         lb_hero = _lb_q.order_by(db.func.random()).first()
@@ -19128,6 +19274,7 @@ def poty():
                     Image.score > 0,
                     Image.status == 'scored',
                     Image.is_public == True,
+                    Image.id.notin_(_haiku_excl),
                     db.or_(Image.is_flagged == False, Image.is_flagged == None))
         )
         _pg_q    = _track_filter(_pg_q)
@@ -20179,7 +20326,7 @@ MENTORS = {
         'price':       200,
         'points_cost': 2000,
         'photo':       'img/mentor_ashok.jpg',
-        'genres':      'Conceptual · Fashion · Street · Portrait',
+        'genres':      'Conceptual · Fashion · Street · Nature',
         'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
     },
 
@@ -22385,13 +22532,19 @@ def bulk_upload_one():
                             'Does this photograph contain a photographer-added watermark, text overlay, '
                             'studio logo, social media handle (@username), copyright text, or any branding '
                             'embedded into the image by the photographer? '
-                            'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                            'Do NOT flag: image content (signs, billboards, labels, graffiti, or writing that is part of the physical scene), '
                             'platform watermarks, natural scene text, '
                             'or phone/camera app overlays (device name, date/time stamps, '
                             'GPS coordinates, camera model text burned in by the phone — e.g. Galaxy S25, iPhone, '
                             'date/time overlays added automatically by camera apps). '
+                            'CRITICAL — DO NOT flag text or writing that appears ON physical surfaces (walls, stone, brick, paint, buildings, forts, '
+                            'monuments, street surfaces) — this is graffiti or architectural text that is part of the scene the photographer captured, '
+                            'not something the photographer added in post-processing. '
+                            'A photographer watermark MUST be a semi-transparent or solid text/logo overlay that floats ON TOP of the image — '
+                            'it will look distinctly separate from the scene, often with consistent opacity, font, or logo style. '
+                            'If text is embedded in a physical surface being photographed, it is scene content — do NOT flag it. '
                             'ONLY flag if the photographer deliberately added their own branding, studio logo, '
-                            'social handle, or copyright text as a post-processing overlay. '
+                            'social handle, or copyright text as a post-processing overlay on top of the image. '
                             'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
                         )}
                     ]}]
@@ -22408,6 +22561,45 @@ def bulk_upload_one():
                 if _bwm_data.get('watermark_detected'):
                     if os.path.exists(thumb_path): os.remove(thumb_path)
                     app.logger.info(f'[bulk_upload_one] watermark rejected: {_bwm_data.get("description")} uid={current_user.id}')
+                    # ── SL-179.1: Admin email on bulk watermark flag ─────────────
+                    # Non-fatal — wrapped in try/except. Return proceeds regardless.
+                    try:
+                        _bwm_desc = _bwm_data.get('description') or 'Not specified'
+                        _bwm_site = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        send_email(
+                            to_addresses=[ADMIN_EMAIL],
+                            subject='[Admin] Watermark Flag (Bulk) — ' + file.filename,
+                            html_body=(
+                                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                                '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+                                '<body style="margin:0;padding:0;background:#FEFCF8;font-family:Inter,Arial,sans-serif;">'
+                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#FEFCF8;padding:24px 16px;"><tr><td align="center">'
+                                '<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:520px;width:100%;">'
+                                '<tr><td style="background:#2C3E6B;padding:16px 24px;">'
+                                '<div style="margin:0;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;font-family:Inter,Arial,sans-serif;">SHUTTER LEAGUE — ADMIN</div>'
+                                '</td></tr><tr><td style="padding:24px;">'
+                                '<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#1a1a18;line-height:1.6;">Watermark Detected — Bulk Upload Rejected</p>'
+                                '<p style="margin:0 0 16px;font-size:15px;color:#4A4840;line-height:1.7;">An image was rejected during bulk upload. Please review — if this is a false positive (e.g. graffiti or text on a physical surface), advise the photographer to re-upload.</p>'
+                                '<table style="margin:12px 0;border-collapse:collapse;width:100%;">'
+                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;white-space:nowrap;vertical-align:top;">File</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + file.filename + '</td></tr>'
+                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">Detected</td><td style="padding:6px 0;font-size:15px;color:#C0392B;font-weight:600;">' + _bwm_desc + '</td></tr>'
+                                '<tr><td style="padding:6px 12px 6px 0;font-size:15px;color:#8a8070;vertical-align:top;">User</td><td style="padding:6px 0;font-size:15px;color:#1a1a18;">' + (current_user.email if current_user else 'unknown') + '</td></tr>'
+                                '</table>'
+                                '<a href="' + _bwm_site + '/admin" style="display:inline-block;background:#2C3E6B;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;font-family:Inter,Arial,sans-serif;">Go to Admin &#8594;</a>'
+                                '</td></tr></table></td></tr></table></body></html>'
+                            ),
+                            text_body=(
+                                'Watermark flag — bulk upload rejected.\n'
+                                'File: ' + file.filename + '\n'
+                                'Detected: ' + _bwm_desc + '\n'
+                                'User: ' + (current_user.email if current_user else 'unknown')
+                            )
+                        )
+                        app.logger.info(f'[bulk_upload_one] watermark flag admin email sent: uid={current_user.id}')
+                    except Exception as _bwm_mail_err:
+                        app.logger.error(f'[bulk_upload_one] watermark flag admin email failed (non-fatal): {_bwm_mail_err}')
+                        try: db.session.rollback()  # SL-179.2: prevent InFailedSqlTransaction poisoning next web request on this worker
+                        except Exception: pass
                     return jsonify({'filename': file.filename, 'status': 'rejected — watermark or logo detected. Please remove any added text or branding and re-upload the clean image.', 'score': None, 'tier': None}), 200
         except Exception as _bwm_err:
             app.logger.warning(f'[bulk_upload_one] watermark check failed (non-fatal): {_bwm_err}')
@@ -30572,13 +30764,16 @@ if _sched_lock_held:
         replace_existing = True,
     )
     # Item D — seasonal auto-discovery — weekly, Sunday 04:00 UTC
-    _scheduler.add_job(
-        func             = run_seasonal_discovery_job,
-        trigger          = CronTrigger(day_of_week='sun', hour=4, minute=0, timezone='UTC'),
-        id               = 'seasonal_discovery',
-        name             = 'Weekly seasonal calendar auto-discovery (item D)',
-        replace_existing = True,
-    )
+    # SL-180.3: skipped entirely when SL_DISABLE_AI_JOBS is set (staging).
+    # Manual trigger remains available at /admin/run-seasonal-discovery.
+    if not _AI_JOBS_DISABLED:
+        _scheduler.add_job(
+            func             = run_seasonal_discovery_job,
+            trigger          = CronTrigger(day_of_week='sun', hour=4, minute=0, timezone='UTC'),
+            id               = 'seasonal_discovery',
+            name             = 'Weekly seasonal calendar auto-discovery (item D)',
+            replace_existing = True,
+        )
     # SESSION116 — peer eval digest — runs every hour at :00
     # Sends batched eval summaries for images where digest_pending=TRUE and digest_due_at <= now
     _scheduler.add_job(
@@ -30610,21 +30805,38 @@ if _sched_lock_held:
     # Session 140 — daily live event scan — 6am IST (00:30 UTC)
     # Scans all active cities for photography events via three-pass web+social search.
     # Runs at 6am IST so advisories are fresh when users open the app in the morning.
+    # SL-180.1: session isolation — scan job uses its own session, never db.session.
+    # This prevents InFailedSqlTransaction from poisoning gunicorn web workers when
+    # a web search times out mid-transaction. Dashboard get_live_event_advisory is
+    # a separate read path and is completely unaffected.
     def _run_city_event_scan_job():
         try:
             with app.app_context():
                 from engine.city_event_scan import run_city_event_scan
-                run_city_event_scan(db.session)
+                _scan_session = db.session.session_factory()
+                try:
+                    run_city_event_scan(_scan_session)
+                finally:
+                    _scan_session.close()
         except Exception as _cese:
             app.logger.warning(f'[city_event_scan_cron] error: {_cese}')
 
-    _scheduler.add_job(
-        func             = _run_city_event_scan_job,
-        trigger          = CronTrigger(hour='22,4,10,16', minute=30, timezone='UTC'),
-        id               = 'city_event_scan',
-        name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
-        replace_existing = True,
-    )
+    # SL-180.3: skipped entirely when SL_DISABLE_AI_JOBS is set (staging).
+    # Manual single-city trigger remains available at /admin/run-city-event-scan.
+    if not _AI_JOBS_DISABLED:
+        _scheduler.add_job(
+            func             = _run_city_event_scan_job,
+            trigger          = CronTrigger(hour='22,4,10,16', minute=30, timezone='UTC'),
+            id               = 'city_event_scan',
+            name             = 'Live event scan every 6hrs — 4am/10am/4pm/10pm IST',
+            replace_existing = True,
+        )
+    else:
+        app.logger.warning(
+            '[scheduler] SL_DISABLE_AI_JOBS is set — city_event_scan and '
+            'seasonal_discovery NOT registered. No unattended Anthropic API '
+            'calls will be made. Admin-triggered runs still work.'
+        )
 
     # SL 172.3 — Daily automated bot purge — 3:15 UTC (8:45 IST)
     # Deletes accounts with gibberish usernames, 0 images, incomplete onboarding,
@@ -31033,6 +31245,1514 @@ def api_mim_ddi():
         'ddi_narrative':        narrative,
         'dimensions':           dimensions,
     })
+
+
+# ---------------------------------------------------------------------------
+# /try -- Free User Haiku Evaluation Page (SL 172.1)
+# ---------------------------------------------------------------------------
+# RULES (Session 172 handoff):
+#   - @login_required -- free users are registered; no anonymous access
+#   - Haiku model only (claude-haiku-4-5-20251001) -- stripped prompt, no Hive
+#   - Writes to images table (is_public=True) -- appears in recent-work, my-gallery
+#   - Increments total_uploads_ever -- enforces FREE_IMAGE_LIMIT = 3 lifetime gate
+#   - NEVER writes to calibration_dataset, standings, BOW, peer pool, AEA pool
+#   - Percentile via existing compute_percentile() -- shown from image 1
+#   - Single Haiku API call: 5 DDI dimensions + one takeaway
+#   - No Sherpa narrative, no Hive AI check, no location advisory
+#   - /try/result/<id> returns JSON for XHR polling from try.html
+# ---------------------------------------------------------------------------
+
+_HAIKU_MODEL = 'claude-haiku-4-5-20251001'
+
+# ── SL-181.2 — Platform calibration anchors (LOW-END) ───────────────────────
+# Measured on production, 2026-08-13, across 311 Sonnet-scored photographs.
+#
+# SL-181.1 supplied median/p75/p90 — three markers, all in the upper half. The
+# model treated the median as a floor rather than a midpoint. Measured result on
+# a weak Street frame: Haiku 7.09 where Sonnet gave 5.60 (+1.49, Contender ->
+# Maverick), with Wonder alone contributing 49% of the gap and no dimension
+# falling below 5.8 while Sonnet reached 4.5.
+#
+# 181.2 supplies the BOTTOM of the distribution instead: lowest, p10, p25,
+# median, and plain counts of how many photographs fall below 6.0 and 7.0.
+# Low scores have to be shown to be normal before a model will award them.
+#
+# Refresh with:
+#   SELECT genre, COUNT(*), MIN(score),
+#          PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY score),
+#          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY score),
+#          PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY score),
+#          COUNT(*) FILTER (WHERE score < 6.0),
+#          COUNT(*) FILTER (WHERE score < 7.0)
+#   FROM images WHERE status='scored' AND score IS NOT NULL
+#   GROUP BY genre HAVING COUNT(*) >= 8;
+#
+# (n, lowest, p10, p25, median, below_6, below_7)
+_TRY_GENRE_CALIBRATION = {
+    'Street':       (76, 4.90, 5.67, 6.89, 7.72,  9, 20),
+    'Wildlife':     (46, 5.90, 6.41, 7.14, 7.92,  1,  9),
+    'Creative':     (45, 6.72, 7.67, 8.09, 8.22,  0,  1),
+    'Documentary':  (44, 5.70, 6.41, 6.94, 7.49,  2, 12),
+    'People':       (43, 5.30, 6.32, 6.56, 7.18,  4, 15),
+    'Landscape':    (41, 4.30, 5.68, 6.42, 7.12,  8, 15),
+    'Nature':       ( 8, 4.18, 4.47, 4.83, 5.85,  4,  5),
+}
+
+# Genres with too few scored images to anchor individually. Figures are the
+# pooled shape of the seven measured genres — provisional by design.
+_TRY_CALIBRATION_FALLBACK = (0, 4.30, 5.90, 6.80, 7.50, 28, 77)
+
+
+def _try_calibration_line(genre):
+    """SL-181.2 — calibration paragraph, weighted towards the LOW end.
+
+    The purpose is to show the model that low scores are ordinary. Giving only
+    upper-half markers (181.1) made the median behave as a floor.
+    """
+    n, lo, p10, p25, med, b6, b7 = _TRY_GENRE_CALIBRATION.get(
+        genre, _TRY_CALIBRATION_FALLBACK
+    )
+    if n:
+        head = (f'Across {n} {genre} photographs already evaluated on Shutter '
+                f'League by the full engine:')
+        counts = (f'  - {b6} of the {n} ({round(100*b6/n)}%) scored below 6.0\n'
+                  f'  - {b7} of the {n} ({round(100*b7/n)}%) scored below 7.0\n')
+    else:
+        head = ('Across all photographs already evaluated on Shutter League by '
+                'the full engine (too few in this interest area to anchor '
+                'individually, so platform-wide figures apply):')
+        counts = ('  - roughly 1 in 11 scored below 6.0\n'
+                  '  - roughly 1 in 4 scored below 7.0\n')
+    return (
+        f'{head}\n'
+        f'  - the lowest scored {lo}\n'
+        f'  - 1 in 10 scored below {p10}\n'
+        f'  - 1 in 4 scored below {p25}\n'
+        f'  - half scored below {med}\n'
+        f'{counts}'
+        f'\nLOW SCORES ARE NORMAL AND EXPECTED. A competent photograph of an '
+        f'ordinary subject belongs in the 5s and 6s. The figures above are not '
+        f'a floor to stay above — they describe a real distribution with real '
+        f'photographs at every level, including the bottom.\n\n'
+        f'DIMENSION AVERAGES across all 311 evaluated photographs:\n'
+        f'  dod 6.85 | disruption 6.70 | dm 6.96 | wonder 7.83 | aq 8.23\n'
+        f'These are AVERAGES. Roughly half of all photographs score below each '
+        f'of them on each dimension.\n'
+    )
+
+
+def _get_haiku_history_context(user_id, exclude_image_id=None):
+    """
+    181.23 — History context for Haiku scoring prompt.
+    Key changes from 181.20:
+    - SQL now fetches asset_name so image names can be used in the opening sentence.
+    - Pre-builds a mandatory opening sentence in Python (specific, named, guaranteed).
+      Haiku is instructed to use it verbatim as the first sentence of impression.
+      This prevents Haiku from skipping the history reference or making it generic.
+    - Computes consistent_strength across all history (most common strongest dimension).
+    - Consistent weakness computed as average lowest dimension across history.
+    - Opening sentence names actual photographs by title — "The flamingo pan, the
+      flower frame" — so the user feels remembered, not processed.
+    """
+    _DIM_NAMES = {
+        'dod': 'Depth of Difficulty',
+        'vd':  'Visual Disruption',
+        'dm':  'Decisive Moment',
+        'wf':  'Wonder Factor',
+        'aq':  'Authentic Quality',
+    }
+    # Plain English — what each dimension means without jargon
+    _DIM_PLAIN = {
+        'dod': 'the difficulty of what you chose to make',
+        'vd':  'the visual surprise in your frame',
+        'dm':  'the timing of the moment',
+        'wf':  'the sense of wonder you create',
+        'aq':  'the emotional atmosphere you build',
+    }
+
+    def _derive_strength_weakness(audit):
+        _scores = {}
+        for _k in ('dod', 'vd', 'dm', 'wf', 'aq'):
+            try:
+                _v = audit.get(_k)
+                if _v is not None:
+                    _scores[_k] = float(_v)
+            except Exception:
+                pass
+        if not _scores:
+            return '', '', {}
+        _strongest = max(_scores, key=_scores.get)
+        _weakest   = min(_scores, key=_scores.get)
+        return _DIM_NAMES.get(_strongest, ''), _DIM_NAMES.get(_weakest, ''), _scores
+
+    try:
+        import json as _hj
+        from collections import Counter as _Ctr
+        _params = {'uid': user_id}
+        # 181.23: add asset_name to SQL so we can name images in the opening
+        _sql = (
+            "SELECT genre, score, tier, audit_json, asset_name "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"
+        )
+        if exclude_image_id:
+            _sql += " AND id != :iid"
+            _params['iid'] = exclude_image_id
+        _sql += " ORDER BY id DESC LIMIT 5"  # up to 5 for pattern strength
+
+        _rows = db.session.execute(db.text(_sql), _params).fetchall()
+        if not _rows:
+            return ''
+
+        _lines        = []
+        _strengths    = []  # strongest dimension key per eval
+        _weaknesses   = []  # weakest dimension key per eval
+        _image_names  = []  # cleaned asset names for opening sentence
+        _all_scores   = {}  # dim → list of scores across history
+
+        for _r in _rows:
+            try:
+                _ha = _hj.loads(_r[3] or '{}')
+                _asset = (_r[4] or '').replace('_', ' ').replace('-', ' ').strip()
+                if _asset:
+                    _image_names.append(_asset)
+
+                _sn = (_ha.get('strength_name') or '').strip()
+                _ln = (_ha.get('next_leap_name') or '').strip()
+                _sn_d, _ln_d, _scores_d = _derive_strength_weakness(_ha)
+                if not _sn:
+                    _sn = _sn_d
+                if not _ln:
+                    _ln = _ln_d
+
+                # Accumulate per-dimension scores for average weakness
+                for _dk, _dv in _scores_d.items():
+                    _all_scores.setdefault(_dk, []).append(_dv)
+
+                # Track strongest/weakest by key for pattern analysis
+                if _scores_d:
+                    _strengths.append(max(_scores_d, key=_scores_d.get))
+                    _weaknesses.append(min(_scores_d, key=_scores_d.get))
+
+                _tk   = (_ha.get('takeaway') or '').strip()
+                _line = f"  - {_r[0]} · {_asset or 'Untitled'} · {float(_r[1]):.2f} · {_r[2]}"
+                if _sn:
+                    _line += f" · Strongest: {_sn}"
+                if _ln:
+                    _line += f" · Gap: {_ln}"
+                if _tk:
+                    _line += f"\n    Takeaway: {_tk}"
+                _lines.append(_line)
+            except Exception:
+                pass
+
+        if not _lines:
+            return ''
+
+        # ── Compute consistent strength and average weakness ──────────────
+        _consistent_strength_key  = ''
+        _consistent_weakness_key  = ''
+        _consistent_strength_name = ''
+        _consistent_weakness_plain = ''
+
+        if _strengths:
+            _sc = _Ctr(_strengths)
+            _consistent_strength_key  = _sc.most_common(1)[0][0]
+            _consistent_strength_name = _DIM_NAMES.get(_consistent_strength_key, '')
+
+        if _all_scores:
+            # Average score per dimension across all history
+            _avg_scores = {k: sum(v)/len(v) for k, v in _all_scores.items()}
+            _consistent_weakness_key   = min(_avg_scores, key=_avg_scores.get)
+            _consistent_weakness_plain = _DIM_PLAIN.get(_consistent_weakness_key, '')
+
+        # ── Build history opening instruction ────────────────────────────
+        # 181.26: Instead of one fixed verbatim sentence (which reads as a bot),
+        # give the prompt the raw materials and let Haiku write the opening
+        # in Sherpa voice. Vary the structure based on eval count and pattern.
+        # The instruction names photographs, strength, and progression explicitly
+        # so the opening is specific — but the wording changes every time.
+        _opening = ''
+        _n = len(_image_names)
+
+        if _n >= 2 and _consistent_strength_name:
+            _named_list = ', '.join([f'"{nm}"' for nm in _image_names[:3]])
+            _opening = (
+                f"HISTORY OPENING INSTRUCTION — the impression field MUST open with "
+                f"one sentence that references the photographer's prior work. "
+                f"You have seen: {_named_list}. "
+                f"Across these, {_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')} "
+                f"has been their most consistent strength. "
+                f"Write the opening sentence in warm Sherpa voice — specific, varied, never formulaic. "
+                f"Do NOT use the phrase 'consistent strength' or 'that thread runs through'. "
+                f"Vary the structure each time — sometimes name the photographs, sometimes name the pattern, "
+                f"sometimes note the progression, sometimes ask a quiet question. "
+                f"Examples of register (do not copy verbatim): "
+                f"'Three very different subjects — and in each one, the emotional weight lands.' / "
+                f"'You keep finding the feeling before you find the frame.' / "
+                f"'There is something you do with atmosphere that we are beginning to recognise.' / "
+                f"'Each photograph you have shown us has made the viewer feel something. That is not an accident.' "
+                f"Then continue with 1-2 sentences specific to THIS photograph."
+            )
+        elif _n == 1 and _consistent_strength_name:
+            _opening = (
+                f"HISTORY OPENING INSTRUCTION — the impression field MUST open with "
+                f"one sentence that references the photographer's first photograph: \"{_image_names[0]}\". "
+                f"It showed us {_DIM_PLAIN.get(_consistent_strength_key, 'emotional atmosphere')}. "
+                f"Write one warm Sherpa sentence acknowledging what that first frame revealed, "
+                f"then move directly to this photograph. "
+                f"Do not be generic. Name what you saw in that first frame. "
+                f"Then continue with 1-2 sentences specific to THIS photograph."
+            )
+
+        # ── Pattern instruction for repeating weakness ────────────────────
+        _pattern_instruction = ''
+        if len(_weaknesses) >= 2 and len(set(_weaknesses[:2])) == 1:
+            _wk_plain = _DIM_PLAIN.get(_weaknesses[0], '')
+            _pattern_instruction = (
+                f"\nPATTERN: {_wk_plain} has been the recurring gap across the last "
+                f"{len(_weaknesses)} evaluations. Weave this into the what_next field "
+                f"in plain English — name it as a pattern without using dimension names."
+            )
+
+        return (
+            f"{_opening}\n\n"
+            f"PHOTOGRAPHER HISTORY (last {len(_lines)} evaluated photograph{'s' if len(_lines) > 1 else ''}):\n"
+            + "\n".join(_lines)
+            + _pattern_instruction
+        )
+    except Exception as _he:
+        app.logger.warning(f'[try_haiku] history fetch failed (non-fatal): {_he}')
+        return ''
+
+
+_TRY_HAIKU_PROMPT = (
+    "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
+    "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
+
+    "DIMENSIONS AND WHAT EACH SCORE MEANS:\n\n"
+
+    "1. dod - Depth of Difficulty: how hard was it to make this photograph? "
+    "Right time, right place, right conditions, physical effort.\n"
+    "   9.0-9.5  Extraordinary access, conditions or physical achievement. Rare.\n"
+    "   8.0-8.9  Sharp subject AND deliberate technique simultaneously, or "
+    "difficult conditions handled well.\n"
+    "   7.5-8.5  Deliberate in-camera technique (intentional camera movement, long exposure, panning, multiple exposure, infrared) that requires precise execution and control. The harder the technique is to execute consistently, the higher the score. A well-controlled technique that most photographers could not replicate belongs here.\n"
+    "   6.5-7.9  Skilled single technique, or conditions requiring real patience.\n"
+    "   5.0-6.4  Competent capture in ordinary conditions.\n"
+    "   Below 5  Anyone standing there could have made this frame.\n\n"
+
+    "2. vd - Visual Disruption: does this image stop the viewer? "
+    "Compositional decisions that break expectation.\n"
+    "   9.0-9.5  A compositional decision almost no photographer would have made.\n"
+    "   8.0-8.9  Strong deliberate construction with clean separation.\n"
+    "   6.5-7.9  Considered composition, but within convention.\n"
+    "   5.0-6.4  Competent framing, no surprise.\n"
+    "   Below 5  Centred, expected, or accidental.\n\n"
+
+    "3. dm - Decisive Moment: was the trigger pulled at the right moment? "
+    "Behaviour, expression, peak action, geometric alignment.\n"
+    "   9.0-9.5  The single unrepeatable instant. A frame earlier or later and "
+    "the photograph does not exist.\n"
+    "   8.0-8.9  Clear peak of action, expression or alignment.\n"
+    "   7.0-8.0  For technique-driven images where subject behaviour is not the primary factor, DM measures the execution window — shutter speed selection, moment of movement initiation, precision of the gesture or pan. A well-controlled technique where the timing of the execution is deliberate and precise scores here. Do not score technique-driven images at 5.0-6.4 simply because there is no human subject — ask whether the technical moment was chosen correctly.\n"
+    "   6.5-7.9  Good timing, but the moment would tolerate a second either way.\n"
+    "   5.0-6.4  Static subject, or timing genuinely not a factor.\n"
+    "   Below 5  Moment missed.\n\n"
+
+    "4. wf - Wonder Factor: does this image make you feel something? "
+    "Emotional resonance, awe, curiosity.\n"
+    "   9.5+     World Press Photo, IPA, Sony World Photography winner level. "
+    "Award this only for work of that standard.\n"
+    "   9.0-9.4  A singular find. The photograph could only exist because this "
+    "photographer was there and saw it.\n"
+    "   8.0-8.9  The discovery is complete and not easily repeated.\n"
+    "   6.5-7.9  Pleasing, atmospheric, but the find is available to others.\n"
+    "   5.0-6.4  Pleasant. Does not linger.\n"
+    "   Below 5  Nothing beyond the record.\n"
+    "   8.0-8.5  Deliberate technique that transforms a subject into something "
+    "the viewer could not have found without the photographer's intervention — "
+    "ICM that creates a colour field, long exposure that turns water to silk, "
+    "abstraction that reveals hidden structure. Test: could the viewer have "
+    "arrived at this vision themselves? If the answer is no, score 8.0-8.5.\n"
+    "   WONDER IS THE MOST OVER-SCORED DIMENSION BY A LARGE MARGIN. Measured "
+    "against the full engine it is where free evaluations drift highest, and it "
+    "carries the heaviest weight in most interest areas. A striking colour, a "
+    "dramatic sky, or a charismatic animal alone is NOT Wonder. "
+    "Wonder is whether the photograph reveals something the viewer could not "
+    "have found themselves. A well-made photograph of an ordinary scene scores "
+    "4-6 here. Before awarding 7 or above, name what is actually being revealed. "
+    "If you cannot name it in one clause, score below 6.\n\n"
+
+    "5. aq - Affective Quotient: is there soul in this frame? "
+    "The intangible quality that makes it memorable.\n"
+    "   9.0-9.4  A specific, powerful emotion that is undeniable and lingers.\n"
+    "   8.0-8.9  A genuine emotional register, clearly present.\n"
+    "   7.5-8.5  Atmosphere, colour palette, and technique can carry genuine "
+    "emotional register without human presence. A photograph that creates mood — "
+    "melancholy, wonder, stillness, tension — through purely visual means scores "
+    "here. Do not require a human subject to score above 7. If the image makes "
+    "you feel something specific when you look at it, score accordingly.\n"
+    "   6.5-7.9  Some feeling, but general rather than particular.\n"
+    "   5.0-6.4  Technically resolved, emotionally quiet.\n"
+    "   Below 4  Triggers the Humanity Check penalty. Use it when earned.\n\n"
+
+    "INTEREST AREA: {genre}\n\n"
+
+    "PLATFORM CALIBRATION - THIS IS THE STANDARD YOU ARE SCORING AGAINST:\n"
+    "{calibration}\n"
+
+    "TIERS the final weighted score falls into:\n"
+    "  Rookie 0-4 | Shooter 4-5 | Contender 5-6 | Craftsman 6-7 | "
+    "Maverick 7-8 | Master 8-9 | Grandmaster 9-9.7 | Legend 9.7+\n"
+    "Master and above is the top quarter of the platform. Treat it as such.\n\n"
+
+    "SCORING DISCIPLINE:\n"
+    "- YOUR NUMBERS MUST AGREE WITH YOUR SENTENCE. Decide first what most "
+    "limits this photograph. Whatever you name in the takeaway as the "
+    "limitation MUST be your lowest-scoring dimension, and it must sit at "
+    "least 2.0 below your highest. Writing that a photograph lacks a decisive "
+    "moment and then scoring Decisive Moment 6.1 is a contradiction. If the "
+    "fault is real enough to name, it is real enough to score.\n"
+    "- Do NOT default to the middle or the top of any band. A band of 8.0-8.9 "
+    "means some photographs score 8.0 and some score 8.9. Choose honestly.\n"
+    "- Use the whole scale. Scores of 4 and 5 are ordinary, not insults. Most "
+    "photographs have at least one dimension in the 4s or 5s. A set of five "
+    "scores that all sit between 6 and 8 almost always means you have avoided "
+    "a judgement rather than made one.\n"
+    "- Score each dimension independently. A photograph strong in one dimension "
+    "is frequently ordinary in another, and saying so is the useful part.\n"
+    "- A technically imperfect photograph with real emotional truth scores higher "
+    "than a technically perfect, emotionally empty one.\n"
+    "- Do not inflate to be encouraging. An honest 6.4 is more useful to a "
+    "photographer than a generous 8.2.\n\n"
+
+    "TAKEAWAY:\n"
+    "Write exactly one sentence (max 30 words) that names the single most "
+    "important insight about this photograph. Name the specific dimension "
+    "that most defines or limits this image and say precisely why. "
+    "Be direct. Do not use the word score.\n\n"
+
+    "IMPRESSION:\n"
+    "2-3 sentences. Warm, specific, Sherpa tone — a senior photographer speaking "
+    "to someone they respect. If PHOTOGRAPHER HISTORY is provided above, open with "
+    "one sentence acknowledging what you have seen from them before, then move to "
+    "this photograph. If no history, open directly on this photograph. "
+    "Name what is genuinely strong. Do not use jargon. Do not use dimension names. "
+    "Do not mention the score. Max 60 words.\n\n"
+
+    "STRENGTH AND NEXT LEAP:\n"
+    "strength_name: The plain-English name of the strongest dimension "
+    "(e.g. 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', "
+    "'Depth of Difficulty', 'Authentic Quality').\n"
+    "strength_obs: One sentence (max 30 words) explaining specifically what "
+    "is working in this dimension for THIS photograph. Concrete. No jargon.\n"
+    "next_leap_name: The plain-English name of the weakest dimension.\n"
+    "next_leap_obs: One sentence (max 30 words) explaining specifically what "
+    "is limiting this dimension for THIS photograph. Honest. No jargon.\n\n"
+
+    "WHAT NEXT:\n"
+    "One actionable instruction the photographer can carry to their next session. "
+    "Device-aware if format is known. If the same gap appears in history, name "
+    "the pattern directly — what to watch for, not what to fix abstractly. "
+    "Plain English. No jargon. Max 80 words.\n\n"
+
+    "MASTER REFERENCE:\n"
+    "master_name: One photographer whose body of work is most relevant to this "
+    "image's strengths or genre. A real, well-known name. Not generic.\n"
+    "master_why: One sentence (max 25 words) connecting their work to what "
+    "this photographer is doing or reaching toward.\n\n"
+
+    "{history_context}\n\n"
+
+    "Return ONLY valid JSON, nothing else, no markdown:\n"
+    "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
+    "\"takeaway\": \"<one sentence>\", "
+    "\"impression\": \"<2-3 sentences>\", "
+    "\"strength_name\": \"<dimension name>\", "
+    "\"strength_obs\": \"<one sentence>\", "
+    "\"next_leap_name\": \"<dimension name>\", "
+    "\"next_leap_obs\": \"<one sentence>\", "
+    "\"what_next\": \"<max 80 words>\", "
+    "\"master_name\": \"<photographer name>\", "
+    "\"master_why\": \"<one sentence>\"}"
+)
+
+
+def _try_run_haiku(image_id, img_b64, genre, user_id=None):
+    """
+    Single Haiku call: all 10 DDI fields per Session 186 handoff spec.
+    181.15: expanded from 6 fields (dod/vd/dm/wf/aq/takeaway) to 10 fields.
+    History context fetched before API call and injected into prompt.
+    Writes results to images table. Called from background thread.
+    """
+    import urllib.request as _ur
+    import json as _json
+    from engine.scoring import calculate_score, get_tier
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        app.logger.error('[try_haiku] ANTHROPIC_API_KEY not set')
+        return None
+
+    # 181.15: fetch history context before building prompt
+    _history_ctx = ''
+    if user_id:
+        with app.app_context():
+            _history_ctx = _get_haiku_history_context(user_id, exclude_image_id=image_id)
+
+    # SL-181.1: genre placeholder plus platform calibration anchors
+    # 181.15: also inject history context
+    prompt = (_TRY_HAIKU_PROMPT
+              .replace('{genre}', genre or 'General')
+              .replace('{calibration}', _try_calibration_line(genre or ''))
+              .replace('{history_context}', _history_ctx))
+
+    payload = _json.dumps({
+        'model': _HAIKU_MODEL,
+        'max_tokens': 800,
+        'temperature': 0,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {
+                'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
+            }},
+            {'type': 'text', 'text': prompt}
+        ]}]
+    }).encode()
+
+    req = _ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type':      'application/json',
+            'x-api-key':         api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with _ur.urlopen(req, timeout=90) as resp:
+            raw = _json.loads(resp.read().decode())
+    except Exception as e:
+        app.logger.error(f'[try_haiku] API call failed: {e}')
+        return None
+
+    text = ''.join(
+        b.get('text', '') for b in (raw.get('content') or [])
+        if b.get('type') == 'text'
+    ).strip()
+
+    if text.startswith('```'):
+        parts = text.split('```')
+        text = parts[1] if len(parts) > 1 else text
+        if text.startswith('json'):
+            text = text[4:]
+    text = text.strip()
+
+    try:
+        d = _json.loads(text)
+    except Exception as e:
+        app.logger.error(f'[try_haiku] JSON parse failed: {e} | raw: {text[:200]}')
+        return None
+
+    def _clamp(v):
+        try:
+            return min(10.0, max(0.0, round(float(v), 1)))
+        except Exception:
+            return 5.0
+
+    dod = _clamp(d.get('dod', 5.0))
+    vd  = _clamp(d.get('vd',  5.0))
+    dm  = _clamp(d.get('dm',  5.0))
+    wf  = _clamp(d.get('wf',  5.0))
+    aq  = _clamp(d.get('aq',  5.0))
+    takeaway       = (d.get('takeaway')       or '').strip()[:300]
+    impression     = (d.get('impression')     or '').strip()[:400]
+    strength_name  = (d.get('strength_name')  or '').strip()[:80]
+    strength_obs   = (d.get('strength_obs')   or '').strip()[:200]
+    next_leap_name = (d.get('next_leap_name') or '').strip()[:80]
+    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:200]
+    what_next      = (d.get('what_next')      or '').strip()[:500]
+    master_name    = (d.get('master_name')    or '').strip()[:100]
+    master_why     = (d.get('master_why')     or '').strip()[:200]
+
+    try:
+        final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+    except Exception as e:
+        app.logger.error(f'[try_haiku] calculate_score failed: {e}')
+        final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
+        tier = get_tier(final_score)
+
+    with app.app_context():
+        try:
+            img = Image.query.get(image_id)
+            if not img:
+                app.logger.error(f'[try_haiku] image {image_id} not found')
+                return None
+            img.score            = round(final_score, 2)
+            img.tier             = tier
+            img.status           = 'scored'
+            img.scored_at        = datetime.now()  # naive UTC — consistent with codebase convention
+            # SL 172.3 fix: write dimension scores to Image columns
+            # compute_calibration_stats() sums these directly — None causes TypeError
+            img.dod_score        = dod
+            img.disruption_score = vd
+            img.dm_score         = dm
+            img.wonder_score     = wf
+            img.aq_score         = aq
+            import json as _j2
+            # 181.15: store all 10 fields per Session 186 handoff spec
+            img._audit_json = _j2.dumps({
+                'source':        'haiku_try',
+                'model':         _HAIKU_MODEL,
+                'dod':           dod,
+                'vd':            vd,
+                'dm':            dm,
+                'wf':            wf,
+                'aq':            aq,
+                'takeaway':      takeaway,
+                'impression':    impression,
+                'strength_name': strength_name,
+                'strength_obs':  strength_obs,
+                'next_leap_name': next_leap_name,
+                'next_leap_obs':  next_leap_obs,
+                'what_next':     what_next,
+                'master_name':   master_name,
+                'master_why':    master_why,
+            })
+            db.session.commit()
+            app.logger.info(
+                f'[try_haiku] scored image={image_id} score={final_score} '
+                f'tier={tier} user={img.user_id}'
+            )
+            return {
+                'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
+                'score': round(final_score, 2),
+                'tier': tier,
+                'takeaway':      takeaway,
+                'impression':    impression,
+                'strength_name': strength_name,
+                'strength_obs':  strength_obs,
+                'next_leap_name': next_leap_name,
+                'next_leap_obs':  next_leap_obs,
+                'what_next':     what_next,
+                'master_name':   master_name,
+                'master_why':    master_why,
+            }
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[try_haiku] DB write failed: {e}')
+            try:
+                img = Image.query.get(image_id)
+                if img:
+                    img.status = 'error'
+                    db.session.commit()
+            except Exception:
+                pass
+            return None
+
+
+@app.route('/try/gallery')
+@login_required
+def try_gallery():
+    """
+    GET /try/gallery — Haiku free-tier image gallery.
+    181.21: Shows only is_haiku_try=TRUE images for the current user.
+    Separate from main My Gallery which shows paid Sonnet images only.
+    Each card links to /try/result/<id>.
+    """
+    # Fetch all Haiku images for this user, newest first
+    _rows = db.session.execute(
+        db.text(
+            "SELECT id, asset_name, score, tier, genre, thumb_url, status, scored_at "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE "
+            "ORDER BY id DESC"
+        ),
+        {'uid': current_user.id}
+    ).fetchall()
+
+    _images = []
+    for _r in _rows:
+        _images.append({
+            'id':         _r[0],
+            'asset_name': _r[1] or 'Untitled',
+            'score':      float(_r[2]) if _r[2] else None,
+            'tier':       _r[3] or '',
+            'genre':      _r[4] or '',
+            'thumb_url':  _r[5] or '',
+            'status':     _r[6] or '',
+            'scored_at':  _r[7],
+        })
+
+    # Count from log (permanent gate count)
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    _gate_count = int(db.session.execute(
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+        {'uid': current_user.id}
+    ).scalar() or 0)
+    _remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
+
+    return render_template(
+        'try_gallery.html',
+        images    = _images,
+        used      = _gate_count,
+        remaining = _remaining,
+        limit     = FREE_IMAGE_LIMIT + _bonus,
+    )
+
+
+@app.route('/try')
+@login_required
+def try_page():
+    """
+    GET /try -- Free user Haiku evaluation page.
+    SL 172.1. Registered free users only (@login_required).
+    Quota: FREE_IMAGE_LIMIT = 3 lifetime (total_uploads_ever).
+    """
+    from engine.scoring import GENRE_CHOICES
+
+    # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
+    # total_uploads_ever includes paid Sonnet evaluations and incorrectly
+    # blocked paid subscribers from using their free Haiku quota.
+    # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
+    _haiku_row = db.session.execute(
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+        {'uid': current_user.id}
+    ).scalar()
+    evals_used = int(_haiku_row or 0)
+
+    import json as _json
+    from engine.scoring import SUBGENRE_MAP, GENRE_IDS
+    _last_image = Image.query.filter(
+        Image.user_id == current_user.id,
+        Image.location.isnot(None),
+        Image.location != ''
+    ).order_by(Image.created_at.desc()).first()
+    _last_location = (_last_image.location if _last_image else None) or current_user.city or ''
+
+    return render_template(
+        'upload.html',           # reuse main upload template — is_trial=True gates differences
+        is_trial      = True,
+        evals_used    = evals_used,
+        genres        = GENRE_IDS,
+        genre_choices = GENRE_CHOICES,
+        subgenre_map  = SUBGENRE_MAP,
+        subgenre_map_json = _json.dumps({k: list(v) for k, v in SUBGENRE_MAP.items()}),
+        last_location = _last_location,
+        subscription_track = getattr(current_user, 'subscription_track', '') or '',
+        mission_dimension  = '',
+        curriculum_principle_id = '',
+        mission_title = '',
+        quota_status  = None,   # trial page does not show quota banner
+        next_page     = '',
+    )
+
+
+@app.route('/try/upload', methods=['POST'])
+@login_required
+def try_upload():
+    """
+    POST /try/upload -- Accept image, save to images table, spin Haiku scoring thread.
+    SL 172.1. Returns JSON {image_id} for frontend to poll /score-status/<id>.
+    CRITICAL: writes to images table only. Never touches calibration, BOW, peer pool, AEA.
+    """
+    import base64 as _b64
+    import io as _io
+
+    _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
+    # total_uploads_ever includes paid Sonnet evaluations and incorrectly
+    # blocked paid subscribers from using their free Haiku quota.
+    # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
+    _haiku_row = db.session.execute(
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+        {'uid': current_user.id}
+    ).scalar()
+    _lifetime = int(_haiku_row or 0)
+
+    if _lifetime >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
+        return jsonify({
+            'error':   True,
+            'message': (
+                f'You have used all {FREE_IMAGE_LIMIT} free evaluations. '
+                'Subscribe now to continue.'
+            )
+        }), 403
+
+    file = request.files.get('image')
+    if not file or file.filename == '':
+        return jsonify({'error': True, 'message': 'No file received.'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'error': True, 'message': 'File type not supported. Please upload a JPG or PNG.'}), 400
+
+    genre = request.form.get('genre', '').strip()
+    if not genre:
+        return jsonify({'error': True, 'message': 'Please select an interest area.'}), 400
+
+    from engine.scoring import normalise_genre, GENRE_IDS
+    genre = normalise_genre(genre)
+    if genre not in GENRE_IDS:
+        return jsonify({'error': True, 'message': 'Invalid interest area selected.'}), 400
+
+    legal = request.form.get('legal_declaration', '')
+    if not legal:
+        return jsonify({'error': True, 'message': 'Please confirm the legal declaration.'}), 400
+
+    try:
+        uid      = str(uuid.uuid4())
+        filename = secure_filename(file.filename)
+        raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f'{uid}_{filename}')
+        file.save(raw_path)
+
+        from PIL import Image as _PIL
+        try:
+            with _PIL.open(raw_path) as _p:
+                if getattr(_p, 'format', '').upper() == 'MPO':
+                    _rgb   = _p.convert('RGB')
+                    _jpath = raw_path.rsplit('.', 1)[0] + '_c.jpg'
+                    _rgb.save(_jpath, 'JPEG', quality=95)
+                    if os.path.exists(raw_path):
+                        os.remove(raw_path)
+                    raw_path = _jpath
+        except Exception:
+            pass
+
+        # ── SL-181.1 — resolution enforcement ────────────────────────────────
+        # ingest_image() checks the ORIGINAL against min_short_side (default
+        # 1500) and raises ValueError if it falls short. It then resizes a
+        # working copy so the LONG edge is at most THUMB_W (1500) and returns
+        # THAT copy's w/h.
+        #
+        # The manual check that used to sit below this line tested those
+        # returned values against a 1500px SHORT-side minimum — a test no
+        # rectangular photograph can pass, because capping the long edge at
+        # 1500 always leaves the short edge below it. Every landscape frame was
+        # rejected with a message telling the photographer their original was
+        # too small when it was not. Portrait and square passed only because
+        # the resize sets width to exactly 1500 and leaves height larger.
+        #
+        # The same class of bug was found and fixed in Curator's Bench (see the
+        # comment at bulk_upload_one); this occurrence was missed.
+        #
+        # Catch the ValueError and surface its message, exactly as the main
+        # /upload route does. ingest_image() remains the single authority.
+        try:
+            thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        except ValueError as _res_err:
+            if os.path.exists(raw_path):
+                os.remove(raw_path)
+            return jsonify({'error': True, 'message': str(_res_err)}), 422
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
+
+        # ── Watermark check (Sonnet — same as main /upload route) ────────────
+        # Runs before saving to images table — a watermarked image must never
+        # enter the DB or consume one of the user's 3 free evaluations.
+        _try_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if _try_api_key and os.path.exists(thumb_path):
+            try:
+                import urllib.request as _twmur, json as _twmjson
+                from PIL import Image as _PILWM2
+                import io as _twmio
+
+                _twm_pil = _PILWM2.open(thumb_path).convert('RGB')
+                if max(_twm_pil.size) > 1024:
+                    _twm_pil.thumbnail((1024, 1024))
+                _twm_buf = _twmio.BytesIO()
+                _twm_pil.save(_twm_buf, format='JPEG', quality=80)
+                _twm_b64 = _b64.b64encode(_twm_buf.getvalue()).decode('utf-8')
+
+                _twm_payload = _twmjson.dumps({
+                    'model': 'claude-sonnet-4-6',
+                    'max_tokens': 100,
+                    'messages': [{'role': 'user', 'content': [
+                        {'type': 'image', 'source': {
+                            'type': 'base64', 'media_type': 'image/jpeg', 'data': _twm_b64
+                        }},
+                        {'type': 'text', 'text': (
+                            'Does this photograph contain a photographer-added watermark, text overlay, '
+                            'studio logo, social media handle (@username), copyright text, or any branding '
+                            'embedded into the image by the photographer? '
+                            'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                            'platform watermarks, natural scene text, or phone/camera app overlays '
+                            '(device name, date/time stamps, GPS coordinates, camera model text). '
+                            'ONLY flag if the photographer deliberately added their own branding, studio logo, '
+                            'social handle, or copyright text as a post-processing overlay. '
+                            'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
+                        )}
+                    ]}]
+                }).encode('utf-8')
+
+                _twm_req = _twmur.Request(
+                    'https://api.anthropic.com/v1/messages',
+                    data=_twm_payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'x-api-key': _try_api_key,
+                        'anthropic-version': '2023-06-01',
+                    },
+                    method='POST'
+                )
+                with _twmur.urlopen(_twm_req, timeout=15) as _twmresp:
+                    _twm_result = _twmjson.loads(_twmresp.read().decode())
+
+                _twm_text = (_twm_result.get('content') or [{}])[0].get('text', '{}')
+                _twm_text = _twm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
+                _twm_data = _twmjson.loads(_twm_text)
+
+                if _twm_data.get('watermark_detected'):
+                    if os.path.exists(thumb_path):
+                        os.remove(thumb_path)
+                    app.logger.info(
+                        f'[try_upload] watermark rejected: {_twm_data.get("description")} '
+                        f'uid={current_user.id}'
+                    )
+                    return jsonify({
+                        'error':   True,
+                        'message': (
+                            'Your image contains a watermark, studio logo, or text overlay. '
+                            'Please export the clean original directly from your camera or editing '
+                            'app — without any branding added — and upload that version.'
+                        )
+                    }), 422
+
+            except Exception as _twm_err:
+                # Fail open — watermark check must never block a legitimate upload
+                app.logger.warning(f'[try_upload] watermark check failed (non-fatal): {_twm_err}')
+
+        try:
+            with _PIL.open(thumb_path) as _tp:
+                _tp_rgb = _tp.convert('RGB')
+                if max(_tp_rgb.size) > 1024:
+                    _tp_rgb.thumbnail((1024, 1024), _PIL.LANCZOS)
+                _buf = _io.BytesIO()
+                _tp_rgb.save(_buf, format='JPEG', quality=85)
+                img_b64 = _b64.b64encode(_buf.getvalue()).decode()
+        except Exception as _pe:
+            app.logger.error(f'[try_upload] PIL resize failed: {_pe}')
+            return jsonify({'error': True, 'message': 'Could not process this image. Please try a different file.'}), 400
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+    except Exception as e:
+        app.logger.error(f'[try_upload] file processing failed: {e}')
+        return jsonify({'error': True, 'message': 'Could not process this image. Please try again.'}), 500
+
+    try:
+        img = Image(
+            user_id           = current_user.id,
+            original_filename = filename,
+            asset_name        = filename.rsplit('.', 1)[0][:120],
+            photographer_name = current_user.full_name or current_user.username,
+            genre             = genre,
+            width             = w,
+            height            = h,
+            phash             = phash,
+            thumb_url         = thumb_url,
+            status            = 'processing',
+            is_public         = True,
+            legal_declaration = True,
+            camera_track      = getattr(current_user, 'subscription_track', None),
+        )
+        db.session.add(img)
+        db.session.execute(
+            db.text(
+                'UPDATE users SET total_uploads_ever = '
+                'COALESCE(total_uploads_ever, 0) + 1 WHERE id = :uid'
+            ),
+            {'uid': current_user.id}
+        )
+        db.session.commit()
+        image_id = img.id
+        # 181.25: set is_haiku_try=TRUE immediately after insert.
+        # The ORM Image() constructor cannot set this column because it is not
+        # a mapped field. Without this UPDATE every Haiku image was saved with
+        # is_haiku_try=FALSE, making all filters (Recent Work, My Gallery,
+        # Standings) invisible to them. Belt-and-braces raw SQL after commit.
+        db.session.execute(
+            db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+            {'iid': image_id}
+        )
+        db.session.commit()
+        app.logger.info(
+            f'[try_upload] image saved: id={image_id} '
+            f'user={current_user.id} genre={genre}'
+        )
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[try_upload] DB insert failed: {e}')
+        return jsonify({'error': True, 'message': 'Could not save your image. Please try again.'}), 500
+
+    _uid_for_thread = current_user.id
+
+    def _haiku_thread(iid, b64, g, uid):
+        with app.app_context():
+            _try_run_haiku(iid, b64, g, user_id=uid)
+
+    threading.Thread(
+        target=_haiku_thread,
+        args=(image_id, img_b64, genre, _uid_for_thread),
+        daemon=True
+    ).start()
+
+    return jsonify({'image_id': image_id})
+
+
+@app.route('/try/result/<int:image_id>')
+@login_required
+def try_result(image_id):
+    """
+    GET /try/result/<id> -- Render the evaluation result page for /try uploads.
+    SL 172.3. Server-side render — no XHR JSON. try.html shows result directly.
+    """
+    import json as _j
+
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    # If still processing, redirect back to /try and let user wait
+    if img.status == 'processing':
+        flash('Your evaluation is still being processed. Please wait a moment.', 'info')
+        return redirect(url_for('try_page'))
+
+    percentile_data = {}
+    if img.score and img.status == 'scored':
+        try:
+            from engine.scoring import compute_percentile
+            percentile_data = compute_percentile(
+                float(img.score),
+                genre=img.genre,
+                camera_track=getattr(img, 'camera_track', None),
+            )
+            # SL 172.3: Tier-aware context string.
+            if percentile_data and img.tier:
+                _pct  = percentile_data.get('top_pct', 50)
+                _tier = img.tier or ''
+                if _tier in ('Grandmaster', 'Legend'):
+                    _ctx = f'Elite territory — this is a {_tier}-tier image, placing you among the highest evaluated on the platform.'
+                elif _tier == 'Master':
+                    _ctx = f'Master-tier result — your photograph is in the top {_pct}% of all evaluated images on this platform.'
+                elif _tier == 'Maverick':
+                    _ctx = f'Strong Maverick-tier result — you are in the top {_pct}%. Refine your weakest dimension to break into Master.'
+                elif _pct <= 35:
+                    _ctx = f'Above average — you are in the top {_pct}%. Keep building to close the gap to the next tier.'
+                else:
+                    _ctx = f'Every evaluation builds your picture — focus on your lowest dimension to move up.'
+                percentile_data['context'] = _ctx
+        except Exception as _pe:
+            app.logger.warning(f'[try_result] percentile failed: {_pe}')
+
+    dims     = {}
+    takeaway = ''
+    try:
+        audit = _j.loads(img._audit_json or '{}')
+        if audit.get('source') == 'haiku_try':
+            dims = {
+                'dod': audit.get('dod'),
+                'vd':  audit.get('vd'),
+                'dm':  audit.get('dm'),
+                'wf':  audit.get('wf'),
+                'aq':  audit.get('aq'),
+            }
+            takeaway = audit.get('takeaway', '')
+    except Exception:
+        pass
+
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    # 181.18: TWO separate counts.
+    # Gate count (permanent — from log, never decrements on delete):
+    _gate_count = int(db.session.execute(
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+        {'uid': current_user.id}
+    ).scalar() or 0)
+    # Display count (current reality — live scored images, decrements on delete):
+    _display_count = int(db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
+        {'uid': current_user.id}
+    ).scalar() or 0)
+    evals_used      = _display_count
+    evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
+
+    # 181.15: milestone_strength — most common strength_name across history
+    # used in eval 5-9 milestone copy in template. Zero API cost — DB only.
+    _milestone_strength = ''
+    if evals_used >= 5:
+        try:
+            _ms_rows = db.session.execute(
+                db.text(
+                    "SELECT audit_json FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id DESC LIMIT 10"
+                ),
+                {'uid': current_user.id}
+            ).fetchall()
+            import json as _msj
+            from collections import Counter as _Ctr
+            _snames = []
+            for _mr in _ms_rows:
+                try:
+                    _ma = _msj.loads(_mr[0] or '{}')
+                    _sn = _ma.get('strength_name', '')
+                    if _sn:
+                        _snames.append(_sn)
+                except Exception:
+                    pass
+            if _snames:
+                _milestone_strength = _Ctr(_snames).most_common(1)[0][0]
+        except Exception as _mse:
+            app.logger.warning(f'[try_result] milestone_strength failed: {_mse}')
+
+    return render_template(
+        'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
+        image_id           = image_id,
+        thumb_url          = img.thumb_url,
+        asset_name         = img.asset_name or img.original_filename or '',
+        score              = img.score,
+        tier               = img.tier or '—',
+        genre              = img.genre or '—',
+        percentile         = percentile_data,
+        dod                = dims.get('dod'),
+        vd                 = dims.get('vd'),
+        dm                 = dims.get('dm'),
+        wf                 = dims.get('wf'),
+        aq                 = dims.get('aq'),
+        takeaway           = takeaway,
+        impression         = audit.get('impression', ''),
+        strength_name      = audit.get('strength_name', ''),
+        strength_obs       = audit.get('strength_obs', ''),
+        next_leap_name     = audit.get('next_leap_name', ''),
+        next_leap_obs      = audit.get('next_leap_obs', ''),
+        what_next          = audit.get('what_next', ''),
+        master_name        = audit.get('master_name', ''),
+        master_why         = audit.get('master_why', ''),
+        evals_used         = evals_used,
+        evals_remaining    = evals_remaining,
+        milestone_strength = _milestone_strength,
+    )
+
+
+
+
+@app.route('/try/result/<int:image_id>/download')
+@login_required
+def try_result_download(image_id):
+    """
+    GET /try/result/<id>/download
+    Two-page A4 PDF scorecard for Haiku free-try evaluations.
+    Session 187 / 181.14n-staging. Per Session 186 handoff spec Section 6.
+
+    Page 1: photograph, score (large), tier, tier ladder, five DDI dimensions
+            colour-coded, impression paragraph, strongest moment + obs,
+            next leap + obs, what_next + EXIF line.
+    Page 2: master reference + why, history thread (last 2 Haiku evals +
+            pattern observation), SL branding footer.
+
+    Filename: SL_[Name]_[Genre]_[YYYY-MM-DD].pdf
+    Owner-only gate — admin can download any image.
+    Self-contained reportlab build — no external engine file dependency.
+    """
+    import json as _pj
+    import io as _pio
+    import urllib.request as _ureq
+
+    img = Image.query.get_or_404(image_id)
+
+    # ── Owner / admin gate ────────────────────────────────────────────────
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    # ── Must be a scored Haiku image ──────────────────────────────────────
+    if img.status != 'scored' or not img.score:
+        return 'This evaluation is not yet complete.', 404
+
+    try:
+        _audit = _pj.loads(img._audit_json or '{}')
+    except Exception:
+        _audit = {}
+
+    if _audit.get('source') != 'haiku_try':
+        return 'This download is only available for free exploratory evaluations.', 400
+
+    # ── Pull all Haiku fields from audit_json ─────────────────────────────
+    _score          = float(img.score or 0)
+    _tier           = img.tier or ''
+    _genre          = img.genre or ''
+    _asset          = img.asset_name or img.original_filename or 'Untitled'
+    _name           = getattr(current_user, 'display_name', '') or current_user.username or ''
+    _impression     = _audit.get('impression', '')
+    _strength_name  = _audit.get('strength_name', '')
+    _strength_obs   = _audit.get('strength_obs', '')
+    _next_leap_name = _audit.get('next_leap_name', '')
+    _next_leap_obs  = _audit.get('next_leap_obs', '')
+    _what_next      = _audit.get('what_next', '')
+    _master_name    = _audit.get('master_name', '')
+    _master_why     = _audit.get('master_why', '')
+    _takeaway       = _audit.get('takeaway', '')
+
+    _dod = _audit.get('dod')
+    _vd  = _audit.get('vd')
+    _dm  = _audit.get('dm')
+    _wf  = _audit.get('wf')
+    _aq  = _audit.get('aq')
+
+    _eval_date = ''
+    _date_src = img.scored_at or img.created_at
+    if _date_src:
+        try:
+            _eval_date = _date_src.strftime('%-d %b %Y')
+        except Exception:
+            _eval_date = str(_date_src)[:10]
+
+    # ── EXIF / meta line ──────────────────────────────────────────────────
+    _exif_parts = [p for p in [_genre, img.format or '', img.location or ''] if p]
+    _exif_line  = '  ·  '.join(_exif_parts)
+
+    # ── Tier ladder ───────────────────────────────────────────────────────
+    _tier_order = ['Rookie', 'Shooter', 'Contender', 'Craftsman',
+                   'Maverick', 'Master', 'Grandmaster', 'Legend']
+
+    # ── History thread — last 2 previous Haiku evals for this user ────────
+    _history_rows = db.session.execute(
+        db.text(
+            "SELECT id, genre, score, tier, audit_json "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE AND id != :iid "
+            "  AND status = 'scored' "
+            "ORDER BY id DESC LIMIT 2"
+        ),
+        {'uid': current_user.id, 'iid': image_id}
+    ).fetchall()
+
+    _history = []
+    for _hr in _history_rows:
+        try:
+            _ha = _pj.loads(_hr[4] or '{}')
+            _history.append({
+                'genre':     _hr[1] or '',
+                'score':     float(_hr[2] or 0),
+                'tier':      _hr[3] or '',
+                'strength':  _ha.get('strength_name', ''),
+                'next_leap': _ha.get('next_leap_name', ''),
+                'takeaway':  _ha.get('takeaway', ''),
+            })
+        except Exception:
+            pass
+
+    # ── Pattern observation across history ────────────────────────────────
+    _pattern_note = ''
+    if len(_history) >= 2:
+        _gaps = [h['next_leap'] for h in _history if h['next_leap']]
+        if len(_gaps) >= 2 and _gaps[0] == _gaps[1] == _next_leap_name and _next_leap_name:
+            _pattern_note = (
+                f'Across your last three evaluations, {_next_leap_name} '
+                f'is the dimension that keeps calling for your attention. '
+                f'That is where your next leap lives.'
+            )
+
+    # ── Fetch photograph bytes from Cloudinary thumb_url ─────────────────
+    _photo_bytes = None
+    if img.thumb_url:
+        try:
+            _req = _ureq.Request(
+                img.thumb_url,
+                headers={'User-Agent': 'ShutterLeague-PDF/1.0'}
+            )
+            with _ureq.urlopen(_req, timeout=8) as _resp:
+                _photo_bytes = _resp.read()
+        except Exception as _fe:
+            app.logger.warning(f'[try_result_download] photo fetch failed: {_fe}')
+
+    # ── Reportlab PDF build ───────────────────────────────────────────────
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.lib import colors
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
+            Table, TableStyle, Image as RLImage
+        )
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+
+        # ── Colour palette — matches SL web tokens ────────────────────────
+        _C_SLATE    = colors.HexColor('#4A6FA5')   # primary slate blue
+        _C_AMBER    = colors.HexColor('#D4A843')   # amber accent
+        _C_DARK     = colors.HexColor('#1A1A2E')   # near-black text
+        _C_MID      = colors.HexColor('#555577')   # mid grey
+        _C_LIGHT    = colors.HexColor('#F5F5F0')   # off-white bg
+        _C_WHITE    = colors.white
+        _C_HIGH     = colors.HexColor('#2ECC71')   # high score green
+        _C_MED      = colors.HexColor('#F39C12')   # mid score amber
+        _C_LOW      = colors.HexColor('#E74C3C')   # low score red
+        _C_RULE     = colors.HexColor('#DDDDCC')   # divider
+
+        def _dim_colour(v):
+            if v is None:
+                return _C_MID
+            if v >= 7.5:
+                return _C_HIGH
+            if v >= 5.0:
+                return _C_MED
+            return _C_LOW
+
+        # ── Styles — Aptos-equivalent via Helvetica (PDF safe) ────────────
+        def _sty(name, font='Helvetica', size=10, leading=14,
+                 colour=None, align=TA_LEFT, bold=False, space_before=0, space_after=4):
+            return ParagraphStyle(
+                name,
+                fontName='Helvetica-Bold' if bold else font,
+                fontSize=size,
+                leading=leading,
+                textColor=colour or _C_DARK,
+                alignment=align,
+                spaceBefore=space_before,
+                spaceAfter=space_after,
+            )
+
+        _s_title    = _sty('title',    size=22, leading=26, colour=_C_SLATE,  bold=True,  align=TA_CENTER, space_after=2)
+        _s_sub      = _sty('sub',      size=11, leading=14, colour=_C_MID,    align=TA_CENTER, space_after=8)
+        _s_score    = _sty('score',    size=48, leading=52, colour=_C_SLATE,  bold=True,  align=TA_CENTER, space_after=0)
+        _s_tier     = _sty('tier',     size=16, leading=20, colour=_C_AMBER,  bold=True,  align=TA_CENTER, space_after=12)
+        _s_label    = _sty('label',    size=8,  leading=10, colour=_C_MID,    bold=True,  space_after=2)
+        _s_body     = _sty('body',     size=10, leading=15, colour=_C_DARK,   space_after=6)
+        _s_body_it  = _sty('bodyit',   size=10, leading=15, colour=_C_MID,    space_after=6)
+        _s_head2    = _sty('head2',    size=12, leading=16, colour=_C_SLATE,  bold=True,  space_before=10, space_after=4)
+        _s_foot     = _sty('foot',     size=8,  leading=10, colour=_C_MID,    align=TA_CENTER, space_after=0)
+        _s_hist_lbl = _sty('histlbl',  size=9,  leading=12, colour=_C_SLATE,  bold=True,  space_after=2)
+        _s_hist_bod = _sty('histbod',  size=9,  leading=13, colour=_C_DARK,   space_after=4)
+        _s_pattern  = _sty('pattern',  size=10, leading=15, colour=_C_AMBER,  space_before=6, space_after=6)
+        _s_takeaway = _sty('takeaway', size=11, leading=16, colour=_C_DARK,   space_before=4, space_after=8)
+
+        _buf  = _pio.BytesIO()
+        _W, _H = A4
+        _M    = 18 * mm
+
+        _doc = SimpleDocTemplate(
+            _buf,
+            pagesize=A4,
+            leftMargin=_M, rightMargin=_M,
+            topMargin=_M,  bottomMargin=_M,
+            title=f'Shutter League — {_asset}',
+            author='Shutter League',
+        )
+
+        _story = []
+
+        # ── PAGE 1 ────────────────────────────────────────────────────────
+
+        # Header
+        _story.append(Paragraph('SHUTTER LEAGUE', _s_title))
+        _story.append(Paragraph('Exploratory Evaluation', _s_sub))
+        _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=10))
+
+        # Photograph
+        if _photo_bytes:
+            try:
+                _img_buf = _pio.BytesIO(_photo_bytes)
+                _rl_img  = RLImage(_img_buf, width=_W - 2*_M, height=80*mm, kind='proportional')
+                _story.append(_rl_img)
+                _story.append(Spacer(1, 6))
+            except Exception as _ie:
+                app.logger.warning(f'[try_result_download] photo embed failed: {_ie}')
+
+        # Asset name + EXIF
+        _story.append(Paragraph(_asset, _s_head2))
+        if _exif_line:
+            _story.append(Paragraph(_exif_line, _s_body_it))
+
+        _story.append(Spacer(1, 4))
+
+        # Score + Tier
+        _story.append(Paragraph(f'{_score:.2f}', _s_score))
+        _story.append(Paragraph(_tier, _s_tier))
+
+        # Tier ladder
+        _ladder_cells = []
+        for _t in _tier_order:
+            _is_current = (_t == _tier)
+            _ladder_cells.append(_t)
+        _ladder_tbl = Table(
+            [_ladder_cells],
+            colWidths=[(_W - 2*_M) / len(_tier_order)] * len(_tier_order),
+        )
+        _ladder_style = [
+            ('FONTNAME',    (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE',    (0,0), (-1,-1), 7),
+            ('ALIGN',       (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',      (0,0), (-1,-1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0,0), (-1,-1), [_C_LIGHT]),
+            ('TEXTCOLOR',   (0,0), (-1,-1), _C_MID),
+            ('TOPPADDING',  (0,0), (-1,-1), 4),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 4),
+            ('BOX',         (0,0), (-1,-1), 0.3, _C_RULE),
+            ('INNERGRID',   (0,0), (-1,-1), 0.3, _C_RULE),
+        ]
+        # Highlight current tier
+        if _tier in _tier_order:
+            _ti = _tier_order.index(_tier)
+            _ladder_style += [
+                ('BACKGROUND',  (_ti,0), (_ti,0), _C_SLATE),
+                ('TEXTCOLOR',   (_ti,0), (_ti,0), _C_WHITE),
+                ('FONTNAME',    (_ti,0), (_ti,0), 'Helvetica-Bold'),
+            ]
+        _ladder_tbl.setStyle(TableStyle(_ladder_style))
+        _story.append(_ladder_tbl)
+        _story.append(Spacer(1, 10))
+
+        # Five dimensions
+        _dim_data = [
+            ('Depth of Difficulty',  _dod),
+            ('Visual Disruption',    _vd),
+            ('Decisive Moment',      _dm),
+            ('Wonder Factor',        _wf),
+            ('Authentic Quality',    _aq),
+        ]
+        _col_w = (_W - 2*_M) / len(_dim_data)
+        _dim_labels = [[Paragraph(f'<b>{n}</b>', _sty('dl', size=7, leading=9, colour=_C_WHITE, bold=True, align=TA_CENTER))
+                        for n, _ in _dim_data]]
+        _dim_scores = [[Paragraph(f'{v:.1f}' if v is not None else '—',
+                                  _sty('ds', size=13, leading=16, colour=_C_WHITE, bold=True, align=TA_CENTER))
+                        for _, v in _dim_data]]
+        _dim_tbl = Table(
+            _dim_labels + _dim_scores,
+            colWidths=[_col_w] * len(_dim_data),
+        )
+        _dim_style = [
+            ('ALIGN',        (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',       (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING',   (0,0), (-1,-1), 4),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 4),
+        ]
+        for _di, (_, _dv) in enumerate(_dim_data):
+            _bg = _dim_colour(_dv)
+            _dim_style.append(('BACKGROUND', (_di, 0), (_di, 1), _bg))
+        _dim_tbl.setStyle(TableStyle(_dim_style))
+        _story.append(_dim_tbl)
+        _story.append(Spacer(1, 10))
+
+        # Takeaway
+        if _takeaway:
+            _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=6))
+            _story.append(Paragraph(_takeaway, _s_takeaway))
+
+        # Impression (the letter)
+        if _impression:
+            _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=6))
+            _story.append(Paragraph('Your Evaluation', _s_head2))
+            _story.append(Paragraph(_impression, _s_body))
+
+        # Strongest moment
+        if _strength_name or _strength_obs:
+            _story.append(Paragraph(f'Strongest: {_strength_name}', _s_head2))
+            if _strength_obs:
+                _story.append(Paragraph(_strength_obs, _s_body))
+
+        # Next leap
+        if _next_leap_name or _next_leap_obs:
+            _story.append(Paragraph(f'Your Next Leap: {_next_leap_name}', _s_head2))
+            if _next_leap_obs:
+                _story.append(Paragraph(_next_leap_obs, _s_body))
+
+        # What next
+        if _what_next:
+            _story.append(Paragraph('What To Do Next', _s_head2))
+            _story.append(Paragraph(_what_next, _s_body))
+
+        # EXIF footer line on page 1
+        _story.append(Spacer(1, 6))
+        _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=4))
+        _story.append(Paragraph(
+            f'Evaluated {_eval_date}  ·  {_exif_line}  ·  shutter.league',
+            _s_foot
+        ))
+
+        # ── PAGE 2 ────────────────────────────────────────────────────────
+        from reportlab.platypus import PageBreak
+        _story.append(PageBreak())
+
+        _story.append(Paragraph('SHUTTER LEAGUE', _s_title))
+        _story.append(Paragraph('Your Journey So Far', _s_sub))
+        _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=10))
+
+        # Master reference
+        if _master_name or _master_why:
+            _story.append(Paragraph('Master Reference', _s_head2))
+            if _master_name:
+                _story.append(Paragraph(_master_name, _sty('mn', size=12, leading=16, colour=_C_AMBER, bold=True, space_after=2)))
+            if _master_why:
+                _story.append(Paragraph(_master_why, _s_body))
+            _story.append(Spacer(1, 8))
+
+        # History thread
+        _story.append(Paragraph('Your Evaluation History', _s_head2))
+
+        if _history:
+            for _hi, _hitem in enumerate(_history):
+                _story.append(Paragraph(
+                    f'Evaluation {len(_history) - _hi}  ·  {_hitem["genre"]}  ·  {_hitem["score"]:.2f}  ·  {_hitem["tier"]}',
+                    _s_hist_lbl
+                ))
+                if _hitem['strength']:
+                    _story.append(Paragraph(f'Strongest: {_hitem["strength"]}', _s_hist_bod))
+                if _hitem['next_leap']:
+                    _story.append(Paragraph(f'Next leap: {_hitem["next_leap"]}', _s_hist_bod))
+                if _hitem['takeaway']:
+                    _story.append(Paragraph(_hitem['takeaway'], _s_hist_bod))
+                _story.append(Spacer(1, 4))
+        else:
+            _story.append(Paragraph(
+                'This is your first exploratory evaluation. Your history will build from here.',
+                _s_body_it
+            ))
+
+        # Pattern observation
+        if _pattern_note:
+            _story.append(HRFlowable(width='100%', thickness=0.5, color=_C_RULE, spaceAfter=6))
+            _story.append(Paragraph(_pattern_note, _s_pattern))
+
+        # Branding footer
+        _story.append(Spacer(1, 16))
+        _story.append(HRFlowable(width='100%', thickness=1, color=_C_SLATE, spaceAfter=6))
+        _story.append(Paragraph(
+            'Shutter League  ·  shutter.league  ·  Annual Excellence Award — 31 December 2026',
+            _s_foot
+        ))
+        _story.append(Paragraph(
+            'This evaluation was generated by the Shutter League exploratory evaluation engine. '
+            'It does not contribute to your League standing, Annual Excellence Award, or Body of Work.',
+            _s_foot
+        ))
+
+        _doc.build(_story)
+        _pdf_bytes = _buf.getvalue()
+
+    except Exception as _rle:
+        app.logger.error(f'[try_result_download] PDF build failed: {_rle}')
+        return 'PDF generation failed. Please try again.', 500
+
+    # ── Filename: SL_[Name]_[Genre]_[Date].pdf ───────────────────────────
+    import re as _re
+    _safe_name  = _re.sub(r'[^A-Za-z0-9]+', '_', _name)[:30].strip('_') or 'Photographer'
+    _safe_genre = _re.sub(r'[^A-Za-z0-9]+', '_', _genre)[:20].strip('_') or 'General'
+    _safe_date  = (_eval_date or '').replace(' ', '-').replace('/', '-')[:12] or '2026'
+    _filename   = f'SL_{_safe_name}_{_safe_genre}_{_safe_date}.pdf'
+
+    from flask import Response as _Resp
+    return _Resp(
+        _pdf_bytes,
+        headers={
+            'Content-Type':           'application/pdf',
+            'Content-Disposition':    f'attachment; filename="{_filename}"',
+            'Content-Length':         str(len(_pdf_bytes)),
+            'Cache-Control':          'no-store, no-cache, must-revalidate',
+            'Pragma':                 'no-cache',
+            'X-Content-Type-Options': 'nosniff',
+        }
+    )
 
 
 @app.route('/admin/resend-subscription-email/<int:user_id>', methods=['GET', 'POST'])
