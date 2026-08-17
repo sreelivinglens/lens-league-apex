@@ -1,3 +1,4 @@
+# SL-VERSION: 181.32-staging (Session 189, 2026-08-18 — ROOT FIX: raw SQL Row objects passed directly to Jinja2 — attribute access (img.thumb_url) silently returns None in some SQLAlchemy versions, so hero selection loop always set hero=none and no image showed (no exception, no log). Fix: convert all raw SQL rows to SimpleNamespace objects in the route before passing to template — index access row[i] is reliable, attr access on Row is not. Applied to both carousel_images and recent_images. RETAINS 181.31-staging.)
 # SL-VERSION: 181.31-staging (Session 189, 2026-08-18 01:50 UTC — Added exc_info=True logging to index() except block so future errors are visible in Railway deploy logs instead of being silently swallowed. RETAINS 181.30-staging.)
 # SL-VERSION: 181.30-staging (Session 189, 2026-08-18 — ROOT FIX: both carousel and recent_images queries converted to raw SQL. ORM Image.thumb_url.like() was silently throwing AttributeError (thumb_url not a mapped db.Column), caught by except Exception, blanking all images. Project rule is raw SQL for unmapped columns. Raw SQL LIKE :r2 now correctly filters to real R2-hosted thumbnails. Both queries parameterised safely. RETAINS 181.29-staging.)
 # SL-VERSION: 181.29-staging (Session 189, 2026-08-17 — HOTFIX: ghost thumb_url records. DB rows where thumb_url is non-null but the R2 file was deleted return 404. Fix: added Image.thumb_url.like() to both carousel and recent_images queries. RETAINS 181.28-staging.)
@@ -3470,14 +3471,28 @@ def index():
             "  AND thumb_url LIKE :r2 "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
-        _seen_users = set()
-        recent_images = []
+        # Convert raw SQL rows to simple objects so Jinja2 attribute access works
+        # reliably — SQLAlchemy Row objects support _mapping but Jinja2 .attr access
+        # may silently return None depending on SQLAlchemy version.
+        from types import SimpleNamespace
+        def _row_to_ns(row, fields):
+            obj = SimpleNamespace()
+            for i, f in enumerate(fields):
+                setattr(obj, f, row[i])
+            return obj
+
+        _recent_fields = ['id','user_id','thumb_url','tier','genre','score','scored_at','photographer_name']
+        recent_images_ns = []
+        _seen_users2 = set()
         for _ri in _recent_rows:
-            if _ri.user_id not in _seen_users:
-                _seen_users.add(_ri.user_id)
-                recent_images.append(_ri)
-                if len(recent_images) == 6:
+            if _ri[1] not in _seen_users2:
+                _seen_users2.add(_ri[1])
+                recent_images_ns.append(_row_to_ns(_ri, _recent_fields))
+                if len(recent_images_ns) == 6:
                     break
+        recent_images = recent_images_ns
+
+        _car_fields = ['id','user_id','thumb_url','tier','genre','score','photographer_name','width','height','exif_original_width','exif_original_height']
         # Hero carousel — score >= 8.5, real R2 thumbnail, exclude mentors
         _mentor_ids = db.session.execute(
             db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
@@ -3503,7 +3518,7 @@ def index():
                 "  AND thumb_url LIKE :r2 "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2}).fetchall()
-        carousel_images = _carousel_rows
+        carousel_images = [_row_to_ns(r, _car_fields) for r in _carousel_rows]
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
