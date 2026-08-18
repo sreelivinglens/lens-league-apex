@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.17-staging (Session 189, 2026-08-18 — GALLERY GRID FIX: grid was broken on mobile when 5th tile removed. Fixed :first-child selector and added explicit min-height on mobile tiles so images show. RETAINS 182.16.) #}
 {# SL-VERSION: 182.16-staging (Session 189, 2026-08-18 — GALLERY FIX 2: Jinja2 set inside loop does not update outer scope — valid_gallery stayed empty, all tiles vanished. Fixed using namespace(count=0) pattern. RETAINS 182.15.) #}
 {# SL-VERSION: 182.15-staging (Session 189, 2026-08-18 — GALLERY FIX: only render tiles with real thumbnails. Empty dark tiles no longer shown. onerror hides entire parent tile if image fails to load. RETAINS 182.14.) #}
 {# SL-VERSION: 182.14-staging (Session 189, 2026-08-18 — BOTTOM NAV: added site's standard bottom nav (sl-bottom-nav) directly into standalone page — shows on mobile <=900px, hidden on desktop. Anon: SHUTTER LEAGUE logo + Upload FAB + Log In. Authed: Dashboard + Upload FAB + My Gallery. Matches base.html bottom nav verbatim. RETAINS 182.13.) #}
@@ -117,7 +118,7 @@ body,html{overflow-x:hidden;max-width:100%}
 .photos{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.6fr .9fr .9fr;grid-template-rows:240px 240px;gap:6px}
 .ph{position:relative;overflow:hidden;background:var(--dark)}
 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ph:nth-child(1){grid-row:1/3}
+.ph:first-child{grid-row:1/3}
 .ph-badge{position:absolute;left:14px;bottom:14px;z-index:2;background:rgba(6,14,28,.85);color:var(--gold);font-size:13px;font-weight:700;padding:7px 12px;letter-spacing:.5px}
 .aea-strip{max-width:1200px;margin:28px auto 0;padding:22px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
 .aea-strip p{font-size:16px;color:var(--muted);max-width:580px;line-height:1.7}
@@ -168,8 +169,9 @@ body,html{overflow-x:hidden;max-width:100%}
 }
 @media (max-width: 768px){
   .hero{grid-template-columns:1fr}
-  .photos{grid-template-columns:1fr 1fr;grid-template-rows:auto}
-  .ph:nth-child(1){grid-row:auto;grid-column:1/3}
+  .photos{grid-template-columns:1fr 1fr;grid-template-rows:auto;min-height:300px}
+  .ph{min-height:150px}
+  .ph:first-child{grid-row:auto;grid-column:1/3;min-height:220px}
 }
 @media (max-width: 600px){
   .hero{grid-template-columns:1fr}
