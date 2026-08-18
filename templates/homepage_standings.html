@@ -1,0 +1,219 @@
+{# SL-VERSION: homepage_standings-1.0-staging (Session 189, 2026-08-18 — NEW FILE. Public standings page — no login required. Shows tier, photographer display name, best image thumbnail only. Full scorecard locked: "For League photographers only — Join the League →". Standalone — no base.html. 188M design tokens. Haiku images never shown (is_haiku_try filter in route). Separate from leaderboard.html which remains login-required.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The League — Shutter League</title>
+<meta name="description" content="Photographers building their record. Every evaluation calibrated against the same standard. Shutter League — Making Images Matter.">
+<meta property="og:title" content="The League — Shutter League">
+<meta property="og:description" content="See where photographers stand. The first calibrated photography credential in India.">
+<meta property="og:image" content="https://shutterleague.com/static/og-image.jpg">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<style>
+:root{
+  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;
+  --blue:#2C3E6B;--gold:#D4A428;--ink:#1A1A18;
+  --muted:#8A8070;--line:#E0D8C8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:16px;line-height:1.65;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* ── NAV ── */
+.pub-nav{height:68px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(212,164,40,.18)}
+.pub-brand{display:flex;align-items:center;gap:10px;color:#fff}
+.pub-crest{width:28px;height:28px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:.5px}
+.pub-brandword{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
+.pub-nav-right{display:flex;align-items:center;gap:10px}
+.pub-login{font-size:14px;color:rgba(255,255,255,.6);padding:7px 14px;border:1px solid rgba(255,255,255,.2);border-radius:2px;transition:color .15s}
+.pub-login:hover{color:#fff}
+.pub-register{font-size:14px;font-weight:700;color:var(--dark);background:var(--gold);padding:8px 18px;border-radius:2px}
+
+/* ── PAGE HEADER ── */
+.pub-header{padding:52px 48px 36px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--line)}
+.pub-header-eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.pub-header-h1{font-size:clamp(32px,4vw,52px);font-weight:600;color:var(--blue);line-height:1.05;letter-spacing:-.04em;margin-bottom:16px}
+.pub-header-desc{font-size:17px;color:var(--muted);line-height:1.8;max-width:640px;margin-bottom:24px}
+.pub-header-stat-row{display:flex;gap:32px;flex-wrap:wrap}
+.pub-stat{display:flex;flex-direction:column;gap:2px}
+.pub-stat-val{font-size:24px;font-weight:700;color:var(--blue);line-height:1}
+.pub-stat-lbl{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* ── TRACK TABS ── */
+.pub-tabs{max-width:1200px;margin:0 auto;padding:20px 48px 0;display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.pub-tab{font-size:14px;font-weight:600;color:var(--muted);padding:10px 18px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;cursor:pointer;text-decoration:none}
+.pub-tab.on{color:var(--blue);border-bottom-color:var(--gold)}
+.pub-tab:hover:not(.on){color:var(--ink)}
+
+/* ── GRID ── */
+.pub-grid-wrap{max-width:1200px;margin:0 auto;padding:36px 48px 80px}
+.pub-tier-section{margin-bottom:52px}
+.pub-tier-label{display:inline-flex;align-items:center;gap:10px;margin-bottom:20px}
+.pub-tier-name{font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:4px 14px;border-radius:99px}
+.pub-tier-count{font-size:13px;color:var(--muted)}
+.pub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* ── PHOTOGRAPHER CARD ── */
+.pub-card{background:#fff;border:1px solid var(--line);display:flex;flex-direction:column;position:relative}
+.pub-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--dark)}
+.pub-card-img-placeholder{width:100%;aspect-ratio:4/3;background:linear-gradient(145deg,#1a2540 0%,#0f1828 100%);display:flex;align-items:center;justify-content:center}
+.pub-card-body{padding:14px 16px 16px}
+.pub-card-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pub-card-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+.pub-card-lock{display:flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);padding:10px 12px;font-size:13px;color:var(--muted);line-height:1.5}
+.pub-card-lock-link{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;margin-left:auto;flex-shrink:0}
+.pub-card-lock-link:hover{text-decoration:underline}
+
+/* Tier pill colours */
+.tp-legend{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B}
+.tp-grandmaster{background:#FDF3CC;color:#B45309;border:1px solid #D6A428}
+.tp-master{background:#EDEDEB;color:#2D2D2D;border:1px solid #C4C4C0}
+.tp-maverick{background:#EDE9FE;color:#5B21B6;border:1px solid #C4B5FD}
+.tp-craftsman{background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD}
+.tp-contender{background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7}
+.tp-shooter{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB}
+.tp-rookie{background:#F9FAFB;color:#6B7280;border:1px solid #E5E7EB}
+
+/* ── JOIN BANNER ── */
+.pub-join{background:var(--dark);padding:52px 48px;text-align:center}
+.pub-join-h{font-size:clamp(24px,3.5vw,40px);font-weight:600;color:#fff;line-height:1.2;letter-spacing:-.03em;margin-bottom:14px}
+.pub-join-sub{font-size:17px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.7}
+.pub-join-cta{display:inline-block;background:var(--gold);color:var(--dark);font-size:16px;font-weight:700;padding:15px 32px;border-radius:2px}
+.pub-join-note{font-size:14px;color:rgba(255,255,255,.35);margin-top:14px}
+
+/* ── FOOTER ── */
+.pub-footer{background:var(--dark);padding:40px 48px 24px;border-top:1px solid rgba(255,255,255,.08)}
+.pub-footer-bottom{font-size:13px;color:rgba(255,255,255,.3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08)}
+.pub-footer-links{display:flex;gap:18px}
+.pub-footer-links a{color:rgba(255,255,255,.3);font-size:13px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){.pub-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .pub-nav{padding:0 16px}
+  .pub-header{padding:36px 20px 28px}
+  .pub-tabs{padding:0 20px}
+  .pub-grid-wrap{padding:28px 20px 60px}
+  .pub-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .pub-join{padding:40px 20px}
+  .pub-footer{padding:32px 20px 20px}
+  .pub-header-stat-row{gap:20px}
+  .pub-register{display:none}
+}
+@media(max-width:400px){.pub-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+{# ── NAV ── #}
+<nav class="pub-nav">
+  <a href="{{ url_for('index') }}" class="pub-brand">
+    <div class="pub-crest">SL</div>
+    <span class="pub-brandword">Shutter League</span>
+  </a>
+  <div class="pub-nav-right">
+    <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
+    <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
+  </div>
+</nav>
+
+{# ── HEADER ── #}
+<div class="pub-header">
+  <div class="pub-header-eyebrow">Overall Standings</div>
+  <h1 class="pub-header-h1">These are photographers<br>building their record.</h1>
+  <p class="pub-header-desc">Every evaluation is calibrated against the same standard. The tier a photographer holds is earned — not by a single image, but by what their eye consistently does across time.</p>
+  <div class="pub-header-stat-row">
+    {% if total_photographers is defined %}<div class="pub-stat"><span class="pub-stat-val">{{ total_photographers }}</span><span class="pub-stat-lbl">Photographers</span></div>{% endif %}
+    {% if total_images is defined %}<div class="pub-stat"><span class="pub-stat-val">{{ total_images }}</span><span class="pub-stat-lbl">Evaluations</span></div>{% endif %}
+    <div class="pub-stat"><span class="pub-stat-val">312</span><span class="pub-stat-lbl">Blind calibrations</span></div>
+    <div class="pub-stat"><span class="pub-stat-val">31 Dec</span><span class="pub-stat-lbl">AEA 2026</span></div>
+  </div>
+</div>
+
+{# ── TRACK TABS ── #}
+<div class="pub-tabs">
+  <a href="?track=all" class="pub-tab {{ 'on' if not track or track == 'all' else '' }}">All</a>
+  <a href="?track=camera" class="pub-tab {{ 'on' if track == 'camera' else '' }}">Camera League</a>
+  <a href="?track=mobile" class="pub-tab {{ 'on' if track == 'mobile' else '' }}">Mobile League</a>
+</div>
+
+{# ── GRID ── #}
+<div class="pub-grid-wrap">
+
+{% set tiers = [
+  ('Legend',      'tp-legend'),
+  ('Grandmaster', 'tp-grandmaster'),
+  ('Master',      'tp-master'),
+  ('Maverick',    'tp-maverick'),
+  ('Craftsman',   'tp-craftsman'),
+  ('Contender',   'tp-contender'),
+  ('Shooter',     'tp-shooter'),
+  ('Rookie',      'tp-rookie'),
+] %}
+
+{% for tier_name, tier_class in tiers %}
+  {% set tier_photographers = public_photographers | selectattr('tier', 'equalto', tier_name) | list %}
+  {% if tier_photographers %}
+  <div class="pub-tier-section">
+    <div class="pub-tier-label">
+      <span class="pub-tier-name {{ tier_class }}">{{ tier_name }}</span>
+      <span class="pub-tier-count">{{ tier_photographers | length }} photographer{{ 's' if tier_photographers | length != 1 else '' }}</span>
+    </div>
+    <div class="pub-grid">
+      {% for p in tier_photographers %}
+      <div class="pub-card">
+        {# Best image thumbnail — shown publicly #}
+        {% if p.best_thumb_url %}
+        <img class="pub-card-img" src="{{ p.best_thumb_url }}" alt="{{ p.display_name }}'s best photograph" loading="lazy" onerror="this.style.display='none'">
+        {% else %}
+        <div class="pub-card-img-placeholder">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        {% endif %}
+        <div class="pub-card-body">
+          <div class="pub-card-name">{{ p.display_name }}</div>
+          <div class="pub-card-meta">{{ p.interest_area or 'Photography' }}{% if p.eval_count %} · {{ p.eval_count }} evaluation{{ 's' if p.eval_count != 1 else '' }}{% endif %}</div>
+          {# Scorecard locked — for League photographers only #}
+          <div class="pub-card-lock">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Full evaluation — League photographers only</span>
+            <a href="{{ url_for('register') }}" class="pub-card-lock-link">Join →</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+
+{% if not public_photographers %}
+<div style="padding:60px 0;text-align:center;color:var(--muted);font-size:16px">No photographers to show yet.</div>
+{% endif %}
+
+</div>
+
+{# ── JOIN BANNER ── #}
+<div class="pub-join">
+  <div class="pub-join-h">Your record starts with<br>your first photograph.</div>
+  <p class="pub-join-sub">Chess has Elo. Cricket has ICC rankings. In 200 years of photography, nobody built one. Until now.</p>
+  <a href="{{ url_for('register') }}" class="pub-join-cta">Join the League →</a>
+  <p class="pub-join-note">10 free evaluations. No subscription needed to begin.</p>
+</div>
+
+{# ── FOOTER ── #}
+<footer class="pub-footer">
+  <div class="pub-footer-bottom">
+    <span>© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280 · Making Images Matter</span>
+    <div class="pub-footer-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:support@shutterleague.com">Contact</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
