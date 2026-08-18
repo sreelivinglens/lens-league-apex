@@ -1,3 +1,5 @@
+# SL-VERSION: 181.29-staging (Session 189, 2026-08-17 — HOTFIX: ghost thumb_url records. DB rows where thumb_url is non-null but the R2 file was deleted return 404. Fix: added Image.thumb_url.like('https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev%') to both carousel and recent_images queries — only confirmed R2-hosted thumbnails qualify. Applied to both queries so gallery tiles get same protection. RETAINS 181.28-staging.)
+# SL-VERSION: 181.28-staging (Session 189, 2026-08-17 — HOTFIX: _mentor_user_ids fetch was removed in 181.27 but still referenced at line 3482. This threw NameError at runtime, caught by except Exception, blanking carousel_images AND recent_images — no images showed on the homepage. Fix: restored the raw SQL fetch of _mentor_user_ids before the carousel query. Also removed two stale comment lines left over from the old block. RETAINS 181.27-staging.)
 # SL-VERSION: 181.27-staging (Session 189, 2026-08-17 — index() hero carousel query: changed tier filter to score>=8.5, added thumb_url!=None requirement, removed landscape filter and unchecked fallback. Aligns homepage hero with founder's "any image scoring 8.5 or above, with a real thumbnail." See Session 189 for rationale and risk discussion. RETAINS 181.26-staging.)
 # SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — no longer a fixed verbatim template. Replaced MANDATORY OPENING SENTENCE (single fixed structure, reads as bot) with HISTORY OPENING INSTRUCTION giving Haiku the raw materials (photograph names, consistent strength, prior pattern) and instructing it to write in Sherpa voice with varied structure each time. Forbidden phrases: "consistent strength", "that thread runs through". Example registers provided. Retains 181.25-staging.)
 # SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE on the images row. ORM Image() constructor cannot set unmapped columns. Every Haiku image was saved with is_haiku_try=FALSE, making all world-separation filters (Recent Work, My Gallery, Standings) blind to them. Fixed: raw SQL UPDATE images SET is_haiku_try=TRUE WHERE id=:iid runs immediately after insert commit in try_upload. DB backfill required: UPDATE images SET is_haiku_try=TRUE WHERE audit_json::text LIKE '%haiku_try%' AND is_haiku_try IS NOT TRUE. Retains 181.24-staging.)
@@ -3455,11 +3457,13 @@ def run_reengagement_emailer():
 @app.route('/')
 def index():
     try:
-        # Recent public scored images for bottom strips
+        # Recent public scored images for bottom strips — R2 domain required
+        _R2_DOMAIN = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev'
         _recent_raw = (Image.query
                          .filter(Image.status=='scored', Image.score!=None,
                                  Image.is_public==True, Image.is_flagged==False,
-                                 Image.thumb_url!=None)
+                                 Image.thumb_url!=None,
+                                 Image.thumb_url.like(f'{_R2_DOMAIN}%'))
                          .order_by(Image.scored_at.desc())
                          .limit(36).all())
         # Deduplicate — max 1 image per photographer, max 6 total
@@ -3471,13 +3475,18 @@ def index():
                 recent_images.append(_ri)
                 if len(recent_images) == 6:
                     break
-        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
-        # Exclude portrait-heavy genres so hero image renders as landscape in 4/3 container
-        # Hero carousel — any image scoring 8.5 or above, with a real thumbnail 
+        # Hero carousel — any image scoring 8.5 or above, with a real thumbnail
+        # thumb_url must start with the R2 CDN domain — rules out ghost records
+        # where the file was deleted from R2 but the DB column still has a value
+        _R2_DOMAIN = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev'
+        _mentor_user_ids = db.session.execute(
+            db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
+        ).scalars().all()
         _carousel_q = Image.query.filter(
             Image.status=='scored', Image.score!=None, Image.score>=8.5,
             Image.is_public==True, Image.is_flagged==False,
-            Image.thumb_url!=None
+            Image.thumb_url!=None,
+            Image.thumb_url.like(f'{_R2_DOMAIN}%')
         )
         if _mentor_user_ids:
             _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
