@@ -1,4 +1,4 @@
-{# SL-VERSION: HAIKU-177.3-staging (Session 189, 2026-08-19 — MOBILE: top bar simplified (logo + counter + avatar only). Bottom nav added matching paid dashboard pattern: Home / Upload / My Gallery / Log out. Top nav hidden on mobile. Text overflow fixed. RETAINS HAIKU-177.2.) (Session 189, 2026-08-19 — Logo links to try_welcome (Haiku home) not try_page (upload). RETAINS HAIKU-177.1.) (Session 189, 2026-08-19 — THREE FIXES: (1) Nav dots hidden on mobile, replaced with compact "X of Y" text. (2) Logout link added to nav. (3) Quote swap: Mahesh back on dashboard, founder in email. (4) Founder byline: IPPAWARDS 2019 added. (5) Mobile overflow fixed. RETAINS HAIKU-177.0.) (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
+{# SL-VERSION: HAIKU-177.4-staging (Session 189, 2026-08-19 — Footer: full 188M footer with Company/Legal columns. Desktop nav counter overflow fix. RETAINS HAIKU-177.3.) (Session 189, 2026-08-19 — MOBILE: top bar simplified (logo + counter + avatar only). Bottom nav added matching paid dashboard pattern: Home / Upload / My Gallery / Log out. Top nav hidden on mobile. Text overflow fixed. RETAINS HAIKU-177.2.) (Session 189, 2026-08-19 — Logo links to try_welcome (Haiku home) not try_page (upload). RETAINS HAIKU-177.1.) (Session 189, 2026-08-19 — THREE FIXES: (1) Nav dots hidden on mobile, replaced with compact "X of Y" text. (2) Logout link added to nav. (3) Quote swap: Mahesh back on dashboard, founder in email. (4) Founder byline: IPPAWARDS 2019 added. (5) Mobile overflow fixed. RETAINS HAIKU-177.0.) (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
 {# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
 {# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
@@ -35,7 +35,7 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
 
 /* ── COUNTER ── */
-.hk-counter{background:rgba(255,255,255,.07);padding:0 12px;display:flex;align-items:center;gap:5px;height:100%;border-left:1px solid rgba(255,255,255,.1);max-width:200px;overflow:hidden}
+.hk-counter{background:rgba(255,255,255,.07);padding:0 12px;display:flex;align-items:center;gap:5px;height:100%;border-left:1px solid rgba(255,255,255,.1);max-width:160px;overflow:hidden;flex-shrink:0}
 .hk-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0}
 .hk-dot.used{background:rgba(255,255,255,.2)}
 .hk-counter-label{font-size:12px;color:rgba(255,255,255,.45);margin-left:4px;white-space:nowrap}
@@ -454,7 +454,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 {# ── DARK FOOTER ── #}
 <footer class="hk-footer">
-  <div class="hk-footer-grid">
+  <div class="hk-footer-grid" style="grid-template-columns:1.4fr 1fr 1fr 1fr 1fr">
     <div class="hk-footer-col">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
         <div class="hk-crest" style="border-color:rgba(255,255,255,.3)">SL</div>
@@ -463,19 +463,37 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <div style="font-size:13px;line-height:1.7;color:rgba(255,255,255,.4)">Photography Assessment &amp; Evolution Platform<br><em>Making Images Matter</em></div>
     </div>
     <div class="hk-footer-col">
-      <h4>About</h4>
-      <a href="{{ url_for('index') }}">Homepage</a>
-      <a href="{{ url_for('science') if False else '/science' }}">The Science</a>
-      <a href="/terms">Terms</a>
-      <a href="/privacy">Privacy</a>
+      <h4>Company</h4>
+      <a href="/about">About Us</a>
+      <a href="/contact">Contact Us</a>
+      <a href="{{ url_for('pricing') }}">Pricing</a>
+      <a href="/faq">FAQ</a>
     </div>
     <div class="hk-footer-col">
-      <h4>Contact</h4>
+      <h4>Legal</h4>
+      <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/refund-policy">Refund Policy</a>
+    </div>
+    <div class="hk-footer-col">
+      <h4>Programmes</h4>
+      <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
+      <a href="/contact">Help &amp; Support</a>
+    </div>
+    <div class="hk-footer-col">
+      <h4>Learn</h4>
+      <a href="{{ url_for('science') }}">Science</a>
+      <a href="/contact">Contact</a>
       <a href="mailto:support@shutterleague.com">support@shutterleague.com</a>
     </div>
   </div>
-  <div class="hk-footer-bottom">
-    © 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280
+  <div class="hk-footer-bottom" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <span>© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
+    <div style="display:flex;gap:16px">
+      <a href="/privacy" style="color:rgba(255,255,255,.3);font-size:13px;text-decoration:none">Privacy Policy</a>
+      <a href="/terms" style="color:rgba(255,255,255,.3);font-size:13px;text-decoration:none">Terms &amp; Conditions</a>
+      <a href="/refund-policy" style="color:rgba(255,255,255,.3);font-size:13px;text-decoration:none">Refund Policy</a>
+    </div>
   </div>
 </footer>
 <div id="cookie-banner" role="region" aria-label="Cookie consent">
