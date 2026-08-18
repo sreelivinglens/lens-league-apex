@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store">
 <title>Dashboard — Shutter League</title>
 <meta name="description" content="Your personalised photography brief, daily assignment, and standing on Shutter League.">
-{# SL-VERSION: 180.2 (Session 189, 2026-08-18 — REDESIGN using approved 188M design language. Standalone — no base.html. Aptos font. 188M tokens: --cream/#FEFCF8, --dark/#0F1F3D, --blue/#2C3E6B, --gold/#D4A428, --paper/#F5F0E8, --ink/#1A1A18, --muted/#8A8070, --line/#E0D8C8. Desktop: dark topnav + 3-col layout (192px sidenav / main / 230px right panel). Mobile: hamburger drawer + bottom nav preserved from 178.x. RETAINS all Jinja2 data wiring from 179.9.) #}
+{# SL-VERSION: 180.3-staging (Session 189, 2026-08-19 — Journey thumbnails: score overlay fixed (position:relative on wrapper, overflow:hidden). Score shown once as overlay only. Mobile same fix. Footer KYC: "Log out" moved from mobile footer (gold colour was KYC-adjacent). RETAINS 180.2.) (Session 189, 2026-08-18 — REDESIGN using approved 188M design language. Standalone — no base.html. Aptos font. 188M tokens: --cream/#FEFCF8, --dark/#0F1F3D, --blue/#2C3E6B, --gold/#D4A428, --paper/#F5F0E8, --ink/#1A1A18, --muted/#8A8070, --line/#E0D8C8. Desktop: dark topnav + 3-col layout (192px sidenav / main / 230px right panel). Mobile: hamburger drawer + bottom nav preserved from 178.x. RETAINS all Jinja2 data wiring from 179.9.) #}
 <style>
 :root{
   --cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;--gold:#D4A428;
@@ -140,7 +140,7 @@ button{font:inherit;cursor:pointer}
 /* Journey thumbnails */
 .db-journey{display:flex;gap:6px;margin-top:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
 .db-journey::-webkit-scrollbar{display:none}
-.db-thumb{flex:0 0 68px;width:68px}
+.db-thumb{flex:0 0 68px;width:68px;position:relative}
 .db-thumb-img{width:68px;height:68px;border-radius:2px;object-fit:cover;display:block}
 .db-thumb-score{font-size:13px;font-weight:700;color:var(--ink);display:block;margin-top:3px;text-align:center}
 .db-thumb-date{font-size:12px;color:var(--muted);text-align:center;display:block}
@@ -232,7 +232,7 @@ button{font:inherit;cursor:pointer}
 .mob-thumb-row{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
 .mob-thumb-row::-webkit-scrollbar{display:none}
 .mob-thumb{flex:0 0 70px;width:70px}
-.mob-thumb-img{width:70px;height:70px;object-fit:cover;display:block;position:relative}
+.mob-thumb-img{width:70px;height:70px;object-fit:cover;display:block}
 .mob-thumb-score{font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;text-align:center}
 .mob-thumb-date{font-size:12px;color:var(--muted);text-align:center}
 
@@ -620,13 +620,10 @@ button{font:inherit;cursor:pointer}
   <div class="db-journey">
     {% for img in _scored %}
     {% if img.thumb_url %}
-    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="db-thumb" style="text-decoration:none">
-      <div style="position:relative">
-        <img src="{{ img.thumb_url }}" alt="" class="db-thumb-img" loading="lazy" onerror="this.parentNode.style.background='var(--line)';this.remove()">
-        <div style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;padding:2px 5px">{{ '%.1f'|format(img.score) }}</div>
-      </div>
-      <span class="db-thumb-score">{{ '%.1f'|format(img.score) }}</span>
-      <span class="db-thumb-date">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</span>
+    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="db-thumb" style="text-decoration:none;display:block;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <img src="{{ img.thumb_url }}" alt="" class="db-thumb-img" loading="lazy" onerror="this.parentNode.style.background='var(--line)';this.remove()">
+      <div style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;padding:2px 5px;pointer-events:none">{{ '%.1f'|format(img.score) }}</div>
+      <span style="font-size:12px;color:var(--muted);text-align:center;display:block;margin-top:3px;pointer-events:none">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</span>
     </a>
     {% endif %}
     {% endfor %}
@@ -917,14 +914,11 @@ button{font:inherit;cursor:pointer}
       <div class="mob-thumb-row">
         {% for img in images.items if images and images.items %}
         {% if img.score and img.thumb_url %}
-        <div class="mob-thumb">
-          <div style="position:relative">
-            <img src="{{ img.thumb_url }}" alt="" class="mob-thumb-img" loading="lazy" onerror="this.parentNode.style.background='var(--line)';this.remove()">
-            <div style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;padding:2px 4px">{{ '%.1f'|format(img.score) }}</div>
-          </div>
-          <div class="mob-thumb-score">{{ '%.1f'|format(img.score) }}</div>
-          <div class="mob-thumb-date">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
-        </div>
+        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="mob-thumb" style="position:relative;flex:0 0 70px;width:70px;display:block;text-decoration:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+          <img src="{{ img.thumb_url }}" alt="" class="mob-thumb-img" loading="lazy" onerror="this.parentNode.style.background='var(--line)';this.remove()">
+          <div style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;padding:2px 4px;pointer-events:none">{{ '%.1f'|format(img.score) }}</div>
+          <div class="mob-thumb-date" style="pointer-events:none">{{ img.scored_at.strftime('%d %b') if img.scored_at else '' }}</div>
+        </a>
         {% endif %}
         {% endfor %}
       </div>
@@ -968,7 +962,7 @@ button{font:inherit;cursor:pointer}
       <a href="/terms" style="font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">Terms</a>
       <a href="/privacy" style="font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">Privacy</a>
       <a href="/contact" style="font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">Help</a>
-      <a href="{{ url_for('logout') }}" style="font-size:13px;color:rgba(255,100,100,.55);text-decoration:none">Log out</a>
+      <a href="{{ url_for('logout') }}" style="font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">Log out</a>
     </div>
     <div style="font-size:12px;color:rgba(255,255,255,.3)">© 2026 Shutter League · UDYAM-KR-03-0697280</div>
   </div>
