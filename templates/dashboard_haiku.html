@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-176.8-staging (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
 {# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
 {# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
@@ -252,18 +253,18 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# ── STATE 1 — ZERO UPLOADS — editorial letter ── #}
     {% if state_zero %}
 
-    <h1 class="hk-h1">What if you could see how good you could become?</h1>
+    <h1 class="hk-h1">You may be closer than you think.</h1>
 
-    <p class="hk-intro">You may be closer than you think. Every photograph has something to teach — what worked, what didn't, and what you might see differently next time.</p>
+    <p class="hk-intro">Most photographers spend years not knowing whether their eye is growing. Likes are social. Camera clubs are polite. Nobody says the hard thing. Your first evaluation will.</p>
 
     <div class="hk-proof">
       <p>"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
-      <small>Mahesh Iyer · Street photographer · Grandmaster, Shutter League · 37 evaluations, self-motivated</small>
+      <small>Mahesh Iyer · Grandmaster, Shutter League · Rank 105 of 20,000 globally, PhotoCrowd · 37 evaluations, self-motivated</small>
     </div>
 
     <div class="hk-empty">
       <div>
-        <strong>Your first photograph is still waiting.</strong>
+        <strong>Your first photograph is waiting.</strong>
         <span>Perhaps this is where it begins.</span>
       </div>
     </div>
@@ -272,11 +273,11 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       Show me what I'm missing →
       <small>Result in under 2 minutes. No subscription needed.</small>
     </a>
-    <div class="hk-cta-note">{{ _lim }} free evaluations. No subscription.</div>
+    <div class="hk-cta-note">{{ _lim }} free evaluations. No card needed. Result in under 2 minutes.</div>
 
     {# World outside #}
     <div class="hk-world">
-      <div class="hk-world-lbl">The League today</div>
+      <div class="hk-world-lbl">The League, while you read this</div>
       <div class="hk-world-grid">
         <div class="hk-world-item">
           <div class="hk-world-item-lbl">Calibrated evaluations</div>
@@ -344,8 +345,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {% endif %}
 
     <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Upload another photograph →
-      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining. Free, no subscription.</small>
+      Show me what this one says →
+      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining. No subscription.</small>
     </a>
 
     {# ── STATES 5-9 — milestone ── #}
@@ -395,7 +396,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {% endif %}
 
     <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Upload another photograph →
+      Show me what this one says →
       <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
     </a>
 
