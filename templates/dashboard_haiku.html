@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
 {# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
 {# SL-VERSION: HAIKU-176.2-staging (Session 189, 2026-08-18 — AUDIT FIXES: (1) media queries reformatted with spaces. (2) reading text line-heights lifted to 1.7-1.75 (hk-intro, hk-strength-text, hk-milestone-text, hk-conversion-body). (3) hk-conv-opt-price secondary lifted to 14px and gold-dk enforced for secondary option. RETAINS HAIKU-176.1-staging.) #}
@@ -20,7 +21,7 @@
   --muted:#8A8070;--line:#E0D8C8;--gold-dk:#A07A10;
 }
 *{box-sizing:border-box}
-body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
 
 /* ── NAV ── */
 .hk-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:50}
@@ -151,10 +152,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 {% set _imgs = images or [] %}
 {% set _last = _imgs[0] if _imgs else none %}
 {% set first_name = (current_user.full_name or current_user.username or '').split()[0] %}
-{% set hour = now.hour if now else 9 %}
-{% if hour < 12 %}{% set greeting_time = 'morning' %}
-{% elif hour < 17 %}{% set greeting_time = 'afternoon' %}
-{% else %}{% set greeting_time = 'evening' %}{% endif %}
+{% set greeting_time = 'morning' %}{# static default — overridden by JS below #}
 
 {# State flags #}
 {% set state_zero = _n == 0 %}
@@ -188,7 +186,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
   {# ── GREETING ── #}
   <div class="hk-greet">
-    Good {{ greeting_time }},
+    <span class="sl-hk-greeting">Good {{ greeting_time }},</span>
     <b>{{ first_name }}.</b>
   </div>
 
@@ -462,6 +460,14 @@ function cbAccept() {
   b.style.opacity = '0';
   setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
 }
+</script>
+<script>
+(function(){
+  var ist=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  var h=ist.getHours();
+  var g=h<12?'morning':h<17?'afternoon':'evening';
+  document.querySelectorAll('.sl-hk-greeting').forEach(function(el){el.textContent='Good '+g+',';});
+})();
 </script>
 </body>
 </html>
