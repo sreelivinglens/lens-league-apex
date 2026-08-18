@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.15-staging (Session 189, 2026-08-18 — GALLERY FIX: only render tiles with real thumbnails. Empty dark tiles no longer shown. onerror hides entire parent tile if image fails to load. RETAINS 182.14.) #}
 {# SL-VERSION: 182.14-staging (Session 189, 2026-08-18 — BOTTOM NAV: added site's standard bottom nav (sl-bottom-nav) directly into standalone page — shows on mobile <=900px, hidden on desktop. Anon: SHUTTER LEAGUE logo + Upload FAB + Log In. Authed: Dashboard + Upload FAB + My Gallery. Matches base.html bottom nav verbatim. RETAINS 182.13.) #}
 {# SL-VERSION: 182.13-staging (Session 189, 2026-08-18 — NAV: added !important to navsection display:none so Why/The League/About are fully hidden on mobile. RETAINS 182.12.) #}
 {# SL-VERSION: 182.12-staging (Session 189, 2026-08-18 — MOBILE NAV FIX: section links hidden below 960px via .navsection{display:none}; Login and Start remain visible. overflow-x:hidden on body/html to fix white space on right. padding-bottom:72px on mobile to clear site bottom nav. RETAINS 182.11.) #}
@@ -345,18 +346,18 @@ body,html{overflow-x:hidden;max-width:100%}
     <p class="gallery-sub">Different cameras. Different ages. Different ways of seeing. One shared ambition: to make the next photograph matter more than the last.</p>
   </div>
   <div class="photos">
-    {% for gi in gallery_pool[:5] %}
+  {% set valid_gallery = [] %}
+  {% for gi in gallery_pool %}
+    {% if gi.thumb_url and valid_gallery|length < 5 %}
+      {% set valid_gallery = valid_gallery + [gi] %}
+    {% endif %}
+  {% endfor %}
+  {% for gi in valid_gallery %}
     <div class="ph">
-      {% if gi.thumb_url %}
-        <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.style.display='none'">
-      {% endif %}
+      <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.parentElement.style.display='none'">
       <span class="ph-badge">{{ gi.tier|upper if gi.tier else 'MASTER' }} · {{ gi.genre|upper if gi.genre else 'PHOTOGRAPHY' }}</span>
     </div>
-    {% else %}
-    {% for _ in range(5) %}
-    <div class="ph"><span class="ph-badge">FROM THE LEAGUE</span></div>
-    {% endfor %}
-    {% endfor %}
+  {% endfor %}
   </div>
   <div class="aea-strip">
     <p>At the end of every year, the most consistent work in the League is recognised by the <strong>Annual Excellence Award</strong> — the first photography credential in the world built on twelve months of honest evaluation, not a single submission.</p>
