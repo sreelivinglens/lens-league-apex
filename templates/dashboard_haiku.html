@@ -2,6 +2,7 @@
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
 {# SL-VERSION: HAIKU-176.2-staging (Session 189, 2026-08-18 — AUDIT FIXES: (1) media queries reformatted with spaces. (2) reading text line-heights lifted to 1.7-1.75 (hk-intro, hk-strength-text, hk-milestone-text, hk-conversion-body). (3) hk-conv-opt-price secondary lifted to 14px and gold-dk enforced for secondary option. RETAINS HAIKU-176.1-staging.) #}
 {# SL-VERSION: HAIKU-176.1-staging (Session 189, 2026-08-18 — FULL REBUILD. Haiku free dashboard (dashboard_haiku.html) rebuilt from scratch using 188M design language. Replaces HAIKU-175.1. 10 states per Session 188 Part 5D spec: State 1 (zero uploads) editorial letter; States 2-4 (1-4 uploads) building; States 5-9 milestone; States 8-9 near limit urgency; State 10 conversion (verbatim locked copy). Route variables: evals_used, evals_remaining, limit, images (list of dicts with id/thumb_url/score/tier/genre), milestone_strength (str). Design tokens: --dark #0F1F3D, --cream #FEFCF8, --paper #F5F0E8, --blue #2C3E6B, --gold #D4A428, --ink #1A1A18, --muted #8A8070, --line #E0D8C8. Aptos font. KYC: score->evaluation, Evolving Eye NEVER shown, no dimension codes user-facing, no Sherpa/POTY/FOMO. 16px+ body. 44px tap targets. Mobile and iPad breakpoints. RETAINS HAIKU-175.1. #}
+{# SL-VERSION: HAIKU-176.6-staging (Session 189, 2026-08-18 — HOTFIX: same url_for fixes. RETAINS HAIKU-176.5-staging.) #}
 {# SL-VERSION: HAIKU-176.5-staging (Session 189, 2026-08-18 — STANDALONE: removed extends base.html. Base was injecting sl-top-nav, bottom-nav and CSS overrides. Dashboard now manages its own head, meta, and cookie banner. Same fix as homepage 182.9. RETAINS HAIKU-176.4-staging.) #}
 <!doctype html>
 <html lang="en">
@@ -421,7 +422,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="hk-footer-col">
       <h4>About</h4>
       <a href="{{ url_for('index') }}">Homepage</a>
-      <a href="{{ url_for('science') }}">The Science</a>
+      <a href="{{ url_for('science') if False else '/science' }}">The Science</a>
       <a href="/terms">Terms</a>
       <a href="/privacy">Privacy</a>
     </div>
