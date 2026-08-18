@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.16-staging (Session 189, 2026-08-18 — GALLERY FIX 2: Jinja2 set inside loop does not update outer scope — valid_gallery stayed empty, all tiles vanished. Fixed using namespace(count=0) pattern. RETAINS 182.15.) #}
 {# SL-VERSION: 182.15-staging (Session 189, 2026-08-18 — GALLERY FIX: only render tiles with real thumbnails. Empty dark tiles no longer shown. onerror hides entire parent tile if image fails to load. RETAINS 182.14.) #}
 {# SL-VERSION: 182.14-staging (Session 189, 2026-08-18 — BOTTOM NAV: added site's standard bottom nav (sl-bottom-nav) directly into standalone page — shows on mobile <=900px, hidden on desktop. Anon: SHUTTER LEAGUE logo + Upload FAB + Log In. Authed: Dashboard + Upload FAB + My Gallery. Matches base.html bottom nav verbatim. RETAINS 182.13.) #}
 {# SL-VERSION: 182.13-staging (Session 189, 2026-08-18 — NAV: added !important to navsection display:none so Why/The League/About are fully hidden on mobile. RETAINS 182.12.) #}
@@ -346,17 +347,15 @@ body,html{overflow-x:hidden;max-width:100%}
     <p class="gallery-sub">Different cameras. Different ages. Different ways of seeing. One shared ambition: to make the next photograph matter more than the last.</p>
   </div>
   <div class="photos">
-  {% set valid_gallery = [] %}
+  {% set ns = namespace(count=0) %}
   {% for gi in gallery_pool %}
-    {% if gi.thumb_url and valid_gallery|length < 5 %}
-      {% set valid_gallery = valid_gallery + [gi] %}
+    {% if gi.thumb_url and ns.count < 5 %}
+      {% set ns.count = ns.count + 1 %}
+      <div class="ph">
+        <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.parentElement.style.display='none'">
+        <span class="ph-badge">{{ gi.tier|upper if gi.tier else 'MASTER' }} · {{ gi.genre|upper if gi.genre else 'PHOTOGRAPHY' }}</span>
+      </div>
     {% endif %}
-  {% endfor %}
-  {% for gi in valid_gallery %}
-    <div class="ph">
-      <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.parentElement.style.display='none'">
-      <span class="ph-badge">{{ gi.tier|upper if gi.tier else 'MASTER' }} · {{ gi.genre|upper if gi.genre else 'PHOTOGRAPHY' }}</span>
-    </div>
   {% endfor %}
   </div>
   <div class="aea-strip">
