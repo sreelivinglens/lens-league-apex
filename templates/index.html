@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.18-staging (Session 189, 2026-08-18 — NAV FIX: logged-in user showed both My dashboard + Dashboard button. Now shows only Dashboard → button. RETAINS 182.17.) #}
 {# SL-VERSION: 182.17-staging (Session 189, 2026-08-18 — GALLERY GRID FIX: grid was broken on mobile when 5th tile removed. Fixed :first-child selector and added explicit min-height on mobile tiles so images show. RETAINS 182.16.) #}
 {# SL-VERSION: 182.16-staging (Session 189, 2026-08-18 — GALLERY FIX 2: Jinja2 set inside loop does not update outer scope — valid_gallery stayed empty, all tiles vanished. Fixed using namespace(count=0) pattern. RETAINS 182.15.) #}
 {# SL-VERSION: 182.15-staging (Session 189, 2026-08-18 — GALLERY FIX: only render tiles with real thumbnails. Empty dark tiles no longer shown. onerror hides entire parent tile if image fails to load. RETAINS 182.14.) #}
@@ -216,7 +217,6 @@ body,html{overflow-x:hidden;max-width:100%}
     <a href="#league" class="navsection">The League</a>
     <a href="#about" class="navsection">About</a>
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard') }}" class="navlogin">My dashboard</a>
       <a href="{{ url_for('dashboard') }}" class="navstart">Dashboard →</a>
     {% else %}
       <a href="{{ url_for('login') }}" class="navlogin">Login</a>
