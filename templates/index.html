@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.20-staging (Session 189, 2026-08-18 — GALLERY: "The League" kicker → "League of Photographers". Thumbnail overlays now show score + tier + photographer name. ph-badge replaced with score+name overlay. Thumbnails link to /standings. RETAINS 182.19.) #}
 {# SL-VERSION: 182.19-staging (Session 189, 2026-08-18 — NAV: "Start" renamed to "Register" for clarity. RETAINS 182.18.) #}
 {# SL-VERSION: 182.18-staging (Session 189, 2026-08-18 — NAV FIX: logged-in user showed both My dashboard + Dashboard button. Now shows only Dashboard → button. RETAINS 182.17.) #}
 {# SL-VERSION: 182.17-staging (Session 189, 2026-08-18 — GALLERY GRID FIX: grid was broken on mobile when 5th tile removed. Fixed :first-child selector and added explicit min-height on mobile tiles so images show. RETAINS 182.16.) #}
@@ -344,20 +345,26 @@ body,html{overflow-x:hidden;max-width:100%}
 <section class="gallery">
   <div class="gallery-head">
     <div>
-      <div class="kicker">The League</div>
-      <h2 class="gallery-h2">People who keep looking.</h2>
+      <div class="kicker">League of Photographers</div>
+      <h2 class="gallery-h2">Photographers building their record.</h2>
     </div>
-    <p class="gallery-sub">Different cameras. Different ages. Different ways of seeing. One shared ambition: to make the next photograph matter more than the last.</p>
+    <p class="gallery-sub">Every evaluation calibrated against the same standard. <a href="{{ url_for('standings_public') }}" style="color:var(--blue);font-weight:600;border-bottom:1px solid var(--line)">View all standings →</a></p>
   </div>
   <div class="photos">
   {% set ns = namespace(count=0) %}
   {% for gi in gallery_pool %}
     {% if gi.thumb_url and ns.count < 5 %}
       {% set ns.count = ns.count + 1 %}
-      <div class="ph">
+      <a href="{{ url_for('standings_public') }}" class="ph" style="text-decoration:none;display:block;position:relative;overflow:hidden">
         <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.parentElement.style.display='none'">
-        <span class="ph-badge">{{ gi.tier|upper if gi.tier else 'MASTER' }} · {{ gi.genre|upper if gi.genre else 'PHOTOGRAPHY' }}</span>
-      </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,.75));display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+          <div>
+            {% if gi.photographer_name %}<div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:.3px;line-height:1.3">{{ gi.photographer_name }}</div>{% endif %}
+            <div style="font-size:12px;color:rgba(255,255,255,.7);letter-spacing:1px;text-transform:uppercase">{{ gi.tier if gi.tier else 'Master' }}</div>
+          </div>
+          {% if gi.score %}<div style="font-size:20px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.03em">{{ '%.1f'|format(gi.score) }}</div>{% endif %}
+        </div>
+      </a>
     {% endif %}
   {% endfor %}
   </div>
