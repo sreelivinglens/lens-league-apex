@@ -1,264 +1,191 @@
-{# SL-VERSION: 182.8-staging (Session 189, 2026-08-18 — HERO CSS FIX: object-fit:contain with padding was hiding the image against the dark background. Changed to object-fit:cover, removed padding. Image now fills the panel. RETAINS 182.7.) #}
-{# SL-VERSION: 182.7-staging (Session 189, 2026-08-18 — HERO FIX: replaced overengineered namespace/loop hero selection with a single direct line: hero = carousel_images[0] if carousel_images else none. Route already gates score>=8.5 and real R2 thumbnails — template does not need to re-filter. 10 iterations of complexity removed. RETAINS 182.6.) #}
-{# SL-VERSION: 182.6-staging (Session 189, 2026-08-18 — FULL AUDIT PASS. All 5 standing checks run: KYC clean (score/submission/winner/ranking are route variables or founder-locked copy; POTY is a URL path not user copy); mobile bottom nav not suppressed, tap targets >=44px, phone 600px + iPad 768px breakpoints present, iOS dvh fallback present, Safari font-smoothing confirmed at line 51, keyboard focus rings present; 70yr rule — all sub-16px fonts are true metadata labels (ALL CAPS eyebrow kickers, monogram, gallery badges, footer headings, legal line) correctly exempt; version chain 182.1-182.6 intact; render passes anon/authed/empty; Python syntax clean; audit tool 18 remaining flags are all checker expecting old homepage or false positives documented in Session 189. RETAINS 182.5. #}
-{# SL-VERSION: 182.5-staging (Session 189, 2026-08-17 — HERO GALLERY-MAT: the hero photo is now shown WHOLE, never cropped (object-fit:contain, centred, with a mat), on the dark left panel — a landscape rests with dark space above/below like a matted print, a portrait nearly fills the panel. Solves the founder's real-world point: ~90% of photographs are landscape and a photographer must never see theirs side-cropped. Because nothing is cropped, the orientation gate is DROPPED — hero = first route-gated (score>=8.5) image with a real thumbnail, any orientation; more likely to show a real photo on staging. Name · tier · score caption unchanged (gallery label at panel bottom). Considered but rejected: expand-icon (still shows the crop first). Fallback if founder finds the desktop mat too empty: full-width landscape hero with headline below (Option 2) — bigger redesign, not done. Template-only, NO app.py change. RETAINS 182.4. #}
-{% extends "base.html" %}
-{# SL-VERSION: 182.4-staging (Session 189, 2026-08-17 — HERO OVERLAY: hero now carries photographer name (bottom-left caption, falls back to "From the League" when absent) alongside tier + score (bottom-right badge), per founder — every hero photo shows score, tier and photographer name. Added object-position:center. Split-hero landscape-crop concern logged. RETAINS 182.3.) #}
-{# SL-VERSION: 182.3-staging (Session 189, 2026-08-17 — HERO IMAGE: hero selects the first route-gated (score>=8.5) carousel image that has a real thumbnail AND is landscape (w>h and w>=800; unknown-dims allowed); portrait/picture-less skipped -> dark gradient. Fixes staging hero showing gradient+badge with no photo (carousel query does not filter thumb_url). Gallery pool excludes hero, requires thumbnail. Template-only. Root cause (route: no thumb_url filter + tier gate) flagged for founder. RETAINS 182.2.) #}
-{# SL-VERSION: 182.2-staging (Session 189, 2026-08-17 — MOBILE NAV: replaced the top hamburger with the site's standard bottom nav (base.html .sl-bottom-nav, anon branch: Home · Upload · Log In) so the homepage matches every other page on mobile. Removed .navtoggle button, #sl188-menu dropdown + toggle JS. Stopped suppressing .sl-bottom-nav (base hides it >=900px, desktop unaffected). Removed padding-bottom:0 override so base's page-home bottom-bar clearance applies. Hid top-nav Login <900px to avoid duplicating the bottom nav's Log In — mobile top nav = brand + Start; also fixes cramped header. Desktop unchanged. RETAINS 182.1.) #}
-{# SL-VERSION: 182.1-staging (Session 189, 2026-08-17 — FRESH HOMEPAGE. Full rebuild from SL_188M.html (approved 188M design language) as a Jinja template extending base.html. Replaces homepage v5.0 (Avenir/Leica mock). Aptos font, 188M design tokens, editorial layout. Extends base — inherits favicon, OG/Twitter share tags, cookie consent. Suppresses base top/bottom/mobile nav + base footer for body.page-home; renders 188M's own nav + dark 5-column footer inside content. Real League images wired to hero + gallery via carousel_images/recent_images (.thumb_url/.tier/.genre/.score) with gradient fallback — same route contract as v5.0, NO app.py change. Founder photo at static/img/Sreekumar.png in founder section. CTAs login-aware: anon -> register, authed -> dashboard. Locked copy verbatim incl. hero CTA "Show me what I'm missing" (founder-confirmed Session 189 over Master-Doc "Show me"). FIXES vs raw 188M: (1) mobile menu — 188M hid all nav links <=960px leaving no Login; added toggle keeping Login+Start reachable. (2) tap targets >=44px on nav, mobile menu, footer links. (3) reading text lifted to >=16px (nav links, micronote, founder credential list, footer links); only true metadata labels (eyebrows, badges, legal line) remain 12-13px per 70yr rule. Staging copy: "10 free evaluations" — production is still 3; must be checked before any production merge. RETAINS homepage v5.0. #}
-{% block title %}Shutter League — What if you could see how good you could become?{% endblock %}
-{% block meta_description %}Shutter League is photography's honest mirror — a calibrated evaluation of how you see, remembered across every photograph you make. Your first 10 evaluations are free.{% endblock %}
-{% block canonical %}https://shutterleague.com{% endblock %}
-{% block og_title %}What if you could see how good you could become? — Shutter League{% endblock %}
-{% block og_description %}An honest evaluation of your photography that remembers every image and shows you what to work on next. Making Images Matter.{% endblock %}
-{% block og_url %}https://shutterleague.com{% endblock %}
-
-{% block body_class %}page-home page-home-188m{% endblock %}
-
-{% block extra_css %}
+{# SL-VERSION: 182.9-staging (Session 189, 2026-08-18 — STANDALONE: removed extends base.html entirely. Base was injecting sl-top-nav, nav-mobile, main wrapper, footer and its own CSS which overrode hero panel dimensions and hid the photograph. Homepage now manages its own head, nav, footer as a standalone Jinja2 template — same as the 188M prototype. Inherits only: favicon, OG tags, cookie banner (copied verbatim from base 180.10). Hero: object-fit:cover, no padding. RETAINS 182.8.) #}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shutter League — What if you could see how good you could become?</title>
+<meta name="description" content="Shutter League is photography's honest mirror — a calibrated evaluation of how you see, remembered across every photograph you make. Your first 10 evaluations are free.">
+<link rel="canonical" href="https://shutterleague.com">
+<meta property="og:title" content="What if you could see how good you could become? — Shutter League">
+<meta property="og:description" content="An honest evaluation of your photography that remembers every image and shows you what to work on next. Making Images Matter.">
+<meta property="og:url" content="https://shutterleague.com">
+<meta property="og:image" content="https://shutterleague.com/static/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <style>
-/* ═══════════════════════════════════════════════════════
-   SHUTTER LEAGUE — HOMEPAGE 182.1-staging
-   Source of truth: SL_188M.html (approved 188M design)
-   Design tokens locked (Founding Master Document, Part 9)
-═══════════════════════════════════════════════════════ */
-
 :root{
-  --cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;--gold:#D4A428;
-  --ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;--dark:#0F1F3D;
+  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;
+  --gold:#D4A428;--ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;
 }
-
-/* ── Suppress base chrome on the 188M homepage ──
-   188M carries its own nav + dark footer, so base's top nav,
-   bottom bar, mobile nav and base footer are hidden here to
-   avoid a double nav. Bottom padding base reserves for its
-   bar is also removed since the bar is hidden. */
-body.page-home-188m .sl-top-nav,
-body.page-home-188m .nav-mobile,
-body.page-home-188m > footer,
-body.page-home-188m .flash-container{ display:none !important; }
-body.page-home-188m{
-  background:var(--cream) !important; color:var(--ink);
-  padding:0 !important; margin:0 !important;
-  font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;
-  font-size:17px; line-height:1.65;
-}
-body.page-home-188m main,
-body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:none !important; }
-
-.sl188 *{box-sizing:border-box;margin:0;padding:0}
-.sl188 a{text-decoration:none;color:inherit}
-.sl188 button{font:inherit;cursor:pointer}
-.sl188 img{display:block}
-.sl188{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.sl188 a,.sl188 button{-webkit-tap-highlight-color:rgba(44,62,107,.18)}
-.sl188 .bigbtn,.sl188 .navstart,.sl188 .navlinks a,.sl188 .footer-col a,.sl188 .footer-bottom-links a{cursor:pointer}
-.sl188 a:focus-visible,.sl188 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font:inherit;cursor:pointer}
 
 /* ── NAV ── */
-.sl188 .nav{
-  height:76px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 48px;border-bottom:1px solid var(--line);
-  background:var(--cream);position:sticky;top:0;z-index:50;
-}
-.sl188 .brand{display:flex;align-items:center;gap:11px;color:var(--blue)}
-.sl188 .crest{
-  width:30px;height:30px;border:1.5px solid currentColor;border-radius:50%;
-  display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0;letter-spacing:.5px;
-}
-.sl188 .brandword{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
-.sl188 .byline{font-size:13px;color:var(--muted);margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
-.sl188 .navlinks{display:flex;gap:24px;align-items:center;color:var(--muted);font-size:16px}
-.sl188 .navlinks a{transition:color .15s;display:inline-flex;align-items:center;min-height:44px}
-.sl188 .navlinks a:hover{color:var(--blue)}
-.sl188 .navstart{
-  background:var(--blue);color:#fff;border:none;border-radius:2px;
-  padding:0 22px;min-height:44px;display:inline-flex;align-items:center;
-  font-size:16px;font-weight:600;letter-spacing:.2px;
-}
-.sl188 .navlogin{color:var(--blue);font-weight:600;font-size:16px;min-height:44px}
-/* Below 900px the site's bottom nav appears (Home · Upload · Log In); hide the top Login to avoid duplication */
-@media (max-width: 899px){ .sl188 .navlogin{display:none} }
+.nav{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;border-bottom:1px solid var(--line);background:var(--cream);position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:11px;color:var(--blue)}
+.crest{width:30px;height:30px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0;letter-spacing:.5px}
+.brandword{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
+.navlinks{display:flex;gap:24px;align-items:center;color:var(--muted);font-size:15px}
+.navlinks a{transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
+.navlinks a:hover{color:var(--blue)}
+.navlogin{color:var(--blue);font-weight:600;font-size:16px}
+.navstart{background:var(--dark);color:#fff;border:none;border-radius:2px;padding:11px 20px;font-size:15px;font-weight:600;letter-spacing:.2px;min-height:44px;display:inline-flex;align-items:center}
 
 /* ── HERO ── */
-.sl188 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 76px);min-height:calc(100dvh - 76px);align-items:stretch}
-.sl188 .hero-photograph{background:var(--dark);position:relative;overflow:hidden;min-height:560px}
-.sl188 .hero-photograph-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
-.sl188 .hero-photograph-fill{
-  position:absolute;inset:0;
-  background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%);
-}
-.sl188 .hero-photograph-fill::after{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 60% 70% at 30% 40%,rgba(212,164,40,.07) 0%,transparent 70%),
-             radial-gradient(ellipse 40% 50% at 70% 60%,rgba(255,255,255,.03) 0%,transparent 60%);
-}
-.sl188 .hero-photograph-meta{
-  position:absolute;left:0;right:0;bottom:0;padding:20px 24px;z-index:2;
-  background:linear-gradient(to top,rgba(6,14,28,.9) 0%,transparent 100%);
-  display:flex;justify-content:space-between;align-items:flex-end;
-}
-.sl188 .hero-photograph-caption{font-size:12px;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase}
-.sl188 .hero-photograph-badge{
-  background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.5);
-  color:var(--gold);font-size:13px;font-weight:700;padding:6px 14px;letter-spacing:.5px;
-}
-.sl188 .hero-text{display:flex;flex-direction:column;justify-content:center;padding:8vh 7vw 8vh 6vw}
-.sl188 .kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:32px;font-weight:600}
-.sl188 .hero-h1{font-size:clamp(52px,6.5vw,88px);line-height:.92;letter-spacing:-.065em;color:var(--blue);font-weight:600;margin-bottom:32px;text-shadow: none}
-.sl188 .hero-lead{font-size:20px;line-height:1.65;color:var(--muted);font-style:italic;margin-bottom:14px;max-width:460px}
-.sl188 .hero-solve{font-size:22px;font-weight:600;color:var(--blue);margin-bottom:40px}
-.sl188 .bigbtn{
-  background:var(--blue);color:#fff;border:none;padding:17px 28px;min-height:44px;
-  font-size:17px;font-weight:600;letter-spacing:.2px;border-radius:2px;display:inline-block;
-}
-.sl188 .micronote{font-size:16px;color:var(--muted);margin-top:14px}
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 76px);min-height:calc(100dvh - 76px);align-items:stretch}
+.hero-photograph{background:var(--dark);position:relative;overflow:hidden;min-height:560px}
+.hero-photograph-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.hero-photograph-fill{position:absolute;inset:0;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)}
+.hero-photograph-fill::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 30% 40%,rgba(212,164,40,.07) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 70% 60%,rgba(255,255,255,.03) 0%,transparent 60%)}
+.hero-photograph-meta{position:absolute;left:0;right:0;bottom:0;padding:20px 24px;z-index:2;background:linear-gradient(to top,rgba(6,14,28,.9) 0%,transparent 100%);display:flex;justify-content:space-between;align-items:flex-end}
+.hero-photograph-caption{font-size:12px;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase}
+.hero-photograph-badge{background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.5);color:var(--gold);font-size:13px;font-weight:700;padding:6px 14px;letter-spacing:.5px}
+.hero-text{display:flex;flex-direction:column;justify-content:center;padding:8vh 7vw 8vh 6vw}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:32px;font-weight:600}
+.hero-h1{font-size:clamp(52px,6.5vw,88px);line-height:.92;letter-spacing:-.065em;color:var(--blue);font-weight:600;margin-bottom:32px;text-shadow:none}
+.hero-lead{font-size:20px;line-height:1.65;color:var(--muted);font-style:italic;margin-bottom:14px;max-width:460px}
+.hero-solve{font-size:22px;font-weight:600;color:var(--blue);margin-bottom:40px}
+.bigbtn{background:var(--dark);color:#fff;border:none;padding:17px 28px;min-height:44px;font-size:17px;font-weight:600;letter-spacing:.2px;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer}
+.micronote{font-size:16px;color:var(--muted);margin-top:14px}
 
 /* ── SECTIONS ── */
-.sl188 .section{padding:13vw 9vw;border-top:1px solid var(--line)}
-.sl188 .statement{font-size:clamp(44px,6vw,80px);line-height:.98;letter-spacing:-.06em;color:var(--blue);font-weight:600;max-width:960px}
-.sl188 .statement em{font-style:normal;color:var(--ink)}
-.sl188 .section-body{font-size:19px;line-height:1.8;color:var(--muted);max-width:600px;margin-top:28px}
+.section{padding:13vw 9vw;border-top:1px solid var(--line)}
+.statement{font-size:clamp(44px,6vw,80px);line-height:.98;letter-spacing:-.06em;color:var(--blue);font-weight:600;max-width:960px}
+.statement em{font-style:normal;color:var(--ink)}
+.section-body{font-size:19px;line-height:1.8;color:var(--muted);max-width:600px;margin-top:28px}
 
 /* ── MOMENT ── */
-.sl188 .moment-wrap{display:grid;grid-template-columns:.55fr 1.45fr;gap:7vw;align-items:center;max-width:1040px;margin:0 auto}
-.sl188 .moment-img{aspect-ratio:3/4;background:linear-gradient(155deg,#1a2030 0%,#2a3540 40%,#1a2535 100%);position:relative;overflow:hidden}
-.sl188 .moment-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sl188 .moment-img::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 40% 50%,rgba(212,164,40,.06) 0%,transparent 70%)}
-.sl188 .moment-kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:24px;font-weight:600}
-.sl188 .moment-copy p{font-size:22px;line-height:1.7;color:var(--muted);margin-bottom:22px}
-.sl188 .moment-copy p:last-child{margin-bottom:0}
-.sl188 .moment-copy p strong{color:var(--ink);font-weight:600}
+.moment-wrap{display:grid;grid-template-columns:.55fr 1.45fr;gap:7vw;align-items:center;max-width:1040px;margin:0 auto}
+.moment-img{aspect-ratio:3/4;background:linear-gradient(155deg,#1a2030 0%,#2a3540 40%,#1a2535 100%);position:relative;overflow:hidden}
+.moment-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.moment-kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:24px;font-weight:600}
+.moment-copy p{font-size:22px;line-height:1.7;color:var(--muted);margin-bottom:22px}
+.moment-copy p strong{color:var(--ink);font-weight:600}
 
 /* ── FOUNDER ── */
-.sl188 .founder{padding:12vw 9vw;border-top:1px solid var(--line);background:var(--paper)}
-.sl188 .founder-inner{display:grid;grid-template-columns:.8fr 1.2fr;gap:8vw;align-items:start;max-width:1040px;margin:0 auto}
-.sl188 .founder-img{position:sticky;top:100px;aspect-ratio:3/4;background:linear-gradient(150deg,#1a2030 0%,#2d3848 50%,#1a2535 100%);position:relative;overflow:hidden}
-.sl188 .founder-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sl188 .founder-img-cap{position:absolute;left:14px;bottom:14px;font-size:12px;color:rgba(255,255,255,.65);letter-spacing:1px;text-transform:uppercase;z-index:2}
-.sl188 .founder-kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:24px;font-weight:600}
-.sl188 .founder-copy p{font-size:19px;line-height:1.8;color:var(--muted);margin-bottom:18px}
-.sl188 .founder-copy p strong{color:var(--ink);font-weight:600}
-.sl188 .founder-cred{margin-top:28px;padding-top:22px;border-top:1px solid var(--line);font-size:16px;color:var(--muted);line-height:2.1}
-.sl188 .founder-cred b{color:var(--blue);font-weight:600}
+.founder{padding:12vw 9vw;border-top:1px solid var(--line);background:var(--paper)}
+.founder-inner{display:grid;grid-template-columns:.8fr 1.2fr;gap:8vw;align-items:start;max-width:1040px;margin:0 auto}
+.founder-img{aspect-ratio:3/4;background:linear-gradient(150deg,#1a2030 0%,#2d3848 50%,#1a2535 100%);position:relative;overflow:hidden}
+.founder-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.founder-img-cap{position:absolute;left:14px;bottom:14px;font-size:12px;color:rgba(255,255,255,.65);letter-spacing:1px;text-transform:uppercase;z-index:2}
+.founder-kicker{font-size:12px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:24px;font-weight:600}
+.founder-copy p{font-size:19px;line-height:1.8;color:var(--muted);margin-bottom:18px}
+.founder-copy p strong{color:var(--ink);font-weight:600}
+.founder-cred{margin-top:28px;padding-top:22px;border-top:1px solid var(--line);font-size:16px;color:var(--muted);line-height:2.1}
+.founder-cred b{color:var(--blue);font-weight:600}
 
 /* ── PULL DARK ── */
-.sl188 .pull{background:var(--dark);padding:14vw 9vw}
-.sl188 .goldbar{width:52px;height:5px;background:var(--gold);margin-bottom:32px}
-.sl188 .pull .statement{color:#fff}
-.sl188 .pull .section-body{color:rgba(255,255,255,.62)}
-.sl188 .progress-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:72px;border-top:1px solid rgba(255,255,255,.1)}
-.sl188 .progress-item{padding:28px 20px 0;border-right:1px solid rgba(255,255,255,.08)}
-.sl188 .progress-item:last-child{border:0}
-.sl188 .progress-label{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:700}
-.sl188 .progress-text{font-size:18px;line-height:1.6;color:rgba(255,255,255,.85)}
+.pull{background:var(--dark);padding:14vw 9vw}
+.goldbar{width:52px;height:5px;background:var(--gold);margin-bottom:32px}
+.pull .statement{color:#fff}
+.pull .section-body{color:rgba(255,255,255,.62)}
+.progress-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:72px;border-top:1px solid rgba(255,255,255,.1)}
+.progress-item{padding:28px 20px 0;border-right:1px solid rgba(255,255,255,.08)}
+.progress-item:last-child{border:0}
+.progress-label{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:700}
+.progress-text{font-size:18px;line-height:1.6;color:rgba(255,255,255,.85)}
 
 /* ── REVEAL ── */
-.sl188 .reveal{padding:13vw 9vw;border-top:1px solid var(--line)}
-.sl188 .mahesh-wrap{max-width:800px;margin:64px auto 0;border-left:5px solid var(--gold);padding-left:32px}
-.sl188 .mahesh-q{font-size:26px;line-height:1.5;color:var(--ink);font-style:italic;margin-bottom:16px}
-.sl188 .mahesh-attr{font-size:16px;color:var(--muted);line-height:1.9}
-.sl188 .mahesh-attr b{color:var(--blue);font-weight:600}
-.sl188 .calibration{max-width:800px;margin:24px auto 0;padding-left:37px;font-size:16px;color:var(--muted);line-height:1.75}
+.reveal{padding:13vw 9vw;border-top:1px solid var(--line)}
+.mahesh-wrap{max-width:800px;margin:64px auto 0;border-left:5px solid var(--gold);padding-left:32px}
+.mahesh-q{font-size:26px;line-height:1.5;color:var(--ink);font-style:italic;margin-bottom:16px}
+.mahesh-attr{font-size:16px;color:var(--muted);line-height:1.9}
+.mahesh-attr b{color:var(--blue);font-weight:600}
+.calibration{max-width:800px;margin:24px auto 0;padding-left:37px;font-size:16px;color:var(--muted);line-height:1.75}
 
 /* ── GALLERY ── */
-.sl188 .gallery{padding:11vw 6vw;border-top:1px solid var(--line)}
-.sl188 .gallery-head{display:flex;justify-content:space-between;align-items:flex-end;max-width:1200px;margin:0 auto 44px;gap:24px}
-.sl188 .gallery-h2{font-size:clamp(40px,5vw,60px);letter-spacing:-.05em;color:var(--blue);font-weight:600}
-.sl188 .gallery-sub{font-size:16px;color:var(--muted);max-width:280px;line-height:1.7}
-.sl188 .photos{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.6fr .9fr .9fr;grid-template-rows:240px 240px;gap:6px}
-.sl188 .ph{position:relative;overflow:hidden}
-.sl188 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sl188 .ph:nth-child(1){grid-row:1/3;background:linear-gradient(155deg,#1a2530 0%,#2a3540 50%,#0f1820 100%)}
-.sl188 .ph:nth-child(2){background:linear-gradient(135deg,#2a3020 0%,#1a2015 100%)}
-.sl188 .ph:nth-child(3){background:linear-gradient(135deg,#301a20 0%,#200f15 100%)}
-.sl188 .ph:nth-child(4){background:linear-gradient(135deg,#1a2530 0%,#0f1820 100%)}
-.sl188 .ph:nth-child(5){background:linear-gradient(135deg,#2a2515 0%,#1a1808 100%)}
-.sl188 .ph::before{content:'';position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 60% 60% at 40% 40%,rgba(255,255,255,.04) 0%,transparent 70%)}
-.sl188 .ph-badge{position:absolute;left:14px;bottom:14px;z-index:2;background:rgba(6,14,28,.85);color:var(--gold);font-size:13px;font-weight:700;padding:7px 12px;letter-spacing:.5px}
-.sl188 .aea-strip{max-width:1200px;margin:28px auto 0;padding:22px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.sl188 .aea-strip p{font-size:16px;color:var(--muted);max-width:580px;line-height:1.7}
-.sl188 .aea-strip p strong{color:var(--blue);font-weight:600}
-.sl188 .aea-date{font-size:16px;color:var(--muted);white-space:nowrap}
+.gallery{padding:11vw 6vw;border-top:1px solid var(--line)}
+.gallery-head{display:flex;justify-content:space-between;align-items:flex-end;max-width:1200px;margin:0 auto 44px;gap:24px}
+.gallery-h2{font-size:clamp(40px,5vw,60px);letter-spacing:-.05em;color:var(--blue);font-weight:600}
+.gallery-sub{font-size:16px;color:var(--muted);max-width:280px;line-height:1.7}
+.photos{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.6fr .9fr .9fr;grid-template-rows:240px 240px;gap:6px}
+.ph{position:relative;overflow:hidden;background:var(--dark)}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph:nth-child(1){grid-row:1/3}
+.ph-badge{position:absolute;left:14px;bottom:14px;z-index:2;background:rgba(6,14,28,.85);color:var(--gold);font-size:13px;font-weight:700;padding:7px 12px;letter-spacing:.5px}
+.aea-strip{max-width:1200px;margin:28px auto 0;padding:22px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.aea-strip p{font-size:16px;color:var(--muted);max-width:580px;line-height:1.7}
+.aea-strip p strong{color:var(--blue);font-weight:600}
+.aea-date{font-size:16px;color:var(--muted);white-space:nowrap}
 
 /* ── END CTA ── */
-.sl188 .end{padding:16vw 9vw;text-align:center;border-top:1px solid var(--line)}
-.sl188 .end-h2{font-size:clamp(48px,6.5vw,84px);line-height:.95;letter-spacing:-.065em;color:var(--blue);font-weight:600;max-width:860px;margin:0 auto 20px}
-.sl188 .end-sub{font-size:19px;color:var(--muted);margin-bottom:36px}
+.end{padding:16vw 9vw;text-align:center;border-top:1px solid var(--line)}
+.end-h2{font-size:clamp(48px,6.5vw,84px);line-height:.95;letter-spacing:-.065em;color:var(--blue);font-weight:600;max-width:860px;margin:0 auto 20px}
+.end-sub{font-size:19px;color:var(--muted);margin-bottom:36px}
 
-/* ── FOOTER (dark, 5-column) ── */
-.sl188 .footer{background:var(--dark);padding:56px 48px 28px}
-.sl188 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
-.sl188 .footer-brand .brand{color:#fff;margin-bottom:12px}
-.sl188 .footer-brand .crest{border-color:rgba(255,255,255,.3);color:var(--gold)}
-.sl188 .footer-brand .brandword{font-size:12px;letter-spacing:2px;color:#fff}
-.sl188 .footer-tagline{font-size:16px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:16px}
-.sl188 .footer-email{font-size:16px;color:rgba(255,255,255,.6)}
-.sl188 .footer-email a{color:var(--gold)}
-.sl188 .footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px}
-.sl188 .footer-col a{display:flex;align-items:center;min-height:44px;color:rgba(255,255,255,.62);font-size:16px;transition:color .15s}
-.sl188 .footer-col a:hover{color:#fff}
-.sl188 .footer-bottom{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:rgba(255,255,255,.4)}
-.sl188 .footer-bottom-links{display:flex;gap:20px}
-.sl188 .footer-bottom-links a{color:rgba(255,255,255,.4);font-size:13px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
-.sl188 .footer-bottom-links a:hover{color:rgba(255,255,255,.8)}
+/* ── FOOTER ── */
+.footer{background:var(--dark);padding:56px 48px 28px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
+.footer-brand .brand{color:#fff;margin-bottom:12px}
+.footer-brand .crest{border-color:rgba(255,255,255,.3);color:var(--gold)}
+.footer-brand .brandword{font-size:12px;letter-spacing:2px;color:#fff}
+.footer-tagline{font-size:16px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:16px}
+.footer-email{font-size:16px;color:rgba(255,255,255,.6)}
+.footer-email a{color:var(--gold)}
+.footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px}
+.footer-col a{display:flex;align-items:center;min-height:44px;color:rgba(255,255,255,.62);font-size:16px;transition:color .15s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:rgba(255,255,255,.4)}
+.footer-bottom-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-bottom-links a{color:rgba(255,255,255,.4);font-size:13px;min-height:44px;display:inline-flex;align-items:center}
 
 /* ── RESPONSIVE ── */
 @media (max-width: 960px){
-  .sl188 .nav{padding:0 22px}
-  .sl188 .byline{display:none}
-  .sl188 .navlinks .navsection{display:none}      /* sections reached by scroll; primary actions in bottom nav */
-  .sl188 .hero{grid-template-columns:1fr}
-  .sl188 .hero-photograph{height:56vw;min-height:280px}
-  .sl188 .hero-text{padding:44px 24px 64px}
-  .sl188 .hero-h1{font-size:clamp(44px,11vw,68px)}
-  .sl188 .moment-wrap{grid-template-columns:1fr}
-  .sl188 .moment-img{aspect-ratio:16/9;min-height:220px}
-  .sl188 .founder-inner{grid-template-columns:1fr}
-  .sl188 .founder-img{aspect-ratio:16/9;min-height:220px;position:relative;top:0}
-  .sl188 .progress-grid{grid-template-columns:1fr 1fr}
-  .sl188 .progress-item{border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:22px}
-  .sl188 .photos{grid-template-columns:1fr 1fr;grid-template-rows:180px 140px 140px}
-  .sl188 .ph:nth-child(1){grid-row:auto;grid-column:1/3}
-  .sl188 .gallery-head{flex-direction:column;gap:14px}
-  .sl188 .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
-  .sl188 .footer-brand{grid-column:1/3}
-  .sl188 .section,.sl188 .founder,.sl188 .reveal,.sl188 .gallery,.sl188 .end,.sl188 .pull{padding:18vw 22px}
-  .sl188 .footer{padding:44px 22px 24px}
-  .sl188 .footer-bottom{flex-direction:column;gap:8px;text-align:center}
-  .sl188 .footer-bottom-links{justify-content:center;flex-wrap:wrap}
+  .nav{padding:0 22px}
+  .byline{display:none}
+  .hero{grid-template-columns:1fr}
+  .hero-photograph{height:56vw;min-height:280px}
+  .hero-text{padding:44px 24px 64px}
+  .hero-h1{font-size:clamp(44px,11vw,68px)}
+  .moment-wrap{grid-template-columns:1fr}
+  .founder-inner{grid-template-columns:1fr}
+  .progress-grid{grid-template-columns:1fr 1fr}
+  .photos{grid-template-columns:1fr 1fr;grid-template-rows:180px 140px 140px}
+  .ph:nth-child(1){grid-row:auto;grid-column:1/3}
+  .gallery-head{flex-direction:column}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .footer-brand{grid-column:1/3}
+  .section,.founder,.reveal,.gallery,.end,.pull{padding:18vw 22px}
+  .footer{padding:44px 22px 24px}
 }
-@media (max-width: 640px){
-  .sl188 .hero-h1{font-size:clamp(40px,12vw,60px)}
-  .sl188 .footer-grid{grid-template-columns:1fr}
-  .sl188 .footer-brand{grid-column:auto}
-}
-/* Explicit iPad breakpoint (768px portrait) — gallery to 2 columns, hero single */
 @media (max-width: 768px){
-  .sl188 .hero{grid-template-columns:1fr}
-  .sl188 .photos{grid-template-columns:1fr 1fr;grid-template-rows:auto}
-  .sl188 .ph:nth-child(1){grid-row:auto;grid-column:1/3}
+  .hero{grid-template-columns:1fr}
+  .photos{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  .ph:nth-child(1){grid-row:auto;grid-column:1/3}
 }
-/* Explicit phone breakpoint (600px) — everything single column; larger gallery tiles are easier to read */
 @media (max-width: 600px){
-  .sl188 .hero{grid-template-columns:1fr}
-  .sl188 .moment-wrap,.sl188 .founder-inner,.sl188 .progress-grid,.sl188 .footer-grid{grid-template-columns:1fr}
-  .sl188 .photos{grid-template-columns: 1fr !important;grid-template-rows:auto}
-  .sl188 .ph{min-height:200px}
-  .sl188 .ph:nth-child(1){grid-column:auto}
+  .hero{grid-template-columns:1fr}
+  .moment-wrap,.founder-inner,.progress-grid,.footer-grid{grid-template-columns:1fr}
+  .photos{grid-template-columns:1fr !important}
+  .ph:nth-child(1){grid-column:auto}
+  .footer-brand{grid-column:auto}
+  .hero-h1{font-size:clamp(40px,12vw,60px)}
 }
-</style>
-{% endblock %}
 
-{% block content %}
-{# HERO: first image from carousel_images. Route already gates score>=8.5 and real R2 thumbnail. #}
+/* ── COOKIE BANNER (from base 180.10) ── */
+#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
+#cookie-banner.cb-visible{display:flex}
+#cookie-banner a{color:var(--gold)}
+#cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
+#cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
+</style>
+</head>
+<body>
+
 {% set hero = carousel_images[0] if carousel_images else none %}
 {% set gallery_pool = recent_images or [] %}
 {% set moment_img = gallery_pool[0] if gallery_pool else none %}
 
-<div class="sl188">
-
-<!-- ═══════════════ NAV ═══════════════ -->
+<!-- NAV -->
 <nav class="nav">
   <a href="{{ url_for('index') }}" class="brand">
     <div class="crest">SL</div>
@@ -266,9 +193,9 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     <span class="byline">Making Images Matter</span>
   </a>
   <div class="navlinks">
-    <a href="#why" class="navsection">Why</a>
-    <a href="#league" class="navsection">The League</a>
-    <a href="#about" class="navsection">About</a>
+    <a href="#why">Why</a>
+    <a href="#league">The League</a>
+    <a href="#about">About</a>
     {% if current_user.is_authenticated %}
       <a href="{{ url_for('dashboard') }}" class="navlogin">My dashboard</a>
       <a href="{{ url_for('dashboard') }}" class="navstart">Dashboard →</a>
@@ -279,7 +206,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
 </nav>
 
-<!-- ═══════════════ HERO ═══════════════ -->
+<!-- HERO -->
 <section class="hero">
   <div class="hero-photograph">
     {% if hero and hero.thumb_url %}
@@ -290,7 +217,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     {% endif %}
     <div class="hero-photograph-fill"></div>
     <div class="hero-photograph-meta">
-      <span class="hero-photograph-caption">{% if hero and hero.photographer_name %}{{ hero.photographer_name }}{% else %}From the League{% endif %}</span>
+      <span class="hero-photograph-caption">{{ hero.photographer_name if hero and hero.photographer_name else 'From the League' }}</span>
       {% if hero and hero.tier and hero.score %}
         <span class="hero-photograph-badge">{{ hero.tier|upper }} · {{ '%.1f'|format(hero.score) }}</span>
       {% else %}
@@ -303,12 +230,16 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     <h1 class="hero-h1">What if you could see how good you could become?</h1>
     <p class="hero-lead">You've probably looked at one of your photographs and thought: <em>if only I had waited. Moved. Looked again.</em></p>
     <p class="hero-solve">How do I solve the what if?</p>
-    <a class="bigbtn" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}">Show me what I'm missing →</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
+    {% endif %}
     <div class="micronote">Your first 10 evaluations are free. No subscription needed.</div>
   </div>
 </section>
 
-<!-- ═══════════════ THE QUESTION ═══════════════ -->
+<!-- THE QUESTION -->
 <section class="section" id="why">
   <div style="max-width:960px;margin:0 auto">
     <p class="statement">You don't need another person<br>to tell you a photograph is <em>good.</em></p>
@@ -316,12 +247,12 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
 </section>
 
-<!-- ═══════════════ KNEELING LINE ═══════════════ -->
+<!-- KNEELING LINE -->
 <section class="section">
   <div class="moment-wrap">
     <div class="moment-img">
       {% if moment_img and moment_img.thumb_url %}
-        <img src="{{ moment_img.thumb_url }}" alt="{{ moment_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.style.display='none'">
+        <img src="{{ moment_img.thumb_url }}" alt="Photography — from the League" loading="lazy" onerror="this.style.display='none'">
       {% endif %}
     </div>
     <div class="moment-copy">
@@ -334,11 +265,11 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
 </section>
 
-<!-- ═══════════════ FOUNDER ═══════════════ -->
+<!-- FOUNDER -->
 <section class="founder" id="about">
   <div class="founder-inner">
     <div class="founder-img">
-      <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar Krishnan, founder of Shutter League" loading="lazy" onerror="this.style.display='none'">
+      <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar Krishnan" loading="lazy" onerror="this.style.display='none'">
       <span class="founder-img-cap">Sreekumar Krishnan</span>
     </div>
     <div class="founder-copy">
@@ -355,14 +286,14 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
         IPPAWARDS 2019 — Global Winner · Shot on iPhone 6s<br>
         Featured: Times of India · Deccan Herald · National Geographic<br>
         Exhibited at the Louvre, Paris · Abu Dhabi 2025 alongside UNESCO<br>
-        B&amp;W Spider Awards · 2019 onwards<br>
+        B&W Spider Awards · 2019 onwards<br>
         Photography teacher · Meditation guide · Bengaluru
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ PULL DARK ═══════════════ -->
+<!-- PULL DARK -->
 <section class="pull" id="league">
   <div style="max-width:1040px;margin:0 auto">
     <div class="goldbar"></div>
@@ -377,7 +308,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
 </section>
 
-<!-- ═══════════════ REVEAL ═══════════════ -->
+<!-- REVEAL -->
 <section class="reveal">
   <div style="max-width:960px;margin:0 auto">
     <p class="statement">One photograph can surprise you.<br><em>Several can reveal you.</em></p>
@@ -385,12 +316,12 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
   <div class="mahesh-wrap">
     <p class="mahesh-q">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
-    <div class="mahesh-attr"><b>Mahesh Iyer</b> · Street photographer · Grandmaster, Shutter League<br>Rank 105 of 20,000 globally on PhotoCrowd · 37 evaluations, self-motivated</div>
+    <div class="mahesh-attr"><b>Mahesh Iyer</b> · Street photographer · Grandmaster, Shutter League<br>105 of 20,000 globally on PhotoCrowd · 37 evaluations, self-motivated</div>
   </div>
   <div class="calibration">The evaluation engine was calibrated through live blind sessions — Making Images Matter — where serious photographers evaluated work without knowing whose it was. 312 photographs. That standard exists nowhere else.</div>
 </section>
 
-<!-- ═══════════════ GALLERY ═══════════════ -->
+<!-- GALLERY -->
 <section class="gallery">
   <div class="gallery-head">
     <div>
@@ -400,19 +331,17 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     <p class="gallery-sub">Different cameras. Different ages. Different ways of seeing. One shared ambition: to make the next photograph matter more than the last.</p>
   </div>
   <div class="photos">
-    {% set fallbacks = [
-      ('MASTER','Wildlife'),('LEGEND','Street'),('GRANDMASTER','Documentary'),
-      ('MAVERICK','Landscape'),('MASTER','People') ] %}
-    {% for i in range(5) %}
-      {% set gi = gallery_pool[i] if gallery_pool|length > i else none %}
-      <div class="ph">
-        {% if gi and gi.thumb_url %}
-          <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.style.display='none'">
-          <span class="ph-badge">{{ (gi.tier or fallbacks[i][0])|upper }} · {{ (gi.genre or fallbacks[i][1])|title }}</span>
-        {% else %}
-          <span class="ph-badge">{{ fallbacks[i][0] }} · {{ fallbacks[i][1] }}</span>
-        {% endif %}
-      </div>
+    {% for gi in gallery_pool[:5] %}
+    <div class="ph">
+      {% if gi.thumb_url %}
+        <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.style.display='none'">
+      {% endif %}
+      <span class="ph-badge">{{ gi.tier|upper if gi.tier else 'MASTER' }} · {{ gi.genre|upper if gi.genre else 'PHOTOGRAPHY' }}</span>
+    </div>
+    {% else %}
+    {% for _ in range(5) %}
+    <div class="ph"><span class="ph-badge">FROM THE LEAGUE</span></div>
+    {% endfor %}
     {% endfor %}
   </div>
   <div class="aea-strip">
@@ -421,15 +350,19 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
 </section>
 
-<!-- ═══════════════ END CTA ═══════════════ -->
+<!-- END CTA -->
 <section class="end">
   <h2 class="end-h2">We think you're capable of more.</h2>
   <p class="end-sub">Come see what your photographs say.</p>
-  <a class="bigbtn" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}">Show me what I'm missing →</a>
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+  {% else %}
+    <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
+  {% endif %}
   <div class="micronote" style="margin-top:16px">10 free evaluations. No subscription.</div>
 </section>
 
-<!-- ═══════════════ FOOTER ═══════════════ -->
+<!-- FOOTER -->
 <footer class="footer">
   <div class="footer-grid">
     <div class="footer-brand">
@@ -443,7 +376,7 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     <div class="footer-col">
       <h4>Company</h4>
       <a href="/about">About Us</a>
-      <a href="/contact">Contact Us</a>
+      <a href="mailto:support@shutterleague.com">Contact Us</a>
       <a href="/pricing">Pricing</a>
       <a href="/faq">FAQ</a>
     </div>
@@ -456,21 +389,21 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
     </div>
     <div class="footer-col">
       <h4>Programmes</h4>
-      <a href="/poty">Annual Excellence Award</a>
+      <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
       <a href="/programme-rules">Programme Rules</a>
-      <a href="/challenge">Weekly Challenge</a>
-      <a href="/mentors">Mentor Guidelines</a>
+      <a href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a>
+      <a href="{{ url_for('mentors') }}">Mentor Guidelines</a>
     </div>
     <div class="footer-col">
       <h4>Learn</h4>
-      <a href="/science">Science</a>
-      <a href="/learning">Lessons</a>
-      <a href="/mentors">Mentor Review</a>
-      <a href="/challenge">Assignments</a>
+      <a href="{{ url_for('science') }}">Science</a>
+      <a href="{{ url_for('learning') }}">Lessons</a>
+      <a href="{{ url_for('mentors') }}">Mentor Review</a>
+      <a href="{{ url_for('weekly_challenge') }}">Assignments</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© {{ now.year if now else 2026 }} Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
+    <span>© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
     <div class="footer-bottom-links">
       <a href="/privacy">Privacy Policy</a>
       <a href="/terms">Terms &amp; Conditions</a>
@@ -479,6 +412,28 @@ body.page-home-188m #main{ padding:0 !important; margin:0 !important; max-width:
   </div>
 </footer>
 
-</div><!-- .sl188 -->
+<!-- COOKIE BANNER (base 180.10 verbatim) -->
+<div id="cookie-banner" role="region" aria-label="Cookie consent">
+  <div class="cb-text">We use cookies to keep you logged in and improve your experience. <a href="/privacy">Learn more</a></div>
+  <div class="cb-actions">
+    <button id="cb-accept" onclick="cbAccept()">Accept</button>
+    <button id="cb-dismiss" onclick="cbAccept()" aria-label="Dismiss">&times;</button>
+  </div>
+</div>
+<script>
+(function(){
+  if (!localStorage.getItem('sl_cookie_ok') && !window.location.pathname.startsWith('/card/')) {
+    document.getElementById('cookie-banner').classList.add('cb-visible');
+  }
+})();
+function cbAccept() {
+  localStorage.setItem('sl_cookie_ok', '1');
+  var b = document.getElementById('cookie-banner');
+  b.style.transition = 'opacity 0.3s';
+  b.style.opacity = '0';
+  setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
+}
+</script>
 
-{% endblock %}
+</body>
+</html>
