@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.21-staging (Session 189, 2026-08-18 — NAV: "The League" now links to /standings public standings page. RETAINS 182.20.) #}
 {# SL-VERSION: 182.20-staging (Session 189, 2026-08-18 — GALLERY: "The League" kicker → "League of Photographers". Thumbnail overlays now show score + tier + photographer name. ph-badge replaced with score+name overlay. Thumbnails link to /standings. RETAINS 182.19.) #}
 {# SL-VERSION: 182.19-staging (Session 189, 2026-08-18 — NAV: "Start" renamed to "Register" for clarity. RETAINS 182.18.) #}
 {# SL-VERSION: 182.18-staging (Session 189, 2026-08-18 — NAV FIX: logged-in user showed both My dashboard + Dashboard button. Now shows only Dashboard → button. RETAINS 182.17.) #}
@@ -216,7 +217,7 @@ body,html{overflow-x:hidden;max-width:100%}
   </a>
   <div class="navlinks">
     <a href="#why" class="navsection">Why</a>
-    <a href="#league" class="navsection">The League</a>
+    <a href="{{ url_for('standings_public') }}" class="navsection">The League</a>
     <a href="#about" class="navsection">About</a>
     {% if current_user.is_authenticated %}
       <a href="{{ url_for('dashboard') }}" class="navstart">Dashboard →</a>
