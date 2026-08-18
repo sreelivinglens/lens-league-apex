@@ -719,7 +719,7 @@ button{font:inherit;cursor:pointer}
   <div class="db-aea-qual">
     <span class="db-aea-lbl">Annual Excellence Award</span>
     <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">Qualified · {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>
-    <div style="font-size:28px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:4px">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
+    <div style="font-size:28px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
     <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:6px">AEA average · top 6 images</div>
     {% if aea_dash.league_rank %}<div style="font-size:13px;color:#7DCEA0;font-weight:600">#{{ aea_dash.league_rank }}</div>{% endif %}
   </div>
