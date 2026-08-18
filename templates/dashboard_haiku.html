@@ -1,4 +1,4 @@
-{# SL-VERSION: HAIKU-177.0-staging (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
+{# SL-VERSION: HAIKU-177.2-staging (Session 189, 2026-08-19 — Logo links to try_welcome (Haiku home) not try_page (upload). RETAINS HAIKU-177.1.) (Session 189, 2026-08-19 — THREE FIXES: (1) Nav dots hidden on mobile, replaced with compact "X of Y" text. (2) Logout link added to nav. (3) Quote swap: Mahesh back on dashboard, founder in email. (4) Founder byline: IPPAWARDS 2019 added. (5) Mobile overflow fixed. RETAINS HAIKU-177.0.) (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
 {# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
 {# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
@@ -22,7 +22,7 @@
   --muted:#8A8070;--line:#E0D8C8;--gold-dk:#A07A10;
 }
 *{box-sizing:border-box}
-body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
+body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden;width:100%}
 
 /* ── NAV ── */
 .hk-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:50}
@@ -35,10 +35,11 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
 
 /* ── COUNTER ── */
-.hk-counter{background:rgba(255,255,255,.07);padding:0 16px;display:flex;align-items:center;gap:6px;height:100%;border-left:1px solid rgba(255,255,255,.1)}
-.hk-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.hk-counter{background:rgba(255,255,255,.07);padding:0 12px;display:flex;align-items:center;gap:5px;height:100%;border-left:1px solid rgba(255,255,255,.1);max-width:200px;overflow:hidden}
+.hk-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0}
 .hk-dot.used{background:rgba(255,255,255,.2)}
 .hk-counter-label{font-size:12px;color:rgba(255,255,255,.45);margin-left:4px;white-space:nowrap}
+.hk-counter-text{font-size:13px;color:rgba(255,255,255,.65);white-space:nowrap;display:none}
 
 /* ── MAIN ── */
 .hk-main{max-width:740px;margin:0 auto;padding:72px 40px 100px}
@@ -48,7 +49,7 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-greet b{display:block;font-size:28px;font-weight:600;color:var(--blue);letter-spacing:-.03em;margin-top:4px}
 
 /* ── EVAL COUNTER BADGE ── */
-.hk-eval-badge{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:10px 16px;font-size:15px;color:var(--muted);margin:0 0 44px}
+.hk-eval-badge{display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:10px 16px;font-size:15px;color:var(--muted);margin:0 0 44px;max-width:100%}
 .hk-eval-badge b{color:var(--dark);font-weight:700}
 
 /* ── STATE 1 — zero uploads ── */
@@ -130,7 +131,9 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 @media (max-width: 768px){
   .hk-main{padding:48px 20px 64px}
   .hk-world-grid{grid-template-columns:1fr}
-  .hk-nav{padding:0 16px}
+  .hk-nav{padding:0 14px}
+  .hk-counter{display:none}
+  .hk-counter-text{display:flex!important;align-items:center;padding:0 10px;border-left:1px solid rgba(255,255,255,.1);height:100%;font-size:13px;color:rgba(255,255,255,.65);white-space:nowrap}
 }
 @media (max-width: 600px){
   .hk-main{padding:32px 16px 80px}
@@ -165,7 +168,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 {# ── NAV ── #}
 <header class="hk-nav">
-  <a href="{{ url_for('try_page') }}" class="hk-brand">
+  <a href="{{ url_for('try_welcome') }}" class="hk-brand">
     <div class="hk-crest">SL</div>
     <span class="hk-brandword">Shutter League</span>
   </a>
@@ -180,6 +183,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       {% endfor %}
       <span class="hk-counter-label">{{ _rem }} remaining</span>
     </div>
+    <a href="{{ url_for('logout') }}" class="hk-gallery-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:36px">Log out</a>
+    <span class="hk-counter-text">{{ _n }}/{{ _lim }}</span>
     <div class="hk-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
   </div>
 </header>
@@ -259,8 +264,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <p class="hk-intro">Upload one photograph. The platform will tell you what it sees — across five dimensions, calibrated against the same standard applied to every photographer here. That honest answer is the thing photography has never had.</p>
 
     <div class="hk-proof">
-      <p>"Making images matter is not about making important images. It is about recognising that the act of making them is itself a process of becoming."</p>
-      <small>Sreekumar Krishnan · Founder, Shutter League · 26 years behind the camera · National Geographic, Louvre, B&amp;W Spider Awards</small>
+      <p>"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
+      <small>Mahesh Iyer · Grandmaster, Shutter League · Rank 105 of 20,000 globally, PhotoCrowd · 37 evaluations, self-motivated</small>
     </div>
 
     <a href="{{ url_for('try_page') }}" class="hk-empty" style="text-decoration:none;cursor:pointer">
