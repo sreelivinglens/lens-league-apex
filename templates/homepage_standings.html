@@ -1,4 +1,4 @@
-{# SL-VERSION: homepage_standings-1.0-staging (Session 189, 2026-08-18 — NEW FILE. Public standings page — no login required. Shows tier, photographer display name, best image thumbnail only. Full scorecard locked: "For League photographers only — Join the League →". Standalone — no base.html. 188M design tokens. Haiku images never shown (is_haiku_try filter in route). Separate from leaderboard.html which remains login-required.) #}
+{# SL-VERSION: homepage_standings-1.2-staging (Session 189, 2026-08-18 — Image wrap is now an anchor linking to image_detail. Score overlay confirmed. Card fully clickable. RETAINS 1.1.) (Session 189, 2026-08-18 — Score now visible on card. Image taller (aspect-ratio 3/2). Score shown as large number over image bottom-right. RETAINS 1.0.) (Session 189, 2026-08-18 — NEW FILE. Public standings page — no login required. Shows tier, photographer display name, best image thumbnail only. Full scorecard locked: "For League photographers only — Join the League →". Standalone — no base.html. 188M design tokens. Haiku images never shown (is_haiku_try filter in route). Separate from leaderboard.html which remains login-required.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,8 +57,11 @@ a{text-decoration:none;color:inherit}
 
 /* ── PHOTOGRAPHER CARD ── */
 .pub-card{background:#fff;border:1px solid var(--line);display:flex;flex-direction:column;position:relative}
-.pub-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--dark)}
-.pub-card-img-placeholder{width:100%;aspect-ratio:4/3;background:linear-gradient(145deg,#1a2540 0%,#0f1828 100%);display:flex;align-items:center;justify-content:center}
+.pub-card-img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:var(--dark)}
+.pub-card-img-placeholder{width:100%;aspect-ratio:3/2;background:linear-gradient(145deg,#1a2540 0%,#0f1828 100%);display:flex;align-items:center;justify-content:center}
+.pub-card-img-wrap{position:relative;display:block;overflow:hidden}
+.pub-card-score{position:absolute;bottom:10px;right:12px;font-size:28px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.04em;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.pub-card-tier-ov{position:absolute;bottom:10px;left:12px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .pub-card-body{padding:14px 16px 16px}
 .pub-card-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pub-card-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
@@ -165,13 +168,17 @@ a{text-decoration:none;color:inherit}
       {% for p in tier_photographers %}
       <div class="pub-card">
         {# Best image thumbnail — shown publicly #}
-        {% if p.best_thumb_url %}
-        <img class="pub-card-img" src="{{ p.best_thumb_url }}" alt="{{ p.display_name }}'s best photograph" loading="lazy" onerror="this.style.display='none'">
-        {% else %}
-        <div class="pub-card-img-placeholder">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </div>
-        {% endif %}
+        <a class="pub-card-img-wrap" href="#" onclick="slOpenImg(this);return false" data-src="{{ p.best_thumb_url }}" data-name="{{ p.display_name }}" data-tier="{{ p.tier }}" data-score="{{ '%.1f'|format(p.best_score) if p.best_score else '' }}">
+          {% if p.best_thumb_url %}
+          <img class="pub-card-img" src="{{ p.best_thumb_url }}" alt="{{ p.display_name }}'s best photograph" loading="lazy" onerror="this.parentElement.style.background='#1a2540'">
+          {% else %}
+          <div class="pub-card-img-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          {% endif %}
+          {% if p.best_score %}<span class="pub-card-score">{{ "%.1f"|format(p.best_score) }}</span>{% endif %}
+          <span class="pub-card-tier-ov">{{ p.tier }}</span>
+        </a>
         <div class="pub-card-body">
           <div class="pub-card-name">{{ p.display_name }}</div>
           <div class="pub-card-meta">{{ p.interest_area or 'Photography' }}{% if p.eval_count %} · {{ p.eval_count }} evaluation{{ 's' if p.eval_count != 1 else '' }}{% endif %}</div>
@@ -215,5 +222,29 @@ a{text-decoration:none;color:inherit}
   </div>
 </footer>
 
+
+<div id="slLightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;flex-direction:column" onclick="this.style.display='none'">
+  <div style="position:relative;max-width:90vw;max-height:80vh">
+    <img id="slLbImg" src="" style="max-width:90vw;max-height:75vh;object-fit:contain;display:block">
+    <div style="position:absolute;bottom:-44px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+      <div>
+        <div id="slLbName" style="font-size:16px;font-weight:600;color:#fff;font-family:Aptos,'Segoe UI',Arial,sans-serif"></div>
+        <div id="slLbTier" style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase;font-family:Aptos,'Segoe UI',Arial,sans-serif"></div>
+      </div>
+      <div id="slLbScore" style="font-size:44px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.04em;font-family:Aptos,'Segoe UI',Arial,sans-serif"></div>
+    </div>
+  </div>
+</div>
+<script>
+function slOpenImg(el){
+  var lb=document.getElementById('slLightbox');
+  document.getElementById('slLbImg').src=el.getAttribute('data-src')||'';
+  document.getElementById('slLbName').textContent=el.getAttribute('data-name')||'';
+  document.getElementById('slLbTier').textContent=el.getAttribute('data-tier')||'';
+  document.getElementById('slLbScore').textContent=el.getAttribute('data-score')||'';
+  lb.style.display='flex';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('slLightbox').style.display='none';});
+</script>
 </body>
 </html>
