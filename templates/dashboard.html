@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store">
 <title>Dashboard — Shutter League</title>
 <meta name="description" content="Your personalised photography brief, daily assignment, and standing on Shutter League.">
-{# SL-VERSION: 180.4-staging (Session 189, 2026-08-19 — Bottom nav: active tab highlight JS added (marks current tab .on based on URL path). iOS tap delay fix: added cursor:pointer and min tap area to all bn tabs. RETAINS 180.3.) (Session 189, 2026-08-19 — Journey thumbnails: score overlay fixed (position:relative on wrapper, overflow:hidden). Score shown once as overlay only. Mobile same fix. Footer KYC: "Log out" moved from mobile footer (gold colour was KYC-adjacent). RETAINS 180.2.) (Session 189, 2026-08-18 — REDESIGN using approved 188M design language. Standalone — no base.html. Aptos font. 188M tokens: --cream/#FEFCF8, --dark/#0F1F3D, --blue/#2C3E6B, --gold/#D4A428, --paper/#F5F0E8, --ink/#1A1A18, --muted/#8A8070, --line/#E0D8C8. Desktop: dark topnav + 3-col layout (192px sidenav / main / 230px right panel). Mobile: hamburger drawer + bottom nav preserved from 178.x. RETAINS all Jinja2 data wiring from 179.9.) #}
+{# SL-VERSION: 180.5-staging (Session 189, 2026-08-19 — Mobile bottom nav: brighter gold #FFD700 active, top indicator line, inactive opacity .55. RETAINS 180.4.) (Session 189, 2026-08-19 — Bottom nav: active tab highlight JS added (marks current tab .on based on URL path). iOS tap delay fix: added cursor:pointer and min tap area to all bn tabs. RETAINS 180.3.) (Session 189, 2026-08-19 — Journey thumbnails: score overlay fixed (position:relative on wrapper, overflow:hidden). Score shown once as overlay only. Mobile same fix. Footer KYC: "Log out" moved from mobile footer (gold colour was KYC-adjacent). RETAINS 180.2.) (Session 189, 2026-08-18 — REDESIGN using approved 188M design language. Standalone — no base.html. Aptos font. 188M tokens: --cream/#FEFCF8, --dark/#0F1F3D, --blue/#2C3E6B, --gold/#D4A428, --paper/#F5F0E8, --ink/#1A1A18, --muted/#8A8070, --line/#E0D8C8. Desktop: dark topnav + 3-col layout (192px sidenav / main / 230px right panel). Mobile: hamburger drawer + bottom nav preserved from 178.x. RETAINS all Jinja2 data wiring from 179.9.) #}
 <style>
 :root{
   --cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;--gold:#D4A428;
@@ -238,9 +238,10 @@ button{font:inherit;cursor:pointer}
 
 /* Mobile bottom nav */
 .mob-bottom-nav{display:none;position:fixed;bottom:env(safe-area-inset-bottom,34px);left:0;right:0;height:62px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,.15);justify-content:space-around;align-items:flex-start;padding-top:0;z-index:1000}
-.mob-bn-tab{display:flex;flex-direction:column;align-items:center;gap:2px;color:rgba(255,255,255,.5);text-decoration:none;font-size:12px;font-weight:600;min-width:52px;min-height:52px;padding-top:10px;padding-bottom:4px;padding-left:6px;padding-right:6px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-touch-callout:none;user-select:none}
+.mob-bn-tab{display:flex;flex-direction:column;align-items:center;gap:2px;color:rgba(255,255,255,.55);text-decoration:none;font-size:12px;font-weight:600;min-width:52px;min-height:52px;padding-top:10px;padding-bottom:4px;padding-left:6px;padding-right:6px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-touch-callout:none;user-select:none}
 .mob-bn-tab svg{flex-shrink:0;width:18px;height:18px}
-.mob-bn-tab.on{color:var(--gold)}
+.mob-bn-tab.on{color:#FFD700;position:relative}
+.mob-bn-tab.on::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:#FFD700;border-radius:0 0 2px 2px}
 .mob-bn-tab:active{opacity:.7}
 
 /* Mobile more drawer */

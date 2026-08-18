@@ -1,5 +1,7 @@
+{# SL-VERSION: 180.12 (Session 189, 2026-08-19 — Bottom nav active state: brighter gold #FFD700, top indicator line on active tab, inactive opacity lifted to .55 for better contrast. RETAINS 180.11.) #}
 {# SL-VERSION: 180.11 (Session 189, 2026-08-19 — Bottom nav tap: stronger :active feedback (scale + opacity). Bottom nav background confirmed #0F1F3D. RETAINS 180.10.) #}
 {# SL-VERSION: 180.10-staging (Session 183, 2026-08-14 — My Evolving Eye added to left sidenav after Portfolio. Shows when authenticated. Sub-line shows next milestone image count when evolving_eye_milestone is set. Links to /my-eye. Active state on evolving_eye endpoint. RETAINS 180.9.) #}
+{# SL-VERSION: 180.12 (Session 189, 2026-08-19 — Bottom nav active state: brighter gold #FFD700, top indicator line on active tab, inactive opacity lifted to .55 for better contrast. RETAINS 180.11.) #}
 {# SL-VERSION: 180.11 (Session 189, 2026-08-19 — Bottom nav tap: stronger :active feedback (scale + opacity). Bottom nav background confirmed #0F1F3D. RETAINS 180.10.) #}
 {# SL-VERSION: 180.10 (Session 189, 2026-08-19 — Bottom nav background: #1A1814 → #0F1F3D to match paid dashboard and all standalone pages. Gold border retained. RETAINS 180.9.) #}
 {# SL-VERSION: 180.9 (Session 182, 2026-08-14 — MOBILE "MORE" SHEET. Staging had only the base rule for .sl-bottom-more-menu (position:fixed; right:0), so on a phone the sheet stretched across and down and swallowed the page, with the last item sliced by the bottom bar. Production base 181.3 carries a max-width:899px override that anchors it to the More button as a compact rounded popup; that block is ported here VERBATIM, plus max-height:58dvh on the list so nothing is cut off. CSS only, one media block, no markup change. NOT TOUCHED: .sl-bottom-nav and its top:auto !important - removing that in SL-178.7 caused the black inner pages of Sessions 178-180. RETAINS 180.8 (Session 182, 2026-08-13 — ONE LINE. The robots meta tag was hardcoded to "index, follow", so no page could opt out of search indexing. It is now {% block robots %}index, follow{% endblock %} — same default for every existing page, nothing changes unless a template overrides it. Needed so image_detail.html can declare noindex, nofollow: scorecards are private evaluations and must not appear in search results. Head-only, meta tag only — no CSS, no layout, no script. RETAINS 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
@@ -146,9 +148,10 @@ table { max-width: none; }
   align-items: center;
   gap: 3px;
   text-decoration: none;
-  color: rgba(255,255,255,0.40);
+  color: rgba(255,255,255,0.55);
   font-size: 13px;
   font-weight: 500;
+  position: relative;
   letter-spacing: .02em;
   min-width: 44px;
   min-height: 44px;
@@ -158,11 +161,12 @@ table { max-width: none; }
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation; /* SL-178.1: eliminates iOS 300ms tap delay */
 }
-.sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
-.sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item.active { color: #FFD700; }
+.sl-bottom-nav .sl-nav-item.active::before { content:''; position:absolute; top:0; left:20%; right:20%; height:2px; background:#FFD700; border-radius:0 0 2px 2px; }
+.sl-bottom-nav .sl-nav-item:hover  { color: #FFD700; }
 /* SL-178.1: touch-action:manipulation eliminates iOS 300ms tap delay on :active */
 /* SL-180.6: press-down feedback — see sitewide tap feedback block below */
-.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; opacity: .65; transform: scale(.92); }
+.sl-bottom-nav .sl-nav-item:active { color: #FFD700; opacity: .65; transform: scale(.92); }
 .sl-bottom-nav .sl-nav-more-btn:active { opacity: .65; transform: scale(.92); }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
