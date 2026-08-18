@@ -1,4 +1,4 @@
-{# SL-VERSION: HAIKU-176.8-staging (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
+{# SL-VERSION: HAIKU-177.0-staging (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
 {# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
 {# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
@@ -41,26 +41,27 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-counter-label{font-size:12px;color:rgba(255,255,255,.45);margin-left:4px;white-space:nowrap}
 
 /* ── MAIN ── */
-.hk-main{max-width:720px;margin:0 auto;padding:64px 32px 80px}
+.hk-main{max-width:740px;margin:0 auto;padding:72px 40px 100px}
 
 /* ── GREETING ── */
-.hk-greet{font-size:15px;color:var(--muted);margin-bottom:6px}
-.hk-greet b{display:block;font-size:24px;font-weight:700;color:var(--blue);letter-spacing:-.02em}
+.hk-greet{font-size:15px;color:var(--muted);margin-bottom:20px}
+.hk-greet b{display:block;font-size:28px;font-weight:600;color:var(--blue);letter-spacing:-.03em;margin-top:4px}
 
 /* ── EVAL COUNTER BADGE ── */
-.hk-eval-badge{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:8px 14px;font-size:14px;color:var(--muted);margin:18px 0 32px}
+.hk-eval-badge{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:10px 16px;font-size:15px;color:var(--muted);margin:0 0 44px}
 .hk-eval-badge b{color:var(--dark);font-weight:700}
 
 /* ── STATE 1 — zero uploads ── */
-.hk-h1{font-size:clamp(28px,4vw,44px);font-weight:600;color:var(--dark);line-height:1.12;letter-spacing:-.03em;margin-bottom:24px;text-shadow:none}
-.hk-intro{font-size:18px;color:var(--muted);line-height:1.75;margin-bottom:28px}
+.hk-h1{font-size:clamp(32px,4.5vw,52px);font-weight:600;color:var(--blue);line-height:1.08;letter-spacing:-.04em;margin-bottom:28px;text-shadow:none}
+.hk-intro{font-size:19px;color:var(--ink);line-height:1.8;margin-bottom:32px}
 .hk-proof{border-left:3px solid var(--gold);padding:16px 20px;margin:0 0 32px;background:var(--paper)}
 .hk-proof p{font-size:17px;font-style:italic;color:var(--ink);line-height:1.6;margin-bottom:8px}
 .hk-proof small{font-size:13px;color:var(--muted)}
-.hk-empty{background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;margin-bottom:28px;padding:32px}
-.hk-empty strong{display:block;font-size:18px;color:var(--dark);margin-bottom:6px}
-.hk-empty span{font-size:16px;color:var(--muted)}
-.hk-cta{display:block;width:100%;background:var(--dark);color:#fff;border:none;border-radius:2px;padding:18px 24px;font-size:17px;font-weight:600;text-align:left;cursor:pointer;margin-bottom:10px;min-height:56px;font-family:inherit;text-decoration:none;display:flex;align-items:center}
+.hk-empty{background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;margin-bottom:28px;padding:32px;transition:border-color .15s,background .15s}
+.hk-empty:hover{border-color:var(--blue);background:#F0F4FA}
+.hk-empty strong{display:block;font-size:22px;font-weight:600;color:var(--blue);margin-bottom:8px;letter-spacing:-.02em}
+.hk-empty span{font-size:16px;color:var(--muted);line-height:1.6}
+.hk-cta{display:flex;align-items:center;width:100%;background:var(--dark);color:#fff;border:none;border-radius:0;padding:20px 28px;font-size:18px;font-weight:600;text-align:left;cursor:pointer;margin-bottom:12px;min-height:60px;font-family:inherit;text-decoration:none;letter-spacing:.1px}
 .hk-cta small{display:block;font-size:13px;font-weight:400;color:rgba(255,255,255,.6);margin-top:4px}
 .hk-cta-note{font-size:14px;color:var(--muted);margin-bottom:48px}
 
@@ -253,16 +254,16 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# ── STATE 1 — ZERO UPLOADS — editorial letter ── #}
     {% if state_zero %}
 
-    <h1 class="hk-h1">You may be closer than you think.</h1>
+    <h1 class="hk-h1">The platform does not know your eye yet.</h1>
 
-    <p class="hk-intro">Most photographers spend years not knowing whether their eye is growing. Likes are social. Camera clubs are polite. Nobody says the hard thing. Your first evaluation will.</p>
+    <p class="hk-intro">Upload one photograph. The platform will tell you what it sees — across five dimensions, calibrated against the same standard applied to every photographer here. That honest answer is the thing photography has never had.</p>
 
     <div class="hk-proof">
-      <p>"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
-      <small>Mahesh Iyer · Grandmaster, Shutter League · Rank 105 of 20,000 globally, PhotoCrowd · 37 evaluations, self-motivated</small>
+      <p>"Making images matter is not about making important images. It is about recognising that the act of making them is itself a process of becoming."</p>
+      <small>Sreekumar Krishnan · Founder, Shutter League · 26 years behind the camera · National Geographic, Louvre, B&amp;W Spider Awards</small>
     </div>
 
-    <div class="hk-empty">
+    <a href="{{ url_for('try_page') }}" class="hk-empty" style="text-decoration:none;cursor:pointer">
       <div>
         <strong>Your first photograph is waiting.</strong>
         <span>Perhaps this is where it begins.</span>
