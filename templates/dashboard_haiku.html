@@ -1,4 +1,4 @@
-{# SL-VERSION: HAIKU-177.2-staging (Session 189, 2026-08-19 — Logo links to try_welcome (Haiku home) not try_page (upload). RETAINS HAIKU-177.1.) (Session 189, 2026-08-19 — THREE FIXES: (1) Nav dots hidden on mobile, replaced with compact "X of Y" text. (2) Logout link added to nav. (3) Quote swap: Mahesh back on dashboard, founder in email. (4) Founder byline: IPPAWARDS 2019 added. (5) Mobile overflow fixed. RETAINS HAIKU-177.0.) (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
+{# SL-VERSION: HAIKU-177.3-staging (Session 189, 2026-08-19 — MOBILE: top bar simplified (logo + counter + avatar only). Bottom nav added matching paid dashboard pattern: Home / Upload / My Gallery / Log out. Top nav hidden on mobile. Text overflow fixed. RETAINS HAIKU-177.2.) (Session 189, 2026-08-19 — Logo links to try_welcome (Haiku home) not try_page (upload). RETAINS HAIKU-177.1.) (Session 189, 2026-08-19 — THREE FIXES: (1) Nav dots hidden on mobile, replaced with compact "X of Y" text. (2) Logout link added to nav. (3) Quote swap: Mahesh back on dashboard, founder in email. (4) Founder byline: IPPAWARDS 2019 added. (5) Mobile overflow fixed. RETAINS HAIKU-177.0.) (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
 {# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
 {# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
 {# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
@@ -147,6 +147,33 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 /* focus */
 .hk-cta:focus-visible,.hk-conv-opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ── MOBILE TOPBAR (replaces full nav on mobile) ── */
+.hk-mob-topbar{display:none;height:56px;background:var(--dark);align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:500;border-bottom:1px solid rgba(212,164,40,.15)}
+.hk-mob-brand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
+.hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#D4A428;flex-shrink:0}
+.hk-mob-brandword{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
+.hk-mob-right{display:flex;align-items:center;gap:8px}
+.hk-mob-counter{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
+.hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+
+/* ── MOBILE BOTTOM NAV ── */
+.hk-bottom-nav{display:none;position:fixed;bottom:env(safe-area-inset-bottom,0px);left:0;right:0;height:62px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,.15);justify-content:space-around;align-items:flex-start;padding-top:0;z-index:1000}
+.hk-bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.5);text-decoration:none;font-size:11px;font-weight:600;min-width:44px;min-height:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;letter-spacing:.3px}
+.hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
+.hk-bn-tab.on{color:var(--gold)}
+
+@media(max-width:768px){
+  .hk-nav{display:none!important}
+  .hk-mob-topbar{display:flex!important}
+  .hk-bottom-nav{display:flex!important}
+  body.page-haiku-dash{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px) + 10px)}
+  .hk-main{padding:36px 18px 60px;max-width:100%;overflow-x:hidden;width:100%}
+  .hk-h1{font-size:clamp(26px,7vw,40px)}
+  .hk-intro{font-size:17px}
+  .hk-world-grid{grid-template-columns:1fr!important}
+  .hk-conversion-options{grid-template-columns:1fr!important}
+}
 </style>
 </head>
 <body class="page-haiku-dash">
@@ -167,6 +194,17 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 {% set state_conversion = _n >= _lim %}
 
 {# ── NAV ── #}
+
+<div class="hk-mob-topbar">
+  <a href="{{ url_for('try_welcome') }}" class="hk-mob-brand">
+    <div class="hk-mob-crest">SL</div>
+    <span class="hk-mob-brandword">Shutter League</span>
+  </a>
+  <div class="hk-mob-right">
+    <span class="hk-mob-counter">{{ _n }}/{{ _lim }}</span>
+    <div class="hk-mob-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
+  </div>
+</div>
 <header class="hk-nav">
   <a href="{{ url_for('try_welcome') }}" class="hk-brand">
     <div class="hk-crest">SL</div>
@@ -453,6 +491,33 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #cookie-banner a{color:var(--gold)}
 #cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
 #cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
+
+/* ── MOBILE TOPBAR (replaces full nav on mobile) ── */
+.hk-mob-topbar{display:none;height:56px;background:var(--dark);align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:500;border-bottom:1px solid rgba(212,164,40,.15)}
+.hk-mob-brand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
+.hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#D4A428;flex-shrink:0}
+.hk-mob-brandword{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
+.hk-mob-right{display:flex;align-items:center;gap:8px}
+.hk-mob-counter{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
+.hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+
+/* ── MOBILE BOTTOM NAV ── */
+.hk-bottom-nav{display:none;position:fixed;bottom:env(safe-area-inset-bottom,0px);left:0;right:0;height:62px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,.15);justify-content:space-around;align-items:flex-start;padding-top:0;z-index:1000}
+.hk-bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.5);text-decoration:none;font-size:11px;font-weight:600;min-width:44px;min-height:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;letter-spacing:.3px}
+.hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
+.hk-bn-tab.on{color:var(--gold)}
+
+@media(max-width:768px){
+  .hk-nav{display:none!important}
+  .hk-mob-topbar{display:flex!important}
+  .hk-bottom-nav{display:flex!important}
+  body.page-haiku-dash{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px) + 10px)}
+  .hk-main{padding:36px 18px 60px;max-width:100%;overflow-x:hidden;width:100%}
+  .hk-h1{font-size:clamp(26px,7vw,40px)}
+  .hk-intro{font-size:17px}
+  .hk-world-grid{grid-template-columns:1fr!important}
+  .hk-conversion-options{grid-template-columns:1fr!important}
+}
 </style>
 <script>
 (function(){
@@ -476,5 +541,25 @@ function cbAccept() {
   document.querySelectorAll('.sl-hk-greeting').forEach(function(el){el.textContent='Good '+g+',';});
 })();
 </script>
+
+<nav class="hk-bottom-nav">
+  <a class="hk-bn-tab on" href="{{ url_for('try_welcome') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <a class="hk-bn-tab" href="{{ url_for('try_page') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Upload
+  </a>
+  <a class="hk-bn-tab" href="{{ url_for('try_gallery') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    My Gallery
+  </a>
+  <a class="hk-bn-tab" href="{{ url_for('logout') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
+</nav>
+
 </body>
 </html>
