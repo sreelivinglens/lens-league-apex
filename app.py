@@ -13287,7 +13287,7 @@ def standings_public():
             u.id AS user_id,
             COALESCE(u.full_name, u.username) AS display_name,
             u.subscription_track,
-            COALESCE(u.interest_area, '') AS interest_area,
+            COALESCE(MAX(i.interest_area), '') AS interest_area,
             COUNT(i.id) AS eval_count,
             MAX(i.score) AS best_score,
             -- Best image: highest score with a real thumbnail
@@ -13329,7 +13329,7 @@ def standings_public():
           AND (i.needs_review = FALSE OR i.needs_review IS NULL)
           AND (i.is_haiku_try IS NOT TRUE)
           {track_filter}
-        GROUP BY u.id, u.full_name, u.username, u.subscription_track, u.interest_area
+        GROUP BY u.id, u.full_name, u.username, u.subscription_track
         ORDER BY MAX(i.score) DESC
     """)).fetchall()
 
