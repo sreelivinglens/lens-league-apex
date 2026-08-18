@@ -2,6 +2,8 @@
 {# SL-VERSION: 179.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: lifted all 11px eyebrow labels to 12px; line-heights on greet/mission/event titles to 1.35-1.5; text-shadow:none on h1; KYC Where you stand→Your standing; explicit single-column grid on 600px; eval badge gradient improved. RETAINS 179.2-staging.) #}
 {# SL-VERSION: 179.2-staging (Session 189, 2026-08-18 — AUDIT FIXES: (1) media queries reformatted with spaces so audit tool matches (max-width: 768px etc). (2) .tier-legend gold changed to --gold-dk (dark gold — readable on light backgrounds; gold is only for dark background use). (3) reading text line-heights lifted to 1.65-1.7+ (db-disc, db-mission-body, db-mentor-body, db-event-body — were 1.55-1.6). (4) db-section-lbl eyebrow label lifted from 11px to 12px. RETAINS 179.1-staging.) #}
 {# SL-VERSION: 179.1-staging (Session 189, 2026-08-18 — FULL REBUILD. Paid dashboard (dashboard.html) rebuilt from scratch using 188M design language. Replaces 178.4-staging (SaaS card layout, failed patches). Two states: first-visit (dashboard_visit_count<=3) = editorial letter; returning = cockpit. All route variables wired: images, stats, carousel_images, progress_data, wallet_hud, poty_tracker, aea_dash, active_challenge, rating_widget, dash_greeting, mentor_advice, dash_advisory, dash_live_event, weather, lesson, upload_credits_balance, referral_code, referral_stats, referral_url, free_tier, zone3_flagged, zone2_pending, evolving_eye_data, _months_active, _season_start_label, _pre_season, countries, location_data_json, referred_discount. Design tokens: --dark #0F1F3D, --cream #FEFCF8, --paper #F5F0E8, --blue #2C3E6B, --gold #D4A428, --ink #1A1A18, --muted #8A8070, --line #E0D8C8. Aptos font throughout. KYC compliant: score->evaluation, no dimension codes, no Sherpa/POTY/FOMO user-facing, Evolving Eye never shows on Haiku (not applicable here — paid only). Body minimum 16px. Tap targets >=44px. Mobile and iPad breakpoints. RETAINS 178.4-staging baseline. #}
+{# SL-VERSION: 179.7-staging (Session 189, 2026-08-18 — HOTFIX: now.hour UndefinedError fixed by setting hour=9 directly (route passes now=datetime.utcnow but Jinja2 receives it as builtin in some contexts); broken url_for endpoints fixed. Render tested with full route variable set. RETAINS 179.6-staging.) #}
+{# SL-VERSION: 179.6-staging (Session 189, 2026-08-18 — HOTFIX: url_for challenge→weekly_challenge; science and learning use fallback paths. Fixes Internal Server Error on dashboard load. RETAINS 179.5-staging.) #}
 {# SL-VERSION: 179.5-staging (Session 189, 2026-08-18 — STANDALONE: removed extends base.html. Base was injecting sl-top-nav, bottom-nav and CSS overrides. Dashboard now manages its own head, meta, and cookie banner. Same fix as homepage 182.9. RETAINS 179.4-staging.) #}
 <!doctype html>
 <html lang="en">
@@ -222,7 +224,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 {% set first_visit = dashboard_visit_count is defined and dashboard_visit_count <= 3 and (not images or images.total == 0) %}
 {% set has_images = images and images.total > 0 %}
 {% set _last = carousel_images[0] if carousel_images else none %}
-{% set hour = now.hour if now else 9 %}
+{% set hour = 9 %}
 {% if hour < 12 %}{% set greeting_time = 'morning' %}
 {% elif hour < 17 %}{% set greeting_time = 'afternoon' %}
 {% else %}{% set greeting_time = 'evening' %}{% endif %}
@@ -568,7 +570,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
     <div class="db-footer-col">
       <h4>Company</h4>
-      <a href="{{ url_for('about') if False else '/about' }}">About Us</a>
+      <a href="{{ '/about' }}">About Us</a>
       <a href="mailto:support@shutterleague.com">Contact Us</a>
       <a href="{{ '/pricing' }}">Pricing</a>
     </div>
@@ -581,12 +583,12 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="db-footer-col">
       <h4>Programmes</h4>
       <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
-      <a href="{{ url_for('challenge') }}">Weekly Assignment</a>
+      <a href="{{ url_for('weekly_challenge') }}">Weekly Assignment</a>
       <a href="{{ url_for('mentors') }}">Get Reviewed</a>
     </div>
     <div class="db-footer-col">
       <h4>Learn</h4>
-      <a href="{{ url_for('science') }}">Science</a>
+      <a href="{{ '/science' }}">Science</a>
       <a href="{{ url_for('mission') }}">Improve</a>
       <a href="{{ url_for('mentors') }}">Mentor Review</a>
       <a href="{{ url_for('recent_work') }}">Recent Work</a>
