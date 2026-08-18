@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
+{# SL-VERSION: image_detail-181.14-staging (Session 189, 2026-08-19 — Mobile footer clearance: sc-footer gets margin-bottom to clear bottom nav. RETAINS 181.13. (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile. Only bottom nav shows on mobile. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
    1. Body copy up 1pt: 15px->16px across em-para, takeaway, accordion body, location, bow
@@ -545,6 +545,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   .sc-acc-teaser{max-width:220px}
   .sc-act-bar{gap:6px}
   body.page-scorecard .sl-bottom-nav{display:flex !important}
+  .sc-footer{margin-bottom:calc(62px + env(safe-area-inset-bottom,0px));padding-bottom:16px}
   /* SL-181.11 — accordion body: reduce left indent on mobile so text has room */
   .sc-acc-body{padding:8px 13px 18px 17px;font-size:16px}
   /* 70yr rule: raise small text on mobile */
