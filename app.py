@@ -1,4 +1,6 @@
+# SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
 # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings public standings page. No login required. Paid photographers only, Haiku images excluded. Raw SQL for thumb_url. Template: leaderboard_public.html. RETAINS 181.32-staging.)
+# SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
 # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 12:07 UTC — Force redeploy to reload Jinja2 template cache. Gunicorn workers cache compiled templates in memory; patching dashboard.html on disk does not take effect until workers restart. This version bump triggers a Railway rebuild and worker restart, which will pick up the patched dashboard.html. No code change — version bump only. RETAINS 181.32-staging.)
 # SL-VERSION: 181.32-staging (Session 189, 2026-08-18 — ROOT FIX: raw SQL Row objects passed directly to Jinja2 — attribute access (img.thumb_url) silently returns None in some SQLAlchemy versions, so hero selection loop always set hero=none and no image showed (no exception, no log). Fix: convert all raw SQL rows to SimpleNamespace objects in the route before passing to template — index access row[i] is reliable, attr access on Row is not. Applied to both carousel_images and recent_images. RETAINS 181.31-staging.)
 # SL-VERSION: 181.31-staging (Session 189, 2026-08-18 01:50 UTC — Added exc_info=True logging to index() except block so future errors are visible in Railway deploy logs instead of being silently swallowed. RETAINS 181.30-staging.)
@@ -4559,7 +4561,7 @@ def dashboard():
     # A free user is defined as not subscribed and not admin.
     # Their world is /try → upload → /try/result → /try/gallery.
     if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
-        return redirect(url_for('try_page'))
+        return redirect(url_for('try_welcome'))
 
     # Approved judges should not see the photographer dashboard
     if current_user.role != 'admin':
@@ -13267,7 +13269,8 @@ def recent_work():
 
 @app.route('/standings')
 def standings_public():
-    # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings
+    # SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
+# SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings
     # Public standings page — no login required. Shows paid photographers only
     # (is_subscribed=TRUE). Haiku images excluded (is_haiku_try IS NOT TRUE).
     # Scorecard locked — leaderboard_public.html shows tier + thumbnail only.
@@ -32044,6 +32047,48 @@ def try_gallery():
         used      = _gate_count,
         remaining = _remaining,
         limit     = FREE_IMAGE_LIMIT + _bonus,
+    )
+
+
+
+@app.route('/try/welcome')
+@login_required
+def try_welcome():
+    # SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE: /try/welcome
+    # Renders dashboard_haiku.html for new free users BEFORE they hit the upload page.
+    # Free user journey: /dashboard → /try/welcome (Haiku dashboard) → /try (upload).
+    # Paid users who somehow land here are redirected to /dashboard.)
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('dashboard'))
+
+    from engine.scoring import GENRE_CHOICES
+    _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    _haiku_row = db.session.execute(
+        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+        {'uid': current_user.id}
+    ).scalar()
+    evals_used = int(_haiku_row or 0)
+    FREE_LIMIT = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    try:
+        from app import FREE_IMAGE_LIMIT as _FIL
+    except Exception:
+        _FIL = 10
+    remaining = max(0, _FIL + _bonus - evals_used)
+
+    first_name = ''
+    if getattr(current_user, 'full_name', None):
+        first_name = current_user.full_name.split()[0]
+    elif getattr(current_user, 'username', None):
+        first_name = current_user.username
+
+    return render_template(
+        'dashboard_haiku.html',
+        first_name    = first_name,
+        evals_used    = evals_used,
+        remaining     = remaining,
+        limit         = _FIL + _bonus,
+        upload_url    = url_for('try_page'),
+        gallery_url   = url_for('try_gallery'),
     )
 
 
