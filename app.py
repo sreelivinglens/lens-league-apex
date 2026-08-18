@@ -1,3 +1,4 @@
+# SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings public standings page. No login required. Paid photographers only, Haiku images excluded. Raw SQL for thumb_url. Template: leaderboard_public.html. RETAINS 181.32-staging.)
 # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 12:07 UTC — Force redeploy to reload Jinja2 template cache. Gunicorn workers cache compiled templates in memory; patching dashboard.html on disk does not take effect until workers restart. This version bump triggers a Railway rebuild and worker restart, which will pick up the patched dashboard.html. No code change — version bump only. RETAINS 181.32-staging.)
 # SL-VERSION: 181.32-staging (Session 189, 2026-08-18 — ROOT FIX: raw SQL Row objects passed directly to Jinja2 — attribute access (img.thumb_url) silently returns None in some SQLAlchemy versions, so hero selection loop always set hero=none and no image showed (no exception, no log). Fix: convert all raw SQL rows to SimpleNamespace objects in the route before passing to template — index access row[i] is reliable, attr access on Row is not. Applied to both carousel_images and recent_images. RETAINS 181.31-staging.)
 # SL-VERSION: 181.31-staging (Session 189, 2026-08-18 01:50 UTC — Added exc_info=True logging to index() except block so future errors are visible in Railway deploy logs instead of being silently swallowed. RETAINS 181.30-staging.)
@@ -13261,6 +13262,109 @@ def recent_work():
         total         = total,
         filter_genres = _all_genres,
         filter_tiers  = _all_tiers,
+    )
+
+
+@app.route('/standings')
+def standings_public():
+    # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings
+    # Public standings page — no login required. Shows paid photographers only
+    # (is_subscribed=TRUE). Haiku images excluded (is_haiku_try IS NOT TRUE).
+    # Scorecard locked — leaderboard_public.html shows tier + thumbnail only.
+    # Raw SQL used for thumb_url (unmapped column). No @login_required.)
+    track = request.args.get('track', 'all')
+
+    track_filter = ""
+    if track == 'camera':
+        track_filter = "AND (u.subscription_track = 'camera' OR u.subscription_track IS NULL)"
+    elif track == 'mobile':
+        track_filter = "AND u.subscription_track = 'mobile'"
+
+    # Fetch paid photographers with their best image thumbnail and tier
+    # Only paid users (is_subscribed=TRUE), no Haiku images
+    rows = db.session.execute(db.text(f"""
+        SELECT
+            u.id AS user_id,
+            COALESCE(u.full_name, u.username) AS display_name,
+            u.subscription_track,
+            COALESCE(u.interest_area, '') AS interest_area,
+            COUNT(i.id) AS eval_count,
+            MAX(i.score) AS best_score,
+            -- Best image: highest score with a real thumbnail
+            (
+                SELECT i2.thumb_url FROM images i2
+                WHERE i2.user_id = u.id
+                  AND i2.score IS NOT NULL
+                  AND i2.score > 0
+                  AND i2.is_public = TRUE
+                  AND i2.status = 'scored'
+                  AND (i2.is_flagged = FALSE OR i2.is_flagged IS NULL)
+                  AND (i2.needs_review = FALSE OR i2.needs_review IS NULL)
+                  AND i2.thumb_url IS NOT NULL
+                  AND i2.thumb_url LIKE 'https://pub-%'
+                  AND (i2.is_haiku_try IS NOT TRUE)
+                ORDER BY i2.score DESC LIMIT 1
+            ) AS best_thumb_url,
+            -- Tier from best image
+            (
+                SELECT i3.tier FROM images i3
+                WHERE i3.user_id = u.id
+                  AND i3.score IS NOT NULL
+                  AND i3.score > 0
+                  AND i3.is_public = TRUE
+                  AND i3.status = 'scored'
+                  AND (i3.is_flagged = FALSE OR i3.is_flagged IS NULL)
+                  AND (i3.needs_review = FALSE OR i3.needs_review IS NULL)
+                  AND (i3.is_haiku_try IS NOT TRUE)
+                ORDER BY i3.score DESC LIMIT 1
+            ) AS tier
+        FROM users u
+        JOIN images i ON i.user_id = u.id
+        WHERE u.is_subscribed = TRUE
+          AND i.is_public = TRUE
+          AND i.score IS NOT NULL
+          AND i.score > 0
+          AND i.status = 'scored'
+          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+          AND (i.is_haiku_try IS NOT TRUE)
+          {track_filter}
+        GROUP BY u.id, u.full_name, u.username, u.subscription_track, u.interest_area
+        ORDER BY MAX(i.score) DESC
+    """)).fetchall()
+
+    from types import SimpleNamespace
+    public_photographers = []
+    for r in rows:
+        public_photographers.append(SimpleNamespace(
+            user_id=r[0],
+            display_name=r[1],
+            subscription_track=r[2],
+            interest_area=r[3] or 'Photography',
+            eval_count=int(r[4]) if r[4] else 0,
+            best_score=float(r[5]) if r[5] else 0,
+            best_thumb_url=r[6],
+            tier=r[7] or 'Rookie',
+        ))
+
+    total_photographers = len(public_photographers)
+    try:
+        total_images = db.session.execute(db.text("""
+            SELECT COUNT(*) FROM images
+            WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
+              AND status = 'scored'
+              AND (is_flagged = FALSE OR is_flagged IS NULL)
+              AND (needs_review = FALSE OR needs_review IS NULL)
+              AND (is_haiku_try IS NOT TRUE)
+        """)).scalar() or 0
+    except Exception:
+        total_images = 0
+
+    return render_template('homepage_standings.html',
+        public_photographers=public_photographers,
+        total_photographers=total_photographers,
+        total_images=total_images,
+        track=track,
     )
 
 
