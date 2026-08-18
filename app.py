@@ -13287,7 +13287,7 @@ def standings_public():
             u.id AS user_id,
             COALESCE(u.full_name, u.username) AS display_name,
             u.subscription_track,
-            COALESCE(MAX(i.interest_area), '') AS interest_area,
+            '' AS interest_area,
             COUNT(i.id) AS eval_count,
             MAX(i.score) AS best_score,
             -- Best image: highest score with a real thumbnail
