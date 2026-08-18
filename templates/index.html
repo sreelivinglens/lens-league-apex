@@ -1,3 +1,5 @@
+{# SL-VERSION: 182.14-staging (Session 189, 2026-08-18 — BOTTOM NAV: added site's standard bottom nav (sl-bottom-nav) directly into standalone page — shows on mobile <=900px, hidden on desktop. Anon: SHUTTER LEAGUE logo + Upload FAB + Log In. Authed: Dashboard + Upload FAB + My Gallery. Matches base.html bottom nav verbatim. RETAINS 182.13.) #}
+{# SL-VERSION: 182.13-staging (Session 189, 2026-08-18 — NAV: added !important to navsection display:none so Why/The League/About are fully hidden on mobile. RETAINS 182.12.) #}
 {# SL-VERSION: 182.12-staging (Session 189, 2026-08-18 — MOBILE NAV FIX: section links hidden below 960px via .navsection{display:none}; Login and Start remain visible. overflow-x:hidden on body/html to fix white space on right. padding-bottom:72px on mobile to clear site bottom nav. RETAINS 182.11.) #}
 {# SL-VERSION: 182.11-staging (Session 189, 2026-08-18 — FINAL HERO FIX: removed hero-photograph-fill div entirely — it was covering the image regardless of z-index. Dark gradient is now the CSS background of hero-photograph itself (fallback when no image). Image sits directly in the container with no overlapping divs. Only hero-photograph-meta sits above via z-index:2. RETAINS 182.10.) #}
 {# SL-VERSION: 182.10-staging (Session 189, 2026-08-18 — Z-INDEX FIX: hero-photograph-fill div was sitting on top of the img (both position:absolute, fill rendered after img in DOM so it painted over it). Fix: img z-index:1, fill z-index:0. Image now visible. RETAINS 182.9.) #}
@@ -145,7 +147,7 @@ body,html{overflow-x:hidden;max-width:100%}
 @media (max-width: 960px){
   .nav{padding:0 16px}
   .byline{display:none}
-  .navsection{display:none}
+  .navsection{display:none !important}
   .hero{grid-template-columns:1fr}
   .hero-photograph{height:56vw;min-height:280px}
   .hero-text{padding:44px 24px 64px}
@@ -176,7 +178,15 @@ body,html{overflow-x:hidden;max-width:100%}
   .hero-h1{font-size:clamp(40px,12vw,60px)}
 }
 
-/* ── COOKIE BANNER (from base 180.10) ── */
+/* ── BOTTOM NAV (mobile only — matches site standard) ── */
+.sl-bottom-nav{position:fixed;top:auto !important;bottom:0;left:0;right:0;height:auto;min-height:62px;padding-bottom:env(safe-area-inset-bottom,0px);background:#1A1814;border-top:1px solid rgba(245,197,24,.2);display:none;justify-content:space-around;align-items:flex-start;z-index:1200;padding-top:10px}
+.sl-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:4px;transition:color .1s;-webkit-tap-highlight-color:transparent}
+.sl-nav-item:hover,.sl-nav-item.active{color:#F4C20D}
+.sl-nav-logo{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4px;text-decoration:none;min-width:44px;min-height:44px}
+.sl-nav-logo__text{font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.5);text-align:center;line-height:1.3}
+.sl-nav-fab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:2px}
+.sl-nav-fab__circle{width:40px;height:40px;background:#F4C20D;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
+@media (max-width: 900px){.sl-bottom-nav{display:flex}}
 #cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
 #cookie-banner.cb-visible{display:flex}
 #cookie-banner a{color:var(--gold)}
@@ -415,6 +425,36 @@ body,html{overflow-x:hidden;max-width:100%}
     </div>
   </div>
 </footer>
+
+<!-- BOTTOM NAV (mobile only — matches site standard) -->
+<nav class="sl-bottom-nav" aria-label="Main navigation">
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('upload') }}" class="sl-nav-fab">
+      <div class="sl-nav-fab__circle">+</div>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('my_gallery') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Gallery</span>
+    </a>
+  {% else %}
+    <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
+      <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
+    </a>
+    <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="sl-nav-fab">
+      <div class="sl-nav-fab__circle">+</div>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      <span>Log In</span>
+    </a>
+  {% endif %}
+</nav>
 
 <!-- COOKIE BANNER (base 180.10 verbatim) -->
 <div id="cookie-banner" role="region" aria-label="Cookie consent">
