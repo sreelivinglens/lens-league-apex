@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.7-staging (Session 190, 2026-08-19 — HERO CONTAINER: background changed to page cream (#FEFCF8) so bars are invisible — image floats naturally. Container height set by image aspect ratio via Jinja: landscape = (h/w)*50vw capped at 700px; portrait = 85vh. object-fit:contain retained. RETAINS HAIKU-178.6.)
 {# SL-VERSION: HAIKU-178.6-staging (Session 190, 2026-08-19 — TWO FIXES: (1) Desktop nav: Upload link added — always visible, points to try_page. Previously only showed when _n>0 via My evaluations. User had no upload path from desktop nav on State 1. (2) Hero panel fallback: background changed from #000 to SL dark gradient — intentional design when no qualifying image in DB, not blank black. RETAINS HAIKU-178.5.)
 {# SL-VERSION: HAIKU-178.5-staging (Session 190, 2026-08-19 — JS FIX: cookie banner HTML element was missing — getElementById("cookie-banner") returned null causing TypeError. Added missing HTML element. Added null guards to cbAccept() and cookie init. RETAINS HAIKU-178.4.)
 {# SL-VERSION: HAIKU-178.4-staging (Session 190, 2026-08-19 — NAV FIX: hk-nav z-index lifted 50→100 so desktop top nav not obscured by any overlapping element. RETAINS HAIKU-178.3.)
@@ -53,9 +54,9 @@ body.page-haiku-dash{
 
 /* ── H2: SPLIT HERO (State 1 desktop) ── */
 .hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%}
-.hk-split-photo{background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%);position:relative;overflow:hidden;min-height:480px}
-.hk-split-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#000}
-.hk-split-photo-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,31,61,.35) 0%,rgba(6,14,28,.6) 100%)}
+.hk-split-photo{background:var(--cream);position:relative;overflow:hidden}
+.hk-split-photo-img{width:100%;height:100%;object-fit:contain;object-position:center;background:var(--cream);display:block}
+/* overlay removed — cream bg, no dark overlay needed */
 .hk-split-photo-meta{
   position:absolute;left:0;right:0;bottom:0;
   padding:20px 28px;
@@ -161,10 +162,10 @@ body.page-haiku-dash{
 .hk-sign{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:24px;margin-top:8px}
 
 /* ── DARK FOOTER ── */
-.hk-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:48px 32px 28px}
-.hk-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px;margin-bottom:32px;max-width:720px}
+.hk-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:40px 24px 24px}
+.hk-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px;margin-bottom:28px;width:100%;max-width:720px}
 .hk-footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
-.hk-footer-col a{display:flex;align-items:center;font-size:14px;color:rgba(255,255,255,.5);padding:3px 0;min-height:44px;transition:color .15s;text-decoration:none}
+.hk-footer-col a{display:flex;align-items:center;font-size:14px;color:rgba(255,255,255,.5);padding:2px 0;min-height:36px;transition:color .15s;text-decoration:none;line-height:1.4}
 .hk-footer-col a:hover{color:#fff}
 .hk-footer-bottom{font-size:13px;border-top:1px solid rgba(255,255,255,.1);padding-top:18px;max-width:720px}
 
@@ -197,8 +198,8 @@ body.page-haiku-dash{
   display:flex;flex-direction:column;align-items:center;gap:3px;
   color:rgba(255,255,255,.5);text-decoration:none;
   font-size:11px;font-weight:600;
-  min-width:0;flex:1;min-height:44px;
-  padding-top:10px;padding-bottom:4px;padding-left:4px;padding-right:4px;
+  min-width:0;flex:1 1 0;min-height:44px;
+  padding-top:10px;padding-bottom:4px;padding-left:2px;padding-right:2px;
   background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;letter-spacing:.3px;
@@ -325,23 +326,35 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 <div class="hk-split">
 
   {# LEFT — DB-sourced hero photograph, random per refresh #}
-  <div class="hk-split-photo">
-    {% if hero_image and hero_image.thumb_url %}
+  {# Container height matches image aspect ratio. Bars (if any) are cream — invisible. #}
+  {% if hero_image and hero_image.thumb_url %}
+    {% if hero_image.is_portrait %}
+      {% set _hero_h = '85vh' %}
+    {% elif hero_image.img_width and hero_image.img_height %}
+      {# Landscape: container height = 50vw * (img_h/img_w), capped at 700px #}
+      {% set _ratio = (hero_image.img_height / hero_image.img_width) %}
+      {% set _hero_h = 'min(calc(50vw * ' ~ _ratio ~ '), 700px)' %}
+    {% else %}
+      {% set _hero_h = '56vw' %}
+    {% endif %}
+  <div class="hk-split-photo" style="height:{{ _hero_h }}">
     <img class="hk-split-photo-img"
          src="{{ hero_image.thumb_url }}"
          alt="From the League"
          onerror="this.style.display='none'">
-    <div class="hk-split-photo-overlay"></div>
-    {% else %}
-    <div class="hk-split-photo-fill"></div>
-    {% endif %}
     <div class="hk-split-photo-meta">
       <span class="hk-split-photo-caption">From the League</span>
-      {% if hero_image %}
-      <span class="hk-split-photo-badge">{{ hero_image.tier|upper if hero_image.tier else 'MASTER' }} · {{ '%.1f'|format(hero_image.score) if hero_image.score else '8.5' }}</span>
-      {% endif %}
+      <span class="hk-split-photo-badge">{{ hero_image.tier|upper }} · {{ '%.1f'|format(hero_image.score) }}</span>
     </div>
   </div>
+  {% else %}
+  {# No image from DB — show SL dark panel as placeholder #}
+  <div class="hk-split-photo" style="min-height:56vw;max-height:700px;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)">
+    <div class="hk-split-photo-meta">
+      <span class="hk-split-photo-caption">From the League</span>
+    </div>
+  </div>
+  {% endif %}
 
   {# RIGHT — editorial letter #}
   <div class="hk-split-text">
