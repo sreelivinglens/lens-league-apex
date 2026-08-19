@@ -1,3 +1,5 @@
+{# SL-VERSION: HAIKU-178.13-staging (Session 190, 2026-08-19 — GESTALT v4: text panel padding-top 4vh→18vh so headline "The platform does not know your eye yet" aligns with image top edge. Image remains flush. RETAINS HAIKU-178.12.)
+{# SL-VERSION: HAIKU-178.12-staging (Session 190, 2026-08-19 — GESTALT v3: photo panel padding-top removed. Instead the entire hk-split top padding matches via the text panel only. Image flush to top. Cream strip above image eliminated — no more container shadow artifact. Text panel padding-top lifted to 4vh to create breathing room without affecting photo panel. RETAINS HAIKU-178.11.)
 {# SL-VERSION: HAIKU-178.11-staging (Session 190, 2026-08-19 — GESTALT v2: photo panel gets padding-top:3vh to match text panel top, so image top edge aligns with greeting. Also reduced gap between greeting and eval badge. RETAINS HAIKU-178.10.)
 {# SL-VERSION: HAIKU-178.10-staging (Session 190, 2026-08-19 — GESTALT ALIGNMENT: split text panel top padding reduced 8vh→3vh so greeting aligns with image top. Both panels now share same visual start point. Gestalt alignment principle. RETAINS HAIKU-178.9.)
 {# SL-VERSION: HAIKU-178.9-staging (Session 190, 2026-08-19 — FOOTER: matched to homepage 188M footer exactly. padding:56px 48px 28px, gap:32px, max-width:1200px, link font-size:15px, margin-bottom:9px, no min-height on links. RETAINS HAIKU-178.8.)
@@ -57,8 +59,8 @@ body.page-haiku-dash{
 .hk-counter-compact b{color:#fff;font-weight:700}
 
 /* ── H2: SPLIT HERO (State 1 desktop) ── */
-.hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%}
-.hk-split-photo{background:var(--cream);position:relative;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;padding-top:3vh}
+.hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%;border-top:1px solid var(--line)}
+.hk-split-photo{background:var(--cream);position:relative;overflow:hidden;display:flex;align-items:flex-start;justify-content:center}
 .hk-split-photo-img{max-width:100%;max-height:100%;object-fit:contain;background:var(--cream);display:block}
 /* overlay removed — cream bg, no dark overlay needed */
 .hk-split-photo-meta{
@@ -79,7 +81,7 @@ body.page-haiku-dash{
 }
 .hk-split-text{
   display:flex;flex-direction:column;justify-content:flex-start;
-  padding:3vh 7vw 6vh 6vw;background:var(--cream);
+  padding:18vh 7vw 6vh 6vw;background:var(--cream);
   overflow-x:hidden;min-width:0;box-sizing:border-box
 }
 
