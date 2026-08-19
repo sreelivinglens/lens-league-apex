@@ -1,3 +1,4 @@
+# SL-VERSION: 181.38-staging (Session 190, 2026-08-19 — try_welcome() hero query: adds width+height to SELECT so template can compute container aspect ratio. is_portrait flag computed in Python. RETAINS 181.37.)
 # SL-VERSION: 181.37-staging (Session 190, 2026-08-19 — CHALLENGE GATE: (1) weekly_challenge(): Haiku users get read-only view (can_submit=False, slot_limit=0); Haiku images excluded from top_subs display. (2) challenge_submit(): Haiku users redirected immediately with flash; paid-only; Haiku images excluded from eligible_images picker; extra guard on POST to reject is_haiku_try images. Rule: Haiku images never enter challenge pool. RETAINS 181.36.)
 # SL-VERSION: 181.36-staging (Session 190, 2026-08-19 — try_welcome() hero query: removed width>height filter. Portrait images now serve — container uses object-fit:contain so both orientations letterbox/pillarbox correctly. RETAINS 181.35.)
 # SL-VERSION: 181.35-staging (Session 190, 2026-08-19 — try_welcome() FOUR FIXES: (1) evals_remaining: was "remaining", template needs "evals_remaining" — silent zero on remaining count. (2) images: not passed — all users saw State 1 regardless of uploads. (3) milestone_strength: not passed — States 5-9 blank. (4) hero_image: new — random Master+ landscape for HAIKU-178.0 split panel. Raw SQL throughout. make_response + Cache-Control:no-store added. RETAINS 181.34.)
@@ -32152,13 +32153,14 @@ def try_welcome():
         except Exception as _mse:
             app.logger.warning(f'[try_welcome] milestone_strength failed: {_mse}')
 
-    # Hero image — random Master/Grandmaster/Legend, score>=8.5, landscape, not haiku
-    # Same query pattern as _dash_carousel in dashboard(). Raw SQL per Rule 10.
+    # Hero image — random Master/Grandmaster/Legend, score>=8.5, not haiku
+    # Fetches width+height so template can size container to match image aspect ratio.
+    # Raw SQL per Rule 10.
     _hero = None
     try:
         _hero_row = db.session.execute(
             db.text(
-                "SELECT thumb_url, score, tier FROM images "
+                "SELECT thumb_url, score, tier, width, height FROM images "
                 "WHERE status = 'scored' AND score IS NOT NULL "
                 "AND is_public = TRUE AND is_flagged = FALSE "
                 "AND tier IN ('Legend','Grandmaster','Master') "
@@ -32169,10 +32171,15 @@ def try_welcome():
         ).fetchone()
         if _hero_row:
             from types import SimpleNamespace as _SN
+            _w = int(_hero_row[3]) if _hero_row[3] else 0
+            _h = int(_hero_row[4]) if _hero_row[4] else 0
             _hero = _SN(
-                thumb_url = _hero_row[0],
-                score     = float(_hero_row[1]),
-                tier      = _hero_row[2],
+                thumb_url   = _hero_row[0],
+                score       = float(_hero_row[1]),
+                tier        = _hero_row[2],
+                img_width   = _w,
+                img_height  = _h,
+                is_portrait = (_h > _w) if (_w and _h) else False,
             )
     except Exception as _he:
         app.logger.warning(f'[try_welcome] hero_image failed: {_he}')
