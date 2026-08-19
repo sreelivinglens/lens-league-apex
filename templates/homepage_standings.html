@@ -1,3 +1,4 @@
+{# SL-VERSION: homepage_standings-1.6-staging (Session 190, 2026-08-19 — NAV STYLE: matched to base.html nav — removed gold border-bottom, link style aligned, button style aligned, padding adjusted. RETAINS 1.5.)
 {# SL-VERSION: homepage_standings-1.5-staging (Session 190, 2026-08-19 — NAV: full discovery nav added matching homepage/base.html — How it works/Science/Programmes/Pricing always visible, auth-aware right side. FOOTER: upgraded to full 5-column homepage-standard footer. RETAINS 1.4.)
 {# SL-VERSION: homepage_standings-1.4-staging (Session 190, 2026-08-19 — MOBILE: bottom nav added for authenticated users (5 tabs: Home/Upload/My Gallery/League/Log out). Logged-out users see no bottom nav. Card lock text shortened for mobile. body padding-bottom added for bottom nav. RETAINS 1.3.)
 {# SL-VERSION: homepage_standings-1.3-staging (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Nav: logged-in users see dashboard/try_welcome link instead of Login/Join. (2) Card lock: logged-in Haiku users see "Continue exploring", paid users see "Your dashboard". Logged-out see Join. (3) Join banner: same conditional. Prevents logged-in redirect loop to dashboard via /register. RETAINS 1.2.)
@@ -25,18 +26,18 @@ html,body{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',
 a{text-decoration:none;color:inherit}
 
 /* ── NAV ── */
-.pub-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(212,164,40,.18)}
+.pub-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;border-bottom:0.5px solid rgba(255,255,255,.1)}
 .pub-nav-links{display:flex;align-items:center;gap:4px}
-.pub-nav-link{font-size:14px;color:rgba(255,255,255,.6);text-decoration:none;padding:6px 10px;border-radius:5px;transition:color .15s;white-space:nowrap}
+.pub-nav-link{font-size:14px;color:rgba(255,255,255,.6);text-decoration:none;padding:5px 12px;border-radius:5px;transition:color .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
 .pub-nav-link:hover{color:#fff;background:rgba(255,255,255,.08)}
 .pub-nav-link.on{color:#fff;font-weight:600}
 .pub-brand{display:flex;align-items:center;gap:10px;color:#fff}
 .pub-crest{width:28px;height:28px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:.5px}
 .pub-brandword{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
 .pub-nav-right{display:flex;align-items:center;gap:10px}
-.pub-login{font-size:14px;color:rgba(255,255,255,.6);padding:7px 14px;border:1px solid rgba(255,255,255,.2);border-radius:2px;transition:color .15s}
+.pub-login{font-size:14px;color:rgba(255,255,255,.65);padding:5px 12px;border:1px solid rgba(255,255,255,.25);border-radius:5px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .pub-login:hover{color:#fff}
-.pub-register{font-size:14px;font-weight:700;color:var(--dark);background:var(--gold);padding:8px 18px;border-radius:2px}
+.pub-register{font-size:14px;font-weight:700;color:var(--dark);background:var(--gold);padding:8px 18px;border-radius:8px;min-height:44px;display:inline-flex;align-items:center}
 
 /* ── PAGE HEADER ── */
 .pub-header{padding:52px 48px 36px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--line)}
@@ -152,8 +153,7 @@ a{text-decoration:none;color:inherit}
 {# ── NAV ── #}
 <nav class="pub-nav">
   <a href="{{ url_for('index') }}" class="pub-brand">
-    <div class="pub-crest">SL</div>
-    <span class="pub-brandword">Shutter League</span>
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" style="height:32px;width:auto;display:block" onerror="this.style.display='none'">
   </a>
   <div class="pub-nav-links">
     <a href="{{ url_for('how_it_works') }}" class="pub-nav-link">How it works</a>
