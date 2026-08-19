@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.10-staging (Session 190, 2026-08-19 — GESTALT ALIGNMENT: split text panel top padding reduced 8vh→3vh so greeting aligns with image top. Both panels now share same visual start point. Gestalt alignment principle. RETAINS HAIKU-178.9.)
 {# SL-VERSION: HAIKU-178.9-staging (Session 190, 2026-08-19 — FOOTER: matched to homepage 188M footer exactly. padding:56px 48px 28px, gap:32px, max-width:1200px, link font-size:15px, margin-bottom:9px, no min-height on links. RETAINS HAIKU-178.8.)
 {# SL-VERSION: HAIKU-178.8-staging (Session 190, 2026-08-19 — HERO ALIGN: photo panel uses flex+center so image aligns vertically with greeting, not pinned to top of split. RETAINS HAIKU-178.7.)
 {# SL-VERSION: HAIKU-178.7-staging (Session 190, 2026-08-19 — HERO CONTAINER: background changed to page cream (#FEFCF8) so bars are invisible — image floats naturally. Container height set by image aspect ratio via Jinja: landscape = (h/w)*50vw capped at 700px; portrait = 85vh. object-fit:contain retained. RETAINS HAIKU-178.6.)
@@ -76,8 +77,8 @@ body.page-haiku-dash{
   background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)
 }
 .hk-split-text{
-  display:flex;flex-direction:column;justify-content:center;
-  padding:8vh 7vw 8vh 6vw;background:var(--cream);
+  display:flex;flex-direction:column;justify-content:flex-start;
+  padding:3vh 7vw 6vh 6vw;background:var(--cream);
   overflow-x:hidden;min-width:0;box-sizing:border-box
 }
 
