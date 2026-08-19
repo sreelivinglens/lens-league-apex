@@ -736,63 +736,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 {% endif %}{# end state_zero vs 2-10 #}
 
-{# ── DISCOVERY GRID ── shown on all states #}
 
-
-  </div>
-  <div class="hk-disc-grid">
-
-    {# Smart personalised card — only when we have strength data #}
-    {% if milestone_strength and not state_zero %}
-    <div class="hk-dc blue">
-      <div class="hk-dc-title">✦ Your eye: {{ milestone_strength }}</div>
-      <div class="hk-dc-sub">This is your strongest dimension across your uploads. See what it looks like at Grandmaster level.</div>
-      <a href="{{ url_for('standings_public') }}" class="hk-dc-link">View Grandmasters →</a>
-    </div>
-    {% elif state_zero_first %}
-    <div class="hk-dc">
-      <div class="hk-dc-title">How it works</div>
-      <div class="hk-dc-sub">312 blind calibrations. One standard applied to every photographer.</div>
-      <a href="{{ url_for('science') }}" class="hk-dc-link">Read the science →</a>
-    </div>
-    {% else %}
-    <div class="hk-dc">
-      <div class="hk-dc-title">How it works</div>
-      <div class="hk-dc-sub">312 blind calibrations. One standard applied to every photographer.</div>
-      <a href="{{ url_for('science') }}" class="hk-dc-link">Read the science →</a>
-    </div>
-    {% endif %}
-
-    {# Next leap — personalised when available #}
-    {% if _next_leap and not state_zero %}
-    <div class="hk-dc accent">
-      <div class="hk-dc-title">Your next leap: {{ _next_leap }}</div>
-      <div class="hk-dc-sub">This dimension is holding your tier. One shift here changes everything.</div>
-      <a href="{{ url_for('how_it_works') }}" class="hk-dc-link">What is {{ _next_leap }}? →</a>
-    </div>
-    {% else %}
-    <div class="hk-dc accent">
-      <div class="hk-dc-title">Annual Excellence Award</div>
-      <div class="hk-dc-sub">31 December 2026. Qualification starts with your first evaluation as a member.</div>
-      <a href="{{ url_for('poty') }}" class="hk-dc-link">What is the AEA? →</a>
-    </div>
-    {% endif %}
-
-    <div class="hk-dc">
-      <div class="hk-dc-title">Pricing</div>
-      <div class="hk-dc-sub">₹4,000 / year. Unlimited evaluations, AEA, calibrated standing.</div>
-      <a href="{{ url_for('pricing') }}" class="hk-dc-link">See what you get →</a>
-    </div>
-
-    <div class="hk-dc">
-      <div class="hk-dc-title">League of Photographers</div>
-      <div class="hk-dc-sub">See the photographers building their record right now.</div>
-      <a href="{{ url_for('standings_public') }}" class="hk-dc-link">View standings →</a>
-    </div>
-
-  </div>
-</div>
-{% endif %}
 
 {# ── VISUAL GALLERY STRIP — photographs from the League ── #}
 {% if _gallery %}
