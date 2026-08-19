@@ -1,3 +1,4 @@
+# SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
 # SL-VERSION: 181.39-staging (Session 190, 2026-08-19 — Rule 10 fix: is_haiku_try.isnot(True) ORM calls in weekly_challenge() and challenge_submit() replaced with raw SQL. ORM filter on unmapped column silently fails. RETAINS 181.38.)
 # SL-VERSION: 181.38-staging (Session 190, 2026-08-19 — try_welcome() hero query: adds width+height to SELECT so template can compute container aspect ratio. is_portrait flag computed in Python. RETAINS 181.37.)
 # SL-VERSION: 181.37-staging (Session 190, 2026-08-19 — CHALLENGE GATE: (1) weekly_challenge(): Haiku users get read-only view (can_submit=False, slot_limit=0); Haiku images excluded from top_subs display. (2) challenge_submit(): Haiku users redirected immediately with flash; paid-only; Haiku images excluded from eligible_images picker; extra guard on POST to reject is_haiku_try images. Rule: Haiku images never enter challenge pool. RETAINS 181.36.)
@@ -32195,6 +32196,78 @@ def try_welcome():
     except Exception as _he:
         app.logger.warning(f'[try_welcome] hero_image failed: {_he}')
 
+    # ── dashboard_visit_count — increment on every visit (raw SQL, Rule 10)
+    _visit_count = 0
+    try:
+        db.session.execute(
+            db.text("UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count, 0) + 1 WHERE id = :uid"),
+            {'uid': current_user.id}
+        )
+        db.session.commit()
+        _visit_row = db.session.execute(
+            db.text("SELECT dashboard_visit_count FROM users WHERE id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        _visit_count = int(_visit_row[0]) if _visit_row and _visit_row[0] else 1
+    except Exception as _ve:
+        app.logger.warning(f'[try_welcome] visit_count failed: {_ve}')
+        db.session.rollback()
+
+    # ── next_leap_name + prev_score — for 1-upload and 2-upload states
+    _next_leap_name = ''
+    _prev_score     = None
+    _score_trend    = None  # 'up', 'down', 'same', None
+    if evals_used >= 1:
+        try:
+            import json as _nlj
+            _nl_rows = db.session.execute(
+                db.text(
+                    "SELECT audit_json, score FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id DESC LIMIT 2"
+                ),
+                {'uid': current_user.id}
+            ).fetchall()
+            if _nl_rows:
+                # Most recent audit_json → next_leap_name
+                try:
+                    _nld = _nlj.loads(_nl_rows[0][0] or '{}')
+                    _next_leap_name = _nld.get('next_leap_name', '')
+                except Exception:
+                    pass
+                # Trend: compare most recent vs previous score
+                if len(_nl_rows) >= 2:
+                    _cur_s  = float(_nl_rows[0][1]) if _nl_rows[0][1] else None
+                    _prev_s = float(_nl_rows[1][1]) if _nl_rows[1][1] else None
+                    if _cur_s and _prev_s:
+                        _prev_score = _prev_s
+                        _diff = _cur_s - _prev_s
+                        _score_trend = 'up' if _diff > 0.1 else ('down' if _diff < -0.1 else 'same')
+        except Exception as _nle:
+            app.logger.warning(f'[try_welcome] next_leap_name failed: {_nle}')
+
+    # ── gallery_images — 4 high-scoring non-Haiku images for visual strip
+    _gallery_images = []
+    try:
+        _gal_rows = db.session.execute(
+            db.text(
+                "SELECT thumb_url, score, tier FROM images "
+                "WHERE status = 'scored' AND score IS NOT NULL "
+                "AND is_public = TRUE AND is_flagged = FALSE "
+                "AND tier IN ('Legend','Grandmaster','Master','Craftsman') "
+                "AND score >= 7.5 AND thumb_url IS NOT NULL "
+                "AND (is_haiku_try IS NOT TRUE) "
+                "ORDER BY RANDOM() LIMIT 4"
+            )
+        ).fetchall()
+        from types import SimpleNamespace as _GSN
+        _gallery_images = [
+            _GSN(thumb_url=_gr[0], score=float(_gr[1]), tier=_gr[2])
+            for _gr in _gal_rows if _gr[0]
+        ]
+    except Exception as _ge:
+        app.logger.warning(f'[try_welcome] gallery_images failed: {_ge}')
+
     resp = make_response(render_template(
         'dashboard_haiku.html',
         evals_used         = evals_used,
@@ -32203,6 +32276,11 @@ def try_welcome():
         images             = _images,
         milestone_strength = _milestone_strength,
         hero_image         = _hero,
+        visit_count        = _visit_count,
+        next_leap_name     = _next_leap_name,
+        prev_score         = _prev_score,
+        score_trend        = _score_trend,
+        gallery_images     = _gallery_images,
     ))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return resp
