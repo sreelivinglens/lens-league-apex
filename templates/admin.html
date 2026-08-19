@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
+{# SL:version 180.4 admin — International Waitlist nav button added. Session 190, 2026-08-19. Previous: {# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -298,6 +298,7 @@
     <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
     <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
     <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
+    <a href="/admin/international-waitlist" class="admin-nav-btn slate">🌍 Intl Waitlist</a>
     <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
   </div>
 
