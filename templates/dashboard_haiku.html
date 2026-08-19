@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.17-staging (Session 190, 2026-08-19 — SMART DASHBOARD: 6 states based on visit_count + evals_used. State 1: visit 1+0 uploads = full editorial split. State 2: visit 2++0 uploads = compressed split + discovery. State 3: 1 upload = first read personalised. State 4: 2 uploads = trend + personalised. State 5: 3-4 uploads = pattern forming. State 6: 5-9 = milestone confirmed. Discovery grid in all states. Visual gallery strip. RETAINS HAIKU-178.16.)
 {# SL-VERSION: HAIKU-178.16-staging (Session 190, 2026-08-19 — NAV: Account link added to desktop nav → /profile. RETAINS HAIKU-178.15.)
 {# SL-VERSION: HAIKU-178.15-staging (Session 190, 2026-08-19 — COPY: "View full evaluation" → "See evaluation" — avoids implying Sonnet paid service. RETAINS HAIKU-178.14.)
 {# SL-VERSION: HAIKU-178.14-staging (Session 190, 2026-08-19 — GESTALT v5: abandon padding approach. Photo panel flush top, object-fit:cover, object-position:center. Image fills the panel from top — the photograph itself is the left panel, full bleed. Text panel padding-top reduced to 10vh so greeting+badge+headline all sit in the upper half, creating visual alignment with the image subject. RETAINS HAIKU-178.13.)
@@ -170,6 +171,38 @@ body.page-haiku-dash{
 /* ── SIGN OFF ── */
 .hk-sign{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:24px;margin-top:8px}
 
+/* ── DISCOVERY GRID ── */
+.hk-disc{background:var(--paper);border-top:1px solid var(--line);padding:20px 24px}
+.hk-disc-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.hk-disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hk-dc{background:#fff;border:1px solid var(--line);border-radius:3px;padding:12px 14px}
+.hk-dc.accent{border-left:3px solid var(--gold)}
+.hk-dc.blue{border-left:3px solid var(--blue);background:#EEF2FF}
+.hk-dc-title{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;line-height:1.4}
+.hk-dc-sub{font-size:12px;color:var(--muted);line-height:1.5}
+.hk-dc-link{font-size:12px;color:var(--blue);font-weight:600;margin-top:6px;display:block;text-decoration:none}
+.hk-dc-link:hover{text-decoration:underline}
+
+/* ── VISUAL GALLERY STRIP ── */
+.hk-gallery-strip{background:var(--dark)}
+.hk-gallery-lbl{padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.hk-gl-text{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase}
+.hk-gl-link{font-size:11px;color:var(--gold);font-weight:600;text-decoration:none}
+.hk-gallery-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.hk-gthumb{position:relative;overflow:hidden;height:80px;background:#1a2a3a}
+.hk-gthumb:not(:last-child){border-right:1px solid rgba(255,255,255,.08)}
+.hk-gthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.hk-gt-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.9) 0%,transparent 60%)}
+.hk-gt-info{position:absolute;bottom:0;left:0;right:0;padding:5px 7px}
+.hk-gt-score{font-size:11px;font-weight:700;color:var(--gold);line-height:1}
+.hk-gt-tier{font-size:8px;color:rgba(255,255,255,.45);letter-spacing:.5px;text-transform:uppercase}
+
+/* ── TREND INDICATOR ── */
+.hk-trend-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:2px;font-size:13px;font-weight:600;margin-bottom:8px}
+.hk-trend-up{background:rgba(74,160,74,.12);color:#2a7a2a}
+.hk-trend-down{background:rgba(180,60,60,.1);color:#8a2020}
+.hk-trend-same{background:rgba(44,62,107,.08);color:var(--blue)}
+
 /* ── DARK FOOTER ── */
 .hk-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:56px 48px 28px}
 .hk-footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
@@ -268,6 +301,8 @@ body.page-haiku-dash{
   .hk-footer-bottom{flex-direction:column;gap:8px;text-align:center}
   .hk-h1{font-size:clamp(24px,8vw,36px);text-shadow:none}
   .hk-strip-tile{width:90px}
+  .hk-disc-grid{grid-template-columns:1fr!important}
+  .hk-gallery-grid{grid-template-columns:repeat(2,1fr)!important}
 }
 /* 900px padding rule removed — 1024px block handles padding-bottom */
 
@@ -284,15 +319,24 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 {% set _lim = limit or 10 %}
 {% set _imgs = images or [] %}
 {% set _last = _imgs[0] if _imgs else none %}
+{% set _visit = visit_count or 1 %}
+{% set _trend = score_trend or '' %}
+{% set _next_leap = next_leap_name or '' %}
+{% set _prev_s = prev_score %}
+{% set _gallery = gallery_images or [] %}
 {% set first_name = (current_user.full_name or current_user.username or '').split()[0] %}
 {% set greeting_time = 'morning' %}{# static default — overridden by JS below #}
 
-{# State flags #}
-{% set state_zero = _n == 0 %}
-{% set state_building = _n >= 1 and _n <= 4 %}
-{% set state_milestone = _n >= 5 and _n <= 9 %}
-{% set state_near_limit = _n >= 8 and _n <= 9 %}
-{% set state_conversion = _n >= _lim %}
+{# State flags — 6 smart states #}
+{% set state_zero_first   = _n == 0 and _visit <= 1 %}
+{% set state_zero_return  = _n == 0 and _visit >= 2 %}
+{% set state_zero         = _n == 0 %}
+{% set state_one          = _n == 1 %}
+{% set state_two          = _n == 2 %}
+{% set state_building     = _n >= 3 and _n <= 4 %}
+{% set state_milestone    = _n >= 5 and _n <= 9 %}
+{% set state_near_limit   = _n >= 8 and _n <= 9 %}
+{% set state_conversion   = _n >= _lim %}
 
 {# ── MOBILE TOPBAR ── #}
 <div class="hk-mob-topbar">
@@ -369,66 +413,41 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   </div>
   {% endif %}
 
-  {# RIGHT — editorial letter #}
+  {# RIGHT — editorial letter, visit-aware #}
   <div class="hk-split-text">
     <div class="hk-greet">
       <span class="sl-hk-greeting">Good {{ greeting_time }},</span>
       <b>{{ first_name }}.</b>
     </div>
-
     <div class="hk-eval-badge">
       <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining
     </div>
 
+    {% if state_zero_first %}
+    {# VISIT 1 — full editorial #}
     <h1 class="hk-h1">The platform does not know your eye yet.</h1>
-
     <p class="hk-intro">Upload one photograph. The platform will tell you what it sees — across five dimensions, calibrated against the same standard applied to every photographer here. That honest answer is the thing photography has never had.</p>
-
     <div class="hk-proof">
       <p>"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
       <small>Mahesh Iyer · Grandmaster, Shutter League · Standing 105 of 20,000 globally, PhotoCrowd · 37 evaluations, self-motivated</small>
     </div>
-
-    <a href="{{ url_for('try_page') }}" class="hk-empty">
-      <div>
-        <strong>Your first photograph is waiting.</strong>
-        <span>Perhaps this is where it begins.</span>
-      </div>
-    </a>
-
     <a href="{{ url_for('try_page') }}" class="hk-cta">
       Show me what I'm missing →
       <small>Result in under 2 minutes. No subscription needed.</small>
     </a>
     <div class="hk-cta-note">{{ _lim }} free evaluations. No card needed.</div>
 
-    <div class="hk-world">
-      <div class="hk-world-lbl">The League, while you read this</div>
-      <div class="hk-world-grid">
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Calibrated evaluations</div>
-          <div class="hk-world-item-val">312</div>
-          <div class="hk-world-item-sub">Making Images Matter blind sessions</div>
-        </div>
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Top tier reached</div>
-          <div class="hk-world-item-val">9.1</div>
-          <div class="hk-world-item-sub">Grandmaster · Sri Chaitanya</div>
-        </div>
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Annual Excellence Award</div>
-          <div class="hk-world-item-val">2026</div>
-          <div class="hk-world-item-sub">31 December 2026</div>
-        </div>
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Platform standard</div>
-          <div class="hk-world-item-val">Global</div>
-          <div class="hk-world-item-sub">Same standard. Every photographer.</div>
-        </div>
-      </div>
-    </div>
+    {% else %}
+    {# VISIT 2+ — compressed, direct #}
+    <h1 class="hk-h1">Your first photograph is still waiting.</h1>
+    <p class="hk-intro">You came back. One photograph. Two minutes. We will tell you exactly what we see.</p>
+    <a href="{{ url_for('try_page') }}" class="hk-cta" style="background:var(--gold);color:var(--dark)">
+      Upload now →
+      <small style="color:rgba(30,26,18,.65)">{{ _rem }} evaluations remaining · No card needed</small>
+    </a>
+    {% endif %}
 
-    <div class="hk-sign" style="margin-top:48px">Shutter League · Making Images Matter</div>
+    <div class="hk-sign" style="margin-top:24px">Shutter League · Making Images Matter</div>
   </div>{# end hk-split-text #}
 
 </div>{# end hk-split #}
@@ -498,8 +517,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
   {% else %}{# states 2-9 #}
 
-    {# ── STATES 2-4 — building ── #}
-    {% if state_building %}
+    {# ── STATE 3: 1 UPLOAD — first read ── #}
+    {% if state_one %}
 
     {% if _last %}
     <div class="hk-last-eval">
@@ -516,23 +535,100 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
     {% endif %}
 
-    {% if _imgs|length > 1 %}
+    <div class="hk-strength">
+      <div class="hk-strength-lbl">What your first photograph showed</div>
+      <div class="hk-strength-text">
+        {% if milestone_strength %}Your eye reads <strong>{{ milestone_strength }}</strong> well. One more photograph and we begin to see a direction.
+        {% else %}One photograph tells us what you made. One more tells us how you see.{% endif %}
+      </div>
+    </div>
+
+    <a href="{{ url_for('try_page') }}" class="hk-cta">
+      Upload your second photograph →
+      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
+    </a>
+
+    {# ── STATE 4: 2 UPLOADS — trend ── #}
+    {% elif state_two %}
+
+    {% if _last %}
+    <div class="hk-last-eval">
+      {% if _last.thumb_url %}
+      <img class="hk-last-thumb" src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'photograph' }}" onerror="this.style.display='none'">
+      {% endif %}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+          <span class="hk-last-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<sub>/10</sub></span>
+          <span class="hk-last-tier">{{ _last.tier or '' }}</span>
+        </div>
+        <a class="hk-last-link" href="{{ url_for('try_result', image_id=_last.id) }}">See evaluation →</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if _imgs|length >= 2 %}
     <div class="hk-strip">
-      {% for img in _imgs %}
-      {% if img.thumb_url %}
+      {% for img in _imgs %}{% if img.thumb_url %}
       <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-strip-tile">
         <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
         <div class="hk-strip-badge">{{ '%.1f'|format(img.score) if img.score }}</div>
       </a>
+      {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="hk-strength">
+      <div class="hk-strength-lbl">
+        {% if _trend == 'up' %}Your eye is improving already
+        {% elif _trend == 'down' %}Your first was stronger — here is why that matters
+        {% else %}Consistent across two photographs{% endif %}
+      </div>
+      <div class="hk-strength-text">
+        {% if _trend == 'up' %}Two photographs, and the second scored higher. That is not nothing.
+        {% elif _trend == 'down' %}The second evaluation came in lower. That is useful data — not a failure. It tells us what to watch.
+        {% else %}Same level across two photographs. Your eye is stable. One more and a direction appears.{% endif %}
+        {% if milestone_strength %} Your strongest dimension so far: <strong>{{ milestone_strength }}</strong>.{% endif %}
+      </div>
+    </div>
+
+    <a href="{{ url_for('try_page') }}" class="hk-cta">
+      Upload your third photograph →
+      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
+    </a>
+
+    {# ── STATE 5: 3-4 UPLOADS — pattern forming ── #}
+    {% elif state_building %}
+
+    {% if _last %}
+    <div class="hk-last-eval">
+      {% if _last.thumb_url %}
+      <img class="hk-last-thumb" src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'photograph' }}" onerror="this.style.display='none'">
       {% endif %}
-      {% endfor %}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+          <span class="hk-last-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<sub>/10</sub></span>
+          <span class="hk-last-tier">{{ _last.tier or '' }}</span>
+        </div>
+        <a class="hk-last-link" href="{{ url_for('try_result', image_id=_last.id) }}">See evaluation →</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if _imgs %}
+    <div class="hk-strip">
+      {% for img in _imgs %}{% if img.thumb_url %}
+      <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-strip-tile">
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
+        <div class="hk-strip-badge">{{ '%.1f'|format(img.score) if img.score }}</div>
+      </a>
+      {% endif %}{% endfor %}
     </div>
     {% endif %}
 
     {% if milestone_strength %}
     <div class="hk-strength">
-      <div class="hk-strength-lbl">Your strongest area</div>
-      <div class="hk-strength-text">{{ milestone_strength }}</div>
+      <div class="hk-strength-lbl">Something is forming</div>
+      <div class="hk-strength-text">Across {{ _n }} photographs, <strong>{{ milestone_strength }}</strong> is your most consistent strength. Your eye has a direction. Keep going.</div>
       <div class="hk-watching">The platform is watching.</div>
     </div>
     {% endif %}
@@ -598,6 +694,94 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </main>
 
 {% endif %}{# end state_zero vs 2-10 #}
+
+{# ── DISCOVERY GRID ── shown on all states #}
+{% if not state_conversion %}
+<div class="hk-disc">
+  <div class="hk-disc-lbl">
+    {% if state_zero %}Explore the League
+    {% elif state_one %}While you wait for your second evaluation
+    {% elif state_two %}Based on your evaluations
+    {% elif state_building %}Your next steps
+    {% else %}Where you are headed{% endif %}
+  </div>
+  <div class="hk-disc-grid">
+
+    {# Smart personalised card — only when we have strength data #}
+    {% if milestone_strength and not state_zero %}
+    <div class="hk-dc blue">
+      <div class="hk-dc-title">✦ Your eye: {{ milestone_strength }}</div>
+      <div class="hk-dc-sub">This is your strongest dimension across your uploads. See what it looks like at Grandmaster level.</div>
+      <a href="{{ url_for('standings_public') }}" class="hk-dc-link">View Grandmasters →</a>
+    </div>
+    {% elif state_zero_first %}
+    <div class="hk-dc">
+      <div class="hk-dc-title">How it works</div>
+      <div class="hk-dc-sub">312 blind calibrations. One standard applied to every photographer.</div>
+      <a href="{{ url_for('science') }}" class="hk-dc-link">Read the science →</a>
+    </div>
+    {% else %}
+    <div class="hk-dc">
+      <div class="hk-dc-title">How it works</div>
+      <div class="hk-dc-sub">312 blind calibrations. One standard applied to every photographer.</div>
+      <a href="{{ url_for('science') }}" class="hk-dc-link">Read the science →</a>
+    </div>
+    {% endif %}
+
+    {# Next leap — personalised when available #}
+    {% if _next_leap and not state_zero %}
+    <div class="hk-dc accent">
+      <div class="hk-dc-title">Your next leap: {{ _next_leap }}</div>
+      <div class="hk-dc-sub">This dimension is holding your tier. One shift here changes everything.</div>
+      <a href="{{ url_for('how_it_works') }}" class="hk-dc-link">What is {{ _next_leap }}? →</a>
+    </div>
+    {% else %}
+    <div class="hk-dc accent">
+      <div class="hk-dc-title">Annual Excellence Award</div>
+      <div class="hk-dc-sub">31 December 2026. Qualification starts with your first evaluation as a member.</div>
+      <a href="{{ url_for('poty') }}" class="hk-dc-link">What is the AEA? →</a>
+    </div>
+    {% endif %}
+
+    <div class="hk-dc">
+      <div class="hk-dc-title">Pricing</div>
+      <div class="hk-dc-sub">₹4,000 / year. Unlimited evaluations, AEA, calibrated standing.</div>
+      <a href="{{ url_for('pricing') }}" class="hk-dc-link">See what you get →</a>
+    </div>
+
+    <div class="hk-dc">
+      <div class="hk-dc-title">League of Photographers</div>
+      <div class="hk-dc-sub">See the photographers building their record right now.</div>
+      <a href="{{ url_for('standings_public') }}" class="hk-dc-link">View standings →</a>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+{# ── VISUAL GALLERY STRIP — photographs from the League ── #}
+{% if _gallery %}
+<div class="hk-gallery-strip">
+  <div class="hk-gallery-lbl">
+    <span class="hk-gl-text">From the League</span>
+    <a href="{{ url_for('standings_public') }}" class="hk-gl-link">View all →</a>
+  </div>
+  <div class="hk-gallery-grid">
+    {% for gi in _gallery %}
+    <div class="hk-gthumb">
+      {% if gi.thumb_url %}
+      <img src="{{ gi.thumb_url }}" alt="{{ gi.tier }}" onerror="this.style.display='none'">
+      {% endif %}
+      <div class="hk-gt-overlay"></div>
+      <div class="hk-gt-info">
+        <div class="hk-gt-score">{{ '%.1f'|format(gi.score) if gi.score }}</div>
+        <div class="hk-gt-tier">{{ gi.tier }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 {# ── DARK FOOTER ── #}
 <footer class="hk-footer">
