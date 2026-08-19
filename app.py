@@ -1,3 +1,5 @@
+# SL-VERSION: 181.37-staging (Session 190, 2026-08-19 — CHALLENGE GATE: (1) weekly_challenge(): Haiku users get read-only view (can_submit=False, slot_limit=0); Haiku images excluded from top_subs display. (2) challenge_submit(): Haiku users redirected immediately with flash; paid-only; Haiku images excluded from eligible_images picker; extra guard on POST to reject is_haiku_try images. Rule: Haiku images never enter challenge pool. RETAINS 181.36.)
+# SL-VERSION: 181.36-staging (Session 190, 2026-08-19 — try_welcome() hero query: removed width>height filter. Portrait images now serve — container uses object-fit:contain so both orientations letterbox/pillarbox correctly. RETAINS 181.35.)
 # SL-VERSION: 181.35-staging (Session 190, 2026-08-19 — try_welcome() FOUR FIXES: (1) evals_remaining: was "remaining", template needs "evals_remaining" — silent zero on remaining count. (2) images: not passed — all users saw State 1 regardless of uploads. (3) milestone_strength: not passed — States 5-9 blank. (4) hero_image: new — random Master+ landscape for HAIKU-178.0 split panel. Raw SQL throughout. make_response + Cache-Control:no-store added. RETAINS 181.34.)
 # SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
 # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings public standings page. No login required. Paid photographers only, Haiku images excluded. Raw SQL for thumb_url. Template: leaderboard_public.html. RETAINS 181.32-staging.)
@@ -21240,19 +21242,18 @@ def _get_active_challenge(user_track: str = None):
 
 @app.route('/challenge')
 def weekly_challenge():
-    """Public challenge page  -  visible to all, submit requires login."""
+    """Public challenge page — visible to all, submit requires paid subscription."""
     challenge = _get_active_challenge()
     if not challenge:
         return render_template('challenge.html', challenge=None,
                                submissions=[], user_subs=[], slots_used=0,
-                               slot_limit=0, can_submit=False)
+                               slot_limit=0, can_submit=False, is_haiku_user=False)
 
-    # Top submissions for display  -  all submissions ranked by score
-    # is_subscriber flag controls whether they compete for prizes, not visibility
+    # Top submissions — Haiku images excluded per standing rule (never enter challenge pool)
     top_subs = (WeeklySubmission.query
                 .filter_by(challenge_id=challenge.id)
                 .join(Image, WeeklySubmission.image_id == Image.id)
-                .filter(Image.score != None)
+                .filter(Image.score != None, Image.is_haiku_try.isnot(True))
                 .order_by(Image.score.desc())
                 .limit(20).all())
 
@@ -21260,15 +21261,19 @@ def weekly_challenge():
     slots_used = 0
     slot_limit = 0
     can_submit = False
+    is_haiku_user = False
 
     if current_user.is_authenticated:
-        user_subs  = WeeklySubmission.query.filter_by(
-            challenge_id=challenge.id, user_id=current_user.id).all()
-        slots_used = len(user_subs)
-        # Admin treated as subscribed for challenge slot purposes
         is_sub_or_admin = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
-        slot_limit = 3 if is_sub_or_admin else 1
-        can_submit = challenge.is_open and slots_used < slot_limit
+        is_haiku_user = not is_sub_or_admin
+        if not is_haiku_user:
+            # Paid users and admins only — fetch their submissions
+            user_subs  = WeeklySubmission.query.filter_by(
+                challenge_id=challenge.id, user_id=current_user.id).all()
+            slots_used = len(user_subs)
+            slot_limit = 3 if is_sub_or_admin else 0
+            can_submit = challenge.is_open and slots_used < slot_limit
+        # Haiku users: slot_limit=0, can_submit=False — read-only view
 
     return render_template('challenge.html',
         challenge=challenge,
@@ -21283,14 +21288,20 @@ def weekly_challenge():
 @app.route('/challenge/submit', methods=['GET', 'POST'])
 @login_required
 def challenge_submit():
-    """Submit an existing scored image to the current challenge."""
+    """Submit an existing scored image to the current challenge. Paid subscribers only."""
+    # Haiku users (free, not subscribed) cannot submit to the challenge.
+    # Rule: Haiku images never enter standings, AEA, calibration pool, challenge. Ever.
+    is_sub = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
+    if not is_sub:
+        flash('Weekly challenges are available to League members. Join to participate.', 'info')
+        return redirect(url_for('weekly_challenge'))
+
     challenge = _get_active_challenge()
     if not challenge or not challenge.is_open:
         flash('No active challenge at the moment. Check back Monday.', 'info')
         return redirect(url_for('weekly_challenge'))
 
-    is_sub     = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
-    slot_limit = 3 if is_sub else 1
+    slot_limit = 3 if is_sub else 0
     slots_used = WeeklySubmission.query.filter_by(
         challenge_id=challenge.id, user_id=current_user.id).count()
 
@@ -21309,6 +21320,15 @@ def challenge_submit():
             flash('Image not found or not yet scored.', 'error')
             return redirect(url_for('challenge_submit'))
 
+        # Extra guard: Haiku images cannot enter the challenge pool regardless of user type
+        _is_haiku_img = bool(db.session.execute(
+            db.text("SELECT is_haiku_try FROM images WHERE id=:iid"),
+            {'iid': image_id}
+        ).scalar())
+        if _is_haiku_img:
+            flash('Free evaluation images cannot be submitted to the challenge.', 'error')
+            return redirect(url_for('challenge_submit'))
+
         # Check not already submitted this image to this challenge
         exists = WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, image_id=image_id).first()
@@ -21325,7 +21345,7 @@ def challenge_submit():
         db.session.add(sub)
         db.session.commit()
 
-        # Sprint 2 — award challenge participation points (+10, subscribers only)
+        # Award challenge participation points (+10, subscribers only)
         try:
             if current_user.is_subscribed:
                 award_points(current_user, 10.0, 'challenge_entry')
@@ -21335,15 +21355,16 @@ def challenge_submit():
         flash(f'Image submitted to the challenge! {slot_limit - slots_used - 1} slot{"s" if slot_limit - slots_used - 1 != 1 else ""} remaining this week.', 'success')
         return redirect(url_for('weekly_challenge'))
 
-    # GET  -  show image picker
-    # Only scored images, owned by user, not already submitted this week
+    # GET — show image picker
+    # Paid images only — Haiku images excluded from picker
     already_submitted_ids = [
         s.image_id for s in WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, user_id=current_user.id).all()
     ]
     eligible_images = (Image.query
         .filter_by(user_id=current_user.id, status='scored')
-        .filter(Image.score != None, Image.is_flagged == False)
+        .filter(Image.score != None, Image.is_flagged == False,
+                Image.is_haiku_try.isnot(True))
         .filter(Image.id.notin_(already_submitted_ids) if already_submitted_ids else db.true())
         .order_by(Image.score.desc())
         .all())
@@ -32142,7 +32163,6 @@ def try_welcome():
                 "AND is_public = TRUE AND is_flagged = FALSE "
                 "AND tier IN ('Legend','Grandmaster','Master') "
                 "AND score >= 8.5 AND thumb_url IS NOT NULL "
-                "AND width > height "
                 "AND (is_haiku_try IS NOT TRUE) "
                 "ORDER BY RANDOM() LIMIT 1"
             )
