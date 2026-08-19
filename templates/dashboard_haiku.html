@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.16-staging (Session 190, 2026-08-19 — NAV: Account link added to desktop nav → /profile. RETAINS HAIKU-178.15.)
 {# SL-VERSION: HAIKU-178.15-staging (Session 190, 2026-08-19 — COPY: "View full evaluation" → "See evaluation" — avoids implying Sonnet paid service. RETAINS HAIKU-178.14.)
 {# SL-VERSION: HAIKU-178.14-staging (Session 190, 2026-08-19 — GESTALT v5: abandon padding approach. Photo panel flush top, object-fit:cover, object-position:center. Image fills the panel from top — the photograph itself is the left panel, full bleed. Text panel padding-top reduced to 10vh so greeting+badge+headline all sit in the upper half, creating visual alignment with the image subject. RETAINS HAIKU-178.13.)
 {# SL-VERSION: HAIKU-178.13-staging (Session 190, 2026-08-19 — GESTALT v4: text panel padding-top 4vh→18vh so headline "The platform does not know your eye yet" aligns with image top edge. Image remains flush. RETAINS HAIKU-178.12.)
@@ -321,6 +322,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="hk-counter-compact">
       <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations
     </div>
+    <a href="{{ url_for('profile') }}" title="Account &amp; Profile" class="hk-gallery-link" style="font-size:13px">Account</a>
     <a href="{{ url_for('logout') }}" class="hk-gallery-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:36px">Log out</a>
     <div class="hk-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
   </div>
