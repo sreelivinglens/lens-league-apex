@@ -1,11 +1,6 @@
-{# SL-VERSION: HAIKU-177.4-staging (Session 189, 2026-08-19 — Footer: full 188M footer with Company/Legal columns. Desktop nav counter overflow fix. RETAINS HAIKU-177.3.) (Session 189, 2026-08-19 — MOBILE: top bar simplified (logo + counter + avatar only). Bottom nav added matching paid dashboard pattern: Home / Upload / My Gallery / Log out. Top nav hidden on mobile. Text overflow fixed. RETAINS HAIKU-177.2.) (Session 189, 2026-08-19 — Logo links to try_welcome (Haiku home) not try_page (upload). RETAINS HAIKU-177.1.) (Session 189, 2026-08-19 — THREE FIXES: (1) Nav dots hidden on mobile, replaced with compact "X of Y" text. (2) Logout link added to nav. (3) Quote swap: Mahesh back on dashboard, founder in email. (4) Founder byline: IPPAWARDS 2019 added. (5) Mobile overflow fixed. RETAINS HAIKU-177.0.) (Session 189, 2026-08-19 — STATE 1: Mahesh quote replaced with founder quote. Greeting scale lifted to match paid dashboard (188M). h1 larger, intro 19px, generous padding. Email welcome updated separately. RETAINS HAIKU-176.9.) (Session 189, 2026-08-18 — Empty state card now fully clickable — wraps in anchor to try_page. RETAINS HAIKU-176.8.) (Session 189, 2026-08-18 — STATE 1 copy rewrite: Sherpa voice throughout. "Submit" removed. CTA = "Show me what I'm missing →". Mahesh proof moved before CTA. World outside stats kept. KYC clean. RETAINS HAIKU-176.7.) #}
-{# SL-VERSION: HAIKU-176.7-staging (Session 189, 2026-08-18 — now.hour UndefinedError fix: replaced Jinja2 now.hour with JS IST greeting; added overflow-x:hidden for mobile. RETAINS HAIKU-176.6.) #}
-{# SL-VERSION: HAIKU-176.4-staging (Session 189, 2026-08-18 — AUDIT PASS 3: explicit grid collapse at 600px; text-shadow:none in mobile block. RETAINS HAIKU-176.3-staging.) #}
-{# SL-VERSION: HAIKU-176.3-staging (Session 189, 2026-08-18 — AUDIT PASS 2: all 11px labels lifted to 12px; strip badge 12px; line-heights on headings 1.5; text-shadow:none on h1; media query spaces applied. RETAINS HAIKU-176.2-staging.) #}
-{# SL-VERSION: HAIKU-176.2-staging (Session 189, 2026-08-18 — AUDIT FIXES: (1) media queries reformatted with spaces. (2) reading text line-heights lifted to 1.7-1.75 (hk-intro, hk-strength-text, hk-milestone-text, hk-conversion-body). (3) hk-conv-opt-price secondary lifted to 14px and gold-dk enforced for secondary option. RETAINS HAIKU-176.1-staging.) #}
-{# SL-VERSION: HAIKU-176.1-staging (Session 189, 2026-08-18 — FULL REBUILD. Haiku free dashboard (dashboard_haiku.html) rebuilt from scratch using 188M design language. Replaces HAIKU-175.1. 10 states per Session 188 Part 5D spec: State 1 (zero uploads) editorial letter; States 2-4 (1-4 uploads) building; States 5-9 milestone; States 8-9 near limit urgency; State 10 conversion (verbatim locked copy). Route variables: evals_used, evals_remaining, limit, images (list of dicts with id/thumb_url/score/tier/genre), milestone_strength (str). Design tokens: --dark #0F1F3D, --cream #FEFCF8, --paper #F5F0E8, --blue #2C3E6B, --gold #D4A428, --ink #1A1A18, --muted #8A8070, --line #E0D8C8. Aptos font. KYC: score->evaluation, Evolving Eye NEVER shown, no dimension codes user-facing, no Sherpa/POTY/FOMO. 16px+ body. 44px tap targets. Mobile and iPad breakpoints. RETAINS HAIKU-175.1. #}
-{# SL-VERSION: HAIKU-176.6-staging (Session 189, 2026-08-18 — HOTFIX: same url_for fixes. RETAINS HAIKU-176.5-staging.) #}
-{# SL-VERSION: HAIKU-176.5-staging (Session 189, 2026-08-18 — STANDALONE: removed extends base.html. Base was injecting sl-top-nav, bottom-nav and CSS overrides. Dashboard now manages its own head, meta, and cookie banner. Same fix as homepage 182.9. RETAINS HAIKU-176.4-staging.) #}
+{# SL-VERSION: HAIKU-178.0-staging (Session 190, 2026-08-19 — FIVE FIXES: (1) H1: Mobile bottom nav rendering — consolidated duplicate style blocks, cookie banner z-index lifted above bottom nav so banner no longer covers nav on first load. (2) H2: Split-image left panel on State 1 — DB-sourced hero_image variable (Master/Grandmaster/Legend, score>=8.5, random per refresh), same pattern as paid dashboard _dash_carousel. Mobile: image collapses to full-width strip. States 2-10 unchanged single-column. (3) H3: Desktop nav dots overflow — replaced 10-dot loop with compact "X of Y" text counter on desktop, matching mobile pattern already in place. (4) H4: Line spacing lifted — body line-height 1.65->1.75, card padding 22px->28px desktop, section gap 16px->20px. (5) H5: Mobile tap response — removed transition from hk-bn-tab:active, added will-change:transform. RETAINS HAIKU-177.4.) #}
+{# SL-VERSION: HAIKU-177.4-staging (Session 189, 2026-08-19 — Footer: full 188M footer with Company/Legal columns. Desktop nav counter overflow fix. RETAINS HAIKU-177.3.) #}
+{# SL-VERSION: HAIKU-176.1-staging (Session 189, 2026-08-18 — FULL REBUILD. Haiku free dashboard. 10 states. Design tokens: --dark #0F1F3D, --cream #FEFCF8, --paper #F5F0E8, --blue #2C3E6B, --gold #D4A428. Aptos font. KYC clean. 16px+ body. 44px tap targets. Mobile and iPad breakpoints.) #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,26 +17,61 @@
   --muted:#8A8070;--line:#E0D8C8;--gold-dk:#A07A10;
 }
 *{box-sizing:border-box}
-body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden;width:100%}
+body.page-haiku-dash{
+  background:var(--cream);color:var(--ink);
+  font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;
+  font-size:17px;line-height:1.75;/* H4: 1.65->1.75 */
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;width:100%
+}
 
-/* ── NAV ── */
+/* ── DESKTOP NAV ── */
 .hk-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:50}
 .hk-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
 .hk-crest{width:28px;height:28px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.5px;flex-shrink:0}
 .hk-brandword{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.9)}
-.hk-nav-right{display:flex;align-items:center;gap:10px}
-.hk-gallery-link{color:rgba(255,255,255,.65);font-size:14px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;padding:0 12px;transition:color .15s}
+.hk-nav-right{display:flex;align-items:center;gap:12px}
+.hk-gallery-link{color:rgba(255,255,255,.65);font-size:14px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;padding:0 12px;transition:color .15s;text-decoration:none}
 .hk-gallery-link:hover{color:#fff}
 .hk-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
 
-/* ── COUNTER ── */
-.hk-counter{background:rgba(255,255,255,.07);padding:0 12px;display:flex;align-items:center;gap:5px;height:100%;border-left:1px solid rgba(255,255,255,.1);max-width:160px;overflow:hidden;flex-shrink:0}
-.hk-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0}
-.hk-dot.used{background:rgba(255,255,255,.2)}
-.hk-counter-label{font-size:12px;color:rgba(255,255,255,.45);margin-left:4px;white-space:nowrap}
-.hk-counter-text{font-size:13px;color:rgba(255,255,255,.65);white-space:nowrap;display:none}
+/* H3: Desktop counter — compact text, no dot loop overflow */
+.hk-counter-compact{
+  background:rgba(255,255,255,.07);padding:0 14px;
+  display:flex;align-items:center;height:100%;
+  border-left:1px solid rgba(255,255,255,.1);
+  font-size:13px;color:rgba(255,255,255,.65);
+  white-space:nowrap;gap:6px;flex-shrink:0
+}
+.hk-counter-compact b{color:#fff;font-weight:700}
 
-/* ── MAIN ── */
+/* ── H2: SPLIT HERO (State 1 desktop) ── */
+.hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 64px);min-height:calc(100dvh - 64px);align-items:stretch}
+.hk-split-photo{background:var(--dark);position:relative;overflow:hidden;min-height:480px}
+.hk-split-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.hk-split-photo-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,31,61,.35) 0%,rgba(6,14,28,.6) 100%)}
+.hk-split-photo-meta{
+  position:absolute;left:0;right:0;bottom:0;
+  padding:20px 28px;
+  background:linear-gradient(to top,rgba(6,14,28,.92) 0%,transparent 100%);
+  display:flex;justify-content:space-between;align-items:flex-end
+}
+.hk-split-photo-caption{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase}
+.hk-split-photo-badge{
+  background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.5);
+  color:var(--gold);font-size:12px;font-weight:700;padding:5px 12px;letter-spacing:.5px
+}
+/* Fallback when no hero image from DB */
+.hk-split-photo-fill{
+  position:absolute;inset:0;
+  background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)
+}
+.hk-split-text{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:8vh 7vw 8vh 6vw;background:var(--cream)
+}
+
+/* ── MAIN (States 2-10 single column) ── */
 .hk-main{max-width:740px;margin:0 auto;padding:72px 40px 100px}
 
 /* ── GREETING ── */
@@ -49,16 +79,21 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-greet b{display:block;font-size:28px;font-weight:600;color:var(--blue);letter-spacing:-.03em;margin-top:4px}
 
 /* ── EVAL COUNTER BADGE ── */
-.hk-eval-badge{display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:10px 16px;font-size:15px;color:var(--muted);margin:0 0 44px;max-width:100%}
+.hk-eval-badge{
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+  background:var(--paper);border:1px solid var(--line);border-radius:2px;
+  padding:12px 18px;/* H4: 10px->12px */
+  font-size:15px;color:var(--muted);margin:0 0 44px;max-width:100%
+}
 .hk-eval-badge b{color:var(--dark);font-weight:700}
 
-/* ── STATE 1 — zero uploads ── */
+/* ── STATE 1 text panel (split layout) ── */
 .hk-h1{font-size:clamp(32px,4.5vw,52px);font-weight:600;color:var(--blue);line-height:1.08;letter-spacing:-.04em;margin-bottom:28px;text-shadow:none}
 .hk-intro{font-size:19px;color:var(--ink);line-height:1.8;margin-bottom:32px}
-.hk-proof{border-left:3px solid var(--gold);padding:16px 20px;margin:0 0 32px;background:var(--paper)}
-.hk-proof p{font-size:17px;font-style:italic;color:var(--ink);line-height:1.6;margin-bottom:8px}
+.hk-proof{border-left:3px solid var(--gold);padding:18px 22px;/* H4: 16px->18px */margin:0 0 32px;background:var(--paper)}
+.hk-proof p{font-size:17px;font-style:italic;color:var(--ink);line-height:1.7;margin-bottom:8px}
 .hk-proof small{font-size:13px;color:var(--muted)}
-.hk-empty{background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;margin-bottom:28px;padding:32px;transition:border-color .15s,background .15s}
+.hk-empty{background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;margin-bottom:28px;padding:32px;transition:border-color .15s,background .15s;text-decoration:none;display:flex}
 .hk-empty:hover{border-color:var(--blue);background:#F0F4FA}
 .hk-empty strong{display:block;font-size:22px;font-weight:600;color:var(--blue);margin-bottom:8px;letter-spacing:-.02em}
 .hk-empty span{font-size:16px;color:var(--muted);line-height:1.6}
@@ -66,49 +101,48 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-cta small{display:block;font-size:13px;font-weight:400;color:rgba(255,255,255,.6);margin-top:4px}
 .hk-cta-note{font-size:14px;color:var(--muted);margin-bottom:48px}
 
-/* ── WORLD OUTSIDE (state 1 only) ── */
+/* ── WORLD OUTSIDE ── */
 .hk-world{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
 .hk-world-lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
-.hk-world-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.hk-world-item{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:18px 20px}
+.hk-world-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}/* H4: 14px->16px */
+.hk-world-item{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:20px 22px}/* H4: 18px->20px */
 .hk-world-item-lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .hk-world-item-val{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.02em;line-height:1.5}
 .hk-world-item-sub{font-size:14px;color:var(--muted);margin-top:4px}
 
-/* ── STATES 2-4 — building ── */
-.hk-last-eval{display:flex;align-items:center;gap:16px;padding:20px 22px;background:var(--paper);border:1px solid var(--line);border-radius:3px;margin-bottom:28px}
+/* ── STATES 2-4 ── */
+.hk-last-eval{display:flex;align-items:center;gap:16px;padding:22px 24px;/* H4 */background:var(--paper);border:1px solid var(--line);border-radius:3px;margin-bottom:28px}
 .hk-last-thumb{width:64px;height:64px;border-radius:2px;object-fit:cover;flex-shrink:0;background:var(--dark)}
 .hk-last-score{font-size:36px;font-weight:700;color:var(--dark);line-height:1;letter-spacing:-.04em}
 .hk-last-score sub{font-size:14px;font-weight:400;color:var(--muted);vertical-align:middle;letter-spacing:0}
 .hk-last-tier{font-size:12px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
-.hk-last-link{font-size:13px;color:var(--blue);margin-top:6px;display:inline-block;min-height:36px;display:inline-flex;align-items:center}
+.hk-last-link{font-size:13px;color:var(--blue);margin-top:6px;display:inline-flex;align-items:center;min-height:36px;text-decoration:none}
 
-/* Strip of thumbnails */
+/* Strip */
 .hk-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:28px}
 .hk-strip-tile{flex-shrink:0;width:110px;border-radius:2px;overflow:hidden;background:var(--dark);position:relative;text-decoration:none;min-height:44px}
 .hk-strip-tile img{width:100%;height:80px;object-fit:cover;display:block}
 .hk-strip-badge{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:linear-gradient(to top,rgba(6,14,28,.9),transparent);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.2px}
 
-/* Strength plain-English */
-.hk-strength{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 3px 3px 0;padding:18px 22px;margin-bottom:28px}
+/* Strength */
+.hk-strength{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 3px 3px 0;padding:20px 24px;/* H4 */margin-bottom:28px}
 .hk-strength-lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:8px}
-.hk-strength-text{font-size:16px;color:var(--ink);line-height:1.7}
+.hk-strength-text{font-size:16px;color:var(--ink);line-height:1.75}
 .hk-watching{font-size:15px;color:var(--muted);font-style:italic;margin-top:12px}
 
-/* ── STATES 5-9 — milestone ── */
-.hk-milestone{border:2px solid var(--gold);border-radius:3px;padding:24px 28px;margin-bottom:28px;background:var(--paper)}
+/* ── STATES 5-9 ── */
+.hk-milestone{border:2px solid var(--gold);border-radius:3px;padding:26px 30px;/* H4 */margin-bottom:28px;background:var(--paper)}
 .hk-milestone-kicker{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:10px}
-.hk-milestone-text{font-size:18px;color:var(--dark);line-height:1.65;font-weight:500}
+.hk-milestone-text{font-size:18px;color:var(--dark);line-height:1.75;font-weight:500}
 
-/* Near-limit urgency (8-9) */
-.hk-urgency{font-size:16px;color:var(--blue);font-weight:600;margin:0 0 28px;padding:14px 18px;background:rgba(44,62,107,.06);border-left:3px solid var(--blue);border-radius:0 3px 3px 0}
+.hk-urgency{font-size:16px;color:var(--blue);font-weight:600;margin:0 0 28px;padding:16px 20px;/* H4 */background:rgba(44,62,107,.06);border-left:3px solid var(--blue);border-radius:0 3px 3px 0}
 
 /* ── STATE 10 — conversion ── */
 .hk-conversion{margin-bottom:32px}
 .hk-conversion-headline{font-size:clamp(22px,3vw,32px);font-weight:600;color:var(--dark);line-height:1.2;letter-spacing:-.02em;margin-bottom:20px}
 .hk-conversion-body{font-size:17px;color:var(--ink);line-height:1.75;margin-bottom:32px}
-.hk-conversion-options{display:flex;flex-direction:column;gap:12px}
-.hk-conv-opt{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-radius:3px;text-decoration:none;min-height:56px;gap:12px;flex-wrap:wrap}
+.hk-conversion-options{display:flex;flex-direction:column;gap:14px}/* H4: 12->14 */
+.hk-conv-opt{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;/* H4 */border-radius:3px;text-decoration:none;min-height:56px;gap:12px;flex-wrap:wrap}
 .hk-conv-opt.primary{background:var(--dark);color:#fff}
 .hk-conv-opt.secondary{background:var(--paper);border:1px solid var(--line);color:var(--dark)}
 .hk-conv-opt.quiet{background:transparent;border:none;color:var(--muted);font-size:15px;padding:14px 0;justify-content:flex-start}
@@ -123,33 +157,17 @@ body.page-haiku-dash{background:var(--cream);color:var(--ink);font-family:Aptos,
 .hk-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:48px 32px 28px}
 .hk-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px;margin-bottom:32px;max-width:720px}
 .hk-footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
-.hk-footer-col a{display:flex;align-items:center;font-size:14px;color:rgba(255,255,255,.5);padding:3px 0;min-height:44px;transition:color .15s}
+.hk-footer-col a{display:flex;align-items:center;font-size:14px;color:rgba(255,255,255,.5);padding:3px 0;min-height:44px;transition:color .15s;text-decoration:none}
 .hk-footer-col a:hover{color:#fff}
 .hk-footer-bottom{font-size:13px;border-top:1px solid rgba(255,255,255,.1);padding-top:18px;max-width:720px}
 
-/* ── RESPONSIVE ── */
-@media (max-width: 768px){
-  .hk-main{padding:48px 20px 64px}
-  .hk-world-grid{grid-template-columns:1fr}
-  .hk-nav{padding:0 14px}
-  .hk-counter{display:none}
-  .hk-counter-text{display:flex!important;align-items:center;padding:0 10px;border-left:1px solid rgba(255,255,255,.1);height:100%;font-size:13px;color:rgba(255,255,255,.65);white-space:nowrap}
+/* ── MOBILE TOPBAR ── */
+.hk-mob-topbar{
+  display:none;height:56px;background:var(--dark);
+  align-items:center;justify-content:space-between;
+  padding:0 16px;position:sticky;top:0;z-index:100;
+  border-bottom:1px solid rgba(212,164,40,.15)
 }
-@media (max-width: 600px){
-  .hk-main{padding:32px 16px 80px}
-  .hk-world-grid,.hk-conversion-options{grid-template-columns:1fr !important}
-  .hk-h1{font-size:clamp(24px,8vw,36px);text-shadow:none}
-  .hk-footer-grid{grid-template-columns:1fr}
-  .hk-strip-tile{width:90px}
-}
-@media (max-width: 900px){body.page-haiku-dash{padding-bottom:72px}}
-
-/* focus */
-.hk-cta:focus-visible,.hk-conv-opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-
-/* ── MOBILE TOPBAR (replaces full nav on mobile) ── */
-.hk-mob-topbar{display:none;height:56px;background:var(--dark);align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:500;border-bottom:1px solid rgba(212,164,40,.15)}
 .hk-mob-brand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
 .hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#D4A428;flex-shrink:0}
 .hk-mob-brandword{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
@@ -157,26 +175,90 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .hk-mob-counter{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
 .hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
 
-/* ── MOBILE BOTTOM NAV ── */
-.hk-bottom-nav{display:none;position:fixed;bottom:env(safe-area-inset-bottom,0px);left:0;right:0;height:62px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,.15);justify-content:space-around;align-items:flex-start;padding-top:0;z-index:1000}
-.hk-bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.5);text-decoration:none;font-size:11px;font-weight:600;min-width:44px;min-height:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;letter-spacing:.3px}
+/* ── H5: MOBILE BOTTOM NAV — tap response fix ── */
+.hk-bottom-nav{
+  display:none;position:fixed;
+  bottom:env(safe-area-inset-bottom,0px);
+  left:0;right:0;height:62px;
+  background:var(--dark);
+  border-top:0.5px solid rgba(255,255,255,.15);
+  justify-content:space-around;align-items:flex-start;
+  padding-top:0;z-index:200/* lifted above cookie banner */
+}
+.hk-bn-tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:rgba(255,255,255,.5);text-decoration:none;
+  font-size:11px;font-weight:600;
+  min-width:44px;min-height:44px;
+  padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;
+  background:none;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;letter-spacing:.3px;
+  will-change:transform;/* H5 */
+  transition:color .15s/* colour transition kept, scale removed from active */
+}
 .hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
 .hk-bn-tab.on{color:var(--gold)}
+/* H5: instant visual tap feedback — no transition delay */
+.hk-bn-tab:active{
+  color:var(--gold)!important;
+  transform:scale(.92);
+  transition:none/* H5: removes delay so tap feels instant */
+}
 
-@media(max-width:768px){
+/* ── COOKIE BANNER — z-index below bottom nav ── */
+/* H1 fix: cookie banner was z-index:9999 covering the bottom nav */
+#cookie-banner{
+  display:none;position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:150;/* H1: was 9999 — now below bottom nav z-index:200 */
+  background:#1A1814;color:#fff;
+  padding:14px 24px;
+  align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;font-size:15px
+}
+#cookie-banner.cb-visible{display:flex}
+#cookie-banner a{color:var(--gold)}
+#cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
+#cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px){
   .hk-nav{display:none!important}
   .hk-mob-topbar{display:flex!important}
   .hk-bottom-nav{display:flex!important}
   body.page-haiku-dash{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px) + 10px)}
+
+  /* H2: split collapses — photo becomes full-width strip, text below */
+  .hk-split{display:block}
+  .hk-split-photo{min-height:52vw;max-height:260px}
+  .hk-split-text{padding:32px 18px 20px}
+
   .hk-main{padding:36px 18px 60px;max-width:100%;overflow-x:hidden;width:100%}
   .hk-h1{font-size:clamp(26px,7vw,40px)}
   .hk-intro{font-size:17px}
   .hk-world-grid{grid-template-columns:1fr!important}
   .hk-conversion-options{grid-template-columns:1fr!important}
+  .hk-footer-grid{grid-template-columns:1fr!important}
 }
+@media (max-width: 600px){
+  .hk-split{display:block!important;grid-template-columns:1fr!important}
+  .hk-split-photo{min-height:48vw}
+  .hk-split-text{padding:28px 16px 16px}
+  .hk-main{padding:32px 16px 80px}
+  .hk-world-grid,.hk-conversion-options{grid-template-columns:1fr!important}
+  .hk-h1{font-size:clamp(24px,8vw,36px);text-shadow:none}
+  .hk-strip-tile{width:90px}
+}
+@media (max-width: 900px){body.page-haiku-dash{padding-bottom:72px}}
+
+/* focus */
+.hk-cta:focus-visible,.hk-conv-opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </style>
 </head>
 <body class="page-haiku-dash">
+
 {# ── STATE DETERMINATION ── #}
 {% set _n = evals_used or 0 %}
 {% set _rem = evals_remaining or 0 %}
@@ -193,8 +275,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 {% set state_near_limit = _n >= 8 and _n <= 9 %}
 {% set state_conversion = _n >= _lim %}
 
-{# ── NAV ── #}
-
+{# ── MOBILE TOPBAR ── #}
 <div class="hk-mob-topbar">
   <a href="{{ url_for('try_welcome') }}" class="hk-mob-brand">
     <div class="hk-mob-crest">SL</div>
@@ -205,6 +286,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="hk-mob-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
   </div>
 </div>
+
+{# ── DESKTOP NAV ── #}
 <header class="hk-nav">
   <a href="{{ url_for('try_welcome') }}" class="hk-brand">
     <div class="hk-crest">SL</div>
@@ -214,36 +297,126 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {% if _n > 0 %}
     <a href="{{ url_for('try_gallery') }}" class="hk-gallery-link">My evaluations</a>
     {% endif %}
-    {# Evaluation counter dots #}
-    <div class="hk-counter">
-      {% for i in range(_lim) %}
-      <div class="hk-dot {{ '' if i < _n else 'used' }}"></div>
-      {% endfor %}
-      <span class="hk-counter-label">{{ _rem }} remaining</span>
+    {# H3: compact text counter replaces 10-dot loop that overflowed #}
+    <div class="hk-counter-compact">
+      <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations
     </div>
     <a href="{{ url_for('logout') }}" class="hk-gallery-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:36px">Log out</a>
-    <span class="hk-counter-text">{{ _n }}/{{ _lim }}</span>
     <div class="hk-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
   </div>
 </header>
 
+{# ══════════════════════════════════════════════════════════════
+   STATE 1 — ZERO UPLOADS — split layout with hero image left
+   H2: hero_image passed from try_welcome() in app.py
+   App.py change required — see note at bottom of file
+══════════════════════════════════════════════════════════════ #}
+{% if state_zero %}
+
+<div class="hk-split">
+
+  {# LEFT — DB-sourced hero photograph, random per refresh #}
+  <div class="hk-split-photo">
+    {% if hero_image and hero_image.thumb_url %}
+    <img class="hk-split-photo-img"
+         src="{{ hero_image.thumb_url }}"
+         alt="From the League"
+         onerror="this.style.display='none'">
+    <div class="hk-split-photo-overlay"></div>
+    {% else %}
+    <div class="hk-split-photo-fill"></div>
+    {% endif %}
+    <div class="hk-split-photo-meta">
+      <span class="hk-split-photo-caption">From the League</span>
+      {% if hero_image %}
+      <span class="hk-split-photo-badge">{{ hero_image.tier|upper if hero_image.tier else 'MASTER' }} · {{ '%.1f'|format(hero_image.score) if hero_image.score else '8.5' }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# RIGHT — editorial letter #}
+  <div class="hk-split-text">
+    <div class="hk-greet">
+      <span class="sl-hk-greeting">Good {{ greeting_time }},</span>
+      <b>{{ first_name }}.</b>
+    </div>
+
+    <div class="hk-eval-badge">
+      <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining
+    </div>
+
+    <h1 class="hk-h1">The platform does not know your eye yet.</h1>
+
+    <p class="hk-intro">Upload one photograph. The platform will tell you what it sees — across five dimensions, calibrated against the same standard applied to every photographer here. That honest answer is the thing photography has never had.</p>
+
+    <div class="hk-proof">
+      <p>"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
+      <small>Mahesh Iyer · Grandmaster, Shutter League · Standing 105 of 20,000 globally, PhotoCrowd · 37 evaluations, self-motivated</small>
+    </div>
+
+    <a href="{{ url_for('try_page') }}" class="hk-empty">
+      <div>
+        <strong>Your first photograph is waiting.</strong>
+        <span>Perhaps this is where it begins.</span>
+      </div>
+    </a>
+
+    <a href="{{ url_for('try_page') }}" class="hk-cta">
+      Show me what I'm missing →
+      <small>Result in under 2 minutes. No subscription needed.</small>
+    </a>
+    <div class="hk-cta-note">{{ _lim }} free evaluations. No card needed.</div>
+
+    <div class="hk-world">
+      <div class="hk-world-lbl">The League, while you read this</div>
+      <div class="hk-world-grid">
+        <div class="hk-world-item">
+          <div class="hk-world-item-lbl">Calibrated evaluations</div>
+          <div class="hk-world-item-val">312</div>
+          <div class="hk-world-item-sub">Making Images Matter blind sessions</div>
+        </div>
+        <div class="hk-world-item">
+          <div class="hk-world-item-lbl">Top tier reached</div>
+          <div class="hk-world-item-val">9.1</div>
+          <div class="hk-world-item-sub">Grandmaster · Sri Chaitanya</div>
+        </div>
+        <div class="hk-world-item">
+          <div class="hk-world-item-lbl">Annual Excellence Award</div>
+          <div class="hk-world-item-val">2026</div>
+          <div class="hk-world-item-sub">31 December 2026</div>
+        </div>
+        <div class="hk-world-item">
+          <div class="hk-world-item-lbl">Platform standard</div>
+          <div class="hk-world-item-val">Global</div>
+          <div class="hk-world-item-sub">Same standard. Every photographer.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hk-sign" style="margin-top:48px">Shutter League · Making Images Matter</div>
+  </div>{# end hk-split-text #}
+
+</div>{# end hk-split #}
+
+{% else %}
+
+{# ══════════════════════════════════════════════════════════════
+   STATES 2-10 — single column layout (unchanged)
+══════════════════════════════════════════════════════════════ #}
+
 <main class="hk-main">
 
-  {# ── GREETING ── #}
   <div class="hk-greet">
     <span class="sl-hk-greeting">Good {{ greeting_time }},</span>
     <b>{{ first_name }}.</b>
   </div>
 
-  {# ── EVAL COUNTER BADGE ── #}
   <div class="hk-eval-badge">
     <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used
     &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining
   </div>
 
-  {# ══════════════════════════════════════════════════════════════
-     STATE 10 — CONVERSION (checked first — takes over entirely)
-  ══════════════════════════════════════════════════════════════ #}
+  {# ── STATE 10 — CONVERSION ── #}
   {% if state_conversion %}
 
   <div class="hk-conversion">
@@ -252,7 +425,6 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       But they do not yet exist in the Shutter League record. Your standings, your AEA qualification, your calibrated Evolving Eye — none of these have started yet. They start with your next photograph.
     </div>
 
-    {# Thumbnail strip — all their evaluations #}
     {% if _imgs %}
     <div class="hk-strip" style="margin-bottom:32px">
       {% for img in _imgs %}
@@ -289,67 +461,11 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
   <div class="hk-sign">Shutter League · Making Images Matter</div>
 
-  {# ══════════════════════════════════════════════════════════════
-     STATES 1-9 — all non-conversion states
-  ══════════════════════════════════════════════════════════════ #}
-  {% else %}
-
-    {# ── STATE 1 — ZERO UPLOADS — editorial letter ── #}
-    {% if state_zero %}
-
-    <h1 class="hk-h1">The platform does not know your eye yet.</h1>
-
-    <p class="hk-intro">Upload one photograph. The platform will tell you what it sees — across five dimensions, calibrated against the same standard applied to every photographer here. That honest answer is the thing photography has never had.</p>
-
-    <div class="hk-proof">
-      <p>"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
-      <small>Mahesh Iyer · Grandmaster, Shutter League · Rank 105 of 20,000 globally, PhotoCrowd · 37 evaluations, self-motivated</small>
-    </div>
-
-    <a href="{{ url_for('try_page') }}" class="hk-empty" style="text-decoration:none;cursor:pointer">
-      <div>
-        <strong>Your first photograph is waiting.</strong>
-        <span>Perhaps this is where it begins.</span>
-      </div>
-    </div>
-
-    <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Show me what I'm missing →
-      <small>Result in under 2 minutes. No subscription needed.</small>
-    </a>
-    <div class="hk-cta-note">{{ _lim }} free evaluations. No card needed. Result in under 2 minutes.</div>
-
-    {# World outside #}
-    <div class="hk-world">
-      <div class="hk-world-lbl">The League, while you read this</div>
-      <div class="hk-world-grid">
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Calibrated evaluations</div>
-          <div class="hk-world-item-val">312</div>
-          <div class="hk-world-item-sub">Making Images Matter blind sessions</div>
-        </div>
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Top tier reached</div>
-          <div class="hk-world-item-val">9.1</div>
-          <div class="hk-world-item-sub">Grandmaster · Sri Chaitanya</div>
-        </div>
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Annual Excellence Award</div>
-          <div class="hk-world-item-val">2026</div>
-          <div class="hk-world-item-sub">31 December 2026</div>
-        </div>
-        <div class="hk-world-item">
-          <div class="hk-world-item-lbl">Platform standard</div>
-          <div class="hk-world-item-val">Global</div>
-          <div class="hk-world-item-sub">Same standard. Every photographer.</div>
-        </div>
-      </div>
-    </div>
+  {% else %}{# states 2-9 #}
 
     {# ── STATES 2-4 — building ── #}
-    {% elif state_building %}
+    {% if state_building %}
 
-    {# Last evaluation #}
     {% if _last %}
     <div class="hk-last-eval">
       {% if _last.thumb_url %}
@@ -365,7 +481,6 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
     {% endif %}
 
-    {# Thumbnail strip — all evaluations so far #}
     {% if _imgs|length > 1 %}
     <div class="hk-strip">
       {% for img in _imgs %}
@@ -379,7 +494,6 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
     {% endif %}
 
-    {# Strongest dimension in plain English #}
     {% if milestone_strength %}
     <div class="hk-strength">
       <div class="hk-strength-lbl">Your strongest area</div>
@@ -396,12 +510,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# ── STATES 5-9 — milestone ── #}
     {% elif state_milestone %}
 
-    {# Near limit urgency (8-9) #}
     {% if state_near_limit %}
     <div class="hk-urgency">Something is becoming visible.</div>
     {% endif %}
 
-    {# Milestone card with gold border #}
     {% if milestone_strength %}
     <div class="hk-milestone">
       <div class="hk-milestone-kicker">Your pattern</div>
@@ -409,7 +521,6 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
     {% endif %}
 
-    {# Last evaluation #}
     {% if _last %}
     <div class="hk-last-eval">
       {% if _last.thumb_url %}
@@ -425,7 +536,6 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
     {% endif %}
 
-    {# Full thumbnail strip #}
     {% if _imgs %}
     <div class="hk-strip" style="margin-bottom:28px">
       {% for img in _imgs %}
@@ -444,13 +554,15 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
     </a>
 
-    {% endif %}{# end states 1-9 #}
+    {% endif %}{# end states 2-4 vs 5-9 #}
 
     <div class="hk-sign" style="margin-top:48px">Shutter League · Making Images Matter</div>
 
-  {% endif %}{# end conversion vs 1-9 #}
+  {% endif %}{# end conversion vs 2-9 #}
 
 </main>
+
+{% endif %}{# end state_zero vs 2-10 #}
 
 {# ── DARK FOOTER ── #}
 <footer class="hk-footer">
@@ -496,47 +608,27 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 </footer>
-<div id="cookie-banner" role="region" aria-label="Cookie consent">
-  <div class="cb-text">We use cookies to keep you logged in and improve your experience. <a href="/privacy">Learn more</a></div>
-  <div class="cb-actions">
-    <button id="cb-accept" onclick="cbAccept()">Accept</button>
-    <button id="cb-dismiss" onclick="cbAccept()" aria-label="Dismiss">&times;</button>
-  </div>
-</div>
-<style>
-#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
-#cookie-banner.cb-visible{display:flex}
-#cookie-banner a{color:var(--gold)}
-#cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
-#cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
 
-/* ── MOBILE TOPBAR (replaces full nav on mobile) ── */
-.hk-mob-topbar{display:none;height:56px;background:var(--dark);align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:500;border-bottom:1px solid rgba(212,164,40,.15)}
-.hk-mob-brand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
-.hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#D4A428;flex-shrink:0}
-.hk-mob-brandword{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
-.hk-mob-right{display:flex;align-items:center;gap:8px}
-.hk-mob-counter{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
-.hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+{# ── BOTTOM NAV — placed last, z-index:200 above cookie banner:150 ── #}
+<nav class="hk-bottom-nav">
+  <a class="hk-bn-tab on" href="{{ url_for('try_welcome') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <a class="hk-bn-tab" href="{{ url_for('try_page') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Upload
+  </a>
+  <a class="hk-bn-tab" href="{{ url_for('try_gallery') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    My Gallery
+  </a>
+  <a class="hk-bn-tab" href="{{ url_for('logout') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
+</nav>
 
-/* ── MOBILE BOTTOM NAV ── */
-.hk-bottom-nav{display:none;position:fixed;bottom:env(safe-area-inset-bottom,0px);left:0;right:0;height:62px;background:var(--dark);border-top:0.5px solid rgba(255,255,255,.15);justify-content:space-around;align-items:flex-start;padding-top:0;z-index:1000}
-.hk-bn-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.5);text-decoration:none;font-size:11px;font-weight:600;min-width:44px;min-height:44px;padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;letter-spacing:.3px}
-.hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
-.hk-bn-tab.on{color:var(--gold)}
-
-@media(max-width:768px){
-  .hk-nav{display:none!important}
-  .hk-mob-topbar{display:flex!important}
-  .hk-bottom-nav{display:flex!important}
-  body.page-haiku-dash{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px) + 10px)}
-  .hk-main{padding:36px 18px 60px;max-width:100%;overflow-x:hidden;width:100%}
-  .hk-h1{font-size:clamp(26px,7vw,40px)}
-  .hk-intro{font-size:17px}
-  .hk-world-grid{grid-template-columns:1fr!important}
-  .hk-conversion-options{grid-template-columns:1fr!important}
-}
-</style>
 <script>
 (function(){
   if (!localStorage.getItem('sl_cookie_ok')) {
@@ -560,24 +652,29 @@ function cbAccept() {
 })();
 </script>
 
-<nav class="hk-bottom-nav">
-  <a class="hk-bn-tab on" href="{{ url_for('try_welcome') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Home
-  </a>
-  <a class="hk-bn-tab" href="{{ url_for('try_page') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Upload
-  </a>
-  <a class="hk-bn-tab" href="{{ url_for('try_gallery') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-    My Gallery
-  </a>
-  <a class="hk-bn-tab" href="{{ url_for('logout') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Log out
-  </a>
-</nav>
-
 </body>
 </html>
+{#
+APP.PY CHANGE REQUIRED — try_welcome() route must pass hero_image variable.
+Add this block to the try_welcome() route in app.py (staging branch only),
+same pattern as _dash_carousel already in dashboard():
+
+    try:
+        _haiku_hero = (Image.query
+                       .filter(Image.status=='scored', Image.score!=None,
+                               Image.is_public==True, Image.is_flagged==False,
+                               Image.tier.in_(['Legend','Grandmaster','Master']),
+                               Image.score>=8.5,
+                               Image.thumb_url!=None,
+                               Image.width > Image.height,
+                               Image.is_haiku_try.isnot(True))
+                       .order_by(db.func.random())
+                       .limit(1).first())
+    except Exception:
+        _haiku_hero = None
+
+Then add hero_image=_haiku_hero to the render_template() call.
+Cache-Control: no-store already set on try_welcome response (verify).
+NO new DB columns. NO production impact until merge.
+FLAG: this app.py change must be deployed to staging before template is tested live.
+#}
