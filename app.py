@@ -1,3 +1,4 @@
+# SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
 # SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
 # SL-VERSION: 181.39-staging (Session 190, 2026-08-19 — Rule 10 fix: is_haiku_try.isnot(True) ORM calls in weekly_challenge() and challenge_submit() replaced with raw SQL. ORM filter on unmapped column silently fails. RETAINS 181.38.)
@@ -2210,6 +2211,26 @@ def _run_startup_tasks():
             except Exception as _ss_mig:
                 db.session.rollback()
                 print(f'site_settings migration warning: {_ss_mig}')
+
+            # waitlist_international — Session 190
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS waitlist_international ("
+                    "  id         SERIAL PRIMARY KEY,"
+                    "  email      VARCHAR(254) NOT NULL,"
+                    "  country    VARCHAR(100),"
+                    "  created_at TIMESTAMP DEFAULT NOW()"
+                    ")"
+                ))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_waitlist_intl_email "
+                    "ON waitlist_international (email)"
+                ))
+                db.session.commit()
+                print('waitlist_international table OK.')
+            except Exception as _wl_mig:
+                db.session.rollback()
+                print(f'waitlist_international migration warning: {_wl_mig}')
 
             # S168 — backfill unsubscribe tokens for existing users
             try:
@@ -15651,6 +15672,72 @@ def admin_check_peer_queue():
     '''
 
 
+
+
+@app.route('/admin/international-waitlist')
+@login_required
+def admin_international_waitlist():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    rows = db.session.execute(
+        db.text(
+            "SELECT id, email, country, created_at "
+            "FROM waitlist_international "
+            "ORDER BY created_at DESC"
+        )
+    ).fetchall()
+    total = len(rows)
+    countries = {}
+    for r in rows:
+        c = r[2] or 'Unknown'
+        countries[c] = countries.get(c, 0) + 1
+    countries_sorted = sorted(countries.items(), key=lambda x: x[1], reverse=True)
+    html = """<!DOCTYPE html><html><head><title>International Waitlist</title>
+<style>body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a18;padding:32px;max-width:1000px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:4px}.meta{font-size:14px;color:#888;margin-bottom:24px}
+.actions{display:flex;gap:12px;margin-bottom:24px}.btn{padding:8px 16px;font-size:14px;font-weight:600;border-radius:6px;text-decoration:none}
+.btn-primary{background:#2C3E6B;color:#fff;border:none}.btn-secondary{background:#f0ede8;color:#333;border:1px solid #ddd}
+.ctag{background:#fff;border:1px solid #E0D8C8;border-radius:4px;padding:3px 10px;font-size:13px;margin:3px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;margin-top:16px}
+th{background:#f0ede8;padding:10px 14px;text-align:left;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888}
+td{padding:10px 14px;border-bottom:1px solid #f0ede8;font-size:14px}tr:last-child td{border-bottom:none}</style></head>
+<body><h1>International Waitlist</h1>
+<div class=meta>%(total)s photographer%(s)s registered</div>
+<div class=actions><a href=/admin/international-waitlist/export class="btn btn-primary">Export CSV</a>
+<a href=/admin class="btn btn-secondary">Back to Admin</a></div>"""
+    html += "<div style='margin-bottom:16px'>"
+    for c, n in countries_sorted:
+        html += f'<span class=ctag>{c} ({n})</span>'
+    html += "</div>"
+    html += """<table><thead><tr><th>#</th><th>Email</th><th>Country</th><th>Registered</th></tr></thead><tbody>"""
+    for r in rows:
+        dt = r[3].strftime('%d %b %Y %H:%M') if r[3] else '—'
+        html += f'<tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2] or "—"}</td><td>{dt}</td></tr>'
+    if not rows:
+        html += '<tr><td colspan=4 style="text-align:center;color:#aaa;padding:32px">No registrations yet.</td></tr>'
+    html += "</tbody></table></body></html>"
+    return html % {'total': total, 's': 's' if total != 1 else ''}
+
+
+@app.route('/admin/international-waitlist/export')
+@login_required
+def admin_international_waitlist_export():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    import csv, io
+    rows = db.session.execute(
+        db.text("SELECT email, country, created_at FROM waitlist_international ORDER BY created_at DESC")
+    ).fetchall()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Email', 'Country', 'Registered At'])
+    for r in rows:
+        writer.writerow([r[0], r[1] or '', r[2].strftime('%Y-%m-%d %H:%M:%S') if r[2] else ''])
+    output.seek(0)
+    from flask import Response
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=international_waitlist.csv'})
+
 @app.route('/admin')
 @login_required
 @admin_required
@@ -21092,7 +21179,7 @@ def contest_enter_monthly(genre):
 def api_international_waitlist():
     """
     Collect email + country from photographers outside India.
-    Stored in contact_messages with category='international_waitlist'.
+    Stored in waitlist_international table.
     No auth required — anyone can register interest.
     """
     try:
@@ -21101,24 +21188,28 @@ def api_international_waitlist():
         country = (data.get('country', '') or '').strip()[:100]
         if not email or '@' not in email:
             return jsonify({'error': 'Valid email required'}), 400
-        db.session.execute(
-            db.text(
-                "INSERT INTO contact_messages (name, email, message, created_at) "
-                "VALUES (:name, :email, :message, NOW())"
-            ),
-            {
-                'name':    f'International Waitlist — {country}',
-                'email':   email,
-                'message': f'International payment waitlist. Country: {country}. Email: {email}',
-            }
-        )
-        db.session.commit()
-        app.logger.info(f'[intl_waitlist] {email} — {country}')
+        # Deduplicate — ignore if email already on waitlist
+        existing = db.session.execute(
+            db.text("SELECT id FROM waitlist_international WHERE email = :email"),
+            {'email': email}
+        ).fetchone()
+        if not existing:
+            db.session.execute(
+                db.text(
+                    "INSERT INTO waitlist_international (email, country, created_at) "
+                    "VALUES (:email, :country, NOW())"
+                ),
+                {'email': email, 'country': country}
+            )
+            db.session.commit()
+            app.logger.info(f'[intl_waitlist] new: {email} — {country}')
+        else:
+            app.logger.info(f'[intl_waitlist] duplicate ignored: {email}')
         return jsonify({'ok': True})
     except Exception as e:
         app.logger.error(f'[intl_waitlist] failed: {e}')
         db.session.rollback()
-        return jsonify({'ok': True})  # Silent fail — don't alarm the user
+        return jsonify({'ok': True})
 
 
 
