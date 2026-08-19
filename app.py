@@ -1,3 +1,4 @@
+# SL-VERSION: 181.35-staging (Session 190, 2026-08-19 — try_welcome() FOUR FIXES: (1) evals_remaining: was "remaining", template needs "evals_remaining" — silent zero on remaining count. (2) images: not passed — all users saw State 1 regardless of uploads. (3) milestone_strength: not passed — States 5-9 blank. (4) hero_image: new — random Master+ landscape for HAIKU-178.0 split panel. Raw SQL throughout. make_response + Cache-Control:no-store added. RETAINS 181.34.)
 # SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
 # SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings public standings page. No login required. Paid photographers only, Haiku images excluded. Raw SQL for thumb_url. Template: leaderboard_public.html. RETAINS 181.32-staging.)
 # SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
@@ -32054,42 +32055,119 @@ def try_gallery():
 @app.route('/try/welcome')
 @login_required
 def try_welcome():
-    # SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE: /try/welcome
-    # Renders dashboard_haiku.html for new free users BEFORE they hit the upload page.
-    # Free user journey: /dashboard → /try/welcome (Haiku dashboard) → /try (upload).
-    # Paid users who somehow land here are redirected to /dashboard.)
+    # SL-VERSION: 181.35-staging (Session 190, 2026-08-19 — FOUR FIXES:
+    # (1) evals_remaining: was passed as 'remaining', template expects 'evals_remaining' — silent zero.
+    # (2) images: was not passed — template showed State 1 for all users regardless of uploads.
+    # (3) milestone_strength: was not passed — States 5-9 milestone copy was always blank.
+    # (4) hero_image: new variable for HAIKU-178.0 split left panel — random Master+ landscape from DB.
+    # Pattern: raw SQL throughout per Rule 10. Mirrors try_gallery() and dashboard() carousel patterns.
+    # RETAINS 181.34.)
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
         return redirect(url_for('dashboard'))
 
-    from engine.scoring import GENRE_CHOICES
-    _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-    _haiku_row = db.session.execute(
-        db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
-        {'uid': current_user.id}
-    ).scalar()
-    evals_used = int(_haiku_row or 0)
-    FREE_LIMIT = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     try:
-        from app import FREE_IMAGE_LIMIT as _FIL
+        _FIL = FREE_IMAGE_LIMIT
     except Exception:
         _FIL = 10
-    remaining = max(0, _FIL + _bonus - evals_used)
 
-    first_name = ''
-    if getattr(current_user, 'full_name', None):
-        first_name = current_user.full_name.split()[0]
-    elif getattr(current_user, 'username', None):
-        first_name = current_user.username
+    # Gate count — permanent, never decrements on delete (from log)
+    _gate_count = int(db.session.execute(
+        db.text(
+            "SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE)"
+            " + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"
+        ),
+        {'uid': current_user.id}
+    ).scalar() or 0)
 
-    return render_template(
+    # Live scored images — for thumbnail strip, state detection
+    _rows = db.session.execute(
+        db.text(
+            "SELECT id, score, tier, genre, thumb_url "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+            "ORDER BY id DESC"
+        ),
+        {'uid': current_user.id}
+    ).fetchall()
+    _images = [
+        {
+            'id':       _r[0],
+            'score':    float(_r[1]) if _r[1] else None,
+            'tier':     _r[2] or '',
+            'genre':    _r[3] or '',
+            'thumb_url': _r[4] or '',
+        }
+        for _r in _rows
+    ]
+    evals_used      = len(_images)
+    evals_remaining = max(0, (_FIL + _bonus) - _gate_count)
+
+    # milestone_strength — most common strength_name across history (evals 5+)
+    # Zero API cost — DB only. Same pattern as try_result().
+    _milestone_strength = ''
+    if evals_used >= 5:
+        try:
+            import json as _msj
+            from collections import Counter as _Ctr
+            _ms_rows = db.session.execute(
+                db.text(
+                    "SELECT audit_json FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id DESC LIMIT 10"
+                ),
+                {'uid': current_user.id}
+            ).fetchall()
+            _snames = []
+            for _mr in _ms_rows:
+                try:
+                    _sn = _msj.loads(_mr[0] or '{}').get('strength_name', '')
+                    if _sn:
+                        _snames.append(_sn)
+                except Exception:
+                    pass
+            if _snames:
+                _milestone_strength = _Ctr(_snames).most_common(1)[0][0]
+        except Exception as _mse:
+            app.logger.warning(f'[try_welcome] milestone_strength failed: {_mse}')
+
+    # Hero image — random Master/Grandmaster/Legend, score>=8.5, landscape, not haiku
+    # Same query pattern as _dash_carousel in dashboard(). Raw SQL per Rule 10.
+    _hero = None
+    try:
+        _hero_row = db.session.execute(
+            db.text(
+                "SELECT thumb_url, score, tier FROM images "
+                "WHERE status = 'scored' AND score IS NOT NULL "
+                "AND is_public = TRUE AND is_flagged = FALSE "
+                "AND tier IN ('Legend','Grandmaster','Master') "
+                "AND score >= 8.5 AND thumb_url IS NOT NULL "
+                "AND width > height "
+                "AND (is_haiku_try IS NOT TRUE) "
+                "ORDER BY RANDOM() LIMIT 1"
+            )
+        ).fetchone()
+        if _hero_row:
+            from types import SimpleNamespace as _SN
+            _hero = _SN(
+                thumb_url = _hero_row[0],
+                score     = float(_hero_row[1]),
+                tier      = _hero_row[2],
+            )
+    except Exception as _he:
+        app.logger.warning(f'[try_welcome] hero_image failed: {_he}')
+
+    resp = make_response(render_template(
         'dashboard_haiku.html',
-        first_name    = first_name,
-        evals_used    = evals_used,
-        remaining     = remaining,
-        limit         = _FIL + _bonus,
-        upload_url    = url_for('try_page'),
-        gallery_url   = url_for('try_gallery'),
-    )
+        evals_used         = evals_used,
+        evals_remaining    = evals_remaining,
+        limit              = _FIL + _bonus,
+        images             = _images,
+        milestone_strength = _milestone_strength,
+        hero_image         = _hero,
+    ))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp
 
 
 @app.route('/try')
