@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.24-staging (Session 190, 2026-08-19 — CARDS: dc-title 13px→16px, dc-sub 12px→14px, dc-link 12px→13px. Cards fill left col height via align-content:stretch + hk-dc flex-col. RETAINS HAIKU-178.23.)
 {# SL-VERSION: HAIKU-178.23-staging (Session 190, 2026-08-19 — THREE FINAL FIXES: (1) Desktop nav: How it works/Science/Programmes/Pricing added. (2) Logo: img tag replacing SL text crest — uses same static path as base.html. (3) Discovery cards moved from full-width hk-disc section into LEFT column under hero image — left col is now flex-col photo+cards, split becomes 2-col grid left+right. RETAINS HAIKU-178.22.)
 {# SL-VERSION: HAIKU-178.22-staging (Session 190, 2026-08-19 — RIGHT PANEL FONTS: greeting 15px→17px, name 32px→38px, eval badge 15px→16px, headline clamp up, intro 19px→21px, proof 17px→18px. RETAINS HAIKU-178.21.)
 {# SL-VERSION: HAIKU-178.21-staging (Session 190, 2026-08-19 — SPACING: right panel justify-content:space-between, eval badge margin-bottom:20px, headline margin-bottom:12px, proof quote added below CTA, stat strip anchored at bottom. CTA moves down naturally. RETAINS HAIKU-178.20.)
@@ -71,7 +72,7 @@ body.page-haiku-dash{
 /* ── H2: SPLIT HERO (State 1 desktop) ── */
 .hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%;border-top:1px solid var(--line)}
 .hk-split-left{display:flex;flex-direction:column}
-.hk-split-cards{background:var(--paper);border-top:1px solid var(--line);padding:16px 20px;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
+.hk-split-cards{background:var(--paper);border-top:1px solid var(--line);padding:20px 24px;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:stretch}
 .hk-split-cards-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;grid-column:1/-1}
 .hk-split-photo{background:var(--dark);position:relative;overflow:hidden}
 .hk-split-photo-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
@@ -189,12 +190,12 @@ body.page-haiku-dash{
 .hk-disc{background:var(--paper);border-top:1px solid var(--line);padding:24px 28px}
 .hk-disc-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
 .hk-disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hk-dc{background:#fff;border:1px solid var(--line);border-radius:3px;padding:12px 14px}
+.hk-dc{background:#fff;border:1px solid var(--line);border-radius:3px;padding:16px 18px;display:flex;flex-direction:column}
 .hk-dc.accent{border-left:3px solid var(--gold)}
 .hk-dc.blue{border-left:3px solid var(--blue);background:#EEF2FF}
-.hk-dc-title{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;line-height:1.4}
-.hk-dc-sub{font-size:12px;color:var(--muted);line-height:1.5}
-.hk-dc-link{font-size:12px;color:var(--blue);font-weight:600;margin-top:6px;display:block;text-decoration:none}
+.hk-dc-title{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:6px;line-height:1.35}
+.hk-dc-sub{font-size:14px;color:var(--muted);line-height:1.6;flex:1}
+.hk-dc-link{font-size:13px;color:var(--blue);font-weight:600;margin-top:8px;display:block;text-decoration:none}
 .hk-dc-link:hover{text-decoration:underline}
 
 /* ── VISUAL GALLERY STRIP ── */
