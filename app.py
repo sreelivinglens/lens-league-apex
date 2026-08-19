@@ -1,3 +1,4 @@
+# SL-VERSION: 181.39-staging (Session 190, 2026-08-19 — Rule 10 fix: is_haiku_try.isnot(True) ORM calls in weekly_challenge() and challenge_submit() replaced with raw SQL. ORM filter on unmapped column silently fails. RETAINS 181.38.)
 # SL-VERSION: 181.38-staging (Session 190, 2026-08-19 — try_welcome() hero query: adds width+height to SELECT so template can compute container aspect ratio. is_portrait flag computed in Python. RETAINS 181.37.)
 # SL-VERSION: 181.37-staging (Session 190, 2026-08-19 — CHALLENGE GATE: (1) weekly_challenge(): Haiku users get read-only view (can_submit=False, slot_limit=0); Haiku images excluded from top_subs display. (2) challenge_submit(): Haiku users redirected immediately with flash; paid-only; Haiku images excluded from eligible_images picker; extra guard on POST to reject is_haiku_try images. Rule: Haiku images never enter challenge pool. RETAINS 181.36.)
 # SL-VERSION: 181.36-staging (Session 190, 2026-08-19 — try_welcome() hero query: removed width>height filter. Portrait images now serve — container uses object-fit:contain so both orientations letterbox/pillarbox correctly. RETAINS 181.35.)
@@ -21251,12 +21252,17 @@ def weekly_challenge():
                                slot_limit=0, can_submit=False, is_haiku_user=False)
 
     # Top submissions — Haiku images excluded per standing rule (never enter challenge pool)
-    top_subs = (WeeklySubmission.query
-                .filter_by(challenge_id=challenge.id)
-                .join(Image, WeeklySubmission.image_id == Image.id)
-                .filter(Image.score != None, Image.is_haiku_try.isnot(True))
-                .order_by(Image.score.desc())
-                .limit(20).all())
+    # Raw SQL per Rule 10 — is_haiku_try is unmapped, ORM filter silently fails
+    _top_sub_rows = db.session.execute(db.text(
+        "SELECT ws.id FROM weekly_submissions ws "
+        "JOIN images i ON ws.image_id = i.id "
+        "WHERE ws.challenge_id = :cid "
+        "AND i.score IS NOT NULL "
+        "AND (i.is_haiku_try IS NOT TRUE) "
+        "ORDER BY i.score DESC LIMIT 20"
+    ), {'cid': challenge.id}).fetchall()
+    _top_sub_ids = [r[0] for r in _top_sub_rows]
+    top_subs = WeeklySubmission.query.filter(WeeklySubmission.id.in_(_top_sub_ids)).all() if _top_sub_ids else []
 
     user_subs = []
     slots_used = 0
@@ -21362,13 +21368,18 @@ def challenge_submit():
         s.image_id for s in WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, user_id=current_user.id).all()
     ]
-    eligible_images = (Image.query
-        .filter_by(user_id=current_user.id, status='scored')
-        .filter(Image.score != None, Image.is_flagged == False,
-                Image.is_haiku_try.isnot(True))
-        .filter(Image.id.notin_(already_submitted_ids) if already_submitted_ids else db.true())
-        .order_by(Image.score.desc())
-        .all())
+    # Raw SQL per Rule 10 — is_haiku_try is unmapped, ORM .isnot() silently fails
+    _excl = tuple(already_submitted_ids) if already_submitted_ids else (0,)
+    _elig_rows = db.session.execute(db.text(
+        "SELECT id FROM images "
+        "WHERE user_id = :uid AND status = 'scored' "
+        "AND score IS NOT NULL AND is_flagged = FALSE "
+        "AND (is_haiku_try IS NOT TRUE) "
+        "AND id NOT IN :excl "
+        "ORDER BY score DESC"
+    ), {'uid': current_user.id, 'excl': _excl}).fetchall()
+    _elig_ids = [r[0] for r in _elig_rows]
+    eligible_images = Image.query.filter(Image.id.in_(_elig_ids)).order_by(Image.score.desc()).all() if _elig_ids else []
 
     return render_template('challenge_submit.html',
         challenge=challenge,
