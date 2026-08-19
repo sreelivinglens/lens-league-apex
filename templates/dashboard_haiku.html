@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.1-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Hero image container: object-fit:contain + black background so portrait/landscape images letterbox/pillarbox correctly — no cropping. (2) Mobile text truncation: overflow-x:hidden on body and hk-split-text, explicit width:100% on split children. (3) Mobile bottom nav: min-width:0 + flex-shrink on tabs so 4th tab never overflows on narrow screens. RETAINS HAIKU-178.0.) #}
 {# SL-VERSION: HAIKU-178.0-staging (Session 190, 2026-08-19 — FIVE FIXES: (1) H1: Mobile bottom nav rendering — consolidated duplicate style blocks, cookie banner z-index lifted above bottom nav so banner no longer covers nav on first load. (2) H2: Split-image left panel on State 1 — DB-sourced hero_image variable (Master/Grandmaster/Legend, score>=8.5, random per refresh), same pattern as paid dashboard _dash_carousel. Mobile: image collapses to full-width strip. States 2-10 unchanged single-column. (3) H3: Desktop nav dots overflow — replaced 10-dot loop with compact "X of Y" text counter on desktop, matching mobile pattern already in place. (4) H4: Line spacing lifted — body line-height 1.65->1.75, card padding 22px->28px desktop, section gap 16px->20px. (5) H5: Mobile tap response — removed transition from hk-bn-tab:active, added will-change:transform. RETAINS HAIKU-177.4.) #}
 {# SL-VERSION: HAIKU-177.4-staging (Session 189, 2026-08-19 — Footer: full 188M footer with Company/Legal columns. Desktop nav counter overflow fix. RETAINS HAIKU-177.3.) #}
 {# SL-VERSION: HAIKU-176.1-staging (Session 189, 2026-08-18 — FULL REBUILD. Haiku free dashboard. 10 states. Design tokens: --dark #0F1F3D, --cream #FEFCF8, --paper #F5F0E8, --blue #2C3E6B, --gold #D4A428. Aptos font. KYC clean. 16px+ body. 44px tap targets. Mobile and iPad breakpoints.) #}
@@ -20,9 +21,9 @@
 body.page-haiku-dash{
   background:var(--cream);color:var(--ink);
   font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;
-  font-size:17px;line-height:1.75;/* H4: 1.65->1.75 */
+  font-size:17px;line-height:1.75;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  overflow-x:hidden;width:100%
+  overflow-x:hidden;width:100%;max-width:100vw
 }
 
 /* ── DESKTOP NAV ── */
@@ -46,9 +47,9 @@ body.page-haiku-dash{
 .hk-counter-compact b{color:#fff;font-weight:700}
 
 /* ── H2: SPLIT HERO (State 1 desktop) ── */
-.hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 64px);min-height:calc(100dvh - 64px);align-items:stretch}
-.hk-split-photo{background:var(--dark);position:relative;overflow:hidden;min-height:480px}
-.hk-split-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 64px);min-height:calc(100dvh - 64px);align-items:stretch;overflow:hidden;width:100%}
+.hk-split-photo{background:#000;position:relative;overflow:hidden;min-height:480px}
+.hk-split-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#000}
 .hk-split-photo-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,31,61,.35) 0%,rgba(6,14,28,.6) 100%)}
 .hk-split-photo-meta{
   position:absolute;left:0;right:0;bottom:0;
@@ -68,7 +69,8 @@ body.page-haiku-dash{
 }
 .hk-split-text{
   display:flex;flex-direction:column;justify-content:center;
-  padding:8vh 7vw 8vh 6vw;background:var(--cream)
+  padding:8vh 7vw 8vh 6vw;background:var(--cream);
+  overflow-x:hidden;min-width:0;box-sizing:border-box
 }
 
 /* ── MAIN (States 2-10 single column) ── */
@@ -179,23 +181,25 @@ body.page-haiku-dash{
 .hk-bottom-nav{
   display:none;position:fixed;
   bottom:env(safe-area-inset-bottom,0px);
-  left:0;right:0;height:62px;
+  left:0;right:0;width:100%;height:62px;
   background:var(--dark);
   border-top:0.5px solid rgba(255,255,255,.15);
   justify-content:space-around;align-items:flex-start;
-  padding-top:0;z-index:200/* lifted above cookie banner */
+  padding-top:0;z-index:200;
+  overflow:hidden;box-sizing:border-box
 }
 .hk-bn-tab{
   display:flex;flex-direction:column;align-items:center;gap:3px;
   color:rgba(255,255,255,.5);text-decoration:none;
   font-size:11px;font-weight:600;
-  min-width:44px;min-height:44px;
-  padding-top:10px;padding-bottom:4px;padding-left:8px;padding-right:8px;
+  min-width:0;flex:1;min-height:44px;
+  padding-top:10px;padding-bottom:4px;padding-left:4px;padding-right:4px;
   background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;letter-spacing:.3px;
-  will-change:transform;/* H5 */
-  transition:color .15s/* colour transition kept, scale removed from active */
+  will-change:transform;
+  transition:color .15s;
+  overflow:hidden
 }
 .hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
 .hk-bn-tab.on{color:var(--gold)}
