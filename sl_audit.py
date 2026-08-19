@@ -625,17 +625,24 @@ def audit_html(filepath):
             if result: _ok(label)
             else: _fail(label); fails += 1
 
-    # ── Fonts ─────────────────────────────────────────────────────────────────
+    # -- Fonts
+    # Approved SL font: Aptos (188M design language, Session 189+). Updated Session 190.
     _section('Fonts')
     if _is_detail_page:
-        _note('Font override checks skipped — detail page uses base.html font stack')
+        _note('Font override checks skipped -- detail page uses base.html font stack')
     else:
-        checks = [
-            ('Inter font only -- !important override', "font-family: 'Inter', sans-serif !important" in content),
-            ('No Georgia in page CSS',                'Georgia' not in content.split('{% block content %}')[0]),
-            ('No JetBrains Mono in page CSS',         'JetBrains' not in content.split('{% block content %}')[0]),
-        ]
-        for label, result in checks:
+        _has_aptos = 'Aptos' in content
+        _has_inter = "font-family: 'Inter', sans-serif !important" in content or ("font-family: 'Inter'" in content and not _has_aptos)
+        if _has_inter:
+            _fail('Inter font found -- replace with Aptos per 188M design language'); fails += 1
+        elif _has_aptos:
+            _ok('Aptos font confirmed -- approved 188M design language')
+        else:
+            _note('No explicit font-family -- verify Aptos via base.html or CSS var')
+        for label, result in [
+            ('No Georgia in page CSS',        'Georgia' not in content),
+            ('No JetBrains Mono in page CSS', 'JetBrains' not in content),
+        ]:
             if result: _ok(label)
             else: _fail(label); fails += 1
 
@@ -1687,6 +1694,52 @@ def audit_apppy(filepath):
         _note(f'{len(kyc_fails_app)} term(s) above are likely admin flash messages -- review manually if deploying after KYC submission')
     else:
         _ok('No KYC terms in flash messages or render_template context strings')
+
+    # -- Haiku isolation checks (Session 190, Rule 10)
+    _section('Haiku isolation (Rule 10 - raw SQL only for unmapped columns)')
+    _orm_haiku = [l.strip()[:80] for l in lines if 'is_haiku_try' in l and '.filter(' in l and 'db.text' not in l and not l.strip().startswith('#')]
+    if _orm_haiku:
+        _fail('ORM filter on is_haiku_try (' + str(len(_orm_haiku)) + ' hit(s)) - use raw SQL Rule 10: ' + _orm_haiku[0]); fails += 1
+    else:
+        _ok('is_haiku_try: raw SQL only (Rule 10 clean)')
+    _orm_thumb = [l.strip()[:80] for l in lines if 'thumb_url' in l and '.like(' in l and not l.strip().startswith('#')]
+    if _orm_thumb:
+        _fail('ORM .like() on thumb_url - use raw SQL Rule 10: ' + _orm_thumb[0]); fails += 1
+    else:
+        _ok('thumb_url: no ORM .like() (Rule 10 clean)')
+
+    # -- try_welcome() route integrity (Session 190)
+    _section('try_welcome() route integrity (Session 190)')
+    _tw_i = next((i for i,l in enumerate(lines) if 'def try_welcome' in l), None)
+    if _tw_i is not None:
+        _tw_end = next((i for i in range(_tw_i+1, len(lines)) if lines[i].startswith('@app') or (lines[i].startswith('def ') and 'try_welcome' not in lines[i])), len(lines))
+        _tw_src = ''.join(lines[_tw_i:_tw_end])
+        for _v in ['evals_remaining', 'images', 'milestone_strength', 'hero_image']:
+            if _v in _tw_src: _ok('try_welcome() passes ' + _v)
+            else: _fail('try_welcome() missing variable: ' + _v); fails += 1
+        if 'Cache-Control' in _tw_src or 'no-store' in _tw_src:
+            _ok('try_welcome() sets Cache-Control: no-store')
+        else:
+            _fail('try_welcome() missing Cache-Control: no-store - hero may be cached'); fails += 1
+    else:
+        _note('try_welcome() not found - verify route exists')
+
+    # -- Challenge gate (Session 190)
+    _section('Challenge gate (Session 190 - Haiku users blocked from submit)')
+    _cs_i = next((i for i,l in enumerate(lines) if 'def challenge_submit' in l), None)
+    if _cs_i is not None:
+        _cs_end = next((i for i in range(_cs_i+1, len(lines)) if lines[i].startswith('@app') or (lines[i].startswith('def ') and 'challenge_submit' not in lines[i])), len(lines))
+        _cs_src = ''.join(lines[_cs_i:_cs_end])
+        if 'is_subscribed' in _cs_src and ('redirect' in _cs_src or 'flash' in _cs_src):
+            _ok('challenge_submit() gates unsubscribed (Haiku) users')
+        else:
+            _fail('challenge_submit() does not gate Haiku users'); fails += 1
+        if 'is_haiku_try' in _cs_src:
+            _ok('challenge_submit() excludes is_haiku_try images')
+        else:
+            _fail('challenge_submit() Haiku images not excluded from eligible picker'); fails += 1
+    else:
+        _note('challenge_submit() not found in this file')
 
     # ── MIM integrity checks (S167) ───────────────────────────────────────────
     # These 7 checks run only on mim-app.py. They fire as a gate before every
