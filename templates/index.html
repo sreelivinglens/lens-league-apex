@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.22-staging (Session 190, 2026-08-19 — NAV: full discovery links added — How it works/Science/Contests/Pricing/League of Photographers. Why/About anchor links removed — content is below fold, nav should drive to pages not anchors. Auth-aware right: logged-in paid→Dashboard, Haiku→My evaluations+Upload, logged-out→Login+Register. RETAINS 182.21.)
 {# SL-VERSION: 182.21-staging (Session 189, 2026-08-18 — NAV: "The League" now links to /standings public standings page. RETAINS 182.20.) #}
 {# SL-VERSION: 182.20-staging (Session 189, 2026-08-18 — GALLERY: "The League" kicker → "League of Photographers". Thumbnail overlays now show score + tier + photographer name. ph-badge replaced with score+name overlay. Thumbnails link to /standings. RETAINS 182.19.) #}
 {# SL-VERSION: 182.19-staging (Session 189, 2026-08-18 — NAV: "Start" renamed to "Register" for clarity. RETAINS 182.18.) #}
@@ -46,7 +47,7 @@ button{font:inherit;cursor:pointer}
 .crest{width:30px;height:30px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0;letter-spacing:.5px}
 .brandword{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
 .byline{font-size:13px;color:var(--muted);margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
-.navlinks{display:flex;gap:24px;align-items:center;color:var(--muted);font-size:15px}
+.navlinks{display:flex;gap:16px;align-items:center;color:var(--muted);font-size:14px}
 .navlinks a{transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .navlinks a:hover{color:var(--blue)}
 .navlogin{color:var(--blue);font-weight:600;font-size:16px}
@@ -216,11 +217,18 @@ body,html{overflow-x:hidden;max-width:100%}
     <span class="byline">Making Images Matter</span>
   </a>
   <div class="navlinks">
-    <a href="#why" class="navsection">Why</a>
-    <a href="{{ url_for('standings_public') }}" class="navsection">The League</a>
-    <a href="#about" class="navsection">About</a>
+    <a href="{{ url_for('how_it_works') }}" class="navsection">How it works</a>
+    <a href="{{ url_for('science') }}" class="navsection">Science</a>
+    <a href="{{ url_for('contests') }}" class="navsection">Programmes</a>
+    <a href="{{ url_for('pricing') }}" class="navsection">Pricing</a>
+    <a href="{{ url_for('standings_public') }}" class="navsection">League of Photographers</a>
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard') }}" class="navstart">Dashboard →</a>
+      {% if current_user.is_subscribed or current_user.role == 'admin' %}
+        <a href="{{ url_for('dashboard') }}" class="navstart">My dashboard →</a>
+      {% else %}
+        <a href="{{ url_for('try_welcome') }}" class="navlogin">My evaluations</a>
+        <a href="{{ url_for('try_page') }}" class="navstart">Upload →</a>
+      {% endif %}
     {% else %}
       <a href="{{ url_for('login') }}" class="navlogin">Login</a>
       <a href="{{ url_for('register') }}" class="navstart">Register</a>
