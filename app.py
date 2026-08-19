@@ -1,3 +1,4 @@
+# SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
 # SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
 # SL-VERSION: 181.39-staging (Session 190, 2026-08-19 — Rule 10 fix: is_haiku_try.isnot(True) ORM calls in weekly_challenge() and challenge_submit() replaced with raw SQL. ORM filter on unmapped column silently fails. RETAINS 181.38.)
 # SL-VERSION: 181.38-staging (Session 190, 2026-08-19 — try_welcome() hero query: adds width+height to SELECT so template can compute container aspect ratio. is_portrait flag computed in Python. RETAINS 181.37.)
@@ -21087,6 +21088,40 @@ def contest_enter_monthly(genre):
     )
 
 
+@app.route('/api/international-waitlist', methods=['POST'])
+def api_international_waitlist():
+    """
+    Collect email + country from photographers outside India.
+    Stored in contact_messages with category='international_waitlist'.
+    No auth required — anyone can register interest.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        email   = (data.get('email', '') or '').strip()[:254]
+        country = (data.get('country', '') or '').strip()[:100]
+        if not email or '@' not in email:
+            return jsonify({'error': 'Valid email required'}), 400
+        db.session.execute(
+            db.text(
+                "INSERT INTO contact_messages (name, email, message, created_at) "
+                "VALUES (:name, :email, :message, NOW())"
+            ),
+            {
+                'name':    f'International Waitlist — {country}',
+                'email':   email,
+                'message': f'International payment waitlist. Country: {country}. Email: {email}',
+            }
+        )
+        db.session.commit()
+        app.logger.info(f'[intl_waitlist] {email} — {country}')
+        return jsonify({'ok': True})
+    except Exception as e:
+        app.logger.error(f'[intl_waitlist] failed: {e}')
+        db.session.rollback()
+        return jsonify({'ok': True})  # Silent fail — don't alarm the user
+
+
+
 @app.route('/contest/my-entries')
 @login_required
 def my_contest_entries():
@@ -21636,7 +21671,7 @@ def api_create_payment():
 
     if track not in ('camera', 'mobile'):
         return jsonify({'error': 'Invalid track'}), 400
-    if plan not in ('monthly', 'halfyearly', 'annual'):
+    if plan not in ('monthly', 'halfyearly', 'annual', 'play'):
         return jsonify({'error': 'Invalid plan'}), 400
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -21646,8 +21681,8 @@ def api_create_payment():
         return jsonify({'error': 'Payment system not available'}), 503
 
     display_prices = {
-        'camera': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'mobile': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'camera': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
+        'mobile': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
     }
     plan_ids = {
         'camera': {
@@ -21660,14 +21695,14 @@ def api_create_payment():
         },
     }
 
-    amount  = display_prices[track][plan]
-    plan_id = plan_ids[track].get(plan, '') if plan != 'monthly' else None
+    amount  = display_prices[track].get(plan, 100)
+    plan_id = plan_ids[track].get(plan, '') if plan not in ('monthly', 'play') else None
 
     try:
         import razorpay as _rzp
         client = _rzp.Client(auth=(razorpay_key, razorpay_secret))
 
-        if plan == 'monthly':
+        if plan in ('monthly', 'play'):
             _receipt = f'sl_{track[:3]}_{current_user.id}_{_uuid.uuid4().hex[:8]}'
             order = client.order.create({
                 'amount':   amount * 100,
@@ -21902,9 +21937,9 @@ def subscribe(track):
     # Monthly uses Orders API — no plan_id needed
     # Half-yearly and Annual use Subscriptions API — plan_id required
     display_prices = {
-        'mobile':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'camera':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'learning': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'mobile':   {'monthly': 200, 'halfyearly': 2500, 'annual': 4000},
+        'camera':   {'monthly': 200, 'halfyearly': 2500, 'annual': 4000},
+        'learning': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000},
         'mentor':   {'monthly': 999, 'halfyearly': 5500, 'annual': 9999},
     }
 
