@@ -1,3 +1,4 @@
+{# SL-VERSION: HAIKU-178.11-staging (Session 190, 2026-08-19 — GESTALT v2: photo panel gets padding-top:3vh to match text panel top, so image top edge aligns with greeting. Also reduced gap between greeting and eval badge. RETAINS HAIKU-178.10.)
 {# SL-VERSION: HAIKU-178.10-staging (Session 190, 2026-08-19 — GESTALT ALIGNMENT: split text panel top padding reduced 8vh→3vh so greeting aligns with image top. Both panels now share same visual start point. Gestalt alignment principle. RETAINS HAIKU-178.9.)
 {# SL-VERSION: HAIKU-178.9-staging (Session 190, 2026-08-19 — FOOTER: matched to homepage 188M footer exactly. padding:56px 48px 28px, gap:32px, max-width:1200px, link font-size:15px, margin-bottom:9px, no min-height on links. RETAINS HAIKU-178.8.)
 {# SL-VERSION: HAIKU-178.8-staging (Session 190, 2026-08-19 — HERO ALIGN: photo panel uses flex+center so image aligns vertically with greeting, not pinned to top of split. RETAINS HAIKU-178.7.)
@@ -57,7 +58,7 @@ body.page-haiku-dash{
 
 /* ── H2: SPLIT HERO (State 1 desktop) ── */
 .hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%}
-.hk-split-photo{background:var(--cream);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.hk-split-photo{background:var(--cream);position:relative;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;padding-top:3vh}
 .hk-split-photo-img{max-width:100%;max-height:100%;object-fit:contain;background:var(--cream);display:block}
 /* overlay removed — cream bg, no dark overlay needed */
 .hk-split-photo-meta{
@@ -86,7 +87,7 @@ body.page-haiku-dash{
 .hk-main{max-width:740px;margin:0 auto;padding:72px 40px 100px}
 
 /* ── GREETING ── */
-.hk-greet{font-size:15px;color:var(--muted);margin-bottom:20px}
+.hk-greet{font-size:15px;color:var(--muted);margin-bottom:12px}
 .hk-greet b{display:block;font-size:28px;font-weight:600;color:var(--blue);letter-spacing:-.03em;margin-top:4px}
 
 /* ── EVAL COUNTER BADGE ── */
