@@ -1,3 +1,4 @@
+# SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
 # SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
 # SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
@@ -15702,7 +15703,7 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;over
 th{background:#f0ede8;padding:10px 14px;text-align:left;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888}
 td{padding:10px 14px;border-bottom:1px solid #f0ede8;font-size:14px}tr:last-child td{border-bottom:none}</style></head>
 <body><h1>International Waitlist</h1>
-<div class=meta>%(total)s photographer%(s)s registered</div>
+<div class=meta>__TOTAL__ photographer__S__ registered</div>
 <div class=actions><a href=/admin/international-waitlist/export class="btn btn-primary">Export CSV</a>
 <a href=/admin class="btn btn-secondary">Back to Admin</a></div>"""
     html += "<div style='margin-bottom:16px'>"
@@ -15716,7 +15717,8 @@ td{padding:10px 14px;border-bottom:1px solid #f0ede8;font-size:14px}tr:last-chil
     if not rows:
         html += '<tr><td colspan=4 style="text-align:center;color:#aaa;padding:32px">No registrations yet.</td></tr>'
     html += "</tbody></table></body></html>"
-    return html % {'total': total, 's': 's' if total != 1 else ''}
+    html = html.replace('__TOTAL__', str(total)).replace('__S__', 's' if total != 1 else '')
+    return html
 
 
 @app.route('/admin/international-waitlist/export')
