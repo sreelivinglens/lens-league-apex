@@ -1,10 +1,4 @@
-{# SL-VERSION: 180.12 (Session 189, 2026-08-19 — Bottom nav active state: brighter gold #FFD700, top indicator line on active tab, inactive opacity lifted to .55 for better contrast. RETAINS 180.11.) #}
-{# SL-VERSION: 180.11 (Session 189, 2026-08-19 — Bottom nav tap: stronger :active feedback (scale + opacity). Bottom nav background confirmed #0F1F3D. RETAINS 180.10.) #}
-{# SL-VERSION: 180.10-staging (Session 183, 2026-08-14 — My Evolving Eye added to left sidenav after Portfolio. Shows when authenticated. Sub-line shows next milestone image count when evolving_eye_milestone is set. Links to /my-eye. Active state on evolving_eye endpoint. RETAINS 180.9.) #}
-{# SL-VERSION: 180.12 (Session 189, 2026-08-19 — Bottom nav active state: brighter gold #FFD700, top indicator line on active tab, inactive opacity lifted to .55 for better contrast. RETAINS 180.11.) #}
-{# SL-VERSION: 180.11 (Session 189, 2026-08-19 — Bottom nav tap: stronger :active feedback (scale + opacity). Bottom nav background confirmed #0F1F3D. RETAINS 180.10.) #}
-{# SL-VERSION: 180.10 (Session 189, 2026-08-19 — Bottom nav background: #1A1814 → #0F1F3D to match paid dashboard and all standalone pages. Gold border retained. RETAINS 180.9.) #}
-{# SL-VERSION: 180.9 (Session 182, 2026-08-14 — MOBILE "MORE" SHEET. Staging had only the base rule for .sl-bottom-more-menu (position:fixed; right:0), so on a phone the sheet stretched across and down and swallowed the page, with the last item sliced by the bottom bar. Production base 181.3 carries a max-width:899px override that anchors it to the More button as a compact rounded popup; that block is ported here VERBATIM, plus max-height:58dvh on the list so nothing is cut off. CSS only, one media block, no markup change. NOT TOUCHED: .sl-bottom-nav and its top:auto !important - removing that in SL-178.7 caused the black inner pages of Sessions 178-180. RETAINS 180.8 (Session 182, 2026-08-13 — ONE LINE. The robots meta tag was hardcoded to "index, follow", so no page could opt out of search indexing. It is now {% block robots %}index, follow{% endblock %} — same default for every existing page, nothing changes unless a template overrides it. Needed so image_detail.html can declare noindex, nofollow: scorecards are private evaluations and must not appear in search results. Head-only, meta tag only — no CSS, no layout, no script. RETAINS 180.7 (Session 180, 2026-08-12 — Progress bar 3px→5px, brighter gradient + stronger glow, jumps to 25% instantly on tap so it is visible to the naked eye. Bottom clearance now driven by --sl-nav-h measured from the live nav on load/resize/orientation instead of a hardcoded 72px — Upload button, mission cards and section headings were being clipped behind the bar. Retains 180.5 top:auto and 180.6 tap feedback.) #}
+{# SL-VERSION: 181.4 (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Authenticated non-paid (Haiku) users now see discovery nav: How it works / Science / Programmes / Pricing / League of Photographers / My evaluations / Log out — instead of paid nav with Dashboard/Improve/etc. (2) Logged-out nav: Programmes link added, AEA label cleaned up. (3) Mobile nav: same Haiku branch added. RETAINS 181.3.) Previous: {# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 <title>{% block title %}Shutter League{% endblock %}</title>
 <meta name="description" content="{% block meta_description %}For 200 years, nobody built a system to tell photographers where they stand. Shutter League changes that. Honest evaluation across 5 dimensions. Free to start.{% endblock %}">
-<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+<meta name="robots" content="index, follow">
 <link rel="canonical" href="{% block canonical %}https://shutterleague.com{% endblock %}">
 <!-- Open Graph -->
 <meta property="og:site_name" content="Shutter League">
@@ -98,7 +92,7 @@
 /* Keyboard accessibility — visible focus ring for keyboard nav, hidden on mouse */
 :focus { outline: none; }
 :focus-visible { outline: 2px solid #F5C518; outline-offset: 3px; border-radius: 2px; }
-html { background: #F7F5F2; /* SL-180.4: Safari iOS shows html bg when body doesn't fill viewport — must match body bg */ scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
 body {
   background: #F7F5F2;
   color: var(--text-primary);
@@ -126,21 +120,21 @@ table { max-width: none; }
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
   position: fixed;
-  top: auto !important; /* SL-180.5: CRITICAL — .sl-bottom-nav is a <nav>, so the generic `nav` rule applies top:0. With top:0 + bottom:0 + height:auto the bar stretched the FULL viewport height (688px measured), filling the screen with #1A1814 and pinning nav items to the top. This guard existed in production v175.10 and was removed in SL-178.7 — that deletion caused every black screen from Session 178 onward. Do not remove. */
-  bottom: 0; /* SL-178.7: flush to screen bottom — safe area handled by padding */
+  top: auto !important;
+  bottom: env(safe-area-inset-bottom, 34px);
   left: 0; right: 0;
-  height: auto; /* SL-178.7: auto height so padding-bottom adds to the 62px tap area */
-  min-height: 62px;
-  padding-bottom: env(safe-area-inset-bottom, 0px); /* SL-178.7: safe area inside the bar */
-  background: #0F1F3D;
-  border-top: 1px solid rgba(212,164,40,0.20);
+  height: 62px;
+  background: rgba(26, 24, 20, 0.98);
+  border-top: 1.5px solid rgba(245,197,24,0.25);
   border-bottom: none;
   display: flex;
   justify-content: space-around;
   align-items: flex-start;
-  z-index: 1200; /* SL-179.2: raised from 998 — nav above upload dropzone and page overlays */
-  padding-top: 10px;
+  z-index: 998;
+  padding-top: 12px;
   overflow: visible;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .sl-bottom-nav .sl-nav-item {
   display: flex;
@@ -148,33 +142,26 @@ table { max-width: none; }
   align-items: center;
   gap: 3px;
   text-decoration: none;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.40);
   font-size: 13px;
   font-weight: 500;
-  position: relative;
   letter-spacing: .02em;
   min-width: 44px;
   min-height: 44px;
   justify-content: flex-start;
   padding-top: 4px;
-  transition: color .1s, opacity .1s, transform .1s;
+  transition: color .1s;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation; /* SL-178.1: eliminates iOS 300ms tap delay */
 }
-.sl-bottom-nav .sl-nav-item.active { color: #FFD700; }
-.sl-bottom-nav .sl-nav-item.active::before { content:''; position:absolute; top:0; left:20%; right:20%; height:2px; background:#FFD700; border-radius:0 0 2px 2px; }
-.sl-bottom-nav .sl-nav-item:hover  { color: #FFD700; }
-/* SL-178.1: touch-action:manipulation eliminates iOS 300ms tap delay on :active */
-/* SL-180.6: press-down feedback — see sitewide tap feedback block below */
-.sl-bottom-nav .sl-nav-item:active { color: #FFD700; opacity: .65; transform: scale(.92); }
-.sl-bottom-nav .sl-nav-more-btn:active { opacity: .65; transform: scale(.92); }
+.sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; transform: scale(1.15); transition: transform 0.1s; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   font-family: inherit;
-  touch-action: manipulation; /* SL-178.1: eliminates iOS 300ms tap delay on More */
 }
 .sl-bottom-nav .sl-nav-item__icon { font-size: 22px; line-height: 1; }
 /* Logo tab — replaces Home on logged-out nav */
@@ -187,7 +174,6 @@ table { max-width: none; }
   min-height: 44px;
   padding: 0 4px;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation; /* SL-178.1: eliminates iOS 300ms tap delay */
 }
 .sl-nav-logo__text {
   font-family: var(--font-mono);
@@ -210,17 +196,16 @@ table { max-width: none; }
 .sl-bottom-more-menu {
   display: none;
   position: fixed;
-  bottom: calc(62px + env(safe-area-inset-bottom, 0px)); /* SL-178.7: matches new nav bottom:0 + padding */
-  top: auto;
+  top: 68px;
   right: 0;
   width: auto;
   min-width: 200px;
   max-width: 80vw;
   background: #1A1A18;
   border-left: 1px solid rgba(245,197,24,0.15);
-  border-top: 1px solid rgba(245,197,24,0.25); /* SL-178.5: top border, not bottom */
+  border-bottom: 1px solid rgba(245,197,24,0.25);
   z-index: 1999;
-  box-shadow: -4px -4px 32px rgba(0,0,0,0.60); /* SL-178.5: shadow upward */
+  box-shadow: -4px 0 32px rgba(0,0,0,0.60);
 }
 .sl-bottom-more-menu.open { display: flex; flex-direction: column; }
 .sl-bottom-more-menu__list {
@@ -232,13 +217,11 @@ table { max-width: none; }
 }
 .sl-bottom-more-menu__fade {
   position: sticky;
-  top: 0; /* SL-178.5: fade at top since menu opens upward */
-  bottom: auto;
+  bottom: 0;
   height: 48px;
-  background: linear-gradient(to top, transparent, #1A1A18); /* SL-178.5: flipped */
+  background: linear-gradient(to bottom, transparent, #1A1A18);
   pointer-events: none;
-  margin-bottom: -48px;
-  margin-top: 0;
+  margin-top: -48px;
 }
 .sl-bottom-more-menu__pinned {
   border-top: 1px solid rgba(255,255,255,0.08);
@@ -256,21 +239,31 @@ table { max-width: none; }
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
+.sl-bottom-more-menu a:hover,
+.sl-bottom-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
 
-/* ── SL-180.9 — MOBILE "MORE" SHEET: compact popup, not a full-screen panel ──
-   PORTED VERBATIM FROM PRODUCTION base 181.3, which has this override and
-   staging does not. Staging had only the base rule — position:fixed; right:0 —
-   so on a phone the sheet stretched across and down the screen and swallowed
-   the page. Production anchors it to the More button as a small rounded popup
-   sitting just above the bottom bar.
+/* ── SL-181.1 — bottom-nav "More" drawer, mobile placement ──────────────────
+   The drawer was written for the desktop header and never re-anchored when the
+   bottom nav arrived. Its base rule is position:fixed / top:68px / right:0, and
+   NO media query in this file overrode it (checked all 13).
 
-   Also fixes the cut-off last item: max-height 58dvh on the list means the
-   sheet ends well clear of the bottom bar and the home indicator, so "Log out"
-   is no longer sliced in half.
+   Effect on a phone: the photographer taps "More" at the BOTTOM of the screen
+   and the menu opens 700+px away at the TOP, outside where they are looking.
+   It reads as "the button did nothing", so they tap again — which toggles it
+   shut. Tap, tap, tap, nothing. The button was never broken; the menu was
+   opening off-attention.
 
-   NOT TOUCHED: .sl-bottom-nav and its `top: auto !important`. Removing that in
-   SL-178.7 is what caused the black inner pages of Sessions 178-180. Different
-   selector, left exactly as it is. */
+   Fix: on mobile only, switch to position:absolute so the drawer anchors to
+   .sl-nav-more-wrap (already position:relative) and sits directly above the
+   button that opened it. .sl-bottom-nav is overflow:visible, so nothing clips.
+
+   Also adds touch-action:manipulation. It appears ZERO times in this file, so
+   iOS holds every nav tap ~300ms waiting for a double-tap-zoom that will never
+   come. Not the cause of the above, but it compounds the dead feeling.
+
+   NOT TOUCHED: `top: auto !important` on .sl-bottom-nav (line ~123). Deleting
+   that in SL-178.7 is what caused the black inner pages of Sessions 178-180.
+   It is a separate rule on a separate selector and is left exactly as it was. */
 @media (max-width: 899px) {
   .sl-bottom-more-menu {
     position: absolute;
@@ -294,9 +287,6 @@ table { max-width: none; }
   .sl-bottom-nav .sl-nav-fab,
   .sl-bottom-more-menu a { touch-action: manipulation; }
 }
-
-.sl-bottom-more-menu a:hover,
-.sl-bottom-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
 /* Upload FAB */
 .sl-bottom-nav .sl-nav-fab {
   display: flex;
@@ -311,7 +301,6 @@ table { max-width: none; }
   min-height: 44px;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation; /* SL-178.1: eliminates iOS 300ms tap delay */
 }
 .sl-bottom-nav .sl-nav-fab__circle {
   width: 46px; height: 46px;
@@ -559,19 +548,10 @@ table { max-width: none; }
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* Add padding so page content clears the bottom tab bar */
-/* SL-180.7: driven by --sl-nav-h, measured from the live nav on load and
-   resize (see script at end of body). The hardcoded 72px guess left the
-   Upload button, mission cards and section headings clipped behind the bar
-   on multiple pages, because real nav height varies with label wrap and
-   safe-area inset. Fallback below covers the pre-JS paint. */
 @media (max-width: 899px) {
-  body:not(.page-home) {
+  body:not(.page-home) { 
     padding-top: 0;
-    padding-bottom: calc(var(--sl-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 24px);
-  }
-  /* Home has its own full-bleed layout but still needs bar clearance */
-  body.page-home {
-    padding-bottom: calc(var(--sl-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 8px);
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 10px); 
   }
 }
 @media (min-width: 900px) {
@@ -579,15 +559,6 @@ table { max-width: none; }
 }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
-/* SL-180.1: mobile-first — desktop nav never paints on mobile.
-   Eliminates the black void that appeared above page content on iPhone Safari
-   because the nav rendered (dark bg, 64px height) before the media query hid it.
-   Restored explicitly for desktop via min-width:900px below. */
-.sl-top-nav { display: none; }
-@media (min-width: 900px) {
-  .sl-top-nav { display: flex !important; }
-}
-
 nav {
   background: rgba(26, 24, 20, 0.94);
   border-bottom: 1px solid rgba(245,197,24,0.15);
@@ -1419,11 +1390,8 @@ footer {
   .sl-top-nav { display: none !important; }
   .nav-mobile-login { display: none !important; }
   /* Mobile drawer — triggered by ☰ in bottom tab bar, slides from top */
-  /* SL-180.2: visibility:hidden + pointer-events:none added — prevents Safari iOS
-     from painting the near-black nav-mobile backdrop even when display:none.
-     This was the black overlay covering all page content on mobile. */
-  .nav-mobile { display: none !important; visibility: hidden; pointer-events: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
-  .nav-mobile.open { display: flex !important; visibility: visible; pointer-events: auto; }
+  .nav-mobile { display: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
+  .nav-mobile.open { display: flex !important; }
   
 }
 
@@ -1431,138 +1399,6 @@ footer {
   .nav-brand { font-size: 16px; letter-spacing: 2px; }
   .grid-4 { grid-template-columns: 1fr; gap: 10px; }
   .stat-val { font-size: 28px; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   SL-180.6 — SITEWIDE TAP FEEDBACK
-   Every tappable element must confirm the tap within one frame. Pages can
-   take 2-13s to load; without instant feedback the user assumes the tap
-   missed and taps again. Press-down (scale 0.96) rather than grow — growing
-   pushes neighbouring items in the 5-across bottom nav and can overflow.
-   120ms, no bounce, no overshoot — readable for a 70-year-old without
-   feeling twitchy. Reduced-motion users get colour/tint only.
-   ═══════════════════════════════════════════════════════════════════════ */
-
-/* Bottom tab bar — nav items, logo, More button */
-.sl-bottom-nav .sl-nav-item,
-.sl-bottom-nav .sl-nav-more-btn,
-.sl-nav-logo {
-  transition: transform .12s ease-out, color .12s ease-out, background .12s ease-out;
-}
-.sl-bottom-nav .sl-nav-item:active,
-.sl-bottom-nav .sl-nav-more-btn:active,
-.sl-nav-logo:active {
-  transform: scale(0.94);
-  color: #F4C20D;
-}
-
-/* Upload FAB — the primary action, gets a firmer press */
-.sl-bottom-nav .sl-nav-fab__circle {
-  transition: transform .12s ease-out, box-shadow .12s ease-out;
-}
-.sl-bottom-nav .sl-nav-fab:active .sl-nav-fab__circle {
-  transform: scale(0.90);
-  box-shadow: 0 0 0 6px rgba(245,197,24,0.22);
-}
-
-/* Buttons — all variants */
-.btn, button, input[type="submit"], .sl-mob-cta-primary, .sl-mob-cta-secondary {
-  transition: transform .12s ease-out, background .12s ease-out,
-              box-shadow .12s ease-out, border-color .12s ease-out;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.btn:active,
-button:active,
-input[type="submit"]:active,
-.sl-mob-cta-primary:active,
-.sl-mob-cta-secondary:active {
-  transform: scale(0.97);
-  box-shadow: 0 0 0 4px rgba(245,197,24,0.20);
-}
-/* Disabled buttons must not appear responsive */
-.btn:disabled:active, .btn[disabled]:active, button:disabled:active {
-  transform: none;
-  box-shadow: none;
-}
-
-/* Cards, gallery items, image thumbnails */
-.card a:active,
-.img-thumb:active,
-.sl-mob-gallery-item:active,
-.sl-mob-imgcard:active,
-.sl-gallery-item:active {
-  transform: scale(0.98);
-  opacity: 0.92;
-}
-.img-thumb, .sl-mob-gallery-item, .sl-mob-imgcard, .sl-gallery-item {
-  transition: transform .12s ease-out, opacity .12s ease-out;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-/* Menu and drawer links — tint, no scale (full-width rows) */
-.nav-mobile a:active,
-.sl-bottom-more-menu a:active,
-.sl-si:active {
-  background: rgba(245,197,24,0.18);
-  color: #FFFFFF;
-}
-.nav-mobile a, .sl-bottom-more-menu a, .sl-si {
-  transition: background .12s ease-out, color .12s ease-out;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Footer and text links */
-.footer-col-link:active, .cb-text a:active {
-  color: var(--gold);
-  text-decoration: underline;
-}
-
-/* Cookie banner buttons */
-#cb-accept, #cb-dismiss {
-  transition: transform .12s ease-out, box-shadow .12s ease-out;
-  touch-action: manipulation;
-}
-#cb-accept:active, #cb-dismiss:active {
-  transform: scale(0.96);
-  box-shadow: 0 0 0 4px rgba(245,197,24,0.25);
-}
-
-/* ── Navigation progress bar — SL-180.6 ──────────────────────────────────
-   Tap feedback ends the moment the finger lifts, but the page may take
-   several seconds. Without an in-flight signal the user taps again. This
-   bar appears on any link tap or form submit and clears on page load. */
-#sl-nav-progress {
-  position: fixed;
-  top: 0; left: 0;
-  height: 5px; /* SL-180.7: 3px was invisible to the naked eye on Retina — a bar
-                  you only notice if you know to look for it does not stop the
-                  user tapping twice. 5px reads clearly without intruding. */
-  width: 0;
-  background: linear-gradient(90deg, #F5C518 0%, #FFD84D 60%, #FFE894 100%);
-  box-shadow: 0 0 12px rgba(245,197,24,0.95), 0 1px 4px rgba(0,0,0,0.30);
-  z-index: 2147483647;
-  opacity: 0;
-  pointer-events: none;
-  transition: width .25s ease-out, opacity .15s ease-out;
-}
-#sl-nav-progress.sl-np-active { opacity: 1; }
-
-/* ── Reduced motion — colour and tint only, no movement ── */
-@media (prefers-reduced-motion: reduce) {
-  .sl-bottom-nav .sl-nav-item:active,
-  .sl-bottom-nav .sl-nav-more-btn:active,
-  .sl-nav-logo:active,
-  .sl-bottom-nav .sl-nav-fab:active .sl-nav-fab__circle,
-  .btn:active, button:active, input[type="submit"]:active,
-  .sl-mob-cta-primary:active, .sl-mob-cta-secondary:active,
-  .card a:active, .img-thumb:active, .sl-mob-gallery-item:active,
-  .sl-mob-imgcard:active, .sl-gallery-item:active,
-  #cb-accept:active, #cb-dismiss:active {
-    transform: none;
-  }
-  #sl-nav-progress { transition: opacity .2s ease-out; }
 }
 
 /* ── Image right-click protection — sitewide ─────────────────────────────── */
@@ -1634,42 +1470,51 @@ img {
   justify-content: center;
 }
 #cb-dismiss:hover { border-color: rgba(255,255,255,0.4); color: #ffffff; }
-/* SL-178.1 — P28 FIX: on mobile the bottom nav (62px + safe area) sits above
-   the cookie banner (z-index:900 vs nav z-index:998). Without this fix the
-   Accept button is hidden behind the nav bar and requires scrolling to reach.
-   Fix: stack banner content vertically and add bottom padding equal to nav height. */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
+  #cookie-banner { padding: 14px 16px; }
+  .cb-text { font-size: 16px; }
+}
+
+/* ── SL-181.2 — cookie banner sits ON TOP OF the bottom nav on mobile ───────
+   Base rule is position:fixed / bottom:0 / z-index:900 with flex-wrap:wrap.
+   The bottom nav is bottom:env(safe-area-inset-bottom,34px), 62px tall,
+   z-index:998 — so it occupies the same bottom ~96px of the screen and wins
+   on z-index.
+
+   With flex-wrap:wrap the .cb-text takes the full width at 375px and pushes
+   .cb-actions onto a second row, which lands underneath the nav bar. The
+   Accept button and the × are therefore unreachable: the banner CANNOT be
+   dismissed on a phone. It has covered content for every mobile visitor since
+   launch, and on a KYC platform a consent notice that cannot be consented to
+   is worse than a cosmetic fault.
+
+   The only existing mobile rule (above) adjusts padding — nothing repositions
+   it. Fix: lift the banner to sit directly above the nav, stop the actions
+   wrapping away, and raise z-index above the nav so it can never be covered.
+   Once accepted, localStorage sl_cookie_ok hides it permanently and the space
+   is returned. */
+@media (max-width: 899px) {
   #cookie-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 16px 16px calc(62px + env(safe-area-inset-bottom, 0px) + 14px) 16px;
+    bottom: calc(62px + env(safe-area-inset-bottom, 34px));
+    z-index: 999;
+    flex-wrap: nowrap;
     gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(245,197,24,0.20);
   }
-  .cb-text {
-    font-size: 16px;
-    line-height: 1.65;
+  #cookie-banner .cb-text {
+    font-size: 14px;
+    line-height: 1.45;
     min-width: 0;
-    width: 100%;
   }
-  .cb-actions {
-    width: 100%;
-    gap: 10px;
-  }
-  #cb-accept {
-    flex: 1;
-    min-height: 48px;
-    font-size: 16px;
-    text-align: center;
-    touch-action: manipulation;
-  }
-  #cb-dismiss {
-    min-width: 48px;
-    min-height: 48px;
-    width: 48px;
-    height: 48px;
-    touch-action: manipulation;
+  #cookie-banner .cb-actions {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+  #cookie-banner #cb-accept { min-height: 44px; padding: 10px 18px; }
+  #cookie-banner #cb-dismiss { min-width: 44px; min-height: 44px; }
 }
 
 /* ── Accordion (sl-accordion) ───────────────────────────────────────────── */
@@ -1767,8 +1612,7 @@ img {
 .sl-si:hover:not(.active){color:#1A1A18;background:#fafaf8}
 .sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
 .sl-main-content{flex:1;min-width:0}
-@media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block;min-height:auto}}
-/* SL-180.3: min-height:auto on mobile — sl-page-wrap had min-height:calc(100vh - 64px) which assumed desktop nav height, broke flex layout on mobile causing black screens on all inner pages (mission, leaderboard, gallery etc). Production unaffected — no sl-page-wrap in production base.html. */
+@media(max-width:768px){.sl-global-sidenav{display:none !important}.sl-page-wrap{display:block}}
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
@@ -1842,26 +1686,38 @@ img {
         <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% else %}
-        {# SL-176.1: Photographer nav — Dashboard · Upload · My Gallery · Improve · Recent Work · Overall Standings · Get Reviewed · Profile #}
+        {% if current_user.is_subscribed %}
+        {# Paid subscriber nav #}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('my_gallery') }}" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
         <a href="{{ url_for('mission') }}" class="{% if request.endpoint == 'mission' %}nav-active{% endif %}">Improve</a>
-        <a href="{{ url_for('recent_work') }}" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
-        <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Overall Standings</a>
-        <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Get Reviewed</a>
+        <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
+        <a href="{{ url_for('recent_work') }}" class="{% if request.endpoint in ['recent_work','leaderboard'] %}nav-active{% endif %}">Explore</a>
         <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% else %}
+        {# Haiku (free) user nav — discovery-oriented #}
+        <a href="{{ url_for('try_page') }}" class="{% if request.endpoint == 'try_page' %}nav-active{% endif %}">Upload</a>
+        <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How it works</a>
+        <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+        <a href="{{ url_for('programmes') }}" class="{% if request.endpoint == 'programmes' %}nav-active{% endif %}">Programmes</a>
+        <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+        <a href="{{ url_for('standings_public') }}" class="{% if request.endpoint == 'standings_public' %}nav-active{% endif %}">League of Photographers</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('try_gallery') }}" class="{% if request.endpoint == 'try_gallery' %}nav-active{% endif %}">My evaluations</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% endif %}
       {% endif %}
     {% else %}
       <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How it works</a>
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
-      <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
-      <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
-      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Annual Excellence</a>
+      <a href="{{ url_for('programmes') }}" class="{% if request.endpoint == 'programmes' %}nav-active{% endif %}">Programmes</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" class="{% if request.endpoint == 'standings_public' %}nav-active{% endif %}">League of Photographers</a>
       <a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}nav-active{% endif %}">Log in</a>
-      <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="nav-lj-btn" style="text-decoration:none; background:#D6A428; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">&#8593; Upload</a>
+      <a href="{{ url_for('register') }}" class="nav-lj-btn" style="text-decoration:none; background:#D6A428; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">Join the League →</a>
     {% endif %}
   </div>
 
@@ -1889,40 +1745,44 @@ img {
       <a href="{{ url_for('judge_history') }}" onclick="toggleNav()">Evaluation History</a>
       <a href="/contact" onclick="toggleNav()">Help &amp; Support</a>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
-    {% else %}
-      {# SL-176.1 — Photographer mobile menu #}
+    {% elif current_user.is_subscribed %}
+      {# Paid subscriber mobile menu #}
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
       <a href="{{ url_for('my_gallery') }}" onclick="toggleNav()">My Gallery</a>
       <a href="{{ url_for('mission') }}" onclick="toggleNav()">Improve</a>
-      <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
-      <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Overall Standings</a>
-      <a href="{{ url_for('mentors') }}" onclick="toggleNav()">Get Reviewed</a>
       <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
+      <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Explore</a>
       <a href="{{ url_for('profile') }}" onclick="toggleNav()">Profile</a>
       <button id="slHamMore" onclick="var m=document.getElementById('slHamMoreList');var open=m.style.display==='block';m.style.display=open?'none':'block';this.textContent=open?'More ▸':'More ▾';" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;text-align:left;width:100%;min-height:44px;">More ▸</button>
       <div id="slHamMoreList" style="display:none">
-        <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
-        <a href="{{ url_for('poty') }}" onclick="toggleNav()">Awards &amp; Recognition</a>
-        <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning Library</a>
+        <a href="{{ url_for('mentors') }}" onclick="toggleNav()">Mentor Review</a>
+        <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Challenge</a>
+        <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence</a>
         <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
         <a href="/contact" onclick="toggleNav()">Help &amp; Support</a>
       </div>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
+    {% else %}
+      {# Haiku (free) user mobile menu — discovery-oriented #}
+      <a href="{{ url_for('try_welcome') }}" onclick="toggleNav()">Home</a>
+      <a href="{{ url_for('try_page') }}" onclick="toggleNav()">Upload</a>
+      <a href="{{ url_for('try_gallery') }}" onclick="toggleNav()">My evaluations</a>
+      <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How it works</a>
+      <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
+      <a href="{{ url_for('programmes') }}" onclick="toggleNav()">Programmes</a>
+      <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" onclick="toggleNav()">League of Photographers</a>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
     {% endif %}
   {% else %}
-    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How it works</a>
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
-    <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning</a>
-    <a href="/mentors" onclick="toggleNav()">Mentors</a>
-    <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
-    <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
-    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Overall Standings</a>
-    <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
-    <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
+    <a href="{{ url_for('programmes') }}" onclick="toggleNav()">Programmes</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
-    <a href="{{ url_for('login') }}" onclick="toggleNav()">Log In</a>
-    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Get My First Evaluation</a>
+    <a href="{{ url_for('standings_public') }}" onclick="toggleNav()">League of Photographers</a>
+    <a href="{{ url_for('login') }}" onclick="toggleNav()">Log in</a>
+    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Join the League →</a>
   {% endif %}
 </div>
 <!-- Flash messages -->
@@ -1940,13 +1800,13 @@ img {
 {% endwith %}
 
 
-{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight', 'evolving_eye'] %}
-{% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a><a class="sl-si {% if request.endpoint == 'recent_work' %}active{% endif %}" href="{{ url_for('recent_work') }}">Recent Work</a><a class="sl-si {% if request.endpoint == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}">Overall Standings</a><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Get Reviewed</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><a class="sl-si sl-si-eye {% if request.endpoint == 'evolving_eye' %}active{% endif %}" href="{{ url_for('evolving_eye') }}" style="display:flex;flex-direction:column;gap:1px;line-height:1.4">My Evolving Eye{% if current_user.is_authenticated and current_user.evolving_eye_milestone %}<span style="font-size:11px;color:#bbb;font-weight:400">Next at {{ ((current_user.evolving_eye_milestone // 10) + 1) * 10 }} images</span>{% endif %}</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Assignment</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learning Library</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Awards &amp; Recognition</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profile &amp; Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% else %}<main>{% endif %}
+{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
+{% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% else %}<main>{% endif %}
 {% block content %}{% endblock %}
 </main>{% if _show_sidenav %}</div>{% endif %}
 
 
-{# ── Mobile tab nav — position:fixed bottom:0 — sits at bottom of viewport on all pages ── #}
+{# ── Mobile tab nav — fixed to top on mobile ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
     {# SL 175.6 — Bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
@@ -2175,21 +2035,35 @@ document.addEventListener('DOMContentLoaded', function() {
   border:none; cursor:pointer;
   font-size:18px; font-weight:700; line-height:44px; text-align:center;
   opacity:0; visibility:hidden;
-  pointer-events:none; /* SL-178.6: never intercept taps when hidden */
   transition:opacity 0.3s, visibility 0.3s, transform 0.2s;
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
 }
-#backToTop.btt-visible {
-  opacity:1; visibility:visible;
-  pointer-events:auto; /* SL-178.6: restore taps when visible */
-}
+#backToTop.btt-visible { opacity:1; visibility:visible; }
 #backToTop:hover { transform:translateY(-3px); }
-/* SL-178.7: on mobile, lift above bottom nav — matches bottom:0 + safe area approach */
-@media (max-width: 900px) {
+
+/* ── SL-181.3 — back-to-top button sits ON the bottom nav ───────────────────
+   Base rule is bottom:28px / right:28px / z-index:999. The bottom nav is
+   bottom:env(safe-area-inset-bottom,34px) and 62px tall, so it occupies
+   roughly 34-96px from the bottom of the screen. The button occupies 28-72px
+   — straight through it — and its z-index:999 beats the nav's 998, so it
+   lands on top of the "More" control and blocks the tap.
+
+   Applies to phones AND iPad portrait: .sl-bottom-nav is hidden only at
+   >=900px (line ~558), so at 768px the nav is present and so is the overlap.
+   iPad landscape (1024px) has no bottom nav and keeps the original 28px
+   placement, which is why this is scoped to <=899px rather than changed
+   globally.
+
+   Also raises the cookie banner above this button so the two cannot fight
+   for the same corner while the banner is still showing. Once accepted,
+   localStorage sl_cookie_ok removes it and the button has the corner to
+   itself. */
+@media (max-width: 899px) {
   #backToTop {
-    bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 12px);
+    bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 14px);
     right: 16px;
   }
+  #cookie-banner { z-index: 1000; }
 }
 </style>
 <script>
@@ -2201,94 +2075,6 @@ document.addEventListener('DOMContentLoaded', function() {
   btt.addEventListener('click', function(){
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-})();
-</script>
-
-<!-- ── SL-180.6: navigation progress bar ─────────────────────────────────── -->
-<div id="sl-nav-progress" role="presentation" aria-hidden="true"></div>
-<script>
-(function(){
-  var bar = document.getElementById('sl-nav-progress');
-  if (!bar) return;
-  var timers = [];
-  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
-
-  function start(){
-    clearTimers();
-    bar.classList.add('sl-np-active');
-    // SL-180.7: jump straight to 25% with no transition so there is an
-    // immediate visible mark. Growing from 0 meant the first moments showed
-    // only a hairline, which users did not register.
-    bar.style.transition = 'none';
-    bar.style.width = '25%';
-    void bar.offsetWidth;
-    bar.style.transition = '';
-    bar.style.width = '45%';
-    timers.push(setTimeout(function(){ bar.style.width = '68%'; }, 400));
-    timers.push(setTimeout(function(){ bar.style.width = '86%'; }, 1600));
-    timers.push(setTimeout(function(){ bar.style.width = '93%'; }, 4000));
-  }
-  function done(){
-    clearTimers();
-    bar.style.width = '100%';
-    timers.push(setTimeout(function(){
-      bar.classList.remove('sl-np-active');
-      timers.push(setTimeout(function(){ bar.style.width = '0'; }, 220));
-    }, 200));
-  }
-
-  // Any left-click on a real navigating link
-  document.addEventListener('click', function(e){
-    var a = e.target.closest ? e.target.closest('a') : null;
-    if (!a) return;
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var href = a.getAttribute('href');
-    if (!href) return;
-    if (href.charAt(0) === '#') return;                    // in-page anchor
-    if (href.indexOf('javascript:') === 0) return;
-    if (href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
-    if (a.target && a.target !== '_self') return;          // new tab
-    if (a.hasAttribute('download')) return;
-    if (a.host && a.host !== window.location.host) return; // external
-    start();
-  }, true);
-
-  // Form submissions — upload, login, search, filters
-  document.addEventListener('submit', function(){ start(); }, true);
-
-  // Clear on load and on back/forward restore
-  window.addEventListener('load', done);
-  window.addEventListener('pageshow', function(ev){
-    if (ev.persisted) { clearTimers(); bar.classList.remove('sl-np-active'); bar.style.width = '0'; }
-  });
-  // If the user cancels navigation, don't leave the bar stranded
-  window.addEventListener('beforeunload', clearTimers);
-})();
-</script>
-
-<script>
-/* SL-180.7 — measure the real bottom-nav height and expose it as --sl-nav-h
-   so body padding always clears it exactly. A hardcoded value cannot be
-   correct across label wrap, safe-area insets and device widths — content
-   was being clipped behind the bar on Dashboard, Improve and Mentors. */
-(function(){
-  function setNavHeight(){
-    var nav = document.querySelector('.sl-bottom-nav');
-    if (!nav) return;
-    var h = Math.round(nav.getBoundingClientRect().height);
-    // Guard against the pre-paint 0 and against a runaway value
-    if (h > 0 && h < 200) {
-      document.documentElement.style.setProperty('--sl-nav-h', h + 'px');
-    }
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setNavHeight);
-  } else {
-    setNavHeight();
-  }
-  window.addEventListener('load', setNavHeight);
-  window.addEventListener('resize', setNavHeight);
-  window.addEventListener('orientationchange', function(){ setTimeout(setNavHeight, 250); });
 })();
 </script>
 
