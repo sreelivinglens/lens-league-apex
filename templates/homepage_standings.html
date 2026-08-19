@@ -1,3 +1,4 @@
+{# SL-VERSION: homepage_standings-1.3-staging (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Nav: logged-in users see dashboard/try_welcome link instead of Login/Join. (2) Card lock: logged-in Haiku users see "Continue exploring", paid users see "Your dashboard". Logged-out see Join. (3) Join banner: same conditional. Prevents logged-in redirect loop to dashboard via /register. RETAINS 1.2.)
 {# SL-VERSION: homepage_standings-1.2-staging (Session 189, 2026-08-18 — Image wrap is now an anchor linking to image_detail. Score overlay confirmed. Card fully clickable. RETAINS 1.1.) (Session 189, 2026-08-18 — Score now visible on card. Image taller (aspect-ratio 3/2). Score shown as large number over image bottom-right. RETAINS 1.0.) (Session 189, 2026-08-18 — NEW FILE. Public standings page — no login required. Shows tier, photographer display name, best image thumbnail only. Full scorecard locked: "For League photographers only — Join the League →". Standalone — no base.html. 188M design tokens. Haiku images never shown (is_haiku_try filter in route). Separate from leaderboard.html which remains login-required.) #}
 <!DOCTYPE html>
 <html lang="en">
@@ -117,8 +118,17 @@ a{text-decoration:none;color:inherit}
     <span class="pub-brandword">Shutter League</span>
   </a>
   <div class="pub-nav-right">
-    <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
-    <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
+    {% if current_user.is_authenticated %}
+      {% if current_user.is_subscribed or current_user.role == 'admin' %}
+        <a href="{{ url_for('dashboard') }}" class="pub-login">My dashboard</a>
+      {% else %}
+        <a href="{{ url_for('try_welcome') }}" class="pub-login">My evaluations</a>
+        <a href="{{ url_for('try_page') }}" class="pub-register">Upload a photograph →</a>
+      {% endif %}
+    {% else %}
+      <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
+      <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
+    {% endif %}
   </div>
 </nav>
 
@@ -186,7 +196,13 @@ a{text-decoration:none;color:inherit}
           <div class="pub-card-lock">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Full evaluation — League photographers only</span>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('try_page') }}" class="pub-card-lock-link">Upload →</a>
+            {% elif current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="pub-card-lock-link">Dashboard →</a>
+            {% else %}
             <a href="{{ url_for('register') }}" class="pub-card-lock-link">Join →</a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -206,8 +222,16 @@ a{text-decoration:none;color:inherit}
 <div class="pub-join">
   <div class="pub-join-h">Your record starts with<br>your first photograph.</div>
   <p class="pub-join-sub">Chess has Elo. Cricket has ICC rankings. In 200 years of photography, nobody built one. Until now.</p>
+  {% if current_user.is_authenticated and not current_user.is_subscribed %}
+  <a href="{{ url_for('try_page') }}" class="pub-join-cta">Upload your first photograph →</a>
+  <p class="pub-join-note">{{ 10 }} free evaluations remaining. No subscription needed.</p>
+  {% elif current_user.is_authenticated %}
+  <a href="{{ url_for('dashboard') }}" class="pub-join-cta">Go to your dashboard →</a>
+  <p class="pub-join-note">Your record is building.</p>
+  {% else %}
   <a href="{{ url_for('register') }}" class="pub-join-cta">Join the League →</a>
   <p class="pub-join-note">10 free evaluations. No subscription needed to begin.</p>
+  {% endif %}
 </div>
 
 {# ── FOOTER ── #}
