@@ -1,3 +1,4 @@
+{# SL-VERSION: homepage_standings-1.8-staging (Session 191, 2026-08-23 — NAV FIXES: (1) My evaluations link fixed try_welcome→try_gallery. (2) Upload button removed for Haiku users — replaced with Log out link. (3) Nav colour #0F1F3D→#1A2744 to match dashboard and base.html Haiku nav. (4) font-size 14px→13px, padding 5px 12px→6px 8px, gap 4px→2px — matches Science page nav. RETAINS 1.7.) #}
 {# SL-VERSION: homepage_standings-1.7-staging (Session 190, 2026-08-19 — NAV: brandword "Shutter League" restored alongside logo — matches base.html pattern. RETAINS 1.6.) #}
 {# SL-VERSION: homepage_standings-1.6-staging (Session 190, 2026-08-19 — NAV STYLE: matched to base.html nav — removed gold border-bottom, link style aligned, button style aligned, padding adjusted. RETAINS 1.5.)
 {# SL-VERSION: homepage_standings-1.5-staging (Session 190, 2026-08-19 — NAV: full discovery nav added matching homepage/base.html — How it works/Science/Programmes/Pricing always visible, auth-aware right side. FOOTER: upgraded to full 5-column homepage-standard footer. RETAINS 1.4.)
@@ -27,16 +28,16 @@ html,body{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',
 a{text-decoration:none;color:inherit}
 
 /* ── NAV ── */
-.pub-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;border-bottom:0.5px solid rgba(255,255,255,.1)}
-.pub-nav-links{display:flex;align-items:center;gap:4px}
-.pub-nav-link{font-size:14px;color:rgba(255,255,255,.6);text-decoration:none;padding:5px 12px;border-radius:5px;transition:color .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+.pub-nav{height:64px;background:#1A2744;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;border-bottom:0.5px solid rgba(255,255,255,.08)}
+.pub-nav-links{display:flex;align-items:center;gap:2px}
+.pub-nav-link{font-size:13px;color:rgba(255,255,255,.6);text-decoration:none;padding:6px 8px;border-radius:5px;transition:color .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
 .pub-nav-link:hover{color:#fff;background:rgba(255,255,255,.08)}
 .pub-nav-link.on{color:#fff;font-weight:600}
 .pub-brand{display:flex;align-items:center;gap:10px;color:#fff}
 .pub-crest{width:28px;height:28px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:.5px}
 .pub-brandword{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
 .pub-nav-right{display:flex;align-items:center;gap:10px}
-.pub-login{font-size:14px;color:rgba(255,255,255,.65);padding:5px 12px;border:1px solid rgba(255,255,255,.25);border-radius:5px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
+.pub-login{font-size:13px;color:rgba(255,255,255,.65);padding:6px 8px;border:1px solid rgba(255,255,255,.25);border-radius:5px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .pub-login:hover{color:#fff}
 .pub-register{font-size:14px;font-weight:700;color:var(--dark);background:var(--gold);padding:8px 18px;border-radius:8px;min-height:44px;display:inline-flex;align-items:center}
 
@@ -169,8 +170,8 @@ a{text-decoration:none;color:inherit}
       {% if current_user.is_subscribed or current_user.role == 'admin' %}
         <a href="{{ url_for('dashboard') }}" class="pub-login">My dashboard</a>
       {% else %}
-        <a href="{{ url_for('try_welcome') }}" class="pub-login">My evaluations</a>
-        <a href="{{ url_for('try_page') }}" class="pub-register">Upload a photograph →</a>
+        <a href="{{ url_for('try_gallery') }}" class="pub-login">My evaluations</a>
+        <a href="{{ url_for('logout') }}" class="pub-nav-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;">Log out</a>
       {% endif %}
     {% else %}
       <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
