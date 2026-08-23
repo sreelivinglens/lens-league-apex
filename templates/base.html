@@ -1,3 +1,4 @@
+{# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — NAV: Profile added to Haiku desktop nav and mobile hamburger menu. RETAINS 181.47.) #}
 {# SL-VERSION: 181.47-staging (Session 191, 2026-08-23 — NAV OVERHAUL: (1) Logo now auth-aware: Haiku→try_welcome, Paid→dashboard, Logged-out→index. (2) Haiku desktop nav reordered: Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, avatar. (3) Haiku mobile menu same order. RETAINS 181.46.) #}
 {# SL-VERSION: 181.46-staging (Session 191, 2026-08-23 — HAIKU NAV ACTIVE STATE: active link now white bold instead of gold for Haiku users. Gold reserved for scores/badges only. RETAINS 181.45.) #}
 {# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — HAIKU NAV COLOUR: nav background changed to #1A2744 (dark navy) for Haiku users via nav-haiku class. Matches dashboard_haiku.html nav colour. Paid users and logged-out retain existing rgba(26,24,20,0.94) dark brown. RETAINS 181.4.) #}
@@ -1719,6 +1720,7 @@ img {
         <a href="{{ url_for('try_page') }}" class="{% if request.endpoint == 'try_page' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
         <a href="{{ url_for('standings_public') }}" class="{% if request.endpoint == 'standings_public' %}nav-active{% endif %}">League of Photographers</a>
+        <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% endif %}
       {% endif %}
@@ -1782,6 +1784,7 @@ img {
       <a href="{{ url_for('try_page') }}" onclick="toggleNav()">Upload</a>
       <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
       <a href="{{ url_for('standings_public') }}" onclick="toggleNav()">League of Photographers</a>
+      <a href="{{ url_for('profile') }}" onclick="toggleNav()">Profile</a>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
     {% endif %}
   {% else %}
