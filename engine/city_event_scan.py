@@ -1,43 +1,48 @@
 """
 engine/city_event_scan.py
 ==========================
-Daily live event scanner — discovers time-bound photography-relevant events
-(exhibitions, festivals, sporting events, cultural gatherings) for every city
-with active uploads in the last 7 days, and writes them as event_type='live'
-rows into seasonal_calendar with date_start / date_end.
+SL-181.44 — Login-triggered live event scanner.
+
+Discovers time-bound photography-relevant events (exhibitions, festivals,
+sporting events, cultural gatherings) for cities where members have logged
+in during the last 24 hours, and writes them as event_type='live' rows into
+seasonal_calendar with date_start / date_end.
 
 ARCHITECTURE
 ────────────
-- Runs daily via APScheduler at 20:30 UTC (02:00 IST)
+- Login path (all three: email/password, Google OAuth, email verify) calls
+  mark_city_login(db_session, city) — a lightweight upsert into
+  city_login_activity. Zero API cost. Non-blocking.
+- Nightly cron (00:30 IST / 19:00 UTC) calls run_city_event_scan(), which
+  queries city_login_activity for cities with a login in the last 24 hours.
+  Only those cities are scanned — if nobody logged in from a city today,
+  zero API calls are made for it.
 - One Claude API call per active city (not per city+genre — events are
-  city-wide, not genre-specific; the dashboard shows them alongside the
-  genre-based seasonal advisory)
-- Priority order: cities sorted by upload count in last 7 days DESC
-- Cities with zero uploads in last 7 days are skipped (not scanned daily —
-  they still get the weekly seasonal discovery sweep)
-- Cities with a recent scan (< 20 hours ago) are skipped (idempotent)
-- MAX_SCANS_PER_RUN = 1000 safety backstop — never a real constraint at
-  current scale, just prevents runaway if something goes wrong
+  city-wide, not genre-specific).
+- Cities with a recent scan (< 20 hours ago) are skipped (idempotent).
+- MAX_SCANS_PER_RUN = 1000 safety backstop.
 - Results written to seasonal_calendar with event_type='live', date_end set —
-  rows auto-expire (suppressed at query time once date_end < today)
-- Dedup: if a row with the same location_name + date_end already exists for
-  the city, it is NOT inserted again (safe to re-run)
+  rows auto-expire (suppressed at query time once date_end < today).
+- Dedup: same location_name + date_end for the city is never inserted twice.
+
+COST MODEL
+──────────
+At 100 cities: only cities with logins today get scanned.
+30 cities active → 30 × 3 web search calls = 90 calls, once at night.
+70 cities idle → 0 calls.
+Scales with active cities, not with number of logins.
 
 DB DEPENDENCY
 ─────────────
-Requires the event_type column migration in app.py startup:
-  ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS
-      event_type VARCHAR(20) DEFAULT 'seasonal';
+Existing tables (unchanged):
+  seasonal_calendar — event_type column required (added in app.py startup).
+  city_event_scan_log — dedup/recency log (created in app.py startup).
 
-And a city_event_scan_log table (created in app.py startup):
-  CREATE TABLE IF NOT EXISTS city_event_scan_log (
-      id         SERIAL PRIMARY KEY,
-      city       VARCHAR(80) NOT NULL,
-      scanned_at TIMESTAMP   NOT NULL DEFAULT NOW(),
-      events_found INTEGER   NOT NULL DEFAULT 0
+New table (created in app.py startup — flagged to founder before deploy):
+  CREATE TABLE IF NOT EXISTS city_login_activity (
+      city          VARCHAR(80) PRIMARY KEY,
+      last_login_at TIMESTAMP   NOT NULL DEFAULT NOW()
   );
-  CREATE INDEX IF NOT EXISTS idx_city_event_scan_log_city_at
-      ON city_event_scan_log (city, scanned_at);
 
 DASHBOARD INTEGRATION
 ─────────────────────
@@ -136,25 +141,56 @@ Today's date is {today}.
 """
 
 
+def mark_city_login(db_session, city):
+    """
+    SL-181.44 — Called from every login entry point in app.py (email/password,
+    Google OAuth callback, email verify) immediately after login_user().
+    Upserts one row into city_login_activity so the nightly cron knows this
+    city had a login today and should be scanned.
+
+    Fire-and-forget — caller must wrap in try/except so no login flow is
+    ever blocked by this call.
+
+    city_login_activity schema (created in app.py startup):
+        city          VARCHAR(80) PRIMARY KEY,
+        last_login_at TIMESTAMP   NOT NULL DEFAULT NOW()
+    """
+    if not city or city.strip().lower() == 'other':
+        return
+    try:
+        db_session.execute(_sql("""
+            INSERT INTO city_login_activity (city, last_login_at)
+            VALUES (:city, NOW())
+            ON CONFLICT (city) DO UPDATE SET last_login_at = NOW()
+        """), {"city": city.strip()})
+        db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        print(f"[city_event_scan] mark_city_login error ({city}): {e}")
+
+
 def _get_active_cities(db_session):
     """
-    Return list of (city, upload_count) tuples for cities with at least one
-    upload in the last ACTIVE_DAYS days, ordered by upload_count DESC.
-    Excludes NULL/empty cities.
+    SL-181.44 — Return list of cities that had at least one login in the last
+    24 hours, ordered by last_login_at DESC (most recent first).
+
+    Replaces the previous upload-based query. Login activity is a stronger
+    signal: if a photographer logged in today, they will see the dashboard
+    advisory today — worth spending one scan on their city.
+    Cities with no logins in 24h get zero API calls regardless of upload
+    history; they remain covered by the weekly seasonal discovery sweep.
     """
-    cutoff = datetime.utcnow() - timedelta(days=ACTIVE_DAYS)
+    cutoff = datetime.utcnow() - timedelta(hours=24)
     try:
         rows = db_session.execute(_sql("""
-            SELECT u.city, COUNT(i.id) AS uploads
-            FROM images i
-            JOIN users u ON u.id = i.user_id
-            WHERE i.created_at >= :cutoff
-              AND u.city IS NOT NULL
-              AND TRIM(u.city) != ''
-            GROUP BY u.city
-            ORDER BY uploads DESC
+            SELECT city
+            FROM city_login_activity
+            WHERE last_login_at >= :cutoff
+              AND city IS NOT NULL
+              AND TRIM(city) != ''
+            ORDER BY last_login_at DESC
         """), {"cutoff": cutoff}).fetchall()
-        return [(r.city, r.uploads) for r in rows]
+        return [(r.city, 1) for r in rows]  # (city, _) — count unused, kept for interface compat
     except Exception as e:
         print(f"[city_event_scan] _get_active_cities error: {e}")
         return []
@@ -302,7 +338,7 @@ def _web_search(query: str, api_key: str) -> str:
                 "tools":      [{"type": "web_search_20250305", "name": "web_search"}],
                 "messages":   [{"role": "user", "content": query}],
             },
-            timeout=30,
+            timeout=90,
         )
         resp.raise_for_status()
         blocks = resp.json().get("content", [])
