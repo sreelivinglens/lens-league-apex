@@ -1,6 +1,7 @@
 # SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
 # SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
+# SL-VERSION: 181.50-staging (Session 191, 2026-08-24 — FIX: league_hero photographer attribution changed to Shutter League — avoids partial name. RETAINS 181.49.)
 # SL-VERSION: 181.49-staging (Session 191, 2026-08-24 — FIX: league_hero query relaxed to score>=8.5 and Master tier included, excludes current user. RETAINS 181.48.)
 # SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — HAIKU SHERPA: _generate_haiku_sherpa cross-image synthesis, Peter Evans Signals of Seeing, one Haiku call per eval stored in mentor_advice_json. try_welcome passes sherpa_obs, sherpa_nudge, user_hero, league_hero. RETAINS 181.47.)
 # SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
@@ -32645,7 +32646,7 @@ def try_welcome():
                 score        = float(_lh_row[1]),
                 tier         = _lh_row[2],
                 genre        = _lh_row[3] or '',
-                photographer = (_lh_row[4] or '').split()[0] if _lh_row[4] else '',
+                photographer = 'Shutter League',
             )
     except Exception as _lhe:
         app.logger.warning(f'[try_welcome] league_hero failed: {_lhe}')
