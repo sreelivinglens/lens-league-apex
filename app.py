@@ -1,6 +1,7 @@
 # SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
 # SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
+# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — HAIKU SHERPA: _generate_haiku_sherpa cross-image synthesis, Peter Evans Signals of Seeing, one Haiku call per eval stored in mentor_advice_json. try_welcome passes sherpa_obs, sherpa_nudge, user_hero, league_hero. RETAINS 181.47.)
 # SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
 # SL-VERSION: 181.39-staging (Session 190, 2026-08-19 — Rule 10 fix: is_haiku_try.isnot(True) ORM calls in weekly_challenge() and challenge_submit() replaced with raw SQL. ORM filter on unmapped column silently fails. RETAINS 181.38.)
 # SL-VERSION: 181.38-staging (Session 190, 2026-08-19 — try_welcome() hero query: adds width+height to SELECT so template can compute container aspect ratio. is_portrait flag computed in Python. RETAINS 181.37.)
@@ -2184,24 +2185,6 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'city_event_scan_log migration warning: {_cesl_mig}')
 
-            # SL-181.44 — city_login_activity (login-triggered city event scan)
-            # One row per city, upserted on every member login. The nightly
-            # city_event_scan cron reads this table instead of the images table —
-            # only cities with a login in the last 24h are scanned, so API cost
-            # scales with active cities, not total cities.
-            try:
-                db.session.execute(db.text("""
-                    CREATE TABLE IF NOT EXISTS city_login_activity (
-                        city          VARCHAR(80) PRIMARY KEY,
-                        last_login_at TIMESTAMP   NOT NULL DEFAULT NOW()
-                    )
-                """))
-                db.session.commit()
-                print('city_login_activity table OK.')
-            except Exception as _cla_mig:
-                db.session.rollback()
-                print(f'city_login_activity migration warning: {_cla_mig}')
-
             # cancellation_reasons table
             try:
                 db.session.execute(db.text(
@@ -3824,13 +3807,6 @@ def verify_email(token):
     except Exception as _rve:
         app.logger.error(f'[referral] verify_email hook: {_rve}')
     login_user(user, remember=True)
-    # SL-181.44 — mark city for nightly event scan
-    try:
-        from engine.city_event_scan import mark_city_login
-        if getattr(user, 'city', None):
-            mark_city_login(db.session, user.city)
-    except Exception as _cla_err:
-        app.logger.warning(f'[verify_email] mark_city_login failed: {_cla_err}')
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
 
@@ -3901,13 +3877,6 @@ def auth_google_callback():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user, remember=True)
-        # SL-181.44 — mark city for nightly event scan
-        try:
-            from engine.city_event_scan import mark_city_login
-            if getattr(user, 'city', None):
-                mark_city_login(db.session, user.city)
-        except Exception as _cla_err:
-            app.logger.warning(f'[auth_google_callback] mark_city_login failed: {_cla_err}')
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
         # Check if this user is an approved judge -- send to jury dashboard
@@ -3982,13 +3951,6 @@ def auth_google_callback():
         except Exception as _rgo:
             app.logger.error(f'[referral] auth_google_callback hook: {_rgo}')
         login_user(user, remember=True)
-        # SL-181.44 — mark city for nightly event scan
-        try:
-            from engine.city_event_scan import mark_city_login
-            if getattr(user, 'city', None):
-                mark_city_login(db.session, user.city)
-        except Exception as _cla_err:
-            app.logger.warning(f'[auth_google_callback_new] mark_city_login failed: {_cla_err}')
         return redirect(url_for('onboarding'))
 
 
@@ -4213,13 +4175,6 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user, remember=True)
-        # SL-181.44 — mark city for nightly event scan
-        try:
-            from engine.city_event_scan import mark_city_login
-            if getattr(user, 'city', None):
-                mark_city_login(db.session, user.city)
-        except Exception as _cla_err:
-            app.logger.warning(f'[login] mark_city_login failed: {_cla_err}')
 
         # SL-176 perf: warm dashboard caches on login so first dashboard
         # load is instant. Runs in background thread — non-blocking.
@@ -31697,6 +31652,167 @@ def _try_calibration_line(genre):
     )
 
 
+def _generate_haiku_sherpa(user_id):
+    """
+    SL-181.48-staging — Cross-image Sherpa synthesis for Haiku users.
+
+    Fires after each new evaluation is scored (2+ images). Reads all
+    takeaways and dimension scores across the user's Haiku history, then
+    makes ONE Haiku API call to produce a personal cross-image observation
+    in Sherpa voice — stored in users.mentor_advice_json.
+
+    NOT templated. NOT a dimension summary. Reads the actual pattern across
+    real photographs using Peter Evans' Signals of Seeing framework:
+    focal point, exclusion, background, specificity, negative space.
+
+    Budget: one Haiku call per new evaluation. ~₹0.50. Stored — never
+    regenerated unless a new evaluation is scored.
+
+    Output JSON stored in mentor_advice_json:
+    {
+      "observation": "<2-3 sentence cross-image Sherpa observation>",
+      "nudge": "<one actionable sentence before next shutter press>",
+      "eval_count": N
+    }
+    """
+    import json as _sj
+    import urllib.request as _sur
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return
+
+    try:
+        # Fetch all scored Haiku images for this user
+        _rows = db.session.execute(db.text("""
+            SELECT i.id, i.score, i.tier, i.genre, i.asset_name,
+                   i.audit_json,
+                   i.dod_score, i.disruption_score, i.dm_score,
+                   i.wonder_score, i.aq_score
+            FROM images i
+            WHERE i.user_id = :uid
+              AND i.is_haiku_try IS TRUE
+              AND i.status = 'scored'
+              AND i.score IS NOT NULL
+            ORDER BY i.id ASC
+        """), {'uid': user_id}).fetchall()
+
+        if not _rows or len(_rows) < 2:
+            return
+
+        # Build image summaries for the prompt
+        _summaries = []
+        for _r in _rows:
+            try:
+                _a = _sj.loads(_r[5] or '{}')
+                _name = (_r[4] or '').replace('_', ' ').strip() or 'Untitled'
+                _tk = (_a.get('takeaway') or '').strip()
+                _wn = (_a.get('what_next') or '').strip()
+                _summary = (
+                    f"Image: {_name} · {_r[3]} · {float(_r[1]):.2f} · {_r[2]}\n"
+                    f"Takeaway: {_tk}\n"
+                    f"Weakest dimension: {_a.get('next_leap_name', '')}"
+                )
+                if _wn:
+                    _summary += f"\nNext action given: {_wn[:80]}"
+                _summaries.append(_summary)
+            except Exception:
+                pass
+
+        if not _summaries:
+            return
+
+        _n = len(_summaries)
+        _history_block = "\n\n".join(_summaries)
+
+        _prompt = f"""You are the Shutter League Sherpa — a senior photographer and mentor
+who has now watched {_n} photographs from this photographer.
+
+You are writing the centrepiece of their personal dashboard. This is the most
+important text they will read every time they return to the platform.
+
+WHAT YOU MUST PRODUCE:
+1. observation: 2-3 sentences that name what you have seen ACROSS ALL {_n} photographs
+   as a body of work — not about any single image. Look for:
+   - What does the photographer consistently do well? (the signal)
+   - What keeps appearing as the limiting factor? (the gap) — name it in plain
+     English, never use dimension codes or jargon
+   - Use Peter Evans' Signals of Seeing: focal point commitment, exclusion
+     (deciding what NOT to include), background awareness, specificity of subject
+   - The observation must feel like it could ONLY have been written about THIS
+     photographer's {_n} specific photographs — not a generic observation
+
+2. nudge: ONE sentence. The single most useful thing they can do before their
+   next shutter press. Concrete. Specific to the pattern you named. Something
+   a Sherpa who has watched all {_n} images would say.
+
+RULES — non-negotiable:
+- Never say "your metrics" or "your data" or "your scores" — you are a Sherpa, not a bot
+- Never use dimension codes: AQ, DM, DOD, WF, VD — plain English only
+- Never say "Shutter League" — you are speaking as the Sherpa, not the platform
+- Never be generic — "keep shooting" or "practice more" is failure
+- Warm, direct, specific. A trusted friend who is also a master photographer.
+- The gap must be named with precision — not "composition" but "the subject gets
+  lost in what's behind it" or "the moment you're choosing is one second too early"
+- Maximum 60 words for observation, 25 words for nudge
+
+PHOTOGRAPHER'S {_n} IMAGES:
+{_history_block}
+
+Return ONLY valid JSON, no markdown:
+{{"observation": "<2-3 sentences>", "nudge": "<one sentence>", "eval_count": {_n}}}"""
+
+        _payload = _sj.dumps({
+            'model': _HAIKU_MODEL,
+            'max_tokens': 300,
+            'temperature': 0.3,
+            'messages': [{'role': 'user', 'content': _prompt}]
+        }).encode()
+
+        _req = _sur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+            },
+            method='POST'
+        )
+
+        with _sur.urlopen(_req, timeout=45) as _resp:
+            _raw = _sj.loads(_resp.read().decode())
+
+        _text = ''.join(
+            b.get('text', '') for b in (_raw.get('content') or [])
+            if b.get('type') == 'text'
+        ).strip()
+
+        if _text.startswith('```'):
+            _parts = _text.split('```')
+            _text = _parts[1] if len(_parts) > 1 else _text
+            if _text.startswith('json'):
+                _text = _text[4:]
+            _text = _text.strip()
+
+        _result = _sj.loads(_text)
+        if not _result.get('observation'):
+            return
+
+        db.session.execute(db.text(
+            "UPDATE users SET mentor_advice_json = :j WHERE id = :uid"
+        ), {'j': _sj.dumps(_result), 'uid': user_id})
+        db.session.commit()
+        app.logger.info(f'[haiku_sherpa] synthesis complete for user {user_id} ({_n} images)')
+
+    except Exception as _e:
+        app.logger.warning(f'[haiku_sherpa] non-fatal: {_e}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 def _get_haiku_history_context(user_id, exclude_image_id=None):
     """
     181.23 — History context for Haiku scoring prompt.
@@ -32182,6 +32298,18 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                 f'[try_haiku] scored image={image_id} score={final_score} '
                 f'tier={tier} user={img.user_id}'
             )
+            # SL-181.48: trigger cross-image Sherpa synthesis after scoring
+            # Fires in background thread — non-blocking, never crashes scoring
+            if user_id:
+                try:
+                    import threading as _sht
+                    _uid_for_sherpa = img.user_id
+                    def _run_sherpa():
+                        with app.app_context():
+                            _generate_haiku_sherpa(_uid_for_sherpa)
+                    _sht.Thread(target=_run_sherpa, daemon=True).start()
+                except Exception as _she:
+                    app.logger.warning(f'[haiku_sherpa] trigger failed (non-fatal): {_she}')
             return {
                 'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
                 'score': round(final_score, 2),
@@ -32442,6 +32570,84 @@ def try_welcome():
     except Exception as _ge:
         app.logger.warning(f'[try_welcome] gallery_images failed: {_ge}')
 
+    # SL-181.48: fetch Sherpa cross-image observation from mentor_advice_json
+    _sherpa_obs = None
+    _sherpa_nudge = None
+    try:
+        import json as _saj
+        _sadv_row = db.session.execute(
+            db.text("SELECT mentor_advice_json FROM users WHERE id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _sadv_row and _sadv_row[0]:
+            _sadv = _saj.loads(_sadv_row[0])
+            _sherpa_obs   = _sadv.get('observation', '').strip() or None
+            _sherpa_nudge = _sadv.get('nudge', '').strip() or None
+    except Exception as _sae:
+        app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
+
+    # SL-181.48: user's own best image as hero (highest score, has thumb)
+    # Falls back to League hero if no user images exist
+    _user_hero = None
+    try:
+        _uh_row = db.session.execute(db.text("""
+            SELECT id, thumb_url, score, tier, genre, width, height
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try IS TRUE
+              AND status = 'scored'
+              AND thumb_url IS NOT NULL
+              AND score IS NOT NULL
+            ORDER BY score DESC
+            LIMIT 1
+        """), {'uid': current_user.id}).fetchone()
+        if _uh_row:
+            from types import SimpleNamespace as _UHSN
+            _uw = int(_uh_row[5]) if _uh_row[5] else 0
+            _uh = int(_uh_row[6]) if _uh_row[6] else 0
+            _user_hero = _UHSN(
+                id        = _uh_row[0],
+                thumb_url = _uh_row[1],
+                score     = float(_uh_row[2]),
+                tier      = _uh_row[3],
+                genre     = _uh_row[4] or '',
+                img_width  = _uw,
+                img_height = _uh,
+                is_portrait = (_uh > _uw) if (_uw and _uh) else False,
+            )
+    except Exception as _uhe:
+        app.logger.warning(f'[try_welcome] user_hero failed: {_uhe}')
+
+    # League hero — Grandmaster/Legend only, for sidebar standard panel
+    _league_hero = None
+    try:
+        _lh_row = db.session.execute(db.text("""
+            SELECT thumb_url, score, tier, genre,
+                   u.full_name
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND i.score IS NOT NULL
+              AND i.is_public = TRUE
+              AND i.is_flagged = FALSE
+              AND i.tier IN ('Legend','Grandmaster')
+              AND i.score >= 9.0
+              AND i.thumb_url IS NOT NULL
+              AND (i.is_haiku_try IS NOT TRUE)
+            ORDER BY RANDOM() LIMIT 1
+        """)).fetchone()
+        if _lh_row:
+            from types import SimpleNamespace as _LHSN
+            _league_hero = _LHSN(
+                thumb_url    = _lh_row[0],
+                score        = float(_lh_row[1]),
+                tier         = _lh_row[2],
+                genre        = _lh_row[3] or '',
+                photographer = (_lh_row[4] or '').split()[0] if _lh_row[4] else '',
+            )
+    except Exception as _lhe:
+        app.logger.warning(f'[try_welcome] league_hero failed: {_lhe}')
+
     resp = make_response(render_template(
         'dashboard_haiku.html',
         evals_used         = evals_used,
@@ -32450,6 +32656,10 @@ def try_welcome():
         images             = _images,
         milestone_strength = _milestone_strength,
         hero_image         = _hero,
+        user_hero          = _user_hero,
+        league_hero        = _league_hero,
+        sherpa_obs         = _sherpa_obs,
+        sherpa_nudge       = _sherpa_nudge,
         visit_count        = _visit_count,
         next_leap_name     = _next_leap_name,
         prev_score         = _prev_score,
