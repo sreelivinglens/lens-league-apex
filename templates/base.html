@@ -1,3 +1,4 @@
+{# SL-VERSION: 181.46-staging (Session 191, 2026-08-23 — HAIKU NAV ACTIVE STATE: active link now white bold instead of gold for Haiku users. Gold reserved for scores/badges only. RETAINS 181.45.) #}
 {# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — HAIKU NAV COLOUR: nav background changed to #1A2744 (dark navy) for Haiku users via nav-haiku class. Matches dashboard_haiku.html nav colour. Paid users and logged-out retain existing rgba(26,24,20,0.94) dark brown. RETAINS 181.4.) #}
 {# SL-VERSION: 181.4 (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Authenticated non-paid (Haiku) users now see discovery nav: How it works / Science / Programmes / Pricing / League of Photographers / My evaluations / Log out — instead of paid nav with Dashboard/Improve/etc. (2) Logged-out nav: Programmes link added, AEA label cleaned up. (3) Mobile nav: same Haiku branch added. RETAINS 181.3.) Previous: {# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
 <!DOCTYPE html>
@@ -580,6 +581,12 @@ nav.nav-haiku {
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+/* Haiku active nav link — white bold, not gold (gold reserved for scores/badges) */
+nav.nav-haiku .nav-links a.nav-active {
+  color: #ffffff !important;
+  background: rgba(255,255,255,0.12);
+  border-bottom: 2px solid rgba(255,255,255,0.6);
 }
 .nav-brand {
   font-family: var(--font-mono);
