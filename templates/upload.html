@@ -2,7 +2,8 @@
 {# SL-VERSION: 181.6d-staging (Session 188, 2026-08-17 — Location field: label "Current Location" → "Where was this photograph taken?"; helper text added (scorecard-only note + red city advisory instruction); same red advisory line added to session pill (shown on 2nd+ uploads). RETAINS 181.6c-staging.)
 {# SL-VERSION: 181.6c-staging (Session 186, 2026-08-16 — FIX: "of 3" now uses evals_limit variable. RETAINS 181.6b-staging.)
 {# SL-VERSION: 181.6b-staging (Session 186, 2026-08-16 — No template change. Version bump to match app-staging-181.14j deploy. RETAINS 181.6-staging.)
-{# SL-VERSION: 181.6-staging (Session 186, 2026-08-16 — FIX: data-next="try_result" on upload form when is_trial. Passes hint to score-status poll so trial images always redirect to /try/result/<id>. Prevents race condition. RETAINS 181.5-staging.)
+{# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — FIX: limit-reached block updated with correct locked copy — "You've seen what the platform sees. Now build the record." Two options: League membership + 100 for 100. RETAINS 181.44-staging.) #}
+{# SL-VERSION: 181.44-staging (Session 186, 2026-08-16 — FIX: data-next="try_result" on upload form when is_trial. Passes hint to score-status poll so trial images always redirect to /try/result/<id>. Prevents race condition. RETAINS 181.5-staging.)
 {# SL-VERSION: 181.3 (Session 184, 2026-08-14 — FIX: flagged status JS now uses r.message from score-status API instead of hardcoded generic text. Watermark, explicit, AI-generated each show correct specific message. My Gallery link retained. RETAINS 181.2.) Previous: 181.2 (181.1 redirected to the result page before scoring finished — now polls first.) Previous: 181.1 (Session 181, 2026-08-13 — free evaluation path. (1) location check now reads #location-hidden when the visible input has been hidden by the session-storage block, which was refusing every second upload in a session. (2) /try/upload success reply {image_id:N} is now handled — it has no status field, so it fell through to the error branch and printed 'Upload failed (200)' on a successful upload. Retains 175.8:) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
@@ -459,10 +460,41 @@
     <p>{% if is_trial %}Five dimensions. A live percentile. One honest takeaway. Upload your photograph to see where it stands.{% else %}Your photograph is about to get the most honest feedback it has ever received. Under 2 minutes. No ego. No encouragement for its own sake.{% endif %}</p>
   </div>
   {% if is_trial %}
+  {% set _trial_limit = evals_limit if evals_limit is defined else 10 %}
+  {% if evals_used >= _trial_limit %}
+  {# Limit reached — block the upload form entirely #}
+  <div style="background:#FEFCF8;border:1px solid #D4A428;border-radius:8px;padding:28px 24px;margin-bottom:24px;">
+    <div style="font-size:19px;font-weight:700;color:#1A1A18;margin-bottom:8px;line-height:1.4;">You've seen what the platform sees. Now build the record.</div>
+    <div style="font-size:15px;color:#4A4840;line-height:1.7;margin-bottom:20px;">You have used all {{ _trial_limit }} free evaluations. Two ways to continue:</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+      <div style="background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:16px 18px;">
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">Join the League of Photographers</div>
+        <div style="font-size:14px;color:#4A4840;line-height:1.6;margin-bottom:12px;">Annual or 6-month membership. Full evaluations, standing, Evolving Eye, Mentor narrative.</div>
+        <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#1A2744;color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:5px;text-decoration:none;">See membership options →</a>
+      </div>
+      <div style="background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:16px 18px;">
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">100 for 100</div>
+        <div style="font-size:14px;color:#4A4840;line-height:1.6;margin-bottom:12px;">₹100 for 100 more Basic Evaluations. No subscription. Continue at your own pace.</div>
+        <a href="{{ url_for('pricing') }}#play" style="display:inline-block;background:#fff;color:#1A2744;font-weight:700;font-size:14px;padding:10px 20px;border-radius:5px;text-decoration:none;border:1px solid #1A2744;">Get 100 more →</a>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#8a8070;">Not everyone wants a standing or an award. Both paths let you keep improving.</div>
+  </div>
+  <script>
+    // Hide upload form — limit reached
+    document.addEventListener('DOMContentLoaded', function() {
+      var carousel = document.getElementById('uploadCarousel');
+      var form = document.getElementById('uploadForm');
+      if (carousel) carousel.style.display = 'none';
+      if (form) form.style.display = 'none';
+    });
+  </script>
+  {% else %}
   <div style="background:#E8EAF6;border:1px solid #C5CAE9;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#1A1A18;line-height:1.5;">
-    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of {{ evals_limit if evals_limit is defined else 10 }}</strong><br>
+    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of {{ _trial_limit }}</strong><br>
     Every dimension is weighted for your interest area and benchmarked against a live calibration pool.
   </div>
+  {% endif %}
   {% endif %}
 
   <!-- ── UPLOAD CAROUSEL ── -->
