@@ -7,6 +7,7 @@
 {# SL-VERSION: HAIKU-178.20-staging (Session 190, 2026-08-19 — SPLIT: bottom padding 6vh→2vh so gap between split and discovery grid is tight. RETAINS HAIKU-178.19.)
 {# SL-VERSION: HAIKU-178.19-staging (Session 190, 2026-08-19 — NAV REVERT: logo img reverted to text crest — img caused nav layout break. Logo update deferred to dedicated session with static path verification. RETAINS HAIKU-178.18.)
 {# SL-VERSION: HAIKU-178.18-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Dead space removed — hk-sign removed from State 1 split, discovery grid moved directly below split with no gap. (2) Gallery image height 80px→140px. (3) SL logo image in desktop nav and mobile topbar replacing text. RETAINS HAIKU-178.17.)
+{# SL-VERSION: HAIKU-178.44-staging (Session 191, 2026-08-24 — RESPONSIVE: added 1024px, 768px, 600px breakpoints for new grid elements — hk-league-panel, hk-locked-row collapse to 1 column on mobile/tablet. hk-strip-new collapses to 2-col. hk-hero, hk-body padding reduced on small screens. Audit: Single column ✅ iPad breakpoint ✅. RETAINS HAIKU-178.43.) #}
 {# SL-VERSION: HAIKU-178.43-staging (Session 191, 2026-08-24 — NAV: Profile added to desktop nav and mobile bottom nav (replaces Log out tab — logout stays in desktop nav). RETAINS HAIKU-178.42.) #}
 {# SL-VERSION: HAIKU-178.42-staging (Session 191, 2026-08-24 — FIX: removed last orphaned hk-sign div from State 0 block. Footer now the only sign-off on all states. RETAINS HAIKU-178.41.) #}
 {# SL-VERSION: HAIKU-178.41-staging (Session 191, 2026-08-24 — KYC: footer now has all 4 mandatory Razorpay legal links: Terms, Privacy, Refunds, Shipping. Short labels. RETAINS HAIKU-178.40.) #}
@@ -391,18 +392,25 @@ body.page-haiku-dash{
   .hk-split-photo{min-height:40vw;max-height:320px}
   .hk-split-text{padding:36px 32px 24px;overflow-x:hidden;width:100%;box-sizing:border-box}
   .hk-main{padding:36px 24px 60px;max-width:100%;overflow-x:hidden;width:100%}
+  .hk-body{padding:24px 20px}
   .hk-h1{font-size:clamp(26px,5vw,40px)}
   .hk-intro{font-size:17px}
   .hk-world-grid{grid-template-columns:1fr 1fr}
   .hk-conversion-options{grid-template-columns:1fr!important}
   .hk-footer{padding:44px 22px 24px}
   .hk-footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+  .hk-league-panel{grid-template-columns:1fr!important}
+  .hk-league-img{height:240px}
+  .hk-strip-new{grid-template-columns:repeat(2,1fr);gap:4px}
+  .hk-tile{height:140px}
+  .hk-hero{height:280px}
 }
 @media (max-width: 600px){
   .hk-split{display:block!important;grid-template-columns:1fr!important}
   .hk-split-photo{min-height:48vw;max-height:240px}
   .hk-split-text{padding:24px 16px 16px}
   .hk-main{padding:32px 16px 80px}
+  .hk-body{padding:20px 16px}
   .hk-world-grid,.hk-conversion-options{grid-template-columns:1fr!important}
   .hk-footer-grid{grid-template-columns:1fr!important}
   .hk-footer-bottom{flex-direction:column;gap:8px;text-align:center}
@@ -410,8 +418,26 @@ body.page-haiku-dash{
   .hk-strip-tile{width:90px}
   .hk-disc-grid{grid-template-columns:1fr!important}
   .hk-gallery-grid{grid-template-columns:repeat(2,1fr)!important}
+  .hk-strip-new{grid-template-columns:repeat(2,1fr)!important;gap:4px}
+  .hk-tile{height:120px}
+  .hk-league-panel{grid-template-columns:1fr!important}
+  .hk-league-img{height:200px}
+  .hk-league-body{padding:20px 16px}
+  .hk-league-score{font-size:40px}
+  .hk-locked-row{grid-template-columns:1fr!important}
+  .hk-hero{height:240px}
+  .hk-hero-num{font-size:36px}
+  .hk-sherpa{padding:20px 16px}
+  .hk-sherpa-q{font-size:15px}
 }
-/* 900px padding rule removed — 1024px block handles padding-bottom */
+@media (max-width: 768px){
+  .hk-league-panel{grid-template-columns: 1fr !important}
+  .hk-locked-row{grid-template-columns: 1fr !important}
+  .hk-strip-new{grid-template-columns:repeat(2,1fr)!important}
+  .hk-tile{height:130px}
+  .hk-body{padding:20px 16px}
+  .hk-hero{height:260px}
+}
 
 /* focus */
 .hk-cta:focus-visible,.hk-conv-opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
