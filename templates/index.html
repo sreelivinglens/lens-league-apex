@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.24-staging (Session 191, 2026-08-23 — NAV FIX: logout link added to Haiku logged-in nav state. Was missing — user had no way to log out from index page. RETAINS 182.23.) #}
 {# SL-VERSION: 182.23-staging (Session 190, 2026-08-19 — NAV: SL logo image replacing text crest. RETAINS 182.22.)
 {# SL-VERSION: 182.22-staging (Session 190, 2026-08-19 — NAV: full discovery links added — How it works/Science/Contests/Pricing/League of Photographers. Why/About anchor links removed — content is below fold, nav should drive to pages not anchors. Auth-aware right: logged-in paid→Dashboard, Haiku→My evaluations+Upload, logged-out→Login+Register. RETAINS 182.21.)
 {# SL-VERSION: 182.21-staging (Session 189, 2026-08-18 — NAV: "The League" now links to /standings public standings page. RETAINS 182.20.) #}
@@ -228,6 +229,7 @@ body,html{overflow-x:hidden;max-width:100%}
       {% else %}
         <a href="{{ url_for('try_welcome') }}" class="navlogin">My evaluations</a>
         <a href="{{ url_for('try_page') }}" class="navstart">Upload →</a>
+        <a href="{{ url_for('logout') }}" class="navlogin" style="font-size:13px;color:var(--muted);border:1px solid var(--line);padding:5px 12px;border-radius:5px;">Log out</a>
       {% endif %}
     {% else %}
       <a href="{{ url_for('login') }}" class="navlogin">Login</a>
