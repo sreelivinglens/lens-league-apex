@@ -2184,6 +2184,24 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'city_event_scan_log migration warning: {_cesl_mig}')
 
+            # SL-181.44 — city_login_activity (login-triggered city event scan)
+            # One row per city, upserted on every member login. The nightly
+            # city_event_scan cron reads this table instead of the images table —
+            # only cities with a login in the last 24h are scanned, so API cost
+            # scales with active cities, not total cities.
+            try:
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS city_login_activity (
+                        city          VARCHAR(80) PRIMARY KEY,
+                        last_login_at TIMESTAMP   NOT NULL DEFAULT NOW()
+                    )
+                """))
+                db.session.commit()
+                print('city_login_activity table OK.')
+            except Exception as _cla_mig:
+                db.session.rollback()
+                print(f'city_login_activity migration warning: {_cla_mig}')
+
             # cancellation_reasons table
             try:
                 db.session.execute(db.text(
@@ -3806,6 +3824,13 @@ def verify_email(token):
     except Exception as _rve:
         app.logger.error(f'[referral] verify_email hook: {_rve}')
     login_user(user, remember=True)
+    # SL-181.44 — mark city for nightly event scan
+    try:
+        from engine.city_event_scan import mark_city_login
+        if getattr(user, 'city', None):
+            mark_city_login(db.session, user.city)
+    except Exception as _cla_err:
+        app.logger.warning(f'[verify_email] mark_city_login failed: {_cla_err}')
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
 
@@ -3876,6 +3901,13 @@ def auth_google_callback():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user, remember=True)
+        # SL-181.44 — mark city for nightly event scan
+        try:
+            from engine.city_event_scan import mark_city_login
+            if getattr(user, 'city', None):
+                mark_city_login(db.session, user.city)
+        except Exception as _cla_err:
+            app.logger.warning(f'[auth_google_callback] mark_city_login failed: {_cla_err}')
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
         # Check if this user is an approved judge -- send to jury dashboard
@@ -3950,6 +3982,13 @@ def auth_google_callback():
         except Exception as _rgo:
             app.logger.error(f'[referral] auth_google_callback hook: {_rgo}')
         login_user(user, remember=True)
+        # SL-181.44 — mark city for nightly event scan
+        try:
+            from engine.city_event_scan import mark_city_login
+            if getattr(user, 'city', None):
+                mark_city_login(db.session, user.city)
+        except Exception as _cla_err:
+            app.logger.warning(f'[auth_google_callback_new] mark_city_login failed: {_cla_err}')
         return redirect(url_for('onboarding'))
 
 
@@ -4174,6 +4213,13 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user, remember=True)
+        # SL-181.44 — mark city for nightly event scan
+        try:
+            from engine.city_event_scan import mark_city_login
+            if getattr(user, 'city', None):
+                mark_city_login(db.session, user.city)
+        except Exception as _cla_err:
+            app.logger.warning(f'[login] mark_city_login failed: {_cla_err}')
 
         # SL-176 perf: warm dashboard caches on login so first dashboard
         # load is instant. Runs in background thread — non-blocking.
