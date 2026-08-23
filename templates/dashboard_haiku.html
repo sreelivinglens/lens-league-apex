@@ -7,6 +7,7 @@
 {# SL-VERSION: HAIKU-178.20-staging (Session 190, 2026-08-19 — SPLIT: bottom padding 6vh→2vh so gap between split and discovery grid is tight. RETAINS HAIKU-178.19.)
 {# SL-VERSION: HAIKU-178.19-staging (Session 190, 2026-08-19 — NAV REVERT: logo img reverted to text crest — img caused nav layout break. Logo update deferred to dedicated session with static path verification. RETAINS HAIKU-178.18.)
 {# SL-VERSION: HAIKU-178.18-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Dead space removed — hk-sign removed from State 1 split, discovery grid moved directly below split with no gap. (2) Gallery image height 80px→140px. (3) SL logo image in desktop nav and mobile topbar replacing text. RETAINS HAIKU-178.17.)
+{# SL-VERSION: HAIKU-178.33-staging (Session 191, 2026-08-24 — FIX: orphaned old States 2-10 block removed (was rendering below footer). Font sizes lifted throughout for 70yr readability: sherpa 17→18px, nudge 13→16px, counter 13→15px, CTA 16→18px, tile score 16→18px, locked title 14→16px, locked sub 12→14px, league statement 13→15px, hero sub 12→14px. RETAINS HAIKU-178.32.) #}
 {# SL-VERSION: HAIKU-178.32-staging (Session 191, 2026-08-24 — FULL REDESIGN: single-column layout. State 0: League hero full-width with invitation copy. States 1-10: user's own best image as hero, Sherpa cross-image observation from mentor_advice_json, image strip clickable 160px tiles, League panel Grandmaster standard, locked Evolving Eye + Portfolio features. Old split layout and gallery strip removed. RETAINS HAIKU-178.31.) #}
 {# SL-VERSION: HAIKU-178.31-staging (Session 191, 2026-08-23 — NAV OVERHAUL: reordered to match base.html Haiku nav — Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, Account, avatar. hk-active class added for white active state. RETAINS HAIKU-178.30.) #}
 {# SL-VERSION: HAIKU-178.30-staging (Session 191, 2026-08-23 — NAV FIX: removed hardcoded font-weight:600;color:#fff from League of Photographers link — was incorrectly highlighted on dashboard. RETAINS HAIKU-178.29.) #}
@@ -81,35 +82,35 @@ body.page-haiku-dash{
 .hk-hero{position:relative;height:340px;background:#0F1F3D;overflow:hidden}
 .hk-hero-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .hk-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.96) 0%,rgba(6,14,28,.2) 55%,transparent 100%)}
-.hk-hero-see{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-size:11px;padding:5px 12px;border:1px solid rgba(255,255,255,.12);border-radius:2px;text-decoration:none;transition:color .15s}
+.hk-hero-see{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-size:14px;padding:8px 16px;border:1px solid rgba(255,255,255,.15);border-radius:2px;text-decoration:none;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .hk-hero-see:hover{color:#fff}
 .hk-hero-content{position:absolute;bottom:0;left:0;right:0;padding:24px 32px}
-.hk-hero-eye{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:10px}
-.hk-hero-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.hk-hero-eye{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+.hk-hero-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .hk-hero-num{font-size:48px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em}
-.hk-hero-denom{font-size:16px;color:rgba(255,255,255,.35)}
-.hk-hero-tier{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.35);padding:4px 12px}
-.hk-hero-genre{font-size:11px;color:rgba(255,255,255,.35);margin-left:4px}
-.hk-hero-sub{font-size:12px;color:rgba(255,255,255,.3)}
+.hk-hero-denom{font-size:18px;color:rgba(255,255,255,.4)}
+.hk-hero-tier{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.35);padding:5px 14px}
+.hk-hero-genre{font-size:14px;color:rgba(255,255,255,.4);margin-left:4px}
+.hk-hero-sub{font-size:14px;color:rgba(255,255,255,.35);line-height:1.6}
 
 /* ── SHERPA OBSERVATION ── */
-.hk-sherpa{background:#fff;border-bottom:1px solid #E8E0D0;padding:24px 32px}
-.hk-sherpa-lbl{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:12px}
-.hk-sherpa-q{font-size:17px;color:#1A1A18;line-height:1.75;font-style:italic;border-left:3px solid #D4A428;padding:2px 0 2px 18px;margin-bottom:10px}
-.hk-sherpa-nudge{font-size:13px;color:#2C3E6B;font-weight:500;padding-left:21px}
+.hk-sherpa{background:#fff;border-bottom:1px solid #E8E0D0;padding:28px 32px}
+.hk-sherpa-lbl{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:14px}
+.hk-sherpa-q{font-size:18px;color:#1A1A18;line-height:1.8;font-style:italic;border-left:3px solid #D4A428;padding:4px 0 4px 20px;margin-bottom:14px}
+.hk-sherpa-nudge{font-size:16px;color:#2C3E6B;font-weight:500;padding-left:23px;line-height:1.6}
 
 /* ── MAIN BODY — single column ── */
 .hk-body{padding:28px 32px;max-width:900px;margin:0 auto}
 
 /* ── COUNTER ── */
-.hk-counter-bar{background:#F5F0E8;border:1px solid #E0D8C8;padding:11px 16px;font-size:13px;color:#8A8070;margin-bottom:16px}
+.hk-counter-bar{background:#F5F0E8;border:1px solid #E0D8C8;padding:14px 18px;font-size:15px;color:#8A8070;margin-bottom:18px}
 .hk-counter-bar b{color:#1A1A18}
 
 /* ── CTA ── */
-.hk-cta-new{background:#1A2744;color:#fff;padding:18px 24px;display:block;text-decoration:none;margin-bottom:32px;transition:background .15s}
+.hk-cta-new{background:#1A2744;color:#fff;padding:20px 26px;display:block;text-decoration:none;margin-bottom:32px;transition:background .15s;min-height:64px}
 .hk-cta-new:hover{background:#243660}
-.hk-cta-new-main{font-size:16px;font-weight:500}
-.hk-cta-new-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}
+.hk-cta-new-main{font-size:18px;font-weight:500}
+.hk-cta-new-sub{font-size:14px;color:rgba(255,255,255,.5);margin-top:4px}
 
 /* ── IMAGE STRIP ── */
 .hk-strip-new{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:36px}
@@ -117,37 +118,37 @@ body.page-haiku-dash{
 .hk-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
 .hk-tile:hover img{transform:scale(1.03)}
 .hk-tile-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.92) 0%,transparent 55%)}
-.hk-tile-info{position:absolute;bottom:0;left:0;right:0;padding:8px 10px}
-.hk-tile-score{font-size:16px;font-weight:700;color:#fff;line-height:1}
-.hk-tile-tier{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#D4A428;margin-top:3px}
-.hk-tile-genre{font-size:9px;color:rgba(255,255,255,.4);margin-top:1px}
+.hk-tile-info{position:absolute;bottom:0;left:0;right:0;padding:10px 12px}
+.hk-tile-score{font-size:18px;font-weight:700;color:#fff;line-height:1}
+.hk-tile-tier{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#D4A428;margin-top:4px}
+.hk-tile-genre{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
 
 /* ── LEAGUE PANEL ── */
 .hk-league-wrap{margin-bottom:28px}
-.hk-league-lbl{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:10px}
+.hk-league-lbl{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:12px}
 .hk-league-panel{background:#0F1F3D;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
 .hk-league-img{position:relative;height:220px;overflow:hidden;background:linear-gradient(135deg,#1a3a5a,#060e1c)}
 .hk-league-img img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
-.hk-league-badge{position:absolute;top:14px;left:14px;background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.4);color:#D4A428;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px}
+.hk-league-badge{position:absolute;top:14px;left:14px;background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.4);color:#D4A428;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 12px}
 .hk-league-body{padding:28px 28px;display:flex;flex-direction:column;justify-content:space-between}
-.hk-league-eyebrow{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
-.hk-league-score{font-size:52px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em;margin-bottom:6px}
-.hk-league-tier{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;margin-bottom:8px}
-.hk-league-meta{font-size:12px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:20px}
-.hk-league-statement{font-size:13px;color:rgba(255,255,255,.35);line-height:1.65;font-style:italic;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;margin-bottom:16px}
-.hk-league-link{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .15s}
+.hk-league-eyebrow{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px}
+.hk-league-score{font-size:52px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em;margin-bottom:8px}
+.hk-league-tier{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;margin-bottom:10px}
+.hk-league-meta{font-size:14px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:20px}
+.hk-league-statement{font-size:15px;color:rgba(255,255,255,.4);line-height:1.7;font-style:italic;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;margin-bottom:18px}
+.hk-league-link{font-size:14px;color:rgba(255,255,255,.4);text-decoration:none;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .hk-league-link:hover{color:#D4A428}
 
 /* ── LOCKED FEATURES ── */
-.hk-locked-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px}
-.hk-locked{background:#F5F0E8;border:1px solid #E0D8C8;padding:18px 20px}
-.hk-locked-top{display:flex;align-items:center;gap:7px;margin-bottom:10px}
-.hk-locked-icon{font-size:13px;color:#8A8070}
-.hk-locked-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
-.hk-locked-title{font-size:14px;font-weight:600;color:#1A2744;margin-bottom:6px;line-height:1.35}
-.hk-locked-sub{font-size:12px;color:#8A8070;line-height:1.6;margin-bottom:12px}
-.hk-locked-bar{background:#E0D8C8;height:30px;display:flex;align-items:center;justify-content:center}
-.hk-locked-bar-text{font-size:10px;color:#8A8070;letter-spacing:.5px}
+.hk-locked-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px}
+.hk-locked{background:#F5F0E8;border:1px solid #E0D8C8;padding:20px 22px}
+.hk-locked-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.hk-locked-icon{font-size:14px;color:#8A8070}
+.hk-locked-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
+.hk-locked-title{font-size:16px;font-weight:600;color:#1A2744;margin-bottom:8px;line-height:1.35}
+.hk-locked-sub{font-size:14px;color:#8A8070;line-height:1.65;margin-bottom:14px}
+.hk-locked-bar{background:#E0D8C8;height:36px;display:flex;align-items:center;justify-content:center}
+.hk-locked-bar-text{font-size:13px;color:#8A8070;letter-spacing:.5px}
 
 /* ── H2: SPLIT HERO (State 0 — zero uploads) ── */
 .hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%;border-top:1px solid var(--line)}
@@ -703,236 +704,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div class="hk-sign">Shutter League · Making Images Matter</div>
 </div>
 
-{% endif %}{# end state_zero vs 1-10 #}  <div class="hk-greet">
-    <span class="sl-hk-greeting">Good {{ greeting_time }},</span>
-    <b>{{ first_name }}.</b>
-  </div>
-
-  <div class="hk-eval-badge">
-    <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used
-    &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining
-  </div>
-
-  {# ── STATE 10 — CONVERSION ── #}
-  {% if state_conversion %}
-
-  <div class="hk-conversion">
-    <div class="hk-conversion-headline">Your photographs have shown us how you see.</div>
-    <div class="hk-conversion-body">
-      But they do not yet exist in the Shutter League record. Your standings, your AEA qualification, your calibrated Evolving Eye — none of these have started yet. They start with your next photograph.
-    </div>
-
-    {% if _imgs %}
-    <div class="hk-strip" style="margin-bottom:32px">
-      {% for img in _imgs %}
-      {% if img.thumb_url %}
-      <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-strip-tile">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'photograph' }}" onerror="this.style.display='none'">
-        <div class="hk-strip-badge">{{ img.tier|upper if img.tier else '' }}{% if img.score %} · {{ '%.1f'|format(img.score) }}{% endif %}</div>
-      </a>
-      {% endif %}
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="hk-conversion-options">
-      <a href="{{ '/pricing' }}" class="hk-conv-opt primary">
-        <div>
-          <div class="hk-conv-opt-label">Join the League of Photographers</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.55);margin-top:3px">Unlimited evaluations · AEA · Evolving Eye · Full record</div>
-        </div>
-        <span class="hk-conv-opt-price">₹4,000 / year</span>
-      </a>
-      <a href="{{ '/pricing' }}" class="hk-conv-opt secondary">
-        <div>
-          <div class="hk-conv-opt-label">Continue exploring</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:3px">100 more evaluations · No subscription</div>
-        </div>
-        <span class="hk-conv-opt-price" style="color:var(--gold-dk);font-size:14px;font-weight:700">₹100</span>
-      </a>
-      <a href="{{ url_for('index') }}" class="hk-conv-opt quiet">
-        I came to explore — I am happy with this for now. Your feedback is appreciated.
-      </a>
-    </div>
-  </div>
-
-  <div class="hk-sign">Shutter League · Making Images Matter</div>
-
-  {% else %}{# states 2-9 #}
-
-    {# ── STATE 3: 1 UPLOAD — first read ── #}
-    {% if state_one %}
-
-    {% if _last %}
-    <div class="hk-last-eval">
-      {% if _last.thumb_url %}
-      <img class="hk-last-thumb" src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'photograph' }}" onerror="this.style.display='none'">
-      {% endif %}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-          <span class="hk-last-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<sub>/10</sub></span>
-          <span class="hk-last-tier">{{ _last.tier or '' }}</span>
-        </div>
-        <a class="hk-last-link" href="{{ url_for('try_result', image_id=_last.id) }}">See evaluation →</a>
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="hk-strength">
-      <div class="hk-strength-lbl">What your first photograph showed</div>
-      <div class="hk-strength-text">
-        {% if milestone_strength %}Your eye reads <strong>{{ milestone_strength }}</strong> well. One more photograph and we begin to see a direction.
-        {% else %}One photograph tells us what you made. One more tells us how you see.{% endif %}
-      </div>
-    </div>
-
-    <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Upload your second photograph →
-      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
-    </a>
-
-    {# ── STATE 4: 2 UPLOADS — trend ── #}
-    {% elif state_two %}
-
-    {% if _last %}
-    <div class="hk-last-eval">
-      {% if _last.thumb_url %}
-      <img class="hk-last-thumb" src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'photograph' }}" onerror="this.style.display='none'">
-      {% endif %}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-          <span class="hk-last-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<sub>/10</sub></span>
-          <span class="hk-last-tier">{{ _last.tier or '' }}</span>
-        </div>
-        <a class="hk-last-link" href="{{ url_for('try_result', image_id=_last.id) }}">See evaluation →</a>
-      </div>
-    </div>
-    {% endif %}
-
-    {% if _imgs|length >= 2 %}
-    <div class="hk-strip">
-      {% for img in _imgs %}{% if img.thumb_url %}
-      <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-strip-tile">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
-        <div class="hk-strip-badge">{{ '%.1f'|format(img.score) if img.score }}</div>
-      </a>
-      {% endif %}{% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="hk-strength">
-      <div class="hk-strength-lbl">
-        {% if _trend == 'up' %}Your eye is improving already
-        {% elif _trend == 'down' %}Your first was stronger — here is why that matters
-        {% else %}Consistent across two photographs{% endif %}
-      </div>
-      <div class="hk-strength-text">
-        {% if _trend == 'up' %}Two photographs, and the second scored higher. That is not nothing.
-        {% elif _trend == 'down' %}The second evaluation came in lower. That is useful data — not a failure. It tells us what to watch.
-        {% else %}Same level across two photographs. Your eye is stable. One more and a direction appears.{% endif %}
-        {% if milestone_strength %} Your strongest dimension so far: <strong>{{ milestone_strength }}</strong>.{% endif %}
-      </div>
-    </div>
-
-    <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Upload your third photograph →
-      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
-    </a>
-
-    {# ── STATE 5: 3-4 UPLOADS — pattern forming ── #}
-    {% elif state_building %}
-
-    {% if _last %}
-    <div class="hk-last-eval">
-      {% if _last.thumb_url %}
-      <img class="hk-last-thumb" src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'photograph' }}" onerror="this.style.display='none'">
-      {% endif %}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-          <span class="hk-last-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<sub>/10</sub></span>
-          <span class="hk-last-tier">{{ _last.tier or '' }}</span>
-        </div>
-        <a class="hk-last-link" href="{{ url_for('try_result', image_id=_last.id) }}">See evaluation →</a>
-      </div>
-    </div>
-    {% endif %}
-
-    {% if _imgs %}
-    <div class="hk-strip">
-      {% for img in _imgs %}{% if img.thumb_url %}
-      <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-strip-tile">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
-        <div class="hk-strip-badge">{{ '%.1f'|format(img.score) if img.score }}</div>
-      </a>
-      {% endif %}{% endfor %}
-    </div>
-    {% endif %}
-
-    {% if milestone_strength %}
-    <div class="hk-strength">
-      <div class="hk-strength-lbl">Something is forming</div>
-      <div class="hk-strength-text">Across {{ _n }} photographs, <strong>{{ milestone_strength }}</strong> is your most consistent strength. Your eye has a direction. Keep going.</div>
-      <div class="hk-watching">The platform is watching.</div>
-    </div>
-    {% endif %}
-
-    <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Show me what this one says →
-      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining. No subscription.</small>
-    </a>
-
-    {# ── STATES 5-9 — milestone ── #}
-    {% elif state_milestone %}
-
-    {% if state_near_limit %}
-    <div class="hk-urgency">Something is becoming visible.</div>
-    {% endif %}
-
-    {% if milestone_strength %}
-    <div class="hk-milestone">
-      <div class="hk-milestone-kicker">Your pattern</div>
-      <div class="hk-milestone-text">{{ milestone_strength }}</div>
-    </div>
-    {% endif %}
-
-    {% if _last %}
-    <div class="hk-last-eval">
-      {% if _last.thumb_url %}
-      <img class="hk-last-thumb" src="{{ _last.thumb_url }}" alt="{{ _last.genre or 'photograph' }}" onerror="this.style.display='none'">
-      {% endif %}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-          <span class="hk-last-score">{{ '%.1f'|format(_last.score) if _last.score else '—' }}<sub>/10</sub></span>
-          <span class="hk-last-tier">{{ _last.tier or '' }}</span>
-        </div>
-        <a class="hk-last-link" href="{{ url_for('try_result', image_id=_last.id) }}">See evaluation →</a>
-      </div>
-    </div>
-    {% endif %}
-
-    {% if _imgs %}
-    <div class="hk-strip" style="margin-bottom:28px">
-      {% for img in _imgs %}
-      {% if img.thumb_url %}
-      <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-strip-tile">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
-        <div class="hk-strip-badge">{{ img.tier|upper if img.tier else '' }}{% if img.score %} · {{ '%.1f'|format(img.score) }}{% endif %}</div>
-      </a>
-      {% endif %}
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <a href="{{ url_for('try_page') }}" class="hk-cta">
-      Show me what this one says →
-      <small>{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining.</small>
-    </a>
-
-    {% endif %}{# end states 2-4 vs 5-9 #}
-
-  <div class="hk-sign" style="margin-top:48px">Shutter League · Making Images Matter</div>
-
-{% endif %}{# end state_zero vs 1-10 — old states 2-10 block removed HAIKU-178.31 #}
+{% endif %}{# end state_zero vs 1-10 #}
 
 
 
