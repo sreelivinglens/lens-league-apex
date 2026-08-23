@@ -7,6 +7,8 @@
 {# SL-VERSION: HAIKU-178.20-staging (Session 190, 2026-08-19 — SPLIT: bottom padding 6vh→2vh so gap between split and discovery grid is tight. RETAINS HAIKU-178.19.)
 {# SL-VERSION: HAIKU-178.19-staging (Session 190, 2026-08-19 — NAV REVERT: logo img reverted to text crest — img caused nav layout break. Logo update deferred to dedicated session with static path verification. RETAINS HAIKU-178.18.)
 {# SL-VERSION: HAIKU-178.18-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Dead space removed — hk-sign removed from State 1 split, discovery grid moved directly below split with no gap. (2) Gallery image height 80px→140px. (3) SL logo image in desktop nav and mobile topbar replacing text. RETAINS HAIKU-178.17.)
+{# SL-VERSION: HAIKU-178.35-staging (Session 191, 2026-08-24 — LEAGUE PANEL TEXT: lifted all text opacity for readability — eyebrow .35→.6, meta .4→.65, statement .4→.75 + 16px, link colour changed to gold #D4A428. RETAINS HAIKU-178.34.) #}
+{# SL-VERSION: HAIKU-178.34-staging (Session 191, 2026-08-24 — CTA copy fixed: "Show me what this one says" → "Upload your next photograph". No ambiguous "this one" reference. RETAINS HAIKU-178.33.) #}
 {# SL-VERSION: HAIKU-178.33-staging (Session 191, 2026-08-24 — FIX: orphaned old States 2-10 block removed (was rendering below footer). Font sizes lifted throughout for 70yr readability: sherpa 17→18px, nudge 13→16px, counter 13→15px, CTA 16→18px, tile score 16→18px, locked title 14→16px, locked sub 12→14px, league statement 13→15px, hero sub 12→14px. RETAINS HAIKU-178.32.) #}
 {# SL-VERSION: HAIKU-178.32-staging (Session 191, 2026-08-24 — FULL REDESIGN: single-column layout. State 0: League hero full-width with invitation copy. States 1-10: user's own best image as hero, Sherpa cross-image observation from mentor_advice_json, image strip clickable 160px tiles, League panel Grandmaster standard, locked Evolving Eye + Portfolio features. Old split layout and gallery strip removed. RETAINS HAIKU-178.31.) #}
 {# SL-VERSION: HAIKU-178.31-staging (Session 191, 2026-08-23 — NAV OVERHAUL: reordered to match base.html Haiku nav — Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, Account, avatar. hk-active class added for white active state. RETAINS HAIKU-178.30.) #}
@@ -131,13 +133,13 @@ body.page-haiku-dash{
 .hk-league-img img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
 .hk-league-badge{position:absolute;top:14px;left:14px;background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.4);color:#D4A428;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 12px}
 .hk-league-body{padding:28px 28px;display:flex;flex-direction:column;justify-content:space-between}
-.hk-league-eyebrow{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px}
+.hk-league-eyebrow{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:12px}
 .hk-league-score{font-size:52px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em;margin-bottom:8px}
 .hk-league-tier{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;margin-bottom:10px}
-.hk-league-meta{font-size:14px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:20px}
-.hk-league-statement{font-size:15px;color:rgba(255,255,255,.4);line-height:1.7;font-style:italic;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;margin-bottom:18px}
-.hk-league-link{font-size:14px;color:rgba(255,255,255,.4);text-decoration:none;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
-.hk-league-link:hover{color:#D4A428}
+.hk-league-meta{font-size:15px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:20px}
+.hk-league-statement{font-size:16px;color:rgba(255,255,255,.75);line-height:1.75;font-style:italic;border-top:1px solid rgba(255,255,255,.12);padding-top:18px;margin-bottom:18px}
+.hk-league-link{font-size:15px;color:#D4A428;text-decoration:none;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
+.hk-league-link:hover{color:#fff}
 
 /* ── LOCKED FEATURES ── */
 .hk-locked-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px}
@@ -521,11 +523,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {# CTA #}
   {% if not state_conversion %}
   <a href="{{ url_for('try_page') }}" class="hk-cta-new">
-    <div class="hk-cta-new-main">
-      {% if state_one %}Upload your second photograph →
-      {% elif state_two %}Upload your third photograph →
-      {% else %}Show me what this one says →{% endif %}
-    </div>
+    <div class="hk-cta-new-main">Upload your next photograph →</div>
     <div class="hk-cta-new-sub">{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining · No subscription needed</div>
   </a>
   {% endif %}
