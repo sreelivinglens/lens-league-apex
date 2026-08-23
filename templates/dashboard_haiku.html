@@ -7,6 +7,8 @@
 {# SL-VERSION: HAIKU-178.20-staging (Session 190, 2026-08-19 — SPLIT: bottom padding 6vh→2vh so gap between split and discovery grid is tight. RETAINS HAIKU-178.19.)
 {# SL-VERSION: HAIKU-178.19-staging (Session 190, 2026-08-19 — NAV REVERT: logo img reverted to text crest — img caused nav layout break. Logo update deferred to dedicated session with static path verification. RETAINS HAIKU-178.18.)
 {# SL-VERSION: HAIKU-178.18-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Dead space removed — hk-sign removed from State 1 split, discovery grid moved directly below split with no gap. (2) Gallery image height 80px→140px. (3) SL logo image in desktop nav and mobile topbar replacing text. RETAINS HAIKU-178.17.)
+{# SL-VERSION: HAIKU-178.43-staging (Session 191, 2026-08-24 — NAV: Profile added to desktop nav and mobile bottom nav (replaces Log out tab — logout stays in desktop nav). RETAINS HAIKU-178.42.) #}
+{# SL-VERSION: HAIKU-178.42-staging (Session 191, 2026-08-24 — FIX: removed last orphaned hk-sign div from State 0 block. Footer now the only sign-off on all states. RETAINS HAIKU-178.41.) #}
 {# SL-VERSION: HAIKU-178.41-staging (Session 191, 2026-08-24 — KYC: footer now has all 4 mandatory Razorpay legal links: Terms, Privacy, Refunds, Shipping. Short labels. RETAINS HAIKU-178.40.) #}
 {# SL-VERSION: HAIKU-178.40-staging (Session 191, 2026-08-24 — Removed redundant hk-sign div, footer handles sign-off. RETAINS HAIKU-178.39.) #}
 {# SL-VERSION: HAIKU-178.39-staging (Session 191, 2026-08-24 — UX: (1) Pricing line added below locked features — shows Rs4000/year + what's included + See membership CTA. (2) 5-column footer stripped to single-line footer — copyright + Pricing/Privacy/Terms/Support links only. Dashboard is a personal space, not a marketing page. RETAINS HAIKU-178.38.) #}
@@ -469,6 +471,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <a href="{{ url_for('try_page') }}" class="hk-gallery-link{% if request.endpoint == 'try_page' %} hk-active{% endif %}">Upload</a>
     <a href="{{ url_for('pricing') }}" class="hk-gallery-link{% if request.endpoint == 'pricing' %} hk-active{% endif %}">Pricing</a>
     <a href="{{ url_for('standings_public') }}" class="hk-gallery-link{% if request.endpoint == 'standings_public' %} hk-active{% endif %}">League of Photographers</a>
+    <a href="{{ url_for('profile') }}" class="hk-gallery-link{% if request.endpoint == 'profile' %} hk-active{% endif %}">Profile</a>
     <a href="{{ url_for('logout') }}" class="hk-gallery-link" style="color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:36px;">Log out</a>
   </div>
 </header>
@@ -623,7 +626,6 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 
-  <div class="hk-sign">Shutter League · Making Images Matter</div>
 </div>
 
 {% else %}
@@ -750,9 +752,9 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     League
   </a>
-  <a class="hk-bn-tab" href="{{ url_for('logout') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Log out
+  <a class="hk-bn-tab" href="{{ url_for('profile') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
   </a>
 </nav>
 
