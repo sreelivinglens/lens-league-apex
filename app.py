@@ -32775,9 +32775,10 @@ def try_welcome():
         db.session.rollback()
 
     # ── next_leap_name + prev_score — for 1-upload and 2-upload states
-    _next_leap_name = ''
-    _prev_score     = None
-    _score_trend    = None  # 'up', 'down', 'same', None
+    _next_leap_name  = ''
+    _next_leap_count = 0    # SL-181.59: times same dimension was weakest
+    _prev_score      = None
+    _score_trend     = None  # 'up', 'down', 'same', None
     if evals_used >= 1:
         try:
             import json as _nlj
@@ -32794,6 +32795,21 @@ def try_welcome():
                 try:
                     _nld = _nlj.loads(_nl_rows[0][0] or '{}')
                     _next_leap_name = _nld.get('next_leap_name', '')
+                    # SL-181.59: count recurrence of same weakest dimension
+                    if _next_leap_name:
+                        try:
+                            _nlc = db.session.execute(
+                                db.text(
+                                    "SELECT COUNT(*) FROM images "
+                                    "WHERE user_id = :uid AND is_haiku_try = TRUE "
+                                    "AND status = 'scored' "
+                                    "AND audit_json->>'next_leap_name' = :dim"
+                                ),
+                                {'uid': current_user.id, 'dim': _next_leap_name}
+                            ).scalar()
+                            _next_leap_count = int(_nlc or 0)
+                        except Exception:
+                            _next_leap_count = 0
                 except Exception:
                     pass
                 # Trend: compare most recent vs previous score
@@ -32922,6 +32938,7 @@ def try_welcome():
         sherpa_nudge       = _sherpa_nudge,
         visit_count        = _visit_count,
         next_leap_name     = _next_leap_name,
+        next_leap_count    = _next_leap_count,
         prev_score         = _prev_score,
         score_trend        = _score_trend,
         gallery_images     = _gallery_images,
