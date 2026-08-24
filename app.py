@@ -32431,7 +32431,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 500  # SL-181.58: 800→500 saves ~₹0.08/eval,
+        'max_tokens': 500,  # SL-181.58: 800→500 saves ~₹0.08/eval
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
