@@ -1,5 +1,19 @@
+{#
+  SL-VERSION: poty-181.2-staging
+  Session 192 · 2026-08-24
+  CTA FIX: Register Participation now 3-way: paid→AEA registration, Haiku→"Join the League of Photographers"→pricing, anon→register. Gold #D6A428 → #F5C518. RETAINS poty-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Public page ✅ · CTA 3-way: paid→AEA, Haiku→pricing, anon→register ✅ · Haiku images excluded from pool (app.py) ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · Hero responsive ✅ · 44px CTAs ✅
+  iPad    : Hero 1-col at ≤900px ✅ · Category grid collapses ✅
+  70yr    : Hero h1 clamp ✅ · Body text 16px+ ✅ · Labels 13px mono (not body copy) ✅ · CTA button 16px+ ✅
+  Version : poty-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
-{# SL-VERSION: poty-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% block title %}Annual Excellence Award — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -19,7 +33,7 @@
    ANNUAL EXCELLENCE AWARD — poty.html
    Session 16 · Inter only
    #F7F5F2 light bg · #EDEAE4 warm bg
-   #1A1A18 text · #D6A428 gold (dark bg only)
+   #1A1A18 text · #F5C518 gold (dark bg only)
    #0F2A22 hero/footer bg · #13254B navy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-poty),
@@ -74,13 +88,13 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  text-transform: uppercase; color: #D6A428;
+  text-transform: uppercase; color: #F5C518;
   margin-bottom: 8px;
 }
 .sl-poty-gold-rule {
   width: 32px;
   height: 2px;
-  background: #D6A428;
+  background: #F5C518;
   margin-bottom: 22px;
 }
 .sl-poty-hero-h1 {
@@ -96,7 +110,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.13em;
-  text-transform: uppercase; color: #D6A428;
+  text-transform: uppercase; color: #F5C518;
   margin-bottom: 14px;
 }
 .sl-poty-hero-body {
@@ -162,7 +176,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
 .sl-poty-sec-rule-dark {
   width: 32px;
   height: 2px;
-  background: #D6A428;
+  background: #F5C518;
   margin-bottom: 22px;
 }
 .sl-poty-h2 {
@@ -384,7 +398,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   border-radius: 50%;
   background: #1A1A18;
   font-weight: 700;
-  font-size: 13px; color: #D6A428; letter-spacing: 0.05em;
+  font-size: 13px; color: #F5C518; letter-spacing: 0.05em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -589,7 +603,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  letter-spacing: 0; color: #D6A428;
+  letter-spacing: 0; color: #F5C518;
 }
 .sl-poty-cta-h {
   font-size: 28px;
@@ -609,7 +623,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  background: #D6A428;
+  background: #F5C518;
   color: #0F2A22;
   padding: 16px 36px;
   font-size: 13px;
@@ -1257,12 +1271,20 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
           <p class="sl-poty-cta-body">Keep creating. Keep growing. The Annual Excellence Award is your recognition.</p>
         </div>
       </div>
-      {% if current_user.is_authenticated %}
+      {% if current_user.is_authenticated and current_user.is_subscribed %}
+        {# Paid subscriber — can register for AEA #}
         <a href="{{ url_for('aea') }}" class="sl-poty-cta-btn">
           Register Participation
           <span class="sl-poty-cta-micro">View your eligibility →</span>
         </a>
+      {% elif current_user.is_authenticated %}
+        {# Haiku user — AEA is a paid feature, send to pricing #}
+        <a href="{{ url_for('pricing') }}" class="sl-poty-cta-btn">
+          Join the League of Photographers
+          <span class="sl-poty-cta-micro">Annual Excellence Award eligibility →</span>
+        </a>
       {% else %}
+        {# Logged out — send to register #}
         <a href="{{ url_for('register') }}" class="sl-poty-cta-btn">
           Start Your Journey
         </a>
