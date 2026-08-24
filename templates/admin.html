@@ -1767,6 +1767,30 @@
             </ul>
             <strong>Do not run</strong> for users who are mid-evaluation (currently uploading) — wait until they are done.
           </div>
+          {# Username lookup — find user ID without leaving the page #}
+          <div style="margin-top:12px;margin-bottom:14px;padding:12px 16px;background:#F8F4EC;border:1px solid #DDD5C0;border-radius:6px;">
+            <div style="font-size:13px;font-weight:600;color:#5A4A30;margin-bottom:8px;">🔍 Find User ID by username</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="haikuUsernameLookup" placeholder="e.g. natures_raaga" style="padding:8px 12px;border:1px solid #DDD5C0;border-radius:4px;font-size:14px;width:200px;min-height:40px;">
+              <button type="button" style="padding:8px 16px;font-size:14px;font-weight:600;background:#5A4A30;color:#fff;border:none;border-radius:4px;cursor:pointer;min-height:40px;" onclick="
+                var uname = document.getElementById('haikuUsernameLookup').value.trim();
+                if (!uname) { alert('Enter a username.'); return; }
+                fetch('/admin/api/user-id-by-username?username=' + encodeURIComponent(uname), {headers:{'X-Requested-With':'XMLHttpRequest'}})
+                  .then(r=>r.json()).then(d=>{
+                    if (d.user_id) {
+                      document.getElementById('haikuRescoreUserId').value = d.user_id;
+                      document.getElementById('haikuLookupResult').textContent = 'User ID ' + d.user_id + ' — ' + d.full_name + ' (' + d.email + ') · ' + d.evals + ' Haiku evals';
+                      document.getElementById('haikuLookupResult').style.color = '#2E7D52';
+                    } else {
+                      document.getElementById('haikuLookupResult').textContent = 'User not found: ' + uname;
+                      document.getElementById('haikuLookupResult').style.color = '#c0392b';
+                    }
+                  }).catch(()=>{ document.getElementById('haikuLookupResult').textContent = 'Lookup failed — check logs.'; });
+              ">Look up</button>
+            </div>
+            <div id="haikuLookupResult" style="font-size:13px;margin-top:6px;color:#5A4A30;min-height:18px;"></div>
+          </div>
+
           <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
             <input type="number" id="haikuRescoreUserId" placeholder="User ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
             <button type="button" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff !important;border:2px solid rgba(255,255,255,.3);border-radius:4px;cursor:pointer;min-height:44px;" onclick="
