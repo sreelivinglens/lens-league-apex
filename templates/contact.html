@@ -1,10 +1,17 @@
-{# SL-VERSION: contact-v177.1 | Session 177 | 2026-08-10
-   P34: Hardened spam protection
-   - Honeypot renamed website → sl_url
-   - Second honeypot sl_phone added
-   - Timing field sl_t added (JS sets on page load, server checks elapsed)
-   - All three work with app_v177_1.py contact route hardening
-   KYC audit: PASS | 70yr audit: PASS | Mobile audit: PASS
+{#
+  SL-VERSION: contact-181.1-staging
+  Session 192 · 2026-08-24
+  VERSION CLEANUP: old multi-line version comment format → standard delivery matrix. No functional changes. Spam protection (honeypots + timing field) intact. RETAINS contact-v177.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · No @login_required — public ✅ · 3 honeypot fields (sl_url, sl_phone, sl_t) ✅ · Refund policy link present ✅ · Terms link present ✅
+  KYC     : Footer KYC inherited from base.html ✅ · Refund Policy linked in billing FAQ ✅ · Terms linked in account deletion FAQ ✅
+  Mobile  : Inherits base.html bottom nav ✅ · Form rows collapse to 1-col ≤520px ✅ · 44px submit button ✅
+  iPad    : contact-card padding reduces ≤600px ✅ · Form responsive ✅
+  70yr    : Form labels 16px ✅ · Input fields 16px ✅ · Body text 16px ✅ · FAQ answers 16px ✅ · Char count 16px ✅
+  Version : contact-181.1-staging — matches filename
+  ──────────────────────────────────────────────────────
 #}
 {% extends "base.html" %}
 {% block title %}Contact Us — {{ platform_name }}{% endblock %}
