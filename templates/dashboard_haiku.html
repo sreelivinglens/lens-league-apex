@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: HAIKU-178.51-staging
+  SL-VERSION: HAIKU-178.52-staging
   Session 192 · 2026-08-24
-  DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
+  CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.51-staging — matches filename
+  Version : HAIKU-178.52-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -533,6 +533,11 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {% if sherpa_nudge %}
   <div class="hk-sherpa-nudge">→ {{ sherpa_nudge }}</div>
   {% endif %}
+  {% if _n >= 3 %}
+  <div style="padding:0 32px 16px;background:#fff;border-bottom:1px solid #E8E0D0;font-size:15px;color:#8A8070;line-height:1.6;">
+    This is what we can see from {{ _n }} photograph{{ 's' if _n != 1 }}. At 48 — the depth of what we know about how you see changes completely.
+  </div>
+  {% endif %}
 </div>
 {% elif _n >= 1 %}
 {# Fallback before synthesis fires — milestone observation #}
@@ -661,6 +666,14 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   </div>
   {% endif %}
 
+  {# QUIET CONVERSION NUDGE — evals 5-9, before League panel #}
+  {% if _n >= 5 and not state_conversion %}
+  <div style="font-size:16px;color:#1A2744;line-height:1.7;margin-bottom:24px;padding:18px 20px;background:#F5F0E8;border-left:3px solid #D4A428;">
+    {% if milestone_strength %}Your strongest quality across {{ _n }} photographs has been <strong>{{ milestone_strength }}</strong>. The League would build on exactly that — with calibrated standing, a body of work record, and an eye toward the Annual Excellence Award.{% else %}Five photographs in. The platform has begun to understand your eye. The question now is whether that understanding goes deeper — or stops here.{% endif %}
+    <a href="{{ url_for('pricing') }}" style="display:block;margin-top:10px;color:#1A2744;font-weight:700;text-decoration:none;font-size:15px;">See what League membership gives you →</a>
+  </div>
+  {% endif %}
+
   {# LEAGUE PANEL #}
   <div class="hk-league-wrap">
     <div class="hk-league-lbl">The standard you are building toward</div>
@@ -677,9 +690,16 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
           <div class="hk-league-score">{{ '%.2f'|format(league_hero.score) if league_hero else '9.15' }}</div>
           <div class="hk-league-tier">{{ league_hero.tier if league_hero else 'Grandmaster' }} · {{ league_hero.genre if league_hero else 'Creative' }}</div>
           <div class="hk-league-statement">
-            {% if _n <= 2 %}"We are looking for a few photographers whose work is worth developing over years."
-            {% elif _n <= 4 %}"We are looking for a few photographers whose work is worth developing over years. Keep going — {{ _n }} photographs is not enough to know."
-            {% else %}"We are looking for a few photographers whose work is worth developing over years. Your {{ _n }} photographs have shown us something worth watching."
+            {% if league_hero and user_hero and user_hero.score %}
+              {% set _gap = ((league_hero.score - user_hero.score) * 10) | int / 10 %}
+              {% if _n <= 2 %}"We are looking for a few photographers whose work is worth developing over years. Show us more."
+              {% elif _n <= 4 %}"{{ _gap }} points separate your best from this. That gap closes through photographs, not time."
+              {% else %}"Your {{ _n }} photographs have shown us something. The {{ _gap }}-point gap to this standard is not talent — it is accumulated decision-making. That is what the League builds."
+              {% endif %}
+            {% else %}
+              {% if _n <= 2 %}"We are looking for a few photographers whose work is worth developing over years."
+              {% else %}"We are looking for a few photographers whose work is worth developing over years. Your {{ _n }} photographs have shown us something worth watching."
+              {% endif %}
             {% endif %}
           </div>
         </div>
@@ -696,7 +716,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-lbl">Evolving Eye</span>
       </div>
       <div class="hk-locked-title">Your portrait as a photographer</div>
-      <div class="hk-locked-sub">A portrait of how you see — built from every photograph, updated with every evaluation. No human mentor can hold this much in memory.</div>
+      <div class="hk-locked-sub">{% if _n >= 3 %}What we wrote above — that is the first line of it. At 48 evaluations, it names your instincts, your recurring gaps, your developing eye. You cannot see it yet. It starts the moment you join.{% else %}Built from every photograph. Names your instincts, your patterns, your recurring gaps. No human mentor can hold this much in memory — or be this honest.{% endif %}</div>
       <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
     <div class="hk-locked">
@@ -704,8 +724,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-icon">🔒</span>
         <span class="hk-locked-lbl">Portfolio & Exhibition</span>
       </div>
-      <div class="hk-locked-title">Your work, seen worldwide</div>
-      <div class="hk-locked-sub">Your work in the world — exhibition, print sale, commission. Standing opens doors that submissions cannot.</div>
+      <div class="hk-locked-title">Your work, seen in the world</div>
+      <div class="hk-locked-sub">A calibrated standing that travels with you — Bengaluru, Mumbai, London, New York. Exhibition, print sale, commission. The credential that holds up in an editorial brief or a gallery application.</div>
       <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
   </div>
@@ -749,6 +769,14 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {% else %}<b>{{ _n }}</b> photograph{{ 's' if _n != 1 }} evaluated &nbsp;·&nbsp; <b>{{ _rem }}</b> more included free{% endif %}
   </div>
 
+  {# QUIET CONVERSION NUDGE — evals 5-9, before League panel #}
+  {% if _n >= 5 and not state_conversion %}
+  <div style="font-size:16px;color:#1A2744;line-height:1.7;margin-bottom:24px;padding:18px 20px;background:#F5F0E8;border-left:3px solid #D4A428;">
+    {% if milestone_strength %}Your strongest quality across {{ _n }} photographs has been <strong>{{ milestone_strength }}</strong>. The League would build on exactly that — with calibrated standing, a body of work record, and an eye toward the Annual Excellence Award.{% else %}Five photographs in. The platform has begun to understand your eye. The question now is whether that understanding goes deeper — or stops here.{% endif %}
+    <a href="{{ url_for('pricing') }}" style="display:block;margin-top:10px;color:#1A2744;font-weight:700;text-decoration:none;font-size:15px;">See what League membership gives you →</a>
+  </div>
+  {% endif %}
+
   {# LEAGUE PANEL #}
   <div class="hk-league-wrap">
     <div class="hk-league-lbl">The standard you are building toward</div>
@@ -779,7 +807,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-lbl">Evolving Eye</span>
       </div>
       <div class="hk-locked-title">Your portrait as a photographer</div>
-      <div class="hk-locked-sub">A portrait of how you see — built from every photograph, updated with every evaluation. No human mentor can hold this much in memory.</div>
+      <div class="hk-locked-sub">{% if _n >= 3 %}What we wrote above — that is the first line of it. At 48 evaluations, it names your instincts, your recurring gaps, your developing eye. You cannot see it yet. It starts the moment you join.{% else %}Built from every photograph. Names your instincts, your patterns, your recurring gaps. No human mentor can hold this much in memory — or be this honest.{% endif %}</div>
       <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
     <div class="hk-locked">
@@ -787,8 +815,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-icon">🔒</span>
         <span class="hk-locked-lbl">Portfolio & Exhibition</span>
       </div>
-      <div class="hk-locked-title">Your work, seen worldwide</div>
-      <div class="hk-locked-sub">Your work in the world — exhibition, print sale, commission. Standing opens doors that submissions cannot.</div>
+      <div class="hk-locked-title">Your work, seen in the world</div>
+      <div class="hk-locked-sub">A calibrated standing that travels with you — Bengaluru, Mumbai, London, New York. Exhibition, print sale, commission. The credential that holds up in an editorial brief or a gallery application.</div>
       <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
   </div>
