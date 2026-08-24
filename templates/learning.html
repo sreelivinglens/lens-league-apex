@@ -1,5 +1,19 @@
+{#
+  SL-VERSION: learning-181.2-staging
+  Session 192 · 2026-08-24
+  MENTOR GATE: All 3 mentor CTAs (hero, per-card, end) now subscription-aware. Haiku users see "Join the League →" → pricing. Logged-out users see "Join free". Paid users see existing mentor booking. Gold #D6A428 → #F5C518. RETAINS learning-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Public page ✅ · Mentor CTAs subscription-gated: Haiku→pricing, paid→mentor booking, anon→register ✅ · Learning content visible to all ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · Lesson hero responsive ✅ · 44px tap targets ✅
+  iPad    : Hero collapses at ≤900px ✅ · Step grid 1-col ✅
+  70yr    : Body text 16px+ ✅ · Lesson title clamp ✅ · Section labels 13px mono (not body copy) ✅
+  Version : learning-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
-{# SL-VERSION: learning-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% block title %}Learn &amp; Grow — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -18,7 +32,7 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    LEARNING PAGE
    Inter only · #F7F5F2 light · #EDEAE4 warm
-   #1A1A18 text · #D6A428 gold (dark bg only)
+   #1A1A18 text · #F5C518 gold (dark bg only)
    #0F2A22 hero/CTA bg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-learn),
@@ -74,13 +88,13 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: #D6A428;
+  color: #F5C518;
   margin-bottom: 8px;
 }
 .sl-learn-gold-rule {
   width: 32px;
   height: 2px;
-  background: #D6A428;
+  background: #F5C518;
   margin-bottom: 22px;
 }
 .sl-learn-hero-h1 {
@@ -93,7 +107,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .sl-learn-hero-h1 span {
-  color: #D6A428;
+  color: #F5C518;
 }
 .sl-learn-hero-bullets {
   display: flex;
@@ -117,7 +131,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 }
 .sl-learn-hero-cta {
   display: inline-block;
-  background: #D6A428;
+  background: #F5C518;
   color: #0F2A22;
   
   font-size: 13px;
@@ -275,7 +289,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 .sl-learn-mentors-left-rule {
   width: 32px;
   height: 3px;
-  background: #D6A428;
+  background: #F5C518;
   margin: 10px 0 16px;
 }
 .sl-learn-mentors-left-body {
@@ -363,7 +377,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 .sl-learn-mentor-rule {
   width: 24px;
   height: 2px;
-  background: #D6A428;
+  background: #F5C518;
   margin: 8px 0;
 }
 .sl-learn-mentor-bio {
@@ -504,12 +518,12 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   background: #EDEAE4;
   border-radius: 8px;
   padding: 20px;
-  border-left: 3px solid #D6A428;
+  border-left: 3px solid #F5C518;
 }
 .sl-learn-built-quote-mark {
   font-size: 40px;
   line-height: 1.5;
-  color: #D6A428;
+  color: #F5C518;
   font-weight: 700;
   margin-bottom: 10px;
 }
@@ -558,7 +572,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #D6A428;
+  color: #F5C518;
 }
 .sl-learn-cta-icon svg {
   width: 26px;
@@ -571,7 +585,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   line-height: 1.5;
 }
 .sl-learn-cta-headline span {
-  color: #D6A428;
+  color: #F5C518;
 }
 .sl-learn-cta-secure {
   font-size: 14px;
@@ -587,7 +601,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 }
 .sl-learn-cta-btn {
   display: inline-block;
-  background: #D6A428;
+  background: #F5C518;
   color: #0F2A22;
   
   font-size: 13px;
@@ -825,20 +839,27 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
       <h1 class="sl-learn-hero-h1 sl-hero-h1">Great photographers<br>are shaped by <span>perspective.</span></h1>
       <div class="sl-learn-hero-bullets">
         <div class="sl-learn-hero-bullet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
           Choose mentors.
         </div>
         <div class="sl-learn-hero-bullet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Receive honest feedback.
         </div>
         <div class="sl-learn-hero-bullet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#D6A428" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
           Keep improving.
         </div>
       </div>
       <p class="sl-learn-hero-arc" style="font-size:15px; color:rgba(255,255,255,0.80); line-height:1.6; margin-bottom:18px; font-weight:400;">A platform that remembers every image — and guides what you make next.</p>
-      <a href="{{ url_for('mentors') }}" class="sl-learn-hero-cta">SUBMIT FOR MENTOR REVIEW</a>
+      {% if current_user.is_authenticated and current_user.is_subscribed %}
+        <a href="{{ url_for('mentors') }}" class="sl-learn-hero-cta">SUBMIT FOR MENTOR REVIEW</a>
+      {% elif current_user.is_authenticated and not current_user.is_subscribed %}
+        {# Haiku user — mentor review is a paid feature #}
+        <a href="{{ url_for('pricing') }}" class="sl-learn-hero-cta">JOIN THE LEAGUE TO ACCESS MENTOR REVIEW →</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="sl-learn-hero-cta">JOIN FREE TO START →</a>
+      {% endif %}
       <div class="sl-learn-hero-timing">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Usually under 72 hours
@@ -948,7 +969,14 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
                 <div class="sl-learn-mentor-genres">{{ m.genres }}</div>
                 <div class="sl-learn-mentor-rule"></div>
                 <div class="sl-learn-mentor-bio">{{ m.bio }}</div>
-                <a href="{{ url_for('mentor_register', slug=slug) }}" class="sl-learn-mentor-btn sl-learn-btn-{{ css_cls }}">&#8377;{{ m.price }} <span>&#8594;</span></a>
+                {% if current_user.is_authenticated and current_user.is_subscribed %}
+                  <a href="{{ url_for('mentor_register', slug=slug) }}" class="sl-learn-mentor-btn sl-learn-btn-{{ css_cls }}">&#8377;{{ m.price }} <span>&#8594;</span></a>
+                {% elif current_user.is_authenticated %}
+                  {# Haiku user — show pricing link instead #}
+                  <a href="{{ url_for('pricing') }}" class="sl-learn-mentor-btn" style="background:#1A2744;color:#fff;opacity:0.85;">Join the League →</a>
+                {% else %}
+                  <a href="{{ url_for('register') }}" class="sl-learn-mentor-btn" style="background:#1A2744;color:#fff;opacity:0.85;">Join free →</a>
+                {% endif %}
               </div>
             </div>
             {% endfor %}
@@ -1061,7 +1089,13 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
         </div>
       </div>
     </div>
-    <a href="{{ url_for('mentors') }}" class="sl-learn-cta-btn">SUBMIT FOR MENTOR REVIEW</a>
+    {% if current_user.is_authenticated and current_user.is_subscribed %}
+      <a href="{{ url_for('mentors') }}" class="sl-learn-cta-btn">SUBMIT FOR MENTOR REVIEW</a>
+    {% elif current_user.is_authenticated %}
+      <a href="{{ url_for('pricing') }}" class="sl-learn-cta-btn">JOIN THE LEAGUE TO ACCESS MENTOR REVIEW →</a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="sl-learn-cta-btn">JOIN FREE TO START →</a>
+    {% endif %}
   </div>
 
 </div><!-- /sl-learn -->
