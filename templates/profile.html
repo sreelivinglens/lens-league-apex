@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: profile-181.3-staging
+  SL-VERSION: profile-181.4-staging
   Session 192 · 2026-08-24
-  JS FIX: Jinja2 dict literal expressions {{ {}.get() }} replaced with {% if/elif %} blocks — eliminates Unexpected token "{"" SyntaxError risk. Also: pricing updated to current rates (halfyearly ₹2,500, annual ₹4,000). HAIKU FIXES: (1) Points Balance section gated to is_subscribed — was visible to Haiku users. (2) Referral Code section gated to is_subscribed — was visible if referral_code set. (3) Sidenav Points/Referral links hidden for Haiku. (4) Account State free copy: hardcoded "3" → evals_limit variable, pricing ₹200/mo → ₹4,000/yr. AUDIT FIXES: (1) Font: Inter → Aptos. (2) Free tier upgrade CTA hardcoded '3 evaluations' → evals_limit variable (staging=10). RETAINS profile-181.0.
+  LAYOUT FIX: max-width 1060→1200px, sidebar 200→220px, grid gap 20→28px, acc-section min-width:0 to prevent grid collapse, upgrade buttons flex with word-break. JS FIX: Jinja2 dict literal expressions {{ {}.get() }} replaced with {% if/elif %} blocks — eliminates Unexpected token "{"" SyntaxError risk. Also: pricing updated to current rates (halfyearly ₹2,500, annual ₹4,000). HAIKU FIXES: (1) Points Balance section gated to is_subscribed — was visible to Haiku users. (2) Referral Code section gated to is_subscribed — was visible if referral_code set. (3) Sidenav Points/Referral links hidden for Haiku. (4) Account State free copy: hardcoded "3" → evals_limit variable, pricing ₹200/mo → ₹4,000/yr. AUDIT FIXES: (1) Font: Inter → Aptos. (2) Free tier upgrade CTA hardcoded '3 evaluations' → evals_limit variable (staging=10). RETAINS profile-181.0.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Inherits base.html bottom nav (now subscription-aware) ✅ · acc-nav-border hidden on mobile ✅ · 44px tap targets ✅
   iPad    : acc-sidebar static at ≤900px ✅ · Single column ✅
   70yr    : Page header clamp(24px,4vw,32px) ✅ · Section titles 16px+ ✅ · Form inputs 16px ✅ · acc-logout-btn 15px acceptable (button label) ✅
-  Version : profile-181.3-staging — matches filename
+  Version : profile-181.4-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 {% extends "base.html" %}
@@ -43,7 +43,7 @@
   body { background: var(--acc-cream); }
 
   .acc-wrap {
-    max-width: 1060px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: clamp(32px,5vw,56px) var(--page-pad,24px) 80px;
     font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif;
@@ -74,8 +74,8 @@
   /* ── Layout: sidebar + content ── */
   .acc-layout {
     display: grid;
-    grid-template-columns: 200px 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 220px 1fr 1.2fr;
+    gap: 28px;
     align-items: start;
   }
   .acc-sidebar {
@@ -143,6 +143,9 @@
     padding: 28px 32px;
     margin-bottom: 20px;
     scroll-margin-top: 100px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
   .acc-section-header {
     display: flex; align-items: center; gap: 12px;
@@ -424,7 +427,7 @@
     grid-column: 2 / 4;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
     align-items: start;
     margin-bottom: 0;
   }
@@ -432,7 +435,7 @@
     grid-column: 2 / 4;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
     align-items: start;
     margin-bottom: 20px;
   }
