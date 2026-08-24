@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: HAIKU-178.66-staging
+  SL-VERSION: HAIKU-178.87-staging
   Session 192 · 2026-08-24
   70YR AUDIT: card body 13px→15px, gold italic 12px→14px, tier names 8px→11px, tier scores 7px→10px, footer KYC links 13px→15px with better contrast. HERO FIX: removed Grandmaster image from hero gradient fallback — hero and Grandmaster panel no longer show same image. IMAGE FALLBACK: League hero and hero panel now use hardcoded R2 fallback URL when thumb_url fails to load on staging. League hero: onerror swaps to fallback. Hero gradient: fallback image at 25% opacity luminosity blend — gives dark atmospheric feel without being empty black. NULL GUARD: user_hero.score accessed without null check at line 523 — jinja2 UndefinedError when user_hero is None (SQL transaction failure). All user_hero.score/tier/genre/id references now wrapped in if user_hero and user_hero.score. CRITICAL FIX: state_zero condition was "not state_zero AND user_hero AND user_hero.thumb_url" — if thumb_url unavailable on staging (R2 not accessible), entire main content branch was skipped. Now: "not state_zero" controls branch, hero image falls back to gradient independently. Sherpa, Zone 2, nudge all now render regardless of thumbnail availability. PRE-SHUTTER QUESTION: Single question per eval, dimension-specific, Sherpa tone, escalating if same weakness repeats. Eval 1: "Show me the next one." Evals 2-10: mapped to next_leap_name + next_leap_count. Five dimension branches. Count 1=gentle, 2=more direct, 3=names the pattern, 4+=statement. COPY FINAL: All founder copy applied. Zone 1: "An image is a thousand words...we are starting to hear yours." Zone 2: tier strip + "one image stands apart — because that photographer saw differently" + 5 dimensions. League panel: gap named, "we build that, challenge by challenge." Zone 3 nudge: signature→voice→body of work→five billion. Evolving Eye: "am I making images or just taking them?" + 5 questions pre-shoot. Portfolio: "from five billion, to one." Grandmasters/Legends named. MANIFESTO REWRITE: Dashboard now built on the founding dream ("get everyone to Magnum level"). Bridge block replaced with dark navy tier progression (Rookie→Craftsman→Maverick→Master→Grandmaster→Legend) + current tier highlighted + "5 billion images a day, almost no one getting better" founding philosophy. Nudge: "signature becomes body of work becomes standing". Evolving Eye: Chess/Elo/ICC/ATP — photography never had this. Portfolio: "You were part of 5 billion. With a standing, your work is different." PHILOSOPHY REWRITE: Dashboard now leads with founding philosophy — the question every photographer carries ("am I actually seeing differently than I was?") that has never had a permanent honest answer. Bridge block removes feature list, replaces with provocation. League statement removes quotes, becomes a direct claim. Locked sections: padlock CTAs replaced with navy "Start your record →" and "Join the League →" in gold. Nudge: reframed around what the photographer now knows about themselves and what the League develops. CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.66-staging — matches filename
+  Version : HAIKU-178.87-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -22,6 +22,12 @@
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<meta property="og:title" content="My Evaluations — Shutter League">
+<meta property="og:description" content="Your photographs evaluated across five dimensions. See where your eye stands.">
+<meta property="og:image" content="https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b93bb08b-9314-421c-a449-f3e6393b72be.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b93bb08b-9314-421c-a449-f3e6393b72be.jpg">
 <style>
 :root{
   --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;
@@ -40,44 +46,44 @@ body.page-haiku-dash{
 /* ── DESKTOP NAV ── */
 .hk-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100}
 .hk-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
-.hk-crest{width:28px;height:28px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.5px;flex-shrink:0}
-.hk-brandword{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.9)}
+.hk-crest{width:28px;height:28px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;letter-spacing:.5px;flex-shrink:0}
+.hk-brandword{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.9)}
 .hk-nav-right{display:flex;align-items:center;gap:2px}
-.hk-gallery-link{color:rgba(255,255,255,.65);font-size:13px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;padding:6px 8px;transition:color .15s;text-decoration:none;white-space:nowrap}
+.hk-gallery-link{color:rgba(255,255,255,.65);font-size:14px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;padding:6px 8px;transition:color .15s;text-decoration:none;white-space:nowrap}
 .hk-gallery-link:hover{color:#fff}
 .hk-gallery-link.hk-active{color:#fff;font-weight:600;background:rgba(255,255,255,.12);border-bottom:2px solid rgba(255,255,255,.6);}
-.hk-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.hk-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
 
 /* H3: Desktop counter — compact text, no dot loop overflow */
 .hk-counter-compact{
   background:rgba(255,255,255,.07);padding:0 14px;
   display:flex;align-items:center;height:100%;
   border-left:1px solid rgba(255,255,255,.1);
-  font-size:13px;color:rgba(255,255,255,.65);
+  font-size:14px;color:rgba(255,255,255,.65);
   white-space:nowrap;gap:6px;flex-shrink:0
 }
 .hk-counter-compact b{color:#fff;font-weight:700}
 
 /* ── HERO — user's own best image ── */
-.hk-hero{position:relative;height:340px;background:#0F1F3D;overflow:hidden}
+.hk-hero{position:relative;height: 480px;background:#0F1F3D;overflow:hidden}
 .hk-hero-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-.hk-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.96) 0%,rgba(6,14,28,.2) 55%,transparent 100%)}
+.hk-hero-overlay,.hero-fade{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,13,11,0.85) 0%,rgba(13,13,11,0.45) 50%,transparent 100%)}
 .hk-hero-see{position:absolute;top:14px;right:14px;background:rgba(6,14,28,.6);color:#fff;font-size:14px;padding:8px 16px;border:1px solid rgba(255,255,255,.3);border-radius:2px;text-decoration:none;transition:all .15s;min-height:44px;display:inline-flex;align-items:center}
 .hk-hero-see:hover{background:rgba(6,14,28,.85);border-color:rgba(255,255,255,.6)}
-.hk-hero-content{position:absolute;bottom:0;left:0;right:0;padding:24px 32px}
-.hk-hero-eye{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+.hk-hero-content{position:absolute;bottom:0;left:0;right:0;padding:24px 32px;margin: 48px 64px}
+.hk-hero-eye{font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
 .hk-hero-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .hk-hero-num{font-size:48px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em}
 .hk-hero-denom{font-size:18px;color:rgba(255,255,255,.4)}
-.hk-hero-tier{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.35);padding:5px 14px}
+.hk-hero-tier{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.35);padding:5px 14px}
 .hk-hero-genre{font-size:14px;color:rgba(255,255,255,.4);margin-left:4px}
 .hk-hero-sub{font-size:14px;color:rgba(255,255,255,.7);line-height:1.6;text-decoration:none;display:block;transition:color .15s}
 .hk-hero-sub:hover{color:#fff}
 
 /* ── SHERPA OBSERVATION ── */
 .hk-sherpa{background:#fff;border-bottom:1px solid #E8E0D0;padding:28px 32px}
-.hk-sherpa-lbl{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:14px}
-.hk-sherpa-q{font-size:18px;color:#1A1A18;line-height:1.8;font-style:italic;border-left:3px solid #D4A428;padding:4px 0 4px 20px;margin-bottom:14px}
+.hk-sherpa-lbl{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:14px}
+.hk-sherpa-q{font-size:18px;color:#1A1A18;line-height:1.8;font-style:italic;text-align: justify;border-left:3px solid #D4A428;padding:4px 0 4px 20px;margin-bottom:14px}
 .hk-sherpa-nudge{font-size:16px;color:#2C3E6B;font-weight:500;padding-left:23px;line-height:1.6}
 
 /* ── MAIN BODY — single column ── */
@@ -90,15 +96,15 @@ body.page-haiku-dash{
 /* ── TREND SPARKLINE ── */
 .hk-trend-block{background:#fff;border:1px solid #E8E0D0;padding:20px 24px;margin-bottom:24px}
 .hk-trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-.hk-trend-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
-.hk-trend-badge{font-size:13px;font-weight:600;padding:3px 10px;border-radius:99px}
+.hk-trend-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
+.hk-trend-badge{font-size:14px;font-weight:600;padding:3px 10px;border-radius:99px}
 .hk-trend-badge.up{background:rgba(46,125,82,.1);color:#2E7D52}
 .hk-trend-badge.down{background:rgba(192,57,43,.08);color:#c0392b}
 .hk-trend-badge.flat{background:rgba(44,62,107,.08);color:#2C3E6B}
 .hk-spark-wrap{overflow-x:auto}
 .hk-spark{width:100%;min-width:200px;height:60px;display:block}
 .hk-spark-labels{display:flex;justify-content:space-between;margin-top:6px}
-.hk-spark-labels span{font-size:10px;color:#8A8070;text-align:center;flex:1;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hk-spark-labels span{font-size:14px;color:#8A8070;text-align:center;flex:1;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ── CTA ── */
 .hk-cta-new{background:#1A2744;color:#fff;padding:20px 26px;display:block;text-decoration:none;margin-bottom:32px;transition:background .15s;min-height:64px}
@@ -114,41 +120,41 @@ body.page-haiku-dash{
 .hk-tile-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.92) 0%,transparent 55%)}
 .hk-tile-info{position:absolute;bottom:0;left:0;right:0;padding:10px 12px}
 .hk-tile-score{font-size:18px;font-weight:700;color:#fff;line-height:1}
-.hk-tile-tier{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#D4A428;margin-top:4px}
-.hk-tile-genre{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+.hk-tile-tier{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#D4A428;margin-top:4px}
+.hk-tile-genre{font-size:14px;color:rgba(255,255,255,.45);margin-top:2px}
 
 /* ── LEAGUE PANEL ── */
 .hk-league-wrap{margin-bottom:28px}
-.hk-league-lbl{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:12px}
+.hk-league-lbl{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:12px}
 .hk-league-panel{background:#0F1F3D;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
 .hk-league-img{position:relative;overflow:hidden;background:linear-gradient(135deg,#1a3a5a,#060e1c);display:flex;align-items:center;justify-content:center;min-height:220px}
 .hk-league-img img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:.85;position:absolute;inset:0}
-.hk-league-badge{position:absolute;top:14px;left:14px;background:rgba(6,14,28,.75);border:1px solid rgba(212,164,40,.6);color:#D4A428;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;z-index:1}
+.hk-league-badge{position:absolute;top:14px;left:14px;background:rgba(6,14,28,.75);border:1px solid rgba(212,164,40,.6);color:#D4A428;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;z-index:1}
 .hk-league-body{padding:28px 28px;display:flex;flex-direction:column;justify-content:space-between}
-.hk-league-eyebrow{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:12px}
+.hk-league-eyebrow{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:12px}
 .hk-league-score{font-size:52px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em;margin-bottom:8px}
-.hk-league-tier{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;margin-bottom:10px}
+.hk-league-tier{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;margin-bottom:10px}
 .hk-league-meta{font-size:15px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:20px}
 .hk-league-statement{font-size:16px;color:rgba(255,255,255,.75);line-height:1.75;font-style:italic;border-top:1px solid rgba(255,255,255,.12);padding-top:18px;margin-bottom:18px}
 .hk-league-link{font-size:15px;color:#D4A428;text-decoration:none;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .hk-league-link:hover{color:#fff}
 
 /* ── LOCKED FEATURES ── */
-.hk-locked-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px}
+.hk-locked-row{display:grid;grid-template-columns: 1fr 1fr;gap:14px;margin-bottom:32px}
 .hk-locked{background:#F5F0E8;border:1px solid #E0D8C8;padding:20px 22px}
 .hk-locked-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .hk-locked-icon{font-size:14px;color:#8A8070}
-.hk-locked-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
-.hk-locked-title{font-size:16px;font-weight:600;color:#1A2744;margin-bottom:8px;line-height:1.35}
+.hk-locked-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
+.hk-locked-title{font-size:16px;font-weight:600;color:#1A2744;margin-bottom:8px;line-height:1.7}
 .hk-locked-sub{font-size:14px;color:#8A8070;line-height:1.65;margin-bottom:14px}
 .hk-locked-bar{background:#E0D8C8;height:36px;display:flex;align-items:center;justify-content:center}
-.hk-locked-bar-text{font-size:13px;color:#8A8070;letter-spacing:.5px}
+.hk-locked-bar-text{font-size:14px;color:#8A8070;letter-spacing:.5px}
 
 /* ── H2: SPLIT HERO (State 0 — zero uploads) ── */
 .hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%;border-top:1px solid var(--line)}
 .hk-split-left{display:flex;flex-direction:column}
 .hk-split-cards{background:var(--paper);border-top:1px solid var(--line);padding:20px 24px;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:stretch}
-.hk-split-cards-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;grid-column:1/-1}
+.hk-split-cards-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;grid-column:1/-1}
 .hk-split-photo{background:var(--dark);position:relative;overflow:hidden}
 .hk-split-photo-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 /* overlay removed — cream bg, no dark overlay needed */
@@ -158,10 +164,10 @@ body.page-haiku-dash{
   background:linear-gradient(to top,rgba(6,14,28,.92) 0%,transparent 100%);
   display:flex;justify-content:space-between;align-items:flex-end
 }
-.hk-split-photo-caption{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase}
+.hk-split-photo-caption{font-size:14px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase}
 .hk-split-photo-badge{
-  background:rgba(212,164,40,.15);border:1px solid rgba(212,164,40,.5);
-  color:var(--gold);font-size:12px;font-weight:700;padding:5px 12px;letter-spacing:.5px
+  background:#1A2744;border:1px solid rgba(212,164,40,.5);
+  color:#F5C518;font-size:14px;font-weight:700;padding:5px 12px;letter-spacing:.5px
 }
 /* Fallback when no hero image from DB */
 .hk-split-photo-fill{
@@ -191,25 +197,25 @@ body.page-haiku-dash{
 .hk-eval-badge b{color:var(--dark);font-weight:700}
 
 /* ── STATE 1 text panel (split layout) ── */
-.hk-h1{font-size:clamp(36px,4.5vw,56px);font-weight:600;color:var(--blue);line-height:1.08;letter-spacing:-.04em;margin-bottom:20px;text-shadow:none}
+.hk-h1{font-size:clamp(36px,4.5vw,56px);font-weight:600;color:var(--blue);line-height:1.7;letter-spacing:-.04em;margin-bottom:20px;text-shadow:none}
 .hk-intro{font-size:21px;color:var(--ink);line-height:1.8;margin-bottom:28px}
 .hk-proof{border-left:3px solid var(--gold);padding:18px 22px;/* H4: 16px->18px */margin:0 0 32px;background:var(--paper)}
 .hk-proof p{font-size:18px;font-style:italic;color:var(--ink);line-height:1.7;margin-bottom:8px}
-.hk-proof small{font-size:13px;color:var(--muted)}
+.hk-proof small{font-size:14px;color:var(--muted)}
 .hk-empty{background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;margin-bottom:28px;padding:32px;transition:border-color .15s,background .15s;text-decoration:none;display:flex}
 .hk-empty:hover{border-color:var(--blue);background:#F0F4FA}
 .hk-empty strong{display:block;font-size:22px;font-weight:600;color:var(--blue);margin-bottom:8px;letter-spacing:-.02em}
 .hk-empty span{font-size:16px;color:var(--muted);line-height:1.6}
 .hk-cta{display:flex;align-items:center;width:100%;background:var(--dark);color:#fff;border:none;border-radius:0;padding:20px 28px;font-size:18px;font-weight:600;text-align:left;cursor:pointer;margin-bottom:12px;min-height:60px;font-family:inherit;text-decoration:none;letter-spacing:.1px}
-.hk-cta small{display:block;font-size:13px;font-weight:400;color:rgba(255,255,255,.6);margin-top:4px}
+.hk-cta small{display:block;font-size:14px;font-weight:400;color:rgba(255,255,255,.6);margin-top:4px}
 .hk-cta-note{font-size:14px;color:var(--muted);margin-bottom:48px}
 
 /* ── WORLD OUTSIDE ── */
 .hk-world{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
-.hk-world-lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+.hk-world-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
 .hk-world-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}/* H4: 14px->16px */
 .hk-world-item{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:20px 22px}/* H4: 18px->20px */
-.hk-world-item-lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.hk-world-item-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .hk-world-item-val{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.02em;line-height:1.5}
 .hk-world-item-sub{font-size:14px;color:var(--muted);margin-top:4px}
 
@@ -218,40 +224,40 @@ body.page-haiku-dash{
 .hk-last-thumb{width:64px;height:64px;border-radius:2px;object-fit:cover;flex-shrink:0;background:var(--dark)}
 .hk-last-score{font-size:36px;font-weight:700;color:var(--dark);line-height:1;letter-spacing:-.04em}
 .hk-last-score sub{font-size:14px;font-weight:400;color:var(--muted);vertical-align:middle;letter-spacing:0}
-.hk-last-tier{font-size:12px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
-.hk-last-link{font-size:13px;color:var(--blue);margin-top:6px;display:inline-flex;align-items:center;min-height:36px;text-decoration:none}
+.hk-last-tier{font-size:14px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.hk-last-link{font-size:14px;color:var(--blue);margin-top:6px;display:inline-flex;align-items:center;min-height:36px;text-decoration:none}
 
 /* Strip */
 .hk-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:28px}
 .hk-strip-tile{flex-shrink:0;width:110px;border-radius:2px;overflow:hidden;background:var(--dark);position:relative;text-decoration:none;min-height:44px}
 .hk-strip-tile img{width:100%;height:80px;object-fit:cover;display:block}
-.hk-strip-badge{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:linear-gradient(to top,rgba(6,14,28,.9),transparent);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.2px}
+.hk-strip-badge{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:rgba(13,13,11,0.7);color:#F5C518;background:linear-gradient(to top,rgba(6,14,28,.9),transparent);font-size:14px;font-weight:700;color:#F5C518;letter-spacing:.2px}
 
 /* Strength */
 .hk-strength{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 3px 3px 0;padding:20px 24px;/* H4 */margin-bottom:28px}
-.hk-strength-lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:8px}
+.hk-strength-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:8px}
 .hk-strength-text{font-size:16px;color:var(--ink);line-height:1.75}
 .hk-watching{font-size:15px;color:var(--muted);font-style:italic;margin-top:12px}
 
 /* ── STATES 5-9 ── */
 .hk-milestone{border:2px solid var(--gold);border-radius:3px;padding:26px 30px;/* H4 */margin-bottom:28px;background:var(--paper)}
-.hk-milestone-kicker{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:10px}
+.hk-milestone-kicker{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:10px}
 .hk-milestone-text{font-size:18px;color:var(--dark);line-height:1.75;font-weight:500}
 
 .hk-urgency{font-size:16px;color:var(--blue);font-weight:600;margin:0 0 28px;padding:16px 20px;/* H4 */background:rgba(44,62,107,.06);border-left:3px solid var(--blue);border-radius:0 3px 3px 0}
 
 /* ── STATE 10 — conversion ── */
 .hk-conversion{margin-bottom:32px}
-.hk-conversion-headline{font-size:clamp(22px,3vw,32px);font-weight:600;color:var(--dark);line-height:1.2;letter-spacing:-.02em;margin-bottom:20px}
-.hk-conversion-body{font-size:17px;color:var(--ink);line-height:1.75;margin-bottom:32px}
+.hk-conversion-headline{font-size:clamp(22px,3vw,32px);font-weight:600;color:var(--dark);line-height:1.7;letter-spacing:-.02em;margin-bottom:20px}
+.hk-conversion-body{font-size:17px;color:var(--ink);line-height:1.75;margin-bottom:32px;text-align: justify}
 .hk-conversion-options{display:flex;flex-direction:column;gap:14px}/* H4: 12->14 */
 .hk-conv-opt{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;/* H4 */border-radius:3px;text-decoration:none;min-height:56px;gap:12px;flex-wrap:wrap}
 .hk-conv-opt.primary{background:var(--dark);color:#fff}
 .hk-conv-opt.secondary{background:var(--paper);border:1px solid var(--line);color:var(--dark)}
 .hk-conv-opt.quiet{background:transparent;border:none;color:var(--muted);font-size:15px;padding:14px 0;justify-content:flex-start}
 .hk-conv-opt-label{font-size:16px;font-weight:600;line-height:1.5}
-.hk-conv-opt-price{font-size:14px;font-weight:700;opacity:.9;white-space:nowrap}
-.hk-conv-opt.primary .hk-conv-opt-price{color:var(--gold)}
+.hk-conv-opt-price{font-size:14px;font-weight:700;opacity:.9;white-space:nowrap;color:#fff}
+.hk-conv-opt.primary .hk-conv-opt-price{color:#fff}
 
 /* ── SIGN OFF ── */
 .hk-sign{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:24px;margin-top:8px}
@@ -259,16 +265,16 @@ body.page-haiku-dash{
 .hk-stat{flex:1;text-align:center;border-right:1px solid var(--line)}
 .hk-stat:last-child{border-right:none}
 .hk-stat-n{font-size:16px;font-weight:700;color:var(--dark);line-height:1}
-.hk-stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+.hk-stat-l{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
 
 /* ── DISCOVERY GRID ── */
 .hk-disc{background:var(--paper);border-top:1px solid var(--line);padding:24px 28px}
-.hk-disc-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.hk-disc-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
 .hk-disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hk-dc{background:#fff;border:1px solid var(--line);border-radius:3px;padding:16px 18px;display:flex;flex-direction:column}
 .hk-dc.accent{border-left:3px solid var(--gold)}
 .hk-dc.blue{border-left:3px solid var(--blue);background:#EEF2FF}
-.hk-dc-title{font-size:18px;font-weight:600;color:var(--dark);margin-bottom:8px;line-height:1.3}
+.hk-dc-title{font-size:18px;font-weight:600;color:var(--dark);margin-bottom:8px;line-height:1.7}
 .hk-dc-sub{font-size:16px;color:var(--muted);line-height:1.6;flex:1}
 .hk-dc-link{font-size:15px;color:var(--blue);font-weight:600;margin-top:10px;display:block;text-decoration:none}
 .hk-dc-link:hover{text-decoration:underline}
@@ -276,30 +282,30 @@ body.page-haiku-dash{
 /* ── VISUAL GALLERY STRIP ── */
 .hk-gallery-strip{background:var(--dark)}
 .hk-gallery-lbl{padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
-.hk-gl-text{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase}
-.hk-gl-link{font-size:11px;color:var(--gold);font-weight:600;text-decoration:none}
+.hk-gl-text{font-size:14px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase}
+.hk-gl-link{font-size:14px;color:#fff;font-weight:600;text-decoration:none}
 .hk-gallery-grid{display:grid;grid-template-columns:repeat(4,1fr)}
 .hk-gthumb{position:relative;overflow:hidden;height:140px;background:#1a2a3a}
 .hk-gthumb:not(:last-child){border-right:1px solid rgba(255,255,255,.08)}
 .hk-gthumb img{width:100%;height:100%;object-fit:cover;display:block}
 .hk-gt-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.9) 0%,transparent 60%)}
 .hk-gt-info{position:absolute;bottom:0;left:0;right:0;padding:5px 7px}
-.hk-gt-score{font-size:11px;font-weight:700;color:var(--gold);line-height:1}
-.hk-gt-tier{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:.5px;text-transform:uppercase}
+.hk-gt-score{font-size:14px;font-weight:700;color:#F5C518;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.5);background:rgba(13,13,11,0.6);padding:1px 4px;border-radius:2px}
+.hk-gt-tier{font-size:14px;color:rgba(255,255,255,.55);letter-spacing:.5px;text-transform:uppercase}
 
 /* ── TREND INDICATOR ── */
-.hk-trend-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:2px;font-size:13px;font-weight:600;margin-bottom:8px}
+.hk-trend-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:2px;font-size:14px;font-weight:600;margin-bottom:8px}
 .hk-trend-up{background:rgba(74,160,74,.12);color:#2a7a2a}
 .hk-trend-down{background:rgba(180,60,60,.1);color:#8a2020}
 .hk-trend-same{background:rgba(44,62,107,.08);color:var(--blue)}
 
 /* ── DARK FOOTER ── */
 .hk-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:56px 48px 28px}
-.hk-footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
-.hk-footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
-.hk-footer-col a{display:block;color:rgba(255,255,255,.52);font-size:15px;margin-bottom:9px;transition:color .15s;text-decoration:none}
+.hk-ft-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
+.hk-footer-col h4{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
+.hk-ft-col a{display:block;color:rgba(255,255,255,.52);font-size:15px;margin-bottom:9px;transition:color .15s;text-decoration:none}
 .hk-footer-col a:hover{color:#fff}
-.hk-footer-bottom{font-size:13px;padding-top:18px;max-width:1200px;margin:0 auto}
+.hk-ft-bottom{font-size:14px;padding-top:18px;max-width:1200px;margin:0 auto}
 
 /* ── MOBILE TOPBAR ── */
 .hk-mob-topbar{
@@ -309,11 +315,11 @@ body.page-haiku-dash{
   border-bottom:1px solid rgba(212,164,40,.15)
 }
 .hk-mob-brand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
-.hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#D4A428;flex-shrink:0}
-.hk-mob-brandword{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
+.hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#D4A428;flex-shrink:0}
+.hk-mob-brandword{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
 .hk-mob-right{display:flex;align-items:center;gap:8px}
-.hk-mob-counter{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
-.hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.hk-mob-counter{font-size:14px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
+.hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
 /* ── MOBILE HAMBURGER ── */
 .hk-mob-ham{display:flex;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0}
 .hk-mob-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
@@ -338,7 +344,7 @@ body.page-haiku-dash{
 .hk-bn-tab{
   display:flex;flex-direction:column;align-items:center;gap:3px;
   color:rgba(255,255,255,.5);text-decoration:none;
-  font-size:11px;font-weight:600;
+  font-size:14px;font-weight:600;
   min-width:0;flex:1 1 0;min-height:44px;
   padding-top:10px;padding-bottom:4px;padding-left:2px;padding-right:2px;
   background:none;border:none;cursor:pointer;
@@ -349,10 +355,10 @@ body.page-haiku-dash{
   overflow:hidden
 }
 .hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
-.hk-bn-tab.on{color:var(--gold)}
+.hk-bn-tab.on{color:#F5C518;background:#0d0d0b}
 /* H5: instant visual tap feedback — no transition delay */
 .hk-bn-tab:active{
-  color:var(--gold)!important;
+  background:#0D0D0B;color:#F5C518!important;
   transform:scale(.92);
   transition:none/* H5: removes delay so tap feels instant */
 }
@@ -369,7 +375,7 @@ body.page-haiku-dash{
   gap:16px;flex-wrap:wrap;font-size:15px
 }
 #cookie-banner.cb-visible{display:flex}
-#cookie-banner a{color:var(--gold)}
+#cookie-banner a{color:#F5C518}
 #cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
 #cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
 
@@ -389,23 +395,28 @@ body.page-haiku-dash{
   .hk-world-grid{grid-template-columns:1fr 1fr}
   .hk-conversion-options{grid-template-columns:1fr!important}
   .hk-footer{padding:44px 22px 24px}
-  .hk-footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+  .hk-ft-grid{grid-template-columns:1fr 1fr;gap:28px}
   .hk-league-panel{grid-template-columns:1fr!important}
   .hk-league-img{height:240px}
   .hk-strip-new{grid-template-columns:repeat(2,1fr);gap:4px}
   .hk-tile{height:140px}
-  .hk-hero{height:280px}
+  .hk-hero{height: 360px}
 }
 @media (max-width: 600px){
+  body,p,div,span,a,li{font-size:14px!important}
+  .hk-crest,.hk-brandword,.hk-gallery-link,.hk-avatar,.hk-counter-compact,.hk-hero-eye,.hk-hero-tier,.hk-sherpa-lbl,.hk-trend-lbl,.hk-trend-badge,.hk-tile-tier,.hk-tile-genre,.hk-league-lbl,.hk-league-badge,.hk-league-eyebrow,.hk-league-tier,.hk-locked-lbl,.hk-locked-bar-text,.hk-split-cards-lbl,.hk-split-photo-caption,.hk-world-lbl,.hk-world-item-lbl,.hk-last-tier,.hk-last-link,.hk-strip-badge,.hk-strength-lbl,.hk-milestone-kicker,.hk-stat-l,.hk-disc-lbl,.hk-gl-text,.hk-gl-link,.hk-gt-tier,.hk-trend-badge,.hk-ft-bottom,.hk-mob-crest,.hk-mob-brandword,.hk-mob-counter,.hk-mob-avatar,.hk-bn-tab{font-size:14px!important}
+
+  .hk-sherpa-lbl,.hk-spark-lbl-txt,.hk-trend-lbl,.hk-counter-bar,.hk-trend-badge,.hk-league-eyebrow,.hk-league-tier{font-size:14px!important}
+  input,select,textarea{font-size:16px!important}
   .hk-split{display:block!important;grid-template-columns:1fr!important}
   .hk-split-photo{min-height:48vw;max-height:240px}
   .hk-split-text{padding:24px 16px 16px}
   .hk-main{padding:32px 16px 80px}
   .hk-body{padding:20px 16px}
   .hk-world-grid,.hk-conversion-options{grid-template-columns:1fr!important}
-  .hk-footer-grid{grid-template-columns:1fr!important}
-  .hk-footer-bottom{flex-direction:column;gap:8px;text-align:center}
-  .hk-h1{font-size:clamp(24px,8vw,36px);text-shadow:none}
+  .hk-ft-grid{grid-template-columns:1fr!important}
+  .hk-ft-bottom{flex-direction:column;gap:8px;text-align:center}
+  .hk-h1{font-size:clamp(24px,8vw,36px);text-shadow: none !important}
   .hk-strip-tile{width:90px}
   .hk-disc-grid{grid-template-columns:1fr!important}
   .hk-gallery-grid{grid-template-columns:repeat(2,1fr)!important}
@@ -432,6 +443,8 @@ body.page-haiku-dash{
   .hk-hero{height:260px}
 }
 
+/* iOS auto-zoom prevention */
+input,select,textarea{font-size:16px!important}
 /* focus */
 .hk-cta:focus-visible,.hk-conv-opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -518,7 +531,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {% else %}
   <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)"></div>
   {% endif %}
-  <div class="hk-hero-overlay"></div>
+  <div class="hk-hero-overlay hero-fade"></div>
   <div class="hk-hero-content">
     <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}. We have been watching.</div>
     {% if user_hero and user_hero.score %}
@@ -547,8 +560,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {# PRE-SHUTTER QUESTION — one per eval, specific to lowest dimension, escalating if repeated #}
   {% if _n >= 1 and _n <= 10 %}
   <div style="margin-top:12px;padding:14px 18px;background:#1A2744;border-left:2px solid #D4A428;">
-    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(212,164,40,.7);margin-bottom:10px;font-family:sans-serif;">Before your next shutter press</div>
-    <div style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-family:Georgia,serif;font-style:italic;">
+    <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(212,164,40,.7);margin-bottom:10px;font-family:sans-serif;">Before your next shutter press</div>
+    <div style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-style:italic;">
       {# Eval 1 — no dimension data yet. The Sherpa invites. #}
       {% if _n == 1 %}
         Show me the next one.
@@ -572,10 +585,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
           {% endif %}
         {# DECISIVE MOMENT #}
         {% elif 'decisive' in _dim or 'moment' in _dim %}
-          {% if _c == 1 %}Was there a reason this frame — and not the one before it, or after?
-          {% elif _c == 2 %}Again — the moment was close, but not yet decisive. What were you waiting for?
-          {% elif _c == 3 %}Three times, the frame has been almost right. The decisive moment is not found by waiting. It is anticipated.
-          {% elif _c >= 4 %}This is the {{ _c }}th time. You are arriving at the scene. The next step is to arrive before it.
+          {% if _c == 1 %}Was there a reason for this frame — and not the one a moment before, or after?
+          {% elif _c == 2 %}Again — the timing was close, but not yet right. What were you waiting for?
+          {% elif _c == 3 %}Three times, the frame has been almost right. The right moment is not found by waiting. It is anticipated.
+          {% elif _c >= 4 %}This is the {{ _c }}th time. You are arriving at the scene. The next step is to be there before it happens.
           {% endif %}
         {# WONDER FACTOR #}
         {% elif 'wonder' in _dim %}
@@ -610,25 +623,25 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       {% for tier_name, tier_score in _tiers %}
         {% set _is_current = (tier_name == tier) %}
         <div style="flex:1;min-width:0;text-align:center;padding:10px 2px;{% if _is_current %}border-bottom:2px solid #D4A428;background:rgba(212,164,40,.07);{% endif %}">
-          <div style="font-size:11px;font-weight:{% if _is_current %}700{% else %}400{% endif %};color:{% if _is_current %}#D4A428{% else %}rgba(255,255,255,.4){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px;">{{ tier_name }}</div>
-          <div style="font-size:10px;color:{% if _is_current %}rgba(212,164,40,.9){% else %}rgba(255,255,255,.3){% endif %};margin-top:2px;">{{ tier_score }}+</div>
+          <div style="font-size:14px;font-weight:{% if _is_current %}700{% else %}400{% endif %};color:{% if _is_current %}#D4A428{% else %}rgba(255,255,255,.45){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px;">{{ tier_name }}</div>
+          <div style="font-size:14px;color:{% if _is_current %}rgba(212,164,40,.9){% else %}rgba(255,255,255,.35){% endif %};margin-top:2px;">{{ tier_score }}+</div>
         </div>
       {% endfor %}
     </div>
 
     {# The standard #}
     <div style="padding:24px 24px 28px;">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:16px;">The standard you are building toward</div>
+      <div style="font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">The standard you are building toward</div>
 
-      <div style="font-size:16px;color:rgba(255,255,255,.85);line-height:1.85;margin-bottom:16px;font-family:Georgia,serif;">
+      <div style="font-size:16px;color:rgba(255,255,255,.85);line-height:1.85;margin-bottom:16px;">
         At every festival, a thousand photographers press the shutter.<br>
         One image stands apart — not because of the camera.<br>
         <span style="color:#D4A428;">Because that photographer saw differently.</span>
       </div>
 
-      <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.75;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;font-style:italic;">
+      <div style="font-size:14px;color:rgba(255,255,255,.45);line-height:1.75;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;font-style:italic;">
         To reach 9, every dimension must be at 9. Not four out of five. All five — in one frame.<br>
-        The difficulty of the pursuit. The disruption to the eye. The decisive moment. The story it carries. The emotion it leaves behind.<br>
+        The difficulty of the pursuit. The disruption to the eye. Whether the timing was right. The story it carries. The emotion it leaves behind.<br>
         That is what makes an image stand the test of time. That is what we help you build.
       </div>
     </div>
@@ -637,7 +650,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {# Zone 1 close — always shows when Sherpa renders #}
   {% if _n >= 3 %}
   <div style="padding:16px 24px 18px;background:#FFFCF4;border-bottom:1px solid #E8E0D0;">
-    <div style="font-size:15px;color:#5A4A30;line-height:1.8;font-style:italic;font-family:Georgia,serif;">
+    <div style="font-size:15px;color:#5A4A30;line-height:1.8;font-style:italic;">
       An image is a thousand words.<br>
       In a world of five billion images a day, almost none are being heard — because they have been seen before.<br>
       <span style="color:#D4A428;font-style:normal;font-weight:500;">We are starting to hear yours.</span>
@@ -730,7 +743,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
   {# IMAGE STRIP #}
   {% if _imgs %}
-  <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:10px">Your photographs</div>
+  <div style="font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:10px">Your photographs</div>
   <div class="hk-strip-new">
     {% for img in _imgs %}
     {% if img.thumb_url %}
@@ -821,10 +834,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# EVOLVING EYE — dark card, visual pull #}
     <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
       <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Evolving Eye</span>
+        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Evolving Eye</span>
       </div>
       <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.4;margin-bottom:12px;font-family:Georgia,serif;">
+        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
           Am I making images —<br>or just taking them?
         </div>
         <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
@@ -835,7 +848,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
       </div>
       <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
+        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
           We will help you start →
         </a>
       </div>
@@ -844,10 +857,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# STANDING — dark card, visual pull #}
     <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
       <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Standing</span>
+        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Standing</span>
       </div>
       <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.4;margin-bottom:12px;font-family:Georgia,serif;">
+        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
           From five billion,<br>to one.
         </div>
         <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
@@ -858,7 +871,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
       </div>
       <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
+        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
           Join the League →
         </a>
       </div>
@@ -880,17 +893,17 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {% else %}
   <div style="width:100%;height:100%;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)"></div>
   {% endif %}
-  <div class="hk-hero-overlay"></div>
+  <div class="hk-hero-overlay hero-fade"></div>
   <div class="hk-hero-content">
     <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}. We are looking for a few good photographers.</div>
-    <h1 style="font-size:clamp(28px,4vw,48px);font-weight:600;color:#fff;line-height:1.1;letter-spacing:-.03em;margin-bottom:12px;max-width:560px">The platform does not know your eye yet.</h1>
+    <h1 style="font-size:clamp(28px,4vw,48px);font-weight:600;color:#fff;line-height:1.7;letter-spacing:-.03em;margin-bottom:12px;max-width:560px">The platform does not know your eye yet.</h1>
     <p style="font-size:16px;color:rgba(255,255,255,.6);line-height:1.7;max-width:480px;margin-bottom:20px">Upload one photograph. We will tell you what we see — across five dimensions, calibrated against the same standard applied to every photographer here.</p>
     <a href="{{ url_for('try_page') }}" style="display:inline-block;background:#D4A428;color:#1A1A18;font-weight:700;font-size:15px;padding:14px 28px;text-decoration:none">
       Show me what I'm missing →
     </a>
-    <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:10px">{{ _lim }} free evaluations. No card needed.</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.3);margin-top:10px">{{ _lim }} free evaluations. No card needed.</div>
     {% if hero_image %}
-    <div style="position:absolute;bottom:14px;right:16px;font-size:9px;color:rgba(255,255,255,.25);letter-spacing:1.5px;text-transform:uppercase">
+    <div style="position:absolute;bottom:14px;right:16px;font-size:14px;color:rgba(255,255,255,.25);letter-spacing:1.5px;text-transform:uppercase">
       {{ hero_image.tier|upper }} · {{ '%.2f'|format(hero_image.score) }} — From the League
     </div>
     {% endif %}
@@ -941,10 +954,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# EVOLVING EYE — dark card, visual pull #}
     <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
       <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Evolving Eye</span>
+        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Evolving Eye</span>
       </div>
       <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.4;margin-bottom:12px;font-family:Georgia,serif;">
+        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
           Am I making images —<br>or just taking them?
         </div>
         <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
@@ -955,7 +968,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
       </div>
       <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
+        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
           We will help you start →
         </a>
       </div>
@@ -964,10 +977,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     {# STANDING — dark card, visual pull #}
     <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
       <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Standing</span>
+        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Standing</span>
       </div>
       <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.4;margin-bottom:12px;font-family:Georgia,serif;">
+        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
           From five billion,<br>to one.
         </div>
         <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
@@ -978,7 +991,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
       </div>
       <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
+        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
           Join the League →
         </a>
       </div>
@@ -1003,7 +1016,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 {# ── FOOTER — bg #1A2744 matches Haiku top nav exactly ── #}
 <footer style="background:#1A2744;padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid rgba(255,255,255,.08)">
-  <span style="font-size:13px;color:rgba(255,255,255,.5)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
+  <span style="font-size:14px;color:rgba(255,255,255,.5)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
   <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
     <a href="{{ url_for('pricing') }}" style="color:rgba(255,255,255,.75);font-size:15px;text-decoration:none">Pricing</a>
     <a href="/terms" style="color:rgba(255,255,255,.65);font-size:15px;text-decoration:none">Terms</a>
