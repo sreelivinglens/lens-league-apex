@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: image_detail_haiku-181.17-staging
+  SL-VERSION: image_detail_haiku-181.18-staging
   Session 192 · 2026-08-24
-  PLAY USER FIXES: (6) Dot counter capped at 20 — play users had 110+ dots. (7) Counter text "free evaluations" → "evaluations" for play users (>10 remaining). (8) Conversion copy: play users (evals 11+) get lighter nudge, not full League conversion. REPETITION FIXES — 5 issues resolved:
+  JS FIX: toggleAcc() and toggleGate() null-guarded — hkAccExtra and hkGateExtra only exist in DOM at eval 1; getElementById returned null on eval 2+ causing Uncaught TypeError. PLAY USER FIXES: (6) Dot counter capped at 20 — play users had 110+ dots. (7) Counter text "free evaluations" → "evaluations" for play users (>10 remaining). (8) Conversion copy: play users (evals 11+) get lighter nudge, not full League conversion. REPETITION FIXES — 5 issues resolved:
   (1) "from one photograph" — now conditional: eval 1 = "from one photograph", eval 2-4 = "from N photographs", eval 5+ = "across your N photographs".
   (2) Trend pill evals 2-4 — was identical "Something is beginning to form..." on every scorecard. Now distinct per eval: Two/Three/Four photographs with varied copy.
   (3) Trend pill evals 5+ — was "pattern is forming. Your eye has a direction. We are watching it." on every scorecard. Now uses milestone_strength if available; otherwise varies by exact count.
@@ -16,7 +16,7 @@
   Mobile  : Own mobile nav (hk-mob-topbar + hk-bottom-nav) ✅ · Hamburger top-right ✅ · 44px tap targets ✅
   iPad    : Single column ≤900px ✅ · hk-dot row wraps ✅
   70yr    : Body 16px+ ✅ · hk-proof-quote 17px ✅ · Trend pill 16px ✅ · Impression 17px ✅
-  Version : image_detail_haiku-181.17-staging — matches filename
+  Version : image_detail_haiku-181.18-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -852,10 +852,11 @@ function toggleAcc() {
   var arrow = document.getElementById('hkAccArrow');
   var lbl   = document.getElementById('hkAccLbl');
   var btn   = document.getElementById('hkAccBtn');
+  if (!extra) return;
   var open  = extra.classList.toggle('open');
-  arrow.classList.toggle('open', open);
-  btn.setAttribute('aria-expanded', open);
-  lbl.textContent = open ? 'Show fewer benefits' : 'See all 6 further benefits';
+  if (arrow) arrow.classList.toggle('open', open);
+  if (btn) btn.setAttribute('aria-expanded', open);
+  if (lbl) lbl.textContent = open ? 'Show fewer benefits' : 'See all 6 further benefits';
 }
 
 function toggleGate() {
@@ -863,11 +864,12 @@ function toggleGate() {
   var arrow = document.getElementById('hkGateArrow');
   var lbl   = document.getElementById('hkGateLbl');
   var btn   = document.getElementById('hkGateBtn');
+  if (!extra) return;
   var open  = extra.style.display === 'block';
   extra.style.display = open ? 'none' : 'block';
-  arrow.classList.toggle('open', !open);
-  btn.setAttribute('aria-expanded', !open);
-  lbl.textContent = open ? 'Read more — 3 further sections included' : 'Show fewer sections';
+  if (arrow) arrow.classList.toggle('open', !open);
+  if (btn) btn.setAttribute('aria-expanded', !open);
+  if (lbl) lbl.textContent = open ? 'Read more — 3 further sections included' : 'Show fewer sections';
 }
 
 function showToast(msg) {
