@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.51-staging
+  SL-VERSION: 181.52-staging
   Session 192 · 2026-08-24
   CRITICAL ACCESS FIX: Bottom nav Improve tab was visible to ALL authenticated users including Haiku. Now subscription-aware: paid sees Dashboard·Upload·My Gallery·Improve·More; Haiku sees Home·Upload·My Gallery·League·Profile — matching the Haiku dashboard bottom nav exactly. RETAINS 181.49.
 
@@ -7,10 +7,10 @@
   ──────────────────────────────────────────────────────
   Audit   : Jinja2 env.parse() required before deploy ✅ · 3 top-nav branches (Haiku/Paid/Logged-out) ✅ · Bottom nav now 2 branches: paid (5 tabs + More) / Haiku (5 tabs, no Improve) ✅ · Standalone pages never extend base.html ✅
   KYC     : 5-col footer: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · .kyc class on mandatory links ✅
-  Mobile  : Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · Hamburger ≤900px ✅ · Cookie banner above bottom nav ✅ · 44px targets ✅
+  Mobile  : Top nav visible on mobile — brand + hamburger ✅ · Nav-links hidden ≤900px ✅ · Hamburger opens drawer below nav (top:64px) ✅ · Drawer clears bottom nav (max-height accounts for 62px) ✅ · Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · 44px targets ✅
   iPad    : bottom-nav visible ≤899px (portrait) ✅ · Nav links hidden ≤900px ✅
   70yr    : Body 17px ✅ · Hero h1 clamp ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
-  Version : 181.51-staging — matches filename
+  Version : 181.52-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -559,10 +559,9 @@ table { max-width: none; }
    END SHARED HERO SYSTEM
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Add padding so page content clears the bottom tab bar */
+/* Content clears bottom tab bar — top nav is sticky so no padding-top needed */
 @media (max-width: 899px) {
   body:not(.page-home) { 
-    padding-top: 0;
     padding-bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 10px); 
   }
 }
@@ -1410,11 +1409,11 @@ footer {
 
   .btn { padding: 10px 18px; font-size: 16px; }
 
-  /* Bottom tab bar replaces top nav on mobile */
-  .sl-top-nav { display: none !important; }
+  /* Top nav stays visible on mobile — shows brand + hamburger only (nav-links hidden above) */
+  /* nav-mobile-login hidden — bottom nav handles logged-out state */
   .nav-mobile-login { display: none !important; }
-  /* Mobile drawer — triggered by ☰ in bottom tab bar, slides from top */
-  .nav-mobile { display: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
+  /* Mobile drawer — slides down from top nav */
+  .nav-mobile { display: none; top: 64px !important; max-height: calc(100dvh - 64px - 62px) !important; z-index: 997 !important; padding-bottom: 20px !important; overflow-y: auto; }
   .nav-mobile.open { display: flex !important; }
   
 }
