@@ -10,6 +10,8 @@
   /* Kill body top padding on this page — desktop gap fix */
   body { padding-top: 0 !important; }
   .admin-wrap { max-width: 1100px; margin: 0 auto; }
+  /* Nav groups */
+  .admin-nav { margin-bottom: 0; }
 
   /* ── Top nav buttons ── */
   .admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
@@ -269,37 +271,56 @@
   </div>
 
   {# ── Top nav ── #}
-  <div class="admin-nav">
-    <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
-    <a href="{{ url_for("admin_engagement") }}" class="admin-nav-btn">📈 Engagement</a>
-    <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
-    <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
-    <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
-      ⚑ Reports
-      {% if open_reports_count %}
-        <span class="badge-count">{{ open_reports_count }}</span>
-      {% endif %}
-    </a>
-    <a href="{{ url_for("admin_judges") }}" class="admin-nav-btn">⚖️ Jury</a>
-    <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
-    <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
-    <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
-    <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn gold">
-      👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
-    </a>
-    <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
-    <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">&#127979; Mentors</a>
-    <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn brown">⬆ Bulk Upload</a>
-    <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
-      ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
-    </a>
-    <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
-    <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
-    <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
-    <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
-    <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
-    <a href="/admin/international-waitlist" class="admin-nav-btn slate">🌍 Intl Waitlist</a>
-    <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
+  {# ── Admin nav — grouped by function ── #}
+  <div style="margin-bottom:24px;">
+
+    {# GROUP 1: Daily checks — things with live counts that need attention #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Daily</div>
+    <div class="admin-nav" style="margin-bottom:14px;">
+      <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
+        ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
+        ⚑ Reports{% if open_reports_count %} <span class="badge-count">{{ open_reports_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn gold">
+        👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
+      <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
+      <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
+      <a href="{{ url_for("admin_engagement") }}" class="admin-nav-btn">📈 Engagement</a>
+    </div>
+
+    {# GROUP 2: Content & platform — programme, content, judging #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Content & Platform</div>
+    <div class="admin-nav" style="margin-bottom:14px;">
+      <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
+      <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
+      <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
+      <a href="{{ url_for("admin_judges") }}" class="admin-nav-btn">⚖️ Jury</a>
+      <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">🏫 Mentors</a>
+      <a href="{{ url_for("admin_site_settings") }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
+      <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn brown">⬆ Bulk Upload</a>
+    </div>
+
+    {# GROUP 3: Tools & data — occasional, not daily #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Tools & Data</div>
+    <div class="admin-nav" style="margin-bottom:14px;">
+      <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
+      <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
+      <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
+      <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
+      <a href="/admin/international-waitlist" class="admin-nav-btn slate">🌍 Intl Waitlist</a>
+    </div>
+
+    {# GROUP 4: Security — flagged, bots, blocks #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Security</div>
+    <div class="admin-nav">
+      <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
+      <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
+    </div>
+
   </div>
 
   {# ── Action Required Banner ── #}
@@ -1706,6 +1727,60 @@
           <div class="danger-desc">Resets all users' rating_credits to 0 and clears all peer rating data — assignments, ratings, pool entries, blended scores. Cannot be undone.</div>
         </div>
         <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl({{ url_for("admin_reset_rating_credits") | tojson }}, 'Reset ALL peer rating credits and data to zero? This cannot be undone.')">Reset All</button>
+      </div>
+
+      {# ── HAIKU RESCORE — SL-181.52 ── #}
+      <div class="danger-row" style="border-color:#1A2744;">
+        <div>
+          <div class="danger-title" style="color:#1A2744">Haiku Rescore — Single Image</div>
+          <div class="danger-desc">
+            Re-runs the Haiku evaluation engine on one specific Haiku image (<code>is_haiku_try = TRUE</code>) using the improved prompt with REPETITION BLOCKED constraint. Updates score, tier, and all text fields (impression, strength, next leap, what next, master reference).<br><br>
+            <strong>When to run:</strong> Use this to test that the REPETITION BLOCKED fix is working before running bulk. Score one image, check the scorecard — impression should be distinctly different from previous scorecards for the same user. Also use this if a specific scorecard was generated before the 181.52 prompt fix and needs updating.<br><br>
+            <strong>Enter the image ID below.</strong> Find it in the image tile above (shown as #ID) or from the URL /try/result/&lt;id&gt;.
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <input type="number" id="haikuRescoreImageId" placeholder="Image ID" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:14px;width:120px;">
+            <button type="button" class="btn btn-solid" style="padding:8px 18px;font-size:13px;white-space:nowrap;background:#1A2744;" onclick="
+              var iid = document.getElementById('haikuRescoreImageId').value;
+              if (!iid) { alert('Enter an image ID first.'); return; }
+              if (!confirm('Re-run Haiku engine on image ' + iid + '? Score and text fields will be overwritten.')) return;
+              fetch('/admin/haiku-rescore/' + iid, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+                .then(r=>r.json()).then(d=>{
+                  if(d.status==='done') alert('Haiku rescore complete for image ' + iid + '. Refresh the scorecard to verify.');
+                  else alert('Rescore failed — check Railway logs.');
+                }).catch(()=>alert('Network error.'));
+            ">Run Single Rescore</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="danger-row" style="border-color:#1A2744;">
+        <div>
+          <div class="danger-title" style="color:#1A2744">Haiku Rescore — All Images for User</div>
+          <div class="danger-desc">
+            Re-runs the Haiku engine on <strong>all</strong> Haiku images for one user, oldest-first. This is critical — oldest-first ensures REPETITION BLOCKED accumulates correctly: image 2 sees image 1's new impression, image 3 sees 1+2, and so on. Each rescore is spaced 1 second apart to avoid API rate limits. Runs in the background — check Railway logs for progress (<code>[haiku_rescore_user] user=X complete — N/N rescored</code>).<br><br>
+            <strong>When to run:</strong>
+            <ul style="margin:6px 0 0 16px;font-size:13px;color:var(--text-muted);line-height:1.7">
+              <li><strong>Before production merge</strong> — any beta user who did evaluations before Session 192 (2026-08-24) has scorecards generated without REPETITION BLOCKED. Run this for each beta user to clean their history before launch.</li>
+              <li><strong>After a prompt fix</strong> — any time the Haiku prompt is updated and existing scorecards need to reflect the new quality.</li>
+              <li><strong>On user complaint</strong> — if a user notices repetitive feedback across their scorecards, run bulk rescore for their user ID.</li>
+            </ul>
+            <strong>Do not run</strong> for users who are mid-evaluation (currently uploading) — wait until they are done.
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <input type="number" id="haikuRescoreUserId" placeholder="User ID" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:14px;width:120px;">
+            <button type="button" class="btn btn-solid" style="padding:8px 18px;font-size:13px;white-space:nowrap;background:#1A2744;" onclick="
+              var uid = document.getElementById('haikuRescoreUserId').value;
+              if (!uid) { alert('Enter a user ID first.'); return; }
+              if (!confirm('Re-run Haiku engine on ALL Haiku images for user ' + uid + ', oldest-first? Runs in background. Check Railway logs for progress.')) return;
+              fetch('/admin/haiku-rescore-user/' + uid, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+                .then(r=>r.json()).then(d=>{
+                  if(d.status==='started') alert('Bulk Haiku rescore started for user ' + uid + '. Watch Railway logs: [haiku_rescore_user] user=' + uid + ' complete.');
+                  else alert('Could not start — check Railway logs.');
+                }).catch(()=>alert('Network error.'));
+            ">Run Bulk Rescore</button>
+          </div>
+        </div>
       </div>
 
     </div>
