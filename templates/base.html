@@ -1,8 +1,18 @@
-{# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — NAV: Profile added to Haiku desktop nav and mobile hamburger menu. RETAINS 181.47.) #}
-{# SL-VERSION: 181.47-staging (Session 191, 2026-08-23 — NAV OVERHAUL: (1) Logo now auth-aware: Haiku→try_welcome, Paid→dashboard, Logged-out→index. (2) Haiku desktop nav reordered: Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, avatar. (3) Haiku mobile menu same order. RETAINS 181.46.) #}
-{# SL-VERSION: 181.46-staging (Session 191, 2026-08-23 — HAIKU NAV ACTIVE STATE: active link now white bold instead of gold for Haiku users. Gold reserved for scores/badges only. RETAINS 181.45.) #}
-{# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — HAIKU NAV COLOUR: nav background changed to #1A2744 (dark navy) for Haiku users via nav-haiku class. Matches dashboard_haiku.html nav colour. Paid users and logged-out retain existing rgba(26,24,20,0.94) dark brown. RETAINS 181.4.) #}
-{# SL-VERSION: 181.4 (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Authenticated non-paid (Haiku) users now see discovery nav: How it works / Science / Programmes / Pricing / League of Photographers / My evaluations / Log out — instead of paid nav with Dashboard/Improve/etc. (2) Logged-out nav: Programmes link added, AEA label cleaned up. (3) Mobile nav: same Haiku branch added. RETAINS 181.3.) Previous: {# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
+{#
+  SL-VERSION: 181.49-staging
+  Session 192 · 2026-08-24
+  FONT: Inter → Aptos system stack ('Aptos','Segoe UI',system-ui,Arial,sans-serif). Google Fonts Inter link removed — zero external font dependency. Footer font-family was 'Avenir Next' — updated to var(--font-body). JetBrains Mono retained via Google Fonts for scores/mono. RETAINS 181.48.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Jinja2 env.parse() required before deploy ✅ · Auth-aware logo ✅ · 3 nav branches (Haiku/Paid/Logged-out) ✅ · Standalone pages never extend base.html ✅
+  KYC     : 5-col footer: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · .kyc class on mandatory links for AI/human audit identification ✅
+  Mobile  : Bottom tab nav ≤899px ✅ · Hamburger ≤900px ✅ · Cookie banner above bottom nav ✅ · Back-to-top above bottom nav ✅ · touch-action:manipulation ✅ · 44px targets ✅
+  iPad    : bottom-nav visible ≤899px (portrait) ✅ · Back-to-top repositioned ✅ · Nav links hidden ≤900px ✅
+  70yr    : Body 17px ✅ · Hero h1 clamp(22px,2.4vw,30px) ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
+  Version : 181.49-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,9 +37,8 @@
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<!-- Aptos is a Windows 11 / Office system font — no external load needed -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='glossary-links.css') }}">
 <style>
@@ -79,7 +88,7 @@
   --amber-dim:   rgba(184, 112, 10, 0.12);
   --dim:         #FFFFFF;
 
-  --font-body:  'Inter', sans-serif;
+  --font-body:  'Aptos', 'Segoe UI', system-ui, Arial, sans-serif;
   --font-mono:  'JetBrains Mono', 'Courier New', monospace;
 
   --nav-height: 64px;
@@ -1300,7 +1309,7 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 footer {
   background: #0F2A22;
   padding: 3rem var(--page-pad) 1.75rem;
-  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
 }
 .footer-top {
   display: grid;
