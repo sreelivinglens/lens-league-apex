@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.50-staging
+  SL-VERSION: 181.51-staging
   Session 192 · 2026-08-24
   CRITICAL ACCESS FIX: Bottom nav Improve tab was visible to ALL authenticated users including Haiku. Now subscription-aware: paid sees Dashboard·Upload·My Gallery·Improve·More; Haiku sees Home·Upload·My Gallery·League·Profile — matching the Haiku dashboard bottom nav exactly. RETAINS 181.49.
 
@@ -10,7 +10,7 @@
   Mobile  : Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · Hamburger ≤900px ✅ · Cookie banner above bottom nav ✅ · 44px targets ✅
   iPad    : bottom-nav visible ≤899px (portrait) ✅ · Nav links hidden ≤900px ✅
   70yr    : Body 17px ✅ · Hero h1 clamp ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
-  Version : 181.50-staging — matches filename
+  Version : 181.51-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -1305,7 +1305,7 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 /* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
 footer {
-  background: #0F2A22;
+  background: #0F1F3D;
   padding: 3rem var(--page-pad) 1.75rem;
   font-family: var(--font-body);
 }
