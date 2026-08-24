@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: HAIKU-178.45-staging
+  SL-VERSION: HAIKU-178.46-staging
   Session 192 · 2026-08-24
-  AUDIT FIXES: (1) Footer bg #1A2744 — matches Haiku top nav exactly. (2) UDYAM-KR-03-0697280 added to footer, 11px fine print. (3) Hamburger added to mobile topbar — overlay with Pricing + Log out, filling gap in 5-tab bottom nav. (4) Font confirmed Aptos. (5) Gold #D4A428 on dark only. RETAINS HAIKU-178.44.
+  HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.45-staging — matches filename
+  Version : HAIKU-178.46-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -305,9 +305,9 @@ body.page-haiku-dash{
 .hk-mob-ham{display:flex;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0}
 .hk-mob-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
 /* Overlay menu */
-.hk-mob-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#1A2744;border-bottom:1px solid rgba(255,255,255,.12);z-index:999;padding:8px 0}
+.hk-mob-menu{display:none;position:fixed;top:60px;right:12px;left:auto;width:220px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:10px;z-index:999;padding:6px 0;box-shadow:0 8px 32px rgba(0,0,0,.55);overflow:hidden}
 .hk-mob-menu.open{display:block}
-.hk-mob-menu a{display:block;padding:14px 20px;font-size:16px;font-weight:500;color:rgba(255,255,255,.8);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:52px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.hk-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hk-mob-menu a:last-child{border-bottom:none}
 .hk-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
 
