@@ -1,3 +1,4 @@
+# SL-VERSION: 181.53-staging (Session 192, 2026-08-24 — HAIKU BACKFILL: /admin/haiku-rescore/<image_id> and /admin/haiku-rescore-user/<user_id> added. Single image route re-runs _try_run_haiku with improved prompt (REPETITION BLOCKED). Bulk user route processes oldest-first with 1s delay between calls so REPETITION BLOCKED builds correctly across sequence. Text + score + tier all updated. is_haiku_try verified before running. Background thread for bulk. RETAINS 181.52.)
 # SL-VERSION: 181.52-staging (Session 192, 2026-08-24 — TWO FIXES: (1) subscribe_confirm: play plan (100-for-100) was blocked — plan not in allowed list, redirected to /pricing. Fixed: play handler intercepts before guard, verifies Razorpay signature, increments referral_bonus_uploads +100 via raw SQL, redirects to /try/welcome. User stays in Haiku world. is_subscribed unchanged. (2) _get_haiku_history_context: REPETITION BLOCKED constraint added — previous impression paragraphs passed to prompt with explicit instruction not to repeat phrases, structures or observations. RETAINS 181.51.)
 # SL-VERSION: 181.51-staging (Session 192, 2026-08-24 — REPETITION BLOCKED added to _TRY_HAIKU_PROMPT via _get_haiku_history_context. RETAINS 181.50.)
 # SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
@@ -11521,6 +11522,134 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 img2.status = old_status if old_status in ('scored', 'error') else 'scored'
                 db.session.commit()
             app.logger.error(f'[force_rescore_bg] {_tb.format_exc()}')
+
+
+# ── SL-181.52: HAIKU RESCORE / BACKFILL ROUTES ───────────────────────────────
+# Purpose: re-run _try_run_haiku on existing Haiku images so REPETITION BLOCKED
+# and improved prompt improvements apply retroactively. Text fields (impression,
+# strength_obs, next_leap_obs, what_next, master_name, master_why, takeaway)
+# are regenerated. Score, tier, and dimension scores are also updated with the
+# fresh call. Haiku images only (is_haiku_try = TRUE).
+#
+# Routes:
+#   POST /admin/haiku-rescore/<image_id>       — single image
+#   POST /admin/haiku-rescore-user/<user_id>   — all Haiku images for one user,
+#                                                 oldest-first so REPETITION BLOCKED
+#                                                 builds correctly across the sequence
+
+def _haiku_rescore_single(image_id):
+    """
+    Core: download thumb from R2, call _try_run_haiku, return True/False.
+    Called from both single and bulk routes. Must run inside app context.
+    """
+    import base64 as _b64, tempfile, io as _io
+    from storage import get_client, BUCKET
+
+    img = Image.query.get(image_id)
+    if not img:
+        app.logger.warning(f'[haiku_rescore] image {image_id} not found')
+        return False
+    if not getattr(img, 'is_haiku_try', False):
+        # Raw SQL check — is_haiku_try not a mapped ORM column
+        row = db.session.execute(
+            db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+            {'iid': image_id}
+        ).fetchone()
+        if not row or not row[0]:
+            app.logger.warning(f'[haiku_rescore] image {image_id} is not a Haiku image — skipped')
+            return False
+
+    if not img.thumb_url:
+        app.logger.warning(f'[haiku_rescore] image {image_id} has no thumb_url — skipped')
+        return False
+
+    try:
+        buf = _io.BytesIO()
+        key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+        get_client().download_fileobj(BUCKET, key, buf)
+        img_b64 = _b64.b64encode(buf.getvalue()).decode()
+    except Exception as _de:
+        app.logger.error(f'[haiku_rescore] image {image_id} download failed: {_de}')
+        return False
+
+    genre   = img.genre or 'General'
+    user_id = img.user_id
+
+    result = _try_run_haiku(image_id, img_b64, genre, user_id=user_id)
+    if result:
+        app.logger.info(
+            f'[haiku_rescore] done image={image_id} user={user_id} '
+            f'score={result.get("score")} tier={result.get("tier")}'
+        )
+        return True
+    else:
+        app.logger.error(f'[haiku_rescore] _try_run_haiku returned None for image {image_id}')
+        return False
+
+
+@app.route('/admin/haiku-rescore/<int:image_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_rescore_single(image_id):
+    """
+    Admin: re-run Haiku engine on one Haiku image with improved prompt
+    (REPETITION BLOCKED, varied opening). Text fields regenerated.
+    Score and tier also updated.
+    """
+    ok = _haiku_rescore_single(image_id)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+        return jsonify({'status': 'done' if ok else 'error', 'image_id': image_id})
+    if ok:
+        flash(f'Haiku rescore complete for image {image_id}.', 'success')
+    else:
+        flash(f'Haiku rescore failed for image {image_id} — check logs.', 'error')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/haiku-rescore-user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_rescore_user(user_id):
+    """
+    Admin: re-run Haiku engine on ALL Haiku images for one user, oldest-first.
+    Oldest-first is critical — REPETITION BLOCKED builds correctly across the
+    sequence (image 2 sees image 1's new impression, image 3 sees 1+2, etc.)
+    Runs in a background thread. Returns immediately.
+    """
+    def _bulk_rescore(uid):
+        with app.app_context():
+            rows = db.session.execute(
+                db.text(
+                    "SELECT id FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id ASC"  # oldest first — REPETITION BLOCKED builds correctly
+                ),
+                {'uid': uid}
+            ).fetchall()
+            image_ids = [r[0] for r in rows]
+            app.logger.info(f'[haiku_rescore_user] user={uid} — {len(image_ids)} images to rescore')
+            done = 0
+            for iid in image_ids:
+                try:
+                    ok = _haiku_rescore_single(iid)
+                    if ok:
+                        done += 1
+                    import time as _t
+                    _t.sleep(1)  # 1s between calls — avoid API rate limit
+                except Exception as _be:
+                    app.logger.error(f'[haiku_rescore_user] image {iid} failed: {_be}')
+            app.logger.info(
+                f'[haiku_rescore_user] user={uid} complete — '
+                f'{done}/{len(image_ids)} rescored'
+            )
+
+    import threading as _brt
+    _brt.Thread(target=_bulk_rescore, args=(user_id,), daemon=True).start()
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+        return jsonify({'status': 'started', 'user_id': user_id})
+    flash(f'Haiku rescore started for user {user_id} — runs in background. Check Railway logs for progress.', 'info')
+    return redirect(request.referrer or url_for('admin_dashboard'))
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
