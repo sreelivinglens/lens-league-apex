@@ -1,3 +1,18 @@
+{#
+  SL-VERSION: challenge-181.2-staging
+  Session 192 · 2026-08-24
+  HAIKU GATE: Challenge CTA now 3-way: paid→submit with slot bar, Haiku→"Join the League to participate"→pricing with clear explanation, anon→register. Removed confusing 0-credit slot bar for Haiku users. Font sizes lifted 14→16px throughout. RETAINS challenge-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Public page ✅ · 3-way CTA: paid (slot bar + submit), Haiku (clean gate → pricing), anon (register) ✅ · No 0-slot confusion for Haiku ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · ch-ctas flex-direction:column ✅ · Buttons full-width ✅ · 44px tap targets ✅
+  iPad    : sub-grid minmax(180px) ✅ · ch-hero padding adjusted ✅
+  70yr    : ch-title 36px (24px mobile) ✅ · ch-body 17px (16px mobile) ✅ · ch-meta-item 16px ✅ · slot-label/week-label/lb-title 13px mono labels ✅
+  Version : challenge-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {% block title %}Weekly Assignment{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
 
@@ -23,12 +38,12 @@
   .ch-body          { font-size: 17px; color: var(--text-secondary); line-height: 1.7;
                       margin-bottom: 20px; max-width: 640px; text-align: left; }
   .ch-meta          { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
-  .ch-meta-item     { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+  .ch-meta-item     { font-family: var(--font-mono); font-size: 16px; color: var(--text-muted); }
   .ch-meta-item strong { color: var(--text-primary); }
   .sponsor-badge    { display: inline-flex; align-items: center; gap: 8px;
                       background: var(--gold-subtle); border: 1px solid var(--gold-dark);
                       border-radius: var(--radius-sm); padding: 8px 14px;
-                      font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+                      font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
   .sponsor-badge strong { color: #854F0B; }
 
   .slot-bar         { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
@@ -44,7 +59,7 @@
                       margin-bottom: 16px; }
   .lb-title         { font-family: var(--font-mono); font-size: 13px; font-weight: 600;
                       letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
-  .lb-note          { font-size: 14px; color: var(--text-muted); }
+  .lb-note          { font-size: 16px; color: var(--text-muted); }
 
   .sub-grid         { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
                       gap: 16px; }
@@ -58,7 +73,7 @@
   .sub-info         { padding: 10px 12px; }
   .sub-rank         { font-family: var(--font-mono); font-size: 13px; font-weight: 700;
                       color: #854F0B; letter-spacing: 1px; margin-bottom: 3px; }
-  .sub-name         { font-size: 14px; font-weight: 600; color: var(--text-primary);
+  .sub-name         { font-size: 16px; font-weight: 600; color: var(--text-primary);
                       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sub-score        { font-family: var(--font-mono); font-size: 13px; color: #854F0B;
                       margin-top: 2px; }
@@ -90,7 +105,7 @@
     .ch-title         { font-size: 24px; }
     .ch-body          { font-size: 16px; max-width: 100%; }
     .ch-meta          { gap: 12px; }
-    .ch-meta-item     { font-size: 14px; }
+    .ch-meta-item     { font-size: 16px; }
     .ch-ctas          { flex-direction: column; }
     .ch-ctas .btn     { width: 100%; text-align: center; }
     .sub-grid         { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -171,7 +186,8 @@
     {% endif %}
 
     {# ── Slot indicator + CTAs ── #}
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and current_user.is_subscribed %}
+      {# Paid subscriber — full challenge access #}
       <div class="slot-bar">
         {% for i in range(slot_limit) %}
           <div class="slot {% if i < slots_used %}used{% endif %}"></div>
@@ -184,12 +200,8 @@
           {% else %}
             You've used all {{ slot_limit }} feedback credit{{ 's' if slot_limit > 1 else '' }} this week
           {% endif %}
-          {% if not current_user.is_subscribed %}
-            &nbsp;·&nbsp; <a href="{{ url_for('pricing') }}" style="color:var(--text-primary); text-decoration:underline;">Subscribe for more credits →</a>
-          {% endif %}
         </span>
       </div>
-
       <div class="ch-ctas">
         {% if can_submit %}
           <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid">Submit for feedback →</a>
@@ -207,13 +219,23 @@
         {% endif %}
       </div>
 
-    {% else %}
+    {% elif current_user.is_authenticated %}
+      {# Haiku (free) user — Weekly Assignment is a League member feature #}
       <div class="ch-ctas">
-        <a href="{{ url_for('register') }}" class="btn btn-solid">Join free to participate →</a>
+        <a href="{{ url_for('pricing') }}" class="btn btn-solid">Join the League to participate →</a>
+      </div>
+      <div style="font-size:16px; color:var(--text-muted); margin-top:12px; line-height:1.6;">
+        The Weekly Assignment is open to League members. League membership gives you 3 feedback credits per week, calibrated standing, and Annual Excellence Award eligibility.
+      </div>
+
+    {% else %}
+      {# Logged out #}
+      <div class="ch-ctas">
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Join free to start →</a>
         <a href="{{ url_for('login') }}" class="btn">Sign in</a>
       </div>
       <div style="font-size:16px; color:var(--text-muted); margin-top:10px;">
-        Free members: 1 feedback credit/week · Subscribers: 3 feedback credits/week + growth tracking
+        League members get 3 feedback credits per week · calibrated standing · Annual Excellence Award eligibility
       </div>
     {% endif %}
   </div>
