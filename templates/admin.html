@@ -1740,7 +1740,7 @@
           </div>
           <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
             <input type="number" id="haikuRescoreImageId" placeholder="Image ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
-            <button type="button" class="btn btn-solid" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff;border:none;" onclick="
+            <button type="button" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff !important;border:2px solid rgba(255,255,255,.3);border-radius:4px;cursor:pointer;min-height:44px;" onclick="
               var iid = document.getElementById('haikuRescoreImageId').value;
               if (!iid) { alert('Enter an image ID first.'); return; }
               if (!confirm('Re-run Haiku engine on image ' + iid + '? Score and text fields will be overwritten.')) return;
@@ -1769,7 +1769,7 @@
           </div>
           <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
             <input type="number" id="haikuRescoreUserId" placeholder="User ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
-            <button type="button" class="btn btn-solid" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff;border:none;" onclick="
+            <button type="button" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff !important;border:2px solid rgba(255,255,255,.3);border-radius:4px;cursor:pointer;min-height:44px;" onclick="
               var uid = document.getElementById('haikuRescoreUserId').value;
               if (!uid) { alert('Enter a user ID first.'); return; }
               if (!confirm('Re-run Haiku engine on ALL Haiku images for user ' + uid + ', oldest-first? Runs in background. Check Railway logs for progress.')) return;
