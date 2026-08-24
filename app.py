@@ -1,3 +1,5 @@
+# SL-VERSION: 181.52-staging (Session 192, 2026-08-24 — TWO FIXES: (1) subscribe_confirm: play plan (100-for-100) was blocked — plan not in allowed list, redirected to /pricing. Fixed: play handler intercepts before guard, verifies Razorpay signature, increments referral_bonus_uploads +100 via raw SQL, redirects to /try/welcome. User stays in Haiku world. is_subscribed unchanged. (2) _get_haiku_history_context: REPETITION BLOCKED constraint added — previous impression paragraphs passed to prompt with explicit instruction not to repeat phrases, structures or observations. RETAINS 181.51.)
+# SL-VERSION: 181.51-staging (Session 192, 2026-08-24 — REPETITION BLOCKED added to _TRY_HAIKU_PROMPT via _get_haiku_history_context. RETAINS 181.50.)
 # SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
 # SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
@@ -21944,6 +21946,43 @@ def subscribe_confirm():
 
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
 
+    # ── PLAY PLAN (100-for-100) ── SL-181.52-staging
+    # play uses Orders API (same as monthly). Verify signature, increment
+    # referral_bonus_uploads by 100. Does NOT set is_subscribed — user stays
+    # in the Haiku world. Redirect to /try/welcome (Haiku dashboard).
+    if plan == 'play' and track in ('camera', 'mobile'):
+        try:
+            if not order_id or not payment_id:
+                raise Exception('Missing order_id or payment_id for play plan')
+            msg = f'{order_id}|{payment_id}'
+            expected = _hmac.new(
+                razorpay_secret.encode('utf-8'),
+                msg.encode('utf-8'),
+                _hashlib.sha256
+            ).hexdigest()
+            if not _hmac.compare_digest(expected, signature):
+                raise Exception('Signature mismatch')
+            # Grant 100 bonus evaluations
+            _current_bonus = int(db.session.execute(
+                db.text('SELECT referral_bonus_uploads FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar() or 0)
+            db.session.execute(
+                db.text('UPDATE users SET referral_bonus_uploads = :new_val WHERE id = :uid'),
+                {'new_val': _current_bonus + 100, 'uid': current_user.id}
+            )
+            db.session.commit()
+            app.logger.info(
+                f'[subscribe_confirm] play top-up granted — '
+                f'user={current_user.id} bonus={_current_bonus}→{_current_bonus + 100}'
+            )
+            flash('100 more evaluations added to your account.', 'success')
+            return redirect(url_for('try_welcome'))
+        except Exception as _pe:
+            app.logger.error(f'[subscribe_confirm] play failed: {_pe}')
+            flash('Payment verification failed. Contact support if you were charged.', 'error')
+            return redirect(url_for('pricing'))
+
     if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual'):
         flash('Invalid payment details.', 'error')
         return redirect(url_for('pricing'))
@@ -31989,11 +32028,33 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
                 f"in plain English — name it as a pattern without using dimension names."
             )
 
+        # ── REPETITION BLOCKED — SL-181.52 ──────────────────────────────────
+        # Collect previous impression paragraphs so the model cannot repeat them.
+        # P2 fix from Session 192 handoff.
+        _repetition_block = ''
+        _prev_impressions = []
+        for _r in _rows:
+            try:
+                import json as _rbj
+                _imp = _rbj.loads(_r[3] or '{}').get('impression', '').strip()
+                if _imp:
+                    _prev_impressions.append(_imp[:150])
+            except Exception:
+                pass
+        if _prev_impressions:
+            _repetition_block = (
+                "\n\nREPETITION BLOCKED — the following observations have already been "
+                "made to this photographer. Do NOT repeat these phrases, sentence structures, "
+                "or observations in ANY field (impression, strength_obs, next_leap_obs, what_next):\n"
+                + "\n".join([f'  - \"{imp}\"' for imp in _prev_impressions])
+            )
+
         return (
             f"{_opening}\n\n"
             f"PHOTOGRAPHER HISTORY (last {len(_lines)} evaluated photograph{'s' if len(_lines) > 1 else ''}):\n"
             + "\n".join(_lines)
             + _pattern_instruction
+            + _repetition_block
         )
     except Exception as _he:
         app.logger.warning(f'[try_haiku] history fetch failed (non-fatal): {_he}')
