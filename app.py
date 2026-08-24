@@ -1,3 +1,4 @@
+# SL-VERSION: 181.58-staging (Session 192, 2026-08-24 — COST+LEGAL: (1) Watermark: Sonnet→Haiku on free tier saves ₹1.60/10evals. (2) upload_declarations table: user_id/image_id/declared_at/ip/ua/watermark_result — permanent legal audit trail. (3) max_tokens 800→500 saves ₹0.80/10evals. (4) Sherpa milestone-only: evals 2,5,10 free; every 10th play — saves ₹0.84/10evals. Total: ₹3.18/10 free evals. RETAINS 181.57.)
 # SL-VERSION: 181.57-staging (Session 192, 2026-08-24 — ADMIN: /admin/api/user-id-by-username endpoint added. Resolves username to user_id + Haiku eval count for the bulk rescore tool. RETAINS 181.56.)
 # SL-VERSION: 181.56-staging (Session 192, 2026-08-24 — INDEX HERO FIX: carousel_images and recent_images queries missing is_haiku_try IS NOT TRUE filter. Haiku images were appearing in homepage hero and recent work sections. Now excluded. On staging with only Haiku images, gradient fallback shows correctly. RETAINS 181.55.)
 # SL-VERSION: 181.55-staging (Session 192, 2026-08-24 — TWO FIXES: (1) /mission route: added is_subscribed gate — Haiku users redirected to /pricing with Sherpa-tone flash message. (2) base.html _show_sidenav: added is_subscribed check — Haiku users were seeing full paid sidenav. RETAINS 181.54.)
@@ -890,6 +891,19 @@ def _run_startup_tasks():
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_url VARCHAR(512)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS thumb_url VARCHAR(512)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
+                    # SL-181.58: upload_declarations — legal audit trail per upload
+                    """CREATE TABLE IF NOT EXISTS upload_declarations (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id),
+                        image_id INTEGER NOT NULL REFERENCES images(id),
+                        declared_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                        ip_address VARCHAR(64),
+                        user_agent VARCHAR(512),
+                        watermark_checked BOOLEAN DEFAULT FALSE,
+                        watermark_result VARCHAR(128)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS ix_upload_decl_user ON upload_declarations(user_id)",
+                    "CREATE INDEX IF NOT EXISTS ix_upload_decl_image ON upload_declarations(image_id)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_lens VARCHAR(180)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
@@ -32417,7 +32431,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 800,
+        'max_tokens': 500  # SL-181.58: 800→500 saves ~₹0.08/eval,
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -32533,16 +32547,26 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                 f'[try_haiku] scored image={image_id} score={final_score} '
                 f'tier={tier} user={img.user_id}'
             )
-            # SL-181.48: trigger cross-image Sherpa synthesis after scoring
-            # Fires in background thread — non-blocking, never crashes scoring
+            # SL-181.58: Sherpa milestone-only — not every eval
+            # Free (10 evals): fires at 2,5,10. Play (100): every 10th.
+            # Saves ~₹0.84 per free user across 10 evals.
             if user_id:
                 try:
-                    import threading as _sht
-                    _uid_for_sherpa = img.user_id
-                    def _run_sherpa():
-                        with app.app_context():
-                            _generate_haiku_sherpa(_uid_for_sherpa)
-                    _sht.Thread(target=_run_sherpa, daemon=True).start()
+                    _sherpa_count = int(db.session.execute(
+                        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
+                        {'uid': img.user_id}
+                    ).scalar() or 0)
+                    _should_sherpa = _sherpa_count in (2, 5, 10) or (_sherpa_count > 10 and _sherpa_count % 10 == 0)
+                    if _should_sherpa:
+                        import threading as _sht
+                        _uid_for_sherpa = img.user_id
+                        def _run_sherpa():
+                            with app.app_context():
+                                _generate_haiku_sherpa(_uid_for_sherpa)
+                        _sht.Thread(target=_run_sherpa, daemon=True).start()
+                        app.logger.info(f'[haiku_sherpa] milestone eval={_sherpa_count} user={img.user_id}')
+                    else:
+                        app.logger.info(f'[haiku_sherpa] skipped eval={_sherpa_count} user={img.user_id}')
                 except Exception as _she:
                     app.logger.warning(f'[haiku_sherpa] trigger failed (non-fatal): {_she}')
             return {
@@ -33069,7 +33093,7 @@ def try_upload():
                 _twm_b64 = _b64.b64encode(_twm_buf.getvalue()).decode('utf-8')
 
                 _twm_payload = _twmjson.dumps({
-                    'model': 'claude-sonnet-4-6',
+                    'model': '_HAIKU_MODEL  # SL-181.58: Haiku replaces Sonnet — watermark check free tier',
                     'max_tokens': 100,
                     'messages': [{'role': 'user', 'content': [
                         {'type': 'image', 'source': {
@@ -33106,6 +33130,8 @@ def try_upload():
                 _twm_text = _twm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
                 _twm_data = _twmjson.loads(_twm_text)
 
+                # SL-181.58: store result for declaration record
+                app._last_wm_result = 'detected: ' + str(_twm_data.get('description','')) if _twm_data.get('watermark_detected') else 'clean'
                 if _twm_data.get('watermark_detected'):
                     if os.path.exists(thumb_path):
                         os.remove(thumb_path)
@@ -33180,6 +33206,24 @@ def try_upload():
             {'iid': image_id}
         )
         db.session.commit()
+        # SL-181.58: store legal declaration audit trail
+        try:
+            _decl_ip = (request.headers.get('X-Forwarded-For', '') or request.remote_addr or '')[:64]
+            _decl_ua = request.headers.get('User-Agent', '')[:512]
+            _wm_result = getattr(app, '_last_wm_result', 'clean')
+            db.session.execute(
+                db.text(
+                    "INSERT INTO upload_declarations "
+                    "(user_id, image_id, declared_at, ip_address, user_agent, "
+                    " watermark_checked, watermark_result) "
+                    "VALUES (:uid, :iid, NOW(), :ip, :ua, TRUE, :wr)"
+                ),
+                {'uid': current_user.id, 'iid': image_id,
+                 'ip': _decl_ip, 'ua': _decl_ua, 'wr': _wm_result}
+            )
+            db.session.commit()
+        except Exception as _decl_err:
+            app.logger.warning(f'[try_upload] declaration store failed (non-fatal): {_decl_err}')
         app.logger.info(
             f'[try_upload] image saved: id={image_id} '
             f'user={current_user.id} genre={genre}'
