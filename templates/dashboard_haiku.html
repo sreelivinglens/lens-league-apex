@@ -1,16 +1,16 @@
 {#
-  SL-VERSION: HAIKU-178.46-staging
+  SL-VERSION: HAIKU-178.48-staging
   Session 192 · 2026-08-24
-  HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
+  PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
-  Audit   : Footer bg #1A2744 matches nav ✅ · Single-line live footer ✅ · No orphaned elements ✅
+  Audit   : Footer bg #1A2744 matches nav ✅ · Fallback Sherpa varies by eval ✅ · score_trend wired ✅ · League statement graduated ✅ · No orphaned elements ✅
   KYC     : Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · All 4 Razorpay mandatory links present on every state
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.46-staging — matches filename
+  Version : HAIKU-178.48-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -448,6 +448,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 {% set state_milestone    = _n >= 5 and _n <= 9 %}
 {% set state_near_limit   = _n >= 8 and _n <= 9 %}
 {% set state_conversion   = _n >= _lim %}
+{% set _bonus_evals = (limit or 10) - 10 %}{# 0 for free users, 100 for play users #}
+{% set _is_play = _bonus_evals > 0 %}
 
 {# ── MOBILE TOPBAR ── #}
 <div class="hk-mob-topbar">
@@ -525,8 +527,13 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div class="hk-sherpa-lbl">{{ _n }} photograph{{ 's' if _n != 1 }} in</div>
   <div class="hk-sherpa-q">
     {% if _n == 1 %}"One photograph tells us what you made. One more tells us how you see."
-    {% elif _n >= 2 and _n <= 4 %}"Something is beginning to form in how you see — keep going."
-    {% elif _n >= 5 %}{% if milestone_strength %}"Across your {{ _n }} photographs, {{ milestone_strength }} is the most consistent signal in your work."{% else %}"A pattern is forming. Your eye has a direction."{% endif %}
+    {% elif _n == 2 %}"Two photographs. We are starting to see where your eye goes."
+    {% elif _n == 3 %}"Three photographs. The direction is becoming clearer."
+    {% elif _n == 4 %}"Four photographs in. We are watching how your eye moves."
+    {% elif _n >= 5 and milestone_strength %}"Across your {{ _n }} photographs, your strongest quality has been {{ milestone_strength }}. That is not an accident."
+    {% elif _n == 5 %}"Five photographs. A pattern is forming. We see where your eye goes."
+    {% elif _n >= 6 and _n <= 7 %}"{{ _n }} photographs. The direction is clear."
+    {% else %}"{{ _n }} photographs. You are close to something."
     {% endif %}
   </div>
   {% if next_leap_name %}
@@ -538,8 +545,18 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 <div class="hk-body">
   {# COUNTER #}
   <div class="hk-counter-bar">
-    <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining
+    {% if _is_play %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% else %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% endif %}
   </div>
+
+  {# TREND SIGNAL — progression between last two evaluations #}
+  {% if _trend and _n >= 2 %}
+  <div style="font-size:15px;color:var(--muted);margin-bottom:16px;padding:0 2px">
+    {% if _trend == 'up' %}Your last evaluation was stronger than the one before it.
+    {% elif _trend == 'down' %}Your last evaluation was lower — one result does not define a direction.
+    {% else %}Your last two evaluations are close.
+    {% endif %}
+  </div>
+  {% endif %}
 
   {# CTA #}
   {% if not state_conversion %}
@@ -572,8 +589,13 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {# CONVERSION STATE #}
   {% if state_conversion %}
   <div class="hk-conversion" style="margin-bottom:32px">
+    {% if _is_play %}
+    <div class="hk-conversion-headline">{{ _lim }} photographs.</div>
+    <div class="hk-conversion-body">We know something real about how you see. None of it is in the Shutter League record yet. Your standing, your AEA qualification, your Evolving Eye — <strong>they start with your next photograph as a member of the League of Photographers.</strong></div>
+    {% else %}
     <div class="hk-conversion-headline">Your photographs have shown us how you see.</div>
     <div class="hk-conversion-body">But they do not yet exist in the Shutter League record. Your standings, your AEA qualification, your calibrated Evolving Eye — none of these have started yet. They start with your next photograph.</div>
+    {% endif %}
     <div class="hk-conversion-options">
       <a href="{{ url_for('pricing') }}" class="hk-conv-opt primary">
         <div>
@@ -582,6 +604,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
         <span class="hk-conv-opt-price">₹4,000 / year</span>
       </a>
+      {% if not _is_play %}
       <a href="{{ url_for('pricing') }}#play" class="hk-conv-opt secondary">
         <div>
           <div class="hk-conv-opt-label">100 for 100</div>
@@ -589,6 +612,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
         <span class="hk-conv-opt-price" style="color:var(--gold-dk);font-size:14px;font-weight:700">₹100</span>
       </a>
+      {% endif %}
       <a href="{{ url_for('index') }}" class="hk-conv-opt quiet">I came to explore — I am happy with this for now. Your feedback is appreciated.</a>
     </div>
   </div>
@@ -609,7 +633,12 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
           <div class="hk-league-eyebrow">The League of Photographers</div>
           <div class="hk-league-score">{{ '%.2f'|format(league_hero.score) if league_hero else '9.15' }}</div>
           <div class="hk-league-tier">{{ league_hero.tier if league_hero else 'Grandmaster' }} · {{ league_hero.genre if league_hero else 'Creative' }}</div>
-          <div class="hk-league-statement">"We are looking for a few photographers whose work is worth developing over years. Your {{ _n }} photograph{{ 's suggest' if _n != 1 else ' suggests' }} you may be one of them."</div>
+          <div class="hk-league-statement">
+            {% if _n <= 2 %}"We are looking for a few photographers whose work is worth developing over years."
+            {% elif _n <= 4 %}"We are looking for a few photographers whose work is worth developing over years. Keep going — {{ _n }} photographs is not enough to know."
+            {% else %}"We are looking for a few photographers whose work is worth developing over years. Your {{ _n }} photographs have shown us something worth watching."
+            {% endif %}
+          </div>
         </div>
         <a href="{{ url_for('standings_public') }}" class="hk-league-link">View the League of Photographers →</a>
       </div>
@@ -671,7 +700,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 <div class="hk-body">
   <div class="hk-counter-bar">
-    <b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining
+    {% if _is_play %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% else %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% endif %}
   </div>
 
   {# LEAGUE PANEL #}
