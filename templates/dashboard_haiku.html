@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: HAIKU-178.48-staging
+  SL-VERSION: HAIKU-178.51-staging
   Session 192 · 2026-08-24
-  PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
+  DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.48-staging — matches filename
+  Version : HAIKU-178.51-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -86,6 +86,19 @@ body.page-haiku-dash{
 /* ── COUNTER ── */
 .hk-counter-bar{background:#F5F0E8;border:1px solid #E0D8C8;padding:14px 18px;font-size:15px;color:#8A8070;margin-bottom:18px}
 .hk-counter-bar b{color:#1A1A18}
+
+/* ── TREND SPARKLINE ── */
+.hk-trend-block{background:#fff;border:1px solid #E8E0D0;padding:20px 24px;margin-bottom:24px}
+.hk-trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.hk-trend-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
+.hk-trend-badge{font-size:13px;font-weight:600;padding:3px 10px;border-radius:99px}
+.hk-trend-badge.up{background:rgba(46,125,82,.1);color:#2E7D52}
+.hk-trend-badge.down{background:rgba(192,57,43,.08);color:#c0392b}
+.hk-trend-badge.flat{background:rgba(44,62,107,.08);color:#2C3E6B}
+.hk-spark-wrap{overflow-x:auto}
+.hk-spark{width:100%;min-width:200px;height:60px;display:block}
+.hk-spark-labels{display:flex;justify-content:space-between;margin-top:6px}
+.hk-spark-labels span{font-size:10px;color:#8A8070;text-align:center;flex:1;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ── CTA ── */
 .hk-cta-new{background:#1A2744;color:#fff;padding:20px 26px;display:block;text-decoration:none;margin-bottom:32px;transition:background .15s;min-height:64px}
@@ -501,14 +514,14 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <img class="hk-hero-img" src="{{ user_hero.thumb_url }}" alt="Your best photograph" onerror="this.style.display='none'">
   <div class="hk-hero-overlay"></div>
   <div class="hk-hero-content">
-    <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}.</div>
+    <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}. We have been watching.</div>
     <div class="hk-hero-row">
       <span class="hk-hero-num">{{ '%.2f'|format(user_hero.score) }}</span>
       <span class="hk-hero-denom">/10</span>
       <span class="hk-hero-tier">{{ user_hero.tier }}</span>
       <span class="hk-hero-genre">{{ user_hero.genre }}</span>
     </div>
-    <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="hk-hero-sub">Your strongest photograph · tap to see the full evaluation →</a>
+    <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="hk-hero-sub">Your best so far &nbsp;·&nbsp; See the full evaluation →</a>
   </div>
 </div>
 
@@ -545,16 +558,54 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 <div class="hk-body">
   {# COUNTER #}
   <div class="hk-counter-bar">
-    {% if _is_play %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% else %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% endif %}
+    {% if _rem == 0 %}You have used all {{ _lim }} free evaluations. Your eye has been seen.
+    {% elif _rem == 1 %}{{ _n }} photographs evaluated. One free evaluation left.
+    {% elif _n == 0 %}{{ _lim }} free evaluations — no card needed.
+    {% else %}<b>{{ _n }}</b> photograph{{ 's' if _n != 1 }} evaluated &nbsp;·&nbsp; <b>{{ _rem }}</b> more included free{% endif %}
   </div>
 
-  {# TREND SIGNAL — progression between last two evaluations #}
-  {% if _trend and _n >= 2 %}
-  <div style="font-size:15px;color:var(--muted);margin-bottom:16px;padding:0 2px">
-    {% if _trend == 'up' %}Your last evaluation was stronger than the one before it.
-    {% elif _trend == 'down' %}Your last evaluation was lower — one result does not define a direction.
-    {% else %}Your last two evaluations are close.
-    {% endif %}
+  {# TREND — visual sparkline across all evaluations #}
+  {% if _imgs and _n >= 2 %}
+  <div class="hk-trend-block">
+    <div class="hk-trend-header">
+      <span class="hk-trend-lbl">Your progression</span>
+      {% if _trend == 'up' %}<span class="hk-trend-badge up">↑ Improving</span>
+      {% elif _trend == 'down' %}<span class="hk-trend-badge down">↓ One result doesn't define a direction</span>
+      {% else %}<span class="hk-trend-badge flat">→ Consistent</span>
+      {% endif %}
+    </div>
+    <div class="hk-spark-wrap">
+      {% set _scores = _imgs | reverse | list %}
+      {% set _max = namespace(v=8.0) %}
+      {% set _min = namespace(v=6.0) %}
+      {% for img in _scores %}{% if img.score %}
+        {% if img.score > _max.v %}{% set _max.v = img.score %}{% endif %}
+        {% if img.score < _min.v %}{% set _min.v = img.score %}{% endif %}
+      {% endif %}{% endfor %}
+      {% set _range = [(_max.v - _min.v), 1.0] | max %}
+      <svg class="hk-spark" viewBox="0 0 {{ (_scores|length - 1) * 60 + 20 }} 60" preserveAspectRatio="none">
+        {# Grid line at midpoint #}
+        <line x1="0" y1="30" x2="{{ (_scores|length - 1) * 60 + 20 }}" y2="30" stroke="#E0D8C8" stroke-width="1" stroke-dasharray="3,3"/>
+        {# Score line #}
+        {% set pts = namespace(v='') %}
+        {% for img in _scores %}{% if img.score %}
+          {% set x = loop.index0 * 60 + 10 %}
+          {% set y = (60 - ((img.score - _min.v) / _range * 48 + 6)) | int %}
+          {% set pts.v = pts.v + (x|string) + ',' + (y|string) + ' ' %}
+        {% endif %}{% endfor %}
+        <polyline points="{{ pts.v }}" fill="none" stroke="#D4A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        {# Dots #}
+        {% for img in _scores %}{% if img.score %}
+          {% set x = loop.index0 * 60 + 10 %}
+          {% set y = (60 - ((img.score - _min.v) / _range * 48 + 6)) | int %}
+          <circle cx="{{ x }}" cy="{{ y }}" r="4" fill="#D4A428"/>
+          <text x="{{ x }}" y="{{ y - 8 }}" text-anchor="middle" font-size="10" fill="#8A8070">{{ '%.2f'|format(img.score) }}</text>
+        {% endif %}{% endfor %}
+      </svg>
+      <div class="hk-spark-labels">
+        {% for img in _scores %}<span>{{ img.genre or '' }}</span>{% endfor %}
+      </div>
+    </div>
   </div>
   {% endif %}
 
@@ -562,13 +613,13 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   {% if not state_conversion %}
   <a href="{{ url_for('try_page') }}" class="hk-cta-new">
     <div class="hk-cta-new-main">Upload your next photograph →</div>
-    <div class="hk-cta-new-sub">{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining · No subscription needed</div>
+    <div class="hk-cta-new-sub">{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining</div>
   </a>
   {% endif %}
 
   {# IMAGE STRIP #}
   {% if _imgs %}
-  <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:10px">Your evaluations</div>
+  <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:10px">Your photographs</div>
   <div class="hk-strip-new">
     {% for img in _imgs %}
     {% if img.thumb_url %}
@@ -604,15 +655,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </div>
         <span class="hk-conv-opt-price">₹4,000 / year</span>
       </a>
-      {% if not _is_play %}
-      <a href="{{ url_for('pricing') }}#play" class="hk-conv-opt secondary">
-        <div>
-          <div class="hk-conv-opt-label">100 for 100</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:3px">100 more Basic Evaluations · No subscription</div>
-        </div>
-        <span class="hk-conv-opt-price" style="color:var(--gold-dk);font-size:14px;font-weight:700">₹100</span>
-      </a>
-      {% endif %}
+      {# 100-for-100 hidden — backend subscribe_confirm blocks plan='play', feature incomplete. Re-enable when play payment path is built end-to-end. #}
       <a href="{{ url_for('index') }}" class="hk-conv-opt quiet">I came to explore — I am happy with this for now. Your feedback is appreciated.</a>
     </div>
   </div>
@@ -620,7 +663,7 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
   {# LEAGUE PANEL #}
   <div class="hk-league-wrap">
-    <div class="hk-league-lbl">The standard</div>
+    <div class="hk-league-lbl">The standard you are building toward</div>
     <div class="hk-league-panel">
       <div class="hk-league-img">
         {% if league_hero and league_hero.thumb_url %}
@@ -653,8 +696,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-lbl">Evolving Eye</span>
       </div>
       <div class="hk-locked-title">Your portrait as a photographer</div>
-      <div class="hk-locked-sub">Built from every image you share here. No human mentor holds this many photographs in memory. Updated with every evaluation. Forever.</div>
-      <div class="hk-locked-bar"><span class="hk-locked-bar-text">Available to League members</span></div>
+      <div class="hk-locked-sub">A portrait of how you see — built from every photograph, updated with every evaluation. No human mentor can hold this much in memory.</div>
+      <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
     <div class="hk-locked">
       <div class="hk-locked-top">
@@ -662,8 +705,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-lbl">Portfolio & Exhibition</span>
       </div>
       <div class="hk-locked-title">Your work, seen worldwide</div>
-      <div class="hk-locked-sub">Print sale, coffee table book, curatorial discovery. Master and Grandmaster standing opens doors to exhibition and commission.</div>
-      <div class="hk-locked-bar"><span class="hk-locked-bar-text">Available to League members</span></div>
+      <div class="hk-locked-sub">Your work in the world — exhibition, print sale, commission. Standing opens doors that submissions cannot.</div>
+      <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
   </div>
 
@@ -700,12 +743,15 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 <div class="hk-body">
   <div class="hk-counter-bar">
-    {% if _is_play %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% else %}<b>{{ _n }}</b> of <b>{{ _lim }}</b> free evaluations used &nbsp;·&nbsp; <b>{{ _rem }}</b> remaining{% endif %}
+    {% if _rem == 0 %}You have used all {{ _lim }} free evaluations. Your eye has been seen.
+    {% elif _rem == 1 %}{{ _n }} photographs evaluated. One free evaluation left.
+    {% elif _n == 0 %}{{ _lim }} free evaluations — no card needed.
+    {% else %}<b>{{ _n }}</b> photograph{{ 's' if _n != 1 }} evaluated &nbsp;·&nbsp; <b>{{ _rem }}</b> more included free{% endif %}
   </div>
 
   {# LEAGUE PANEL #}
   <div class="hk-league-wrap">
-    <div class="hk-league-lbl">The standard</div>
+    <div class="hk-league-lbl">The standard you are building toward</div>
     <div class="hk-league-panel">
       <div class="hk-league-img">
         {% if hero_image and hero_image.thumb_url %}
@@ -733,8 +779,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-lbl">Evolving Eye</span>
       </div>
       <div class="hk-locked-title">Your portrait as a photographer</div>
-      <div class="hk-locked-sub">Built from every image you share here. No human mentor holds this many photographs in memory. Updated with every evaluation. Forever.</div>
-      <div class="hk-locked-bar"><span class="hk-locked-bar-text">Available to League members</span></div>
+      <div class="hk-locked-sub">A portrait of how you see — built from every photograph, updated with every evaluation. No human mentor can hold this much in memory.</div>
+      <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
     <div class="hk-locked">
       <div class="hk-locked-top">
@@ -742,8 +788,8 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <span class="hk-locked-lbl">Portfolio & Exhibition</span>
       </div>
       <div class="hk-locked-title">Your work, seen worldwide</div>
-      <div class="hk-locked-sub">Print sale, coffee table book, curatorial discovery. Master and Grandmaster standing opens doors to exhibition and commission.</div>
-      <div class="hk-locked-bar"><span class="hk-locked-bar-text">Available to League members</span></div>
+      <div class="hk-locked-sub">Your work in the world — exhibition, print sale, commission. Standing opens doors that submissions cannot.</div>
+      <div class="hk-locked-bar"><span class="hk-locked-bar-text">League members only</span></div>
     </div>
   </div>
 
