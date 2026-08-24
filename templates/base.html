@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.54-staging
+  SL-VERSION: 181.55-staging
   Session 192 · 2026-08-24
   CRITICAL ACCESS FIX: Bottom nav Improve tab was visible to ALL authenticated users including Haiku. Now subscription-aware: paid sees Dashboard·Upload·My Gallery·Improve·More; Haiku sees Home·Upload·My Gallery·League·Profile — matching the Haiku dashboard bottom nav exactly. RETAINS 181.49.
 
@@ -10,7 +10,7 @@
   Mobile  : Top nav visible on mobile — brand + hamburger ✅ · Nav-links hidden ≤900px ✅ · Hamburger opens compact 240px dropdown top-right ✅ · Drawer clears bottom nav (max-height: 100dvh - nav - 62px) ✅ · Consistent with index/standings/haiku hamburger pattern ✅ · Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · 44px targets ✅
   iPad    : bottom-nav visible ≤899px (portrait) ✅ · Nav links hidden ≤900px ✅
   70yr    : Body 17px ✅ · Hero h1 clamp ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
-  Version : 181.54-staging — matches filename
+  Version : 181.55-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -1825,7 +1825,7 @@ img {
   {% endif %}
 {% endwith %}
 
-{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
+{% set _show_sidenav = current_user.is_authenticated and current_user.is_subscribed and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
 {% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% else %}<main>{% endif %}
 {% block content %}{% endblock %}
 </main>{% if _show_sidenav %}</div>{% endif %}
