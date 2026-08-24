@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: HAIKU-178.58-staging
+  SL-VERSION: HAIKU-178.59-staging
   Session 192 · 2026-08-24
-  COPY FINAL: All founder copy applied. Zone 1: "An image is a thousand words...we are starting to hear yours." Zone 2: tier strip + "one image stands apart — because that photographer saw differently" + 5 dimensions. League panel: gap named, "we build that, challenge by challenge." Zone 3 nudge: signature→voice→body of work→five billion. Evolving Eye: "am I making images or just taking them?" + 5 questions pre-shoot. Portfolio: "from five billion, to one." Grandmasters/Legends named. MANIFESTO REWRITE: Dashboard now built on the founding dream ("get everyone to Magnum level"). Bridge block replaced with dark navy tier progression (Rookie→Craftsman→Maverick→Master→Grandmaster→Legend) + current tier highlighted + "5 billion images a day, almost no one getting better" founding philosophy. Nudge: "signature becomes body of work becomes standing". Evolving Eye: Chess/Elo/ICC/ATP — photography never had this. Portfolio: "You were part of 5 billion. With a standing, your work is different." PHILOSOPHY REWRITE: Dashboard now leads with founding philosophy — the question every photographer carries ("am I actually seeing differently than I was?") that has never had a permanent honest answer. Bridge block removes feature list, replaces with provocation. League statement removes quotes, becomes a direct claim. Locked sections: padlock CTAs replaced with navy "Start your record →" and "Join the League →" in gold. Nudge: reframed around what the photographer now knows about themselves and what the League develops. CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
+  PRE-SHUTTER QUESTION: Single question per eval, dimension-specific, Sherpa tone, escalating if same weakness repeats. Eval 1: "Show me the next one." Evals 2-10: mapped to next_leap_name + next_leap_count. Five dimension branches. Count 1=gentle, 2=more direct, 3=names the pattern, 4+=statement. COPY FINAL: All founder copy applied. Zone 1: "An image is a thousand words...we are starting to hear yours." Zone 2: tier strip + "one image stands apart — because that photographer saw differently" + 5 dimensions. League panel: gap named, "we build that, challenge by challenge." Zone 3 nudge: signature→voice→body of work→five billion. Evolving Eye: "am I making images or just taking them?" + 5 questions pre-shoot. Portfolio: "from five billion, to one." Grandmasters/Legends named. MANIFESTO REWRITE: Dashboard now built on the founding dream ("get everyone to Magnum level"). Bridge block replaced with dark navy tier progression (Rookie→Craftsman→Maverick→Master→Grandmaster→Legend) + current tier highlighted + "5 billion images a day, almost no one getting better" founding philosophy. Nudge: "signature becomes body of work becomes standing". Evolving Eye: Chess/Elo/ICC/ATP — photography never had this. Portfolio: "You were part of 5 billion. With a standing, your work is different." PHILOSOPHY REWRITE: Dashboard now leads with founding philosophy — the question every photographer carries ("am I actually seeing differently than I was?") that has never had a permanent honest answer. Bridge block removes feature list, replaces with provocation. League statement removes quotes, becomes a direct claim. Locked sections: padlock CTAs replaced with navy "Start your record →" and "Join the League →" in gold. Nudge: reframed around what the photographer now knows about themselves and what the League develops. CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.58-staging — matches filename
+  Version : HAIKU-178.59-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -532,17 +532,62 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div class="hk-sherpa-q">{{ sherpa_obs }}</div>
   {% if sherpa_nudge %}
   <div class="hk-sherpa-nudge">→ {{ sherpa_nudge }}</div>
-  <div style="margin-top:12px;padding:12px 16px;background:#1A2744;border-left:2px solid #D4A428;">
-    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(212,164,40,.7);margin-bottom:8px;font-family:sans-serif;">Before your next shutter press</div>
-    <div style="font-size:13px;color:#3A3020;line-height:1.85;">
-      <span style="display:block;padding:3px 0;border-bottom:0.5px solid rgba(212,164,40,.15);color:rgba(255,255,255,.85);">Is there a story only I can see here?</span>
-      <span style="display:block;padding:3px 0;border-bottom:0.5px solid rgba(212,164,40,.15);color:rgba(255,255,255,.85);">Where is the light, the shadow, the decisive moment?</span>
-      <span style="display:block;padding:3px 0;border-bottom:0.5px solid rgba(212,164,40,.15);color:rgba(255,255,255,.85);">Does this disrupt — or has it been made before?</span>
-      <span style="display:block;padding:3px 0;border-bottom:0.5px solid rgba(212,164,40,.15);color:rgba(255,255,255,.85);">Can I feel the wow before I press?</span>
-      <span style="display:block;padding:3px 0;color:rgba(255,255,255,.85);">Would this hold in black and white?</span>
+  {# PRE-SHUTTER QUESTION — one per eval, specific to lowest dimension, escalating if repeated #}
+  {% if _n >= 1 and _n <= 10 %}
+  <div style="margin-top:12px;padding:14px 18px;background:#1A2744;border-left:2px solid #D4A428;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(212,164,40,.7);margin-bottom:10px;font-family:sans-serif;">Before your next shutter press</div>
+    <div style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-family:Georgia,serif;font-style:italic;">
+      {# Eval 1 — no dimension data yet. The Sherpa invites. #}
+      {% if _n == 1 %}
+        Show me the next one.
+      {# Evals 2–10 — dimension-specific, escalating by recurrence #}
+      {% elif next_leap_name %}
+        {% set _dim = next_leap_name | lower %}
+        {% set _c = next_leap_count | default(1) %}
+        {# DEPTH OF DIFFICULTY #}
+        {% if 'difficulty' in _dim or 'depth' in _dim %}
+          {% if _c == 1 %}Were you pursuing this shot — or waiting for it to happen?
+          {% elif _c == 2 %}Again, the pursuit wasn't there. What would you have needed to do differently before you raised the camera?
+          {% elif _c == 3 %}Three times now. The shot you are making is the one that was there. The shot you are not making is the one you had to pursue.
+          {% elif _c >= 4 %}This is the {{ _c }}th time we have seen this. The difficulty is not in the scene. It is in the decision to go looking for it.
+          {% endif %}
+        {# VISUAL DISRUPTION #}
+        {% elif 'disruption' in _dim or 'visual' in _dim %}
+          {% if _c == 1 %}Does this image stop the eye — or does it confirm what the viewer already expected?
+          {% elif _c == 2 %}Again, the frame did not disrupt. What would have made this image impossible to scroll past?
+          {% elif _c == 3 %}Three times, the eye has found a beautiful frame. Three times, it has not found an unexpected one. Beauty and disruption are not the same thing.
+          {% elif _c >= 4 %}This is the {{ _c }}th time. You have a consistent aesthetic. The next step is to break it — just once.
+          {% endif %}
+        {# DECISIVE MOMENT #}
+        {% elif 'decisive' in _dim or 'moment' in _dim %}
+          {% if _c == 1 %}Was there a reason this frame — and not the one before it, or after?
+          {% elif _c == 2 %}Again — the moment was close, but not yet decisive. What were you waiting for?
+          {% elif _c == 3 %}Three times, the frame has been almost right. The decisive moment is not found by waiting. It is anticipated.
+          {% elif _c >= 4 %}This is the {{ _c }}th time. You are arriving at the scene. The next step is to arrive before it.
+          {% endif %}
+        {# WONDER FACTOR #}
+        {% elif 'wonder' in _dim %}
+          {% if _c == 1 %}Does something happen to the person who sees this — or does it simply record?
+          {% elif _c == 2 %}Again — the image is technically there, but it does not create wonder. What would have made a viewer stop breathing for a moment?
+          {% elif _c == 3 %}Three times. The craft is present. The wonder is not. They are different things.
+          {% elif _c >= 4 %}This is the {{ _c }}th time. The image is good. The question is whether good is what you are aiming for.
+          {% endif %}
+        {# AFFECTIVE QUOTIENT #}
+        {% elif 'affective' in _dim or 'emotion' in _dim or 'story' in _dim %}
+          {% if _c == 1 %}Is there a story in this image that only you could have seen?
+          {% elif _c == 2 %}Again — the image is seen, but not felt. What was the emotion you were carrying when you pressed?
+          {% elif _c == 3 %}Three times, the image has been made. Three times, it has not yet been felt. The difference is in what you bring before you raise the camera.
+          {% elif _c >= 4 %}This is the {{ _c }}th time. The eye is strong. The question is what the eye is in service of.
+          {% endif %}
+        {% else %}
+          What would make this the one image from today that you remember in ten years?
+        {% endif %}
+      {% else %}
+        What would make this the one image from today that you remember in ten years?
+      {% endif %}
     </div>
-    <div style="font-size:11px;color:rgba(212,164,40,.55);margin-top:10px;font-style:italic;">These are the five dimensions of making an image matter — amongst the thousands.</div>
   </div>
+  {% endif %}
   {% endif %}
   {% if _n >= 3 %}
   <div style="background:#0F1F3D;color:#fff;">
