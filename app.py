@@ -1,3 +1,5 @@
+# SL-VERSION: 181.62-staging (Session 192, 2026-08-24 — user_hero SIMPLIFIED: removed separate DB query entirely. user_hero = _images[0] — last uploaded image, already fetched. No extra query, no failure mode. RETAINS 181.61.)
+# SL-VERSION: 181.61-staging (Session 192, 2026-08-24 — user_hero FIX: removed thumb_url IS NOT NULL from query — was blocking hero score when thumb missing. Added fallback: if user_hero still None, use _images[0] so score/tier always renders. RETAINS 181.60.)
 # SL-VERSION: 181.60-staging (Session 192, 2026-08-24 — CRITICAL: db.session.rollback() guard at start of try_welcome — prevents InFailedSqlTransaction cascade. next_leap_count: SQL count of dimension recurrence passed to template for escalating pre-shutter question. RETAINS 181.58.)
 # SL-VERSION: 181.58-staging (Session 192, 2026-08-24 — COST+LEGAL: (1) Watermark: Sonnet→Haiku on free tier saves ₹1.60/10evals. (2) upload_declarations table: user_id/image_id/declared_at/ip/ua/watermark_result — permanent legal audit trail. (3) max_tokens 800→500 saves ₹0.80/10evals. (4) Sherpa milestone-only: evals 2,5,10 free; every 10th play — saves ₹0.84/10evals. Total: ₹3.18/10 free evals. RETAINS 181.57.)
 # SL-VERSION: 181.57-staging (Session 192, 2026-08-24 — ADMIN: /admin/api/user-id-by-username endpoint added. Resolves username to user_id + Haiku eval count for the bulk rescore tool. RETAINS 181.56.)
@@ -32862,37 +32864,22 @@ def try_welcome():
     except Exception as _sae:
         app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
 
-    # SL-181.48: user's own best image as hero (highest score, has thumb)
-    # Falls back to League hero if no user images exist
+    # SL-181.62: user_hero = last uploaded image — _images[0] is already id DESC
+    # No separate query needed. _images is fetched above and already has all fields.
     _user_hero = None
-    try:
-        _uh_row = db.session.execute(db.text("""
-            SELECT id, thumb_url, score, tier, genre, width, height
-            FROM images
-            WHERE user_id = :uid
-              AND is_haiku_try IS TRUE
-              AND status = 'scored'
-              AND thumb_url IS NOT NULL
-              AND score IS NOT NULL
-            ORDER BY score DESC
-            LIMIT 1
-        """), {'uid': current_user.id}).fetchone()
-        if _uh_row:
+    if _images:
+        try:
             from types import SimpleNamespace as _UHSN
-            _uw = int(_uh_row[5]) if _uh_row[5] else 0
-            _uh = int(_uh_row[6]) if _uh_row[6] else 0
+            _last_img = _images[0]
             _user_hero = _UHSN(
-                id        = _uh_row[0],
-                thumb_url = _uh_row[1],
-                score     = float(_uh_row[2]),
-                tier      = _uh_row[3],
-                genre     = _uh_row[4] or '',
-                img_width  = _uw,
-                img_height = _uh,
-                is_portrait = (_uh > _uw) if (_uw and _uh) else False,
+                id        = _last_img['id'],
+                thumb_url = _last_img.get('thumb_url') or '',
+                score     = float(_last_img['score']) if _last_img.get('score') else None,
+                tier      = _last_img.get('tier') or '',
+                genre     = _last_img.get('genre') or '',
             )
-    except Exception as _uhe:
-        app.logger.warning(f'[try_welcome] user_hero failed: {_uhe}')
+        except Exception as _uhe:
+            app.logger.warning(f'[try_welcome] user_hero from _images failed: {_uhe}')
 
     # League hero — Grandmaster/Legend only, for sidebar standard panel
     _league_hero = None
