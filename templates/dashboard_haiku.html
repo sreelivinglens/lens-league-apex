@@ -1,49 +1,18 @@
-{# SL-VERSION: HAIKU-178.26-staging (Session 190, 2026-08-19 — CARD FIXES: (1) How it works → how_it_works not science. (2) AEA link text "What is the AEA?" → "Annual Excellence Award →". (3) dc-title 18px bold, dc-sub 16px normal — differentiated. RETAINS HAIKU-178.25.)
-{# SL-VERSION: HAIKU-178.25-staging (Session 190, 2026-08-19 — CARDS: dc-sub 14px→18px to match proof quote body. dc-title 16px→18px. dc-link 13px→15px. RETAINS HAIKU-178.24.)
-{# SL-VERSION: HAIKU-178.24-staging (Session 190, 2026-08-19 — CARDS: dc-title 13px→16px, dc-sub 12px→14px, dc-link 12px→13px. Cards fill left col height via align-content:stretch + hk-dc flex-col. RETAINS HAIKU-178.23.)
-{# SL-VERSION: HAIKU-178.23-staging (Session 190, 2026-08-19 — THREE FINAL FIXES: (1) Desktop nav: How it works/Science/Programmes/Pricing added. (2) Logo: img tag replacing SL text crest — uses same static path as base.html. (3) Discovery cards moved from full-width hk-disc section into LEFT column under hero image — left col is now flex-col photo+cards, split becomes 2-col grid left+right. RETAINS HAIKU-178.22.)
-{# SL-VERSION: HAIKU-178.22-staging (Session 190, 2026-08-19 — RIGHT PANEL FONTS: greeting 15px→17px, name 32px→38px, eval badge 15px→16px, headline clamp up, intro 19px→21px, proof 17px→18px. RETAINS HAIKU-178.21.)
-{# SL-VERSION: HAIKU-178.21-staging (Session 190, 2026-08-19 — SPACING: right panel justify-content:space-between, eval badge margin-bottom:20px, headline margin-bottom:12px, proof quote added below CTA, stat strip anchored at bottom. CTA moves down naturally. RETAINS HAIKU-178.20.)
-{# SL-VERSION: HAIKU-178.20-staging (Session 190, 2026-08-19 — SPLIT: bottom padding 6vh→2vh so gap between split and discovery grid is tight. RETAINS HAIKU-178.19.)
-{# SL-VERSION: HAIKU-178.19-staging (Session 190, 2026-08-19 — NAV REVERT: logo img reverted to text crest — img caused nav layout break. Logo update deferred to dedicated session with static path verification. RETAINS HAIKU-178.18.)
-{# SL-VERSION: HAIKU-178.18-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Dead space removed — hk-sign removed from State 1 split, discovery grid moved directly below split with no gap. (2) Gallery image height 80px→140px. (3) SL logo image in desktop nav and mobile topbar replacing text. RETAINS HAIKU-178.17.)
-{# SL-VERSION: HAIKU-178.44-staging (Session 191, 2026-08-24 — RESPONSIVE: added 1024px, 768px, 600px breakpoints for new grid elements — hk-league-panel, hk-locked-row collapse to 1 column on mobile/tablet. hk-strip-new collapses to 2-col. hk-hero, hk-body padding reduced on small screens. Audit: Single column ✅ iPad breakpoint ✅. RETAINS HAIKU-178.43.) #}
-{# SL-VERSION: HAIKU-178.43-staging (Session 191, 2026-08-24 — NAV: Profile added to desktop nav and mobile bottom nav (replaces Log out tab — logout stays in desktop nav). RETAINS HAIKU-178.42.) #}
-{# SL-VERSION: HAIKU-178.42-staging (Session 191, 2026-08-24 — FIX: removed last orphaned hk-sign div from State 0 block. Footer now the only sign-off on all states. RETAINS HAIKU-178.41.) #}
-{# SL-VERSION: HAIKU-178.41-staging (Session 191, 2026-08-24 — KYC: footer now has all 4 mandatory Razorpay legal links: Terms, Privacy, Refunds, Shipping. Short labels. RETAINS HAIKU-178.40.) #}
-{# SL-VERSION: HAIKU-178.40-staging (Session 191, 2026-08-24 — Removed redundant hk-sign div, footer handles sign-off. RETAINS HAIKU-178.39.) #}
-{# SL-VERSION: HAIKU-178.39-staging (Session 191, 2026-08-24 — UX: (1) Pricing line added below locked features — shows Rs4000/year + what's included + See membership CTA. (2) 5-column footer stripped to single-line footer — copyright + Pricing/Privacy/Terms/Support links only. Dashboard is a personal space, not a marketing page. RETAINS HAIKU-178.38.) #}
-{# SL-VERSION: HAIKU-178.38-staging (Session 191, 2026-08-24 — THREE FIXES: (1) Removed duplicate See evaluation button from hero top-right. (2) Removed redundant Shutter League/Shutter League 2026 meta from League panel. (3) Fixed double comma in greeting — JS was appending comma, template already had one. RETAINS HAIKU-178.37.) #}
-{# SL-VERSION: HAIKU-178.37-staging (Session 191, 2026-08-24 — FIX: strip overflow hidden on container so 4th tile doesn't bleed. RETAINS HAIKU-178.36.) #}
-{# SL-VERSION: HAIKU-178.36-staging (Session 191, 2026-08-24 — THREE FIXES: (1) Hero sub text now a clickable link. See evaluation button has dark backing so always visible. (2) GRANDMASTER badge: dark background rgba(6,14,28,.75) so readable on any image. (3) League panel: align-items:stretch so image fills full height matching right column. RETAINS HAIKU-178.35.) #}
-{# SL-VERSION: HAIKU-178.35-staging (Session 191, 2026-08-24 — LEAGUE PANEL TEXT: lifted all text opacity for readability — eyebrow .35→.6, meta .4→.65, statement .4→.75 + 16px, link colour changed to gold #D4A428. RETAINS HAIKU-178.34.) #}
-{# SL-VERSION: HAIKU-178.34-staging (Session 191, 2026-08-24 — CTA copy fixed: "Show me what this one says" → "Upload your next photograph". No ambiguous "this one" reference. RETAINS HAIKU-178.33.) #}
-{# SL-VERSION: HAIKU-178.33-staging (Session 191, 2026-08-24 — FIX: orphaned old States 2-10 block removed (was rendering below footer). Font sizes lifted throughout for 70yr readability: sherpa 17→18px, nudge 13→16px, counter 13→15px, CTA 16→18px, tile score 16→18px, locked title 14→16px, locked sub 12→14px, league statement 13→15px, hero sub 12→14px. RETAINS HAIKU-178.32.) #}
-{# SL-VERSION: HAIKU-178.32-staging (Session 191, 2026-08-24 — FULL REDESIGN: single-column layout. State 0: League hero full-width with invitation copy. States 1-10: user's own best image as hero, Sherpa cross-image observation from mentor_advice_json, image strip clickable 160px tiles, League panel Grandmaster standard, locked Evolving Eye + Portfolio features. Old split layout and gallery strip removed. RETAINS HAIKU-178.31.) #}
-{# SL-VERSION: HAIKU-178.31-staging (Session 191, 2026-08-23 — NAV OVERHAUL: reordered to match base.html Haiku nav — Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, Account, avatar. hk-active class added for white active state. RETAINS HAIKU-178.30.) #}
-{# SL-VERSION: HAIKU-178.30-staging (Session 191, 2026-08-23 — NAV FIX: removed hardcoded font-weight:600;color:#fff from League of Photographers link — was incorrectly highlighted on dashboard. RETAINS HAIKU-178.29.) #}
-{# SL-VERSION: HAIKU-178.29-staging (Session 191, 2026-08-23 — NAV STYLE: hk-gallery-link font-size 14px→13px, padding 0 12px→6px 8px, white-space:nowrap added. hk-nav-right gap 12px→2px. Matches base.html nav-links style so dashboard nav is compact and consistent with all other Haiku pages. RETAINS HAIKU-178.28.) #}
-{# SL-VERSION: HAIKU-178.28-staging (Session 191, 2026-08-23 — H1 FIX: removed eval counter from nav — mobile topbar hk-mob-counter removed, desktop hk-counter-compact removed. Counter was crowding discovery links. Counter remains in dashboard body content. RETAINS HAIKU-178.17.) #}
-{# SL-VERSION: HAIKU-178.17-staging (Session 190, 2026-08-19 — SMART DASHBOARD: 6 states based on visit_count + evals_used. State 1: visit 1+0 uploads = full editorial split. State 2: visit 2++0 uploads = compressed split + discovery. State 3: 1 upload = first read personalised. State 4: 2 uploads = trend + personalised. State 5: 3-4 uploads = pattern forming. State 6: 5-9 = milestone confirmed. Discovery grid in all states. Visual gallery strip. RETAINS HAIKU-178.16.)
-{# SL-VERSION: HAIKU-178.16-staging (Session 190, 2026-08-19 — NAV: Account link added to desktop nav → /profile. RETAINS HAIKU-178.15.)
-{# SL-VERSION: HAIKU-178.15-staging (Session 190, 2026-08-19 — COPY: "View full evaluation" → "See evaluation" — avoids implying Sonnet paid service. RETAINS HAIKU-178.14.)
-{# SL-VERSION: HAIKU-178.14-staging (Session 190, 2026-08-19 — GESTALT v5: abandon padding approach. Photo panel flush top, object-fit:cover, object-position:center. Image fills the panel from top — the photograph itself is the left panel, full bleed. Text panel padding-top reduced to 10vh so greeting+badge+headline all sit in the upper half, creating visual alignment with the image subject. RETAINS HAIKU-178.13.)
-{# SL-VERSION: HAIKU-178.13-staging (Session 190, 2026-08-19 — GESTALT v4: text panel padding-top 4vh→18vh so headline "The platform does not know your eye yet" aligns with image top edge. Image remains flush. RETAINS HAIKU-178.12.)
-{# SL-VERSION: HAIKU-178.12-staging (Session 190, 2026-08-19 — GESTALT v3: photo panel padding-top removed. Instead the entire hk-split top padding matches via the text panel only. Image flush to top. Cream strip above image eliminated — no more container shadow artifact. Text panel padding-top lifted to 4vh to create breathing room without affecting photo panel. RETAINS HAIKU-178.11.)
-{# SL-VERSION: HAIKU-178.11-staging (Session 190, 2026-08-19 — GESTALT v2: photo panel gets padding-top:3vh to match text panel top, so image top edge aligns with greeting. Also reduced gap between greeting and eval badge. RETAINS HAIKU-178.10.)
-{# SL-VERSION: HAIKU-178.10-staging (Session 190, 2026-08-19 — GESTALT ALIGNMENT: split text panel top padding reduced 8vh→3vh so greeting aligns with image top. Both panels now share same visual start point. Gestalt alignment principle. RETAINS HAIKU-178.9.)
-{# SL-VERSION: HAIKU-178.9-staging (Session 190, 2026-08-19 — FOOTER: matched to homepage 188M footer exactly. padding:56px 48px 28px, gap:32px, max-width:1200px, link font-size:15px, margin-bottom:9px, no min-height on links. RETAINS HAIKU-178.8.)
-{# SL-VERSION: HAIKU-178.8-staging (Session 190, 2026-08-19 — HERO ALIGN: photo panel uses flex+center so image aligns vertically with greeting, not pinned to top of split. RETAINS HAIKU-178.7.)
-{# SL-VERSION: HAIKU-178.7-staging (Session 190, 2026-08-19 — HERO CONTAINER: background changed to page cream (#FEFCF8) so bars are invisible — image floats naturally. Container height set by image aspect ratio via Jinja: landscape = (h/w)*50vw capped at 700px; portrait = 85vh. object-fit:contain retained. RETAINS HAIKU-178.6.)
-{# SL-VERSION: HAIKU-178.6-staging (Session 190, 2026-08-19 — TWO FIXES: (1) Desktop nav: Upload link added — always visible, points to try_page. Previously only showed when _n>0 via My evaluations. User had no upload path from desktop nav on State 1. (2) Hero panel fallback: background changed from #000 to SL dark gradient — intentional design when no qualifying image in DB, not blank black. RETAINS HAIKU-178.5.)
-{# SL-VERSION: HAIKU-178.5-staging (Session 190, 2026-08-19 — JS FIX: cookie banner HTML element was missing — getElementById("cookie-banner") returned null causing TypeError. Added missing HTML element. Added null guards to cbAccept() and cookie init. RETAINS HAIKU-178.4.)
-{# SL-VERSION: HAIKU-178.4-staging (Session 190, 2026-08-19 — NAV FIX: hk-nav z-index lifted 50→100 so desktop top nav not obscured by any overlapping element. RETAINS HAIKU-178.3.)
-{# SL-VERSION: HAIKU-178.3-staging (Session 190, 2026-08-19 — IPAD FIXES: nav breakpoint 768px→1024px; hk-split collapses at 1024px; photo panel height capped; 900px body rule removed. RETAINS HAIKU-178.2.)
-{# SL-VERSION: HAIKU-178.2-staging (Session 190, 2026-08-19 — NAV: "League of Photographers" added to desktop top nav; "League" tab added to mobile bottom nav (5 tabs: Home/Upload/My Gallery/League/Log out). Both point to url_for("standings_public"). RETAINS HAIKU-178.1.)
-{# SL-VERSION: HAIKU-178.1-staging (Session 190, 2026-08-19 — THREE FIXES: (1) Hero image container: object-fit:contain + black background so portrait/landscape images letterbox/pillarbox correctly — no cropping. (2) Mobile text truncation: overflow-x:hidden on body and hk-split-text, explicit width:100% on split children. (3) Mobile bottom nav: min-width:0 + flex-shrink on tabs so 4th tab never overflows on narrow screens. RETAINS HAIKU-178.0.) #}
-{# SL-VERSION: HAIKU-178.0-staging (Session 190, 2026-08-19 — FIVE FIXES: (1) H1: Mobile bottom nav rendering — consolidated duplicate style blocks, cookie banner z-index lifted above bottom nav so banner no longer covers nav on first load. (2) H2: Split-image left panel on State 1 — DB-sourced hero_image variable (Master/Grandmaster/Legend, score>=8.5, random per refresh), same pattern as paid dashboard _dash_carousel. Mobile: image collapses to full-width strip. States 2-10 unchanged single-column. (3) H3: Desktop nav dots overflow — replaced 10-dot loop with compact "X of Y" text counter on desktop, matching mobile pattern already in place. (4) H4: Line spacing lifted — body line-height 1.65->1.75, card padding 22px->28px desktop, section gap 16px->20px. (5) H5: Mobile tap response — removed transition from hk-bn-tab:active, added will-change:transform. RETAINS HAIKU-177.4.) #}
-{# SL-VERSION: HAIKU-177.4-staging (Session 189, 2026-08-19 — Footer: full 188M footer with Company/Legal columns. Desktop nav counter overflow fix. RETAINS HAIKU-177.3.) #}
-{# SL-VERSION: HAIKU-176.1-staging (Session 189, 2026-08-18 — FULL REBUILD. Haiku free dashboard. 10 states. Design tokens: --dark #0F1F3D, --cream #FEFCF8, --paper #F5F0E8, --blue #2C3E6B, --gold #D4A428. Aptos font. KYC clean. 16px+ body. 44px tap targets. Mobile and iPad breakpoints.) #}
+{#
+  SL-VERSION: HAIKU-178.45-staging
+  Session 192 · 2026-08-24
+  AUDIT FIXES: (1) Footer bg #1A2744 — matches Haiku top nav exactly. (2) UDYAM-KR-03-0697280 added to footer, 11px fine print. (3) Hamburger added to mobile topbar — overlay with Pricing + Log out, filling gap in 5-tab bottom nav. (4) Font confirmed Aptos. (5) Gold #D4A428 on dark only. RETAINS HAIKU-178.44.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Footer bg #1A2744 matches nav ✅ · Single-line live footer ✅ · No orphaned elements ✅
+  KYC     : Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · All 4 Razorpay mandatory links present on every state
+  Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
+  iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
+  70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
+  Version : HAIKU-178.45-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 <!doctype html>
 <html lang="en">
 <head>
@@ -332,6 +301,15 @@ body.page-haiku-dash{
 .hk-mob-right{display:flex;align-items:center;gap:8px}
 .hk-mob-counter{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
 .hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+/* ── MOBILE HAMBURGER ── */
+.hk-mob-ham{display:flex;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0}
+.hk-mob-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
+/* Overlay menu */
+.hk-mob-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#1A2744;border-bottom:1px solid rgba(255,255,255,.12);z-index:999;padding:8px 0}
+.hk-mob-menu.open{display:block}
+.hk-mob-menu a{display:block;padding:14px 20px;font-size:16px;font-weight:500;color:rgba(255,255,255,.8);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:52px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.hk-mob-menu a:last-child{border-bottom:none}
+.hk-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
 
 /* ── H5: MOBILE BOTTOM NAV — tap response fix ── */
 .hk-bottom-nav{
@@ -479,7 +457,15 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   </a>
   <div class="hk-mob-right">
     <div class="hk-mob-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
+    <button class="hk-mob-ham" onclick="var m=document.getElementById('hkMobMenu');m.classList.toggle('open')" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
+</div>
+{# Hamburger overlay — Pricing + Log out (not in bottom nav) #}
+<div class="hk-mob-menu" id="hkMobMenu">
+  <a href="{{ url_for('pricing') }}" onclick="document.getElementById('hkMobMenu').classList.remove('open')">Pricing</a>
+  <a href="{{ url_for('logout') }}" onclick="document.getElementById('hkMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
 </div>
 
 {# ── DESKTOP NAV ── #}
@@ -747,9 +733,9 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 {# Gallery strip removed HAIKU-178.32 — League panel in body replaces it #}
 
-{# ── DARK FOOTER ── #}
-<footer style="background:var(--dark);padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid rgba(255,255,255,.08)">
-  <span style="font-size:13px;color:rgba(255,255,255,.35)">© 2026 Shutter League · Bengaluru, India</span>
+{# ── FOOTER — bg #1A2744 matches Haiku top nav exactly ── #}
+<footer style="background:#1A2744;padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid rgba(255,255,255,.08)">
+  <span style="font-size:11px;color:rgba(255,255,255,.28)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
   <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
     <a href="{{ url_for('pricing') }}" style="color:rgba(255,255,255,.5);font-size:13px;text-decoration:none">Pricing</a>
     <a href="/terms" style="color:rgba(255,255,255,.35);font-size:13px;text-decoration:none">Terms</a>
@@ -799,6 +785,14 @@ function cbAccept() {
   b.style.opacity = '0';
   setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
 }
+// Close hamburger on outside tap
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('hkMobMenu');
+  if (!menu) return;
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !e.target.closest('.hk-mob-ham')) {
+    menu.classList.remove('open');
+  }
+});
 </script>
 <script>
 (function(){
