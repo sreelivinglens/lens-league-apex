@@ -1739,8 +1739,8 @@
             <strong>Enter the image ID below.</strong> Find it in the image tile above (shown as #ID) or from the URL /try/result/&lt;id&gt;.
           </div>
           <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
-            <input type="number" id="haikuRescoreImageId" placeholder="Image ID" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:14px;width:120px;">
-            <button type="button" class="btn btn-solid" style="padding:8px 18px;font-size:13px;white-space:nowrap;background:#1A2744;" onclick="
+            <input type="number" id="haikuRescoreImageId" placeholder="Image ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
+            <button type="button" class="btn btn-solid" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff;border:none;" onclick="
               var iid = document.getElementById('haikuRescoreImageId').value;
               if (!iid) { alert('Enter an image ID first.'); return; }
               if (!confirm('Re-run Haiku engine on image ' + iid + '? Score and text fields will be overwritten.')) return;
@@ -1768,8 +1768,8 @@
             <strong>Do not run</strong> for users who are mid-evaluation (currently uploading) — wait until they are done.
           </div>
           <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
-            <input type="number" id="haikuRescoreUserId" placeholder="User ID" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:14px;width:120px;">
-            <button type="button" class="btn btn-solid" style="padding:8px 18px;font-size:13px;white-space:nowrap;background:#1A2744;" onclick="
+            <input type="number" id="haikuRescoreUserId" placeholder="User ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
+            <button type="button" class="btn btn-solid" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff;border:none;" onclick="
               var uid = document.getElementById('haikuRescoreUserId').value;
               if (!uid) { alert('Enter a user ID first.'); return; }
               if (!confirm('Re-run Haiku engine on ALL Haiku images for user ' + uid + ', oldest-first? Runs in background. Check Railway logs for progress.')) return;
