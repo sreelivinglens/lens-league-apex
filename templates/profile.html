@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: profile-181.1-staging
+  SL-VERSION: profile-181.3-staging
   Session 192 · 2026-08-24
-  AUDIT FIXES: (1) Font: Inter (17 occurrences) → Aptos system stack. (2) Free tier upgrade CTA hardcoded '3 evaluations' → evals_limit variable (staging=10). RETAINS profile-181.0.
+  JS FIX: Jinja2 dict literal expressions {{ {}.get() }} replaced with {% if/elif %} blocks — eliminates Unexpected token "{"" SyntaxError risk. Also: pricing updated to current rates (halfyearly ₹2,500, annual ₹4,000). HAIKU FIXES: (1) Points Balance section gated to is_subscribed — was visible to Haiku users. (2) Referral Code section gated to is_subscribed — was visible if referral_code set. (3) Sidenav Points/Referral links hidden for Haiku. (4) Account State free copy: hardcoded "3" → evals_limit variable, pricing ₹200/mo → ₹4,000/yr. AUDIT FIXES: (1) Font: Inter → Aptos. (2) Free tier upgrade CTA hardcoded '3 evaluations' → evals_limit variable (staging=10). RETAINS profile-181.0.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Inherits base.html bottom nav (now subscription-aware) ✅ · acc-nav-border hidden on mobile ✅ · 44px tap targets ✅
   iPad    : acc-sidebar static at ≤900px ✅ · Single column ✅
   70yr    : Page header clamp(24px,4vw,32px) ✅ · Section titles 16px+ ✅ · Form inputs 16px ✅ · acc-logout-btn 15px acceptable (button label) ✅
-  Version : profile-181.1-staging — matches filename
+  Version : profile-181.3-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 {% extends "base.html" %}
@@ -506,12 +506,14 @@
           <li><a href="#account-state">
             <span class="nav-icon">📊</span> Account State
           </a></li>
+          {% if current_user.is_subscribed %}
           <li><a href="#points-balance">
             <span class="nav-icon">⭐</span> Points Balance
           </a></li>
           <li><a href="#referral-code">
             <span class="nav-icon">👥</span> Referral Code
           </a></li>
+          {% endif %}
           <li><a href="/contact">
             <span class="nav-icon" style="font-style:normal;">?</span> Help &amp; Support
           </a></li>
@@ -702,7 +704,7 @@
               <div class="acc-league-icon">{{ '📷' if current_user.subscription_track == 'camera' else '📱' }}</div>
               <div>
                 <div class="acc-league-eyebrow">Active League</div>
-                <div class="acc-league-name">{{ {'camera':'Camera League','mobile':'Mobile League'}.get(current_user.subscription_track, '') }}</div>
+                <div class="acc-league-name">{% if current_user.subscription_track == 'camera' %}Camera League{% elif current_user.subscription_track == 'mobile' %}Mobile League{% else %}{{ current_user.subscription_track }}{% endif %}</div>
               </div>
             </div>
             <a href="{{ url_for('pricing') }}" class="acc-switch-btn">Switch League</a>
@@ -712,8 +714,8 @@
           <div class="acc-plan-row">
             <div class="acc-plan-left">
               <div class="acc-plan-name">
-                {{ {'camera':'Camera League','mobile':'Mobile League'}.get(current_user.subscription_track,'') }}
-                · {{ {'monthly':'Monthly','halfyearly':'Six-Month','annual':'Annual'}.get(current_user.subscription_plan,'') }}
+                {% if current_user.subscription_track == 'camera' %}Camera League{% elif current_user.subscription_track == 'mobile' %}Mobile League{% endif %}
+                · {% if current_user.subscription_plan == 'monthly' %}Monthly{% elif current_user.subscription_plan == 'halfyearly' %}Six-Month{% elif current_user.subscription_plan == 'annual' %}Annual{% endif %}
                 <span class="acc-plan-status">Active</span>
               </div>
               <div class="acc-plan-date">
@@ -727,8 +729,8 @@
               </div>
             </div>
             <div class="acc-plan-right">
-              ₹{{ {'monthly':'200','halfyearly':'1,100','annual':'2,000'}.get(current_user.subscription_plan,'—') }}
-              <span>/ {{ {'monthly':'month','halfyearly':'6 months','annual':'year'}.get(current_user.subscription_plan,'') }}</span>
+              ₹{% if current_user.subscription_plan == 'monthly' %}200{% elif current_user.subscription_plan == 'halfyearly' %}2,500{% elif current_user.subscription_plan == 'annual' %}4,000{% else %}—{% endif %}
+              <span>/ {% if current_user.subscription_plan == 'monthly' %}month{% elif current_user.subscription_plan == 'halfyearly' %}6 months{% elif current_user.subscription_plan == 'annual' %}year{% endif %}</span>
             </div>
           </div>
 
@@ -800,8 +802,8 @@
             <h3>You are on the free plan.</h3>
             <p>You have used <strong>{{ images_used }}</strong> of {{ evals_limit | default(10) }} free evaluations. Subscribe for unlimited evaluations every month, league standing, and Annual Excellence Award eligibility.</p>
             <div class="acc-upgrade-btns">
-              <a href="{{ url_for('subscribe', track='camera') }}" class="acc-upgrade-btn primary">📷 Camera League · ₹200/mo</a>
-              <a href="{{ url_for('subscribe', track='mobile') }}" class="acc-upgrade-btn secondary">📱 Mobile League · ₹200/mo</a>
+              <a href="{{ url_for('pricing') }}" class="acc-upgrade-btn primary">📷 Camera League · ₹4,000/yr</a>
+              <a href="{{ url_for('pricing') }}" class="acc-upgrade-btn secondary">📱 Mobile League · ₹4,000/yr</a>
             </div>
           </div>
         {% endif %}
@@ -811,7 +813,8 @@
       </div>{# /acc-grid-top #}
 
       <div class="acc-grid-bottom">
-      {# ══ Section 3 — Points Balance ══ #}
+      {# ══ Section 3 — Points Balance — paid subscribers only ══ #}
+      {% if current_user.is_subscribed %}
       <div class="acc-section" id="points-balance" style="border-top:3px solid #2E7D52;">
         <div class="acc-section-header" style="background:rgba(46,125,82,0.05);border-radius:6px;padding:12px 16px;margin-bottom:20px;">
           <div class="acc-section-num">3</div>
@@ -858,8 +861,10 @@
       </div>
       {# end section 3 #}
 
-      {# ══ Section 4 — Referral Code ══ #}
-      {% if referral_code %}
+      {% endif %}{# end points balance — paid only #}
+
+      {# ══ Section 4 — Referral Code — paid subscribers only ══ #}
+      {% if current_user.is_subscribed and referral_code %}
       <div class="acc-section" id="referral-code" style="border-top:3px solid #E09940;">
         <div class="acc-section-header" style="background:rgba(224,153,64,0.06);border-radius:6px;padding:12px 16px;margin-bottom:20px;">
           <div class="acc-section-num">4</div>
