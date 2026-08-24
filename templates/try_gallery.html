@@ -1,11 +1,25 @@
-{# SL-VERSION: try_gallery-181.21 (Session 187, 2026-08-17 — NEW: Haiku free-tier My Gallery. Shows only is_haiku_try=TRUE images for current user. Each card links to /try/result/<id>. Matches Haiku scorecard visual language — Aptos, cream/gold, no dark backgrounds. Eval counter, remaining count, Upload CTA. RETAINS nothing — new file.) #}
+{#
+  SL-VERSION: try_gallery-181.22-staging
+  Session 192 · 2026-08-24
+  AUDIT FIXES: (1) "Exploratory Evaluations" → "My Evaluations" — term not in founding doc. (2) Subtitle rewritten — Sherpa tone. (3) Dots capped at 20 for play users. (4) Font sizes lifted: tg-sub 15→16px, tg-stat-l 13→15px, tg-dots-txt 14→15px, tg-card-name 14→15px, tg-empty-body 15→16px. (5) Exhausted CTA: 100-for-100 removed — backend not ready. Single path to pricing. RETAINS 181.21.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Haiku gallery — try_gallery route ✅ · is_haiku_try=TRUE images only ✅ · Sidenav hidden by base.html 181.55 (is_subscribed gate) ✅
+  KYC     : Footer KYC inherited from base.html ✅ · No "score"/"DDI"/"exploratory" in user copy ✅ · Pricing link on exhausted state ✅
+  Mobile  : 2-col grid ≤768px ✅ · Upload CTA full-width ✅ · 44px tap targets ✅ · Dots wrap ✅
+  iPad    : 2-col grid ≤1024px ✅
+  70yr    : tg-title 28px (22px mobile) ✅ · tg-sub 16px ✅ · tg-stat-n 28px ✅ · tg-stat-l 15px ✅ · tg-card-score 22px ✅ · tg-card-name 15px ✅ · Upload CTA 17px ✅
+  Version : try_gallery-181.22-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
-{% block title %}My Exploratory Evaluations — Shutter League{% endblock %}
+{% block title %}My Evaluations — Shutter League{% endblock %}
 {% block extra_head %}
 <link rel="canonical" href="{{ request.url }}">
 <meta name="robots" content="noindex,nofollow">
 {% endblock %}
-{% block meta_description %}Your exploratory evaluations on Shutter League.{% endblock %}
+{% block meta_description %}Your free evaluations on Shutter League.{% endblock %}
 {% block body_class %}page-dashboard page-try-gallery{% endblock %}
 
 {% block extra_css %}
@@ -30,19 +44,19 @@
 /* ── Header ── */
 .tg-header { margin-bottom:28px; }
 .tg-title  { font-size:28px; font-weight:500; color:var(--tg-ink); margin-bottom:6px; }
-.tg-sub    { font-size:15px; color:var(--tg-muted); }
+.tg-sub    { font-size:16px; color:var(--tg-muted); }
 
 /* ── Stats row ── */
 .tg-stats  { display:flex; gap:28px; flex-wrap:wrap; margin-bottom:24px; padding:18px 22px; background:#FFFCF0; border:1.5px solid #EEE0B0; border-radius:12px; }
 .tg-stat   { }
 .tg-stat-n { font-size:28px; font-weight:500; color:var(--tg-ink); line-height:1; }
-.tg-stat-l { font-size:13px; color:var(--tg-muted); margin-top:3px; }
+.tg-stat-l { font-size:15px; color:var(--tg-muted); margin-top:3px; }
 
 /* ── Dots counter ── */
 .tg-dots   { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-bottom:24px; }
 .tg-dot    { width:10px; height:10px; border-radius:50%; background:#D8CEB8; flex-shrink:0; }
 .tg-dot.used { background:var(--tg-gold); }
-.tg-dots-txt { font-size:14px; color:var(--tg-muted); margin-left:6px; }
+.tg-dots-txt { font-size:15px; color:var(--tg-muted); margin-left:6px; }
 
 /* ── Upload CTA ── */
 .tg-upload-cta { display:block; width:100%; background:linear-gradient(135deg,#4A6FA5 0%,#3A5F95 100%); color:#FFFFFF; font-size:17px; font-weight:500; padding:18px 26px; border-radius:10px; text-align:center; border:none; cursor:pointer; font-family:var(--tg-font); margin-bottom:28px; text-decoration:none; }
@@ -60,14 +74,14 @@
 .tg-card-body { padding:14px 16px; min-height:44px; }
 .tg-card-score { font-size:22px; font-weight:500; color:var(--tg-ink); line-height:1; }
 .tg-card-tier  { display:inline-block; background:var(--tg-gold); color:#2A1800; font-size:13px; font-weight:500; padding:3px 8px; border-radius:4px; margin-left:6px; letter-spacing:.04em; vertical-align:middle; }
-.tg-card-name  { font-size:14px; color:var(--tg-ink-m); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tg-card-name  { font-size:15px; color:var(--tg-ink-m); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tg-card-genre { font-size:13px; color:var(--tg-muted); margin-top:2px; }
 .tg-card-processing { font-size:13px; color:var(--tg-muted); font-style:italic; margin-top:4px; }
 
 /* ── Empty state ── */
 .tg-empty { text-align:center; padding:60px 20px; }
 .tg-empty-hl { font-size:20px; font-weight:500; color:var(--tg-ink); margin-bottom:10px; }
-.tg-empty-body { font-size:15px; color:var(--tg-muted); line-height:1.7; margin-bottom:24px; }
+.tg-empty-body { font-size:16px; color:var(--tg-muted); line-height:1.7; margin-bottom:24px; }
 
 /* ── Mobile ── */
 @media (max-width:768px) {
@@ -92,8 +106,8 @@
 
   {# ── HEADER ── #}
   <div class="tg-header">
-    <div class="tg-title">My Exploratory Evaluations</div>
-    <div class="tg-sub">Your photographs in the free evaluation world. These do not enter your League standing.</div>
+    <div class="tg-title">My Evaluations</div>
+    <div class="tg-sub">Your photographs — seen, evaluated, remembered. These do not enter your League standing.</div>
   </div>
 
   {# ── STATS ── #}
@@ -123,20 +137,28 @@
 
   {# ── DOTS COUNTER ── #}
   <div class="tg-dots">
-    {% for i in range(limit) %}<div class="tg-dot{% if i < used %} used{% endif %}"></div>{% endfor %}
-    <span class="tg-dots-txt">{{ remaining }} exploratory evaluation{{ 's' if remaining != 1 else '' }} remaining</span>
+    {# Cap at 20 dots — play users (100-for-100) would render 110 dots #}
+    {% set _dot_total = [limit, 20] | min %}
+    {% set _dot_used  = [used, _dot_total] | min %}
+    {% for i in range(_dot_total) %}<div class="tg-dot{% if i < _dot_used %} used{% endif %}"></div>{% endfor %}
+    {% if limit > 20 %}
+    <span class="tg-dots-txt">{{ used }} used &nbsp;·&nbsp; {{ remaining }} remaining</span>
+    {% else %}
+    <span class="tg-dots-txt">{{ remaining }} evaluation{{ 's' if remaining != 1 else '' }} remaining</span>
+    {% endif %}
   </div>
 
   {# ── UPLOAD CTA ── #}
   {% if remaining > 0 %}
   <a href="{{ url_for('try_page') }}" class="tg-upload-cta">
     Upload your next photograph &rarr;
-    <span class="tg-upload-sub">{{ remaining }} exploratory evaluation{{ 's' if remaining != 1 else '' }} remaining</span>
+    <span class="tg-upload-sub">{{ remaining }} evaluation{{ 's' if remaining != 1 else '' }} remaining</span>
   </a>
   {% else %}
+  {# When evaluations exhausted — single path to League membership #}
   <a href="{{ url_for('pricing') }}" class="tg-upload-cta">
-    I want to keep exploring — 100 more evaluations &rarr;
-    <span class="tg-upload-sub">Join the League of Photographers for the full experience</span>
+    Join the League of Photographers &rarr;
+    <span class="tg-upload-sub">Your standing, your Annual Excellence Award qualification, your Evolving Eye — they start here.</span>
   </a>
   {% endif %}
 
