@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.53-staging
+  SL-VERSION: 181.54-staging
   Session 192 · 2026-08-24
   CRITICAL ACCESS FIX: Bottom nav Improve tab was visible to ALL authenticated users including Haiku. Now subscription-aware: paid sees Dashboard·Upload·My Gallery·Improve·More; Haiku sees Home·Upload·My Gallery·League·Profile — matching the Haiku dashboard bottom nav exactly. RETAINS 181.49.
 
@@ -10,7 +10,7 @@
   Mobile  : Top nav visible on mobile — brand + hamburger ✅ · Nav-links hidden ≤900px ✅ · Hamburger opens compact 240px dropdown top-right ✅ · Drawer clears bottom nav (max-height: 100dvh - nav - 62px) ✅ · Consistent with index/standings/haiku hamburger pattern ✅ · Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · 44px targets ✅
   iPad    : bottom-nav visible ≤899px (portrait) ✅ · Nav links hidden ≤900px ✅
   70yr    : Body 17px ✅ · Hero h1 clamp ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
-  Version : 181.53-staging — matches filename
+  Version : 181.54-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -1368,7 +1368,7 @@ footer {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   color: rgba(255,255,255,0.75);
 }
@@ -1704,7 +1704,7 @@ img {
          alt="Shutter League"
          style="height:34px; width:auto; display:block;"
          onerror="this.style.display='none'">
-    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
+    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:var(--font-body);line-height:1;">SHUTTER LEAGUE</span>
   </a>
 
   <!-- Desktop nav -->
