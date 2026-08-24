@@ -1,3 +1,4 @@
+# SL-VERSION: 181.55-staging (Session 192, 2026-08-24 — TWO FIXES: (1) /mission route: added is_subscribed gate — Haiku users redirected to /pricing with Sherpa-tone flash message. (2) base.html _show_sidenav: added is_subscribed check — Haiku users were seeing full paid sidenav. RETAINS 181.54.)
 # SL-VERSION: 181.53-staging (Session 192, 2026-08-24 — HAIKU BACKFILL: /admin/haiku-rescore/<image_id> and /admin/haiku-rescore-user/<user_id> added. Single image route re-runs _try_run_haiku with improved prompt (REPETITION BLOCKED). Bulk user route processes oldest-first with 1s delay between calls so REPETITION BLOCKED builds correctly across sequence. Text + score + tier all updated. is_haiku_try verified before running. Background thread for bulk. RETAINS 181.52.)
 # SL-VERSION: 181.52-staging (Session 192, 2026-08-24 — TWO FIXES: (1) subscribe_confirm: play plan (100-for-100) was blocked — plan not in allowed list, redirected to /pricing. Fixed: play handler intercepts before guard, verifies Razorpay signature, increments referral_bonus_uploads +100 via raw SQL, redirects to /try/welcome. User stays in Haiku world. is_subscribed unchanged. (2) _get_haiku_history_context: REPETITION BLOCKED constraint added — previous impression paragraphs passed to prompt with explicit instruction not to repeat phrases, structures or observations. RETAINS 181.51.)
 # SL-VERSION: 181.51-staging (Session 192, 2026-08-24 — REPETITION BLOCKED added to _TRY_HAIKU_PROMPT via _get_haiku_history_context. RETAINS 181.50.)
@@ -4269,7 +4270,14 @@ def forgot_password():
 def mission():
     """Mission Details — Screen 2 of the assignment sequence.
     Powered by Photo School curriculum — same lesson as dashboard card.
+    Paid subscribers only — Haiku users redirected to pricing.
+    SL-181.55: subscription gate added.
     """
+    # Gate: Haiku (free) users should not access /mission
+    if not getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
+        flash('The Improve section is available to League members.', 'info')
+        return redirect(url_for('pricing'))
+
     progress_data    = _build_progress_data(current_user)
     active_challenge = _get_active_challenge(
         user_track=getattr(current_user, 'subscription_track', None) or None
