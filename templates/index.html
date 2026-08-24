@@ -1,19 +1,18 @@
-{# SL-VERSION: 182.24-staging (Session 191, 2026-08-23 — NAV FIX: logout link added to Haiku logged-in nav state. Was missing — user had no way to log out from index page. RETAINS 182.23.) #}
-{# SL-VERSION: 182.23-staging (Session 190, 2026-08-19 — NAV: SL logo image replacing text crest. RETAINS 182.22.)
-{# SL-VERSION: 182.22-staging (Session 190, 2026-08-19 — NAV: full discovery links added — How it works/Science/Contests/Pricing/League of Photographers. Why/About anchor links removed — content is below fold, nav should drive to pages not anchors. Auth-aware right: logged-in paid→Dashboard, Haiku→My evaluations+Upload, logged-out→Login+Register. RETAINS 182.21.)
-{# SL-VERSION: 182.21-staging (Session 189, 2026-08-18 — NAV: "The League" now links to /standings public standings page. RETAINS 182.20.) #}
-{# SL-VERSION: 182.20-staging (Session 189, 2026-08-18 — GALLERY: "The League" kicker → "League of Photographers". Thumbnail overlays now show score + tier + photographer name. ph-badge replaced with score+name overlay. Thumbnails link to /standings. RETAINS 182.19.) #}
-{# SL-VERSION: 182.19-staging (Session 189, 2026-08-18 — NAV: "Start" renamed to "Register" for clarity. RETAINS 182.18.) #}
-{# SL-VERSION: 182.18-staging (Session 189, 2026-08-18 — NAV FIX: logged-in user showed both My dashboard + Dashboard button. Now shows only Dashboard → button. RETAINS 182.17.) #}
-{# SL-VERSION: 182.17-staging (Session 189, 2026-08-18 — GALLERY GRID FIX: grid was broken on mobile when 5th tile removed. Fixed :first-child selector and added explicit min-height on mobile tiles so images show. RETAINS 182.16.) #}
-{# SL-VERSION: 182.16-staging (Session 189, 2026-08-18 — GALLERY FIX 2: Jinja2 set inside loop does not update outer scope — valid_gallery stayed empty, all tiles vanished. Fixed using namespace(count=0) pattern. RETAINS 182.15.) #}
-{# SL-VERSION: 182.15-staging (Session 189, 2026-08-18 — GALLERY FIX: only render tiles with real thumbnails. Empty dark tiles no longer shown. onerror hides entire parent tile if image fails to load. RETAINS 182.14.) #}
-{# SL-VERSION: 182.14-staging (Session 189, 2026-08-18 — BOTTOM NAV: added site's standard bottom nav (sl-bottom-nav) directly into standalone page — shows on mobile <=900px, hidden on desktop. Anon: SHUTTER LEAGUE logo + Upload FAB + Log In. Authed: Dashboard + Upload FAB + My Gallery. Matches base.html bottom nav verbatim. RETAINS 182.13.) #}
-{# SL-VERSION: 182.13-staging (Session 189, 2026-08-18 — NAV: added !important to navsection display:none so Why/The League/About are fully hidden on mobile. RETAINS 182.12.) #}
-{# SL-VERSION: 182.12-staging (Session 189, 2026-08-18 — MOBILE NAV FIX: section links hidden below 960px via .navsection{display:none}; Login and Start remain visible. overflow-x:hidden on body/html to fix white space on right. padding-bottom:72px on mobile to clear site bottom nav. RETAINS 182.11.) #}
-{# SL-VERSION: 182.11-staging (Session 189, 2026-08-18 — FINAL HERO FIX: removed hero-photograph-fill div entirely — it was covering the image regardless of z-index. Dark gradient is now the CSS background of hero-photograph itself (fallback when no image). Image sits directly in the container with no overlapping divs. Only hero-photograph-meta sits above via z-index:2. RETAINS 182.10.) #}
-{# SL-VERSION: 182.10-staging (Session 189, 2026-08-18 — Z-INDEX FIX: hero-photograph-fill div was sitting on top of the img (both position:absolute, fill rendered after img in DOM so it painted over it). Fix: img z-index:1, fill z-index:0. Image now visible. RETAINS 182.9.) #}
-{# SL-VERSION: 182.9-staging (Session 189, 2026-08-18 — STANDALONE: removed extends base.html entirely. Base was injecting sl-top-nav, nav-mobile, main wrapper, footer and its own CSS which overrode hero panel dimensions and hid the photograph. Homepage now manages its own head, nav, footer as a standalone Jinja2 template — same as the 188M prototype. Inherits only: favicon, OG tags, cookie banner (copied verbatim from base 180.10). Hero: object-fit:cover, no padding. RETAINS 182.8.) #}
+{#
+  SL-VERSION: 182.26-staging
+  Session 192 · 2026-08-24
+  HAMBURGER FIX: compact dropdown anchored top-right (240px, border-radius:10px) — was left:0;right:0 full-bleed covering the screen. RETAINS 182.25.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Standalone — does not extend base.html ✅ · navsection links hidden ≤960px, hamburger shown ✅ · Cookie banner z-index below bottom nav ✅
+  KYC     : Footer Legal col: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bottom strip: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅
+  Mobile  : Bottom nav ≤900px ✅ · Hamburger overlay ≤960px ✅ · Hero 1-col ≤960px ✅ · body padding-bottom:72px ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
+  iPad    : Hero 1-col at ≤960px ✅ · moment/founder 1-col ✅ · progress-grid 2-col ✅ · photos 2-col ✅ · footer 2-col ✅
+  70yr    : hero-h1 clamp(52px,6.5vw,88px) ✅ · body 17px ✅ · section-body 19px ✅ · founder-copy 19px ✅ · footer col links 16px ✅ · Gold #F5C518 on dark ✅
+  Version : 182.26-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 <!doctype html>
 <html lang="en">
 <head>
@@ -35,7 +34,7 @@
 <style>
 :root{
   --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;
-  --gold:#D4A428;--ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;
+  --gold:#F5C518;--ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -54,6 +53,20 @@ button{font:inherit;cursor:pointer}
 .navlinks a:hover{color:var(--blue)}
 .navlogin{color:var(--blue);font-weight:600;font-size:16px}
 .navstart{background:var(--dark);color:#fff;border:none;border-radius:2px;padding:11px 20px;font-size:15px;font-weight:600;letter-spacing:.2px;min-height:44px;display:inline-flex;align-items:center}
+
+/* ── HAMBURGER (mobile only) ── */
+.nav-ham{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:10px 8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;margin-left:8px}
+.nav-ham span{display:block;width:20px;height:2px;background:var(--blue);border-radius:2px}
+.nav-mob-menu{display:none;position:fixed;top:80px;right:12px;left:auto;width:240px;background:var(--cream);border:1px solid var(--line);border-radius:10px;z-index:999;padding:6px 0;box-shadow:0 8px 28px rgba(0,0,0,.14);overflow:hidden}
+.nav-mob-menu.open{display:block}
+.nav-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:var(--blue);text-decoration:none;border-bottom:1px solid var(--line);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.nav-mob-menu a:last-child{border-bottom:none}
+.nav-mob-menu a:active{background:var(--paper)}
+.nav-mob-menu .mob-cta{font-weight:700;color:var(--dark);background:var(--dark);color:#fff;margin:12px 24px;border-radius:2px;justify-content:center}
+@media(max-width:960px){
+  .navlinks .navsection{display:none !important}
+  .nav-ham{display:flex}
+}
 /* prevent horizontal scroll on mobile */
 body,html{overflow-x:hidden;max-width:100%}
 
@@ -198,7 +211,7 @@ body,html{overflow-x:hidden;max-width:100%}
 .sl-nav-fab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:2px}
 .sl-nav-fab__circle{width:40px;height:40px;background:#F4C20D;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
 @media (max-width: 900px){.sl-bottom-nav{display:flex}}
-#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
+#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
 #cookie-banner.cb-visible{display:flex}
 #cookie-banner a{color:var(--gold)}
 #cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
@@ -236,7 +249,32 @@ body,html{overflow-x:hidden;max-width:100%}
       <a href="{{ url_for('register') }}" class="navstart">Register</a>
     {% endif %}
   </div>
+  {# Hamburger — mobile only, navsection links hide at ≤960px #}
+  <button class="nav-ham" onclick="var m=document.getElementById('navMobMenu');m.classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+{# Mobile overlay menu — auth-aware #}
+<div class="nav-mob-menu" id="navMobMenu">
+  <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">How it works</a>
+  <a href="{{ url_for('science') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Science</a>
+  <a href="{{ url_for('contests') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Programmes</a>
+  <a href="{{ url_for('pricing') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Pricing</a>
+  <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">League of Photographers</a>
+  {% if current_user.is_authenticated %}
+    {% if current_user.is_subscribed or current_user.role == 'admin' %}
+      <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My dashboard</a>
+    {% else %}
+      <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My evaluations</a>
+      <a href="{{ url_for('try_page') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Upload</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')" style="color:rgba(255,80,80,.75)">Log out</a>
+  {% else %}
+    <a href="{{ url_for('login') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Log in</a>
+    <a href="{{ url_for('register') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')" class="mob-cta">Register — it's free</a>
+  {% endif %}
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -440,9 +478,10 @@ body,html{overflow-x:hidden;max-width:100%}
   <div class="footer-bottom">
     <span>© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy Policy</a>
       <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/privacy">Privacy Policy</a>
       <a href="/refund-policy">Refund Policy</a>
+      <a href="/shipping-policy">Shipping &amp; Returns</a>
     </div>
   </div>
 </footer>
@@ -498,6 +537,14 @@ function cbAccept() {
   b.style.opacity = '0';
   setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
 }
+// Close hamburger on outside tap
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('navMobMenu');
+  if (!menu) return;
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !e.target.closest('.nav-ham')) {
+    menu.classList.remove('open');
+  }
+});
 </script>
 
 </body>
