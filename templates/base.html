@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.52-staging
+  SL-VERSION: 181.53-staging
   Session 192 · 2026-08-24
   CRITICAL ACCESS FIX: Bottom nav Improve tab was visible to ALL authenticated users including Haiku. Now subscription-aware: paid sees Dashboard·Upload·My Gallery·Improve·More; Haiku sees Home·Upload·My Gallery·League·Profile — matching the Haiku dashboard bottom nav exactly. RETAINS 181.49.
 
@@ -7,10 +7,10 @@
   ──────────────────────────────────────────────────────
   Audit   : Jinja2 env.parse() required before deploy ✅ · 3 top-nav branches (Haiku/Paid/Logged-out) ✅ · Bottom nav now 2 branches: paid (5 tabs + More) / Haiku (5 tabs, no Improve) ✅ · Standalone pages never extend base.html ✅
   KYC     : 5-col footer: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · .kyc class on mandatory links ✅
-  Mobile  : Top nav visible on mobile — brand + hamburger ✅ · Nav-links hidden ≤900px ✅ · Hamburger opens drawer below nav (top:64px) ✅ · Drawer clears bottom nav (max-height accounts for 62px) ✅ · Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · 44px targets ✅
+  Mobile  : Top nav visible on mobile — brand + hamburger ✅ · Nav-links hidden ≤900px ✅ · Hamburger opens compact 240px dropdown top-right ✅ · Drawer clears bottom nav (max-height: 100dvh - nav - 62px) ✅ · Consistent with index/standings/haiku hamburger pattern ✅ · Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · 44px targets ✅
   iPad    : bottom-nav visible ≤899px (portrait) ✅ · Nav links hidden ≤900px ✅
   70yr    : Body 17px ✅ · Hero h1 clamp ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
-  Version : 181.52-staging — matches filename
+  Version : 181.53-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -924,29 +924,38 @@ nav.nav-haiku .nav-links a.nav-active {
   display: none;
   position: fixed;
   top: var(--nav-height);
-  left: 0;
-  right: 0;
-  max-height: calc(100vh - var(--nav-height));
-  max-height: calc(100dvh - var(--nav-height));
+  right: 12px;
+  left: auto;
+  width: 240px;
+  max-height: calc(100dvh - var(--nav-height) - 62px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: rgba(26,24,20,0.96);
-  border-bottom: 1px solid var(--border);
-  padding: 12px var(--page-pad) 32px;
+  background: #1A1A18;
+  border: 1px solid rgba(245,197,24,0.18);
+  border-radius: 10px;
+  padding: 6px 0;
   flex-direction: column;
-  gap: 2px;
-  z-index: 199;
+  gap: 0;
+  z-index: 999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.55);
 }
 .nav-mobile.open { display: flex; }
 .nav-mobile a {
-  color: #FFFFFF;
+  color: rgba(255,255,255,0.85);
   text-decoration: none;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  transition: color 0.2s, background 0.2s;
+  padding: 13px 18px;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
+.nav-mobile a:last-child { border-bottom: none; }
 .nav-mobile a:hover { color: #FFFFFF; background: rgba(255,255,255,0.10); }
 .nav-mobile a.nav-admin { color: var(--gold); }
 .nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.12); }
@@ -1413,7 +1422,7 @@ footer {
   /* nav-mobile-login hidden — bottom nav handles logged-out state */
   .nav-mobile-login { display: none !important; }
   /* Mobile drawer — slides down from top nav */
-  .nav-mobile { display: none; top: 64px !important; max-height: calc(100dvh - 64px - 62px) !important; z-index: 997 !important; padding-bottom: 20px !important; overflow-y: auto; }
+  .nav-mobile { display: none; }
   .nav-mobile.open { display: flex !important; }
   
 }
