@@ -1,3 +1,5 @@
+# SL-VERSION: 181.57-staging (Session 192, 2026-08-24 — ADMIN: /admin/api/user-id-by-username endpoint added. Resolves username to user_id + Haiku eval count for the bulk rescore tool. RETAINS 181.56.)
+# SL-VERSION: 181.56-staging (Session 192, 2026-08-24 — INDEX HERO FIX: carousel_images and recent_images queries missing is_haiku_try IS NOT TRUE filter. Haiku images were appearing in homepage hero and recent work sections. Now excluded. On staging with only Haiku images, gradient fallback shows correctly. RETAINS 181.55.)
 # SL-VERSION: 181.55-staging (Session 192, 2026-08-24 — TWO FIXES: (1) /mission route: added is_subscribed gate — Haiku users redirected to /pricing with Sherpa-tone flash message. (2) base.html _show_sidenav: added is_subscribed check — Haiku users were seeing full paid sidenav. RETAINS 181.54.)
 # SL-VERSION: 181.53-staging (Session 192, 2026-08-24 — HAIKU BACKFILL: /admin/haiku-rescore/<image_id> and /admin/haiku-rescore-user/<user_id> added. Single image route re-runs _try_run_haiku with improved prompt (REPETITION BLOCKED). Bulk user route processes oldest-first with 1s delay between calls so REPETITION BLOCKED builds correctly across sequence. Text + score + tier all updated. is_haiku_try verified before running. Background thread for bulk. RETAINS 181.52.)
 # SL-VERSION: 181.52-staging (Session 192, 2026-08-24 — TWO FIXES: (1) subscribe_confirm: play plan (100-for-100) was blocked — plan not in allowed list, redirected to /pricing. Fixed: play handler intercepts before guard, verifies Razorpay signature, increments referral_bonus_uploads +100 via raw SQL, redirects to /try/welcome. User stays in Haiku world. is_subscribed unchanged. (2) _get_haiku_history_context: REPETITION BLOCKED constraint added — previous impression paragraphs passed to prompt with explicit instruction not to repeat phrases, structures or observations. RETAINS 181.51.)
@@ -3509,6 +3511,7 @@ def index():
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
             "  AND thumb_url LIKE :r2 "
+            "  AND (is_haiku_try IS NOT TRUE) "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
         # Convert raw SQL rows to simple objects so Jinja2 attribute access works
@@ -3545,6 +3548,7 @@ def index():
                 "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
                 "  AND is_public=true AND is_flagged=false "
                 "  AND thumb_url LIKE :r2 "
+                "  AND (is_haiku_try IS NOT TRUE) "
                 "  AND user_id != ALL(:mids) "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2, 'mids': list(_mentor_ids)}).fetchall()
@@ -3556,6 +3560,7 @@ def index():
                 "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
                 "  AND is_public=true AND is_flagged=false "
                 "  AND thumb_url LIKE :r2 "
+                "  AND (is_haiku_try IS NOT TRUE) "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2}).fetchall()
         carousel_images = [_row_to_ns(r, _car_fields) for r in _carousel_rows]
@@ -11658,6 +11663,36 @@ def admin_haiku_rescore_user(user_id):
         return jsonify({'status': 'started', 'user_id': user_id})
     flash(f'Haiku rescore started for user {user_id} — runs in background. Check Railway logs for progress.', 'info')
     return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/api/user-id-by-username')
+@login_required
+@admin_required
+def admin_api_user_id_by_username():
+    """
+    Admin AJAX: resolve username → user_id + basic info + Haiku eval count.
+    Used by the Haiku rescore bulk tool in admin dashboard.
+    """
+    username = request.args.get('username', '').strip()
+    if not username:
+        return jsonify({'error': 'No username provided'}), 400
+    user = User.query.filter(
+        db.or_(User.username == username, User.email == username)
+    ).first()
+    if not user:
+        return jsonify({'user_id': None}), 200
+    # Count Haiku evals
+    haiku_count = int(db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
+        {'uid': user.id}
+    ).scalar() or 0)
+    return jsonify({
+        'user_id':   user.id,
+        'username':  user.username,
+        'full_name': user.full_name or user.username,
+        'email':     user.email,
+        'evals':     haiku_count,
+    })
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
