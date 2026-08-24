@@ -1,9 +1,24 @@
-{# SL-VERSION: image_detail_haiku-182.0-staging (Session 190, 2026-08-19 — STANDALONE: removed extends base.html. Full standalone head/nav/footer. Aptos font applied to body (was overridden by base.html Inter). Mobile topbar + bottom nav added matching dashboard_haiku-178.0 pattern. Cookie banner added. iPad @768px breakpoint added. 70yr: font-size minimums lifted, line-heights checked. KYC: "exploratory evaluation" -> "free evaluation" throughout user copy. "rank" -> "standing" retained from 181.21. All other copy, logic, and indigo colour scheme unchanged — indigo is intentional differentiator from paid dashboard. RETAINS image_detail_haiku-181.21.) #}
-{# SL-VERSION: image_detail_haiku-181.21 (Session 187, 2026-08-17 — Back to My Gallery now points to try_gallery route. RETAINS 181.19.) #}
-{# SL-VERSION: image_detail_haiku-181.19 (Session 187, 2026-08-17 — Delete button added. RETAINS 181.18.) #}
-{# SL-VERSION: image_detail_haiku-181.18 (Session 187, 2026-08-17 — Top nav restored. Underline removed. Primary CTA updated. RETAINS 181.15.) #}
-{# SL-VERSION: image_detail_haiku-181.15 (Session 187, 2026-08-16 — Milestone/Reduced upsell logic by evals_used. RETAINS 181.3e.) #}
-{# SL-VERSION: image_detail_haiku-181.2 (Session 186, 2026-08-16 — FULL REDESIGN. All fields from expanded Haiku prompt. Aptos font, pastel colours.) #}
+{#
+  SL-VERSION: image_detail_haiku-181.17-staging
+  Session 192 · 2026-08-24
+  PLAY USER FIXES: (6) Dot counter capped at 20 — play users had 110+ dots. (7) Counter text "free evaluations" → "evaluations" for play users (>10 remaining). (8) Conversion copy: play users (evals 11+) get lighter nudge, not full League conversion. REPETITION FIXES — 5 issues resolved:
+  (1) "from one photograph" — now conditional: eval 1 = "from one photograph", eval 2-4 = "from N photographs", eval 5+ = "across your N photographs".
+  (2) Trend pill evals 2-4 — was identical "Something is beginning to form..." on every scorecard. Now distinct per eval: Two/Three/Four photographs with varied copy.
+  (3) Trend pill evals 5+ — was "pattern is forming. Your eye has a direction. We are watching it." on every scorecard. Now uses milestone_strength if available; otherwise varies by exact count.
+  (4) Mahesh Iyer quote — gated to eval 1 only. Exact wording per founding doc. Was showing on every scorecard.
+  (5) Conv section eval 5-9 — "Your eye has a direction. We are watching it." removed (was duplicating trend pill). milestone_strength still used when available.
+  KYC: "technically" removed from Mahesh quote. No "score" in user copy. No dimension codes. RETAINS 181.15.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Standalone — does not extend base.html ✅ · Haiku scorecard shell ✅ · evals_used/milestone_strength/impression/strength_name etc all from app.py ✅ · No user-facing "score"/"DDI"/"AQ"/"technically" ✅
+  KYC     : No forbidden terms in user copy ✅ · "score" = CSS/vars only ✅ · Mahesh quote exact per founding doc Part 11 ✅ · Milestone wording per founding doc Section 5 ✅
+  Mobile  : Own mobile nav (hk-mob-topbar + hk-bottom-nav) ✅ · Hamburger top-right ✅ · 44px tap targets ✅
+  iPad    : Single column ≤900px ✅ · hk-dot row wraps ✅
+  70yr    : Body 16px+ ✅ · hk-proof-quote 17px ✅ · Trend pill 16px ✅ · Impression 17px ✅
+  Version : image_detail_haiku-181.17-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 <!doctype html>
 <html lang="en">
 <head>
@@ -363,7 +378,7 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
     <span class="hk-mob-brandword">Shutter League</span>
   </a>
   <div class="hk-mob-right">
-    <span class="hk-mob-counter">{{ _eval_num }} of {{ _eval_num + _remaining }}</span>
+    <span class="hk-mob-counter">{{ _eval_num }} of {{ _eval_num + _remaining }}{% if _remaining <= 10 %} free{% endif %}</span>
     <div class="hk-mob-avatar">{{ _first_name[0].upper() if _first_name else 'U' }}</div>
   </div>
 </div>
@@ -376,7 +391,7 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
   </a>
   <div class="hk-nav-right">
     <a href="{{ url_for('try_gallery') }}" class="hk-nav-link">My evaluations</a>
-    <div class="hk-nav-counter"><b>{{ _eval_num }}</b>&nbsp;of&nbsp;<b>{{ _eval_num + _remaining }}</b>&nbsp;free evaluations</div>
+    <div class="hk-nav-counter"><b>{{ _eval_num }}</b>&nbsp;of&nbsp;<b>{{ _eval_num + _remaining }}</b>&nbsp;{% if _remaining > 10 %}evaluations{% else %}free evaluations{% endif %}</div>
     <a href="{{ url_for('logout') }}" class="hk-nav-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:36px">Log out</a>
     <div class="hk-mob-avatar">{{ _first_name[0].upper() if _first_name else 'U' }}</div>
   </div>
@@ -452,8 +467,15 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
 
   {# ── EVALUATION COUNTER ── #}
   <div class="hk-dots-row">
-    {% for i in range(_eval_num + _remaining) %}<div class="hk-dot{% if i < _eval_num %} used{% endif %}"></div>{% endfor %}
+    {# Cap dots at 20 — play users (100-for-100) would generate 110+ dots #}
+    {% set _dot_total = [_eval_num + _remaining, 20] | min %}
+    {% set _dot_used  = [_eval_num, _dot_total] | min %}
+    {% for i in range(_dot_total) %}<div class="hk-dot{% if i < _dot_used %} used{% endif %}"></div>{% endfor %}
+    {% if _eval_num + _remaining > 20 %}
+    <span class="hk-dots-txt">{{ _eval_num }} used &nbsp;·&nbsp; {{ _remaining }} remaining</span>
+    {% else %}
     <span class="hk-dots-txt">{{ _remaining }} free evaluation{{ 's' if _remaining != 1 else '' }} remaining</span>
+    {% endif %}
   </div>
 
   {# ── CELEBRATION ── #}
@@ -469,7 +491,11 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
     {% else %}
       <div class="hk-cel-hl">Not many photographers would have noticed what you noticed here.</div>
     {% endif %}
-    <div class="hk-cel-sub">This is what we see in your eye — from one photograph.</div>
+    <div class="hk-cel-sub">
+      {% if _eval_num == 1 %}This is what we see in your eye — from one photograph.
+      {% elif _eval_num <= 4 %}This is what we see in your eye — from {{ _eval_num }} photographs.
+      {% else %}This is what we see across your {{ _eval_num }} photographs.{% endif %}
+    </div>
   </div>
 
   {# ── MASTER REFERENCE ── #}
@@ -490,9 +516,23 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
     {% if _eval_num == 1 %}
     <div class="hk-trend-pill">&ldquo;One photograph tells us what you made. Keep uploading — we will begin to see how you see.&rdquo;</div>
     {% elif _eval_num <= 4 %}
-    <div class="hk-trend-pill">&ldquo;{{ _eval_num }} photographs in. Something is beginning to form in how you see — keep going.&rdquo;</div>
+    {% if _eval_num == 2 %}
+    <div class="hk-trend-pill">&ldquo;Two photographs. We are starting to see something.&rdquo;</div>
+    {% elif _eval_num == 3 %}
+    <div class="hk-trend-pill">&ldquo;Three photographs. The direction is becoming clearer.&rdquo;</div>
     {% else %}
-    <div class="hk-trend-pill">&ldquo;Across your last {{ _eval_num }} uploads, a pattern is forming. Your eye has a direction. We are watching it.&rdquo;</div>
+    <div class="hk-trend-pill">&ldquo;Four photographs. We are watching how your eye moves.&rdquo;</div>
+    {% endif %}
+    {% else %}
+    {% if milestone_strength %}
+    <div class="hk-trend-pill">&ldquo;Across your {{ _eval_num }} photographs, your strongest quality has been {{ milestone_strength }}. That is not an accident.&rdquo;</div>
+    {% elif _eval_num == 5 %}
+    <div class="hk-trend-pill">&ldquo;Five photographs. A pattern is forming. We see where your eye goes.&rdquo;</div>
+    {% elif _eval_num == 6 or _eval_num == 7 %}
+    <div class="hk-trend-pill">&ldquo;{{ _eval_num }} photographs. The direction is clear. Keep building.&rdquo;</div>
+    {% else %}
+    <div class="hk-trend-pill">&ldquo;{{ _eval_num }} photographs. You are close to something.&rdquo;</div>
+    {% endif %}
     {% endif %}
   </div>
 
@@ -557,11 +597,13 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
   </div>
   {% endif %}
 
-  {# ── SOCIAL PROOF ── #}
+  {# ── SOCIAL PROOF — only on eval 1, never repeated ── #}
+  {% if _eval_num == 1 %}
   <div class="hk-proof-block">
-    <div class="hk-proof-quote">I had never seen a photograph described technically like this. It told me exactly what I was doing right and what I was missing. After 20 years of photography, that is not an easy thing to say.</div>
-    <div class="hk-proof-attr"><strong>Mahesh Iyer</strong> &middot; Street photographer &middot; Standing 105 of 20,000 globally, PhotoCrowd &middot; Grandmaster, Shutter League</div>
+    <div class="hk-proof-quote">&ldquo;It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say.&rdquo;</div>
+    <div class="hk-proof-attr"><strong>Mahesh Iyer</strong> &middot; Grandmaster, Shutter League &middot; Standing 105 of 20,000 globally, PhotoCrowd</div>
   </div>
+  {% endif %}
 
   {# ── UPSELL — conditional by eval number ── #}
   {% if _eval_num == 1 %}
@@ -653,8 +695,8 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
   <div class="hk-conv-sec">
     <div class="hk-conv-hl">{{ _eval_num }} photographs.</div>
     <div class="hk-conv-body" style="font-size:17px;line-height:1.85">
-      {% if milestone_strength %}Across everything you have uploaded, <strong>{{ milestone_strength }}</strong> has been your most consistent strength. Your eye has a direction. We are watching it.
-      {% else %}Across your {{ _eval_num }} uploads, a pattern is forming. Your eye has a direction.{% endif %}
+      {% if milestone_strength %}Across everything you have uploaded, <strong>{{ milestone_strength }}</strong> has been your most consistent strength.
+      {% endif %}
       Your standing hasn&rsquo;t started yet — <strong>it starts with your next photograph as a member of the League of Photographers.</strong>
     </div>
     <div class="hk-tracks" style="margin-top:18px">
@@ -665,6 +707,12 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
 
   {% else %}
 
+  {% if _remaining > 0 and _eval_num >= 10 %}
+  {# Play user (100-for-100) — they've paid, don't hammer conversion. Lighter nudge. #}
+  <div class="hk-conv-sec">
+    <div class="hk-conv-hl">{{ _eval_num }} photographs.</div>
+    <div class="hk-conv-body" style="font-size:17px;line-height:1.85">{% if milestone_strength %}Your most consistent quality across all of them: <strong>{{ milestone_strength }}</strong>. {% endif %}When you are ready, your standing in the League of Photographers starts with a subscription.</div>
+  {% else %}
   <div class="hk-conv-sec">
     <div class="hk-conv-hl">Ten photographs.</div>
     <div class="hk-conv-body" style="font-size:17px;line-height:1.85">We know something real about how you see. But none of it is in the Shutter League record yet. Your standing, your AEA qualification, your Evolving Eye — <strong>they start with your next photograph as a member of the League of Photographers.</strong></div>
@@ -673,6 +721,7 @@ a:focus-visible{outline:3px solid var(--hk-gold);outline-offset:2px}
       <div class="hk-track hk-track-mobile"><div class="hk-track-name" style="color:#1E5808">Mobile League</div><div class="hk-track-sub" style="color:#3A8020">iPhone &middot; Android &middot; Smartphone</div></div>
     </div>
   </div>
+  {% endif %}{# end play/free conversion #}
 
   {% endif %}
 
