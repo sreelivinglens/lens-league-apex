@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: homepage_standings-2.1-staging
+  SL-VERSION: homepage_standings-2.2-staging
   Session 192 · 2026-08-24
-  MOBILE NAV: hamburger added to pub-nav. Logged-out users had zero nav on mobile. Overlay auth-aware: logged-out sees discovery links + Log in + Join; Haiku sees + My evaluations + Log out; paid sees My dashboard + Log out. RETAINS homepage_standings-2.0.
+  HAMBURGER FIX: compact dropdown anchored top-right — was left:0;right:0 full-bleed. RETAINS homepage_standings-2.1.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
   Mobile  : Hamburger overlay ✅ · Bottom nav (authenticated only) ✅ · 2-col grid ≤768px ✅ · Footer 2-col ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
   iPad    : Grid 3-col ≤1024px ✅ · Nav padding reduced ✅
   70yr    : Header h1 clamp(32px,4vw,52px) ✅ · Desc 17px ✅ · Card name 15px ✅ · Footer links 15px ✅ · Strip 13px fine print ✅
-  Version : homepage_standings-2.1-staging — matches filename
+  Version : homepage_standings-2.2-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -51,9 +51,9 @@ a{text-decoration:none;color:inherit}
 /* ── HAMBURGER (mobile) ── */
 .pub-ham{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:10px 8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;margin-left:8px}
 .pub-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
-.pub-mob-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#1A2744;border-bottom:1px solid rgba(255,255,255,.12);z-index:999;padding:8px 0}
+.pub-mob-menu{display:none;position:fixed;top:68px;right:12px;left:auto;width:240px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:10px;z-index:999;padding:6px 0;box-shadow:0 8px 32px rgba(0,0,0,.55);overflow:hidden}
 .pub-mob-menu.open{display:block}
-.pub-mob-menu a{display:flex;align-items:center;padding:14px 20px;font-size:16px;font-weight:500;color:rgba(255,255,255,.8);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:52px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pub-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .pub-mob-menu a:last-child{border-bottom:none}
 .pub-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
 .pub-mob-menu .pub-mob-join{color:var(--gold);font-weight:700}
