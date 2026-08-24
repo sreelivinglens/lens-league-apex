@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: HAIKU-178.53-staging
+  SL-VERSION: HAIKU-178.55-staging
   Session 192 · 2026-08-24
   CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
   iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
   70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.53-staging — matches filename
+  Version : HAIKU-178.55-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -534,8 +534,14 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div class="hk-sherpa-nudge">→ {{ sherpa_nudge }}</div>
   {% endif %}
   {% if _n >= 3 %}
-  <div style="padding:0 32px 16px;background:#fff;border-bottom:1px solid #E8E0D0;font-size:15px;color:#8A8070;line-height:1.6;">
-    This is what we can see from {{ _n }} photograph{{ 's' if _n != 1 }}. League members receive 48 evaluations a year — the depth of what we know about how you see changes completely.
+  <div style="padding:16px 32px 20px;background:#FFFCF4;border-bottom:1px solid #E8E0D0;border-left:3px solid #D4A428;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070;margin-bottom:10px;">What comes next</div>
+    <div style="font-size:16px;color:#1A1A18;line-height:1.75;margin-bottom:10px;">
+      {% if _next_leap %}With more photographs, we can tell you specifically why <strong>{{ _next_leap }}</strong> keeps appearing in your work — and what to do before the next shutter press to break the pattern.{% else %}With more photographs, we begin to see not just what you made — but what you instinctively reach for, and where your eye consistently stops short.{% endif %}
+    </div>
+    <div style="font-size:14px;color:#8A8070;line-height:1.65;">
+      At 48 evaluations: edit directions for each photograph, a location advisory for your city, and a body of work that names your eye as distinct from every other photographer on the platform.
+    </div>
   </div>
   {% endif %}
 </div>
