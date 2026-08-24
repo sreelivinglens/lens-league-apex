@@ -1,16 +1,16 @@
 {#
-  SL-VERSION: 182.26-staging
+  SL-VERSION: 182.27-staging
   Session 192 · 2026-08-24
-  HAMBURGER FIX: compact dropdown anchored top-right (240px, border-radius:10px) — was left:0;right:0 full-bleed covering the screen. RETAINS 182.25.
+  HAIKU CTA FIX: all authenticated CTAs (hero, end, nav, hamburger) now 3-way — paid→dashboard, Haiku→try_welcome, anon→register. Bottom nav gold #F4C20D→#F5C518. RETAINED FROM: compact dropdown anchored top-right (240px, border-radius:10px) — was left:0;right:0 full-bleed covering the screen. RETAINS 182.25.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
-  Audit   : Standalone — does not extend base.html ✅ · navsection links hidden ≤960px, hamburger shown ✅ · Cookie banner z-index below bottom nav ✅
+  Audit   : Standalone ✅ · navsection hidden ≤960px, hamburger shown ✅ · Cookie banner z-index below bottom nav ✅ · All CTAs 3-way: paid→dashboard, Haiku→try_welcome, anon→register ✅
   KYC     : Footer Legal col: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bottom strip: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅
   Mobile  : Bottom nav ≤900px ✅ · Hamburger overlay ≤960px ✅ · Hero 1-col ≤960px ✅ · body padding-bottom:72px ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
   iPad    : Hero 1-col at ≤960px ✅ · moment/founder 1-col ✅ · progress-grid 2-col ✅ · photos 2-col ✅ · footer 2-col ✅
   70yr    : hero-h1 clamp(52px,6.5vw,88px) ✅ · body 17px ✅ · section-body 19px ✅ · founder-copy 19px ✅ · footer col links 16px ✅ · Gold #F5C518 on dark ✅
-  Version : 182.26-staging — matches filename
+  Version : 182.27-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!doctype html>
@@ -205,11 +205,11 @@ body,html{overflow-x:hidden;max-width:100%}
 /* ── BOTTOM NAV (mobile only — matches site standard) ── */
 .sl-bottom-nav{position:fixed;top:auto !important;bottom:0;left:0;right:0;height:auto;min-height:62px;padding-bottom:env(safe-area-inset-bottom,0px);background:#1A1814;border-top:1px solid rgba(245,197,24,.2);display:none;justify-content:space-around;align-items:flex-start;z-index:1200;padding-top:10px}
 .sl-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:4px;transition:color .1s;-webkit-tap-highlight-color:transparent}
-.sl-nav-item:hover,.sl-nav-item.active{color:#F4C20D}
+.sl-nav-item:hover,.sl-nav-item.active{color:#F5C518}
 .sl-nav-logo{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4px;text-decoration:none;min-width:44px;min-height:44px}
 .sl-nav-logo__text{font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.5);text-align:center;line-height:1.3}
 .sl-nav-fab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:2px}
-.sl-nav-fab__circle{width:40px;height:40px;background:#F4C20D;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
+.sl-nav-fab__circle{width:40px;height:40px;background:#F5C518;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
 @media (max-width: 900px){.sl-bottom-nav{display:flex}}
 #cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
 #cookie-banner.cb-visible{display:flex}
@@ -238,7 +238,11 @@ body,html{overflow-x:hidden;max-width:100%}
     <a href="{{ url_for('standings_public') }}" class="navsection">League of Photographers</a>
     {% if current_user.is_authenticated %}
       {% if current_user.is_subscribed or current_user.role == 'admin' %}
-        <a href="{{ url_for('dashboard') }}" class="navstart">My dashboard →</a>
+        {% if current_user.is_subscribed %}
+          <a href="{{ url_for('dashboard') }}" class="navstart">My dashboard →</a>
+        {% else %}
+          <a href="{{ url_for('try_welcome') }}" class="navstart">My evaluations →</a>
+        {% endif %}
       {% else %}
         <a href="{{ url_for('try_welcome') }}" class="navlogin">My evaluations</a>
         <a href="{{ url_for('try_page') }}" class="navstart">Upload →</a>
@@ -264,7 +268,11 @@ body,html{overflow-x:hidden;max-width:100%}
   <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">League of Photographers</a>
   {% if current_user.is_authenticated %}
     {% if current_user.is_subscribed or current_user.role == 'admin' %}
-      <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My dashboard</a>
+      {% if current_user.is_subscribed %}
+        <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My dashboard</a>
+      {% else %}
+        <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My evaluations</a>
+      {% endif %}
     {% else %}
       <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My evaluations</a>
       <a href="{{ url_for('try_page') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Upload</a>
@@ -299,8 +307,10 @@ body,html{overflow-x:hidden;max-width:100%}
     <h1 class="hero-h1">What if you could see how good you could become?</h1>
     <p class="hero-lead">You've probably looked at one of your photographs and thought: <em>if only I had waited. Moved. Looked again.</em></p>
     <p class="hero-solve">How do I solve the what if?</p>
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and current_user.is_subscribed %}
       <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+    {% elif current_user.is_authenticated %}
+      <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
     {% else %}
       <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
     {% endif %}
@@ -427,8 +437,10 @@ body,html{overflow-x:hidden;max-width:100%}
 <section class="end">
   <h2 class="end-h2">We think you're capable of more.</h2>
   <p class="end-sub">Come see what your photographs say.</p>
-  {% if current_user.is_authenticated %}
+  {% if current_user.is_authenticated and current_user.is_subscribed %}
     <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+  {% elif current_user.is_authenticated %}
+    <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
   {% else %}
     <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
   {% endif %}
