@@ -1,12 +1,18 @@
-{# SL-VERSION: homepage_standings-2.0-staging (Session 191, 2026-08-24 — KYC: added Shipping link, shortened labels to Terms/Privacy/Refunds/Shipping in both footer Legal column and bottom strip. All 4 Razorpay mandatory links now present. RETAINS 1.9.) #}
-{# SL-VERSION: homepage_standings-1.9-staging (Session 191, 2026-08-23 — NAV LAYOUT: merged pub-nav-links into pub-nav-right so all links push right like base.html Science page. Removed centred middle section. pub-nav-right gap 10px→2px. RETAINS 1.8.) #}
-{# SL-VERSION: homepage_standings-1.8-staging (Session 191, 2026-08-23 — NAV FIXES: (1) My evaluations link fixed try_welcome→try_gallery. (2) Upload button removed for Haiku users — replaced with Log out link. (3) Nav colour #0F1F3D→#1A2744 to match dashboard and base.html Haiku nav. (4) font-size 14px→13px, padding 5px 12px→6px 8px, gap 4px→2px — matches Science page nav. RETAINS 1.7.) #}
-{# SL-VERSION: homepage_standings-1.7-staging (Session 190, 2026-08-19 — NAV: brandword "Shutter League" restored alongside logo — matches base.html pattern. RETAINS 1.6.) #}
-{# SL-VERSION: homepage_standings-1.6-staging (Session 190, 2026-08-19 — NAV STYLE: matched to base.html nav — removed gold border-bottom, link style aligned, button style aligned, padding adjusted. RETAINS 1.5.)
-{# SL-VERSION: homepage_standings-1.5-staging (Session 190, 2026-08-19 — NAV: full discovery nav added matching homepage/base.html — How it works/Science/Programmes/Pricing always visible, auth-aware right side. FOOTER: upgraded to full 5-column homepage-standard footer. RETAINS 1.4.)
-{# SL-VERSION: homepage_standings-1.4-staging (Session 190, 2026-08-19 — MOBILE: bottom nav added for authenticated users (5 tabs: Home/Upload/My Gallery/League/Log out). Logged-out users see no bottom nav. Card lock text shortened for mobile. body padding-bottom added for bottom nav. RETAINS 1.3.)
-{# SL-VERSION: homepage_standings-1.3-staging (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Nav: logged-in users see dashboard/try_welcome link instead of Login/Join. (2) Card lock: logged-in Haiku users see "Continue exploring", paid users see "Your dashboard". Logged-out see Join. (3) Join banner: same conditional. Prevents logged-in redirect loop to dashboard via /register. RETAINS 1.2.)
-{# SL-VERSION: homepage_standings-1.2-staging (Session 189, 2026-08-18 — Image wrap is now an anchor linking to image_detail. Score overlay confirmed. Card fully clickable. RETAINS 1.1.) (Session 189, 2026-08-18 — Score now visible on card. Image taller (aspect-ratio 3/2). Score shown as large number over image bottom-right. RETAINS 1.0.) (Session 189, 2026-08-18 — NEW FILE. Public standings page — no login required. Shows tier, photographer display name, best image thumbnail only. Full scorecard locked: "For League photographers only — Join the League →". Standalone — no base.html. 188M design tokens. Haiku images never shown (is_haiku_try filter in route). Separate from leaderboard.html which remains login-required.) #}
+{#
+  SL-VERSION: homepage_standings-2.1-staging
+  Session 192 · 2026-08-24
+  MOBILE NAV: hamburger added to pub-nav. Logged-out users had zero nav on mobile. Overlay auth-aware: logged-out sees discovery links + Log in + Join; Haiku sees + My evaluations + Log out; paid sees My dashboard + Log out. RETAINS homepage_standings-2.0.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Standalone — does not extend base.html ✅ · Desktop nav hidden ≤768px, hamburger shown ✅ · Bottom nav auth-gated ✅ · Own 5-col pub-footer ✅
+  KYC     : Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · In footer Legal column and bottom strip
+  Mobile  : Hamburger overlay ✅ · Bottom nav (authenticated only) ✅ · 2-col grid ≤768px ✅ · Footer 2-col ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
+  iPad    : Grid 3-col ≤1024px ✅ · Nav padding reduced ✅
+  70yr    : Header h1 clamp(32px,4vw,52px) ✅ · Desc 17px ✅ · Card name 15px ✅ · Footer links 15px ✅ · Strip 13px fine print ✅
+  Version : homepage_standings-2.1-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +48,15 @@ a{text-decoration:none;color:inherit}
 .pub-login{font-size:13px;color:rgba(255,255,255,.65);padding:6px 8px;border:1px solid rgba(255,255,255,.25);border-radius:5px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .pub-login:hover{color:#fff}
 .pub-register{font-size:14px;font-weight:700;color:var(--dark);background:var(--gold);padding:8px 18px;border-radius:8px;min-height:44px;display:inline-flex;align-items:center}
+/* ── HAMBURGER (mobile) ── */
+.pub-ham{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:10px 8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;margin-left:8px}
+.pub-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
+.pub-mob-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#1A2744;border-bottom:1px solid rgba(255,255,255,.12);z-index:999;padding:8px 0}
+.pub-mob-menu.open{display:block}
+.pub-mob-menu a{display:flex;align-items:center;padding:14px 20px;font-size:16px;font-weight:500;color:rgba(255,255,255,.8);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:52px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pub-mob-menu a:last-child{border-bottom:none}
+.pub-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
+.pub-mob-menu .pub-mob-join{color:var(--gold);font-weight:700}
 
 /* ── PAGE HEADER ── */
 .pub-header{padding:52px 48px 36px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--line)}
@@ -135,6 +150,8 @@ a{text-decoration:none;color:inherit}
 @media(max-width:1024px){.pub-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:768px){
   .pub-nav{padding:0 16px}
+  .pub-nav-right{display:none}  /* hide all desktop nav links — hamburger takes over */
+  .pub-ham{display:flex}        /* show hamburger */
   .pub-header{padding:36px 20px 28px}
   .pub-tabs{padding:0 20px}
   .pub-grid-wrap{padding:28px 20px 60px}
@@ -178,7 +195,31 @@ a{text-decoration:none;color:inherit}
       <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
     {% endif %}
   </div>
+  {# Hamburger — mobile only, replaces pub-nav-right which hides at ≤768px #}
+  <button class="pub-ham" onclick="var m=document.getElementById('pubMobMenu');m.classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+{# Mobile overlay menu — full link set, auth-aware #}
+<div class="pub-mob-menu" id="pubMobMenu">
+  <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">How it works</a>
+  <a href="{{ url_for('science') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Science</a>
+  <a href="{{ url_for('contests') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Programmes</a>
+  <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+  <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">League of Photographers</a>
+  {% if current_user.is_authenticated %}
+    {% if current_user.is_subscribed or current_user.role == 'admin' %}
+      <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My dashboard</a>
+    {% else %}
+      <a href="{{ url_for('try_gallery') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My evaluations</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
+  {% else %}
+    <a href="{{ url_for('login') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Log in</a>
+    <a href="{{ url_for('register') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" class="pub-mob-join">Join the League →</a>
+  {% endif %}
+</div>
 
 {# ── HEADER ── #}
 <div class="pub-header">
@@ -354,6 +395,14 @@ function slOpenImg(el){
   lb.style.display='flex';
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('slLightbox').style.display='none';});
+// Close hamburger on outside tap
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('pubMobMenu');
+  if(!menu)return;
+  if(menu.classList.contains('open')&&!menu.contains(e.target)&&!e.target.closest('.pub-ham')){
+    menu.classList.remove('open');
+  }
+});
 </script>
 {% if current_user.is_authenticated %}
 <nav class="pub-bottom-nav">
