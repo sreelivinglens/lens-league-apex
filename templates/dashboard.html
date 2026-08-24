@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 178.3-staging
+  SL-VERSION: 178.4-staging
   Session 192 · 2026-08-24
   THREE FIXES: (1) Font: 'Avenir Next' → Aptos stack on *{} reset. (2) Gold: --gold #D6A428 → #F5C518 (canonical bright). --gold-dk #A37B2C retained for text-on-cream contexts only. (3) Mobile footer KYC: added Refund Policy + Shipping + Bengaluru — 2 mandatory Razorpay links were missing on mobile. RETAINS 178.2.
 
@@ -10,7 +10,7 @@
   Mobile  : Bottom nav 5-tab ✅ · More drawer popup ✅ · Mobile footer complete KYC ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Sidenav hidden ✅
   iPad    : Sidenav hidden ≤992px ✅ · Single column ✅ · Body padding for bottom nav ✅
   70yr    : Body 16px+ ✅ · Gold #F5C518 on dark — high contrast ✅ · gold-dk #A37B2C on cream — readable ✅ · 44px tap targets ✅
-  Version : 178.3-staging — matches filename
+  Version : 178.4-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 {% extends "base.html" %}
@@ -46,7 +46,7 @@ body.page-dashboard #backToTop         { display:none !important }
 /* ── TOKENS — from dashboard_approved.html ── */
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Aptos','Segoe UI',system-ui,Arial,sans-serif}
 :root{
-  --gold:#F5C518;--gold-dk:#A37B2C;--dark:#1A1814;--cream:#F6F2E9;
+  --gold:#F5C518;--gold-dk:#A37B2C;--dark:#0F1F3D;--cream:#F6F2E9;
   --border:#E8E4DA;--muted:#6B6B6B;--green:#2A7A3A;--text:#1A1A18;
   --pista:#E8F5E2;--pista-b:#C5E0BB;--navy:#13254B;--blue:#1A7FD4
 }
