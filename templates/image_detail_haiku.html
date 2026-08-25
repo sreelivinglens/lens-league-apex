@@ -13,8 +13,11 @@
 <style>
 /* SCORECARD — overrides and additions on top of base */
 
-/* Remove default main padding that base adds */
+/* Remove default main padding that base adds — all breakpoints */
 main { padding:0 !important; background:#E8E5DF; }
+@media (max-width:900px) { main { padding:0 !important; } }
+@media (max-width:768px) { main { padding:0 !important; } }
+@media (max-width:600px) { main { padding:0 !important; } }
 
 /* PAGE */
 .sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
@@ -60,7 +63,7 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 
 /* EDITORIAL CONTENT COLUMN */
-.sl-content { max-width:760px; margin:0 auto; padding:0 48px; }
+.sl-content { max-width:860px; margin:0 auto; padding:0 48px; }
 
 /* VERDICT */
 .sl-verdict { padding-top:60px; }
