@@ -1,15 +1,16 @@
-{# SL-VERSION: 181.35-staging (Session 196, 2026-08-26 — dashboard_haiku.html built from approved sl_dashboard_full.html design. Standalone page, no base.html extension.) #}
+{# SL-VERSION: 181.37-staging (Session 197, 2026-08-26 — (1) haiku_percentile: real DB query added to try_welcome() — MAX(score) vs all haiku users pool, passed as haiku_percentile; template shows "Top N%" only when value present. (2) WHERE YOU STAND: horizontal strip kept but rebuilt clean — no scroll-snap, webkit-scrollbar hidden, 200px cards desktop / 160px 768px / 140px 600px, score+tier inline row. RETAINS 181.36.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Shutter League — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webkit-font-smoothing:antialiased; }
 .sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
 .sl-col { max-width:760px; margin:0 auto; padding:0 48px; }
 .sl-rule { width:100%; height:0.5px; background:rgba(26,39,68,0.09); }
@@ -24,15 +25,20 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
 .sl-brand-name { font-size:12px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
 .sl-brand-sub { font-size:10px; letter-spacing:0.10em; color:rgba(26,39,68,0.36); text-transform:uppercase; }
 .sl-nav { display:flex; gap:32px; }
-.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; }
+.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; cursor:pointer; }
 .sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
 
 /* ── HERO ── */
 .sl-hero { width:100%; background:#0C1018; }
 .sl-hero img { width:100%; display:block; }
 .sl-hero-bar { background:#1A2744; padding:28px 48px 36px; }
+/* Tier position + percentile — between image and greeting */
+.sl-hero-position { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+.sl-hero-tier-pos { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); }
+.sl-hero-percentile { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); }
+.sl-hero-pos-sep { font-size:11px; color:rgba(255,255,255,0.18); }
 .sl-hero-greeting { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:10px; }
-.sl-hero-name { font-family:'Playfair Display',serif; font-size:28px; color:#fff; font-weight:400; line-height:1.3; margin-bottom:24px; }
+.sl-hero-name { font-family:'Playfair Display',serif; font-size:28px; color:#fff; font-weight:400; line-height:1.5; margin-bottom:24px; }
 .sl-hero-meta { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; }
 .sl-hero-standing { display:flex; align-items:baseline; gap:12px; }
 .sl-hero-score { font-family:'Playfair Display',serif; font-size:56px; color:#fff; line-height:1; letter-spacing:-0.03em; }
@@ -40,7 +46,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
 .sl-hero-tier { font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:#C8A84B; font-weight:500; }
 .sl-hero-genre { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.26); }
 .sl-hero-link { font-size:13px; color:rgba(255,255,255,0.36); letter-spacing:0.04em; }
-.sl-hero-link a { color:rgba(255,255,255,0.36); text-decoration:none; }
+.sl-hero-link a { color:rgba(255,255,255,0.36); text-decoration:none; cursor:pointer; }
 .sl-hero-link a:hover { color:#C8A84B; }
 
 /* ── SHARED EYEBROW ── */
@@ -78,21 +84,22 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
 .sl-counter-num { font-family:'Playfair Display',serif; font-size:64px; color:#1A2744; line-height:1; letter-spacing:-0.04em; }
 .sl-counter-label { font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,39,68,0.42); }
 .sl-record-statement { font-family:'Playfair Display',serif; font-size:20px; color:rgba(26,39,68,0.52); line-height:1.8; font-style:italic; margin-bottom:64px; }
-.sl-record { display:flex; flex-direction:column; gap:0; }
-.sl-record-entry { margin-bottom:72px; }
-.sl-record-entry:last-child { margin-bottom:0; }
-.sl-record-img { width:100%; display:block; }
-.sl-record-meta { padding:20px 0; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:0.5px solid rgba(26,39,68,0.09); gap:24px; }
-.sl-record-left { display:flex; flex-direction:column; gap:6px; }
-.sl-record-eval { font-size:15px; color:rgba(26,39,68,0.38); letter-spacing:0.06em; text-transform:uppercase; }
-.sl-record-name { font-size:18px; color:#1A2744; font-weight:400; line-height:1.3; }
-.sl-record-genre { font-size:15px; color:rgba(26,39,68,0.48); }
-.sl-record-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
-.sl-record-score { font-family:'Playfair Display',serif; font-size:40px; color:#1A2744; line-height:1; letter-spacing:-0.02em; }
-.sl-record-tier { font-size:15px; letter-spacing:0.08em; text-transform:uppercase; color:#C8A84B; }
-.sl-progression-note { margin-top:56px; padding-top:32px; border-top:0.5px solid rgba(26,39,68,0.09); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:12px; }
+/* Horizontal strip — clean, no scroll snap jank */
+.sl-record-strip { display:flex; flex-direction:row; gap:24px; align-items:flex-start; overflow-x:auto; padding-bottom:4px; }
+.sl-record-strip::-webkit-scrollbar { display:none; }
+.sl-record-card { flex:0 0 auto; width:200px; display:flex; flex-direction:column; }
+.sl-record-img { width:200px; height:auto; display:block; }
+.sl-record-meta { padding:14px 0 0; display:flex; flex-direction:column; gap:4px; border-bottom:none; }
+.sl-record-eval { font-size:11px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,39,68,0.38); }
+.sl-record-name { font-size:15px; color:#1A2744; font-weight:400; line-height:1.5; margin-top:4px; }
+.sl-record-score-row { display:flex; align-items:baseline; gap:8px; margin-top:4px; }
+.sl-record-score { font-family:'Playfair Display',serif; font-size:22px; color:#1A2744; line-height:1; letter-spacing:-0.02em; }
+.sl-record-tier { font-size:11px; letter-spacing:0.09em; text-transform:uppercase; color:#C8A84B; }
+.sl-progression-note { margin-top:32px; padding-top:28px; border-top:0.5px solid rgba(26,39,68,0.09); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:12px; }
 .sl-progression-text { font-size:17px; color:rgba(26,39,68,0.50); font-style:italic; line-height:1.7; }
 .sl-progression-best { font-size:14px; color:rgba(26,39,68,0.38); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; }
+.sl-record-link { margin-top:20px; display:inline-block; font-size:15px; color:rgba(26,39,68,0.50); letter-spacing:0.04em; text-decoration:none; cursor:pointer; }
+.sl-record-link:hover { color:#1A2744; }
 
 /* ── THE JOURNEY ── */
 .sl-journey { padding:80px 0; }
@@ -112,15 +119,16 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
 .sl-inv-gap { margin-bottom:48px; padding-bottom:48px; border-bottom:0.5px solid rgba(255,255,255,0.09); }
 .sl-inv-gap-num { font-family:'Playfair Display',serif; font-size:72px; color:rgba(255,255,255,0.88); line-height:1; letter-spacing:-0.04em; margin-bottom:10px; }
 .sl-inv-gap-label { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.28); }
-.sl-inv-cta { font-size:18px; color:#F5C518; letter-spacing:0.02em; cursor:pointer; line-height:1.5; display:block; margin-bottom:20px; text-decoration:none; }
-.sl-inv-secondary { font-size:15px; color:rgba(255,255,255,0.24); line-height:1.5; cursor:pointer; }
+.sl-inv-cta { font-size:18px; color:#F5C518; letter-spacing:0.02em; cursor:pointer; line-height:1.5; display:block; margin-bottom:20px; text-decoration:none; padding:14px 0; min-height:44px; }
+.sl-inv-secondary { font-size:15px; color:rgba(255,255,255,0.24); line-height:1.5; cursor:pointer; padding:12px 0; min-height:44px; display:block; }
 
 /* ── FOOTER ── */
 .sl-footer { padding:24px 48px; display:flex; justify-content:space-between; align-items:center; border-top:0.5px solid rgba(26,39,68,0.08); flex-wrap:wrap; gap:12px; }
 .sl-footer-copy { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.04em; }
 .sl-footer-kyc { display:flex; gap:20px; }
-.sl-footer-kyc a { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.05em; text-transform:uppercase; text-decoration:none; }
+.sl-footer-kyc a { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.05em; text-transform:uppercase; text-decoration:none; cursor:pointer; padding:8px 0; min-height:44px; display:flex; align-items:center; }
 
+/* ── MOBILE — 768px ── */
 @media(max-width:768px) {
   .sl-topbar,.sl-hero-bar,.sl-invitation,.sl-footer { padding-left:24px; padding-right:24px; }
   .sl-col { padding-left:24px; padding-right:24px; }
@@ -130,8 +138,33 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   .sl-gap-num,.sl-inv-gap-num { font-size:56px; }
   .sl-sherpa-body,.sl-journey-copy,.sl-inv-copy { font-size:19px; }
   .sl-counters { gap:32px; }
-  .sl-record-entry { margin-bottom:56px; }
-  .sl-record-score { font-size:32px; }
+  .sl-record-strip { gap:16px; }
+  .sl-record-card { width:160px; }
+  .sl-record-img { width:160px; }
+  .sl-progression-note { flex-direction:column; }
+  .sl-hero-meta { flex-direction:column; align-items:flex-start; }
+}
+
+/* ── MOBILE — 600px ── */
+@media(max-width:600px) {
+  .sl-topbar { padding-left:16px; padding-right:16px; }
+  .sl-col { padding-left:16px; padding-right:16px; }
+  .sl-hero-bar { padding-left:16px; padding-right:16px; padding-bottom:28px; }
+  .sl-invitation { padding-left:16px; padding-right:16px; }
+  .sl-footer { padding-left:16px; padding-right:16px; flex-direction:column; align-items:flex-start; gap:16px; }
+  .sl-footer-kyc { flex-wrap:wrap; gap:16px; }
+  .sl-hero-name { font-size:24px; }
+  .sl-hero-score { font-size:36px; }
+  .sl-sherpa-body,.sl-journey-copy { font-size:18px; }
+  .sl-inv-copy { font-size:22px; }
+  .sl-inv-gap-num { font-size:48px; }
+  .sl-gap-num { font-size:48px; }
+  .sl-counter-num { font-size:40px; }
+  .sl-record-card { width:140px; }
+  .sl-record-img { width:140px; }
+  .sl-counters { gap:24px; }
+  .sl-dim-row { flex-direction:column; gap:4px; }
+  .sl-record-meta { gap:16px; }
 }
 </style>
 </head>
@@ -154,9 +187,16 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   <!-- ═══ HERO ═══ -->
   {% if user_hero and user_hero.thumb_url %}
   <div class="sl-hero">
-    <img src="{{ user_hero.thumb_url }}" alt="Your last photograph">
+    <img src="{{ user_hero.thumb_url }}" alt="Your best photograph so far">
     <div class="sl-hero-bar">
-      <div class="sl-hero-greeting">Good morning</div>
+      <div class="sl-hero-position">
+        <span class="sl-hero-tier-pos">{{ user_hero.tier }}</span>
+        {% if haiku_percentile %}
+        <span class="sl-hero-pos-sep">·</span>
+        <span class="sl-hero-percentile">Top {{ haiku_percentile }}%</span>
+        {% endif %}
+      </div>
+      <div class="sl-hero-greeting" id="sl-greeting">Good morning</div>
       <div class="sl-hero-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
       <div class="sl-hero-meta">
         <div class="sl-hero-standing">
@@ -262,23 +302,20 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
         {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}. This is what your record looks like so far.
       </div>
       {% if images %}
-      <div class="sl-record">
+      <div class="sl-record-strip">
         {% for img in images %}
         {% if img.thumb_url %}
-        <div class="sl-record-entry">
+        <div class="sl-record-card">
           <img class="sl-record-img" src="{{ img.thumb_url }}" alt="Evaluation {{ loop.revindex }} — {{ img.genre }}">
           <div class="sl-record-meta">
-            <div class="sl-record-left">
-              <span class="sl-record-eval">Evaluation {{ loop.revindex }}</span>
-              <span class="sl-record-name">{{ img.genre }}</span>
-              <span class="sl-record-genre">{{ img.tier }}</span>
-            </div>
-            <div class="sl-record-right">
-              {% if img.score %}
+            <span class="sl-record-eval">Evaluation {{ loop.revindex }}</span>
+            <span class="sl-record-name">{{ img.genre }}</span>
+            {% if img.score %}
+            <div class="sl-record-score-row">
               <span class="sl-record-score">{{ "%.2f"|format(img.score) }}</span>
-              {% endif %}
               <span class="sl-record-tier">{{ img.tier }}</span>
             </div>
+            {% endif %}
           </div>
         </div>
         {% endif %}
@@ -288,11 +325,14 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
       <div class="sl-progression-note">
         <span class="sl-progression-text">Your record is accumulating. Each photograph stays — nothing resets.</span>
         {% if best_score.val > 0 %}
-        {% set best_tier = '' %}
-        {% for img in images %}{% if img.score == best_score.val %}{% set best_tier = img.tier %}{% endif %}{% endfor %}
-        <span class="sl-progression-best">Best &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }} &nbsp;·&nbsp; {{ best_tier }}</span>
+        {% set best_tier = namespace(val='') %}
+        {% for img in images %}{% if img.score == best_score.val %}{% set best_tier.val = img.tier %}{% endif %}{% endfor %}
+        <span class="sl-progression-best">Best &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }} &nbsp;·&nbsp; {{ best_tier.val }}</span>
         {% endif %}
       </div>
+      {% if images %}
+      <a href="{{ url_for('try_gallery') }}" class="sl-record-link">View my full record →</a>
+      {% endif %}
     </div>
 
     <div class="sl-rule"></div>
@@ -329,7 +369,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   <div class="sl-invitation">
     <div class="sl-inv-inner">
       <div class="sl-inv-eyebrow">The League of Photographers</div>
-      {% if evals_remaining > 0 %}
+      {% if evals_used > 0 %}
       <div class="sl-inv-copy">
         Your record is growing. Your next photograph continues it.
       </div>
@@ -342,8 +382,8 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
         <div class="sl-inv-gap-num">{{ "%.2f"|format(gap) }}</div>
         <div class="sl-inv-gap-label">Points separate your best from Grandmaster</div>
       </div>
-      <a href="{{ url_for('try_page') }}" class="sl-inv-cta">Start your record →</a>
-      <div class="sl-inv-secondary">I am here to explore. This is enough for now.</div>
+      <a href="{{ url_for('try_page') }}" class="sl-inv-cta">{% if evals_used > 0 %}Continue your record →{% else %}Start your record →{% endif %}</a>
+      <span class="sl-inv-secondary">I am here to explore. This is enough for now.</span>
     </div>
   </div>
 
@@ -359,5 +399,15 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   </div>
 
 </div>
+
+<script>
+// Time-aware greeting
+(function() {
+  var h = new Date().getHours();
+  var g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  var el = document.getElementById('sl-greeting');
+  if (el) el.textContent = g;
+})();
+</script>
 </body>
 </html>
