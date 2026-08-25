@@ -1,1466 +1,381 @@
+{# image_detail.html — Production Score Card for paid subscriber evaluations
+   Route: /image/<image_id>  →  image_detail() in app-staging.py
+   Visual specification: APPROVED sl_scorecard_final.html (same as Haiku)
+   Data contract: image.* ORM object + pre-parsed audit vars (SL-194, app-staging.py 181.51)
+   Extends base.html — inherits nav, mobile nav, footer, KYC.
+   DO NOT REDESIGN. DO NOT ADD UI. IMPLEMENT THE APPROVED DESIGN.
+#}
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.14-staging (Session 190, 2026-08-19 — HOTFIX: image_id undefined — url_for calls now use image.id. RETAINS 181.13.)
-{# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
-   Session 183 — 2026-08-14 (second pass)
-   TYPOGRAPHY + LAYOUT PASS:
-   1. Body copy up 1pt: 15px->16px across em-para, takeaway, accordion body, location, bow
-   2. Line-height 1.75->1.85 throughout — more breathing room between lines
-   3. Para spacing increased: 14px->18-20px between paragraphs
-   4. Bullet spacing increased: 14px->18px between items
-   5. Action bar: 2-column grid -> single column rows, full width buttons, 14px font
-   6. Mobile accordion padding matched to desktop
-   RETAINS image_detail-181.11-staging (trust marks, score block, summary box,
-   dimension bars, location card, body of work, eval means open by default).
 
-   SCORECARD REDESIGN — visual presentation layer only, zero data/logic change.
-   Strategy: "One photograph shows us a moment. Your photographs show us how you see."
-   Changes:
-   1. TRUST MARKS ROW — three badges (AI Verified · Calibrated 312 images · Expert Scored)
-      appear immediately below the photo, before the score. Makes the credential visible
-      before the number, not buried in right rail.
-   2. SCORE BLOCK — tier name above, score large (7.48/10 two decimal places), percentile
-      below. Cleaner, more legible at 70yr. Score now reads as the conclusion of the trust
-      marks, not the opening statement.
-   3. SUMMARY BOX — new section immediately below score: Strength pill + one line,
-      Next Leap pill + one line. The two most important findings above the fold,
-      visible without scrolling or tapping.
-   4. DIMENSIONS — on mobile, all 5 now shown as colour-coded bars. Green = strongest,
-      red = weakest. No more "See all 5 dimensions" tap required. LENSIC shows all 5
-      immediately; so do we.
-   5. LOCATION ADVISORY — promoted from accordion to named green card with pin icon.
-      "Your next shot — bookmarked" is now a first-class section, not buried inside
-      "What you need to do". This is the differentiator no competitor has.
-   6. BODY OF WORK — promoted from accordion to named numbered section with 1/2/3 frames.
-      Visible without tapping.
-   RETAINS image_detail-181.10-staging (all Jinja2 data logic, JS, audit field mapping,
-   zoom viewer, render-text, accordion JS, DDI tap, mobile media queries). #}
-{# SL-VERSION: image_detail-181.10-staging
-   Session 182 — 2026-08-14
-   NINE CHANGES, all requested by the founder:
-
-   -6. PERCENTILE COPY set to the founder's exact wording, after his own
-       research on how percentile is conventionally shown and what fits the
-       card's fixed footprint. There is no standard glyph for percentile (no
-       equivalent of "%"), so the ordinal carries it.
-         header   : "91st Percentile"   (capital P; ordinal, not "91% percentile",
-                                         which reads as "91 percent percentile")
-         sub-copy : "Higher than 91% of images in the League."
-       "images in the League" replaces "photographs evaluated on Shutter League"
-       — 15 characters shorter, holds to two lines on a phone, and stays inside
-       KYC (no "score", no "rank").
-       The hero line under the evaluation number now carries the same copy on one
-       line, so the two places on the page cannot drift apart again.
-       EDGE CASES, both live and both awkward — founder has not chosen wording:
-         top_pct 100 -> "0th Percentile / Higher than 0% of images in the League."
-         top_pct 0   -> "100th Percentile / Higher than 100% of images..." which
-                        is self-contradictory: it cannot be higher than itself.
-       Flagged, not fudged.
-
-   -5. PERCENTILE NOW STATED THE STANDARD WAY. compute_percentile() returns
-       top_pct = the share of the pool AT OR ABOVE this photograph, so LOWER is
-       better. The page printed "Top 95%", which reads as praise and means the
-       opposite. Verified against real scorecards: 8.10 -> "Top 41%", 6.40 ->
-       "Top 95%", 5.60 -> "Top 100%". Now shown as GMAT/GRE/SAT do it: the share
-       you BEAT, as an Nth percentile. 6.40 becomes "5th percentile - higher than
-       5% of photographs evaluated". Ordinals handled (11th, 12th, 13th, not
-       11st). The standing bar now GROWS with performance - it was filled to
-       top_pct, so a weak photograph drew a long green bar. Green is reserved for
-       the upper half; below that it is neutral, because a 5th percentile should
-       not be coloured like good news.
-       NOTE: top_pct 100 renders "0th percentile". Honest but awkward English.
-       Flagged, not fudged.
-
-   -4. ONE NAME PER DIMENSION. Three naming systems ran at once - "Affective Q."
-       in the tiles, "Affective Quotient" mid-page, "Whether it made one feel
-       something" in the trend charts. The same 7.4 appeared under two names on
-       one screen. Single set now: Difficulty, Visual Impact, Timing, Disruption,
-       Emotion. Both internal lists (_ddi_pairs and _ddi_cols) were updated - they
-       must stay identical, because "Your Strongest" and "Your Next Leap" are
-       decided by matching the name string.
-       STILL TO MATCH: app.py 12193-12195 and 12493-12495 label the trend charts
-       with sentences. Template-only change; app.py untouched this session.
-
-   -3. "APEX DEPTH DIMENSION INDEX (DDI) ANALYSIS" is now "The Five Dimensions".
-       sl_audit.py lists DDI as internal-only jargon, and it was the largest
-       heading on the page.
-
-   -2b. FULL-SIZE PHOTOGRAPH VIEWER. The photograph is letterboxed into a 320px
-       band, 220px on a phone - the subject of the entire page is the smallest
-       thing on it. Tapping the photograph, or the "View full size" button in the
-       corner, opens it at the largest size the screen allows. Escape or the close
-       button dismisses it; tapping the photograph inside does not. The button
-       exists because a bare tappable image is invisible affordance. 44px target.
-       On mobile the overlay clears the bottom nav and the home indicator.
-
-
-   -2. ACCORDION PREVIEW LINES no longer show a stray bullet marker. The eight
-       teasers are truncated previews of text that carries markers, and they are
-       not .sc-render-text, so the JS never touched them — "What stood out ▪",
-       "Balanced · Light editing ▪". Measured after 181.7: 12 list items created
-       but 3 markers still on the page, all of them teasers. Markers are now
-       stripped in Jinja before truncate(90). Verified by rendering all three
-       marker characters plus clean text.
-
-
-   -1. LONG-FORM TEXT NOW READABLE. The page's text renderer split on U+25A0
-       (BLACK SQUARE) but the scoring engine emits U+25AA (BLACK SMALL SQUARE).
-       Two different characters, so the split never matched: every long block
-       rendered as one unbroken slab with the markers stranded mid-sentence.
-       Measured on staging — querySelectorAll('.sc-render-text p') returned 0.
-       The email path already handled this correctly (app.py splits on U+25AA);
-       only this page was left behind. The renderer now accepts U+25A0, U+25AA
-       and U+2022, and multi-item text becomes a real <ul> with the marker in
-       the margin and a hanging indent, so wrapped lines align under the first
-       word instead of under the bullet. Spacing 10px to 14px desktop / 16px
-       mobile. Tested against the live 'White Dove' scorecard text.
-
-
-   0. "Generate My Evolving Eye Report" REMOVED from the action bar. It was a
-      link to /my-eye, not a generator — see the comment at the action bar.
-
-
-   1. DELETE control added. Staging had none at all; production has one, so a
-      photographer on staging could not remove their own photograph. POST, not
-      a link — a GET could be destroyed by a crawler or a browser prefetch.
-      Shown only to the owner: delete_image() is owner-only and abort(403)s
-      everyone else, so offering the button to non-owners would only produce a
-      refusal. Passes 'from' through so the route returns to My Gallery when
-      that is where the photographer came from.
-
-   2. DELIVERY-STANDARD PASS. This file failed sl_audit.py on 17 checks before
-      this session — it had never passed. Fixed:
-        · 68 declarations between 9px and 12px lifted to a 13px floor, 14px
-          inside the mobile breakpoint. Nothing was removed or restructured;
-          text is simply larger. Smallest type grew ~45%.
-        · line-height 1.25 / 1.3 raised to 1.6
-        · min-height:44px on every button — mobile and iPad tap targets
-        · KYC wording: "All scores out of 10" → "All evaluations out of 10";
-          "Final score calibrated" → "Final evaluation calibrated"; the SEO
-          description said "Scored 8.42" → "Evaluated 8.42"; three Jinja
-          comments reworded (the audit sweeps comments too)
-        · canonical URL block added, pointing at this image
-        · robots noindex, nofollow — these are private evaluations and must not
-          be indexed. Requires base.html 180.8, which turns the hardcoded
-          "index, follow" into {% block robots %}. Deploy base.html first.
-
-   STILL FAILING — 6 checks, deliberately not addressed:
-      The CSI (Cultural Saturation Intelligence) notice cards. The audit expects
-      two conditions on this page — the own-duplicate one and the threshold one
-      (see sl_audit.py for the exact names; they are deliberately NOT written
-      here, because the audit checks by substring and naming them in a comment
-      makes the check pass while the cards remain unbuilt). The route does not
-      pass those variables. Building markup that can never render would
-      make the audit green while hiding a genuinely missing feature, so it has
-      been left failing on the founder's instruction. Note that CSI is partly
-      live: app.py reads csi_genre_weights during scoring and injects the
-      saturation boosts into the evaluation prompt.
-
-   Retains image_detail-176.11 (Session 176 — no sidenav, full-width photo,
-   DDI below photo, meaning-before-takeaway, accordions closed, correct audit
-   field mapping, no dark scorecard backgrounds, B&W edit guard, Ernst Haas
-   dedup via JS, master names bold and linkable). #}
-{% block title %}{{ image.asset_name or 'Evaluation' }} — Shutter League{% endblock %}
-{% block meta_description %}Shutter League evaluation for {{ image.asset_name or 'your photograph' }}. Evaluated {{ '%.2f'|format(image.score) if image.score else '' }} — {{ image.tier or '' }}.{% endblock %}
-{# Private evaluation — must never be indexed. base.html exposes
-   {% block robots %} for exactly this. See SL-181.5. #}
-{% block robots %}noindex, nofollow{% endblock %}
-{% block canonical %}https://shutterleague.com{{ url_for('image_detail', image_id=image.id) }}{% endblock %}
-{% block body_class %}page-scorecard{% endblock %}
-
-{% block extra_head %}
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-store">
-{% endblock %}
+{% block title %}{{ image.asset_name or 'Evaluation' }} — Score Card — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
-/* =====================================================
-   SL image_detail.html — v176.11
-   LOCKED: session 176 · 2026-08-09
-===================================================== */
+/* SCORECARD — overrides and additions on top of base */
+main { padding:0 !important; background:#E8E5DF; }
+@media (max-width:900px) { main { padding:0 !important; } }
+@media (max-width:768px) { main { padding:0 !important; } }
+@media (max-width:600px) { main { padding:0 !important; } }
 
-/* ── SUPPRESS BASE CHROME ── */
-body.page-scorecard .sl-top-nav,
-body.page-scorecard nav.sl-top-nav       { display:none !important }
-body.page-scorecard .sl-bottom-nav       { display:none !important }
-body.page-scorecard footer               { display:none !important }
-body.page-scorecard .nav-mobile          { display:none !important }
-body.page-scorecard .nav-mobile-login    { display:none !important }
-body.page-scorecard .flash-container     { display:none !important }
-body.page-scorecard #backToTop           { display:none !important }
-body.page-scorecard > main,
-body.page-scorecard main                 { padding:0 !important; max-width:none !important; margin:0 !important; background:#F6F2E9 !important }
-body.page-scorecard                      { padding-top:0 !important; background:#F6F2E9 !important; margin-top:0 !important }
+/* PAGE */
+.sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
 
-/* ── TOKENS ── */
-*  { box-sizing:border-box; margin:0; padding:0 }
-:root{
-  --sc-gold:#D6A428;   --sc-gold-dk:#A37B2C;   --sc-dark:#1A1814;
-  --sc-cream:#F6F2E9;  --sc-border:#E8E4DA;    --sc-muted:#6B6B6B;
-  --sc-green:#2A7A3A;  --sc-text:#1A1A18;
-  --sc-pista:#E8F5E2;  --sc-pista-b:#C5E0BB;
-  --sc-blue:#2C5F8A;   --sc-blue-lt:#E8F0F8;
+/* TOP BAR */
+.sl-topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 48px;
+  border-bottom:0.5px solid rgba(26,39,68,0.10);
+  background:#F5F3EF;
 }
-body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
-
-/* ── TOPNAV ── */
-.sc-topnav{background:#111214;display:flex;align-items:center;padding:0 20px;height:54px;gap:8px}
-.sc-logo-area{display:flex;align-items:center;gap:8px}
-.sc-logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
-.sc-nl{padding:5px 10px;font-size:13px;color:rgba(255,255,255,.45);border-radius:5px;text-decoration:none}
-.sc-nl:hover{color:#fff}
-.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sc-dark)}
-
-/* ── LAYOUT: 2-column, no sidenav ── */
-.sc-wrap{max-width:1200px;margin:0 auto;background:var(--sc-cream)}
-.sc-shell{display:grid;grid-template-columns:1fr 220px;background:var(--sc-cream)}
-
-/* ── CENTRE ── */
-.sc-centre{padding:16px 18px;display:flex;flex-direction:column;min-width:0}
-.sc-back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
-.sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
-.sc-back-lnk:hover{color:var(--sc-dark)}
-.sc-page-lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-
-/* ── SHARED CARD ── */
-.sc-card{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px}
-.sc-card-body{padding:17px 20px}
-.sc-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.sc-card-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-.sc-card-link{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-gold-dk);text-decoration:none}
-.sc-card-link:hover{text-decoration:underline}
-
-/* ── PHOTO HERO — fills frame ── */
-.sc-photo-hero{width:100%;border-radius:12px;overflow:hidden;position:relative;margin-bottom:10px;background:var(--sc-dark)}
-.sc-photo-hero img{width:100%;height:320px;object-fit:contain;display:block;background:var(--sc-dark)}
-.sc-photo-hero .sc-photo-placeholder{width:100%;height:320px;background:var(--sc-dark);display:flex;align-items:center;justify-content:center}
-.sc-photo-exif{position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap}
-.sc-photo-exif span{font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:3px}
-.sc-photo-copyright{position:absolute;bottom:8px;right:10px;font-size:13px;color:rgba(255,255,255,.5)}
-/* HUD pill on photo */
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ── REVELATION ── */
-.sc-revelation{font-size:16px;color:var(--sc-text);line-height:1.85;border-left:3px solid var(--sc-gold);padding-left:14px;margin-bottom:16px}
-.sc-revelation em{font-style:italic}
-.sc-dist-wrap{padding-top:12px;border-top:0.5px solid var(--sc-border)}
-.sc-dist-lbl{font-size:13px;color:var(--sc-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
-.sc-dist-bar-wrap{position:relative;height:6px;background:var(--sc-border);border-radius:3px}
-.sc-dist-fill{position:absolute;left:0;top:0;height:100%;background:var(--sc-gold);border-radius:3px}
-.sc-dist-val{position:absolute;top:-14px;transform:translateX(-50%);font-size:13px;font-weight:700;color:var(--sc-gold)}
-.sc-dist-tri{position:absolute;top:6px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--sc-gold)}
-.sc-dist-ns{display:flex;justify-content:space-between;font-size:13px;color:var(--sc-muted);margin-top:4px}
-
-/* ── DDI STRIP ── */
-.sc-ddi-strip{display:grid;grid-template-columns:repeat(5,1fr);border:0.5px solid var(--sc-border);border-radius:8px;overflow:hidden}
-.sc-ddi-col{padding:11px 7px;text-align:center;border-right:0.5px solid var(--sc-border);cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
-.sc-ddi-col:last-child{border-right:none}
-.sc-ddi-col:hover{background:var(--sc-cream)}
-.sc-ddi-col.sc-strongest{background:#fffbef}
-.sc-ddi-col.sc-leap{background:#f5f3ff}
-.sc-ddi-col.active{background:var(--sc-cream);box-shadow:inset 0 -2px 0 var(--sc-gold)}
-.sc-ddi-em{font-size:15px;margin-bottom:4px}
-.sc-ddi-nm{font-size:8.5px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.6;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
-.sc-ddi-sr{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;min-height:26px}
-.sc-ddi-num{font-size:20px;font-weight:700;color:var(--sc-dark)}
-.sc-ddi-ar{font-size:13px;margin-left:1px}
-.sc-ddi-ar.u{color:#22c55e}.sc-ddi-ar.d{color:#ef4444}.sc-ddi-ar.f{color:var(--sc-muted)}
-.sc-ddi-bar{height:3px;background:#e8e4da;border-radius:2px;margin:4px 4px 6px;overflow:hidden}
-.sc-ddi-bar-fill{height:100%;border-radius:2px}
-.sc-ddi-tag{font-size:13px;font-weight:600;padding:2px 6px;border-radius:10px;display:inline-block}
-.sc-dt-stg{background:#fef3c7;color:#92400e}
-.sc-dt-leap{background:#ede9fe;color:#4a3280}
-.sc-dt-good{background:#f1f5f9;color:#475569}
-.sc-dt-str{background:#dcfce7;color:#166534}
-.sc-dt-exc{background:#dbeafe;color:#1e40af}
-.sc-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--sc-cream);border-radius:8px;font-size:13px;color:var(--sc-text);line-height:1.65}
-.sc-ddi-hint{font-size:13px;color:var(--sc-muted);text-align:center;margin-top:7px}
-
-/* ── WHAT THIS EVALUATION MEANS — premium gold corners ── */
-.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;overflow:hidden;position:relative}
-.sc-eval-means::before{content:'';position:absolute;top:0;left:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:12px 0 0 0;pointer-events:none;z-index:1}
-.sc-eval-means::after{content:'';position:absolute;top:0;right:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 12px 0 0;pointer-events:none;z-index:1}
-.sc-em-bl{position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:0 0 0 12px;pointer-events:none;z-index:1}
-.sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
-.sc-em-inner{padding:17px 20px}
-.sc-em-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
-.sc-em-preview.clamped,.sc-ta-preview.clamped{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.sc-em-para{font-size:16px;color:var(--sc-text);line-height:1.85;margin-bottom:20px;padding-bottom:20px;border-bottom:0.5px solid var(--sc-border)}
-.sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.sc-em-para strong{color:var(--sc-dark);font-weight:700}
-.sc-em-para a{color:var(--sc-gold-dk);text-decoration:underline}
-.sc-rm{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;margin-top:10px;display:inline-block}
-
-/* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
-.sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
-.sc-ta-eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:16px;color:var(--sc-dark);line-height:1.85}
-
-.sc-ta-full p,.sc-ta-preview p{margin-bottom:14px}
-.sc-ta-full p:last-child{margin-bottom:0}
-.sc-ta-full strong,.sc-ta-preview strong{font-weight:700;color:var(--sc-dark)}
-.sc-ta-full a,.sc-ta-preview a{color:var(--sc-gold-dk);text-decoration:underline}
-
-/* ── ACCORDION ── */
-.sc-acc-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);overflow:hidden;margin-bottom:10px}
-.sc-acc-sec-hdr{padding:13px 18px 11px;border-bottom:0.5px solid var(--sc-border)}
-.sc-acc-sec-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
-.sc-acc-row{border-bottom:0.5px solid var(--sc-border)}
-.sc-acc-row:last-child{border-bottom:none}
-.sc-acc-head{display:flex;align-items:flex-start;gap:10px;padding:13px 17px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s}
-.sc-acc-head:hover{background:var(--sc-cream)}
-.sc-acc-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
-.sc-acc-col{flex:1;min-width:0}
-.sc-acc-title{font-size:14px;font-weight:600;color:var(--sc-dark);line-height:1.6}
-.sc-acc-teaser{font-size:13px;color:var(--sc-muted);margin-top:3px;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
-.sc-acc-chev{font-size:18px;color:var(--sc-muted);flex-shrink:0;margin-top:2px;transition:transform .2s;display:inline-block;line-height:1}
-.sc-acc-row.open .sc-acc-chev{transform:rotate(180deg)}
-/* All accordions CLOSED by default */
-.sc-acc-body{display:none;padding:8px 17px 18px 53px;font-size:16px;color:var(--sc-text);line-height:1.85}
-.sc-acc-row.open .sc-acc-body{display:block}
-.sc-acc-body p{margin-bottom:14px}
-.sc-acc-body p:last-child{margin-bottom:0}
-.sc-acc-body strong{color:var(--sc-dark);font-weight:700}
-.sc-acc-body a{color:var(--sc-gold-dk);text-decoration:underline}
-.sc-acc-body ul{padding-left:18px;margin-top:6px;margin-bottom:8px}
-.sc-acc-body ul li{margin-bottom:10px;line-height:1.85}
-
-/* ── NEXT SHOT — cream/green, NEVER dark on scorecard ── */
-.sc-next-shot{background:var(--sc-pista);border:1px solid var(--sc-pista-b);border-radius:10px;padding:15px 16px;margin:8px}
-.sc-ns-eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-green);margin-bottom:6px}
-.sc-ns-location{font-size:15px;font-weight:600;color:var(--sc-dark);margin-bottom:5px}
-.sc-ns-spec{display:flex;align-items:flex-start;gap:7px;margin-bottom:4px}
-.sc-ns-spec-lbl{font-size:13px;font-weight:600;color:var(--sc-muted);letter-spacing:.05em;text-transform:uppercase;width:50px;flex-shrink:0;padding-top:2px}
-.sc-ns-spec-val{font-size:13px;color:var(--sc-text);line-height:1.6}
-.sc-ns-cta-row{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
-.sc-ns-btn{min-height:44px;box-sizing:border-box;background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
-.sc-ns-btn:hover{background:var(--sc-gold-dk);color:#fff}
-.sc-ns-btn-ghost{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:8px 12px;cursor:pointer;text-decoration:none}
-
-/* ── DEVELOPING / SPARKLINE ── */
-.sc-dev-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:16px 18px;margin-bottom:10px}
-.sc-trend-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fffbef;border:1px solid var(--sc-gold);border-radius:20px;font-size:13px;font-weight:600;color:var(--sc-gold-dk)}
-
-/* ── ACTION BAR ── */
-.sc-act-bar{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);padding:12px 17px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.sc-btn-gold{min-height:44px;box-sizing:border-box;background:var(--sc-gold);color:var(--sc-dark);font-size:14px;font-weight:700;padding:11px 17px;border-radius:7px;border:none;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none;width:100%}
-.sc-btn-gold:hover{background:var(--sc-gold-dk);color:#fff}
-.sc-btn-ghost{min-height:44px;box-sizing:border-box;font-size:14px;color:var(--sc-text);background:transparent;border:1px solid var(--sc-border);border-radius:7px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none;width:100%}
-.sc-btn-ghost:hover{background:var(--sc-cream)}
-.sc-btn-danger{color:#B3261E;border-color:#B3261E;background:transparent}.sc-btn-danger:hover{background:#FDECEA}
-.sc-btn-back{min-height:44px;box-sizing:border-box;font-size:14px;color:var(--sc-muted);background:transparent;border:none;padding:11px 0;cursor:pointer;text-decoration:none;text-align:center;width:100%}
-
-/* ── RIGHT RAIL ── */
-.sc-rpanel{padding:16px 14px;display:flex;flex-direction:column;gap:12px;border-left:0.5px solid var(--sc-border);background:#fff;width:220px;flex-shrink:0}
-.sc-rl{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:7px}
-.sc-rcard{background:var(--sc-cream);border-radius:9px;border:0.5px solid var(--sc-border);padding:12px}
-.sc-rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)}
-.sc-rr:last-child{border-bottom:none}
-.sc-rk{font-size:13px;color:var(--sc-muted)}
-.sc-rv{font-size:13px;font-weight:600;color:var(--sc-text)}
-.sc-rv.gd{color:var(--sc-gold-dk)}.sc-rv.gn{color:var(--sc-green)}
-
-/* ── EVALUATED BY SL BADGE ── */
-.sc-ev-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:5px;font-size:13px;color:var(--sc-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
-
-/* ── FOOTER ── */
-.sc-footer{background:var(--sc-dark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.sc-footer-text{font-size:13px;color:rgba(255,255,255,.4)}
-.sc-footer-link{font-size:13px;color:var(--sc-gold);font-weight:600;text-decoration:none}
-.sc-footer-link:hover{text-decoration:underline}
-
-/* ── SL-181.11 TRUST MARKS ── */
-.sc-trust-row{display:flex;gap:7px;padding:10px 14px;border-bottom:0.5px solid var(--sc-border);flex-wrap:wrap;background:#fff;border-radius:0}
-.sc-trust-badge{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:4px 9px;border-radius:20px;white-space:nowrap}
-.sc-trust-ai{background:#e8f5e2;color:#2A7A3A;border:0.5px solid #C5E0BB}
-.sc-trust-cal{background:#ede9fe;color:#4a3280;border:0.5px solid #c4b5fd}
-.sc-trust-exp{background:#fff8e6;color:#92400e;border:0.5px solid #fde68a}
-
-/* ── SL-181.11 EVALUATION BLOCK ── */
-.sc-eval-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;padding:16px 18px}
-.sc-eval-tier-line{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sc-muted);margin-bottom:4px;font-weight:600}
-.sc-eval-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.sc-eval-left{}
-.sc-eval-num{font-size:56px;font-weight:700;color:var(--sc-dark);line-height:1;letter-spacing:-1px}
-.sc-eval-denom{font-size:20px;color:var(--sc-muted);font-weight:400}
-.sc-eval-pct{font-size:13px;color:var(--sc-muted);margin-top:5px}
-.sc-eval-pct strong{color:var(--sc-green)}
-.sc-eval-right{text-align:right;flex-shrink:0}
-.sc-genre-pill{display:inline-block;font-size:13px;color:var(--sc-muted);background:var(--sc-cream);border:0.5px solid var(--sc-border);padding:3px 9px;border-radius:12px;margin-bottom:6px}
-
-/* ── SL-181.11 SUMMARY BOX ── */
-.sc-summary-box{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.sc-summary-line{display:flex;align-items:flex-start;gap:8px;font-size:15px;line-height:1.7;color:var(--sc-dark)}
-.sc-pill-strength{display:inline-block;background:#e8f5e2;color:#2A7A3A;font-size:13px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px}
-.sc-pill-leap{display:inline-block;background:#ede9fe;color:#4a3280;font-size:13px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px}
-.sc-summary-divider{height:0.5px;background:var(--sc-border)}
-
-/* ── SL-181.11 DIMENSION BARS (mobile + desktop) ── */
-.sc-dim-bars{display:flex;flex-direction:column;gap:9px;margin-top:10px}
-.sc-dim-row{display:flex;align-items:center;gap:10px}
-.sc-dim-name{font-size:13px;color:var(--sc-muted);width:80px;flex-shrink:0}
-.sc-dim-bar-wrap{flex:1;height:5px;background:var(--sc-border);border-radius:3px;overflow:hidden}
-.sc-dim-bar-fill{height:100%;border-radius:3px}
-.sc-dim-score{font-size:13px;font-weight:600;color:var(--sc-dark);width:32px;text-align:right;flex-shrink:0}
-.sc-dim-tag-sm{font-size:13px;font-weight:600;width:70px;text-align:right;flex-shrink:0}
-
-/* ── SL-181.11 LOCATION CARD (promoted) ── */
-.sc-location-card{background:#e8f5e2;border:1px solid var(--sc-pista-b);border-radius:12px;margin-bottom:10px;padding:15px 16px}
-.sc-location-eyebrow{font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--sc-green);margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.sc-location-title{font-size:15px;font-weight:600;color:var(--sc-dark);margin-bottom:5px}
-.sc-location-body{font-size:15px;color:#1a3a1a;line-height:1.8}
-.sc-location-cta{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:13px;font-weight:700;color:var(--sc-dark);background:var(--sc-gold);padding:8px 16px;border-radius:7px;text-decoration:none;min-height:44px;box-sizing:border-box}
-
-/* ── SL-181.11 BODY OF WORK (promoted) ── */
-.sc-bow-card{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;padding:15px 17px}
-.sc-bow-hdr{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:10px}
-.sc-bow-intro{font-size:14px;color:var(--sc-text);line-height:1.65;margin-bottom:12px}
-.sc-bow-frames{display:flex;flex-direction:column;gap:10px}
-.sc-bow-frame{display:flex;gap:11px;align-items:flex-start}
-.sc-bow-num{font-size:13px;font-weight:700;color:#fff;background:var(--sc-gold-dk);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.sc-bow-text{font-size:15px;line-height:1.8;color:var(--sc-text)}
-
-/* ══════════════════════════════════
-   IPAD 768-1023
-══════════════════════════════════ */
-
-/* ── SL-181.7 — READABLE LONG-FORM TEXT ─────────────────────────────────────
-   Bullets are real list items now. The marker sits in the margin and the text
-   runs in its own column, so a wrapped line aligns under the first WORD, not
-   under the bullet — that hanging indent is the whole difference between a
-   list you can scan and a paragraph with squares in it.
-   Spacing was 10px between items, which read as one mass. Now 14px, with the
-   line-height already at 1.75. */
-.sc-render-text .sc-bullets{
-  list-style:none;
-  margin:0;
-  padding:0;
+.sl-topbar-back {
+  font-size:13px; color:rgba(26,39,68,0.42);
+  letter-spacing:0.08em; text-transform:uppercase; text-decoration:none;
 }
-.sc-render-text .sc-bullets li{
-  position:relative;
-  padding-left:22px;          /* the text column */
-  margin-bottom:18px;         /* air between points */
-  line-height:1.75;
+.sl-topbar-back:hover { color:#C8A84B; }
+.sl-topbar-actions {
+  display:flex; gap:28px;
+  font-size:13px; color:rgba(26,39,68,0.38);
+  letter-spacing:0.06em; text-transform:uppercase;
 }
-.sc-render-text .sc-bullets li:last-child{margin-bottom:0}
-.sc-render-text .sc-bullets li::before{
-  content:"\25AA";            /* the marker, drawn by CSS not left in the text */
-  position:absolute;
-  left:4px;
-  top:0;
-  color:var(--sc-gold-dk);
-  font-size:15px;
-  line-height:1.75;
-}
-.sc-render-text p{
-  margin:0 0 16px;
-  line-height:1.85;
-}
-.sc-render-text p:last-child{margin-bottom:0}
+.sl-topbar-actions a { color:inherit; text-decoration:none; }
+.sl-topbar-actions a:hover { color:#C8A84B; }
 
-
-/* ── SL-181.9 — FULL-SIZE PHOTOGRAPH VIEWER ─────────────────────────────────
-   The scorecard letterboxes the photograph into a 320px band (220px on a
-   phone). Everything on the page is about that photograph, and it is the
-   smallest thing on it. This opens it at the largest size the screen allows. */
-.sc-zoom-btn{
-  position:absolute; bottom:10px; left:10px;
-  display:inline-flex; align-items:center; gap:6px;
-  min-height:44px; padding:0 14px;
-  font-size:13px; font-weight:600; letter-spacing:.02em;
-  color:#fff; background:rgba(0,0,0,.55);
-  border:1px solid rgba(255,255,255,.28); border-radius:8px;
-  cursor:pointer; -webkit-tap-highlight-color:transparent;
-  transition:background .12s ease-out, transform .12s ease-out;
+/* PHOTOGRAPH */
+.sl-photo-wrap { width:100%; background:#0C1018; }
+.sl-photo-img { width:100%; height:auto; display:block; }
+.sl-photo-meta {
+  padding:13px 48px; background:#0C1018;
+  display:flex; justify-content:space-between; align-items:center;
 }
-.sc-zoom-btn:hover{background:rgba(0,0,0,.75)}
-.sc-zoom-btn:active{transform:scale(.96)}
-
-.sc-zoom-ov{
-  display:none; position:fixed; inset:0; z-index:9999;
-  background:rgba(0,0,0,.94);
-  align-items:center; justify-content:center;
-  padding:16px;
-}
-.sc-zoom-ov.open{display:flex}
-.sc-zoom-ov img{
-  max-width:100%; max-height:100%;
-  width:auto; height:auto; object-fit:contain;
-  border-radius:4px;
-}
-.sc-zoom-close{
-  position:absolute; top:14px; right:14px;
-  min-width:44px; min-height:44px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:26px; line-height:1; color:#fff;
-  background:rgba(255,255,255,.14); border:0; border-radius:10px;
-  cursor:pointer; -webkit-tap-highlight-color:transparent;
-}
-.sc-zoom-cap{
-  position:absolute; bottom:14px; left:0; right:0;
-  text-align:center; font-size:14px; color:rgba(255,255,255,.75);
-  padding:0 16px; pointer-events:none;
-}
-@media (max-width:768px){
-  /* Clear of the bottom navigation bar and the home indicator. */
-  .sc-zoom-ov{padding:8px 8px calc(76px + env(safe-area-inset-bottom,0px))}
-  .sc-zoom-btn{bottom:8px; left:8px; font-size:14px}
-  .sc-zoom-cap{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.sl-photo-meta span {
+  font-size:13px; color:rgba(255,255,255,0.30);
+  letter-spacing:0.08em; text-transform:uppercase;
 }
 
-@media (max-width:1023px) and (min-width:769px){
-  .sc-shell{grid-template-columns:1fr 200px}
-  .sc-rpanel{width:200px}
+/* EDITORIAL CONTENT COLUMN */
+.sl-content { max-width:860px; margin:0 auto; padding:0 48px; }
+
+/* VERDICT */
+.sl-verdict { padding-top:60px; }
+.sl-score-line { display:flex; align-items:baseline; gap:14px; margin-bottom:10px; }
+.sl-score-num {
+  font-family:'Playfair Display',serif;
+  font-size:104px; font-weight:400; color:#1A2744;
+  line-height:1; letter-spacing:-0.04em;
+}
+.sl-score-denom { font-size:26px; color:rgba(26,39,68,0.25); font-weight:300; }
+.sl-tier-genre {
+  font-size:15px; letter-spacing:0.14em; text-transform:uppercase;
+  color:#C8A84B; font-weight:500; margin-bottom:28px;
+}
+.sl-tier-strip {
+  display:flex; flex-wrap:wrap; margin-bottom:20px;
+  border-bottom:0.5px solid rgba(26,39,68,0.09); padding-bottom:20px;
+}
+.sl-tier-item {
+  font-size:15px; letter-spacing:0.04em; text-transform:uppercase;
+  color:rgba(26,39,68,0.26); padding:8px 14px 8px 0; white-space:nowrap;
+}
+.sl-tier-item.active {
+  color:#1A2744; font-weight:600;
+  border-bottom:2px solid #C8A84B; margin-bottom:-0.5px;
+}
+.sl-percentile {
+  font-size:16px; color:rgba(26,39,68,0.48);
+  margin-bottom:64px; font-style:italic; line-height:1.65;
+}
+.sl-gold-rule { width:32px; height:1.5px; background:#C8A84B; margin-bottom:52px; }
+
+/* SECTION EYEBROW */
+.sl-eyebrow {
+  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.36); margin-bottom:28px;
 }
 
-/* ══════════════════════════════════
-   MOBILE ≤768px
-══════════════════════════════════ */
-/* Mobile breakpoint: max-width: 768px (also covers max-width: 600px and max-width: 480px) */
-@media (max-width:768px){
-  /* SL-181.7 — tighter text column on a phone, but keep the hanging indent */
-  .sc-render-text .sc-bullets li{padding-left:18px;margin-bottom:20px}
-  .sc-render-text .sc-bullets li::before{left:2px}
-  .sc-render-text p{margin:0 0 18px}
-
-  .sc-shell{display:block}
-  .sc-rpanel{display:none}
-  .sc-logo-text{display:none}
-  .sc-nav-links-wrap{display:none}
-  .sc-topnav{display:none!important}
-  .sc-centre{padding:11px 11px 80px}
-  .sc-photo-hero img{height:220px;object-fit:contain;background:var(--sc-dark)}
-  .sc-ddi-strip-desktop{display:none}
-  .sc-ddi-mobile{display:block}
-  .sc-acc-teaser{max-width:220px}
-  .sc-act-bar{gap:6px}
-  body.page-scorecard .sl-bottom-nav{display:flex !important}
-  /* SL-181.11 — accordion body: reduce left indent on mobile so text has room */
-  .sc-acc-body{padding:8px 13px 18px 17px;font-size:16px}
-  /* 70yr rule: raise small text on mobile */
-  .sc-ddi-nm{font-size:14px !important}
-  .sc-ddi-tag{font-size:14px !important}
-  .sc-ddi-hint{font-size:14px !important}
-  .sc-photo-exif span{font-size:14px !important}
-  .sc-ev-badge{font-size:14px !important}
-  .sc-card-title{font-size:14px !important}
-  .sc-acc-teaser{font-size:14px !important}
-  .sc-dist-lbl{font-size:14px !important}
-  .sc-dist-ns{font-size:14px !important}
+/* FIVE DIMENSIONS */
+.sl-dimensions { margin-bottom:64px; }
+.sl-dim-row {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:18px 0; border-bottom:0.5px solid rgba(26,39,68,0.08);
 }
-@media (min-width:769px){
-  .sc-ddi-mobile{display:none}
+.sl-dim-row:last-of-type { border-bottom:none; }
+.sl-dim-left { display:flex; flex-direction:column; gap:4px; }
+.sl-dim-official {
+  font-size:15px; letter-spacing:0.08em; text-transform:uppercase;
+  color:rgba(26,39,68,0.45); font-weight:500;
+}
+.sl-dim-plain { font-size:17px; color:#1A2744; line-height:1.3; }
+.sl-dim-right { display:flex; align-items:baseline; gap:16px; flex-shrink:0; padding-left:24px; }
+.sl-dim-val { font-size:28px; color:#1A2744; font-weight:500; font-variant-numeric:tabular-nums; }
+.sl-dim-tag { font-size:15px; letter-spacing:0.07em; text-transform:uppercase; min-width:86px; text-align:right; }
+.sl-dim-tag.strongest { color:#C8A84B; }
+.sl-dim-tag.gap       { color:rgba(26,39,68,0.30); }
+.sl-dim-tag.developing{ color:rgba(26,39,68,0.44); }
+.sl-dim-note { margin-top:24px; font-size:15px; color:rgba(26,39,68,0.38); font-style:italic; line-height:1.7; }
+
+/* NARRATIVE */
+.sl-narrative { margin-bottom:72px; border-top:0.5px solid rgba(26,39,68,0.08); padding-top:60px; }
+.sl-narrative-body {
+  font-size:21px; line-height:1.9; color:#1A2744;
+  font-family:'Playfair Display',serif; font-weight:400;
+}
+
+/* EDITORIAL BLOCKS */
+.sl-editorial { margin-bottom:72px; display:flex; flex-direction:column; gap:52px; }
+.sl-block-label {
+  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.36); margin-bottom:14px;
+}
+.sl-block-body { font-size:18px; line-height:1.85; color:#1A2744; }
+
+/* EYE BEHIND THIS */
+.sl-reference {
+  margin-bottom:0; border-top:0.5px solid rgba(26,39,68,0.08);
+  padding-top:56px; padding-bottom:64px;
+}
+.sl-ref-eyebrow {
+  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.36); margin-bottom:18px;
+}
+.sl-ref-name {
+  font-family:'Playfair Display',serif;
+  font-size:32px; color:#1A2744; margin-bottom:14px; margin-top:0; font-weight:400;
+}
+.sl-ref-desc { font-size:18px; color:rgba(26,39,68,0.58); line-height:1.8; margin-bottom:20px; }
+.sl-ref-link {
+  font-size:13px; color:#C8A84B;
+  letter-spacing:0.09em; text-transform:uppercase; text-decoration:none;
+}
+.sl-ref-link:hover { text-decoration:underline; }
+
+/* NEXT DECISION */
+.sl-conversion { background:#1A2744; padding:56px 48px; }
+.sl-conv-inner { max-width:760px; margin:0 auto; width:100%; }
+.sl-conv-count {
+  font-size:13px; color:rgba(255,255,255,0.32);
+  letter-spacing:0.08em; text-transform:uppercase; margin-bottom:16px;
+}
+.sl-conv-statement {
+  font-size:24px; color:rgba(255,255,255,0.88); line-height:1.65;
+  font-family:'Playfair Display',serif; margin-bottom:28px;
+}
+.sl-conv-primary {
+  font-size:17px; color:#F5C518; letter-spacing:0.03em;
+  line-height:1.5; margin-bottom:16px; display:block; text-decoration:none;
+}
+.sl-conv-primary:hover { text-decoration:underline; }
+.sl-conv-secondary {
+  font-size:15px; color:rgba(255,255,255,0.28);
+  line-height:1.5; display:block; text-decoration:none;
+}
+
+/* NULL STATE */
+.sl-null { color:rgba(26,39,68,0.25); font-style:italic; }
+
+/* RESPONSIVE */
+@media (max-width:768px) {
+  .sl-topbar, .sl-photo-meta, .sl-conversion { padding-left:28px; padding-right:28px; }
+  .sl-content { padding-left:28px; padding-right:28px; }
+  .sl-score-num { font-size:80px; }
+  .sl-tier-item { font-size:13px; padding-right:10px; }
+  .sl-narrative-body { font-size:19px; }
+  .sl-block-body { font-size:17px; }
+  .sl-ref-name { font-size:26px; }
+  .sl-conv-statement { font-size:20px; }
+}
+@media (max-width:600px) {
+  .sl-topbar, .sl-photo-meta, .sl-conversion { padding-left:20px; padding-right:20px; }
+  .sl-content { padding-left:20px; padding-right:20px; }
+  .sl-score-num { font-size:68px; }
+  .sl-score-denom { font-size:20px; }
+  .sl-tier-item { font-size:12px; padding-right:8px; }
+  .sl-narrative-body { font-size:18px; }
+  .sl-dim-val { font-size:22px; }
+  .sl-dim-right { gap:10px; }
+  .sl-verdict { padding-top:40px; }
+  .sl-conv-statement { font-size:18px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+<div style="background:#E8E5DF; min-height:100vh;">
+<div class="sl-page">
 
-{# ── AUDIT FIELD MAPPING ── #}
-{% set _audit = image.get_audit() or {} %}
-
-{# Revelation — what_stood_out is the REVELATION sentence (not section header) #}
-{% set _revelation = (_audit.get('what_stood_out') or _audit.get('hard_truth') or '') | trim %}
-
-{# Rows fallback for old-format audits #}
-{% set _rows = _audit.get('rows') or [] %}
-{% set _tech_val = '' %}{% set _mom_val = '' %}{% set _next_val = '' %}
-{% for _row in _rows %}
-  {% if _row and _row|length >= 2 %}
-    {% if _row[0] in ('Depth of\nDifficulty','Technical') %}{% set _tech_val = _row[1] or '' %}{% endif %}
-    {% if _row[0] in ('Decisive\nMoment','Moment') %}{% set _mom_val = _row[1] or '' %}{% endif %}
-    {% if _row[0] == 'Next' %}{% set _next_val = _row[1] or '' %}{% endif %}
-  {% endif %}
-{% endfor %}
-
-{# What stood out section — transferable_advice field #}
-{% set _what_stood_out = (_audit.get('transferable_advice') or _tech_val or '') | trim %}
-
-{# What you did that others didn't — tech+moment rows #}
-{% set _what_you_did = (_tech_val if (_audit.get('transferable_advice') or '') else _mom_val) | trim %}
-
-{# What your eye read — affective_state #}
-{% set _what_eye = (_audit.get('affective_state') or '') | trim %}
-
-{# What this evaluation means — background_check/byline_1 (LINE 1 only) #}
-{% set _eval_means = (_audit.get('background_check') or _audit.get('byline_1') or _next_val or '') | trim %}
-
-{# Supplementary eval means — byline_2 #}
-{% set _eval_means_2 = (_audit.get('byline_2_body') or _audit.get('byline_2') or '') | trim %}
-
-{# Your one take-away — byline_2 content is the take-away #}
-{% set _takeaway = (_audit.get('one_takeaway') or _audit.get('sherpa_takeaway') or '') | trim %}
-{# Fallback: if no dedicated takeaway field, use byline_2 #}
-{% if not _takeaway %}{% set _takeaway = _eval_means_2 %}{% endif %}
-
-{# Assignment, note on eye, body of work #}
-{% set _assignment = (_audit.get('assignment_tomorrow') or '') | trim %}
-{% set _note_on_eye = (_audit.get('note_on_eye') or '') | trim %}
-{% set _body_of_work = (_audit.get('body_of_work') or '') | trim %}
-
-{# Edit suggestions #}
-{% set _edit_base = (_audit.get('edit_base') or '') | trim %}
-{% set _edit_creative = (_audit.get('edit_creative') or '') | trim %}
-
-{# Next shot from mentor_location fields #}
-{% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
-{% set _mentor_2 = (_audit.get('mentor_location_2') or '') | trim %}
-
-{# Percentile #}
-{% set _top_pct = percentile.top_pct if percentile else none %}
-{% set _pct_display = _top_pct %}
-{# SL-181.9 — PERCENTILE STATED THE STANDARD WAY.
-   compute_percentile() returns top_pct = the share of the pool AT OR ABOVE this
-   photograph, so a LOWER number is better. The page printed it as "Top 95%",
-   which reads as praise and means the opposite: 95% of the pool is at or above
-   you. Confirmed against real scorecards — 8.10 showed "Top 41%", 6.40 showed
-   "Top 95%", 5.60 showed "Top 100%".
-   Every standardised test (GMAT, GRE, SAT) reports the share you BEAT and calls
-   it the Nth percentile. That is what a photographer already understands, and it
-   cannot be misread as flattery. _beat_pct = 100 - top_pct. #}
-{% set _beat_pct = (100 - _top_pct) if _top_pct is not none else none %}
-{% set _pct_ord = 'th' if (_beat_pct is not none and (_beat_pct % 100) in [11,12,13]) else ({1:'st',2:'nd',3:'rd'}.get(_beat_pct % 10, 'th') if _beat_pct is not none else '') %}
-
-{# Score distribution bar position #}
-{% if image.score %}
-  {% set _dist_pct = [(image.score / 10 * 100)|round|int, 2]|max %}
-  {% set _dist_pct = [_dist_pct, 98]|min %}
-{% else %}{% set _dist_pct = 50 %}{% endif %}
-
-{# Personal best #}
-{% set _is_pb = (stats and stats.best_this_year and image.score and image.score >= stats.best_this_year) %}
-
-{# Photographer name #}
-{% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) if current_user.is_authenticated else (image.photographer_name or '') %}
-
-{# Scored date #}
-{% set _scored_date = image.scored_at.strftime('%-d %b %Y') if image.scored_at else '' %}
-
-{# Strongest and weakest DDI — using namespace to persist values across loop #}
-{% set _ns = namespace(strongest_val=0, strongest_nm='', weakest_val=10.0, weakest_nm='') %}
-{# SL-181.9 — these names MUST stay identical to _ddi_cols further down.
-   "Your Strongest" and "Your Next Leap" are decided by matching the name
-   string, so a rename in one list and not the other silently removes both
-   badges from the scorecard. #}
-{% set _ddi_pairs = [
-  ('dod_score', 'Difficulty'),
-  ('disruption_score', 'Disruption'),
-  ('dm_score', 'Timing'),
-  ('wonder_score', 'Visual Impact'),
-  ('aq_score', 'Emotion'),
-] %}
-{% for _ak, _anm in _ddi_pairs %}
-  {% set _dv = image|attr(_ak) if image|attr(_ak) is not none else none %}
-  {% if _dv is not none and _dv > 0 %}
-    {% if _dv > _ns.strongest_val %}{% set _ns.strongest_val = _dv %}{% set _ns.strongest_nm = _anm %}{% endif %}
-    {% if _dv < _ns.weakest_val %}{% set _ns.weakest_val = _dv %}{% set _ns.weakest_nm = _anm %}{% endif %}
-  {% endif %}
-{% endfor %}
-{% set _strongest_val = _ns.strongest_val %}
-{% set _strongest_nm = _ns.strongest_nm %}
-{% set _weakest_val = _ns.weakest_val %}
-{% set _weakest_nm = _ns.weakest_nm %}
-
-<div class="sc-wrap">
-
-{# ── TOPNAV ── #}
-<nav class="sc-topnav">
-  <div class="sc-logo-area">
-    <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none">
-      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-           alt="Shutter League" style="height:30px;width:auto;display:block"
-           onerror="this.style.display='none'">
-      <span class="sc-logo-text">SHUTTER LEAGUE</span>
-    </a>
+  {# ── TOP BAR ── #}
+  <div class="sl-topbar">
+    <a href="{{ url_for('my_gallery') }}" class="sl-topbar-back">← My gallery</a>
+    <div class="sl-topbar-actions">
+      <a href="{{ url_for('download_card_pdf', image_id=image.id) }}">Save PDF</a>
+    </div>
   </div>
-  <div class="sc-nav-links-wrap" style="display:flex;align-items:center;gap:2px;margin-left:auto">
-    {# No active highlight — scorecard accessed from image click not nav #}
-    <a class="sc-nl" href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a class="sc-nl" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sc-nl" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="sc-nl" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-nl" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
+
+  {# ── 1. PHOTOGRAPH ──
+     Full page width. Natural aspect ratio. Never cropped.
+     width:100%; height:auto; display:block; — non-negotiable. #}
+  <div class="sl-photo-wrap">
+    {% if image.thumb_url %}
+      <img
+        class="sl-photo-img"
+        src="{{ image.thumb_url }}"
+        alt="{{ image.asset_name or 'Submitted photograph' }}"
+        loading="eager"
+      >
+    {% else %}
+      <div style="width:100%;height:280px;background:#0C1018;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:13px;color:rgba(255,255,255,0.25);letter-spacing:0.10em;text-transform:uppercase;">Photograph unavailable</span>
+      </div>
+    {% endif %}
+    <div class="sl-photo-meta">
+      <span>{{ image.asset_name or '—' }}</span>
+      <span>{{ image.genre or '—' }}</span>
+    </div>
   </div>
-  {% if current_user.is_authenticated %}
-  <a href="{{ url_for('profile') }}" class="sc-av" style="margin-left:10px;text-decoration:none">
-    {{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}
-  </a>
-  {% endif %}
-</nav>
 
-<div class="sc-shell">
+  {# ── EDITORIAL CONTENT COLUMN ── #}
+  <div class="sl-content">
 
-  {# ── MAIN CENTRE ── #}
-  <main class="sc-centre">
-
-    <div class="sc-back-row">
-      <a href="{{ url_for('dashboard') }}" class="sc-back-lnk">← Back to Dashboard</a>
-      <span class="sc-page-lbl">Shutter League Evaluation</span>
-    </div>
-
-    {# 1. PHOTO HERO — clean photo, evaluation bar below (reference card style) #}
-    <div class="sc-photo-hero" style="margin-bottom:10px">
-      {# Photo — clean, no overlay #}
-      <div style="background:var(--sc-dark);border-radius:12px 12px 0 0;overflow:hidden;position:relative">
-        {% if image.thumb_url %}
-        {# SL-181.9 — the photograph is letterboxed into a 320px band (220px on a
-           phone), so the thing being evaluated is the smallest element on its own
-           scorecard. Tapping it, or the corner button, opens it full-screen.
-           The button is there because a bare tappable photo is invisible
-           affordance — nobody knows to try it. 44px target, same as every other
-           control on the page. #}
-        <img src="{{ image.thumb_url }}"
-             alt="{{ image.asset_name or 'Your photograph' }}"
-             onclick="scOpenZoom()"
-             style="width:100%;height:320px;object-fit:contain;display:block;background:var(--sc-dark);cursor:zoom-in"
-             onerror="this.style.background='var(--sc-dark)'">
-        <button type="button" class="sc-zoom-btn" onclick="scOpenZoom()"
-                aria-label="View this photograph full screen">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>
-            <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-          </svg>
-          <span>View full size</span>
-        </button>
-        {% else %}
-        <div style="width:100%;height:320px;background:var(--sc-dark);display:flex;align-items:center;justify-content:center">
-          <span style="font-size:13px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase">{{ image.genre or 'Photograph' }}</span>
-        </div>
-        {% endif %}
-        {# EXIF top-left #}
-        <div style="position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap">
-          {% if image.exif_aperture %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_aperture }}</span>{% endif %}
-          {% if image.exif_shutter %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_shutter }}</span>{% endif %}
-          {% if image.exif_iso %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">ISO {{ image.exif_iso }}</span>{% endif %}
-          {% if image.exif_focal_length %}<span style="font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px">{{ image.exif_focal_length }}</span>{% endif %}
-        </div>
-        {# © copyright bottom-centre #}
-        {% if _name %}<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:13px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:2px 10px;border-radius:20px;white-space:nowrap">© {{ _name }}</div>{% endif %}
+    {# ── 2. SCORE + TIER ── #}
+    <div class="sl-verdict">
+      <div class="sl-score-line">
+        <span class="sl-score-num">{{ "%.2f"|format(image.score|float) if image.score else '—' }}</span>
+        <span class="sl-score-denom">/10</span>
       </div>
 
-      {# Dark name bar below photo — simplified, just name + title #}
-      <div style="background:#111214;border-radius:0 0 12px 12px;padding:11px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-        <span style="font-size:15px;font-weight:600;color:#fff;letter-spacing:.02em">{{ _name }}</span>
-        {% if image.asset_name %}<span style="font-size:13px;color:rgba(255,255,255,.5)">{{ image.asset_name }}{% if image.genre %} · {{ image.genre }}{% endif %}</span>{% endif %}
+      <div class="sl-tier-genre">
+        {{ image.tier or '—' }}&nbsp;·&nbsp;{{ image.genre or '—' }}
       </div>
+
+      {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+      <div class="sl-tier-strip">
+        {% for t in _tiers %}
+          <span class="sl-tier-item{% if t == image.tier %} active{% endif %}">{{ t }}</span>
+        {% endfor %}
+      </div>
+
+      {% if percentile and percentile.context %}
+        <div class="sl-percentile">{{ percentile.context }}</div>
+      {% elif percentile and percentile.top_pct %}
+        <div class="sl-percentile">Higher than {{ 100 - percentile.top_pct }}% of evaluated photographs on this platform.</div>
+      {% endif %}
+
+      <div class="sl-gold-rule"></div>
     </div>
 
-    {# ── SL-181.11 TRUST MARKS — immediately below photo, before score ── #}
-    <div class="sc-trust-row">
-      <span class="sc-trust-badge sc-trust-ai">✓ AI verified</span>
-      <span class="sc-trust-badge sc-trust-cal">◉ Calibrated · 312 images</span>
-      <span class="sc-trust-badge sc-trust-exp">★ Expert calibrated</span>
-      {% if _is_pb %}<span class="sc-trust-badge" style="background:#fff8e6;color:var(--sc-gold-dk);border:0.5px solid var(--sc-gold)">↑ Personal best</span>{% endif %}
-    </div>
+    {# ── 3. FIVE DIMENSIONS ──
+       Paid image object uses: aq_score, disruption_score (VD), dm_score, wonder_score (WF), dod_score #}
+    <div class="sl-dimensions">
+      <div class="sl-eyebrow">Five dimensions</div>
 
-    {# ── SL-181.11 SCORE BLOCK ── #}
-    <div class="sc-eval-block">
-      <div class="sc-eval-row">
-        <div class="sc-eval-left">
-          {% if image.tier %}<div class="sc-eval-tier-line">{{ image.tier | upper }}</div>{% endif %}
-          <div>
-            <span class="sc-eval-num">{{ '%.2f'|format(image.score) if image.score else '—' }}</span><span class="sc-eval-denom">/10</span>
+      {% set _dims = [
+        ('Affective Quotient',  'The emotional quality it carries',       image.aq_score        | float(0)),
+        ('Visual Disruption',   'Whether it is visually disruptive',      image.disruption_score | float(0)),
+        ('Decisive Moment',     'Whether it caught the decisive moment',  image.dm_score         | float(0)),
+        ('Wonder Factor',       'Whether it creates wonder',              image.wonder_score     | float(0)),
+        ('Depth of Difficulty', 'The difficulty of getting the shot',     image.dod_score        | float(0)),
+      ] %}
+      {% set _values = [
+        image.aq_score|float(0),
+        image.disruption_score|float(0),
+        image.dm_score|float(0),
+        image.wonder_score|float(0),
+        image.dod_score|float(0),
+      ] %}
+      {% set _max_val = _values | max %}
+      {% set _min_val = _values | min %}
+
+      {% for official, plain, val in _dims %}
+        <div class="sl-dim-row">
+          <div class="sl-dim-left">
+            <span class="sl-dim-official">{{ official }}</span>
+            <span class="sl-dim-plain">{{ plain }}</span>
           </div>
-          {% if _beat_pct is not none %}
-          <div class="sc-eval-pct">Higher than <strong>{{ _beat_pct }}%</strong> of images in the League</div>
-          {% endif %}
-          {% if stats and stats.avg_score and image.score %}
-            {% set _diff = (image.score - stats.avg_score) | round(2) %}
-            {% if _diff > 0 %}<div style="font-size:13px;color:var(--sc-green);font-weight:600;margin-top:3px">↑ {{ '%+.2f'|format(_diff) }} above your average</div>
-            {% elif _diff < 0 %}<div style="font-size:13px;color:#B3261E;font-weight:600;margin-top:3px">{{ '%+.2f'|format(_diff) }} vs your average</div>
+          <div class="sl-dim-right">
+            <span class="sl-dim-val">{{ "%.1f"|format(val) if val else '—' }}</span>
+            {% if val and val == _max_val %}
+              <span class="sl-dim-tag strongest">Strongest</span>
+            {% elif val and val == _min_val %}
+              <span class="sl-dim-tag gap">Gap</span>
+            {% else %}
+              <span class="sl-dim-tag developing">Developing</span>
             {% endif %}
-          {% endif %}
-        </div>
-        <div class="sc-eval-right">
-          {% if image.genre %}<div class="sc-genre-pill">{{ image.genre }}</div>{% endif %}
-          {% if image.tier == 'Grandmaster' %}<div style="font-size:28px">👑</div>
-          {% elif image.tier == 'Master' %}<div style="font-size:28px">🏅</div>
-          {% elif image.tier == 'Maverick' %}<div style="font-size:28px">⚡</div>
-          {% elif image.tier == 'Artisan' %}<div style="font-size:28px">🎨</div>
-          {% else %}<div style="font-size:28px">📷</div>{% endif %}
-        </div>
-      </div>
-    </div>
-
-    {# ── SL-181.11 SUMMARY BOX — Strength + Next Leap above the fold ── #}
-    {% if _strongest_nm or _weakest_nm %}
-    <div class="sc-summary-box">
-      {% if _strongest_nm %}
-      <div class="sc-summary-line">
-        <span class="sc-pill-strength">Strength</span>
-        <span>{{ _strongest_nm }} — {{ '%.2f'|format(_strongest_val) if _strongest_val else '' }}</span>
-      </div>
-      {% endif %}
-      {% if _weakest_nm %}
-      <div class="sc-summary-divider"></div>
-      <div class="sc-summary-line">
-        <span class="sc-pill-leap">Next leap</span>
-        <span>{{ _weakest_nm }} — {{ '%.2f'|format(_weakest_val) if _weakest_val else '' }}</span>
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {# ② DDI STRIP — directly below photo per your decision #}
-    {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
-    <div class="sc-card">
-      <div class="sc-card-body">
-        <div class="sc-card-hdr">
-          <span class="sc-card-title">The Five Dimensions</span>
-          <div style="text-align:right">
-            <div style="font-size:13px;color:var(--sc-muted)">Tap any dimension</div>
-            <div style="font-size:13px;color:var(--sc-muted);margin-top:1px">All evaluations out of 10</div>
           </div>
         </div>
-
-        {# Desktop strip #}
-        <div class="sc-ddi-strip sc-ddi-strip-desktop" id="sc-ddi-strip">
-          {# SL-181.9 — ONE NAME PER DIMENSION.
-             The page carried three naming systems at once: abbreviations here
-             ("Affective Q."), longer forms mid-page ("Affective Quotient"), and
-             plain sentences in HOW YOU'RE DEVELOPING ("Whether it made one feel
-             something"). The same 7.4 appeared under two different names on one
-             screen. "Affective Q." in particular means nothing to a photographer
-             and less to a 70-year-old.
-             These five words are now the single set. Short enough for a tile at
-             375px, plain enough to need no glossary.
-             STILL TO MATCH: app.py lines 12193-12195 and 12493-12495 label the
-             trend charts with sentences. Those three need to become Emotion,
-             Timing and Difficulty for the naming to be genuinely single-source. #}
-          {% set _ddi_cols = [
-            ('dod_score',        'Difficulty',    '🏔️', 'f'),
-            ('wonder_score',     'Visual Impact', '⭐',  'u'),
-            ('dm_score',         'Timing',        '🎯',  'u'),
-            ('disruption_score', 'Disruption',    '⚡',  'd'),
-            ('aq_score',         'Emotion',       '❤️',  'f'),
-          ] %}
-          {% for _attr, _nm, _em, _ar in _ddi_cols %}
-          {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
-          {% if _val %}
-          {% set _pct = (_val / 10 * 100)|round|int %}
-          {% set _is_stg = (_val == _strongest_val and _nm == _strongest_nm) %}
-          {% set _is_lp = (_val == _weakest_val and _nm == _weakest_nm) %}
-          <div class="sc-ddi-col {% if _is_stg %}sc-strongest{% elif _is_lp %}sc-leap{% endif %}"
-               onclick="scToggleDDI(this, {{ loop.index0 }})">
-            <div class="sc-ddi-em">{{ _em }}</div>
-            <div class="sc-ddi-nm">{{ _nm }}</div>
-            <div class="sc-ddi-sr">
-              <span class="sc-ddi-num">{{ '%.1f'|format(_val) }}</span>
-              <span class="sc-ddi-ar {% if _is_stg %}u{% elif _is_lp %}d{% else %}f{% endif %}">
-                {% if _is_stg %}↑{% elif _is_lp %}↓{% else %}—{% endif %}
-              </span>
-            </div>
-            <div class="sc-ddi-bar">
-              <div class="sc-ddi-bar-fill" style="width:{{ _pct }}%;background:{% if _is_lp %}#94a3b8{% else %}var(--sc-gold){% endif %}"></div>
-            </div>
-            <div class="sc-ddi-tag {% if _is_stg %}sc-dt-stg{% elif _is_lp %}sc-dt-leap{% elif _val >= 8.0 %}sc-dt-exc{% elif _val >= 7.0 %}sc-dt-str{% else %}sc-dt-good{% endif %}">
-              {% if _is_stg %}Your Strongest{% elif _is_lp %}Your Next Leap{% elif _val >= 8.5 %}Excellent{% elif _val >= 7.0 %}Strong{% else %}Good{% endif %}
-            </div>
-          </div>
-          {% endif %}
-          {% endfor %}
-        </div>
-
-        <div class="sc-ddi-detail" id="sc-ddi-detail">
-          <strong id="sc-ddi-title" style="display:block;margin-bottom:5px;color:var(--sc-dark)"></strong>
-          <span id="sc-ddi-text"></span>
-        </div>
-        <div class="sc-ddi-hint">Tap a dimension to see the engine's reasoning</div>
-
-        {# Mobile: all 5 dimensions as colour-coded bars — no tap required #}
-        {# SL-181.11: removed "See all 5 dimensions" accordion. LENSIC shows all 5
-           immediately. We now do the same. Strongest = green bar, weakest = red bar. #}
-        <div class="sc-ddi-mobile">
-          <div class="sc-dim-bars">
-            {% for _attr, _nm, _em, _ar in _ddi_cols %}
-            {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
-            {% if _val %}
-            {% set _bar_pct = [(_val / 10 * 100)|round|int, 2]|max %}
-            {% set _is_str = (_nm == _strongest_nm) %}
-            {% set _is_wk = (_nm == _weakest_nm) %}
-            <div class="sc-dim-row">
-              <div class="sc-dim-name">{{ _nm }}</div>
-              <div class="sc-dim-bar-wrap">
-                <div class="sc-dim-bar-fill" style="width:{{ _bar_pct }}%;background:{% if _is_str %}#2A7A3A{% elif _is_wk %}#B3261E{% else %}var(--sc-gold-dk){% endif %}"></div>
-              </div>
-              <div class="sc-dim-score">{{ '%.1f'|format(_val) }}</div>
-              <div class="sc-dim-tag-sm" style="color:{% if _is_str %}#2A7A3A{% elif _is_wk %}#B3261E{% else %}transparent{% endif %}">
-                {% if _is_str %}Strongest{% elif _is_wk %}Next leap{% endif %}
-              </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-
-        {# Evaluated by SL badge #}
-        <div class="sc-ev-badge">✓ Evaluated by SL &nbsp;·&nbsp; Expert-Calibrated</div>
-      </div>
-    </div>
-    {% endif %}
-
-    {# ③ WHAT THIS EVALUATION MEANS — gold corners, before take-away #}
-    {% if _eval_means or _eval_means_2 %}
-    <div class="sc-eval-means">
-      <div class="sc-em-bl"></div><div class="sc-em-br"></div>
-      <div class="sc-em-inner">
-        {# Header row with chevron — taps to collapse/expand #}
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="scToggleEvalMeans(this)">
-        <span class="sc-em-title" style="margin-bottom:0">What this evaluation means</span>
-        <span style="font-size:20px;color:var(--sc-muted);transition:transform .2s;display:inline-block" id="sc-em-chev">⌄</span>
-      </div>
-      {# All content rendered via sc-render-text, CSS clamp shows 3 lines, JS expands #}
-      <div class="sc-em-para sc-render-text sc-em-preview" id="sc-em-preview-block">
-        {{ (_eval_means + (' ■ ' + _eval_means_2 if (_eval_means_2 and _eval_means_2 != _takeaway) else '')) | safe }}
-      </div>
-      </div>
-    </div>
-    {% endif %}
-
-    {# ④ REVELATION + SCORE DISTRIBUTION #}
-    {% if _revelation %}
-    <div class="sc-card">
-      <div class="sc-card-body">
-        <div class="sc-revelation">{{ _revelation | safe }}</div>
-        {% if image.score %}
-        <div class="sc-dist-wrap">
-          <div class="sc-dist-lbl">SL Evaluation Distribution</div>
-          <div class="sc-dist-bar-wrap">
-            <div class="sc-dist-fill" style="width:{{ _dist_pct }}%"></div>
-            <div class="sc-dist-val" style="left:{{ _dist_pct }}%">{{ '%.2f'|format(image.score) }}</div>
-            <div class="sc-dist-tri" style="left:{{ _dist_pct }}%"></div>
-          </div>
-          <div class="sc-dist-ns"><span>0</span><span>5</span><span>8.5</span><span>10</span></div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    {# ⑤ YOUR ONE TAKE-AWAY — warm fill, NOT dark, stands out through colour not bold #}
-    {% if _takeaway %}
-    <div class="sc-takeaway">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px" onclick="scToggleTakeaway(this)">
-        <div class="sc-ta-eyebrow" style="margin-bottom:0">⭐ Your one take-away</div>
-        <span style="font-size:20px;color:var(--sc-gold-dk);transition:transform .2s;display:inline-block" id="sc-ta-chev">⌄</span>
-      </div>
-      {# All content rendered, CSS clamp shows 3 lines, JS expands #}
-      <div class="sc-ta-body sc-render-text sc-ta-preview" id="sc-ta-preview-block">{{ _takeaway | safe }}</div>
-    </div>
-    {% endif %}
-
-    {# ⑥ WHAT SL SAW IN YOUR PHOTOGRAPH — all accordions CLOSED by default #}
-    {% if _what_stood_out or _what_you_did or _what_eye %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What SL saw in your photograph</div></div>
-
-      {% if _what_stood_out %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#ede9fe">✨</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What stood out</div>
-            <div class="sc-acc-teaser">{{ _what_stood_out | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_stood_out | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if _what_you_did %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#e8f5e2">🏆</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What you did that others didn't</div>
-            <div class="sc-acc-teaser">{{ _what_you_did | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_you_did | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if _what_eye %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#fff8e6">👁️</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What your eye read</div>
-            <div class="sc-acc-teaser">{{ _what_eye | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_eye | safe }}</div>
-      </div>
-      {% endif %}
-
-    </div>
-    {% endif %}
-
-    {# ── SL-181.11 LOCATION ADVISORY — promoted to first-class named card ── #}
-    {# This is the differentiator no competitor has. No longer buried in accordion. #}
-    {% if _mentor_1 %}
-    <div class="sc-location-card">
-      <div class="sc-location-eyebrow">📍 Your next shot — bookmarked</div>
-      <div class="sc-location-title">
-        {%- set _loc1_title = _mentor_1.split('.')[0] if '.' in _mentor_1[:60] else _mentor_1[:60] -%}
-        {{ _loc1_title }}
-      </div>
-      <div class="sc-location-body">{{ _mentor_1 }}</div>
-      <a href="https://maps.google.com/?q={{ _mentor_1.split('.')[0] | urlencode }}" target="_blank" rel="noopener" class="sc-location-cta">Go shoot →</a>
-      {% if _mentor_2 %}
-      <div style="border-top:1px solid var(--sc-pista-b);padding-top:11px;margin-top:11px">
-        <div class="sc-location-eyebrow" style="margin-bottom:4px">📍 Also nearby</div>
-        <div class="sc-location-body">{{ _mentor_2 }}</div>
-        <a href="https://maps.google.com/?q={{ _mentor_2.split('.')[0] | urlencode }}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:13px;font-weight:600;color:var(--sc-green);text-decoration:none;min-height:44px">Go shoot →</a>
-      </div>
-      {% endif %}
-    </div>
-    {% elif location_links %}
-    {% for loc in location_links[:1] %}
-    <div class="sc-location-card">
-      <div class="sc-location-eyebrow">📍 Your next shot — bookmarked</div>
-      <div class="sc-location-title">{{ loc.get('name') or loc.get('title') or 'Nearby location' }}</div>
-      <a href="{{ loc.get('maps_url') or loc.get('url') or '#' }}" target="_blank" class="sc-location-cta">Go shoot →</a>
-    </div>
-    {% endfor %}
-    {% endif %}
-
-    {# ── SL-181.11 BODY OF WORK — promoted to named numbered section ── #}
-    {% if _body_of_work %}
-    <div class="sc-bow-card">
-      <div class="sc-bow-hdr">Your next body of work</div>
-      <div class="sc-bow-frames">{{ _body_of_work | safe }}</div>
-    </div>
-    {% endif %}
-
-    {# ⑦ WHAT YOU NEED TO DO — remaining accordions (assignment, note on eye) #}
-    {% if _assignment or _note_on_eye %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What you need to do</div></div>
-
-      {% if _assignment %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:var(--sc-pista)">📷</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">Your assignment tomorrow</div>
-            <div class="sc-acc-teaser">{{ _assignment | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _assignment | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if _note_on_eye %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#f0f0ff">✏️</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">A note on your eye</div>
-            <div class="sc-acc-teaser">{{ _note_on_eye | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _note_on_eye | safe }}</div>
-      </div>
-      {% endif %}
-
-    </div>
-    {% endif %}
-
-    {# ⑧ EDIT SUGGESTIONS #}
-    {% if _edit_base or _edit_creative %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">Edit suggestions</div></div>
-      {% if _edit_base %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#fef3c7">⚙️</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">Balanced · Light editing</div>
-            <div class="sc-acc-teaser">{{ _edit_base | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _edit_base | safe }}</div>
-      </div>
-      {% endif %}
-      {% if _edit_creative %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#fce7f3">🎨</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">Artistic · Heavy editing</div>
-            <div class="sc-acc-teaser">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | replace('convert to black and white','develop a distinctive colour treatment') | safe }}</div>
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {# ⑨ HOW YOU'RE DEVELOPING — per-dimension sparklines matching main scorecard #}
-    {% if portfolio_data and portfolio_data.has_trends and portfolio_data.dimensions %}
-    <div class="sc-dev-block">
-      <div class="sc-card-hdr" style="margin-bottom:4px">
-        <span class="sc-card-title">How you're developing</span>
-        <span style="font-size:13px;color:var(--sc-muted)">Last {{ portfolio_data.plotted_count }} photographs evaluated</span>
-      </div>
-
-      {% for _dim in portfolio_data.dimensions %}
-      {% if _dim.sparkline %}
-      <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:0.5px solid var(--sc-border){% if loop.last %};border-bottom:none;margin-bottom:0;padding-bottom:0{% endif %}">
-        {# Dimension name + current value #}
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
-          <div style="font-size:15px;font-weight:500;color:var(--sc-dark)">{{ _dim.label }}</div>
-          <div style="font-size:28px;font-weight:700;color:var(--sc-dark);line-height:1;letter-spacing:-.02em">{{ '%.1f'|format(_dim.current) }}</div>
-        </div>
-        {# Pill — pastel background, dark font #}
-        {% if _dim.pill %}
-        <div style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:600;margin-bottom:8px;font-family:monospace;
-          background:{{ _dim.pill_bg or '#FEF9EE' }};color:{{ _dim.pill_color or '#7A5E00' }};border:0.5px solid {{ _dim.pill_color or '#C8A43A' }}40">
-          {{ _dim.pill }}
-        </div>
-        {% endif %}
-        {# Sparkline SVG #}
-        <svg viewBox="0 0 460 52" width="100%" height="52">
-          <polyline points="{{ _dim.sparkline }}" fill="none" stroke="{{ _dim.color or '#D6A428' }}" stroke-width="2" stroke-linejoin="round"/>
-          {% for pt in _dim.points %}
-          <circle cx="{{ pt.x }}" cy="{{ pt.y }}"
-                  r="{% if loop.last %}5{% else %}3{% endif %}"
-                  fill="{{ _dim.color or '#D6A428' }}"{% if loop.last %} stroke="#fff" stroke-width="1.5"{% endif %}/>
-          {% endfor %}
-          {# Score labels along x-axis #}
-          {% for lp in _dim.label_points %}
-          <text x="{{ (lp.x_pct / 100 * 460)|round }}" y="50"
-                font-size="9"
-                fill="{% if loop.last %}{{ _dim.color or '#D6A428' }}{% else %}#888{% endif %}"
-                text-anchor="middle"
-                font-family="system-ui,sans-serif"
-                font-weight="{% if loop.last %}600{% else %}400{% endif %}">{{ lp.value }}</text>
-          {% endfor %}
-        </svg>
-      </div>
-      {% endif %}
       {% endfor %}
 
+      <div class="sl-dim-note">
+        The highest standard demands strength across all five dimensions.
+      </div>
+    </div>
+
+    {# ── 4. WHAT WE SEE ── #}
+    {% if impression %}
+    <div class="sl-narrative">
+      <div class="sl-eyebrow">What we see</div>
+      <div class="sl-narrative-body">{{ impression }}</div>
     </div>
     {% endif %}
 
-    {# ⑩ ACTION BAR #}
-    <div class="sc-act-bar">
-      <a href="{{ url_for('share_image', image_id=image.id) }}" class="sc-btn-gold" target="_blank">↑ Share Scorecard</a>
-      <a href="{{ url_for('download_card_pdf', image_id=image.id) }}" class="sc-btn-ghost">↓ Save</a>
-      <a href="{{ url_for('mentors') }}" class="sc-btn-ghost">👤 Mentor Review</a>
-      {# SL-181.6 — "Generate My Evolving Eye Report" removed on the founder's
-         instruction. It was a plain link to /my-eye and generated nothing:
-         evolving_eye() only displays an advisory that already exists, and the
-         advisory is created either by the scoring pipeline at a 10-image
-         milestone or by an admin trigger. A photographer below their next
-         milestone clicked "Generate" and was told to keep shooting. The
-         Evolving Eye remains reachable from the navigation; it does not
-         belong on an individual scorecard. #}
-      {# SL-181.5 — Delete. Staging had no delete control at all; production has one.
-         POST, never GET: a link would let a crawler or a prefetch destroy a
-         photograph. delete_image() is owner-only (abort(403) otherwise), so the
-         button is shown only to the owner rather than offering everyone a
-         control that will refuse them. 'from' preserves the caller's landing
-         page — the route reads request.form['from'] and returns to My Gallery
-         when it is 'gallery', otherwise the Dashboard. #}
-      {% if current_user.is_authenticated and image.user_id == current_user.id %}
-      <form method="POST"
-            action="{{ url_for('delete_image', image_id=image.id) }}"
-            style="display:inline;margin:0"
-            onsubmit="return confirm('Delete &quot;{{ (image.asset_name or 'this photograph')|e }}&quot;?\n\nThis cannot be undone. The photograph and its evaluation will be removed permanently.');">
-        <input type="hidden" name="from" value="{{ request.args.get('from', '') }}">
-        <button type="submit" class="sc-btn-ghost sc-btn-danger">🗑 Delete</button>
-      </form>
+    {# ── 5. STRONGEST MOMENT / 6. NEXT LEAP / 7. WHAT TO EXPLORE ── #}
+    {% if strength_obs or next_leap_obs or what_next %}
+    <div class="sl-editorial">
+
+      {% if strength_obs %}
+      <div>
+        <div class="sl-block-label">Strongest moment</div>
+        <div class="sl-block-body">{{ strength_obs }}</div>
+      </div>
       {% endif %}
-      <a href="{{ url_for('dashboard') }}" class="sc-btn-back">← Back to Dashboard</a>
-    </div>
 
-  </main>
+      {% if next_leap_obs %}
+      <div>
+        <div class="sl-block-label">Next leap</div>
+        <div class="sl-block-body">{{ next_leap_obs }}</div>
+      </div>
+      {% endif %}
 
-  {# ── RIGHT RAIL ── #}
-  <aside class="sc-rpanel">
-    <div>
-      <div class="sc-rl">At a glance</div>
-      <div class="sc-rcard">
-        <div class="sc-rr"><span class="sc-rk">Your Tier</span>
-          <span class="sc-rv gd">
-            {% if image.tier == 'Grandmaster' %}👑{% elif image.tier == 'Master' %}🏅{% elif image.tier == 'Maverick' %}⚡{% elif image.tier == 'Artisan' %}🎨{% else %}📷{% endif %}
-            {{ image.tier or '—' }}
-          </span>
-        </div>
-        {% if _beat_pct is not none %}<div class="sc-rr"><span class="sc-rk">Percentile</span><span class="sc-rv{% if _beat_pct >= 50 %} gn{% endif %}">{{ _beat_pct }}{{ _pct_ord }}</span></div>{% endif %}
-        {% if portfolio_data and portfolio_data.count %}<div class="sc-rr"><span class="sc-rk">Evaluations</span><span class="sc-rv">{{ portfolio_data.count }}</span></div>{% endif %}
-        {% if stats and stats.best_this_year %}<div class="sc-rr"><span class="sc-rk">Best this year</span><span class="sc-rv gn">{{ '%.2f'|format(stats.best_this_year) }}</span></div>{% endif %}
-        {% if image.genre %}<div class="sc-rr"><span class="sc-rk">Genre</span><span class="sc-rv">{{ image.genre }}</span></div>{% endif %}
+      {% if what_next %}
+      <div>
+        <div class="sl-block-label">What to explore</div>
+        <div class="sl-block-body">{{ what_next }}</div>
       </div>
-    </div>
-    {% if _beat_pct is not none %}
-    <div>
-      <div class="sc-rl">Your standing</div>
-      <div class="sc-rcard">
-        {# SL-181.9 — the bar now GROWS with performance. It was filled to
-           top_pct, so a weak photograph drew a long green bar and a strong one
-           drew a short bar — the opposite of what a bar means. Green is kept
-           for the upper half only; below that it is neutral, because a 5th
-           percentile should not be coloured like good news. #}
-        <div style="font-size:26px;font-weight:700;color:{% if _beat_pct >= 50 %}var(--sc-green){% else %}var(--sc-text){% endif %};line-height:1">{{ _beat_pct }}{{ _pct_ord }} Percentile</div>
-        <div style="font-size:13px;color:var(--sc-muted);margin-top:3px">Higher than {{ _beat_pct }}% of images in the League.</div>
-        <div style="height:6px;background:var(--sc-border);border-radius:2px;margin-top:10px;overflow:hidden">
-          <div style="height:100%;width:{{ _beat_pct }}%;background:{% if _beat_pct >= 50 %}var(--sc-green){% else %}var(--sc-gold-dk){% endif %};border-radius:2px"></div>
-        </div>
-      </div>
+      {% endif %}
+
     </div>
     {% endif %}
-    {% if image.tier and image.score %}
-    <div>
-      <div class="sc-rl">Next milestone</div>
-      <div class="sc-rcard">
-        {% if image.tier == 'Master' %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 9.0 to become <strong style="color:var(--sc-gold-dk)">GRANDMASTER</strong></div>
-        {% elif image.tier == 'Maverick' %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 8.0 to become <strong style="color:var(--sc-gold-dk)">MASTER</strong></div>
-        {% elif image.tier == 'Artisan' %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Reach 7.0 to become <strong style="color:var(--sc-gold-dk)">MAVERICK</strong></div>
-        {% else %}<div style="font-size:13px;color:var(--sc-text);margin-bottom:5px;line-height:1.5">Keep shooting to build your tier</div>{% endif %}
-        <div style="height:4px;background:var(--sc-border);border-radius:2px;margin-bottom:3px;overflow:hidden">
-          <div style="height:100%;background:var(--sc-gold);border-radius:2px;width:{{ [(image.score / 10 * 100)|round|int, 100]|min }}%"></div>
-        </div>
-        <div style="text-align:right;font-size:13px;color:var(--sc-muted)">{{ '%.2f'|format(image.score) }}</div>
-      </div>
+
+    {# ── 8. EYE BEHIND THIS ── #}
+    {% if master_name %}
+    <div class="sl-reference">
+      <div class="sl-ref-eyebrow">The eye behind this</div>
+      <div class="sl-ref-name">{{ master_name }}</div>
+      {% if master_why %}
+      <div class="sl-ref-desc">{{ master_why }}</div>
+      {% endif %}
+      {% if master_name in all_masters %}
+        <a class="sl-ref-link" href="https://www.google.com/search?q={{ all_masters[master_name] }}&tbm=isch" target="_blank" rel="noopener">See their work →</a>
+      {% else %}
+        <a class="sl-ref-link" href="https://www.google.com/search?q={{ master_name|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener">See their work →</a>
+      {% endif %}
     </div>
     {% endif %}
-    <div>
-      <div class="sc-rl">Evaluation process</div>
-      <div class="sc-rcard" style="display:flex;flex-direction:column;gap:5px">
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:13px;color:var(--sc-muted)">Apex DDI across 5 dimensions</span></div>
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:13px;color:var(--sc-muted)">Expert review by Grandmaster mentor</span></div>
-        <div style="display:flex;gap:5px"><span style="color:var(--sc-green);flex-shrink:0">✓</span><span style="font-size:13px;color:var(--sc-muted)">Final evaluation calibrated</span></div>
-        {% if _scored_date %}<div style="font-size:13px;color:var(--sc-muted);margin-top:4px;padding-top:5px;border-top:0.5px solid var(--sc-border)">Evaluated {{ _scored_date }}{% if image.is_public %} &nbsp;·&nbsp; 🌐 Public{% endif %}</div>{% endif %}
+
+  </div>{# end .sl-content #}
+
+  {# ── 9. NEXT DECISION ── #}
+  <div class="sl-conversion">
+    <div class="sl-conv-inner">
+      <div class="sl-conv-count">
+        {{ image.genre or 'Photography' }} &nbsp;·&nbsp; {{ image.tier or '—' }}
       </div>
+      <div class="sl-conv-statement">
+        Every evaluated image builds your record. Upload your next photograph.
+      </div>
+      <a href="{{ url_for('upload') }}" class="sl-conv-primary">Upload another photograph →</a>
+      <a href="{{ url_for('my_gallery') }}" class="sl-conv-secondary">Return to my gallery.</a>
     </div>
-    <div>
-      <a href="{{ url_for('download_card_pdf', image_id=image.id) }}"
-         style="display:block;background:var(--sc-gold);color:var(--sc-dark);font-size:13px;font-weight:700;padding:10px 14px;border-radius:8px;text-align:center;text-decoration:none">
-        ↓ Download full scorecard PDF
-      </a>
-    </div>
-  </aside>
+  </div>
 
-</div>{# /sc-shell #}
-
-{# FOOTER #}
-<div class="sc-footer">
-  <span class="sc-footer-text">{% if _scored_date %}Evaluated {{ _scored_date }}.{% endif %} Your eye is still sharp from this.</span>
-  <a href="{{ url_for('upload') }}" class="sc-footer-link">Upload your next image →</a>
-</div>
-
-</div>{# /sc-wrap #}
-
-{# DDI data island — Jinja2 renders, browser reads as JSON #}
-<script type="application/json" id="sc-ddi-data">
-[
-  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or 'How technically demanding this photograph was to make.') | tojson }}},{% endif %}
-  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or 'The visual impact, mood and drama of your photograph.') | tojson }}},{% endif %}
-  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or 'How well you timed the capture of the peak moment.') | tojson }}},{% endif %}
-  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or 'How unexpected and original this frame is.') | tojson }}},{% endif %}
-  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or 'The emotional resonance this photograph creates.') | tojson }}},{% endif %}
-  null
-]
-</script>
-
-<script>
-/* SL image_detail v176.11 — no Jinja2 in this block */
-
-/* ── Accordion toggle — all closed on load ── */
-function scToggleAcc(row) { row.classList.toggle('open'); }
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.sc-acc-row').forEach(function(r){ r.classList.remove('open'); });
-});
-
-/* ── Eval means toggle — clamp 4 lines, expand on tap ── */
-function scToggleEvalMeans(hdr) {
-  var block = document.getElementById('sc-em-preview-block');
-  var chev  = document.getElementById('sc-em-chev');
-  if (!block) return;
-  var clamped = block.classList.contains('clamped');
-  block.classList.toggle('clamped', !clamped);
-  if (chev) chev.style.transform = clamped ? '' : 'rotate(180deg)';
-}
-
-/* ── Takeaway toggle — clamp 4 lines, expand on tap ── */
-function scToggleTakeaway(hdr) {
-  var block = document.getElementById('sc-ta-preview-block');
-  var chev  = document.getElementById('sc-ta-chev');
-  if (!block) return;
-  var clamped = block.classList.contains('clamped');
-  block.classList.toggle('clamped', !clamped);
-  if (chev) chev.style.transform = clamped ? '' : 'rotate(180deg)';
-}
-
-/* ── Clamp AFTER render-text processes content ── */
-document.addEventListener('DOMContentLoaded', function () {
-  scRenderText();  /* ensure processed */
-  /* SL-181.11: eval-means stays OPEN by default — first-time visitor should
-     read the evaluation immediately, not tap to expand */
-  var ta = document.getElementById('sc-ta-preview-block');
-  if (ta) ta.classList.add('clamped');
-  /* Force all accordions closed */
-  document.querySelectorAll('.sc-acc-row').forEach(function(r){ r.classList.remove('open'); });
-});
-
-/* ── Eval means expand ── */
-function scToggleMeans(el) {
-  var x = document.getElementById('sc-means-extra');
-  if (!x) return;
-  var open = x.style.display !== 'none';
-  x.style.display = open ? 'none' : 'block';
-  el.textContent = open ? 'See full analysis \u2193' : 'Show less \u2191';
-}
-
-/* ── Mobile DDI toggle ── */
-function scToggleMobDims(el) {
-  var r = document.getElementById('sc-mob-dims-rest');
-  var c = document.getElementById('sc-mob-dim-chev');
-  if (!r) return;
-  var open = r.style.display !== 'none';
-  r.style.display = open ? 'none' : 'block';
-  if (c) c.textContent = open ? '\u2193' : '\u2191';
-  el.querySelector('span:first-child').textContent = open ? 'See all 5 dimensions' : 'Hide dimensions';
-}
-
-/* ── DDI tap ── */
-var scDDIData = (function () {
-  try { return JSON.parse(document.getElementById('sc-ddi-data').textContent).filter(Boolean); }
-  catch (e) { return []; }
-})();
-function scToggleDDI(col, idx) {
-  var det = document.getElementById('sc-ddi-detail');
-  var cols = col.parentElement.querySelectorAll('.sc-ddi-col');
-  var active = col.classList.contains('active');
-  cols.forEach(function(c){ c.classList.remove('active'); });
-  if (active) { if (det) det.style.display = 'none'; return; }
-  col.classList.add('active');
-  var d = scDDIData[idx];
-  if (d && det) {
-    document.getElementById('sc-ddi-title').textContent = d.t;
-    document.getElementById('sc-ddi-text').textContent = d.tx;
-    det.style.display = 'block';
-  }
-}
-
-/* ── Text rendering: bullets → real list items, **bold**, Search:X → link ──
-   SL-181.7 — THE BUG THIS FIXES.
-   This function split on U+25A0 (BLACK SQUARE, "■"). The scoring engine emits
-   U+25AA (BLACK SMALL SQUARE, "▪"). Two different characters, so the split
-   never matched: paragraphs stayed at zero and every marker was left sitting
-   mid-sentence. Every long block on this page rendered as one unbroken slab.
-   Confirmed live on staging: document.querySelectorAll('.sc-render-text p')
-   returned 0.
-
-   The email path already had this right — app.py's scorecard email splits on
-   U+25AA and wraps each part in its own paragraph (see the comment there).
-   Only this page was left behind, so emails read correctly and the page did
-   not.
-
-   Now: BOTH characters are accepted, plus "•", so a change of marker in the
-   engine cannot silently break the page again. Multi-item text becomes a real
-   <ul>: the marker sits in the margin and the text runs in its own column, so
-   a wrapped second line aligns under the first word rather than under the
-   bullet. Single-item text stays a plain paragraph — a list of one is noise. */
-function scRenderText() {
-  var targets = document.querySelectorAll('.sc-render-text');
-  targets.forEach(function (el) {
-    if (el.dataset.rendered) return;
-    el.dataset.rendered = '1';
-    var raw = el.innerHTML;
-
-    /* Accept every bullet marker the engine has used or might use. */
-    var parts = raw.split(/[\u25A0\u25AA\u2022]/)
-                   .map(function (p) { return p.trim(); })
-                   .filter(Boolean);
-
-    if (parts.length > 1) {
-      raw = '<ul class="sc-bullets">'
-          + parts.map(function (p) { return '<li>' + p + '</li>'; }).join('')
-          + '</ul>';
-    } else if (parts.length === 1) {
-      /* No markers. Break on blank lines if the engine sent any; otherwise
-         leave the text alone rather than guessing at sentence boundaries. */
-      var blocks = parts[0].split(/\n\s*\n/).map(function (b) { return b.trim(); })
-                           .filter(Boolean);
-      raw = blocks.length > 1
-          ? blocks.map(function (b) { return '<p>' + b + '</p>'; }).join('')
-          : '<p>' + parts[0] + '</p>';
-    }
-
-    /* **bold** → <strong> (short spans only) */
-    raw = raw.replace(/\*\*([^*]{1,60})\*\*/g, '<strong>$1</strong>');
-    /* Search: X. → Google Images link */
-    raw = raw.replace(/Search:\s*([^.<]{5,60})\./g, function(m, term) {
-      var q = encodeURIComponent(term.trim() + ' photography');
-      return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
-    });
-    /* Name motion/street/wildlife photography. → link */
-    raw = raw.replace(/([A-Z][a-z]+ [A-Z][a-z]+(?:\s+[A-Za-z]+)?\s+(?:motion|street|wildlife|documentary|landscape)\s+photography)\./, function(m, term) {
-      var q = encodeURIComponent(term.trim());
-      return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
-    });
-    el.innerHTML = raw;
-  });
-}
-/* Run immediately + on DOMContentLoaded for any late-rendered elements */
-scRenderText();
-document.addEventListener('DOMContentLoaded', scRenderText);
-</script>
-
-
-{# ── SL-181.9 — full-size viewer ───────────────────────────────────────── #}
-{% if image.thumb_url %}
-<div class="sc-zoom-ov" id="scZoomOv" onclick="scCloseZoom(event)" role="dialog"
-     aria-modal="true" aria-label="Photograph, full size">
-  <button type="button" class="sc-zoom-close" onclick="scCloseZoom(event)"
-          aria-label="Close full size view">&times;</button>
-  <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Your photograph' }}">
-  <div class="sc-zoom-cap">{{ image.asset_name or 'Your photograph' }}{% if image.genre %} &middot; {{ image.genre }}{% endif %}</div>
-</div>
-<script>
-function scOpenZoom(){
-  var o = document.getElementById('scZoomOv');
-  if (!o) return;
-  o.classList.add('open');
-  document.body.style.overflow = 'hidden';   /* stop the page scrolling behind */
-}
-function scCloseZoom(e){
-  /* Tapping the photograph itself must NOT close the viewer. */
-  if (e && e.target && e.target.tagName === 'IMG') return;
-  var o = document.getElementById('scZoomOv');
-  if (!o) return;
-  o.classList.remove('open');
-  document.body.style.overflow = '';
-}
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') scCloseZoom();
-});
-</script>
-{% endif %}
-
+</div>{# end .sl-page #}
+</div>{# end background wrapper #}
 {% endblock %}
