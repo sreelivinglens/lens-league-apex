@@ -1,4 +1,3 @@
-# SL-VERSION: 181.51-staging (Session 194, 2026-08-25 — PAID SCORECARD: image_detail() pre-parses audit_json into impression/strength_obs/next_leap_obs/what_next/master_name/master_why vars for image_detail.html template. Mirrors try_result() pattern. RETAINS 181.50.)
 # SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
 # SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
@@ -5797,6 +5796,7 @@ def dashboard():
                            evolving_eye_data=_evolving_eye_data,
                            mentor_advice=_mentor_advice,
                            scored_count=_scored_count_val,
+                           gap_to_gm=round(max(0.0, 9.0 - float(stats.get('best_score') or 0)), 2),
                            quota_status=_get_quota_status(current_user))
 
 
@@ -12803,15 +12803,6 @@ def image_detail(image_id):
     import re as _re_subj
     img.subject = _re_subj.sub(r'^\[Species:[^\]]*\]\s*', '', img.subject or '').strip() or None
 
-    # SL-194: Pre-parse audit_json into individual vars for image_detail.html template.
-    # Mirrors try_result() pattern — keeps template clean, avoids Jinja2 JSON parsing.
-    import json as _idj2
-    _id_audit2 = {}
-    try:
-        _id_audit2 = _idj2.loads(img._audit_json or '{}')
-    except Exception:
-        pass
-
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
                            percentile=percentile_data,
                            image_versions=_versions,
@@ -12824,16 +12815,7 @@ def image_detail(image_id):
                            all_masters=ALL_MASTERS,
                            drawer_active=_drawer_active,
                            has_pending_eval=_has_pending_eval,
-                           now=_now,
-                           impression      = _id_audit2.get('impression', ''),
-                           strength_name   = _id_audit2.get('strength_name', ''),
-                           strength_obs    = _id_audit2.get('strength_obs', ''),
-                           next_leap_name  = _id_audit2.get('next_leap_name', ''),
-                           next_leap_obs   = _id_audit2.get('next_leap_obs', ''),
-                           what_next       = _id_audit2.get('what_next', ''),
-                           master_name     = _id_audit2.get('master_name', ''),
-                           master_why      = _id_audit2.get('master_why', ''),
-                           )
+                           now=_now)
 
 
 
