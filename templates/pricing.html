@@ -291,116 +291,117 @@
 }
 </style>
 
-{# ── Hero ── #}
-<div class="pr-hero">
-  <div class="pr-hero-eye">Photography evaluation platform</div>
-  <h1>You've seen what the platform sees.<br>Now build the record.</h1>
-  <p class="pr-hero-built">Built by award-winning photographers, for photographers who want to get better.</p>
-  <p class="pr-hero-200">Chess has Elo. Cricket has ICC standings.<br>In 200 years of photography — nobody built one. Until now.</p>
-  <p class="pr-hero-std">The standard is the same whether you are in Bengaluru or Berlin.</p>
-  <div class="pr-proof">
-    <p class="pr-proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
-    <p class="pr-proof-a"><strong>Vaibhav Parakh</strong> · Mobile photographer · Shutter League</p>
+{# ── OPENING STATEMENT — approved design ── #}
+<div class="pr-hero" style="text-align:left;max-width:860px;">
+  <div class="pr-hero-eye">Build your record</div>
+  <h1 style="font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,44px);font-weight:400;letter-spacing:-0.02em;line-height:1.2;margin-bottom:28px;">In 200 years of photography, nobody built a standing. Until now.</h1>
+  <p class="pr-hero-built">Every evaluation is calibrated against a single standard. The tier a photographer holds is earned — not purchased, not algorithmic. Built photograph by photograph, over time.</p>
+</div>
+
+{# ── FOUR TRUST STATEMENTS ── #}
+<div style="max-width:860px;margin:0 auto;padding:0 var(--page-pad) 48px;">
+  <div style="padding:22px 0;border-bottom:0.5px solid rgba(26,39,68,0.09);display:flex;align-items:baseline;gap:24px;border-top:0.5px solid rgba(26,39,68,0.09);">
+    <span style="font-size:17px;color:#1A2744;font-weight:500;min-width:200px;flex-shrink:0;">One standard</span>
+    <span style="font-size:17px;color:rgba(26,39,68,0.58);line-height:1.65;">The same evaluation whether you shoot wildlife in Bengaluru or street in Berlin. Calibrated blind — not by algorithm, not by follower count.</span>
+  </div>
+  <div style="padding:22px 0;border-bottom:0.5px solid rgba(26,39,68,0.09);display:flex;align-items:baseline;gap:24px;">
+    <span style="font-size:17px;color:#1A2744;font-weight:500;min-width:200px;flex-shrink:0;">Permanent record</span>
+    <span style="font-size:17px;color:rgba(26,39,68,0.58);line-height:1.65;">Every photograph you upload is remembered. The record of how your eye changes over months and years is yours. Nothing resets.</span>
+  </div>
+  <div style="padding:22px 0;border-bottom:0.5px solid rgba(26,39,68,0.09);display:flex;align-items:baseline;gap:24px;">
+    <span style="font-size:17px;color:#1A2744;font-weight:500;min-width:200px;flex-shrink:0;">Earned standing</span>
+    <span style="font-size:17px;color:rgba(26,39,68,0.58);line-height:1.65;">Rookie. Shooter. Contender. Craftsman. Maverick. Master. Grandmaster. Legend. Each tier is the result of consistent work across time — not a single image.</span>
+  </div>
+  <div style="padding:22px 0;display:flex;align-items:baseline;gap:24px;">
+    <span style="font-size:17px;color:#1A2744;font-weight:500;min-width:200px;flex-shrink:0;">The credential compounds</span>
+    <span style="font-size:17px;color:rgba(26,39,68,0.58);line-height:1.65;">The Annual Excellence Award is decided by consistency across twelve months. The longer the platform has seen your eye, the more the credential means.</span>
   </div>
 </div>
 
-{# ── Plans ── #}
-<div class="pr-plans">
-
-  {# Annual #}
-  <div class="pr-plan featured">
-    <div class="pr-plan-pill">★ Build the record</div>
-    <div class="pr-plan-label">Annual</div>
-    <div class="pr-plan-price"><sup>₹</sup>4,000<span style="font-size:16px;font-weight:400;color:var(--text-muted);white-space:nowrap"> / year</span></div>
-    <div class="pr-plan-period">₹333 per month · 48 Full Evaluations</div>
-    <p class="pr-plan-tagline">The complete record begins here. Every photograph remembered. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.</p>
-    <div class="pr-divider"></div>
-    <ul class="pr-features">
-      <li>48 Full Evaluations per year</li>
-      <li>Mentor narrative on every photograph</li>
-      <li>Annual Excellence Award eligibility</li>
-      <li>Calibrated standing — Camera or Mobile League</li>
-      <li>Your evolving portrait — begins at 10 evaluations</li>
-      <li>Missions and weekly challenges</li>
-      <li>Next Shot advisory after every evaluation</li>
-      <li>Memory-aware re-evaluation</li>
-      <li>Location advisory — where to shoot next</li>
-      <li>Founding Member price — locked forever</li>
-    </ul>
-    <a href="/image/47" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
-    <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
+{# ── GRANDMASTER PHOTOGRAPH ── #}
+{% if poty_hero and poty_hero.thumb_url %}
+<div style="background:#F5F3EF;">
+  <img src="{{ poty_hero.thumb_url }}" alt="Grandmaster photograph from the League"
+       style="width:100%;height:auto;display:block;"
+       onerror="this.parentElement.style.display='none'">
+  <div style="max-width:860px;margin:0 auto;padding:16px var(--page-pad) 48px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:0.5px solid rgba(26,39,68,0.09);">
+    <span style="font-size:16px;color:#1A2744;font-weight:500;">{{ poty_hero.photographer_name or 'Shutter League' }}{% if poty_hero.genre %} &nbsp;·&nbsp; {{ poty_hero.genre }}{% endif %}</span>
+    <span style="font-size:16px;color:#C8A84B;letter-spacing:0.06em;">{{ poty_hero.tier or 'Grandmaster' }}{% if poty_hero.score %} &nbsp;·&nbsp; {{ "%.2f"|format(poty_hero.score|float) }}{% endif %}</span>
   </div>
-
-  {# 6 Months #}
-  <div class="pr-plan">
-    <div class="pr-plan-label">6 Months</div>
-    <div class="pr-plan-price"><sup>₹</sup>2,500</div>
-    <div class="pr-plan-period">₹417 per month · 24 Full Evaluations</div>
-    <p class="pr-plan-tagline">Six months of the full record. The Mentor narrative, the calibrated standing, the Annual Excellence Award — all of it starts from your first evaluation. When you are ready to extend, the annual record is waiting.</p>
-    <div class="pr-divider"></div>
-    <ul class="pr-features">
-      <li>24 Full Evaluations over 6 months</li>
-      <li>Mentor narrative on every photograph</li>
-      <li>Annual Excellence Award eligibility</li>
-      <li>Calibrated standing — Camera or Mobile League</li>
-      <li>Your evolving portrait — begins at 10 evaluations</li>
-      <li>Missions and weekly challenges</li>
-      <li>Next Shot advisory</li>
-      <li>Memory-aware re-evaluation</li>
-      <li>Location advisory</li>
-      <li class="dim">Founding Member price — annual only</li>
-    </ul>
-    <a href="/image/47" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
-    <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
-  </div>
-
-  {# 100 for 100 #}
-  <div class="pr-plan">
-    <div class="pr-plan-label">100 for 100</div>
-    <div class="pr-plan-price"><sup>₹</sup>100</div>
-    <div class="pr-plan-period">One-time · 100 Basic Evaluations</div>
-    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League of Photographers is here.</p>
-    <div class="pr-divider"></div>
-    <ul class="pr-features">
-      <li>100 Basic Evaluations</li>
-      <li>Five-dimension feedback on every photograph</li>
-      <li>Your pattern across 100 photographs</li>
-      <li>See how your eye develops over time</li>
-      <li>One-time purchase — no subscription</li>
-    </ul>
-    <a href="/try/result/33" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
-    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
-  </div>
-
 </div>
+{% endif %}
 
-{# ── Track selection modal (hidden) ── #}
-<div id="pr-track-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
-  <div style="background:var(--surface-2);border-radius:14px;padding:32px;max-width:440px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
-    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
-    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">Annual — ₹4,000</div>
-    <p style="font-size:15px;color:var(--text-secondary);margin-bottom:24px;line-height:1.6">Camera League for DSLR, mirrorless, and medium format. Mobile League for smartphone photographers — evaluated on its own terms.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <button onclick="startDirectPayment('camera')" style="padding:16px;font-size:15px;font-weight:700;background:var(--gold);color:#1a1200;border:none;border-radius:8px;cursor:pointer;min-height:52px">Camera League →</button>
-      <button onclick="startDirectPayment('mobile')" style="padding:16px;font-size:15px;font-weight:700;background:var(--surface-1);color:var(--text-primary);border:1.5px solid var(--border-strong);border-radius:8px;cursor:pointer;min-height:52px">Mobile League →</button>
+{# ── THREE TIERS — editorial prose ── #}
+<div style="max-width:860px;margin:0 auto;padding:64px var(--page-pad) 0;">
+
+  {# ANNUAL #}
+  <div style="padding-bottom:72px;border-bottom:0.5px solid rgba(26,39,68,0.09);margin-bottom:72px;">
+    <div style="font-size:15px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,39,68,0.38);margin-bottom:16px;">The complete record</div>
+    <div style="font-family:'Playfair Display',serif;font-size:32px;color:#1A2744;font-weight:400;margin-bottom:8px;">Annual</div>
+    <span style="display:block;font-size:15px;letter-spacing:0.08em;text-transform:uppercase;color:#C8A84B;font-weight:500;margin-bottom:28px;">Founding Member price locked forever</span>
+    <div style="font-family:'Playfair Display',serif;font-size:64px;color:#1A2744;line-height:1;letter-spacing:-0.03em;margin-bottom:8px;">₹4,000</div>
+    <div style="font-size:16px;color:rgba(26,39,68,0.48);margin-bottom:36px;">per year &nbsp;·&nbsp; ₹333 per month &nbsp;·&nbsp; 48 full evaluations</div>
+    <div style="font-size:18px;color:#1A2744;line-height:1.85;margin-bottom:32px;">The complete record begins here. Every photograph evaluated. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.</div>
+    <div style="margin-bottom:40px;">
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">48 full evaluations per year — Mentor narrative on every photograph</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Calibrated standing — Camera or Mobile League</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Your evolving portrait — begins at 10 evaluations</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Annual Excellence Award eligibility</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Missions and weekly challenges</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Next Shot advisory after every evaluation</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Memory-aware re-evaluation</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Location advisory — where to photograph next</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;">Founding Member price — locked forever</div>
     </div>
-    <button onclick="document.getElementById('pr-track-modal').style.display='none'" style="width:100%;padding:10px;font-size:14px;color:var(--text-muted);background:none;border:none;cursor:pointer">Cancel</button>
+    <a href="/image/47" target="_blank" style="display:block;font-size:14px;color:#C8A84B;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;margin-bottom:24px;">See a sample full evaluation →</a>
+    <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')" style="font-weight:500;font-size:17px;text-align:left;padding-left:0;background:none;border:none;cursor:pointer;color:#1A2744;display:block;width:auto;">Build your annual record — ₹4,000 →</button>
+    <div style="font-size:15px;color:rgba(26,39,68,0.42);line-height:1.65;margin-top:12px;margin-bottom:16px;">Membership gives you the opportunity to build your record. League standing is earned through the work.</div>
+    <div style="font-size:14px;color:rgba(26,39,68,0.38);line-height:1.65;font-style:italic;margin-top:8px;padding-top:16px;border-top:0.5px solid rgba(26,39,68,0.08);">Founding Member pricing. This rate is locked for the life of the membership. It will not be available once the founding cohort closes.</div>
   </div>
-</div>
 
-{# ── Founding Member ── #}
-<div class="pr-founding">
-  <div class="pr-founding-inner">
-    <div style="flex:1">
-      <div class="pr-founding-label">Founding Member</div>
-      <div class="pr-founding-h">Join before January 2027. Your price is locked forever.</div>
-      <p class="pr-founding-sub">Standard pricing increases after January 2027. Founding Members remain at ₹4,000 per year for as long as they remain subscribed. The record you build never resets.</p>
+  {# SIX MONTHS #}
+  <div style="padding-bottom:72px;border-bottom:0.5px solid rgba(26,39,68,0.09);margin-bottom:72px;">
+    <div style="font-size:15px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,39,68,0.38);margin-bottom:16px;">Six months of the full record</div>
+    <div style="font-family:'Playfair Display',serif;font-size:32px;color:#1A2744;font-weight:400;margin-bottom:8px;">Six Months</div>
+    <span style="display:block;font-size:15px;margin-bottom:28px;">&nbsp;</span>
+    <div style="font-family:'Playfair Display',serif;font-size:64px;color:#1A2744;line-height:1;letter-spacing:-0.03em;margin-bottom:8px;">₹2,500</div>
+    <div style="font-size:16px;color:rgba(26,39,68,0.48);margin-bottom:36px;">for six months &nbsp;·&nbsp; ₹417 per month &nbsp;·&nbsp; 24 full evaluations</div>
+    <div style="font-size:18px;color:#1A2744;line-height:1.85;margin-bottom:32px;">Six months of the full record. The Mentor narrative, the calibrated standing, the Annual Excellence Award — all of it starts with your first evaluation. When you are ready to extend, the annual record is waiting.</div>
+    <div style="margin-bottom:40px;">
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">24 full evaluations over six months — Mentor narrative on every photograph</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Calibrated standing — Camera or Mobile League</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Your evolving portrait — begins at 10 evaluations</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Annual Excellence Award eligibility</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Missions and weekly challenges</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Next Shot advisory after every evaluation</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Memory-aware re-evaluation</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;">Location advisory — where to photograph next</div>
     </div>
-    <div class="pr-founding-price">₹4,000<br><span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.45)">forever</span></div>
+    <a href="/image/47" target="_blank" style="display:block;font-size:14px;color:#C8A84B;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;margin-bottom:24px;">See a sample full evaluation →</a>
+    <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')" style="font-weight:500;font-size:17px;text-align:left;padding-left:0;background:none;border:none;cursor:pointer;color:#1A2744;display:block;width:auto;">Start six months — ₹2,500 →</button>
+    <div style="font-size:15px;color:rgba(26,39,68,0.42);line-height:1.65;margin-top:12px;">Membership gives you the opportunity to build your record. League standing is earned through the work.</div>
   </div>
+
+  {# 100 FOR 100 #}
+  <div style="padding-bottom:72px;">
+    <div style="font-size:15px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,39,68,0.38);margin-bottom:16px;">The evaluation. Without the record.</div>
+    <div style="font-family:'Playfair Display',serif;font-size:32px;color:#1A2744;font-weight:400;margin-bottom:8px;">100 for 100</div>
+    <span style="display:block;font-size:15px;margin-bottom:28px;">&nbsp;</span>
+    <div style="font-family:'Playfair Display',serif;font-size:64px;color:#1A2744;line-height:1;letter-spacing:-0.03em;margin-bottom:8px;">₹100</div>
+    <div style="font-size:16px;color:rgba(26,39,68,0.48);margin-bottom:36px;">one time &nbsp;·&nbsp; 100 basic evaluations &nbsp;·&nbsp; five dimensions</div>
+    <div style="font-size:18px;color:#1A2744;line-height:1.85;margin-bottom:32px;">For everyone serious about improving, or an organisation running courses or workshops. You get the same five-dimensional evaluation calibrated against our standard — no Mentor narrative. Use within your own timelines.</div>
+    <div style="margin-bottom:40px;">
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">100 basic evaluations — five dimensions on every photograph</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;border-bottom:0.5px solid rgba(26,39,68,0.06);">Visual gradient score</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.70);line-height:1.7;padding:10px 0;">Use within your own timelines</div>
+    </div>
+    <a href="/try/result/33" target="_blank" style="display:block;font-size:14px;color:#C8A84B;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;margin-bottom:24px;">See a sample basic evaluation →</a>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')" style="font-weight:500;font-size:17px;text-align:left;padding-left:0;background:none;border:none;cursor:pointer;color:#1A2744;display:block;width:auto;">Start with 100 evaluations — ₹100 →</button>
+  </div>
+
 </div>
 
-{# ── India only + International waitlist ── #}
+{# ── INDIA PAYMENTS + INTERNATIONAL WAITLIST ── #}
 <div class="pr-intl">
   <div class="pr-intl-inner">
     <p><strong>India payments only.</strong> Membership payments are currently accepted through Indian bank accounts, UPI, and Indian debit or credit cards only. International payments are not yet supported.</p>
@@ -414,54 +415,26 @@
   </div>
 </div>
 
-{# ── Comparison table ── #}
-<div class="pr-compare">
-  <h2>What you get</h2>
-  <div class="pr-table-wrap">
-  <table class="pr-table">
-    <thead>
-      <tr>
-        <th style="width:36%"> </th>
-        <th class="hl">Annual ₹4,000</th>
-        <th>6 Months ₹2,500</th>
-        <th>100 for 100 ₹100</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="row-key">Evaluations</td><td class="check">48 Full / year</td><td class="check">24 Full / 6 months</td><td class="check">100 Basic</td></tr>
-      <tr><td class="row-key">Evaluation type</td><td class="check">Full — Mentor + five dimensions</td><td class="check">Full — Mentor + five dimensions</td><td style="color:var(--text-secondary)">Basic — five dimensions</td></tr>
-      <tr><td class="row-key">Mentor narrative</td><td class="check">✓ every photograph</td><td class="check">✓ every photograph</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Annual Excellence Award</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Calibrated standing</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Your evolving portrait</td><td class="check">✓ begins at 10</td><td class="check">✓ begins at 10</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Missions and challenges</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Next Shot advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Founding Member price lock</td><td class="check">✓ annual only</td><td class="dash">—</td><td class="dash">—</td></tr>
-    </tbody>
-  </table>
-  </div>
+{# ── KYC ── #}
+<div style="padding:28px var(--page-pad);border-top:0.5px solid rgba(26,39,68,0.08);font-size:13px;color:rgba(26,39,68,0.38);line-height:1.7;">
+  All memberships are subject to the Shutter League Terms and Conditions.
+  &nbsp;<a href="/terms" style="color:rgba(26,39,68,0.50);text-decoration:none;">Terms &amp; Conditions</a>
+  &nbsp;·&nbsp;<a href="/privacy" style="color:rgba(26,39,68,0.50);text-decoration:none;">Privacy Policy</a>
+  &nbsp;·&nbsp;<a href="/refund-policy" style="color:rgba(26,39,68,0.50);text-decoration:none;">Refund Policy</a>
+  &nbsp;·&nbsp;<a href="/shipping-policy" style="color:rgba(26,39,68,0.50);text-decoration:none;">Shipping &amp; Returns</a>
 </div>
 
-{# ── Why three blocks ── #}
-<div class="pr-why">
-  <div class="pr-why-item">
-    <div class="pr-why-h">Honest, not algorithmic</div>
-    <p class="pr-why-b">When this platform says your photograph is Grandmaster level, that tier was calibrated by photographers evaluating real images blind — not an algorithm rating itself.</p>
-    <div class="pr-proof" style="margin-top:16px;padding:12px 16px">
-      <p class="pr-proof-q" style="font-size:15px">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
-      <p class="pr-proof-a" style="font-size:13px"><strong>Mahesh Iyer</strong> · Grandmaster · Standing 105 of 20,000 globally, PhotoCrowd · 37 evaluations</p>
+{# ── Track selection modal — preserved verbatim ── #}
+<div id="pr-track-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+  <div style="background:var(--surface-2);border-radius:14px;padding:32px;max-width:440px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">Annual — ₹4,000</div>
+    <p style="font-size:15px;color:var(--text-secondary);margin-bottom:24px;line-height:1.6">Camera League for DSLR, mirrorless, and medium format. Mobile League for smartphone photographers — evaluated on its own terms.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <button onclick="startDirectPayment('camera')" style="padding:16px;font-size:15px;font-weight:700;background:var(--gold);color:#1a1200;border:none;border-radius:8px;cursor:pointer;min-height:52px">Camera League →</button>
+      <button onclick="startDirectPayment('mobile')" style="padding:16px;font-size:15px;font-weight:700;background:var(--surface-1);color:var(--text-primary);border:1.5px solid var(--border-strong);border-radius:8px;cursor:pointer;min-height:52px">Mobile League →</button>
     </div>
-  </div>
-  <div class="pr-why-item">
-    <div class="pr-why-h">The record is permanent</div>
-    <p class="pr-why-b">One year from now — or three — every photograph you uploaded is still here. The record of how your eye changed is permanent. Nothing is lost. Nothing resets.</p>
-  </div>
-  <div class="pr-why-item">
-    <div class="pr-why-h">The credential compounds</div>
-    <p class="pr-why-b">The Annual Excellence Award is decided by consistency across twelve months. The longer you are on the platform, the more it has seen of your eye. The credential you earn in year three means more than year one — because it was harder to earn.</p>
+    <button onclick="document.getElementById('pr-track-modal').style.display='none'" style="width:100%;padding:10px;font-size:14px;color:var(--text-muted);background:none;border:none;cursor:pointer">Cancel</button>
   </div>
 </div>
 
