@@ -160,6 +160,8 @@ a{text-decoration:none;color:inherit}
   .pub-nav{padding:0 16px}
   .pub-nav-right{display:none}  /* hide all desktop nav links — hamburger takes over */
   .pub-ham{display:flex}        /* show hamburger */
+  /* SL-194: Haiku users have More tab in bottom nav — hamburger not needed */
+  .pub-nav.haiku-nav .pub-ham{display:none}
   .pub-header{padding:36px 20px 28px}
   .pub-tabs{padding:0 20px}
   .pub-grid-wrap{padding:28px 20px 60px}
@@ -180,7 +182,7 @@ a{text-decoration:none;color:inherit}
 <body>
 
 {# ── NAV ── #}
-<nav class="pub-nav">
+<nav class="pub-nav{% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %} haiku-nav{% endif %}">
   <a href="{{ url_for('index') }}" class="pub-brand">
     <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" style="height:34px;width:auto;display:block" onerror="this.style.display='none'">
     <span class="pub-brandword">Shutter League</span>
