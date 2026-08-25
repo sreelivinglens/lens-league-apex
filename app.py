@@ -1,13 +1,4 @@
-# SL-VERSION: 181.62-staging (Session 192, 2026-08-24 — user_hero SIMPLIFIED: removed separate DB query entirely. user_hero = _images[0] — last uploaded image, already fetched. No extra query, no failure mode. RETAINS 181.61.)
-# SL-VERSION: 181.61-staging (Session 192, 2026-08-24 — user_hero FIX: removed thumb_url IS NOT NULL from query — was blocking hero score when thumb missing. Added fallback: if user_hero still None, use _images[0] so score/tier always renders. RETAINS 181.60.)
-# SL-VERSION: 181.60-staging (Session 192, 2026-08-24 — CRITICAL: db.session.rollback() guard at start of try_welcome — prevents InFailedSqlTransaction cascade. next_leap_count: SQL count of dimension recurrence passed to template for escalating pre-shutter question. RETAINS 181.58.)
-# SL-VERSION: 181.58-staging (Session 192, 2026-08-24 — COST+LEGAL: (1) Watermark: Sonnet→Haiku on free tier saves ₹1.60/10evals. (2) upload_declarations table: user_id/image_id/declared_at/ip/ua/watermark_result — permanent legal audit trail. (3) max_tokens 800→500 saves ₹0.80/10evals. (4) Sherpa milestone-only: evals 2,5,10 free; every 10th play — saves ₹0.84/10evals. Total: ₹3.18/10 free evals. RETAINS 181.57.)
-# SL-VERSION: 181.57-staging (Session 192, 2026-08-24 — ADMIN: /admin/api/user-id-by-username endpoint added. Resolves username to user_id + Haiku eval count for the bulk rescore tool. RETAINS 181.56.)
-# SL-VERSION: 181.56-staging (Session 192, 2026-08-24 — INDEX HERO FIX: carousel_images and recent_images queries missing is_haiku_try IS NOT TRUE filter. Haiku images were appearing in homepage hero and recent work sections. Now excluded. On staging with only Haiku images, gradient fallback shows correctly. RETAINS 181.55.)
-# SL-VERSION: 181.55-staging (Session 192, 2026-08-24 — TWO FIXES: (1) /mission route: added is_subscribed gate — Haiku users redirected to /pricing with Sherpa-tone flash message. (2) base.html _show_sidenav: added is_subscribed check — Haiku users were seeing full paid sidenav. RETAINS 181.54.)
-# SL-VERSION: 181.53-staging (Session 192, 2026-08-24 — HAIKU BACKFILL: /admin/haiku-rescore/<image_id> and /admin/haiku-rescore-user/<user_id> added. Single image route re-runs _try_run_haiku with improved prompt (REPETITION BLOCKED). Bulk user route processes oldest-first with 1s delay between calls so REPETITION BLOCKED builds correctly across sequence. Text + score + tier all updated. is_haiku_try verified before running. Background thread for bulk. RETAINS 181.52.)
-# SL-VERSION: 181.52-staging (Session 192, 2026-08-24 — TWO FIXES: (1) subscribe_confirm: play plan (100-for-100) was blocked — plan not in allowed list, redirected to /pricing. Fixed: play handler intercepts before guard, verifies Razorpay signature, increments referral_bonus_uploads +100 via raw SQL, redirects to /try/welcome. User stays in Haiku world. is_subscribed unchanged. (2) _get_haiku_history_context: REPETITION BLOCKED constraint added — previous impression paragraphs passed to prompt with explicit instruction not to repeat phrases, structures or observations. RETAINS 181.51.)
-# SL-VERSION: 181.51-staging (Session 192, 2026-08-24 — REPETITION BLOCKED added to _TRY_HAIKU_PROMPT via _get_haiku_history_context. RETAINS 181.50.)
+# SL-VERSION: 181.53-staging (Session 193, 2026-08-25 — FIX: try_welcome() InFailedSqlTransaction. Background workers leave DB session in failed state — gallery_images, sherpa_obs, league_hero all silently failed on every /try/welcome load. Fix: db.session.rollback() added at try_welcome() entry, same pattern as dashboard() at line 4612. RETAINS 181.52.)
 # SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
 # SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
 # SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
@@ -894,19 +885,6 @@ def _run_startup_tasks():
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_url VARCHAR(512)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS thumb_url VARCHAR(512)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
-                    # SL-181.58: upload_declarations — legal audit trail per upload
-                    """CREATE TABLE IF NOT EXISTS upload_declarations (
-                        id SERIAL PRIMARY KEY,
-                        user_id INTEGER NOT NULL REFERENCES users(id),
-                        image_id INTEGER NOT NULL REFERENCES images(id),
-                        declared_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                        ip_address VARCHAR(64),
-                        user_agent VARCHAR(512),
-                        watermark_checked BOOLEAN DEFAULT FALSE,
-                        watermark_result VARCHAR(128)
-                    )""",
-                    "CREATE INDEX IF NOT EXISTS ix_upload_decl_user ON upload_declarations(user_id)",
-                    "CREATE INDEX IF NOT EXISTS ix_upload_decl_image ON upload_declarations(image_id)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_lens VARCHAR(180)",
                     "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
@@ -3528,7 +3506,6 @@ def index():
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
             "  AND thumb_url LIKE :r2 "
-            "  AND (is_haiku_try IS NOT TRUE) "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
         # Convert raw SQL rows to simple objects so Jinja2 attribute access works
@@ -3565,7 +3542,6 @@ def index():
                 "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
                 "  AND is_public=true AND is_flagged=false "
                 "  AND thumb_url LIKE :r2 "
-                "  AND (is_haiku_try IS NOT TRUE) "
                 "  AND user_id != ALL(:mids) "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2, 'mids': list(_mentor_ids)}).fetchall()
@@ -3577,7 +3553,6 @@ def index():
                 "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
                 "  AND is_public=true AND is_flagged=false "
                 "  AND thumb_url LIKE :r2 "
-                "  AND (is_haiku_try IS NOT TRUE) "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2}).fetchall()
         carousel_images = [_row_to_ns(r, _car_fields) for r in _carousel_rows]
@@ -4292,14 +4267,7 @@ def forgot_password():
 def mission():
     """Mission Details — Screen 2 of the assignment sequence.
     Powered by Photo School curriculum — same lesson as dashboard card.
-    Paid subscribers only — Haiku users redirected to pricing.
-    SL-181.55: subscription gate added.
     """
-    # Gate: Haiku (free) users should not access /mission
-    if not getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
-        flash('The Improve section is available to League members.', 'info')
-        return redirect(url_for('pricing'))
-
     progress_data    = _build_progress_data(current_user)
     active_challenge = _get_active_challenge(
         user_track=getattr(current_user, 'subscription_track', None) or None
@@ -11552,164 +11520,6 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 img2.status = old_status if old_status in ('scored', 'error') else 'scored'
                 db.session.commit()
             app.logger.error(f'[force_rescore_bg] {_tb.format_exc()}')
-
-
-# ── SL-181.52: HAIKU RESCORE / BACKFILL ROUTES ───────────────────────────────
-# Purpose: re-run _try_run_haiku on existing Haiku images so REPETITION BLOCKED
-# and improved prompt improvements apply retroactively. Text fields (impression,
-# strength_obs, next_leap_obs, what_next, master_name, master_why, takeaway)
-# are regenerated. Score, tier, and dimension scores are also updated with the
-# fresh call. Haiku images only (is_haiku_try = TRUE).
-#
-# Routes:
-#   POST /admin/haiku-rescore/<image_id>       — single image
-#   POST /admin/haiku-rescore-user/<user_id>   — all Haiku images for one user,
-#                                                 oldest-first so REPETITION BLOCKED
-#                                                 builds correctly across the sequence
-
-def _haiku_rescore_single(image_id):
-    """
-    Core: download thumb from R2, call _try_run_haiku, return True/False.
-    Called from both single and bulk routes. Must run inside app context.
-    """
-    import base64 as _b64, tempfile, io as _io
-    from storage import get_client, BUCKET
-
-    img = Image.query.get(image_id)
-    if not img:
-        app.logger.warning(f'[haiku_rescore] image {image_id} not found')
-        return False
-    if not getattr(img, 'is_haiku_try', False):
-        # Raw SQL check — is_haiku_try not a mapped ORM column
-        row = db.session.execute(
-            db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
-            {'iid': image_id}
-        ).fetchone()
-        if not row or not row[0]:
-            app.logger.warning(f'[haiku_rescore] image {image_id} is not a Haiku image — skipped')
-            return False
-
-    if not img.thumb_url:
-        app.logger.warning(f'[haiku_rescore] image {image_id} has no thumb_url — skipped')
-        return False
-
-    try:
-        buf = _io.BytesIO()
-        key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
-        get_client().download_fileobj(BUCKET, key, buf)
-        img_b64 = _b64.b64encode(buf.getvalue()).decode()
-    except Exception as _de:
-        app.logger.error(f'[haiku_rescore] image {image_id} download failed: {_de}')
-        return False
-
-    genre   = img.genre or 'General'
-    user_id = img.user_id
-
-    result = _try_run_haiku(image_id, img_b64, genre, user_id=user_id)
-    if result:
-        app.logger.info(
-            f'[haiku_rescore] done image={image_id} user={user_id} '
-            f'score={result.get("score")} tier={result.get("tier")}'
-        )
-        return True
-    else:
-        app.logger.error(f'[haiku_rescore] _try_run_haiku returned None for image {image_id}')
-        return False
-
-
-@app.route('/admin/haiku-rescore/<int:image_id>', methods=['POST'])
-@login_required
-@admin_required
-def admin_haiku_rescore_single(image_id):
-    """
-    Admin: re-run Haiku engine on one Haiku image with improved prompt
-    (REPETITION BLOCKED, varied opening). Text fields regenerated.
-    Score and tier also updated.
-    """
-    ok = _haiku_rescore_single(image_id)
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-        return jsonify({'status': 'done' if ok else 'error', 'image_id': image_id})
-    if ok:
-        flash(f'Haiku rescore complete for image {image_id}.', 'success')
-    else:
-        flash(f'Haiku rescore failed for image {image_id} — check logs.', 'error')
-    return redirect(request.referrer or url_for('admin_dashboard'))
-
-
-@app.route('/admin/haiku-rescore-user/<int:user_id>', methods=['POST'])
-@login_required
-@admin_required
-def admin_haiku_rescore_user(user_id):
-    """
-    Admin: re-run Haiku engine on ALL Haiku images for one user, oldest-first.
-    Oldest-first is critical — REPETITION BLOCKED builds correctly across the
-    sequence (image 2 sees image 1's new impression, image 3 sees 1+2, etc.)
-    Runs in a background thread. Returns immediately.
-    """
-    def _bulk_rescore(uid):
-        with app.app_context():
-            rows = db.session.execute(
-                db.text(
-                    "SELECT id FROM images "
-                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
-                    "ORDER BY id ASC"  # oldest first — REPETITION BLOCKED builds correctly
-                ),
-                {'uid': uid}
-            ).fetchall()
-            image_ids = [r[0] for r in rows]
-            app.logger.info(f'[haiku_rescore_user] user={uid} — {len(image_ids)} images to rescore')
-            done = 0
-            for iid in image_ids:
-                try:
-                    ok = _haiku_rescore_single(iid)
-                    if ok:
-                        done += 1
-                    import time as _t
-                    _t.sleep(1)  # 1s between calls — avoid API rate limit
-                except Exception as _be:
-                    app.logger.error(f'[haiku_rescore_user] image {iid} failed: {_be}')
-            app.logger.info(
-                f'[haiku_rescore_user] user={uid} complete — '
-                f'{done}/{len(image_ids)} rescored'
-            )
-
-    import threading as _brt
-    _brt.Thread(target=_bulk_rescore, args=(user_id,), daemon=True).start()
-
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-        return jsonify({'status': 'started', 'user_id': user_id})
-    flash(f'Haiku rescore started for user {user_id} — runs in background. Check Railway logs for progress.', 'info')
-    return redirect(request.referrer or url_for('admin_dashboard'))
-
-
-@app.route('/admin/api/user-id-by-username')
-@login_required
-@admin_required
-def admin_api_user_id_by_username():
-    """
-    Admin AJAX: resolve username → user_id + basic info + Haiku eval count.
-    Used by the Haiku rescore bulk tool in admin dashboard.
-    """
-    username = request.args.get('username', '').strip()
-    if not username:
-        return jsonify({'error': 'No username provided'}), 400
-    user = User.query.filter(
-        db.or_(User.username == username, User.email == username)
-    ).first()
-    if not user:
-        return jsonify({'user_id': None}), 200
-    # Count Haiku evals
-    haiku_count = int(db.session.execute(
-        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
-        {'uid': user.id}
-    ).scalar() or 0)
-    return jsonify({
-        'user_id':   user.id,
-        'username':  user.username,
-        'full_name': user.full_name or user.username,
-        'email':     user.email,
-        'evals':     haiku_count,
-    })
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
@@ -22135,43 +21945,6 @@ def subscribe_confirm():
 
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
 
-    # ── PLAY PLAN (100-for-100) ── SL-181.52-staging
-    # play uses Orders API (same as monthly). Verify signature, increment
-    # referral_bonus_uploads by 100. Does NOT set is_subscribed — user stays
-    # in the Haiku world. Redirect to /try/welcome (Haiku dashboard).
-    if plan == 'play' and track in ('camera', 'mobile'):
-        try:
-            if not order_id or not payment_id:
-                raise Exception('Missing order_id or payment_id for play plan')
-            msg = f'{order_id}|{payment_id}'
-            expected = _hmac.new(
-                razorpay_secret.encode('utf-8'),
-                msg.encode('utf-8'),
-                _hashlib.sha256
-            ).hexdigest()
-            if not _hmac.compare_digest(expected, signature):
-                raise Exception('Signature mismatch')
-            # Grant 100 bonus evaluations
-            _current_bonus = int(db.session.execute(
-                db.text('SELECT referral_bonus_uploads FROM users WHERE id = :uid'),
-                {'uid': current_user.id}
-            ).scalar() or 0)
-            db.session.execute(
-                db.text('UPDATE users SET referral_bonus_uploads = :new_val WHERE id = :uid'),
-                {'new_val': _current_bonus + 100, 'uid': current_user.id}
-            )
-            db.session.commit()
-            app.logger.info(
-                f'[subscribe_confirm] play top-up granted — '
-                f'user={current_user.id} bonus={_current_bonus}→{_current_bonus + 100}'
-            )
-            flash('100 more evaluations added to your account.', 'success')
-            return redirect(url_for('try_welcome'))
-        except Exception as _pe:
-            app.logger.error(f'[subscribe_confirm] play failed: {_pe}')
-            flash('Payment verification failed. Contact support if you were charged.', 'error')
-            return redirect(url_for('pricing'))
-
     if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual'):
         flash('Invalid payment details.', 'error')
         return redirect(url_for('pricing'))
@@ -32217,33 +31990,11 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
                 f"in plain English — name it as a pattern without using dimension names."
             )
 
-        # ── REPETITION BLOCKED — SL-181.52 ──────────────────────────────────
-        # Collect previous impression paragraphs so the model cannot repeat them.
-        # P2 fix from Session 192 handoff.
-        _repetition_block = ''
-        _prev_impressions = []
-        for _r in _rows:
-            try:
-                import json as _rbj
-                _imp = _rbj.loads(_r[3] or '{}').get('impression', '').strip()
-                if _imp:
-                    _prev_impressions.append(_imp[:150])
-            except Exception:
-                pass
-        if _prev_impressions:
-            _repetition_block = (
-                "\n\nREPETITION BLOCKED — the following observations have already been "
-                "made to this photographer. Do NOT repeat these phrases, sentence structures, "
-                "or observations in ANY field (impression, strength_obs, next_leap_obs, what_next):\n"
-                + "\n".join([f'  - \"{imp}\"' for imp in _prev_impressions])
-            )
-
         return (
             f"{_opening}\n\n"
             f"PHOTOGRAPHER HISTORY (last {len(_lines)} evaluated photograph{'s' if len(_lines) > 1 else ''}):\n"
             + "\n".join(_lines)
             + _pattern_instruction
-            + _repetition_block
         )
     except Exception as _he:
         app.logger.warning(f'[try_haiku] history fetch failed (non-fatal): {_he}')
@@ -32434,7 +32185,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 500,  # SL-181.58: 800→500 saves ~₹0.08/eval
+        'max_tokens': 800,
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -32550,26 +32301,16 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                 f'[try_haiku] scored image={image_id} score={final_score} '
                 f'tier={tier} user={img.user_id}'
             )
-            # SL-181.58: Sherpa milestone-only — not every eval
-            # Free (10 evals): fires at 2,5,10. Play (100): every 10th.
-            # Saves ~₹0.84 per free user across 10 evals.
+            # SL-181.48: trigger cross-image Sherpa synthesis after scoring
+            # Fires in background thread — non-blocking, never crashes scoring
             if user_id:
                 try:
-                    _sherpa_count = int(db.session.execute(
-                        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
-                        {'uid': img.user_id}
-                    ).scalar() or 0)
-                    _should_sherpa = _sherpa_count in (2, 5, 10) or (_sherpa_count > 10 and _sherpa_count % 10 == 0)
-                    if _should_sherpa:
-                        import threading as _sht
-                        _uid_for_sherpa = img.user_id
-                        def _run_sherpa():
-                            with app.app_context():
-                                _generate_haiku_sherpa(_uid_for_sherpa)
-                        _sht.Thread(target=_run_sherpa, daemon=True).start()
-                        app.logger.info(f'[haiku_sherpa] milestone eval={_sherpa_count} user={img.user_id}')
-                    else:
-                        app.logger.info(f'[haiku_sherpa] skipped eval={_sherpa_count} user={img.user_id}')
+                    import threading as _sht
+                    _uid_for_sherpa = img.user_id
+                    def _run_sherpa():
+                        with app.app_context():
+                            _generate_haiku_sherpa(_uid_for_sherpa)
+                    _sht.Thread(target=_run_sherpa, daemon=True).start()
                 except Exception as _she:
                     app.logger.warning(f'[haiku_sherpa] trigger failed (non-fatal): {_she}')
             return {
@@ -32662,6 +32403,15 @@ def try_welcome():
     # RETAINS 181.34.)
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
         return redirect(url_for('dashboard'))
+
+    # SL-181.53: Proactive rollback at route entry — background workers can leave
+    # DB session in InFailedSqlTransaction. Without this every subsequent query fails.
+    # Same pattern as dashboard() at line 4612.
+    try:
+        db.session.rollback()
+    except Exception:
+        pass
+
 
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     try:
@@ -32778,10 +32528,9 @@ def try_welcome():
         db.session.rollback()
 
     # ── next_leap_name + prev_score — for 1-upload and 2-upload states
-    _next_leap_name  = ''
-    _next_leap_count = 0    # SL-181.59: times same dimension was weakest
-    _prev_score      = None
-    _score_trend     = None  # 'up', 'down', 'same', None
+    _next_leap_name = ''
+    _prev_score     = None
+    _score_trend    = None  # 'up', 'down', 'same', None
     if evals_used >= 1:
         try:
             import json as _nlj
@@ -32798,21 +32547,6 @@ def try_welcome():
                 try:
                     _nld = _nlj.loads(_nl_rows[0][0] or '{}')
                     _next_leap_name = _nld.get('next_leap_name', '')
-                    # SL-181.59: count recurrence of same weakest dimension
-                    if _next_leap_name:
-                        try:
-                            _nlc = db.session.execute(
-                                db.text(
-                                    "SELECT COUNT(*) FROM images "
-                                    "WHERE user_id = :uid AND is_haiku_try = TRUE "
-                                    "AND status = 'scored' "
-                                    "AND audit_json->>'next_leap_name' = :dim"
-                                ),
-                                {'uid': current_user.id, 'dim': _next_leap_name}
-                            ).scalar()
-                            _next_leap_count = int(_nlc or 0)
-                        except Exception:
-                            _next_leap_count = 0
                 except Exception:
                     pass
                 # Trend: compare most recent vs previous score
@@ -32864,22 +32598,37 @@ def try_welcome():
     except Exception as _sae:
         app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
 
-    # SL-181.62: user_hero = last uploaded image — _images[0] is already id DESC
-    # No separate query needed. _images is fetched above and already has all fields.
+    # SL-181.48: user's own best image as hero (highest score, has thumb)
+    # Falls back to League hero if no user images exist
     _user_hero = None
-    if _images:
-        try:
+    try:
+        _uh_row = db.session.execute(db.text("""
+            SELECT id, thumb_url, score, tier, genre, width, height
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try IS TRUE
+              AND status = 'scored'
+              AND thumb_url IS NOT NULL
+              AND score IS NOT NULL
+            ORDER BY score DESC
+            LIMIT 1
+        """), {'uid': current_user.id}).fetchone()
+        if _uh_row:
             from types import SimpleNamespace as _UHSN
-            _last_img = _images[0]
+            _uw = int(_uh_row[5]) if _uh_row[5] else 0
+            _uh = int(_uh_row[6]) if _uh_row[6] else 0
             _user_hero = _UHSN(
-                id        = _last_img['id'],
-                thumb_url = _last_img.get('thumb_url') or '',
-                score     = float(_last_img['score']) if _last_img.get('score') else None,
-                tier      = _last_img.get('tier') or '',
-                genre     = _last_img.get('genre') or '',
+                id        = _uh_row[0],
+                thumb_url = _uh_row[1],
+                score     = float(_uh_row[2]),
+                tier      = _uh_row[3],
+                genre     = _uh_row[4] or '',
+                img_width  = _uw,
+                img_height = _uh,
+                is_portrait = (_uh > _uw) if (_uw and _uh) else False,
             )
-        except Exception as _uhe:
-            app.logger.warning(f'[try_welcome] user_hero from _images failed: {_uhe}')
+    except Exception as _uhe:
+        app.logger.warning(f'[try_welcome] user_hero failed: {_uhe}')
 
     # League hero — Grandmaster/Legend only, for sidebar standard panel
     _league_hero = None
@@ -32926,7 +32675,6 @@ def try_welcome():
         sherpa_nudge       = _sherpa_nudge,
         visit_count        = _visit_count,
         next_leap_name     = _next_leap_name,
-        next_leap_count    = _next_leap_count,
         prev_score         = _prev_score,
         score_trend        = _score_trend,
         gallery_images     = _gallery_images,
@@ -33098,7 +32846,7 @@ def try_upload():
                 _twm_b64 = _b64.b64encode(_twm_buf.getvalue()).decode('utf-8')
 
                 _twm_payload = _twmjson.dumps({
-                    'model': '_HAIKU_MODEL  # SL-181.58: Haiku replaces Sonnet — watermark check free tier',
+                    'model': 'claude-sonnet-4-6',
                     'max_tokens': 100,
                     'messages': [{'role': 'user', 'content': [
                         {'type': 'image', 'source': {
@@ -33135,8 +32883,6 @@ def try_upload():
                 _twm_text = _twm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
                 _twm_data = _twmjson.loads(_twm_text)
 
-                # SL-181.58: store result for declaration record
-                app._last_wm_result = 'detected: ' + str(_twm_data.get('description','')) if _twm_data.get('watermark_detected') else 'clean'
                 if _twm_data.get('watermark_detected'):
                     if os.path.exists(thumb_path):
                         os.remove(thumb_path)
@@ -33211,24 +32957,6 @@ def try_upload():
             {'iid': image_id}
         )
         db.session.commit()
-        # SL-181.58: store legal declaration audit trail
-        try:
-            _decl_ip = (request.headers.get('X-Forwarded-For', '') or request.remote_addr or '')[:64]
-            _decl_ua = request.headers.get('User-Agent', '')[:512]
-            _wm_result = getattr(app, '_last_wm_result', 'clean')
-            db.session.execute(
-                db.text(
-                    "INSERT INTO upload_declarations "
-                    "(user_id, image_id, declared_at, ip_address, user_agent, "
-                    " watermark_checked, watermark_result) "
-                    "VALUES (:uid, :iid, NOW(), :ip, :ua, TRUE, :wr)"
-                ),
-                {'uid': current_user.id, 'iid': image_id,
-                 'ip': _decl_ip, 'ua': _decl_ua, 'wr': _wm_result}
-            )
-            db.session.commit()
-        except Exception as _decl_err:
-            app.logger.warning(f'[try_upload] declaration store failed (non-fatal): {_decl_err}')
         app.logger.info(
             f'[try_upload] image saved: id={image_id} '
             f'user={current_user.id} genre={genre}'
