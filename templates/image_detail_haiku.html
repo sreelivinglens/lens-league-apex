@@ -162,10 +162,6 @@ main { padding:0 !important; background:#E8E5DF; }
   color:rgba(26,39,68,0.36); margin-bottom:14px;
 }
 .sl-block-body { font-size:18px; line-height:1.85; color:#1A2744; }
-.sl-block-name {
-  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.42); margin-top:16px;
-}
 
 /* EYE BEHIND THIS */
 .sl-reference {
@@ -372,9 +368,7 @@ main { padding:0 !important; background:#E8E5DF; }
       <div>
         <div class="sl-block-label">Strongest moment</div>
         <div class="sl-block-body">{{ strength_obs }}</div>
-        {% if strength_name %}
-        <div class="sl-block-name">{{ strength_name }}</div>
-        {% endif %}
+
       </div>
       {% endif %}
 
@@ -382,9 +376,7 @@ main { padding:0 !important; background:#E8E5DF; }
       <div>
         <div class="sl-block-label">Next leap</div>
         <div class="sl-block-body">{{ next_leap_obs }}</div>
-        {% if next_leap_name %}
-        <div class="sl-block-name">{{ next_leap_name }}</div>
-        {% endif %}
+
       </div>
       {% endif %}
 
