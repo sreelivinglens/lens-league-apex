@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: 182.27-staging
-  Session 192 · 2026-08-24
-  HAIKU CTA FIX: all authenticated CTAs (hero, end, nav, hamburger) now 3-way — paid→dashboard, Haiku→try_welcome, anon→register. Bottom nav gold #F4C20D→#F5C518. RETAINED FROM: compact dropdown anchored top-right (240px, border-radius:10px) — was left:0;right:0 full-bleed covering the screen. RETAINS 182.25.
+  SL-VERSION: 182.28-staging
+  Session 193 · 2026-08-25
+  BOTTOM NAV FIX: (1) Logged-out nav: replaced SHUTTER LEAGUE logo + gold FAB + Log In with Home/Pricing/League/Log In + More drawer (How it works/Science/Programmes/Join the League). (2) Authenticated nav: added Haiku branch (Home→try_welcome/Upload→try_page/My Gallery→try_gallery/League/Profile). Paid branch retains Dashboard/Upload FAB/My Gallery. RETAINS 182.27.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -501,6 +501,30 @@ body,html{overflow-x:hidden;max-width:100%}
 <!-- BOTTOM NAV (mobile only — matches site standard) -->
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
+    {% if not current_user.is_subscribed and current_user.role != 'admin' %}
+    {# Haiku (free) user #}
+    <a href="{{ url_for('try_welcome') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('try_gallery') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Gallery</span>
+    </a>
+    <a href="{{ url_for('standings_public') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      <span>League</span>
+    </a>
+    <a href="{{ url_for('profile') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </a>
+    {% else %}
+    {# Paid user #}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Dashboard</span>
@@ -513,18 +537,39 @@ body,html{overflow-x:hidden;max-width:100%}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       <span>My Gallery</span>
     </a>
+    {% endif %}
   {% else %}
-    <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
-      <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
+  {# Logged-out — discovery nav + More drawer #}
+    <a href="{{ url_for('index') }}" class="sl-nav-item active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
     </a>
-    <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="sl-nav-fab">
-      <div class="sl-nav-fab__circle">+</div>
-      <span>Upload</span>
+    <a href="{{ url_for('pricing') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span>Pricing</span>
+    </a>
+    <a href="{{ url_for('standings_public') }}" class="sl-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      <span>League</span>
     </a>
     <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold)">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       <span>Log In</span>
     </a>
+    {# More drawer #}
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;" id="idxMoreWrap">
+      <button class="sl-nav-item" onclick="idxMoreToggle(event)" aria-label="More"
+              style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:4px;touch-action:manipulation;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <span>More</span>
+      </button>
+      <div id="idxMoreMenu" style="display:none;position:absolute;bottom:calc(100% + 10px);right:-8px;width:208px;background:#1A1A18;border:1px solid rgba(245,197,24,.25);border-radius:10px;overflow:hidden;box-shadow:0 -6px 28px rgba(0,0,0,.55);z-index:1999;">
+        <a href="{{ url_for('how_it_works') }}" style="display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:15px;font-weight:500;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);touch-action:manipulation;" onclick="idxMoreClose()">How it works</a>
+        <a href="{{ url_for('science') }}" style="display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:15px;font-weight:500;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);touch-action:manipulation;" onclick="idxMoreClose()">Science</a>
+        <a href="{{ url_for('contests') }}" style="display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:15px;font-weight:500;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);touch-action:manipulation;" onclick="idxMoreClose()">Programmes</a>
+        <a href="{{ url_for('register') }}" style="display:block;color:#F5C518;font-weight:700;text-decoration:none;font-size:15px;padding:13px 18px;touch-action:manipulation;" onclick="idxMoreClose()">Join the League →</a>
+      </div>
+    </div>
   {% endif %}
 </nav>
 
@@ -556,7 +601,22 @@ document.addEventListener('click', function(e) {
   if (menu.classList.contains('open') && !menu.contains(e.target) && !e.target.closest('.nav-ham')) {
     menu.classList.remove('open');
   }
+  // Close bottom More drawer on outside tap
+  var idxMenu = document.getElementById('idxMoreMenu');
+  var idxWrap = document.getElementById('idxMoreWrap');
+  if (idxMenu && idxMenu.style.display !== 'none' && idxWrap && !idxWrap.contains(e.target)) {
+    idxMenu.style.display = 'none';
+  }
 });
+function idxMoreToggle(e) {
+  e.stopPropagation();
+  var m = document.getElementById('idxMoreMenu');
+  if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+function idxMoreClose() {
+  var m = document.getElementById('idxMoreMenu');
+  if (m) m.style.display = 'none';
+}
 </script>
 
 </body>
