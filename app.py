@@ -32652,6 +32652,31 @@ def try_welcome():
     except Exception as _lhe:
         app.logger.warning(f'[try_welcome] league_hero failed: {_lhe}')
 
+    # ── haiku_percentile — how this user ranks among all Haiku try users by best score
+    # Uses same pattern as platform percentile in scored route (line ~6713).
+    # Pool: all users with at least 1 scored is_haiku_try image.
+    # Percentile = % of that pool this user scores better than (higher = better).
+    # Raw SQL per Rule 10. Falls back to None — template hides block if missing.
+    _haiku_percentile = None
+    try:
+        if _user_hero and _user_hero.score:
+            _pct_row = db.session.execute(db.text("""
+                SELECT COUNT(*) AS total,
+                       COUNT(CASE WHEN best_score < :my_score THEN 1 END) AS below
+                FROM (
+                    SELECT user_id, MAX(score) AS best_score
+                    FROM images
+                    WHERE is_haiku_try IS TRUE
+                      AND status = 'scored'
+                      AND score IS NOT NULL
+                    GROUP BY user_id
+                ) t
+            """), {'my_score': _user_hero.score}).fetchone()
+            if _pct_row and _pct_row[0] and _pct_row[0] > 1:
+                _haiku_percentile = max(1, round((_pct_row[1] / _pct_row[0]) * 100))
+    except Exception as _pce:
+        app.logger.warning(f'[try_welcome] haiku_percentile failed: {_pce}')
+
     resp = make_response(render_template(
         'dashboard_haiku.html',
         evals_used         = evals_used,
@@ -32669,6 +32694,7 @@ def try_welcome():
         prev_score         = _prev_score,
         score_trend        = _score_trend,
         gallery_images     = _gallery_images,
+        haiku_percentile   = _haiku_percentile,
     ))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return resp
