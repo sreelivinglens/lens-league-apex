@@ -1,5 +1,5 @@
-{# SL-VERSION: 181.57-staging (Session 194, 2026-08-25 — HAMBURGER FIX: Removed .sl-top-nav{display:none} on mobile. Top nav now stays visible — hamburger shows on ALL pages pre and post login. Nav-links still hidden. Bottom tab bar stays alongside. Haiku branch added to bottom nav. RETAINS 181.48.) #}
-{# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — NAV: Profile added to Haiku desktop nav and mobile hamburger menu. RETAINS 181.47.) #}
+{# SL-VERSION: 181.58-staging (Session 194, 2026-08-25 — HAMBURGER DROPDOWN COMPACT: nav-mobile was left:0;right:0 full-width overlay. Now right:12px, width:240px, border-radius:10px, anchored below hamburger button top-right. Background #1A2744 navy matches Haiku nav. Removed mobile override that forced top:0/full-screen. RETAINS 181.57.) #}
+{# SL-VERSION: 181.57-staging (Session 194, 2026-08-25 — HAMBURGER FIX: Removed sl-top-nav display:none on mobile. RETAINS 181.48.) #}
 {# SL-VERSION: 181.47-staging (Session 191, 2026-08-23 — NAV OVERHAUL: (1) Logo now auth-aware: Haiku→try_welcome, Paid→dashboard, Logged-out→index. (2) Haiku desktop nav reordered: Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, avatar. (3) Haiku mobile menu same order. RETAINS 181.46.) #}
 {# SL-VERSION: 181.46-staging (Session 191, 2026-08-23 — HAIKU NAV ACTIVE STATE: active link now white bold instead of gold for Haiku users. Gold reserved for scores/badges only. RETAINS 181.45.) #}
 {# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — HAIKU NAV COLOUR: nav background changed to #1A2744 (dark navy) for Haiku users via nav-haiku class. Matches dashboard_haiku.html nav colour. Paid users and logged-out retain existing rgba(26,24,20,0.94) dark brown. RETAINS 181.4.) #}
@@ -919,18 +919,20 @@ nav.nav-haiku .nav-links a.nav-active {
   display: none;
   position: fixed;
   top: var(--nav-height);
-  left: 0;
-  right: 0;
-  max-height: calc(100vh - var(--nav-height));
-  max-height: calc(100dvh - var(--nav-height));
+  right: 12px;
+  left: auto;
+  width: 240px;
+  max-height: calc(100dvh - var(--nav-height) - 80px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: rgba(26,24,20,0.96);
-  border-bottom: 1px solid var(--border);
-  padding: 12px var(--page-pad) 32px;
+  background: #1A2744;
+  border: 1px solid rgba(245,197,24,0.20);
+  border-radius: 10px;
+  padding: 8px 0 12px;
   flex-direction: column;
-  gap: 2px;
-  z-index: 199;
+  gap: 0;
+  z-index: 1200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
 }
 .nav-mobile.open { display: flex; }
 .nav-mobile a {
@@ -1408,7 +1410,7 @@ footer {
      Only nav-links (desktop links) are hidden. Hamburger shows. */
   .nav-mobile-login { display: none !important; }
   /* Mobile drawer — triggered by ☰ in bottom tab bar, slides from top */
-  .nav-mobile { display: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
+  .nav-mobile { display: none; max-height: calc(100dvh - var(--nav-height) - 80px); }
   .nav-mobile.open { display: flex !important; }
   
 }
