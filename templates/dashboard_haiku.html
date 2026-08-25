@@ -1,5 +1,7 @@
 {#
-  SL-VERSION: HAIKU-178.87-staging
+  SL-VERSION: HAIKU-178.88-staging
+  Session 193 · 2026-08-25
+  HERO FIX: Text no longer overlays the photograph. Image is now pure full-bleed (no gradient overlay, no position:absolute text). Score, tier, genre, greeting and eval link moved to a dark navy info card (.hk-hero-info) sitting immediately below the photograph. Mobile hero height increased: 240px→300px (max-width:600px), 260px→320px (max-width:768px). "Full view →" button retained top-right on the image. All content identical — layout only. RETAINS HAIKU-178.87.
   Session 192 · 2026-08-24
   70YR AUDIT: card body 13px→15px, gold italic 12px→14px, tier names 8px→11px, tier scores 7px→10px, footer KYC links 13px→15px with better contrast. HERO FIX: removed Grandmaster image from hero gradient fallback — hero and Grandmaster panel no longer show same image. IMAGE FALLBACK: League hero and hero panel now use hardcoded R2 fallback URL when thumb_url fails to load on staging. League hero: onerror swaps to fallback. Hero gradient: fallback image at 25% opacity luminosity blend — gives dark atmospheric feel without being empty black. NULL GUARD: user_hero.score accessed without null check at line 523 — jinja2 UndefinedError when user_hero is None (SQL transaction failure). All user_hero.score/tier/genre/id references now wrapped in if user_hero and user_hero.score. CRITICAL FIX: state_zero condition was "not state_zero AND user_hero AND user_hero.thumb_url" — if thumb_url unavailable on staging (R2 not accessible), entire main content branch was skipped. Now: "not state_zero" controls branch, hero image falls back to gradient independently. Sherpa, Zone 2, nudge all now render regardless of thumbnail availability. PRE-SHUTTER QUESTION: Single question per eval, dimension-specific, Sherpa tone, escalating if same weakness repeats. Eval 1: "Show me the next one." Evals 2-10: mapped to next_leap_name + next_leap_count. Five dimension branches. Count 1=gentle, 2=more direct, 3=names the pattern, 4+=statement. COPY FINAL: All founder copy applied. Zone 1: "An image is a thousand words...we are starting to hear yours." Zone 2: tier strip + "one image stands apart — because that photographer saw differently" + 5 dimensions. League panel: gap named, "we build that, challenge by challenge." Zone 3 nudge: signature→voice→body of work→five billion. Evolving Eye: "am I making images or just taking them?" + 5 questions pre-shoot. Portfolio: "from five billion, to one." Grandmasters/Legends named. MANIFESTO REWRITE: Dashboard now built on the founding dream ("get everyone to Magnum level"). Bridge block replaced with dark navy tier progression (Rookie→Craftsman→Maverick→Master→Grandmaster→Legend) + current tier highlighted + "5 billion images a day, almost no one getting better" founding philosophy. Nudge: "signature becomes body of work becomes standing". Evolving Eye: Chess/Elo/ICC/ATP — photography never had this. Portfolio: "You were part of 5 billion. With a standing, your work is different." PHILOSOPHY REWRITE: Dashboard now leads with founding philosophy — the question every photographer carries ("am I actually seeing differently than I was?") that has never had a permanent honest answer. Bridge block removes feature list, replaces with provocation. League statement removes quotes, becomes a direct claim. Locked sections: padlock CTAs replaced with navy "Start your record →" and "Join the League →" in gold. Nudge: reframed around what the photographer now knows about themselves and what the League develops. CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
 
@@ -64,20 +66,20 @@ body.page-haiku-dash{
 }
 .hk-counter-compact b{color:#fff;font-weight:700}
 
-/* ── HERO — user's own best image ── */
-.hk-hero{position:relative;height: 480px;background:#0F1F3D;overflow:hidden}
+/* ── HERO — user's own best image — pure photograph, no text overlay ── */
+.hk-hero{position:relative;height:480px;background:#0F1F3D;overflow:hidden}
 .hk-hero-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-.hk-hero-overlay,.hero-fade{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,13,11,0.85) 0%,rgba(13,13,11,0.45) 50%,transparent 100%)}
 .hk-hero-see{position:absolute;top:14px;right:14px;background:rgba(6,14,28,.6);color:#fff;font-size:14px;padding:8px 16px;border:1px solid rgba(255,255,255,.3);border-radius:2px;text-decoration:none;transition:all .15s;min-height:44px;display:inline-flex;align-items:center}
 .hk-hero-see:hover{background:rgba(6,14,28,.85);border-color:rgba(255,255,255,.6)}
-.hk-hero-content{position:absolute;bottom:0;left:0;right:0;padding:24px 32px;margin: 48px 64px}
-.hk-hero-eye{font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
-.hk-hero-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.hk-hero-num{font-size:48px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em}
-.hk-hero-denom{font-size:18px;color:rgba(255,255,255,.4)}
-.hk-hero-tier{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.35);padding:5px 14px}
-.hk-hero-genre{font-size:14px;color:rgba(255,255,255,.4);margin-left:4px}
-.hk-hero-sub{font-size:14px;color:rgba(255,255,255,.7);line-height:1.6;text-decoration:none;display:block;transition:color .15s}
+/* Hero info card — BELOW the image, not on top of it */
+.hk-hero-info{background:#1A2744;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hk-hero-eye{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:8px}
+.hk-hero-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.hk-hero-num{font-size:40px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.03em}
+.hk-hero-denom{font-size:16px;color:rgba(255,255,255,.35)}
+.hk-hero-tier{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.4);padding:4px 12px}
+.hk-hero-genre{font-size:13px;color:rgba(255,255,255,.4);margin-left:2px}
+.hk-hero-sub{font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;text-decoration:none;display:block;transition:color .15s}
 .hk-hero-sub:hover{color:#fff}
 
 /* ── SHERPA OBSERVATION ── */
@@ -427,8 +429,9 @@ body.page-haiku-dash{
   .hk-league-body{padding:20px 16px}
   .hk-league-score{font-size:40px}
   .hk-locked-row{grid-template-columns:1fr!important}
-  .hk-hero{height:240px}
-  .hk-hero-num{font-size:36px}
+  .hk-hero{height:300px}
+  .hk-hero-num{font-size:32px}
+  .hk-hero-info{padding:14px 16px}
   .hk-sherpa{padding:20px 16px}
   .hk-sherpa-q{font-size:15px}
   .hk-locked-row > div > div:nth-child(2){padding:16px 14px 12px!important}
@@ -440,7 +443,7 @@ body.page-haiku-dash{
   .hk-strip-new{grid-template-columns:repeat(2,1fr)!important}
   .hk-tile{height:130px}
   .hk-body{padding:20px 16px}
-  .hk-hero{height:260px}
+  .hk-hero{height:320px}
 }
 
 /* iOS auto-zoom prevention */
@@ -524,15 +527,20 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 ══════════════════════════════════════════════════════════════ #}
 
 {% if not state_zero %}
-{# HERO: user's own best photograph — falls back to gradient if thumb unavailable #}
+{# HERO: user's own best photograph — clean full-bleed image, no text overlay #}
 <div class="hk-hero">
   {% if user_hero and user_hero.thumb_url %}
   <img class="hk-hero-img" src="{{ user_hero.thumb_url }}" alt="Your best photograph" onerror="this.style.display='none'">
   {% else %}
   <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)"></div>
   {% endif %}
-  <div class="hk-hero-overlay hero-fade"></div>
-  <div class="hk-hero-content">
+  {% if user_hero and user_hero.id %}
+  <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="hk-hero-see">Full view →</a>
+  {% endif %}
+</div>
+{# INFO CARD — score, tier, genre — sits below the photograph, not on top of it #}
+<div class="hk-hero-info">
+  <div>
     <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}. We have been watching.</div>
     {% if user_hero and user_hero.score %}
     <div class="hk-hero-row">
