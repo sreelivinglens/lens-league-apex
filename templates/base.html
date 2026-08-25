@@ -1,3 +1,4 @@
+{# SL-VERSION: 181.57-staging (Session 194, 2026-08-25 — HAIKU DRAWER VISIBLE FIX: Drawer opened but was clipped invisible. Cause: page-specific CSS (pricing.html etc) sets overflow-x:hidden on body which clips position:absolute children — known iOS/Chrome behaviour. Fix: #slBottomMoreMenuHaiku gets position:fixed !important at <=899px — viewport-relative, cannot be clipped by any parent overflow. Bottom calc: 72px nav + safe-area. Paid drawer unchanged. RETAINS 181.56.) #}
 {# SL-VERSION: 181.56-staging (Session 194, 2026-08-25 — HAIKU MOBILE NAV FIX: On mobile (<=900px) the top nav is hidden entirely — hamburger included. The bottom tab bar is the only nav. Haiku users were falling into the paid branch (Dashboard/Upload/My Gallery/Improve/More→paid routes). Fixed by adding Haiku branch: Home/Upload/My Evals/More with Haiku-only drawer (Pricing/League/Profile/Science/Help/Log out). Added toggleBottomMoreHaiku, closeBottomMoreHaiku, outside-click dismiss. touch-action:manipulation on all items. Built from 23 Aug known-good baseline. RETAINS 181.48.) #}
 {# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — NAV: Profile added to Haiku desktop nav and mobile hamburger menu. RETAINS 181.47.) #}
 {# SL-VERSION: 181.47-staging (Session 191, 2026-08-23 — NAV OVERHAUL: (1) Logo now auth-aware: Haiku→try_welcome, Paid→dashboard, Logged-out→index. (2) Haiku desktop nav reordered: Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, avatar. (3) Haiku mobile menu same order. RETAINS 181.46.) #}
@@ -283,6 +284,19 @@ table { max-width: none; }
     overflow: hidden;
     box-shadow: 0 -6px 28px rgba(0,0,0,0.55);
     z-index: 1999;
+  }
+  /* SL-181.56: Haiku drawer uses position:fixed to escape overflow:hidden
+     clipping set by individual page CSS (e.g. pricing.html sets
+     overflow-x:hidden on body at 768px, which clips position:absolute
+     descendants). Fixed positioning is viewport-relative — no parent
+     overflow can clip it. Bottom value accounts for nav bar height +
+     safe area + gap. Right aligns with the More button position. */
+  #slBottomMoreMenuHaiku {
+    position: fixed !important;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 8px !important;
+    top: auto !important;
+    left: auto !important;
   }
   .sl-bottom-more-menu__list { max-height: 58dvh; }
 
