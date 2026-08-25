@@ -1,1164 +1,363 @@
-{#
-  SL-VERSION: HAIKU-178.88-staging
-  Session 193 · 2026-08-25
-  HERO FIX: Text no longer overlays the photograph. Image is now pure full-bleed (no gradient overlay, no position:absolute text). Score, tier, genre, greeting and eval link moved to a dark navy info card (.hk-hero-info) sitting immediately below the photograph. Mobile hero height increased: 240px→300px (max-width:600px), 260px→320px (max-width:768px). "Full view →" button retained top-right on the image. All content identical — layout only. RETAINS HAIKU-178.87.
-  Session 192 · 2026-08-24
-  70YR AUDIT: card body 13px→15px, gold italic 12px→14px, tier names 8px→11px, tier scores 7px→10px, footer KYC links 13px→15px with better contrast. HERO FIX: removed Grandmaster image from hero gradient fallback — hero and Grandmaster panel no longer show same image. IMAGE FALLBACK: League hero and hero panel now use hardcoded R2 fallback URL when thumb_url fails to load on staging. League hero: onerror swaps to fallback. Hero gradient: fallback image at 25% opacity luminosity blend — gives dark atmospheric feel without being empty black. NULL GUARD: user_hero.score accessed without null check at line 523 — jinja2 UndefinedError when user_hero is None (SQL transaction failure). All user_hero.score/tier/genre/id references now wrapped in if user_hero and user_hero.score. CRITICAL FIX: state_zero condition was "not state_zero AND user_hero AND user_hero.thumb_url" — if thumb_url unavailable on staging (R2 not accessible), entire main content branch was skipped. Now: "not state_zero" controls branch, hero image falls back to gradient independently. Sherpa, Zone 2, nudge all now render regardless of thumbnail availability. PRE-SHUTTER QUESTION: Single question per eval, dimension-specific, Sherpa tone, escalating if same weakness repeats. Eval 1: "Show me the next one." Evals 2-10: mapped to next_leap_name + next_leap_count. Five dimension branches. Count 1=gentle, 2=more direct, 3=names the pattern, 4+=statement. COPY FINAL: All founder copy applied. Zone 1: "An image is a thousand words...we are starting to hear yours." Zone 2: tier strip + "one image stands apart — because that photographer saw differently" + 5 dimensions. League panel: gap named, "we build that, challenge by challenge." Zone 3 nudge: signature→voice→body of work→five billion. Evolving Eye: "am I making images or just taking them?" + 5 questions pre-shoot. Portfolio: "from five billion, to one." Grandmasters/Legends named. MANIFESTO REWRITE: Dashboard now built on the founding dream ("get everyone to Magnum level"). Bridge block replaced with dark navy tier progression (Rookie→Craftsman→Maverick→Master→Grandmaster→Legend) + current tier highlighted + "5 billion images a day, almost no one getting better" founding philosophy. Nudge: "signature becomes body of work becomes standing". Evolving Eye: Chess/Elo/ICC/ATP — photography never had this. Portfolio: "You were part of 5 billion. With a standing, your work is different." PHILOSOPHY REWRITE: Dashboard now leads with founding philosophy — the question every photographer carries ("am I actually seeing differently than I was?") that has never had a permanent honest answer. Bridge block removes feature list, replaces with provocation. League statement removes quotes, becomes a direct claim. Locked sections: padlock CTAs replaced with navy "Start your record →" and "Join the League →" in gold. Nudge: reframed around what the photographer now knows about themselves and what the League develops. CONVERSION FIX: (1) Bridge line after Sherpa — "This is what we can see from N photographs. At 48 the depth changes completely." (2) League panel score gap — personalised: "1.7 points separate your best from this. That gap closes through photographs, not time." (3) Locked Evolving Eye — "What we wrote above is the first line of it." Makes absence felt not just described. (4) Quiet nudge at evals 5-9 before League panel using milestone_strength. (5) Portfolio copy — adds credential claim (Bengaluru/London/gallery application). DASHBOARD WOW: (1) Hero eyebrow "We have been watching." (2) Sherpa label → "What we see across your N photographs" (reverted from "in your eye" — the count and "across" signal cross-image synthesis which is the product differentiator). (3) Counter reframed as milestone not meter. (4) Trend: visual SVG sparkline showing all scores with dots, labels, up/down/flat badge. (5) CTA sub-label "No subscription needed" removed. (6) Image strip → "Your photographs". (7) League label → "The standard you are building toward". (8) Locked copy sharpened. 100-FOR-100 HIDDEN: subscribe_confirm blocks plan=play — money taken, nothing granted. Option removed from conversion block until backend is complete. PLAY USER FIXES: (1) score_trend fixed — was checking +/- in string, should be up/down. (2) Play user state (_is_play) added — counter says "evaluations" not "free evaluations". (3) Conversion headline different for play users. (4) 100-for-100 option hidden for play users (they already paid). DASHBOARD FIXES: (1) Fallback Sherpa copy now varies per eval count — matches scorecard tone, no repetition. (2) score_trend wired into progression signal below counter. (3) League statement graduated by eval count — no premature "you may be one of them" at eval 1-2. HAMBURGER FIX: compact dropdown anchored top-right (220px wide, border-radius:10px, box-shadow) — was left:0;right:0 full-bleed covering the whole screen. RETAINS HAIKU-178.45.
-
-  DELIVERY AUDIT
-  ──────────────────────────────────────────────────────
-  Audit   : Footer bg #1A2744 matches nav ✅ · Fallback Sherpa varies by eval ✅ · score_trend wired ✅ · League statement graduated ✅ · No orphaned elements ✅
-  KYC     : Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · All 4 Razorpay mandatory links present on every state
-  Mobile  : Bottom nav 5 tabs ✅ · Hamburger overlay: Pricing + Log out ✅ · Mobile topbar sticky ✅ · touch-action:manipulation ✅ · 44px tap targets ✅ · Cookie banner z-index below bottom nav ✅
-  iPad    : Breakpoint 1024px: desktop nav hidden, mobile topbar + bottom nav shown ✅ · Single column ✅ · Hero 280px ✅
-  70yr    : Body 16px+ ✅ · Sherpa 18px ✅ · CTA 18px ✅ · Tile score 18px ✅ · Footer links 13px fine print ✅ · UDYAM 11px fine print ✅
-  Version : HAIKU-178.87-staging — matches filename
-  ──────────────────────────────────────────────────────
-#}
-<!doctype html>
+{# SL-VERSION: 181.35-staging (Session 196, 2026-08-26 — dashboard_haiku.html built from approved sl_dashboard_full.html design. Standalone page, no base.html extension.) #}
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Explore Photography Evaluation — Shutter League</title>
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-<meta property="og:title" content="My Evaluations — Shutter League">
-<meta property="og:description" content="Your photographs evaluated across five dimensions. See where your eye stands.">
-<meta property="og:image" content="https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b93bb08b-9314-421c-a449-f3e6393b72be.jpg">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b93bb08b-9314-421c-a449-f3e6393b72be.jpg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shutter League — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;
-  --blue:#2C3E6B;--gold:#D4A428;--ink:#1A1A18;
-  --muted:#8A8070;--line:#E0D8C8;--gold-dk:#A07A10;
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
+.sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
+.sl-col { max-width:760px; margin:0 auto; padding:0 48px; }
+.sl-rule { width:100%; height:0.5px; background:rgba(26,39,68,0.09); }
+
+/* ── TOP BAR ── */
+.sl-topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 48px;
+  border-bottom:0.5px solid rgba(26,39,68,0.10);
 }
-*{box-sizing:border-box}
-body.page-haiku-dash{
-  background:var(--cream);color:var(--ink);
-  font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;
-  font-size:17px;line-height:1.75;
-  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  overflow-x:hidden;width:100%;max-width:100vw
+.sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
+.sl-brand-name { font-size:12px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
+.sl-brand-sub { font-size:10px; letter-spacing:0.10em; color:rgba(26,39,68,0.36); text-transform:uppercase; }
+.sl-nav { display:flex; gap:32px; }
+.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; }
+.sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+
+/* ── HERO ── */
+.sl-hero { width:100%; background:#0C1018; }
+.sl-hero img { width:100%; display:block; }
+.sl-hero-bar { background:#1A2744; padding:28px 48px 36px; }
+.sl-hero-greeting { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:10px; }
+.sl-hero-name { font-family:'Playfair Display',serif; font-size:28px; color:#fff; font-weight:400; line-height:1.3; margin-bottom:24px; }
+.sl-hero-meta { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; }
+.sl-hero-standing { display:flex; align-items:baseline; gap:12px; }
+.sl-hero-score { font-family:'Playfair Display',serif; font-size:56px; color:#fff; line-height:1; letter-spacing:-0.03em; }
+.sl-hero-tier-block { display:flex; flex-direction:column; gap:4px; padding-left:4px; }
+.sl-hero-tier { font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:#C8A84B; font-weight:500; }
+.sl-hero-genre { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.26); }
+.sl-hero-link { font-size:13px; color:rgba(255,255,255,0.36); letter-spacing:0.04em; }
+.sl-hero-link a { color:rgba(255,255,255,0.36); text-decoration:none; }
+.sl-hero-link a:hover { color:#C8A84B; }
+
+/* ── SHARED EYEBROW ── */
+.sl-eyebrow { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.45); margin-bottom:36px; }
+
+/* ── GOLD RULE ── */
+.sl-gold-rule { width:32px; height:1.5px; background:#C8A84B; margin-bottom:32px; }
+
+/* ── SHERPA ── */
+.sl-sherpa { padding:72px 0 80px; }
+.sl-sherpa-body { font-family:'Playfair Display',serif; font-size:22px; line-height:1.9; color:#1A2744; font-weight:400; margin-bottom:40px; }
+.sl-sherpa-nudge { font-size:17px; color:rgba(26,39,68,0.56); line-height:1.8; border-left:1.5px solid #C8A84B; padding-left:22px; font-style:italic; }
+
+/* ── THE STANDARD ── */
+.sl-standard { padding:80px 0; }
+.sl-tier-strip { display:flex; flex-wrap:wrap; gap:0; margin-bottom:48px; border-bottom:0.5px solid rgba(26,39,68,0.09); padding-bottom:20px; }
+.sl-tier-pill { font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:rgba(26,39,68,0.25); padding:8px 14px 8px 0; white-space:nowrap; }
+.sl-tier-pill.active { color:#1A2744; font-weight:600; border-bottom:2px solid #C8A84B; margin-bottom:-0.5px; }
+.sl-gm-img { width:100%; display:block; }
+.sl-gm-credit { display:flex; justify-content:space-between; align-items:baseline; padding:16px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:40px; }
+.sl-gm-name { font-size:15px; color:#1A2744; font-weight:500; }
+.sl-gm-score { font-size:15px; color:#C8A84B; letter-spacing:0.06em; }
+.sl-standard-copy { font-size:18px; line-height:1.85; color:#1A2744; margin-bottom:36px; }
+.sl-five-dims { margin-bottom:36px; }
+.sl-dim-row { display:flex; justify-content:space-between; align-items:baseline; padding:13px 0; border-bottom:0.5px solid rgba(26,39,68,0.08); font-size:16px; }
+.sl-dim-row:last-child { border-bottom:none; }
+.sl-dim-plain { color:rgba(26,39,68,0.60); }
+.sl-dim-official { font-size:12px; letter-spacing:0.09em; text-transform:uppercase; color:rgba(26,39,68,0.34); }
+.sl-standard-close { font-family:'Playfair Display',serif; font-size:20px; line-height:1.8; color:#1A2744; font-style:italic; }
+
+/* ── WHERE YOU STAND ── */
+.sl-where { padding:80px 0; }
+.sl-counters { display:flex; gap:56px; margin-bottom:64px; flex-wrap:wrap; }
+.sl-counter { display:flex; flex-direction:column; gap:8px; }
+.sl-counter-num { font-family:'Playfair Display',serif; font-size:64px; color:#1A2744; line-height:1; letter-spacing:-0.04em; }
+.sl-counter-label { font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,39,68,0.42); }
+.sl-record-statement { font-family:'Playfair Display',serif; font-size:20px; color:rgba(26,39,68,0.52); line-height:1.8; font-style:italic; margin-bottom:64px; }
+.sl-record { display:flex; flex-direction:column; gap:0; }
+.sl-record-entry { margin-bottom:72px; }
+.sl-record-entry:last-child { margin-bottom:0; }
+.sl-record-img { width:100%; display:block; }
+.sl-record-meta { padding:20px 0; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:0.5px solid rgba(26,39,68,0.09); gap:24px; }
+.sl-record-left { display:flex; flex-direction:column; gap:6px; }
+.sl-record-eval { font-size:15px; color:rgba(26,39,68,0.38); letter-spacing:0.06em; text-transform:uppercase; }
+.sl-record-name { font-size:18px; color:#1A2744; font-weight:400; line-height:1.3; }
+.sl-record-genre { font-size:15px; color:rgba(26,39,68,0.48); }
+.sl-record-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+.sl-record-score { font-family:'Playfair Display',serif; font-size:40px; color:#1A2744; line-height:1; letter-spacing:-0.02em; }
+.sl-record-tier { font-size:15px; letter-spacing:0.08em; text-transform:uppercase; color:#C8A84B; }
+.sl-progression-note { margin-top:56px; padding-top:32px; border-top:0.5px solid rgba(26,39,68,0.09); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:12px; }
+.sl-progression-text { font-size:17px; color:rgba(26,39,68,0.50); font-style:italic; line-height:1.7; }
+.sl-progression-best { font-size:14px; color:rgba(26,39,68,0.38); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; }
+
+/* ── THE JOURNEY ── */
+.sl-journey { padding:80px 0; }
+.sl-journey-copy { font-family:'Playfair Display',serif; font-size:22px; line-height:1.85; color:#1A2744; font-weight:400; margin-bottom:56px; }
+.sl-gap-block { padding:36px 0; border-top:0.5px solid rgba(26,39,68,0.09); border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:48px; }
+.sl-gap-num { font-family:'Playfair Display',serif; font-size:80px; color:#1A2744; line-height:1; letter-spacing:-0.04em; margin-bottom:12px; }
+.sl-gap-label { font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(26,39,68,0.38); margin-bottom:16px; }
+.sl-gap-copy { font-size:17px; color:rgba(26,39,68,0.58); line-height:1.8; }
+.sl-milestone { font-size:18px; color:#1A2744; line-height:1.8; }
+.sl-milestone strong { font-weight:500; }
+
+/* ── THE INVITATION ── */
+.sl-invitation { background:#1A2744; padding:72px 48px; }
+.sl-inv-inner { max-width:760px; margin:0 auto; }
+.sl-inv-eyebrow { font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:32px; }
+.sl-inv-copy { font-family:'Playfair Display',serif; font-size:26px; color:rgba(255,255,255,0.88); line-height:1.75; font-weight:400; margin-bottom:52px; }
+.sl-inv-gap { margin-bottom:48px; padding-bottom:48px; border-bottom:0.5px solid rgba(255,255,255,0.09); }
+.sl-inv-gap-num { font-family:'Playfair Display',serif; font-size:72px; color:rgba(255,255,255,0.88); line-height:1; letter-spacing:-0.04em; margin-bottom:10px; }
+.sl-inv-gap-label { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.28); }
+.sl-inv-cta { font-size:18px; color:#F5C518; letter-spacing:0.02em; cursor:pointer; line-height:1.5; display:block; margin-bottom:20px; text-decoration:none; }
+.sl-inv-secondary { font-size:15px; color:rgba(255,255,255,0.24); line-height:1.5; cursor:pointer; }
+
+/* ── FOOTER ── */
+.sl-footer { padding:24px 48px; display:flex; justify-content:space-between; align-items:center; border-top:0.5px solid rgba(26,39,68,0.08); flex-wrap:wrap; gap:12px; }
+.sl-footer-copy { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.04em; }
+.sl-footer-kyc { display:flex; gap:20px; }
+.sl-footer-kyc a { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.05em; text-transform:uppercase; text-decoration:none; }
+
+@media(max-width:768px) {
+  .sl-topbar,.sl-hero-bar,.sl-invitation,.sl-footer { padding-left:24px; padding-right:24px; }
+  .sl-col { padding-left:24px; padding-right:24px; }
+  .sl-nav { display:none; }
+  .sl-hero-score { font-size:40px; }
+  .sl-counter-num { font-size:48px; }
+  .sl-gap-num,.sl-inv-gap-num { font-size:56px; }
+  .sl-sherpa-body,.sl-journey-copy,.sl-inv-copy { font-size:19px; }
+  .sl-counters { gap:32px; }
+  .sl-record-entry { margin-bottom:56px; }
+  .sl-record-score { font-size:32px; }
 }
-
-/* ── DESKTOP NAV ── */
-.hk-nav{height:64px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100}
-.hk-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
-.hk-crest{width:28px;height:28px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;letter-spacing:.5px;flex-shrink:0}
-.hk-brandword{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.9)}
-.hk-nav-right{display:flex;align-items:center;gap:2px}
-.hk-gallery-link{color:rgba(255,255,255,.65);font-size:14px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;padding:6px 8px;transition:color .15s;text-decoration:none;white-space:nowrap}
-.hk-gallery-link:hover{color:#fff}
-.hk-gallery-link.hk-active{color:#fff;font-weight:600;background:rgba(255,255,255,.12);border-bottom:2px solid rgba(255,255,255,.6);}
-.hk-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
-
-/* H3: Desktop counter — compact text, no dot loop overflow */
-.hk-counter-compact{
-  background:rgba(255,255,255,.07);padding:0 14px;
-  display:flex;align-items:center;height:100%;
-  border-left:1px solid rgba(255,255,255,.1);
-  font-size:14px;color:rgba(255,255,255,.65);
-  white-space:nowrap;gap:6px;flex-shrink:0
-}
-.hk-counter-compact b{color:#fff;font-weight:700}
-
-/* ── HERO — user's own best image — pure photograph, no text overlay ── */
-.hk-hero{position:relative;height:480px;background:#0F1F3D;overflow:hidden}
-.hk-hero-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-.hk-hero-see{position:absolute;top:14px;right:14px;background:rgba(6,14,28,.6);color:#fff;font-size:14px;padding:8px 16px;border:1px solid rgba(255,255,255,.3);border-radius:2px;text-decoration:none;transition:all .15s;min-height:44px;display:inline-flex;align-items:center}
-.hk-hero-see:hover{background:rgba(6,14,28,.85);border-color:rgba(255,255,255,.6)}
-/* Hero info card — BELOW the image, not on top of it */
-.hk-hero-info{background:#1A2744;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.hk-hero-eye{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:8px}
-.hk-hero-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.hk-hero-num{font-size:40px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.03em}
-.hk-hero-denom{font-size:16px;color:rgba(255,255,255,.35)}
-.hk-hero-tier{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;border:1px solid rgba(212,164,40,.4);padding:4px 12px}
-.hk-hero-genre{font-size:13px;color:rgba(255,255,255,.4);margin-left:2px}
-.hk-hero-sub{font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;text-decoration:none;display:block;transition:color .15s}
-.hk-hero-sub:hover{color:#fff}
-
-/* ── SHERPA OBSERVATION ── */
-.hk-sherpa{background:#fff;border-bottom:1px solid #E8E0D0;padding:28px 32px}
-.hk-sherpa-lbl{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:14px}
-.hk-sherpa-q{font-size:18px;color:#1A1A18;line-height:1.8;font-style:italic;text-align: justify;border-left:3px solid #D4A428;padding:4px 0 4px 20px;margin-bottom:14px}
-.hk-sherpa-nudge{font-size:16px;color:#2C3E6B;font-weight:500;padding-left:23px;line-height:1.6}
-
-/* ── MAIN BODY — single column ── */
-.hk-body{padding:28px 32px;max-width:900px;margin:0 auto}
-
-/* ── COUNTER ── */
-.hk-counter-bar{background:#F5F0E8;border:1px solid #E0D8C8;padding:14px 18px;font-size:15px;color:#8A8070;margin-bottom:18px}
-.hk-counter-bar b{color:#1A1A18}
-
-/* ── TREND SPARKLINE ── */
-.hk-trend-block{background:#fff;border:1px solid #E8E0D0;padding:20px 24px;margin-bottom:24px}
-.hk-trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-.hk-trend-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
-.hk-trend-badge{font-size:14px;font-weight:600;padding:3px 10px;border-radius:99px}
-.hk-trend-badge.up{background:rgba(46,125,82,.1);color:#2E7D52}
-.hk-trend-badge.down{background:rgba(192,57,43,.08);color:#c0392b}
-.hk-trend-badge.flat{background:rgba(44,62,107,.08);color:#2C3E6B}
-.hk-spark-wrap{overflow-x:auto}
-.hk-spark{width:100%;min-width:200px;height:60px;display:block}
-.hk-spark-labels{display:flex;justify-content:space-between;margin-top:6px}
-.hk-spark-labels span{font-size:14px;color:#8A8070;text-align:center;flex:1;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* ── CTA ── */
-.hk-cta-new{background:#1A2744;color:#fff;padding:20px 26px;display:block;text-decoration:none;margin-bottom:32px;transition:background .15s;min-height:64px}
-.hk-cta-new:hover{background:#243660}
-.hk-cta-new-main{font-size:18px;font-weight:500}
-.hk-cta-new-sub{font-size:14px;color:rgba(255,255,255,.5);margin-top:4px}
-
-/* ── IMAGE STRIP ── */
-.hk-strip-new{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:36px;overflow:hidden}
-.hk-tile{position:relative;height:160px;overflow:hidden;cursor:pointer;text-decoration:none;display:block}
-.hk-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
-.hk-tile:hover img{transform:scale(1.03)}
-.hk-tile-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.92) 0%,transparent 55%)}
-.hk-tile-info{position:absolute;bottom:0;left:0;right:0;padding:10px 12px}
-.hk-tile-score{font-size:18px;font-weight:700;color:#fff;line-height:1}
-.hk-tile-tier{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#D4A428;margin-top:4px}
-.hk-tile-genre{font-size:14px;color:rgba(255,255,255,.45);margin-top:2px}
-
-/* ── LEAGUE PANEL ── */
-.hk-league-wrap{margin-bottom:28px}
-.hk-league-lbl{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:12px}
-.hk-league-panel{background:#0F1F3D;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
-.hk-league-img{position:relative;overflow:hidden;background:linear-gradient(135deg,#1a3a5a,#060e1c);display:flex;align-items:center;justify-content:center;min-height:220px}
-.hk-league-img img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:.85;position:absolute;inset:0}
-.hk-league-badge{position:absolute;top:14px;left:14px;background:rgba(6,14,28,.75);border:1px solid rgba(212,164,40,.6);color:#D4A428;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;z-index:1}
-.hk-league-body{padding:28px 28px;display:flex;flex-direction:column;justify-content:space-between}
-.hk-league-eyebrow{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:12px}
-.hk-league-score{font-size:52px;font-weight:600;color:#fff;line-height:1;letter-spacing:-.04em;margin-bottom:8px}
-.hk-league-tier{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#D4A428;margin-bottom:10px}
-.hk-league-meta{font-size:15px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:20px}
-.hk-league-statement{font-size:16px;color:rgba(255,255,255,.75);line-height:1.75;font-style:italic;border-top:1px solid rgba(255,255,255,.12);padding-top:18px;margin-bottom:18px}
-.hk-league-link{font-size:15px;color:#D4A428;text-decoration:none;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
-.hk-league-link:hover{color:#fff}
-
-/* ── LOCKED FEATURES ── */
-.hk-locked-row{display:grid;grid-template-columns: 1fr 1fr;gap:14px;margin-bottom:32px}
-.hk-locked{background:#F5F0E8;border:1px solid #E0D8C8;padding:20px 22px}
-.hk-locked-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.hk-locked-icon{font-size:14px;color:#8A8070}
-.hk-locked-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8A8070}
-.hk-locked-title{font-size:16px;font-weight:600;color:#1A2744;margin-bottom:8px;line-height:1.7}
-.hk-locked-sub{font-size:14px;color:#8A8070;line-height:1.65;margin-bottom:14px}
-.hk-locked-bar{background:#E0D8C8;height:36px;display:flex;align-items:center;justify-content:center}
-.hk-locked-bar-text{font-size:14px;color:#8A8070;letter-spacing:.5px}
-
-/* ── H2: SPLIT HERO (State 0 — zero uploads) ── */
-.hk-split{display:grid;grid-template-columns:1fr 1fr;min-height:min(calc(100vh - 64px),700px);min-height:min(calc(100dvh - 64px),700px);align-items:stretch;overflow:hidden;width:100%;border-top:1px solid var(--line)}
-.hk-split-left{display:flex;flex-direction:column}
-.hk-split-cards{background:var(--paper);border-top:1px solid var(--line);padding:20px 24px;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:stretch}
-.hk-split-cards-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;grid-column:1/-1}
-.hk-split-photo{background:var(--dark);position:relative;overflow:hidden}
-.hk-split-photo-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-/* overlay removed — cream bg, no dark overlay needed */
-.hk-split-photo-meta{
-  position:absolute;left:0;right:0;bottom:0;
-  padding:20px 28px;
-  background:linear-gradient(to top,rgba(6,14,28,.92) 0%,transparent 100%);
-  display:flex;justify-content:space-between;align-items:flex-end
-}
-.hk-split-photo-caption{font-size:14px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase}
-.hk-split-photo-badge{
-  background:#1A2744;border:1px solid rgba(212,164,40,.5);
-  color:#F5C518;font-size:14px;font-weight:700;padding:5px 12px;letter-spacing:.5px
-}
-/* Fallback when no hero image from DB */
-.hk-split-photo-fill{
-  position:absolute;inset:0;
-  background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)
-}
-.hk-split-text{
-  display:flex;flex-direction:column;justify-content:space-between;
-  padding:10vh 7vw 3vh 6vw;background:var(--cream);
-  overflow-x:hidden;min-width:0;box-sizing:border-box
-}
-
-/* ── MAIN (States 2-10 single column) ── */
-.hk-main{max-width:740px;margin:0 auto;padding:72px 40px 100px}
-
-/* ── GREETING ── */
-.hk-greet{font-size:15px;color:var(--muted);margin-bottom:12px}
-.hk-greet b{display:block;font-size:28px;font-weight:600;color:var(--blue);letter-spacing:-.03em;margin-top:4px}
-
-/* ── EVAL COUNTER BADGE ── */
-.hk-eval-badge{
-  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
-  background:var(--paper);border:1px solid var(--line);border-radius:2px;
-  padding:12px 18px;
-  font-size:16px;color:var(--muted);margin:0 0 40px;max-width:100%
-}
-.hk-eval-badge b{color:var(--dark);font-weight:700}
-
-/* ── STATE 1 text panel (split layout) ── */
-.hk-h1{font-size:clamp(36px,4.5vw,56px);font-weight:600;color:var(--blue);line-height:1.7;letter-spacing:-.04em;margin-bottom:20px;text-shadow:none}
-.hk-intro{font-size:21px;color:var(--ink);line-height:1.8;margin-bottom:28px}
-.hk-proof{border-left:3px solid var(--gold);padding:18px 22px;/* H4: 16px->18px */margin:0 0 32px;background:var(--paper)}
-.hk-proof p{font-size:18px;font-style:italic;color:var(--ink);line-height:1.7;margin-bottom:8px}
-.hk-proof small{font-size:14px;color:var(--muted)}
-.hk-empty{background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;margin-bottom:28px;padding:32px;transition:border-color .15s,background .15s;text-decoration:none;display:flex}
-.hk-empty:hover{border-color:var(--blue);background:#F0F4FA}
-.hk-empty strong{display:block;font-size:22px;font-weight:600;color:var(--blue);margin-bottom:8px;letter-spacing:-.02em}
-.hk-empty span{font-size:16px;color:var(--muted);line-height:1.6}
-.hk-cta{display:flex;align-items:center;width:100%;background:var(--dark);color:#fff;border:none;border-radius:0;padding:20px 28px;font-size:18px;font-weight:600;text-align:left;cursor:pointer;margin-bottom:12px;min-height:60px;font-family:inherit;text-decoration:none;letter-spacing:.1px}
-.hk-cta small{display:block;font-size:14px;font-weight:400;color:rgba(255,255,255,.6);margin-top:4px}
-.hk-cta-note{font-size:14px;color:var(--muted);margin-bottom:48px}
-
-/* ── WORLD OUTSIDE ── */
-.hk-world{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
-.hk-world-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
-.hk-world-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}/* H4: 14px->16px */
-.hk-world-item{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:20px 22px}/* H4: 18px->20px */
-.hk-world-item-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.hk-world-item-val{font-size:24px;font-weight:700;color:var(--dark);letter-spacing:-.02em;line-height:1.5}
-.hk-world-item-sub{font-size:14px;color:var(--muted);margin-top:4px}
-
-/* ── STATES 2-4 ── */
-.hk-last-eval{display:flex;align-items:center;gap:16px;padding:22px 24px;/* H4 */background:var(--paper);border:1px solid var(--line);border-radius:3px;margin-bottom:28px}
-.hk-last-thumb{width:64px;height:64px;border-radius:2px;object-fit:cover;flex-shrink:0;background:var(--dark)}
-.hk-last-score{font-size:36px;font-weight:700;color:var(--dark);line-height:1;letter-spacing:-.04em}
-.hk-last-score sub{font-size:14px;font-weight:400;color:var(--muted);vertical-align:middle;letter-spacing:0}
-.hk-last-tier{font-size:14px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
-.hk-last-link{font-size:14px;color:var(--blue);margin-top:6px;display:inline-flex;align-items:center;min-height:36px;text-decoration:none}
-
-/* Strip */
-.hk-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:28px}
-.hk-strip-tile{flex-shrink:0;width:110px;border-radius:2px;overflow:hidden;background:var(--dark);position:relative;text-decoration:none;min-height:44px}
-.hk-strip-tile img{width:100%;height:80px;object-fit:cover;display:block}
-.hk-strip-badge{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:rgba(13,13,11,0.7);color:#F5C518;background:linear-gradient(to top,rgba(6,14,28,.9),transparent);font-size:14px;font-weight:700;color:#F5C518;letter-spacing:.2px}
-
-/* Strength */
-.hk-strength{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 3px 3px 0;padding:20px 24px;/* H4 */margin-bottom:28px}
-.hk-strength-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:8px}
-.hk-strength-text{font-size:16px;color:var(--ink);line-height:1.75}
-.hk-watching{font-size:15px;color:var(--muted);font-style:italic;margin-top:12px}
-
-/* ── STATES 5-9 ── */
-.hk-milestone{border:2px solid var(--gold);border-radius:3px;padding:26px 30px;/* H4 */margin-bottom:28px;background:var(--paper)}
-.hk-milestone-kicker{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:10px}
-.hk-milestone-text{font-size:18px;color:var(--dark);line-height:1.75;font-weight:500}
-
-.hk-urgency{font-size:16px;color:var(--blue);font-weight:600;margin:0 0 28px;padding:16px 20px;/* H4 */background:rgba(44,62,107,.06);border-left:3px solid var(--blue);border-radius:0 3px 3px 0}
-
-/* ── STATE 10 — conversion ── */
-.hk-conversion{margin-bottom:32px}
-.hk-conversion-headline{font-size:clamp(22px,3vw,32px);font-weight:600;color:var(--dark);line-height:1.7;letter-spacing:-.02em;margin-bottom:20px}
-.hk-conversion-body{font-size:17px;color:var(--ink);line-height:1.75;margin-bottom:32px;text-align: justify}
-.hk-conversion-options{display:flex;flex-direction:column;gap:14px}/* H4: 12->14 */
-.hk-conv-opt{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;/* H4 */border-radius:3px;text-decoration:none;min-height:56px;gap:12px;flex-wrap:wrap}
-.hk-conv-opt.primary{background:var(--dark);color:#fff}
-.hk-conv-opt.secondary{background:var(--paper);border:1px solid var(--line);color:var(--dark)}
-.hk-conv-opt.quiet{background:transparent;border:none;color:var(--muted);font-size:15px;padding:14px 0;justify-content:flex-start}
-.hk-conv-opt-label{font-size:16px;font-weight:600;line-height:1.5}
-.hk-conv-opt-price{font-size:14px;font-weight:700;opacity:.9;white-space:nowrap;color:#fff}
-.hk-conv-opt.primary .hk-conv-opt-price{color:#fff}
-
-/* ── SIGN OFF ── */
-.hk-sign{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:24px;margin-top:8px}
-.hk-stat-strip{display:flex;gap:0;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
-.hk-stat{flex:1;text-align:center;border-right:1px solid var(--line)}
-.hk-stat:last-child{border-right:none}
-.hk-stat-n{font-size:16px;font-weight:700;color:var(--dark);line-height:1}
-.hk-stat-l{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
-
-/* ── DISCOVERY GRID ── */
-.hk-disc{background:var(--paper);border-top:1px solid var(--line);padding:24px 28px}
-.hk-disc-lbl{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.hk-disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hk-dc{background:#fff;border:1px solid var(--line);border-radius:3px;padding:16px 18px;display:flex;flex-direction:column}
-.hk-dc.accent{border-left:3px solid var(--gold)}
-.hk-dc.blue{border-left:3px solid var(--blue);background:#EEF2FF}
-.hk-dc-title{font-size:18px;font-weight:600;color:var(--dark);margin-bottom:8px;line-height:1.7}
-.hk-dc-sub{font-size:16px;color:var(--muted);line-height:1.6;flex:1}
-.hk-dc-link{font-size:15px;color:var(--blue);font-weight:600;margin-top:10px;display:block;text-decoration:none}
-.hk-dc-link:hover{text-decoration:underline}
-
-/* ── VISUAL GALLERY STRIP ── */
-.hk-gallery-strip{background:var(--dark)}
-.hk-gallery-lbl{padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
-.hk-gl-text{font-size:14px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase}
-.hk-gl-link{font-size:14px;color:#fff;font-weight:600;text-decoration:none}
-.hk-gallery-grid{display:grid;grid-template-columns:repeat(4,1fr)}
-.hk-gthumb{position:relative;overflow:hidden;height:140px;background:#1a2a3a}
-.hk-gthumb:not(:last-child){border-right:1px solid rgba(255,255,255,.08)}
-.hk-gthumb img{width:100%;height:100%;object-fit:cover;display:block}
-.hk-gt-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,14,28,.9) 0%,transparent 60%)}
-.hk-gt-info{position:absolute;bottom:0;left:0;right:0;padding:5px 7px}
-.hk-gt-score{font-size:14px;font-weight:700;color:#F5C518;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.5);background:rgba(13,13,11,0.6);padding:1px 4px;border-radius:2px}
-.hk-gt-tier{font-size:14px;color:rgba(255,255,255,.55);letter-spacing:.5px;text-transform:uppercase}
-
-/* ── TREND INDICATOR ── */
-.hk-trend-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:2px;font-size:14px;font-weight:600;margin-bottom:8px}
-.hk-trend-up{background:rgba(74,160,74,.12);color:#2a7a2a}
-.hk-trend-down{background:rgba(180,60,60,.1);color:#8a2020}
-.hk-trend-same{background:rgba(44,62,107,.08);color:var(--blue)}
-
-/* ── DARK FOOTER ── */
-.hk-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:56px 48px 28px}
-.hk-ft-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
-.hk-footer-col h4{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
-.hk-ft-col a{display:block;color:rgba(255,255,255,.52);font-size:15px;margin-bottom:9px;transition:color .15s;text-decoration:none}
-.hk-footer-col a:hover{color:#fff}
-.hk-ft-bottom{font-size:14px;padding-top:18px;max-width:1200px;margin:0 auto}
-
-/* ── MOBILE TOPBAR ── */
-.hk-mob-topbar{
-  display:none;height:56px;background:var(--dark);
-  align-items:center;justify-content:space-between;
-  padding:0 16px;position:sticky;top:0;z-index:100;
-  border-bottom:1px solid rgba(212,164,40,.15)
-}
-.hk-mob-brand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
-.hk-mob-crest{width:26px;height:26px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#D4A428;flex-shrink:0}
-.hk-mob-brandword{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8)}
-.hk-mob-right{display:flex;align-items:center;gap:8px}
-.hk-mob-counter{font-size:14px;font-weight:600;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
-.hk-mob-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
-/* ── MOBILE HAMBURGER ── */
-.hk-mob-ham{display:flex;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0}
-.hk-mob-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
-/* Overlay menu */
-.hk-mob-menu{display:none;position:fixed;top:60px;right:12px;left:auto;width:220px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:10px;z-index:999;padding:6px 0;box-shadow:0 8px 32px rgba(0,0,0,.55);overflow:hidden}
-.hk-mob-menu.open{display:block}
-.hk-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.hk-mob-menu a:last-child{border-bottom:none}
-.hk-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
-/* SL-194: Bottom More drawer — anchored above More tab */
-.hk-more-drawer{display:none;position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));right:8px;width:220px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:12px;z-index:300;padding:6px 0;box-shadow:0 -4px 32px rgba(0,0,0,.55)}
-.hk-more-drawer.open{display:block}
-.hk-more-item{display:flex;align-items:center;gap:12px;padding:13px 20px;min-height:48px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .12s}
-.hk-more-item:active{background:rgba(255,255,255,.06)}
-.hk-more-item svg{width:18px;height:18px;flex-shrink:0;opacity:0.55}
-.hk-more-divider{height:0.5px;background:rgba(255,255,255,.10);margin:4px 0}
-.hk-more-item.hk-logout{color:rgba(255,110,90,.8)}
-
-/* ── H5: MOBILE BOTTOM NAV — tap response fix ── */
-.hk-bottom-nav{
-  display:none;position:fixed;
-  bottom:env(safe-area-inset-bottom,0px);
-  left:0;right:0;width:100%;height:62px;
-  background:var(--dark);
-  border-top:0.5px solid rgba(255,255,255,.15);
-  justify-content:space-around;align-items:flex-start;
-  padding-top:0;z-index:200;
-  overflow:hidden;box-sizing:border-box
-}
-.hk-bn-tab{
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  color:rgba(255,255,255,.5);text-decoration:none;
-  font-size:14px;font-weight:600;
-  min-width:0;flex:1 1 0;min-height:44px;
-  padding-top:10px;padding-bottom:4px;padding-left:2px;padding-right:2px;
-  background:none;border:none;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;letter-spacing:.3px;
-  will-change:transform;
-  transition:color .15s;
-  overflow:hidden
-}
-.hk-bn-tab svg{flex-shrink:0;width:18px;height:18px}
-.hk-bn-tab.on{color:#F5C518;background:#0d0d0b}
-/* H5: instant visual tap feedback — no transition delay */
-.hk-bn-tab:active{
-  background:#0D0D0B;color:#F5C518!important;
-  transform:scale(.92);
-  transition:none/* H5: removes delay so tap feels instant */
-}
-
-/* ── COOKIE BANNER — z-index below bottom nav ── */
-/* H1 fix: cookie banner was z-index:9999 covering the bottom nav */
-#cookie-banner{
-  display:none;position:fixed;
-  bottom:0;left:0;right:0;
-  z-index:150;/* H1: was 9999 — now below bottom nav z-index:200 */
-  background:#1A1814;color:#fff;
-  padding:14px 24px;
-  align-items:center;justify-content:space-between;
-  gap:16px;flex-wrap:wrap;font-size:15px
-}
-#cookie-banner.cb-visible{display:flex}
-#cookie-banner a{color:#F5C518}
-#cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
-#cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
-
-/* ── RESPONSIVE ── */
-@media (max-width: 1024px){
-  .hk-nav{display:none!important}
-  .hk-mob-topbar{display:flex!important}
-  .hk-bottom-nav{display:flex!important}
-  body.page-haiku-dash{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px) + 10px)}
-  .hk-split{display:block!important;grid-template-columns:1fr!important}
-  .hk-split-photo{min-height:40vw;max-height:320px}
-  .hk-split-text{padding:36px 32px 24px;overflow-x:hidden;width:100%;box-sizing:border-box}
-  .hk-main{padding:36px 24px 60px;max-width:100%;overflow-x:hidden;width:100%}
-  .hk-body{padding:24px 20px}
-  .hk-h1{font-size:clamp(26px,5vw,40px)}
-  .hk-intro{font-size:17px}
-  .hk-world-grid{grid-template-columns:1fr 1fr}
-  .hk-conversion-options{grid-template-columns:1fr!important}
-  .hk-footer{padding:44px 22px 24px}
-  .hk-ft-grid{grid-template-columns:1fr 1fr;gap:28px}
-  .hk-league-panel{grid-template-columns:1fr!important}
-  .hk-league-img{height:240px}
-  .hk-strip-new{grid-template-columns:repeat(2,1fr);gap:4px}
-  .hk-tile{height:140px}
-  .hk-hero{height: 360px}
-}
-@media (max-width: 600px){
-  body,p,div,span,a,li{font-size:14px!important}
-  .hk-crest,.hk-brandword,.hk-gallery-link,.hk-avatar,.hk-counter-compact,.hk-hero-eye,.hk-hero-tier,.hk-sherpa-lbl,.hk-trend-lbl,.hk-trend-badge,.hk-tile-tier,.hk-tile-genre,.hk-league-lbl,.hk-league-badge,.hk-league-eyebrow,.hk-league-tier,.hk-locked-lbl,.hk-locked-bar-text,.hk-split-cards-lbl,.hk-split-photo-caption,.hk-world-lbl,.hk-world-item-lbl,.hk-last-tier,.hk-last-link,.hk-strip-badge,.hk-strength-lbl,.hk-milestone-kicker,.hk-stat-l,.hk-disc-lbl,.hk-gl-text,.hk-gl-link,.hk-gt-tier,.hk-trend-badge,.hk-ft-bottom,.hk-mob-crest,.hk-mob-brandword,.hk-mob-counter,.hk-mob-avatar,.hk-bn-tab{font-size:14px!important}
-
-  .hk-sherpa-lbl,.hk-spark-lbl-txt,.hk-trend-lbl,.hk-counter-bar,.hk-trend-badge,.hk-league-eyebrow,.hk-league-tier{font-size:14px!important}
-  input,select,textarea{font-size:16px!important}
-  .hk-split{display:block!important;grid-template-columns:1fr!important}
-  .hk-split-photo{min-height:48vw;max-height:240px}
-  .hk-split-text{padding:24px 16px 16px}
-  .hk-main{padding:32px 16px 80px}
-  .hk-body{padding:20px 16px}
-  .hk-world-grid,.hk-conversion-options{grid-template-columns:1fr!important}
-  .hk-ft-grid{grid-template-columns:1fr!important}
-  .hk-ft-bottom{flex-direction:column;gap:8px;text-align:center}
-  .hk-h1{font-size:clamp(24px,8vw,36px);text-shadow: none !important}
-  .hk-strip-tile{width:90px}
-  .hk-disc-grid{grid-template-columns:1fr!important}
-  .hk-gallery-grid{grid-template-columns:repeat(2,1fr)!important}
-  .hk-strip-new{grid-template-columns:repeat(2,1fr)!important;gap:4px}
-  .hk-tile{height:120px}
-  .hk-league-panel{grid-template-columns:1fr!important}
-  .hk-league-img{height:200px}
-  .hk-league-body{padding:20px 16px}
-  .hk-league-score{font-size:40px}
-  .hk-locked-row{grid-template-columns:1fr!important}
-  .hk-hero{height:300px}
-  .hk-hero-num{font-size:32px}
-  .hk-hero-info{padding:14px 16px}
-  .hk-sherpa{padding:20px 16px}
-  .hk-sherpa-q{font-size:15px}
-  .hk-locked-row > div > div:nth-child(2){padding:16px 14px 12px!important}
-  .hk-locked-row > div > div:last-child{padding:0 14px 14px!important}
-}
-@media (max-width: 768px){
-  .hk-league-panel{grid-template-columns: 1fr !important}
-  .hk-locked-row{grid-template-columns: 1fr !important}
-  .hk-strip-new{grid-template-columns:repeat(2,1fr)!important}
-  .hk-tile{height:130px}
-  .hk-body{padding:20px 16px}
-  .hk-hero{height:320px}
-}
-
-/* iOS auto-zoom prevention */
-input,select,textarea{font-size:16px!important}
-/* focus */
-.hk-cta:focus-visible,.hk-conv-opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </style>
 </head>
-<body class="page-haiku-dash">
+<body>
+<div class="sl-page">
 
-{# ── STATE DETERMINATION ── #}
-{% set _n = evals_used or 0 %}
-{% set _rem = evals_remaining or 0 %}
-{% set _lim = limit or 10 %}
-{% set _imgs = images or [] %}
-{% set _last = _imgs[0] if _imgs else none %}
-{% set _visit = visit_count or 1 %}
-{% set _trend = score_trend or '' %}
-{% set _next_leap = next_leap_name or '' %}
-{% set _prev_s = prev_score %}
-{% set _gallery = gallery_images or [] %}
-{% set first_name = (current_user.full_name or current_user.username or '').split()[0] %}
-{% set greeting_time = 'morning' %}{# static default — overridden by JS below #}
-
-{# State flags — 6 smart states #}
-{% set state_zero_first   = _n == 0 and _visit <= 1 %}
-{% set state_zero_return  = _n == 0 and _visit >= 2 %}
-{% set state_zero         = _n == 0 %}
-{% set state_one          = _n == 1 %}
-{% set state_two          = _n == 2 %}
-{% set state_building     = _n >= 3 and _n <= 4 %}
-{% set state_milestone    = _n >= 5 and _n <= 9 %}
-{% set state_near_limit   = _n >= 8 and _n <= 9 %}
-{% set state_conversion   = _n >= _lim %}
-{% set _bonus_evals = (limit or 10) - 10 %}{# 0 for free users, 100 for play users #}
-{% set _is_play = _bonus_evals > 0 %}
-
-{# ── MOBILE TOPBAR ── #}
-<div class="hk-mob-topbar">
-  <a href="{{ url_for('try_welcome') }}" class="hk-mob-brand">
-    <div class="hk-mob-crest">SL</div>
-    <span class="hk-mob-brandword">Shutter League</span>
-  </a>
-  <div class="hk-mob-right">
-    <div class="hk-mob-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
-{# SL-194: hamburger removed — More tab in bottom nav handles overflow items #}
-  </div>
-</div>
-{# SL-194: More drawer — anchored above More tab in bottom nav #}
-<div class="hk-more-drawer" id="hkMoreDrawer">
-  <a class="hk-more-item" href="{{ url_for('profile') }}" onclick="closeHkMore()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Profile
-  </a>
-  <a class="hk-more-item" href="{{ url_for('pricing') }}" onclick="closeHkMore()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    Pricing
-  </a>
-  <a class="hk-more-item" href="/contact" onclick="closeHkMore()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    Help &amp; Support
-  </a>
-  <div class="hk-more-divider"></div>
-  <a class="hk-more-item hk-logout" href="{{ url_for('logout') }}" onclick="closeHkMore()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Log out
-  </a>
-</div>
-
-{# ── DESKTOP NAV ── #}
-<header class="hk-nav">
-  <a href="{{ url_for('try_welcome') }}" class="hk-brand">
-    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-         alt="Shutter League"
-         style="height:32px;width:auto;display:block;flex-shrink:0"
-         onerror="this.outerHTML='<div class=hk-crest>SL</div>'">
-    <span class="hk-brandword">Shutter League</span>
-  </a>
-  <div class="hk-nav-right">
-    <a href="{{ url_for('try_welcome') }}" class="hk-gallery-link{% if request.endpoint == 'try_welcome' %} hk-active{% endif %}">Home</a>
-    <a href="{{ url_for('try_gallery') }}" class="hk-gallery-link{% if request.endpoint == 'try_gallery' %} hk-active{% endif %}">My evaluations</a>
-    <a href="{{ url_for('try_page') }}" class="hk-gallery-link{% if request.endpoint == 'try_page' %} hk-active{% endif %}">Upload</a>
-    <a href="{{ url_for('pricing') }}" class="hk-gallery-link{% if request.endpoint == 'pricing' %} hk-active{% endif %}">Pricing</a>
-    <a href="{{ url_for('standings_public') }}" class="hk-gallery-link{% if request.endpoint == 'standings_public' %} hk-active{% endif %}">League of Photographers</a>
-    <a href="{{ url_for('profile') }}" class="hk-gallery-link{% if request.endpoint == 'profile' %} hk-active{% endif %}">Profile</a>
-    <a href="{{ url_for('logout') }}" class="hk-gallery-link" style="color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:36px;">Log out</a>
-  </div>
-</header>
-
-{# ══════════════════════════════════════════════════════════════
-   HERO — user's own best image (States 1-10)
-   State 0: League hero shown instead
-══════════════════════════════════════════════════════════════ #}
-
-{% if not state_zero %}
-{# HERO: user's own best photograph — clean full-bleed image, no text overlay #}
-<div class="hk-hero">
-  {% if user_hero and user_hero.thumb_url %}
-  <img class="hk-hero-img" src="{{ user_hero.thumb_url }}" alt="Your best photograph" onerror="this.style.display='none'">
-  {% else %}
-  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)"></div>
-  {% endif %}
-  {% if user_hero and user_hero.id %}
-  <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="hk-hero-see">Full view →</a>
-  {% endif %}
-</div>
-{# INFO CARD — score, tier, genre — sits below the photograph, not on top of it #}
-<div class="hk-hero-info">
-  <div>
-    <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}. We have been watching.</div>
-    {% if user_hero and user_hero.score %}
-    <div class="hk-hero-row">
-      <span class="hk-hero-num">{{ '%.2f'|format(user_hero.score) }}</span>
-      <span class="hk-hero-denom">/10</span>
-      <span class="hk-hero-tier">{{ user_hero.tier }}</span>
-      <span class="hk-hero-genre">{{ user_hero.genre }}</span>
-    </div>
-    <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="hk-hero-sub">Your best so far &nbsp;·&nbsp; See the full evaluation →</a>
-    {% else %}
-    <div class="hk-hero-row">
-      <span class="hk-hero-tier">{{ tier or '' }}</span>
-    </div>
-    {% endif %}
-  </div>
-</div>
-
-{# SHERPA OBSERVATION #}
-{% if sherpa_obs %}
-<div class="hk-sherpa">
-  <div class="hk-sherpa-lbl">What we see across your {{ _n }} photograph{{ 's' if _n != 1 }}</div>
-  <div class="hk-sherpa-q">{{ sherpa_obs }}</div>
-  {% if sherpa_nudge %}
-  <div class="hk-sherpa-nudge">→ {{ sherpa_nudge }}</div>
-  {# PRE-SHUTTER QUESTION — one per eval, specific to lowest dimension, escalating if repeated #}
-  {% if _n >= 1 and _n <= 10 %}
-  <div style="margin-top:12px;padding:14px 18px;background:#1A2744;border-left:2px solid #D4A428;">
-    <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(212,164,40,.7);margin-bottom:10px;font-family:sans-serif;">Before your next shutter press</div>
-    <div style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-style:italic;">
-      {# Eval 1 — no dimension data yet. The Sherpa invites. #}
-      {% if _n == 1 %}
-        Show me the next one.
-      {# Evals 2–10 — dimension-specific, escalating by recurrence #}
-      {% elif next_leap_name %}
-        {% set _dim = next_leap_name | lower %}
-        {% set _c = next_leap_count | default(1) %}
-        {# DEPTH OF DIFFICULTY #}
-        {% if 'difficulty' in _dim or 'depth' in _dim %}
-          {% if _c == 1 %}Were you pursuing this shot — or waiting for it to happen?
-          {% elif _c == 2 %}Again, the pursuit wasn't there. What would you have needed to do differently before you raised the camera?
-          {% elif _c == 3 %}Three times now. The shot you are making is the one that was there. The shot you are not making is the one you had to pursue.
-          {% elif _c >= 4 %}This is the {{ _c }}th time we have seen this. The difficulty is not in the scene. It is in the decision to go looking for it.
-          {% endif %}
-        {# VISUAL DISRUPTION #}
-        {% elif 'disruption' in _dim or 'visual' in _dim %}
-          {% if _c == 1 %}Does this image stop the eye — or does it confirm what the viewer already expected?
-          {% elif _c == 2 %}Again, the frame did not disrupt. What would have made this image impossible to scroll past?
-          {% elif _c == 3 %}Three times, the eye has found a beautiful frame. Three times, it has not found an unexpected one. Beauty and disruption are not the same thing.
-          {% elif _c >= 4 %}This is the {{ _c }}th time. You have a consistent aesthetic. The next step is to break it — just once.
-          {% endif %}
-        {# DECISIVE MOMENT #}
-        {% elif 'decisive' in _dim or 'moment' in _dim %}
-          {% if _c == 1 %}Was there a reason for this frame — and not the one a moment before, or after?
-          {% elif _c == 2 %}Again — the timing was close, but not yet right. What were you waiting for?
-          {% elif _c == 3 %}Three times, the frame has been almost right. The right moment is not found by waiting. It is anticipated.
-          {% elif _c >= 4 %}This is the {{ _c }}th time. You are arriving at the scene. The next step is to be there before it happens.
-          {% endif %}
-        {# WONDER FACTOR #}
-        {% elif 'wonder' in _dim %}
-          {% if _c == 1 %}Does something happen to the person who sees this — or does it simply record?
-          {% elif _c == 2 %}Again — the image is technically there, but it does not create wonder. What would have made a viewer stop breathing for a moment?
-          {% elif _c == 3 %}Three times. The craft is present. The wonder is not. They are different things.
-          {% elif _c >= 4 %}This is the {{ _c }}th time. The image is good. The question is whether good is what you are aiming for.
-          {% endif %}
-        {# AFFECTIVE QUOTIENT #}
-        {% elif 'affective' in _dim or 'emotion' in _dim or 'story' in _dim %}
-          {% if _c == 1 %}Is there a story in this image that only you could have seen?
-          {% elif _c == 2 %}Again — the image is seen, but not felt. What was the emotion you were carrying when you pressed?
-          {% elif _c == 3 %}Three times, the image has been made. Three times, it has not yet been felt. The difference is in what you bring before you raise the camera.
-          {% elif _c >= 4 %}This is the {{ _c }}th time. The eye is strong. The question is what the eye is in service of.
-          {% endif %}
-        {% else %}
-          What would make this the one image from today that you remember in ten years?
-        {% endif %}
-      {% else %}
-        What would make this the one image from today that you remember in ten years?
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-  {% endif %}
-  {% if _n >= 3 %}
-  <div style="background:#0F1F3D;color:#fff;">
-
-    {# Tier strip #}
-    <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);">
-      {% set _tiers = [('Rookie','6.0'),('Craftsman','6.5'),('Maverick','7.0'),('Master','7.5'),('Grandmaster','9.0'),('Legend','9.5')] %}
-      {% for tier_name, tier_score in _tiers %}
-        {% set _is_current = (tier_name == tier) %}
-        <div style="flex:1;min-width:0;text-align:center;padding:10px 2px;{% if _is_current %}border-bottom:2px solid #D4A428;background:rgba(212,164,40,.07);{% endif %}">
-          <div style="font-size:14px;font-weight:{% if _is_current %}700{% else %}400{% endif %};color:{% if _is_current %}#D4A428{% else %}rgba(255,255,255,.45){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px;">{{ tier_name }}</div>
-          <div style="font-size:14px;color:{% if _is_current %}rgba(212,164,40,.9){% else %}rgba(255,255,255,.35){% endif %};margin-top:2px;">{{ tier_score }}+</div>
-        </div>
-      {% endfor %}
-    </div>
-
-    {# The standard #}
-    <div style="padding:24px 24px 28px;">
-      <div style="font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">The standard you are building toward</div>
-
-      <div style="font-size:16px;color:rgba(255,255,255,.85);line-height:1.85;margin-bottom:16px;">
-        At every festival, a thousand photographers press the shutter.<br>
-        One image stands apart — not because of the camera.<br>
-        <span style="color:#D4A428;">Because that photographer saw differently.</span>
-      </div>
-
-      <div style="font-size:14px;color:rgba(255,255,255,.45);line-height:1.75;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;font-style:italic;">
-        To reach 9, every dimension must be at 9. Not four out of five. All five — in one frame.<br>
-        The difficulty of the pursuit. The disruption to the eye. Whether the timing was right. The story it carries. The emotion it leaves behind.<br>
-        That is what makes an image stand the test of time. That is what we help you build.
-      </div>
-    </div>
-  </div>
-  {% endif %}
-  {# Zone 1 close — always shows when Sherpa renders #}
-  {% if _n >= 3 %}
-  <div style="padding:16px 24px 18px;background:#FFFCF4;border-bottom:1px solid #E8E0D0;">
-    <div style="font-size:15px;color:#5A4A30;line-height:1.8;font-style:italic;">
-      An image is a thousand words.<br>
-      In a world of five billion images a day, almost none are being heard — because they have been seen before.<br>
-      <span style="color:#D4A428;font-style:normal;font-weight:500;">We are starting to hear yours.</span>
-    </div>
-  </div>
-  {% endif %}
-</div>
-{% elif _n >= 1 %}
-{# Fallback before synthesis fires — milestone observation #}
-<div class="hk-sherpa">
-  <div class="hk-sherpa-lbl">{{ _n }} photograph{{ 's' if _n != 1 }} in</div>
-  <div class="hk-sherpa-q">
-    {% if _n == 1 %}"One photograph tells us what you made. One more tells us how you see."
-    {% elif _n == 2 %}"Two photographs. We are starting to see where your eye goes."
-    {% elif _n == 3 %}"Three photographs. The direction is becoming clearer."
-    {% elif _n == 4 %}"Four photographs in. We are watching how your eye moves."
-    {% elif _n >= 5 and milestone_strength %}"Across your {{ _n }} photographs, your strongest quality has been {{ milestone_strength }}. That is not an accident."
-    {% elif _n == 5 %}"Five photographs. A pattern is forming. We see where your eye goes."
-    {% elif _n >= 6 and _n <= 7 %}"{{ _n }} photographs. The direction is clear."
-    {% else %}"{{ _n }} photographs. You are close to something."
-    {% endif %}
-  </div>
-  {% if next_leap_name %}
-  <div class="hk-sherpa-nudge">→ The gap to close: {{ next_leap_name }}</div>
-  {% endif %}
-</div>
-{% endif %}
-
-<div class="hk-body">
-  {# COUNTER #}
-  <div class="hk-counter-bar">
-    {% if _rem == 0 %}You have used all {{ _lim }} free evaluations. Your eye has been seen.
-    {% elif _rem == 1 %}{{ _n }} photographs evaluated. One free evaluation left.
-    {% elif _n == 0 %}{{ _lim }} free evaluations — no card needed.
-    {% else %}<b>{{ _n }}</b> photograph{{ 's' if _n != 1 }} evaluated &nbsp;·&nbsp; <b>{{ _rem }}</b> more included free{% endif %}
-  </div>
-
-  {# TREND — visual sparkline across all evaluations #}
-  {% if _imgs and _n >= 2 %}
-  <div class="hk-trend-block">
-    <div class="hk-trend-header">
-      <span class="hk-trend-lbl">Your progression</span>
-      {% if _trend == 'up' %}<span class="hk-trend-badge up">↑ Improving</span>
-      {% elif _trend == 'down' %}<span class="hk-trend-badge down">↓ One result doesn't define a direction</span>
-      {% else %}<span class="hk-trend-badge flat">→ Consistent</span>
-      {% endif %}
-    </div>
-    <div class="hk-spark-wrap">
-      {% set _scores = _imgs | reverse | list %}
-      {% set _max = namespace(v=8.0) %}
-      {% set _min = namespace(v=6.0) %}
-      {% for img in _scores %}{% if img.score %}
-        {% if img.score > _max.v %}{% set _max.v = img.score %}{% endif %}
-        {% if img.score < _min.v %}{% set _min.v = img.score %}{% endif %}
-      {% endif %}{% endfor %}
-      {% set _range = [(_max.v - _min.v), 1.0] | max %}
-      <svg class="hk-spark" viewBox="0 0 {{ (_scores|length - 1) * 60 + 20 }} 60" preserveAspectRatio="none">
-        {# Grid line at midpoint #}
-        <line x1="0" y1="30" x2="{{ (_scores|length - 1) * 60 + 20 }}" y2="30" stroke="#E0D8C8" stroke-width="1" stroke-dasharray="3,3"/>
-        {# Score line #}
-        {% set pts = namespace(v='') %}
-        {% for img in _scores %}{% if img.score %}
-          {% set x = loop.index0 * 60 + 10 %}
-          {% set y = (60 - ((img.score - _min.v) / _range * 48 + 6)) | int %}
-          {% set pts.v = pts.v + (x|string) + ',' + (y|string) + ' ' %}
-        {% endif %}{% endfor %}
-        <polyline points="{{ pts.v }}" fill="none" stroke="#D4A428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-        {# Dots #}
-        {% for img in _scores %}{% if img.score %}
-          {% set x = loop.index0 * 60 + 10 %}
-          {% set y = (60 - ((img.score - _min.v) / _range * 48 + 6)) | int %}
-          <circle cx="{{ x }}" cy="{{ y }}" r="4" fill="#D4A428"/>
-          <text x="{{ x }}" y="{{ y - 8 }}" text-anchor="middle" font-size="10" fill="#8A8070">{{ '%.2f'|format(img.score) }}</text>
-        {% endif %}{% endfor %}
-      </svg>
-      <div class="hk-spark-labels">
-        {% for img in _scores %}<span>{{ img.genre or '' }}</span>{% endfor %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {# CTA #}
-  {% if not state_conversion %}
-  <a href="{{ url_for('try_page') }}" class="hk-cta-new">
-    <div class="hk-cta-new-main">Upload your next photograph →</div>
-    <div class="hk-cta-new-sub">{{ _rem }} evaluation{{ 's' if _rem != 1 }} remaining</div>
-  </a>
-  {% endif %}
-
-  {# IMAGE STRIP #}
-  {% if _imgs %}
-  <div style="font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:10px">Your photographs</div>
-  <div class="hk-strip-new">
-    {% for img in _imgs %}
-    {% if img.thumb_url %}
-    <a href="{{ url_for('try_result', image_id=img.id) }}" class="hk-tile">
-      <img src="{{ img.thumb_url }}" alt="{{ img.genre or 'photograph' }}" onerror="this.style.display='none'">
-      <div class="hk-tile-overlay"></div>
-      <div class="hk-tile-info">
-        <div class="hk-tile-score">{{ '%.2f'|format(img.score) if img.score else '—' }}</div>
-        <div class="hk-tile-tier">{{ img.tier or '' }}</div>
-        <div class="hk-tile-genre">{{ img.genre or '' }}</div>
-      </div>
+  <!-- TOP BAR -->
+  <div class="sl-topbar">
+    <a href="{{ url_for('index') }}" class="sl-brand">
+      <span class="sl-brand-name">Shutter League</span>
+      <span class="sl-brand-sub">Making Images Matter</span>
     </a>
-    {% endif %}
-    {% endfor %}
+    <nav class="sl-nav">
+      <a href="{{ url_for('try_welcome') }}" class="active">Dashboard</a>
+      <a href="{{ url_for('try_page') }}">Evaluate</a>
+      <a href="{{ url_for('standings_public') }}">League</a>
+    </nav>
   </div>
-  {% endif %}
 
-  {# CONVERSION STATE #}
-  {% if state_conversion %}
-  <div class="hk-conversion" style="margin-bottom:32px">
-    {% if _is_play %}
-    <div class="hk-conversion-headline">{{ _lim }} photographs.</div>
-    <div class="hk-conversion-body">We know something real about how you see. None of it is in the Shutter League record yet. Your standing, your AEA qualification, your Evolving Eye — <strong>they start with your next photograph as a member of the League of Photographers.</strong></div>
-    {% else %}
-    <div class="hk-conversion-headline">Your photographs have shown us how you see.</div>
-    <div class="hk-conversion-body">But they do not yet exist in the Shutter League record. Your standings, your AEA qualification, your calibrated Evolving Eye — none of these have started yet. They start with your next photograph.</div>
-    {% endif %}
-    <div class="hk-conversion-options">
-      <a href="{{ url_for('pricing') }}" class="hk-conv-opt primary">
-        <div>
-          <div class="hk-conv-opt-label">Join the League of Photographers</div>
-          <div style="font-size:15px;color:rgba(255,255,255,.55);margin-top:3px">Unlimited evaluations · AEA · Evolving Eye · Full record</div>
-        </div>
-        <span class="hk-conv-opt-price">₹4,000 / year</span>
-      </a>
-      {# 100-for-100 hidden — backend subscribe_confirm blocks plan='play', feature incomplete. Re-enable when play payment path is built end-to-end. #}
-      <a href="{{ url_for('index') }}" class="hk-conv-opt quiet">I came to explore — I am happy with this for now. Your feedback is appreciated.</a>
-    </div>
-  </div>
-  {% endif %}
-
-  {# QUIET CONVERSION NUDGE — evals 5-9, before League panel #}
-  {% if _n >= 5 and not state_conversion %}
-  <div style="font-size:16px;color:#1A2744;line-height:1.7;margin-bottom:24px;padding:18px 20px;background:#F5F0E8;border-left:3px solid #D4A428;">
-    {% if milestone_strength %}<strong>{{ milestone_strength }}</strong> — that is your signature across {{ _n }} photographs.<br>Most photographers spend years not knowing this. You know it now.<br><br>The League is where a signature becomes a voice. Where a voice becomes a body of work. Where a body of work stands apart from five billion.{% else %}{{ _n }} photographs. We have begun to see your eye — where it is already distinct, and where it is still doing what everyone else does.<br><br>The question is whether you want to know what it can become — and whether you are willing to be told honestly.{% endif %}
-    <a href="{{ url_for('pricing') }}" style="display:inline-block;margin-top:16px;color:#1A2744;font-weight:700;text-decoration:none;font-size:16px;letter-spacing:.3px;border-bottom:2px solid #D4A428;padding-bottom:2px;">Join the League of Photographers →</a>
-  </div>
-  {% endif %}
-
-  {# LEAGUE PANEL #}
-  <div class="hk-league-wrap">
-    <div class="hk-league-lbl">The standard you are building toward</div>
-    <div class="hk-league-panel">
-      <div class="hk-league-img">
-        {% if league_hero and league_hero.thumb_url %}
-        <img src="{{ league_hero.thumb_url }}" alt="From the League"
-             onerror="this.src='https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b93bb08b-9314-421c-a449-f3e6393b72be.jpg';this.onerror=null;">
-        {% else %}
-        <img src='https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b93bb08b-9314-421c-a449-f3e6393b72be.jpg' alt="From the League">
-        {% endif %}
-        <span class="hk-league-badge">{{ league_hero.tier|upper if league_hero else 'GRANDMASTER' }}</span>
-      </div>
-      <div class="hk-league-body">
-        <div>
-          <div class="hk-league-eyebrow">The League of Photographers</div>
-          <div class="hk-league-score">{{ '%.2f'|format(league_hero.score) if league_hero else '9.15' }}</div>
-          <div class="hk-league-tier">{{ league_hero.tier if league_hero else 'Grandmaster' }} · {{ league_hero.genre if league_hero else 'Creative' }}</div>
-          <div class="hk-league-statement">
-            {% if league_hero and user_hero and user_hero.score %}
-              {% set _gap = (((league_hero.score - user_hero.score) * 10) | round | int) / 10 %}
-              {% if _n <= 2 %}The distance between where you are and this photograph is not talent. It is accumulated decision-making. We build that.
-              {% elif _n <= 4 %}{{ _gap }} points separate your best from this. That gap has a shape. We can already see it.
-              {% else %}The {{ _gap }}-point gap to this standard is not talent. It is accumulated decision-making — photograph by photograph, honest evaluation by honest evaluation.<br><br>We build that. Challenge by challenge.
-              {% endif %}
-            {% else %}
-              The distance to this standard is not talent. It is accumulated decision-making — photograph by photograph. We build that. Challenge by challenge.
-            {% endif %}
+  <!-- ═══ HERO ═══ -->
+  {% if user_hero and user_hero.thumb_url %}
+  <div class="sl-hero">
+    <img src="{{ user_hero.thumb_url }}" alt="Your last photograph">
+    <div class="sl-hero-bar">
+      <div class="sl-hero-greeting">Good morning</div>
+      <div class="sl-hero-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
+      <div class="sl-hero-meta">
+        <div class="sl-hero-standing">
+          <span class="sl-hero-score">{{ "%.2f"|format(user_hero.score) }}</span>
+          <div class="sl-hero-tier-block">
+            <span class="sl-hero-tier">{{ user_hero.tier }}</span>
+            <span class="sl-hero-genre">{{ user_hero.genre }}</span>
           </div>
         </div>
-        <a href="{{ url_for('standings_public') }}" class="hk-league-link">View the League of Photographers →</a>
+        <div class="sl-hero-link">
+          <a href="{{ url_for('try_page') }}">Your best so far &nbsp;·&nbsp; See the full evaluation →</a>
+        </div>
       </div>
     </div>
   </div>
-
-  {# LOCKED FEATURES #}
-  <div class="hk-locked-row" style="align-items:stretch;">
-
-    {# EVOLVING EYE — dark card, visual pull #}
-    <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Evolving Eye</span>
-      </div>
-      <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
-          Am I making images —<br>or just taking them?
-        </div>
-        <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
-          Before today, no photographer could answer this honestly. Your Evolving Eye is that answer — built from every photograph, updated with every evaluation.
-        </div>
-        <div style="font-size:14px;color:#8A6A10;font-style:italic;font-weight:500;">
-          Every 10 evaluations — a challenge built from your trends. Specific to your eye. The only place in the world where that happens.
-        </div>
-      </div>
-      <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
-          We will help you start →
-        </a>
-      </div>
-    </div>
-
-    {# STANDING — dark card, visual pull #}
-    <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Standing</span>
-      </div>
-      <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
-          From five billion,<br>to one.
-        </div>
-        <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
-          With a standing in the League, your work is different. Not because the photographs changed — because now there is a record.
-        </div>
-        <div style="font-size:14px;color:#8A6A10;font-style:italic;font-weight:500;">
-          Grandmasters open doors. Legends define what photography can be. We know how to help you get there.
-        </div>
-      </div>
-      <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
-          Join the League →
-        </a>
-      </div>
-    </div>
-
-  </div>
-
-</div>
-
-{% else %}
-
-{# ══════════════════════════════════════════════════════════════
-   STATE 0 — ZERO UPLOADS — League hero + invitation
-══════════════════════════════════════════════════════════════ #}
-
-<div class="hk-hero" style="height:420px">
-  {% if hero_image and hero_image.thumb_url %}
-  <img class="hk-hero-img" src="{{ hero_image.thumb_url }}" alt="From the League" onerror="this.style.display='none'">
-  {% else %}
-  <div style="width:100%;height:100%;background:linear-gradient(160deg,#1a2a4a 0%,#0d1a30 40%,#060e1c 100%)"></div>
   {% endif %}
-  <div class="hk-hero-overlay hero-fade"></div>
-  <div class="hk-hero-content">
-    <div class="hk-hero-eye"><span class="sl-hk-greeting">Good evening</span>, {{ first_name }}. We are looking for a few good photographers.</div>
-    <h1 style="font-size:clamp(28px,4vw,48px);font-weight:600;color:#fff;line-height:1.7;letter-spacing:-.03em;margin-bottom:12px;max-width:560px">The platform does not know your eye yet.</h1>
-    <p style="font-size:16px;color:rgba(255,255,255,.6);line-height:1.7;max-width:480px;margin-bottom:20px">Upload one photograph. We will tell you what we see — across five dimensions, calibrated against the same standard applied to every photographer here.</p>
-    <a href="{{ url_for('try_page') }}" style="display:inline-block;background:#D4A428;color:#1A1A18;font-weight:700;font-size:15px;padding:14px 28px;text-decoration:none">
-      Show me what I'm missing →
-    </a>
-    <div style="font-size:14px;color:rgba(255,255,255,.3);margin-top:10px">{{ _lim }} free evaluations. No card needed.</div>
-    {% if hero_image %}
-    <div style="position:absolute;bottom:14px;right:16px;font-size:14px;color:rgba(255,255,255,.25);letter-spacing:1.5px;text-transform:uppercase">
-      {{ hero_image.tier|upper }} · {{ '%.2f'|format(hero_image.score) }} — From the League
+
+  <div class="sl-col">
+
+    <!-- ═══ SHERPA ═══ -->
+    {% if sherpa_obs %}
+    <div class="sl-sherpa">
+      <div class="sl-eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
+      <div class="sl-sherpa-body">{{ sherpa_obs }}</div>
+      {% if sherpa_nudge %}
+      <div class="sl-sherpa-nudge">{{ sherpa_nudge }}</div>
+      {% endif %}
     </div>
+    <div class="sl-rule"></div>
     {% endif %}
-  </div>
-</div>
 
-<div class="hk-body">
-  <div class="hk-counter-bar">
-    {% if _rem == 0 %}You have used all {{ _lim }} free evaluations. Your eye has been seen.
-    {% elif _rem == 1 %}{{ _n }} photographs evaluated. One free evaluation left.
-    {% elif _n == 0 %}{{ _lim }} free evaluations — no card needed.
-    {% else %}<b>{{ _n }}</b> photograph{{ 's' if _n != 1 }} evaluated &nbsp;·&nbsp; <b>{{ _rem }}</b> more included free{% endif %}
-  </div>
+    <!-- ═══ THE STANDARD ═══ -->
+    <div class="sl-standard">
+      <div class="sl-eyebrow">The standard you are building toward</div>
+      <div class="sl-tier-strip">
+        {% set tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+        {% set current_tier = user_hero.tier if user_hero else '' %}
+        {% for t in tiers %}
+        <span class="sl-tier-pill{% if t == current_tier %} active{% endif %}">{{ t }}</span>
+        {% endfor %}
+      </div>
+      {% if league_hero and league_hero.thumb_url %}
+      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
+      <div class="sl-gm-credit">
+        <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
+        <span class="sl-gm-score">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
+      </div>
+      {% endif %}
+      <div class="sl-standard-copy">
+        At every festival, a thousand photographers press the shutter at the same moment. One image stands apart. Not because of the camera. Because that photographer saw differently — before they raised it.
+      </div>
+      <div class="sl-five-dims">
+        <div class="sl-dim-row">
+          <span class="sl-dim-plain">The difficulty of getting the shot</span>
+          <span class="sl-dim-official">Depth of Difficulty</span>
+        </div>
+        <div class="sl-dim-row">
+          <span class="sl-dim-plain">Whether it is visually disruptive</span>
+          <span class="sl-dim-official">Visual Disruption</span>
+        </div>
+        <div class="sl-dim-row">
+          <span class="sl-dim-plain">Whether it caught the decisive moment</span>
+          <span class="sl-dim-official">Decisive Moment</span>
+        </div>
+        <div class="sl-dim-row">
+          <span class="sl-dim-plain">Whether it creates wonder</span>
+          <span class="sl-dim-official">Wonder Factor</span>
+        </div>
+        <div class="sl-dim-row">
+          <span class="sl-dim-plain">The emotion it carries</span>
+          <span class="sl-dim-official">Affective Quotient</span>
+        </div>
+      </div>
+      <div class="sl-standard-close">
+        The highest standard demands strength across all five dimensions.
+      </div>
+    </div>
 
-  {# QUIET CONVERSION NUDGE — evals 5-9, before League panel #}
-  {% if _n >= 5 and not state_conversion %}
-  <div style="font-size:16px;color:#1A2744;line-height:1.7;margin-bottom:24px;padding:18px 20px;background:#F5F0E8;border-left:3px solid #D4A428;">
-    {% if milestone_strength %}<strong>{{ milestone_strength }}</strong> — that is your signature across {{ _n }} photographs.<br>Most photographers spend years not knowing this. You know it now.<br><br>The League is where a signature becomes a voice. Where a voice becomes a body of work. Where a body of work stands apart from five billion.{% else %}{{ _n }} photographs. We have begun to see your eye — where it is already distinct, and where it is still doing what everyone else does.<br><br>The question is whether you want to know what it can become — and whether you are willing to be told honestly.{% endif %}
-    <a href="{{ url_for('pricing') }}" style="display:inline-block;margin-top:16px;color:#1A2744;font-weight:700;text-decoration:none;font-size:16px;letter-spacing:.3px;border-bottom:2px solid #D4A428;padding-bottom:2px;">Join the League of Photographers →</a>
-  </div>
-  {% endif %}
+    <div class="sl-rule"></div>
 
-  {# LEAGUE PANEL #}
-  <div class="hk-league-wrap">
-    <div class="hk-league-lbl">The standard you are building toward</div>
-    <div class="hk-league-panel">
-      <div class="hk-league-img">
-        {% if hero_image and hero_image.thumb_url %}
-        <img src="{{ hero_image.thumb_url }}" alt="From the League" onerror="this.style.display='none'">
+    <!-- ═══ WHERE YOU STAND ═══ -->
+    <div class="sl-where">
+      <div class="sl-eyebrow">Where you stand</div>
+      {% set best_score = namespace(val=0.0) %}
+      {% for img in images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
+      <div class="sl-counters">
+        <div class="sl-counter">
+          <span class="sl-counter-num">{{ evals_used }}</span>
+          <span class="sl-counter-label">Photographs evaluated</span>
+        </div>
+        <div class="sl-counter">
+          <span class="sl-counter-num">{{ evals_remaining }}</span>
+          <span class="sl-counter-label">Remaining free</span>
+        </div>
+        {% if best_score.val > 0 %}
+        <div class="sl-counter">
+          <span class="sl-counter-num">{{ "%.2f"|format(best_score.val) }}</span>
+          <span class="sl-counter-label">Best evaluation</span>
+        </div>
         {% endif %}
-        <span class="hk-league-badge">{{ hero_image.tier|upper if hero_image else 'GRANDMASTER' }}</span>
       </div>
-      <div class="hk-league-body">
-        <div>
-          <div class="hk-league-eyebrow">The League of Photographers</div>
-          <div class="hk-league-score">{{ '%.2f'|format(hero_image.score) if hero_image else '9.15' }}</div>
-          <div class="hk-league-tier">{{ hero_image.tier if hero_image else 'Grandmaster' }}</div>
-          <div class="hk-league-statement">"We are looking for a few photographers whose work is worth developing over years. Upload one photograph. We will tell you if you have what it takes."</div>
-        </div>
-        <a href="{{ url_for('standings_public') }}" class="hk-league-link">View the League of Photographers →</a>
+      <div class="sl-record-statement">
+        {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}. This is what your record looks like so far.
       </div>
-    </div>
-  </div>
-
-  {# LOCKED FEATURES #}
-  <div class="hk-locked-row" style="align-items:stretch;">
-
-    {# EVOLVING EYE — dark card, visual pull #}
-    <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Evolving Eye</span>
+      {% if images %}
+      <div class="sl-record">
+        {% for img in images %}
+        {% if img.thumb_url %}
+        <div class="sl-record-entry">
+          <img class="sl-record-img" src="{{ img.thumb_url }}" alt="Evaluation {{ loop.revindex }} — {{ img.genre }}">
+          <div class="sl-record-meta">
+            <div class="sl-record-left">
+              <span class="sl-record-eval">Evaluation {{ loop.revindex }}</span>
+              <span class="sl-record-name">{{ img.genre }}</span>
+              <span class="sl-record-genre">{{ img.tier }}</span>
+            </div>
+            <div class="sl-record-right">
+              {% if img.score %}
+              <span class="sl-record-score">{{ "%.2f"|format(img.score) }}</span>
+              {% endif %}
+              <span class="sl-record-tier">{{ img.tier }}</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
       </div>
-      <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
-          Am I making images —<br>or just taking them?
-        </div>
-        <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
-          Before today, no photographer could answer this honestly. Your Evolving Eye is that answer — built from every photograph, updated with every evaluation.
-        </div>
-        <div style="font-size:14px;color:#8A6A10;font-style:italic;font-weight:500;">
-          Every 10 evaluations — a challenge built from your trends. Specific to your eye. The only place in the world where that happens.
-        </div>
-      </div>
-      <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
-          We will help you start →
-        </a>
+      {% endif %}
+      <div class="sl-progression-note">
+        <span class="sl-progression-text">Your record is accumulating. Each photograph stays — nothing resets.</span>
+        {% if best_score.val > 0 %}
+        {% set best_tier = '' %}
+        {% for img in images %}{% if img.score == best_score.val %}{% set best_tier = img.tier %}{% endif %}{% endfor %}
+        <span class="sl-progression-best">Best &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }} &nbsp;·&nbsp; {{ best_tier }}</span>
+        {% endif %}
       </div>
     </div>
 
-    {# STANDING — dark card, visual pull #}
-    <div class="hk-locked" style="background:#EEF3FA;border:1px solid #C8D8EE;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="background:#D4A428;padding:8px 16px;">
-        <span style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a0e00;">Standing</span>
+    <div class="sl-rule"></div>
+
+    <!-- ═══ THE JOURNEY ═══ -->
+    <div class="sl-journey">
+      <div class="sl-eyebrow">What you are becoming</div>
+      <div class="sl-journey-copy">
+        Your signature becomes your voice. Your voice becomes a body of work. Your body of work stands apart from five billion.
       </div>
-      <div style="padding:20px 18px 16px;flex:1;">
-        <div style="font-size:20px;font-weight:500;color:#1A2744;line-height:1.7;margin-bottom:12px;">
-          From five billion,<br>to one.
-        </div>
-        <div style="font-size:15px;color:#3A4A6A;line-height:1.65;margin-bottom:10px;">
-          With a standing in the League, your work is different. Not because the photographs changed — because now there is a record.
-        </div>
-        <div style="font-size:14px;color:#8A6A10;font-style:italic;font-weight:500;">
-          Grandmasters open doors. Legends define what photography can be. We know how to help you get there.
+      {% set gap = [9.0 - best_score.val, 0.0]|max %}
+      <div class="sl-gap-block">
+        <div class="sl-gap-num">{{ "%.2f"|format(gap) }}</div>
+        <div class="sl-gap-label">Points from Grandmaster</div>
+        <div class="sl-gap-copy">
+          The distance is not talent. It is accumulated decision-making — photograph by photograph. Honest evaluation by honest evaluation.
         </div>
       </div>
-      <div style="padding:0 18px 18px;">
-        <a href="{{ url_for('pricing') }}" style="display:block;background:#1A2744;color:#F5C518;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:12px 16px;text-align:center;">
-          Join the League →
-        </a>
+      <div class="sl-gold-rule"></div>
+      {% if milestone_strength %}
+      <div class="sl-milestone">
+        Your milestone strength is <strong>{{ milestone_strength }}</strong> — the emotional atmosphere your eye creates instinctively. That quality, directed into more demanding situations, is what closes the gap.
       </div>
+      {% else %}
+      <div class="sl-milestone">
+        Each evaluation reveals what your eye reaches for before your mind intervenes. That instinct is the beginning of your voice.
+      </div>
+      {% endif %}
     </div>
 
   </div>
 
-  {# PRICING LINE #}
-  <div style="background:#1A2744;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div style="font-size:15px;color:rgba(255,255,255,.8);line-height:1.7">
-      <span style="color:#D4A428;font-weight:700">&#8377;4,000 / year</span>
-      &nbsp;·&nbsp; 48 evaluations &nbsp;·&nbsp; Calibrated standing &nbsp;·&nbsp; Evolving Eye &nbsp;·&nbsp; Annual Excellence Award &nbsp;·&nbsp; Portfolio
+  <!-- ═══ THE INVITATION ═══ -->
+  <div class="sl-invitation">
+    <div class="sl-inv-inner">
+      <div class="sl-inv-eyebrow">The League of Photographers</div>
+      {% if evals_remaining > 0 %}
+      <div class="sl-inv-copy">
+        Your record is growing. Your next photograph continues it.
+      </div>
+      {% else %}
+      <div class="sl-inv-copy">
+        Your standing has not started yet. Your record begins with your next photograph.
+      </div>
+      {% endif %}
+      <div class="sl-inv-gap">
+        <div class="sl-inv-gap-num">{{ "%.2f"|format(gap) }}</div>
+        <div class="sl-inv-gap-label">Points separate your best from Grandmaster</div>
+      </div>
+      <a href="{{ url_for('try_page') }}" class="sl-inv-cta">Start your record →</a>
+      <div class="sl-inv-secondary">I am here to explore. This is enough for now.</div>
     </div>
-    <a href="{{ url_for('pricing') }}" style="background:#D4A428;color:#1A1A18;font-weight:700;font-size:15px;padding:12px 24px;text-decoration:none;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;margin-top:8px">See membership &#8594;</a>
   </div>
 
-{% endif %}{# end state_zero vs 1-10 #}
-
-
-
-{# Gallery strip removed HAIKU-178.32 — League panel in body replaces it #}
-
-{# ── FOOTER — bg #1A2744 matches Haiku top nav exactly ── #}
-<footer style="background:#1A2744;padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid rgba(255,255,255,.08)">
-  <span style="font-size:14px;color:rgba(255,255,255,.5)">© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
-  <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
-    <a href="{{ url_for('pricing') }}" style="color:rgba(255,255,255,.75);font-size:15px;text-decoration:none">Pricing</a>
-    <a href="/terms" style="color:rgba(255,255,255,.65);font-size:15px;text-decoration:none">Terms</a>
-    <a href="/privacy" style="color:rgba(255,255,255,.65);font-size:15px;text-decoration:none">Privacy</a>
-    <a href="/refund-policy" style="color:rgba(255,255,255,.65);font-size:15px;text-decoration:none">Refunds</a>
-    <a href="/shipping-policy" style="color:rgba(255,255,255,.65);font-size:15px;text-decoration:none">Shipping</a>
-    <a href="/contact" style="color:rgba(255,255,255,.65);font-size:15px;text-decoration:none">Support</a>
+  <!-- FOOTER -->
+  <div class="sl-footer">
+    <span class="sl-footer-copy">© 2026 Shutter League &nbsp;·&nbsp; Bengaluru, India &nbsp;·&nbsp; UDYAM-KR-03-0697280</span>
+    <div class="sl-footer-kyc">
+      <a href="{{ url_for('terms') }}">Terms</a>
+      <a href="{{ url_for('privacy') }}">Privacy</a>
+      <a href="{{ url_for('refunds') }}">Refunds</a>
+      <a href="{{ url_for('shipping') }}">Shipping</a>
+    </div>
   </div>
-</footer>
 
-{# ── BOTTOM NAV — placed last, z-index:200 above cookie banner:150 ── #}
-<nav class="hk-bottom-nav">
-  <a class="hk-bn-tab on" href="{{ url_for('try_welcome') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Home
-  </a>
-  <a class="hk-bn-tab" href="{{ url_for('try_page') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Upload
-  </a>
-  <a class="hk-bn-tab" href="{{ url_for('try_gallery') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-    My Gallery
-  </a>
-  <a class="hk-bn-tab" href="{{ url_for('standings_public') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-    League
-  </a>
-  <button class="hk-bn-tab" id="hkMoreBtn" onclick="toggleHkMore(event)" aria-label="More" style="background:none;border:none;cursor:pointer;touch-action:manipulation;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-    More
-  </button>
-</nav>
-
-<script>
-(function(){
-  var _cb = document.getElementById('cookie-banner');
-  if (_cb && !localStorage.getItem('sl_cookie_ok')) {
-    _cb.classList.add('cb-visible');
-  }
-})();
-function cbAccept() {
-  localStorage.setItem('sl_cookie_ok', '1');
-  var b = document.getElementById('cookie-banner');
-  if (!b) return;
-  b.style.transition = 'opacity 0.3s';
-  b.style.opacity = '0';
-  setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
-}
-// SL-194: More drawer open/close
-function toggleHkMore(e) {
-  e.stopPropagation();
-  var d = document.getElementById('hkMoreDrawer');
-  if (d) d.classList.toggle('open');
-  var btn = document.getElementById('hkMoreBtn');
-  if (btn) btn.style.color = d && d.classList.contains('open') ? '#F5C518' : '';
-}
-function closeHkMore() {
-  var d = document.getElementById('hkMoreDrawer');
-  if (d) d.classList.remove('open');
-  var btn = document.getElementById('hkMoreBtn');
-  if (btn) btn.style.color = '';
-}
-// Close More drawer on outside tap
-document.addEventListener('click', function(e) {
-  var d = document.getElementById('hkMoreDrawer');
-  var btn = document.getElementById('hkMoreBtn');
-  if (d && d.classList.contains('open') && !d.contains(e.target) && (!btn || !btn.contains(e.target))) {
-    closeHkMore();
-  }
-});
-</script>
-<script>
-(function(){
-  var ist=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
-  var h=ist.getHours();
-  var g=h<12?'morning':h<17?'afternoon':'evening';
-  document.querySelectorAll('.sl-hk-greeting').forEach(function(el){el.textContent='Good '+g;});
-})();
-</script>
-
-<div id="cookie-banner" role="region" aria-label="Cookie consent">
-  <div class="cb-text">We use cookies to keep you logged in and improve your experience. <a href="/privacy">Learn more</a></div>
-  <div class="cb-actions">
-    <button id="cb-accept" onclick="cbAccept()">Accept</button>
-    <button id="cb-dismiss" onclick="cbAccept()" aria-label="Dismiss">&times;</button>
-  </div>
 </div>
 </body>
 </html>
-{#
-APP.PY CHANGE REQUIRED — try_welcome() route must pass hero_image variable.
-Add this block to the try_welcome() route in app.py (staging branch only),
-same pattern as _dash_carousel already in dashboard():
-
-    try:
-        _haiku_hero = (Image.query
-                       .filter(Image.status=='scored', Image.score!=None,
-                               Image.is_public==True, Image.is_flagged==False,
-                               Image.tier.in_(['Legend','Grandmaster','Master']),
-                               Image.score>=8.5,
-                               Image.thumb_url!=None,
-                               Image.width > Image.height,
-                               Image.is_haiku_try.isnot(True))
-                       .order_by(db.func.random())
-                       .limit(1).first())
-    except Exception:
-        _haiku_hero = None
-
-Then add hero_image=_haiku_hero to the render_template() call.
-Cache-Control: no-store already set on try_welcome response (verify).
-NO new DB columns. NO production impact until merge.
-FLAG: this app.py change must be deployed to staging before template is tested live.
-#}
-
-Session 192 · 2026-08-24
