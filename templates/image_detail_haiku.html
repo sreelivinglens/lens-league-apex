@@ -2,69 +2,68 @@
    Route: /try/result/<image_id>  →  try_result() in app-staging.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
+   Extends base-staging.html — inherits nav, mobile nav, footer, KYC.
    DO NOT REDESIGN. DO NOT ADD UI. IMPLEMENT THE APPROVED DESIGN.
 #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shutter League — Evaluation Score Card</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
+{% extends "base.html" %}
 
-/* PAGE — wide for photograph, narrow for text */
+{% block title %}Evaluation Score Card — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+/* SCORECARD — overrides and additions on top of base */
+
+/* Remove default main padding that base adds */
+main { padding:0 !important; background:#E8E5DF; }
+
+/* PAGE */
 .sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
 
-/* TOP BAR */
+/* TOP BAR — back link + save PDF */
 .sl-topbar {
   display:flex; justify-content:space-between; align-items:center;
   padding:18px 48px;
   border-bottom:0.5px solid rgba(26,39,68,0.10);
+  background:#F5F3EF;
 }
 .sl-topbar-back {
-  font-size:12px; color:rgba(26,39,68,0.42);
-  letter-spacing:0.10em; text-transform:uppercase;
-  text-decoration:none; cursor:pointer;
+  font-size:13px; color:rgba(26,39,68,0.42);
+  letter-spacing:0.08em; text-transform:uppercase;
+  text-decoration:none;
 }
 .sl-topbar-back:hover { color:#C8A84B; }
 .sl-topbar-actions {
   display:flex; gap:28px;
-  font-size:12px; color:rgba(26,39,68,0.38);
-  letter-spacing:0.08em; text-transform:uppercase;
+  font-size:13px; color:rgba(26,39,68,0.38);
+  letter-spacing:0.06em; text-transform:uppercase;
 }
+.sl-topbar-actions a { color:inherit; text-decoration:none; }
+.sl-topbar-actions a:hover { color:#C8A84B; }
 
 /* PHOTOGRAPH — full width, natural aspect ratio, NEVER CROPPED
    width:100%; height:auto; display:block; — non-negotiable.
-   No object-fit. No fixed height. No container forced dimensions.
-   The image determines its own rendered height from its natural proportions. */
-.sl-photo-wrap { width:100%; background:#0C1018; position:relative; }
+   No object-fit. No fixed height. No forced container ratio. */
+.sl-photo-wrap { width:100%; background:#0C1018; }
 .sl-photo-img {
   width:100%;
   height:auto;
   display:block;
-  /* Natural aspect ratio — image dimensions determine height.
-     exif_original_width/height used for aspect-ratio reservation below
-     but NEVER to force a fixed container height. */
 }
 .sl-photo-meta {
-  padding:12px 48px;
+  padding:13px 48px;
   background:#0C1018;
   display:flex; justify-content:space-between; align-items:center;
 }
 .sl-photo-meta span {
-  font-size:12px; color:rgba(255,255,255,0.30);
-  letter-spacing:0.09em; text-transform:uppercase;
+  font-size:13px; color:rgba(255,255,255,0.30);
+  letter-spacing:0.08em; text-transform:uppercase;
 }
 
 /* EDITORIAL CONTENT COLUMN */
 .sl-content { max-width:760px; margin:0 auto; padding:0 48px; }
 
 /* VERDICT */
-.sl-verdict { padding-top:60px; padding-bottom:0; }
+.sl-verdict { padding-top:60px; }
 .sl-score-line { display:flex; align-items:baseline; gap:14px; margin-bottom:10px; }
 .sl-score-num {
   font-family:'Playfair Display',serif;
@@ -72,10 +71,14 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   line-height:1; letter-spacing:-0.04em;
 }
 .sl-score-denom { font-size:26px; color:rgba(26,39,68,0.25); font-weight:300; }
+
+/* Tier + genre — 15px, readable */
 .sl-tier-genre {
-  font-size:12px; letter-spacing:0.22em; text-transform:uppercase;
+  font-size:15px; letter-spacing:0.14em; text-transform:uppercase;
   color:#C8A84B; font-weight:500; margin-bottom:28px;
 }
+
+/* Tier strip */
 .sl-tier-strip {
   display:flex; flex-wrap:wrap; margin-bottom:20px;
   border-bottom:0.5px solid rgba(26,39,68,0.09); padding-bottom:20px;
@@ -88,15 +91,17 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   color:#1A2744; font-weight:600;
   border-bottom:2px solid #C8A84B; margin-bottom:-0.5px;
 }
+
+/* Percentile */
 .sl-percentile {
   font-size:16px; color:rgba(26,39,68,0.48);
   margin-bottom:64px; font-style:italic; line-height:1.65;
 }
 
-/* GOLD RULE */
+/* Gold rule */
 .sl-gold-rule { width:32px; height:1.5px; background:#C8A84B; margin-bottom:52px; }
 
-/* SECTION EYEBROW */
+/* Section eyebrow — 15px */
 .sl-eyebrow {
   font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
   color:rgba(26,39,68,0.36); margin-bottom:28px;
@@ -111,6 +116,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
 }
 .sl-dim-row:last-of-type { border-bottom:none; }
 .sl-dim-left { display:flex; flex-direction:column; gap:4px; }
+/* Proprietary name — 15px */
 .sl-dim-official {
   font-size:15px; letter-spacing:0.08em; text-transform:uppercase;
   color:rgba(26,39,68,0.45); font-weight:500;
@@ -124,6 +130,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   font-size:28px; color:#1A2744; font-weight:500;
   font-variant-numeric:tabular-nums;
 }
+/* Status tag — 15px */
 .sl-dim-tag {
   font-size:15px; letter-spacing:0.07em; text-transform:uppercase;
   min-width:86px; text-align:right;
@@ -147,8 +154,9 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   font-family:'Playfair Display',serif; font-weight:400;
 }
 
-/* EDITORIAL BLOCKS — Strongest Moment, Next Leap, What to Explore */
+/* EDITORIAL BLOCKS */
 .sl-editorial { margin-bottom:72px; display:flex; flex-direction:column; gap:52px; }
+/* Block labels — 15px */
 .sl-block-label {
   font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
   color:rgba(26,39,68,0.36); margin-bottom:14px;
@@ -159,12 +167,13 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   color:rgba(26,39,68,0.42); margin-top:16px;
 }
 
-/* EYE BEHIND THIS — reference photographer */
+/* EYE BEHIND THIS */
 .sl-reference {
   margin-bottom:0;
   border-top:0.5px solid rgba(26,39,68,0.08);
   padding-top:56px; padding-bottom:64px;
 }
+/* Eyebrow — 15px */
 .sl-ref-eyebrow {
   font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
   color:rgba(26,39,68,0.36); margin-bottom:18px;
@@ -179,19 +188,17 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
   line-height:1.8; margin-bottom:20px;
 }
 .sl-ref-link {
-  font-size:12px; color:#C8A84B;
+  font-size:13px; color:#C8A84B;
   letter-spacing:0.09em; text-transform:uppercase; text-decoration:none;
 }
 .sl-ref-link:hover { text-decoration:underline; }
 
-/* CONVERSION — next decision, full width navy */
-.sl-conversion {
-  background:#1A2744; padding:56px 48px;
-}
+/* NEXT DECISION — full width navy */
+.sl-conversion { background:#1A2744; padding:56px 48px; }
 .sl-conv-inner { max-width:760px; margin:0 auto; width:100%; }
 .sl-conv-count {
-  font-size:12px; color:rgba(255,255,255,0.32);
-  letter-spacing:0.09em; text-transform:uppercase; margin-bottom:16px;
+  font-size:13px; color:rgba(255,255,255,0.32);
+  letter-spacing:0.08em; text-transform:uppercase; margin-bottom:16px;
 }
 .sl-conv-statement {
   font-size:24px; color:rgba(255,255,255,0.88); line-height:1.65;
@@ -199,77 +206,70 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
 }
 .sl-conv-primary {
   font-size:17px; color:#F5C518; letter-spacing:0.03em;
-  cursor:pointer; line-height:1.5; margin-bottom:16px;
+  line-height:1.5; margin-bottom:16px;
   display:block; text-decoration:none;
 }
 .sl-conv-primary:hover { text-decoration:underline; }
 .sl-conv-secondary {
   font-size:15px; color:rgba(255,255,255,0.28);
-  cursor:pointer; line-height:1.5; display:block; text-decoration:none;
+  line-height:1.5; display:block; text-decoration:none;
 }
 
-/* FOOTER */
-.sl-footer {
-  padding:24px 48px;
-  display:flex; justify-content:space-between; align-items:center;
-  border-top:0.5px solid rgba(26,39,68,0.09);
-}
-.sl-footer-back {
-  font-size:12px; color:rgba(26,39,68,0.35);
-  letter-spacing:0.08em; text-transform:uppercase; text-decoration:none;
-}
-.sl-footer-back:hover { color:#C8A84B; }
-.sl-footer-actions {
-  display:flex; gap:28px;
-  font-size:12px; color:rgba(26,39,68,0.35);
-  letter-spacing:0.08em; text-transform:uppercase;
-}
-
-/* NULL STATE — graceful handling when field is absent */
+/* NULL STATE */
 .sl-null { color:rgba(26,39,68,0.25); font-style:italic; }
 
-/* MOBILE */
+/* ── RESPONSIVE ───────────────────────────────────────── */
+
+/* iPad portrait — 768px */
+@media (max-width:768px) {
+  .sl-topbar,
+  .sl-photo-meta,
+  .sl-conversion { padding-left:28px; padding-right:28px; }
+  .sl-content { padding-left:28px; padding-right:28px; }
+  .sl-score-num { font-size:80px; }
+  .sl-tier-item { font-size:13px; padding-right:10px; }
+  .sl-narrative-body { font-size:19px; }
+  .sl-block-body { font-size:17px; }
+  .sl-ref-name { font-size:26px; }
+  .sl-conv-statement { font-size:20px; }
+}
+
+/* Mobile — 600px */
 @media (max-width:600px) {
   .sl-topbar,
   .sl-photo-meta,
-  .sl-conversion,
-  .sl-footer { padding-left:24px; padding-right:24px; }
-  .sl-content { padding-left:24px; padding-right:24px; }
-  .sl-score-num { font-size:72px; }
+  .sl-conversion { padding-left:20px; padding-right:20px; }
+  .sl-content { padding-left:20px; padding-right:20px; }
+  .sl-score-num { font-size:68px; }
+  .sl-score-denom { font-size:20px; }
+  .sl-tier-item { font-size:12px; padding-right:8px; }
   .sl-narrative-body { font-size:18px; }
-  .sl-tier-item { font-size:13px; padding-right:8px; }
+  .sl-dim-val { font-size:22px; }
+  .sl-dim-right { gap:10px; }
+  .sl-verdict { padding-top:40px; }
+  .sl-conv-statement { font-size:18px; }
 }
 </style>
-</head>
-<body>
+{% endblock %}
 
+{% block content %}
+
+<div style="background:#E8E5DF; min-height:100vh;">
 <div class="sl-page">
 
-  {# ══════════════════════════════════════════════════════════
-     TOP BAR
-  ══════════════════════════════════════════════════════════ #}
+  {# ── TOP BAR ── #}
   <div class="sl-topbar">
     <a href="{{ url_for('try_page') }}" class="sl-topbar-back">← My evaluations</a>
     <div class="sl-topbar-actions">
-      <a href="{{ url_for('try_result_download', image_id=image_id) }}" style="color:inherit;text-decoration:none;">Save PDF</a>
+      <a href="{{ url_for('try_result_download', image_id=image_id) }}">Save PDF</a>
     </div>
   </div>
 
-  {# ══════════════════════════════════════════════════════════
-     1. PHOTOGRAPH
+  {# ── 1. PHOTOGRAPH ──
      Full page width. Natural aspect ratio. Never cropped.
-     width:100%; height:auto; display:block; — locked.
-     aspect-ratio attribute used only for layout reservation,
-     not to force a fixed container height.
-  ══════════════════════════════════════════════════════════ #}
+     width:100%; height:auto; display:block; — non-negotiable. #}
   <div class="sl-photo-wrap">
     {% if thumb_url %}
-      {# Compute natural aspect ratio from dimensions for layout reservation.
-         Primary: image.width / image.height (thumbnail dimensions).
-         Fallback: exif_original_width / exif_original_height.
-         If neither available: no aspect-ratio attribute — browser handles naturally. #}
-      {% set _img_w = image.width or image.exif_original_width %}
-      {% set _img_h = image.height or image.exif_original_height %}
       <img
         class="sl-photo-img"
         src="{{ thumb_url }}"
@@ -277,8 +277,8 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
         loading="eager"
       >
     {% else %}
-      <div style="width:100%;height:320px;background:#1A2744;display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:14px;color:rgba(255,255,255,0.28);letter-spacing:0.10em;text-transform:uppercase;">Photograph unavailable</span>
+      <div style="width:100%;height:280px;background:#0C1018;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:13px;color:rgba(255,255,255,0.25);letter-spacing:0.10em;text-transform:uppercase;">Photograph unavailable</span>
       </div>
     {% endif %}
     <div class="sl-photo-meta">
@@ -287,14 +287,10 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
     </div>
   </div>
 
-  {# ══════════════════════════════════════════════════════════
-     EDITORIAL CONTENT COLUMN
-  ══════════════════════════════════════════════════════════ #}
+  {# ── EDITORIAL CONTENT COLUMN ── #}
   <div class="sl-content">
 
-    {# ══════════════════════════════════════════════════════════
-       2. SCORE + TIER
-    ══════════════════════════════════════════════════════════ #}
+    {# ── 2. SCORE + TIER ── #}
     <div class="sl-verdict">
       <div class="sl-score-line">
         <span class="sl-score-num">{{ "%.2f"|format(score|float) if score else '—' }}</span>
@@ -305,7 +301,6 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
         {{ tier or '—' }}&nbsp;·&nbsp;{{ genre or '—' }}
       </div>
 
-      {# Tier strip — eight tiers, active one underlined in gold #}
       {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
       <div class="sl-tier-strip">
         {% for t in _tiers %}
@@ -313,7 +308,6 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
         {% endfor %}
       </div>
 
-      {# Percentile context — from compute_percentile() if available #}
       {% if percentile and percentile.context %}
         <div class="sl-percentile">{{ percentile.context }}</div>
       {% elif percentile and percentile.top_pct %}
@@ -323,15 +317,10 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
       <div class="sl-gold-rule"></div>
     </div>
 
-    {# ══════════════════════════════════════════════════════════
-       3. FIVE DIMENSIONS
-       audit_json keys: aq, vd, dm, wf, dod
-       Each dimension: proprietary name + plain English + value + tag
-    ══════════════════════════════════════════════════════════ #}
+    {# ── 3. FIVE DIMENSIONS ── #}
     <div class="sl-dimensions">
       <div class="sl-eyebrow">Five dimensions</div>
 
-      {# Build dimension data for tag calculation #}
       {% set _dims = [
         ('Affective Quotient',  'The emotional quality it carries',       aq  | float(0)),
         ('Visual Disruption',   'Whether it is visually disruptive',      vd  | float(0)),
@@ -339,8 +328,6 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
         ('Wonder Factor',       'Whether it creates wonder',              wf  | float(0)),
         ('Depth of Difficulty', 'The difficulty of getting the shot',     dod | float(0)),
       ] %}
-
-      {# Find max and min to tag Strongest / Gap #}
       {% set _values = [aq|float(0), vd|float(0), dm|float(0), wf|float(0), dod|float(0)] %}
       {% set _max_val = _values | max %}
       {% set _min_val = _values | min %}
@@ -369,11 +356,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
       </div>
     </div>
 
-    {# ══════════════════════════════════════════════════════════
-       4. WHAT WE SEE — impression / mentor narrative
-       audit_json key: impression
-       Display actual DB content. Do not rewrite or paraphrase.
-    ══════════════════════════════════════════════════════════ #}
+    {# ── 4. WHAT WE SEE ── #}
     {% if impression %}
     <div class="sl-narrative">
       <div class="sl-eyebrow">What we see</div>
@@ -381,11 +364,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
     </div>
     {% endif %}
 
-    {# ══════════════════════════════════════════════════════════
-       5. STRONGEST MOMENT / 6. NEXT LEAP / 7. WHAT TO EXPLORE
-       audit_json keys: strength_obs, strength_name,
-                        next_leap_obs, next_leap_name, what_next
-    ══════════════════════════════════════════════════════════ #}
+    {# ── 5. STRONGEST MOMENT / 6. NEXT LEAP / 7. WHAT TO EXPLORE ── #}
     {% if strength_obs or next_leap_obs or what_next %}
     <div class="sl-editorial">
 
@@ -419,11 +398,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
     </div>
     {% endif %}
 
-    {# ══════════════════════════════════════════════════════════
-       8. EYE BEHIND THIS — reference photographer
-       audit_json keys: master_name, master_why
-       Copy and link only — no portrait photograph of the mentor.
-    ══════════════════════════════════════════════════════════ #}
+    {# ── 8. EYE BEHIND THIS ── #}
     {% if master_name %}
     <div class="sl-reference">
       <div class="sl-ref-eyebrow">The eye behind this</div>
@@ -431,68 +406,32 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
       {% if master_why %}
       <div class="sl-ref-desc">{{ master_why }}</div>
       {% endif %}
-      {# Search link — uses ALL_MASTERS dict if available, falls back to plain search #}
       {% if master_name in all_masters %}
-        <a class="sl-ref-link" href="https://www.google.com/search?q={{ all_masters[master_name] }}&tbm=isch" target="_blank" rel="noopener">
-          See their work →
-        </a>
+        <a class="sl-ref-link" href="https://www.google.com/search?q={{ all_masters[master_name] }}&tbm=isch" target="_blank" rel="noopener">See their work →</a>
       {% else %}
-        <a class="sl-ref-link" href="https://www.google.com/search?q={{ master_name|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener">
-          See their work →
-        </a>
+        <a class="sl-ref-link" href="https://www.google.com/search?q={{ master_name|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener">See their work →</a>
       {% endif %}
     </div>
     {% endif %}
 
   </div>{# end .sl-content #}
 
-  {# ══════════════════════════════════════════════════════════
-     9. NEXT DECISION — conversion, full width navy
-     evals_used, evals_remaining from route
-     Copy locked: "Your standing has not started yet."
-     CTA: "Build your record →"
-     Secondary: "I came to explore. This is enough for now."
-  ══════════════════════════════════════════════════════════ #}
+  {# ── 9. NEXT DECISION ── #}
   <div class="sl-conversion">
     <div class="sl-conv-inner">
-
-      {# Evaluation count — what has been used #}
       <div class="sl-conv-count">
         {{ evals_used or 0 }} of 10 free evaluations used
-        {% if evals_remaining is not none %}
-          &nbsp;·&nbsp; {{ evals_remaining }} remaining
-        {% endif %}
+        {% if evals_remaining is not none %}&nbsp;·&nbsp; {{ evals_remaining }} remaining{% endif %}
       </div>
-
-      {# Statement — locked copy #}
       <div class="sl-conv-statement">
         Your standing has not started yet. Your record begins with your next photograph.
       </div>
-
-      {# Primary CTA — locked copy #}
-      <a href="{{ url_for('pricing') }}" class="sl-conv-primary">
-        Build your record →
-      </a>
-
-      {# Secondary — locked copy #}
-      <a href="{{ url_for('try_page') }}" class="sl-conv-secondary">
-        I came to explore. This is enough for now.
-      </a>
-
-    </div>
-  </div>
-
-  {# ══════════════════════════════════════════════════════════
-     FOOTER
-  ══════════════════════════════════════════════════════════ #}
-  <div class="sl-footer">
-    <a href="{{ url_for('try_page') }}" class="sl-footer-back">← Upload another photograph</a>
-    <div class="sl-footer-actions">
-      <span>Shutter League &nbsp;·&nbsp; Bengaluru, India</span>
+      <a href="{{ url_for('pricing') }}" class="sl-conv-primary">Build your record →</a>
+      <a href="{{ url_for('try_page') }}" class="sl-conv-secondary">I came to explore. This is enough for now.</a>
     </div>
   </div>
 
 </div>{# end .sl-page #}
+</div>{# end background wrapper #}
 
-</body>
-</html>
+{% endblock %}
