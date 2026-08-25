@@ -1,18 +1,20 @@
-{#
-  SL-VERSION: 182.28-staging
-  Session 193 · 2026-08-25
-  BOTTOM NAV FIX: (1) Logged-out nav: replaced SHUTTER LEAGUE logo + gold FAB + Log In with Home/Pricing/League/Log In + More drawer (How it works/Science/Programmes/Join the League). (2) Authenticated nav: added Haiku branch (Home→try_welcome/Upload→try_page/My Gallery→try_gallery/League/Profile). Paid branch retains Dashboard/Upload FAB/My Gallery. RETAINS 182.27.
-
-  DELIVERY AUDIT
-  ──────────────────────────────────────────────────────
-  Audit   : Standalone ✅ · navsection hidden ≤960px, hamburger shown ✅ · Cookie banner z-index below bottom nav ✅ · All CTAs 3-way: paid→dashboard, Haiku→try_welcome, anon→register ✅
-  KYC     : Footer Legal col: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bottom strip: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅
-  Mobile  : Bottom nav ≤900px ✅ · Hamburger overlay ≤960px ✅ · Hero 1-col ≤960px ✅ · body padding-bottom:72px ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
-  iPad    : Hero 1-col at ≤960px ✅ · moment/founder 1-col ✅ · progress-grid 2-col ✅ · photos 2-col ✅ · footer 2-col ✅
-  70yr    : hero-h1 clamp(52px,6.5vw,88px) ✅ · body 17px ✅ · section-body 19px ✅ · founder-copy 19px ✅ · footer col links 16px ✅ · Gold #F5C518 on dark ✅
-  Version : 182.27-staging — matches filename
-  ──────────────────────────────────────────────────────
-#}
+{# SL-VERSION: 182.25-staging (Session 194, 2026-08-25 — HAIKU MOBILE NAV FIX: Standalone page — has own bottom nav not inherited from base. Authenticated branch had no Haiku sub-branch. Haiku users saw Dashboard/Upload FAB/My Gallery — all paid routes. Fixed: added is_subscribed check. Paid: unchanged. Haiku: Home/Upload/My Evals/More with inline drawer (Pricing/League/Profile/Science/Help/Log out). Drawer uses inline style toggle (no base.html CSS classes available). JS added before </body>. Built from 23 Aug known-good baseline. RETAINS 182.24.) #}
+{# SL-VERSION: 182.24-staging (Session 191, 2026-08-23 — NAV FIX: logout link added to Haiku logged-in nav state. Was missing — user had no way to log out from index page. RETAINS 182.23.) #}
+{# SL-VERSION: 182.23-staging (Session 190, 2026-08-19 — NAV: SL logo image replacing text crest. RETAINS 182.22.)
+{# SL-VERSION: 182.22-staging (Session 190, 2026-08-19 — NAV: full discovery links added — How it works/Science/Contests/Pricing/League of Photographers. Why/About anchor links removed — content is below fold, nav should drive to pages not anchors. Auth-aware right: logged-in paid→Dashboard, Haiku→My evaluations+Upload, logged-out→Login+Register. RETAINS 182.21.)
+{# SL-VERSION: 182.21-staging (Session 189, 2026-08-18 — NAV: "The League" now links to /standings public standings page. RETAINS 182.20.) #}
+{# SL-VERSION: 182.20-staging (Session 189, 2026-08-18 — GALLERY: "The League" kicker → "League of Photographers". Thumbnail overlays now show score + tier + photographer name. ph-badge replaced with score+name overlay. Thumbnails link to /standings. RETAINS 182.19.) #}
+{# SL-VERSION: 182.19-staging (Session 189, 2026-08-18 — NAV: "Start" renamed to "Register" for clarity. RETAINS 182.18.) #}
+{# SL-VERSION: 182.18-staging (Session 189, 2026-08-18 — NAV FIX: logged-in user showed both My dashboard + Dashboard button. Now shows only Dashboard → button. RETAINS 182.17.) #}
+{# SL-VERSION: 182.17-staging (Session 189, 2026-08-18 — GALLERY GRID FIX: grid was broken on mobile when 5th tile removed. Fixed :first-child selector and added explicit min-height on mobile tiles so images show. RETAINS 182.16.) #}
+{# SL-VERSION: 182.16-staging (Session 189, 2026-08-18 — GALLERY FIX 2: Jinja2 set inside loop does not update outer scope — valid_gallery stayed empty, all tiles vanished. Fixed using namespace(count=0) pattern. RETAINS 182.15.) #}
+{# SL-VERSION: 182.15-staging (Session 189, 2026-08-18 — GALLERY FIX: only render tiles with real thumbnails. Empty dark tiles no longer shown. onerror hides entire parent tile if image fails to load. RETAINS 182.14.) #}
+{# SL-VERSION: 182.14-staging (Session 189, 2026-08-18 — BOTTOM NAV: added site's standard bottom nav (sl-bottom-nav) directly into standalone page — shows on mobile <=900px, hidden on desktop. Anon: SHUTTER LEAGUE logo + Upload FAB + Log In. Authed: Dashboard + Upload FAB + My Gallery. Matches base.html bottom nav verbatim. RETAINS 182.13.) #}
+{# SL-VERSION: 182.13-staging (Session 189, 2026-08-18 — NAV: added !important to navsection display:none so Why/The League/About are fully hidden on mobile. RETAINS 182.12.) #}
+{# SL-VERSION: 182.12-staging (Session 189, 2026-08-18 — MOBILE NAV FIX: section links hidden below 960px via .navsection{display:none}; Login and Start remain visible. overflow-x:hidden on body/html to fix white space on right. padding-bottom:72px on mobile to clear site bottom nav. RETAINS 182.11.) #}
+{# SL-VERSION: 182.11-staging (Session 189, 2026-08-18 — FINAL HERO FIX: removed hero-photograph-fill div entirely — it was covering the image regardless of z-index. Dark gradient is now the CSS background of hero-photograph itself (fallback when no image). Image sits directly in the container with no overlapping divs. Only hero-photograph-meta sits above via z-index:2. RETAINS 182.10.) #}
+{# SL-VERSION: 182.10-staging (Session 189, 2026-08-18 — Z-INDEX FIX: hero-photograph-fill div was sitting on top of the img (both position:absolute, fill rendered after img in DOM so it painted over it). Fix: img z-index:1, fill z-index:0. Image now visible. RETAINS 182.9.) #}
+{# SL-VERSION: 182.9-staging (Session 189, 2026-08-18 — STANDALONE: removed extends base.html entirely. Base was injecting sl-top-nav, nav-mobile, main wrapper, footer and its own CSS which overrode hero panel dimensions and hid the photograph. Homepage now manages its own head, nav, footer as a standalone Jinja2 template — same as the 188M prototype. Inherits only: favicon, OG tags, cookie banner (copied verbatim from base 180.10). Hero: object-fit:cover, no padding. RETAINS 182.8.) #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -34,7 +36,7 @@
 <style>
 :root{
   --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;--blue:#2C3E6B;
-  --gold:#F5C518;--ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;
+  --gold:#D4A428;--ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -53,20 +55,6 @@ button{font:inherit;cursor:pointer}
 .navlinks a:hover{color:var(--blue)}
 .navlogin{color:var(--blue);font-weight:600;font-size:16px}
 .navstart{background:var(--dark);color:#fff;border:none;border-radius:2px;padding:11px 20px;font-size:15px;font-weight:600;letter-spacing:.2px;min-height:44px;display:inline-flex;align-items:center}
-
-/* ── HAMBURGER (mobile only) ── */
-.nav-ham{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:10px 8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;margin-left:8px}
-.nav-ham span{display:block;width:20px;height:2px;background:var(--blue);border-radius:2px}
-.nav-mob-menu{display:none;position:fixed;top:80px;right:12px;left:auto;width:240px;background:var(--cream);border:1px solid var(--line);border-radius:10px;z-index:999;padding:6px 0;box-shadow:0 8px 28px rgba(0,0,0,.14);overflow:hidden}
-.nav-mob-menu.open{display:block}
-.nav-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:var(--blue);text-decoration:none;border-bottom:1px solid var(--line);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.nav-mob-menu a:last-child{border-bottom:none}
-.nav-mob-menu a:active{background:var(--paper)}
-.nav-mob-menu .mob-cta{font-weight:700;color:var(--dark);background:var(--dark);color:#fff;margin:12px 24px;border-radius:2px;justify-content:center}
-@media(max-width:960px){
-  .navlinks .navsection{display:none !important}
-  .nav-ham{display:flex}
-}
 /* prevent horizontal scroll on mobile */
 body,html{overflow-x:hidden;max-width:100%}
 
@@ -205,13 +193,13 @@ body,html{overflow-x:hidden;max-width:100%}
 /* ── BOTTOM NAV (mobile only — matches site standard) ── */
 .sl-bottom-nav{position:fixed;top:auto !important;bottom:0;left:0;right:0;height:auto;min-height:62px;padding-bottom:env(safe-area-inset-bottom,0px);background:#1A1814;border-top:1px solid rgba(245,197,24,.2);display:none;justify-content:space-around;align-items:flex-start;z-index:1200;padding-top:10px}
 .sl-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:4px;transition:color .1s;-webkit-tap-highlight-color:transparent}
-.sl-nav-item:hover,.sl-nav-item.active{color:#F5C518}
+.sl-nav-item:hover,.sl-nav-item.active{color:#F4C20D}
 .sl-nav-logo{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4px;text-decoration:none;min-width:44px;min-height:44px}
 .sl-nav-logo__text{font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.5);text-align:center;line-height:1.3}
 .sl-nav-fab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:2px}
-.sl-nav-fab__circle{width:40px;height:40px;background:#F5C518;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
+.sl-nav-fab__circle{width:40px;height:40px;background:#F4C20D;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
 @media (max-width: 900px){.sl-bottom-nav{display:flex}}
-#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
+#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
 #cookie-banner.cb-visible{display:flex}
 #cookie-banner a{color:var(--gold)}
 #cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
@@ -238,11 +226,7 @@ body,html{overflow-x:hidden;max-width:100%}
     <a href="{{ url_for('standings_public') }}" class="navsection">League of Photographers</a>
     {% if current_user.is_authenticated %}
       {% if current_user.is_subscribed or current_user.role == 'admin' %}
-        {% if current_user.is_subscribed %}
-          <a href="{{ url_for('dashboard') }}" class="navstart">My dashboard →</a>
-        {% else %}
-          <a href="{{ url_for('try_welcome') }}" class="navstart">My evaluations →</a>
-        {% endif %}
+        <a href="{{ url_for('dashboard') }}" class="navstart">My dashboard →</a>
       {% else %}
         <a href="{{ url_for('try_welcome') }}" class="navlogin">My evaluations</a>
         <a href="{{ url_for('try_page') }}" class="navstart">Upload →</a>
@@ -253,36 +237,7 @@ body,html{overflow-x:hidden;max-width:100%}
       <a href="{{ url_for('register') }}" class="navstart">Register</a>
     {% endif %}
   </div>
-  {# Hamburger — mobile only, navsection links hide at ≤960px #}
-  <button class="nav-ham" onclick="var m=document.getElementById('navMobMenu');m.classList.toggle('open')" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
 </nav>
-
-{# Mobile overlay menu — auth-aware #}
-<div class="nav-mob-menu" id="navMobMenu">
-  <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">How it works</a>
-  <a href="{{ url_for('science') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Science</a>
-  <a href="{{ url_for('contests') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Programmes</a>
-  <a href="{{ url_for('pricing') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Pricing</a>
-  <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">League of Photographers</a>
-  {% if current_user.is_authenticated %}
-    {% if current_user.is_subscribed or current_user.role == 'admin' %}
-      {% if current_user.is_subscribed %}
-        <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My dashboard</a>
-      {% else %}
-        <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My evaluations</a>
-      {% endif %}
-    {% else %}
-      <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">My evaluations</a>
-      <a href="{{ url_for('try_page') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Upload</a>
-    {% endif %}
-    <a href="{{ url_for('logout') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')" style="color:rgba(255,80,80,.75)">Log out</a>
-  {% else %}
-    <a href="{{ url_for('login') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')">Log in</a>
-    <a href="{{ url_for('register') }}" onclick="document.getElementById('navMobMenu').classList.remove('open')" class="mob-cta">Register — it's free</a>
-  {% endif %}
-</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -307,10 +262,8 @@ body,html{overflow-x:hidden;max-width:100%}
     <h1 class="hero-h1">What if you could see how good you could become?</h1>
     <p class="hero-lead">You've probably looked at one of your photographs and thought: <em>if only I had waited. Moved. Looked again.</em></p>
     <p class="hero-solve">How do I solve the what if?</p>
-    {% if current_user.is_authenticated and current_user.is_subscribed %}
+    {% if current_user.is_authenticated %}
       <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
-    {% elif current_user.is_authenticated %}
-      <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
     {% else %}
       <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
     {% endif %}
@@ -437,10 +390,8 @@ body,html{overflow-x:hidden;max-width:100%}
 <section class="end">
   <h2 class="end-h2">We think you're capable of more.</h2>
   <p class="end-sub">Come see what your photographs say.</p>
-  {% if current_user.is_authenticated and current_user.is_subscribed %}
+  {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
-  {% elif current_user.is_authenticated %}
-    <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
   {% else %}
     <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
   {% endif %}
@@ -490,10 +441,9 @@ body,html{overflow-x:hidden;max-width:100%}
   <div class="footer-bottom">
     <span>© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
     <div class="footer-bottom-links">
-      <a href="/terms">Terms &amp; Conditions</a>
       <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms &amp; Conditions</a>
       <a href="/refund-policy">Refund Policy</a>
-      <a href="/shipping-policy">Shipping &amp; Returns</a>
     </div>
   </div>
 </footer>
@@ -501,35 +451,14 @@ body,html{overflow-x:hidden;max-width:100%}
 <!-- BOTTOM NAV (mobile only — matches site standard) -->
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
-    {% if not current_user.is_subscribed and current_user.role != 'admin' %}
-    {# Haiku (free) user #}
-    <a href="{{ url_for('try_welcome') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Home</span>
-    </a>
-    <a href="{{ url_for('try_page') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <span>Upload</span>
-    </a>
-    <a href="{{ url_for('try_gallery') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      <span>My Gallery</span>
-    </a>
-    <a href="{{ url_for('standings_public') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-      <span>League</span>
-    </a>
-    <a href="{{ url_for('profile') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span>Profile</span>
-    </a>
-    {% else %}
-    {# Paid user #}
+
+    {% if current_user.is_subscribed or current_user.role == 'admin' %}
+    {# ── SL-182.25 PAID / ADMIN — unchanged from 182.24 ── #}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Dashboard</span>
     </a>
-    <a href="{{ url_for('upload') }}" class="sl-nav-fab">
+    <a href="{{ url_for('upload') }}" class="sl-nav-fab" style="touch-action:manipulation;">
       <div class="sl-nav-fab__circle">+</div>
       <span>Upload</span>
     </a>
@@ -537,39 +466,52 @@ body,html{overflow-x:hidden;max-width:100%}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       <span>My Gallery</span>
     </a>
-    {% endif %}
-  {% else %}
-  {# Logged-out — discovery nav + More drawer #}
-    <a href="{{ url_for('index') }}" class="sl-nav-item active">
+
+    {% else %}
+    {# ── SL-182.25 HAIKU (free) — Home · Upload · My Evals · More ── #}
+    <a href="{{ url_for('try_welcome') }}" class="sl-nav-item active" style="touch-action:manipulation;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Home</span>
     </a>
-    <a href="{{ url_for('pricing') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      <span>Pricing</span>
+    <a href="{{ url_for('try_page') }}" class="sl-nav-item" style="touch-action:manipulation;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
     </a>
-    <a href="{{ url_for('standings_public') }}" class="sl-nav-item">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-      <span>League</span>
+    <a href="{{ url_for('try_gallery') }}" class="sl-nav-item" style="touch-action:manipulation;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Evals</span>
     </a>
-    <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      <span>Log In</span>
-    </a>
-    {# More drawer #}
-    <div style="position:relative;display:flex;flex-direction:column;align-items:center;" id="idxMoreWrap">
-      <button class="sl-nav-item" onclick="idxMoreToggle(event)" aria-label="More"
-              style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:4px;touch-action:manipulation;">
+    <div class="sl-nav-more-wrap" id="slNavMoreWrapHaiku" style="position:relative;display:flex;flex-direction:column;align-items:center;">
+      <button class="sl-nav-item sl-nav-more-btn"
+              onclick="toggleBottomMoreHaiku(event)" aria-label="More"
+              style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.40);font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:4px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         <span>More</span>
       </button>
-      <div id="idxMoreMenu" style="display:none;position:absolute;bottom:calc(100% + 10px);right:-8px;width:208px;background:#1A1A18;border:1px solid rgba(245,197,24,.25);border-radius:10px;overflow:hidden;box-shadow:0 -6px 28px rgba(0,0,0,.55);z-index:1999;">
-        <a href="{{ url_for('how_it_works') }}" style="display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:15px;font-weight:500;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);touch-action:manipulation;" onclick="idxMoreClose()">How it works</a>
-        <a href="{{ url_for('science') }}" style="display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:15px;font-weight:500;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);touch-action:manipulation;" onclick="idxMoreClose()">Science</a>
-        <a href="{{ url_for('contests') }}" style="display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:15px;font-weight:500;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);touch-action:manipulation;" onclick="idxMoreClose()">Programmes</a>
-        <a href="{{ url_for('register') }}" style="display:block;color:#F5C518;font-weight:700;text-decoration:none;font-size:15px;padding:13px 18px;touch-action:manipulation;" onclick="idxMoreClose()">Join the League →</a>
+      <div id="slBottomMoreMenuHaiku" style="display:none;position:absolute;bottom:calc(100% + 10px);right:-8px;min-width:208px;max-width:74vw;background:#1A1A18;border:1px solid rgba(245,197,24,0.25);border-radius:10px;overflow:hidden;box-shadow:0 -6px 28px rgba(0,0,0,0.55);z-index:1999;">
+        <a href="{{ url_for('pricing') }}" style="display:block;color:rgba(255,255,255,0.80);text-decoration:none;font-size:15px;font-weight:500;padding:11px 24px 11px 16px;touch-action:manipulation;">Pricing</a>
+        <a href="{{ url_for('standings_public') }}" style="display:block;color:rgba(255,255,255,0.80);text-decoration:none;font-size:15px;font-weight:500;padding:11px 24px 11px 16px;touch-action:manipulation;">League of Photographers</a>
+        <a href="{{ url_for('profile') }}" style="display:block;color:rgba(255,255,255,0.80);text-decoration:none;font-size:15px;font-weight:500;padding:11px 24px 11px 16px;touch-action:manipulation;">Profile</a>
+        <a href="{{ url_for('science') }}" style="display:block;color:rgba(255,255,255,0.80);text-decoration:none;font-size:15px;font-weight:500;padding:11px 24px 11px 16px;touch-action:manipulation;">The Science</a>
+        <a href="/contact" style="display:block;color:rgba(255,255,255,0.80);text-decoration:none;font-size:15px;font-weight:500;padding:11px 24px 11px 16px;touch-action:manipulation;">Help &amp; Support</a>
+        <a href="{{ url_for('logout') }}" style="display:block;color:#F5C518;text-decoration:none;font-size:15px;font-weight:500;padding:11px 24px 11px 16px;touch-action:manipulation;">Log out</a>
       </div>
     </div>
+    {% endif %}
+
+  {% else %}
+    {# Non-authenticated — minimal #}
+    <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
+      <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
+    </a>
+    <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="sl-nav-fab" style="touch-action:manipulation;">
+      <div class="sl-nav-fab__circle">+</div>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('login') }}" class="sl-nav-item" style="color:var(--gold);touch-action:manipulation;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      <span>Log In</span>
+    </a>
   {% endif %}
 </nav>
 
@@ -594,29 +536,19 @@ function cbAccept() {
   b.style.opacity = '0';
   setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
 }
-// Close hamburger on outside tap
-document.addEventListener('click', function(e) {
-  var menu = document.getElementById('navMobMenu');
+function toggleBottomMoreHaiku(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('slBottomMoreMenuHaiku');
   if (!menu) return;
-  if (menu.classList.contains('open') && !menu.contains(e.target) && !e.target.closest('.nav-ham')) {
-    menu.classList.remove('open');
-  }
-  // Close bottom More drawer on outside tap
-  var idxMenu = document.getElementById('idxMoreMenu');
-  var idxWrap = document.getElementById('idxMoreWrap');
-  if (idxMenu && idxMenu.style.display !== 'none' && idxWrap && !idxWrap.contains(e.target)) {
-    idxMenu.style.display = 'none';
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('slBottomMoreMenuHaiku');
+  var wrap = document.getElementById('slNavMoreWrapHaiku');
+  if (menu && menu.style.display === 'block' && wrap && !wrap.contains(e.target)) {
+    menu.style.display = 'none';
   }
 });
-function idxMoreToggle(e) {
-  e.stopPropagation();
-  var m = document.getElementById('idxMoreMenu');
-  if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none';
-}
-function idxMoreClose() {
-  var m = document.getElementById('idxMoreMenu');
-  if (m) m.style.display = 'none';
-}
 </script>
 
 </body>
