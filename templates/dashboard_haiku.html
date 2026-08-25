@@ -85,7 +85,7 @@ body.page-haiku-dash{
 /* ── SHERPA OBSERVATION ── */
 .hk-sherpa{background:#fff;border-bottom:1px solid #E8E0D0;padding:28px 32px}
 .hk-sherpa-lbl{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8A8070;margin-bottom:14px}
-.hk-sherpa-q{font-size:18px;color:#1A1A18;line-height:1.8;font-style:italic;text-align:left;word-break:break-word;overflow-wrap:break-word;border-left:3px solid #D4A428;padding:4px 0 4px 20px;margin-bottom:14px}
+.hk-sherpa-q{font-size:18px;color:#1A1A18;line-height:1.8;font-style:italic;text-align: justify;border-left:3px solid #D4A428;padding:4px 0 4px 20px;margin-bottom:14px}
 .hk-sherpa-nudge{font-size:16px;color:#2C3E6B;font-weight:500;padding-left:23px;line-height:1.6}
 
 /* ── MAIN BODY — single column ── */
@@ -331,6 +331,14 @@ body.page-haiku-dash{
 .hk-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hk-mob-menu a:last-child{border-bottom:none}
 .hk-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
+/* SL-194: Bottom More drawer — anchored above More tab */
+.hk-more-drawer{display:none;position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));right:8px;width:220px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:12px;z-index:300;padding:6px 0;box-shadow:0 -4px 32px rgba(0,0,0,.55)}
+.hk-more-drawer.open{display:block}
+.hk-more-item{display:flex;align-items:center;gap:12px;padding:13px 20px;min-height:48px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .12s}
+.hk-more-item:active{background:rgba(255,255,255,.06)}
+.hk-more-item svg{width:18px;height:18px;flex-shrink:0;opacity:0.55}
+.hk-more-divider{height:0.5px;background:rgba(255,255,255,.10);margin:4px 0}
+.hk-more-item.hk-logout{color:rgba(255,110,90,.8)}
 
 /* ── H5: MOBILE BOTTOM NAV — tap response fix ── */
 .hk-bottom-nav{
@@ -490,15 +498,28 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   </a>
   <div class="hk-mob-right">
     <div class="hk-mob-avatar">{{ first_name[0].upper() if first_name else 'U' }}</div>
-    <button class="hk-mob-ham" onclick="var m=document.getElementById('hkMobMenu');m.classList.toggle('open')" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+{# SL-194: hamburger removed — More tab in bottom nav handles overflow items #}
   </div>
 </div>
-{# Hamburger overlay — Pricing + Log out (not in bottom nav) #}
-<div class="hk-mob-menu" id="hkMobMenu">
-  <a href="{{ url_for('pricing') }}" onclick="document.getElementById('hkMobMenu').classList.remove('open')">Pricing</a>
-  <a href="{{ url_for('logout') }}" onclick="document.getElementById('hkMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
+{# SL-194: More drawer — anchored above More tab in bottom nav #}
+<div class="hk-more-drawer" id="hkMoreDrawer">
+  <a class="hk-more-item" href="{{ url_for('profile') }}" onclick="closeHkMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </a>
+  <a class="hk-more-item" href="{{ url_for('pricing') }}" onclick="closeHkMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Pricing
+  </a>
+  <a class="hk-more-item" href="/contact" onclick="closeHkMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Help &amp; Support
+  </a>
+  <div class="hk-more-divider"></div>
+  <a class="hk-more-item hk-logout" href="{{ url_for('logout') }}" onclick="closeHkMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
 </div>
 
 {# ── DESKTOP NAV ── #}
@@ -1053,10 +1074,10 @@ a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     League
   </a>
-  <a class="hk-bn-tab" href="{{ url_for('profile') }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Profile
-  </a>
+  <button class="hk-bn-tab" id="hkMoreBtn" onclick="toggleHkMore(event)" aria-label="More" style="background:none;border:none;cursor:pointer;touch-action:manipulation;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    More
+  </button>
 </nav>
 
 <script>
@@ -1074,12 +1095,26 @@ function cbAccept() {
   b.style.opacity = '0';
   setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
 }
-// Close hamburger on outside tap
+// SL-194: More drawer open/close
+function toggleHkMore(e) {
+  e.stopPropagation();
+  var d = document.getElementById('hkMoreDrawer');
+  if (d) d.classList.toggle('open');
+  var btn = document.getElementById('hkMoreBtn');
+  if (btn) btn.style.color = d && d.classList.contains('open') ? '#F5C518' : '';
+}
+function closeHkMore() {
+  var d = document.getElementById('hkMoreDrawer');
+  if (d) d.classList.remove('open');
+  var btn = document.getElementById('hkMoreBtn');
+  if (btn) btn.style.color = '';
+}
+// Close More drawer on outside tap
 document.addEventListener('click', function(e) {
-  var menu = document.getElementById('hkMobMenu');
-  if (!menu) return;
-  if (menu.classList.contains('open') && !menu.contains(e.target) && !e.target.closest('.hk-mob-ham')) {
-    menu.classList.remove('open');
+  var d = document.getElementById('hkMoreDrawer');
+  var btn = document.getElementById('hkMoreBtn');
+  if (d && d.classList.contains('open') && !d.contains(e.target) && (!btn || !btn.contains(e.target))) {
+    closeHkMore();
   }
 });
 </script>
