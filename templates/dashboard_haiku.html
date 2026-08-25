@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.37-staging (Session 197, 2026-08-26 — (1) haiku_percentile: real DB query added to try_welcome() — MAX(score) vs all haiku users pool, passed as haiku_percentile; template shows "Top N%" only when value present. (2) WHERE YOU STAND: horizontal strip kept but rebuilt clean — no scroll-snap, webkit-scrollbar hidden, 200px cards desktop / 160px 768px / 140px 600px, score+tier inline row. RETAINS 181.36.) #}
+{# SL-VERSION: 181.38-staging (Session 197, 2026-08-26 — (1) Hero link fixed: "See the full evaluation" now goes to url_for('try_result', image_id=user_hero.id) not try_page. (2) Record strip: uniform 260px card containers with object-fit:contain + dark #2A2118 background — portrait images letterbox cleanly, all metadata aligns at same vertical position. (3) Tier position text opacity raised 35%→65% for readability on navy. RETAINS 181.37.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,9 +34,9 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-hero-bar { background:#1A2744; padding:28px 48px 36px; }
 /* Tier position + percentile — between image and greeting */
 .sl-hero-position { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
-.sl-hero-tier-pos { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); }
-.sl-hero-percentile { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); }
-.sl-hero-pos-sep { font-size:11px; color:rgba(255,255,255,0.18); }
+.sl-hero-tier-pos { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.65); }
+.sl-hero-percentile { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.65); }
+.sl-hero-pos-sep { font-size:11px; color:rgba(255,255,255,0.35); }
 .sl-hero-greeting { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:10px; }
 .sl-hero-name { font-family:'Playfair Display',serif; font-size:28px; color:#fff; font-weight:400; line-height:1.5; margin-bottom:24px; }
 .sl-hero-meta { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; }
@@ -84,12 +84,13 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-counter-num { font-family:'Playfair Display',serif; font-size:64px; color:#1A2744; line-height:1; letter-spacing:-0.04em; }
 .sl-counter-label { font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,39,68,0.42); }
 .sl-record-statement { font-family:'Playfair Display',serif; font-size:20px; color:rgba(26,39,68,0.52); line-height:1.8; font-style:italic; margin-bottom:64px; }
-/* Horizontal strip — clean, no scroll snap jank */
+/* Horizontal strip — uniform card height, portrait letterboxes inside */
 .sl-record-strip { display:flex; flex-direction:row; gap:24px; align-items:flex-start; overflow-x:auto; padding-bottom:4px; }
 .sl-record-strip::-webkit-scrollbar { display:none; }
 .sl-record-card { flex:0 0 auto; width:200px; display:flex; flex-direction:column; }
-.sl-record-img { width:200px; height:auto; display:block; }
-.sl-record-meta { padding:14px 0 0; display:flex; flex-direction:column; gap:4px; border-bottom:none; }
+.sl-record-img-wrap { width:200px; height:260px; background:#2A2118; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.sl-record-img { width:200px; height:260px; object-fit:contain; display:block; }
+.sl-record-meta { padding:14px 0 0; display:flex; flex-direction:column; gap:4px; }
 .sl-record-eval { font-size:11px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,39,68,0.38); }
 .sl-record-name { font-size:15px; color:#1A2744; font-weight:400; line-height:1.5; margin-top:4px; }
 .sl-record-score-row { display:flex; align-items:baseline; gap:8px; margin-top:4px; }
@@ -140,7 +141,8 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   .sl-counters { gap:32px; }
   .sl-record-strip { gap:16px; }
   .sl-record-card { width:160px; }
-  .sl-record-img { width:160px; }
+  .sl-record-img-wrap { width:160px; height:210px; }
+  .sl-record-img { width:160px; height:210px; }
   .sl-progression-note { flex-direction:column; }
   .sl-hero-meta { flex-direction:column; align-items:flex-start; }
 }
@@ -161,7 +163,8 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   .sl-gap-num { font-size:48px; }
   .sl-counter-num { font-size:40px; }
   .sl-record-card { width:140px; }
-  .sl-record-img { width:140px; }
+  .sl-record-img-wrap { width:140px; height:180px; }
+  .sl-record-img { width:140px; height:180px; }
   .sl-counters { gap:24px; }
   .sl-dim-row { flex-direction:column; gap:4px; }
   .sl-record-meta { gap:16px; }
@@ -207,7 +210,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
           </div>
         </div>
         <div class="sl-hero-link">
-          <a href="{{ url_for('try_page') }}">Your best so far &nbsp;·&nbsp; See the full evaluation →</a>
+          <a href="{{ url_for('try_result', image_id=user_hero.id) }}">Your best so far &nbsp;·&nbsp; See the full evaluation →</a>
         </div>
       </div>
     </div>
@@ -306,7 +309,9 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
         {% for img in images %}
         {% if img.thumb_url %}
         <div class="sl-record-card">
-          <img class="sl-record-img" src="{{ img.thumb_url }}" alt="Evaluation {{ loop.revindex }} — {{ img.genre }}">
+          <div class="sl-record-img-wrap">
+            <img class="sl-record-img" src="{{ img.thumb_url }}" alt="Evaluation {{ loop.revindex }} — {{ img.genre }}">
+          </div>
           <div class="sl-record-meta">
             <span class="sl-record-eval">Evaluation {{ loop.revindex }}</span>
             <span class="sl-record-name">{{ img.genre }}</span>
