@@ -57,6 +57,14 @@ a{text-decoration:none;color:inherit}
 .pub-mob-menu a:last-child{border-bottom:none}
 .pub-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
 .pub-mob-menu .pub-mob-join{color:var(--gold);font-weight:700}
+/* SL-194: Haiku More drawer — bottom-right above More tab */
+.pub-more-drawer{display:none;position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));right:8px;width:220px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:12px;z-index:300;padding:6px 0;box-shadow:0 -4px 32px rgba(0,0,0,.55)}
+.pub-more-drawer.open{display:block}
+.pub-more-item{display:flex;align-items:center;gap:12px;padding:13px 20px;min-height:48px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pub-more-item:active{background:rgba(255,255,255,.06)}
+.pub-more-item svg{width:18px;height:18px;flex-shrink:0;opacity:0.55}
+.pub-more-divider{height:0.5px;background:rgba(255,255,255,.10);margin:4px 0}
+.pub-more-item.pub-logout{color:rgba(255,110,90,.8)}
 
 /* ── PAGE HEADER ── */
 .pub-header{padding:52px 48px 36px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--line)}
@@ -201,24 +209,56 @@ a{text-decoration:none;color:inherit}
   </button>
 </nav>
 
-{# Mobile overlay menu — full link set, auth-aware #}
+{# Mobile overlay menu — auth-aware. SL-194: Haiku users don't see discovery pages (already a member). #}
 <div class="pub-mob-menu" id="pubMobMenu">
-  <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">How it works</a>
-  <a href="{{ url_for('science') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Science</a>
-  <a href="{{ url_for('contests') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Programmes</a>
-  <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
-  <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">League of Photographers</a>
-  {% if current_user.is_authenticated %}
-    {% if current_user.is_subscribed or current_user.role == 'admin' %}
-      <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My dashboard</a>
-    {% else %}
-      <a href="{{ url_for('try_gallery') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My evaluations</a>
-    {% endif %}
+  {% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %}
+    {# Haiku user — product pages only, no pre-login discovery #}
+    <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Home</a>
+    <a href="{{ url_for('try_page') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Upload</a>
+    <a href="{{ url_for('try_gallery') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My evaluations</a>
+    <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+    <a href="{{ url_for('profile') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Profile</a>
+    <a href="{{ url_for('logout') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
+  {% elif current_user.is_authenticated %}
+    {# Paid / admin #}
+    <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">How it works</a>
+    <a href="{{ url_for('science') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Science</a>
+    <a href="{{ url_for('contests') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Programmes</a>
+    <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+    <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">League of Photographers</a>
+    <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My dashboard</a>
     <a href="{{ url_for('logout') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
   {% else %}
+    {# Logged out — discovery + join #}
+    <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">How it works</a>
+    <a href="{{ url_for('science') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Science</a>
+    <a href="{{ url_for('contests') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Programmes</a>
+    <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+    <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">League of Photographers</a>
     <a href="{{ url_for('login') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Log in</a>
     <a href="{{ url_for('register') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" class="pub-mob-join">Join the League →</a>
   {% endif %}
+</div>
+
+{# SL-194: Haiku More drawer — replaces Log out direct tab #}
+<div class="pub-more-drawer" id="pubMoreDrawer">
+  <a class="pub-more-item" href="{{ url_for('profile') }}" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </a>
+  <a class="pub-more-item" href="{{ url_for('pricing') }}" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Pricing
+  </a>
+  <a class="pub-more-item" href="/contact" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Help &amp; Support
+  </a>
+  <div class="pub-more-divider"></div>
+  <a class="pub-more-item pub-logout" href="{{ url_for('logout') }}" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
 </div>
 
 {# ── HEADER ── #}
@@ -402,7 +442,28 @@ document.addEventListener('click',function(e){
   if(menu.classList.contains('open')&&!menu.contains(e.target)&&!e.target.closest('.pub-ham')){
     menu.classList.remove('open');
   }
+  // SL-194: Close Haiku More drawer on outside tap
+  var d=document.getElementById('pubMoreDrawer');
+  var btn=document.getElementById('pubMoreBtn');
+  if(d&&d.classList.contains('open')&&!d.contains(e.target)&&(!btn||!btn.contains(e.target))){
+    d.classList.remove('open');
+    if(btn)btn.style.color='';
+  }
 });
+// SL-194: Haiku More drawer functions
+function togglePubMore(e){
+  e.stopPropagation();
+  var d=document.getElementById('pubMoreDrawer');
+  if(d)d.classList.toggle('open');
+  var btn=document.getElementById('pubMoreBtn');
+  if(btn)btn.style.color=d&&d.classList.contains('open')?'#F5C518':'';
+}
+function closePubMore(){
+  var d=document.getElementById('pubMoreDrawer');
+  if(d)d.classList.remove('open');
+  var btn=document.getElementById('pubMoreBtn');
+  if(btn)btn.style.color='';
+}
 </script>
 {% if current_user.is_authenticated %}
 <nav class="pub-bottom-nav">
@@ -420,6 +481,7 @@ document.addEventListener('click',function(e){
     My Gallery
   </a>
   {% else %}
+  {# Haiku: Home · Upload · My Gallery · League · More #}
   <a class="pub-bn-tab" href="{{ url_for('try_welcome') }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Home
@@ -437,10 +499,19 @@ document.addEventListener('click',function(e){
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     League
   </a>
+  {% if current_user.is_subscribed or current_user.role == 'admin' %}
   <a class="pub-bn-tab" href="{{ url_for('logout') }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     Log out
   </a>
+  {% else %}
+  {# Haiku: More tab replaces Log out direct tab #}
+  <button class="pub-bn-tab" id="pubMoreBtn" onclick="togglePubMore(event)" aria-label="More"
+          style="background:none;border:none;cursor:pointer;touch-action:manipulation;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    More
+  </button>
+  {% endif %}
 </nav>
 {% endif %}
 </body>
