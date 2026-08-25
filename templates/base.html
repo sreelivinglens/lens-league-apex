@@ -1,18 +1,9 @@
-{#
-  SL-VERSION: 181.56-staging
-  Session 192 · 2026-08-24
-  CRITICAL ACCESS FIX: Bottom nav Improve tab was visible to ALL authenticated users including Haiku. Now subscription-aware: paid sees Dashboard·Upload·My Gallery·Improve·More; Haiku sees Home·Upload·My Gallery·League·Profile — matching the Haiku dashboard bottom nav exactly. RETAINS 181.49.
-
-  DELIVERY AUDIT
-  ──────────────────────────────────────────────────────
-  Audit   : Jinja2 env.parse() required before deploy ✅ · 3 top-nav branches (Haiku/Paid/Logged-out) ✅ · Bottom nav now 2 branches: paid (5 tabs + More) / Haiku (5 tabs, no Improve) ✅ · Standalone pages never extend base.html ✅
-  KYC     : 5-col footer: Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · .kyc class on mandatory links ✅
-  Mobile  : Top nav visible on mobile — brand + hamburger ✅ · Nav-links hidden ≤900px ✅ · Hamburger opens compact 240px dropdown top-right ✅ · Drawer clears bottom nav (max-height: 100dvh - nav - 62px) ✅ · Consistent with index/standings/haiku hamburger pattern ✅ · Paid bottom nav: Dashboard·Upload·My Gallery·Improve·More ✅ · Haiku bottom nav: Home·Upload·My Gallery·League·Profile ✅ · 44px targets ✅
-  iPad    : bottom-nav visible ≤899px (portrait) ✅ · Nav links hidden ≤900px ✅
-  70yr    : Body 17px ✅ · Hero h1 clamp ✅ · Footer links 13px fine print ✅ · focus-visible ring ✅
-  Version : 181.56-staging — matches filename
-  ──────────────────────────────────────────────────────
-#}
+{# SL-VERSION: 181.51-staging (Session 193, 2026-08-25 — BOTTOM NAV: (1) Bottom nav background unified to #1A2744 across all states — eliminates black vs navy inconsistency. (2) Haiku (free) users now get correct bottom nav: Home→try_welcome / Upload→try_upload / My Gallery→try_gallery / League→standings / Profile. Paid users retain Dashboard/Upload/My Gallery/Improve/More. Previously Haiku users fell into paid nav branch — mission/my_gallery routed to paid pages, Log out appeared as primary tab on League page. RETAINS 181.48.) #}
+{# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — NAV: Profile added to Haiku desktop nav and mobile hamburger menu. RETAINS 181.47.) #}
+{# SL-VERSION: 181.47-staging (Session 191, 2026-08-23 — NAV OVERHAUL: (1) Logo now auth-aware: Haiku→try_welcome, Paid→dashboard, Logged-out→index. (2) Haiku desktop nav reordered: Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, avatar. (3) Haiku mobile menu same order. RETAINS 181.46.) #}
+{# SL-VERSION: 181.46-staging (Session 191, 2026-08-23 — HAIKU NAV ACTIVE STATE: active link now white bold instead of gold for Haiku users. Gold reserved for scores/badges only. RETAINS 181.45.) #}
+{# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — HAIKU NAV COLOUR: nav background changed to #1A2744 (dark navy) for Haiku users via nav-haiku class. Matches dashboard_haiku.html nav colour. Paid users and logged-out retain existing rgba(26,24,20,0.94) dark brown. RETAINS 181.4.) #}
+{# SL-VERSION: 181.4 (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Authenticated non-paid (Haiku) users now see discovery nav: How it works / Science / Programmes / Pricing / League of Photographers / My evaluations / Log out — instead of paid nav with Dashboard/Improve/etc. (2) Logged-out nav: Programmes link added, AEA label cleaned up. (3) Mobile nav: same Haiku branch added. RETAINS 181.3.) Previous: {# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,8 +28,9 @@
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-<!-- Aptos is a Windows 11 / Office system font — no external load needed -->
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='glossary-links.css') }}">
 <style>
@@ -53,6 +45,7 @@
     --text-muted:     var(--text-primary) !important;
     --text-disabled:  #888888 !important;
   }
+
 
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
@@ -87,7 +80,7 @@
   --amber-dim:   rgba(184, 112, 10, 0.12);
   --dim:         #FFFFFF;
 
-  --font-body:  'Aptos', 'Segoe UI', system-ui, Arial, sans-serif;
+  --font-body:  'Inter', sans-serif;
   --font-mono:  'JetBrains Mono', 'Courier New', monospace;
 
   --nav-height: 64px;
@@ -136,7 +129,7 @@ table { max-width: none; }
   bottom: env(safe-area-inset-bottom, 34px);
   left: 0; right: 0;
   height: 62px;
-  background: rgba(26, 24, 20, 0.98);
+  background: #1A2744;
   border-top: 1.5px solid rgba(245,197,24,0.25);
   border-bottom: none;
   display: flex;
@@ -165,9 +158,9 @@ table { max-width: none; }
   transition: color .1s;
   -webkit-tap-highlight-color: transparent;
 }
-.sl-bottom-nav .sl-nav-item.active { color: #F5C518; }
-.sl-bottom-nav .sl-nav-item:hover  { color: #F5C518; }
-.sl-bottom-nav .sl-nav-item:active { color: #F5C518; transform: scale(1.15); transition: transform 0.1s; }
+.sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:active { color: #F4C20D; transform: scale(1.15); transition: transform 0.1s; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
@@ -317,7 +310,7 @@ table { max-width: none; }
 .sl-bottom-nav .sl-nav-fab__circle {
   width: 46px; height: 46px;
   border-radius: 50%;
-  background: #F5C518;
+  background: #F4C20D;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,9 +552,10 @@ table { max-width: none; }
    END SHARED HERO SYSTEM
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Content clears bottom tab bar — top nav is sticky so no padding-top needed */
+/* Add padding so page content clears the bottom tab bar */
 @media (max-width: 899px) {
   body:not(.page-home) { 
+    padding-top: 0;
     padding-bottom: calc(62px + env(safe-area-inset-bottom, 34px) + 10px); 
   }
 }
@@ -699,6 +693,7 @@ nav.nav-haiku .nav-links a.nav-active {
 }
 .nav-more-menu a:hover { background: rgba(255,255,255,0.09); color: #FFFFFF; }
 .nav-more-menu a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.10); }
+
 
 /* ── Login/Join dropdown (desktop) ───────────────────────────────────────── */
 .nav-lj-wrap {
@@ -924,38 +919,29 @@ nav.nav-haiku .nav-links a.nav-active {
   display: none;
   position: fixed;
   top: var(--nav-height);
-  right: 12px;
-  left: auto;
-  width: 240px;
-  max-height: calc(100dvh - var(--nav-height) - 62px);
+  left: 0;
+  right: 0;
+  max-height: calc(100vh - var(--nav-height));
+  max-height: calc(100dvh - var(--nav-height));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: #1A1A18;
-  border: 1px solid rgba(245,197,24,0.18);
-  border-radius: 10px;
-  padding: 6px 0;
+  background: rgba(26,24,20,0.96);
+  border-bottom: 1px solid var(--border);
+  padding: 12px var(--page-pad) 32px;
   flex-direction: column;
-  gap: 0;
-  z-index: 999;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+  gap: 2px;
+  z-index: 199;
 }
 .nav-mobile.open { display: flex; }
 .nav-mobile a {
-  color: rgba(255,255,255,0.85);
+  color: #FFFFFF;
   text-decoration: none;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
-  padding: 13px 18px;
-  border-radius: 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  transition: background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
 }
-.nav-mobile a:last-child { border-bottom: none; }
 .nav-mobile a:hover { color: #FFFFFF; background: rgba(255,255,255,0.10); }
 .nav-mobile a.nav-admin { color: var(--gold); }
 .nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.12); }
@@ -1313,9 +1299,9 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 /* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
 footer {
-  background: #0F1F3D;
+  background: #0F2A22;
   padding: 3rem var(--page-pad) 1.75rem;
-  font-family: var(--font-body);
+  font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 .footer-top {
   display: grid;
@@ -1336,7 +1322,7 @@ footer {
 .footer-col {}
 .footer-col-title {
   font-size: 10px; font-weight: 700;
-  color: #F5C518; text-transform: uppercase;
+  color: #D6A428; text-transform: uppercase;
   letter-spacing: 2px; margin-bottom: 14px;
 }
 .footer-col-link {
@@ -1359,7 +1345,7 @@ footer {
 .footer-copy { font-size: 12px; color: #3A6A4A; }
 .footer-social { display: flex; gap: 20px; }
 .footer-social a { font-size: 12px; color: #3A6A4A; text-decoration: none; }
-.footer-social a:hover { color: #F5C518; }
+.footer-social a:hover { color: #D6A428; }
 /* legacy — keep for mobile override */
 .footer-bottom-legacy {
   padding: 14px var(--page-pad);
@@ -1368,7 +1354,7 @@ footer {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  font-family: var(--font-body);
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   color: rgba(255,255,255,0.75);
 }
@@ -1418,11 +1404,11 @@ footer {
 
   .btn { padding: 10px 18px; font-size: 16px; }
 
-  /* Top nav stays visible on mobile — shows brand + hamburger only (nav-links hidden above) */
-  /* nav-mobile-login hidden — bottom nav handles logged-out state */
+  /* Bottom tab bar replaces top nav on mobile */
+  .sl-top-nav { display: none !important; }
   .nav-mobile-login { display: none !important; }
-  /* Mobile drawer — slides down from top nav */
-  .nav-mobile { display: none; }
+  /* Mobile drawer — triggered by ☰ in bottom tab bar, slides from top */
+  .nav-mobile { display: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
   .nav-mobile.open { display: flex !important; }
   
 }
@@ -1597,6 +1583,7 @@ img {
 
 /* First accordion open by default via HTML open attribute — all others collapsed */
 
+
 /* ── Photographer credit — plain gold text (shared — all hero pages) ── */
 /* Second definition intentionally overrides first for cascade safety.
    Gold, 14px, no pill, no blur — consistent across all banners. */
@@ -1639,7 +1626,7 @@ img {
 .sl-page-wrap{display:flex;align-items:stretch;min-height:calc(100vh - 64px)}
 .sl-global-sidenav{width:155px;flex-shrink:0;background:#fff;border-right:0.5px solid #E8E4DA;padding:14px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;align-self:flex-start}
 .sl-si{display:block;padding:7px 14px;font-size:13px;color:#6B6B6B;text-decoration:none;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.6}
-.sl-si.active{background:#F6F2E9;color:#1A1A18;font-weight:600;border-left-color:#F5C518}
+.sl-si.active{background:#F6F2E9;color:#1A1A18;font-weight:600;border-left-color:#D6A428}
 .sl-si:hover:not(.active){color:#1A1A18;background:#fafaf8}
 .sl-si-more{font-size:13px;font-weight:600;letter-spacing:2px;color:#bbb;padding:12px 14px 3px;text-transform:uppercase;display:block}
 .sl-main-content{flex:1;min-width:0}
@@ -1704,7 +1691,7 @@ img {
          alt="Shutter League"
          style="height:34px; width:auto; display:block;"
          onerror="this.style.display='none'">
-    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:var(--font-body);line-height:1;">SHUTTER LEAGUE</span>
+    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
   </a>
 
   <!-- Desktop nav -->
@@ -1745,7 +1732,7 @@ img {
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
       <a href="{{ url_for('standings_public') }}" class="{% if request.endpoint == 'standings_public' %}nav-active{% endif %}">League of Photographers</a>
       <a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}nav-active{% endif %}">Log in</a>
-      <a href="{{ url_for('register') }}" class="nav-lj-btn" style="text-decoration:none; background:#F5C518; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">Join the League →</a>
+      <a href="{{ url_for('register') }}" class="nav-lj-btn" style="text-decoration:none; background:#D6A428; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">Join the League →</a>
     {% endif %}
   </div>
 
@@ -1825,59 +1812,59 @@ img {
   {% endif %}
 {% endwith %}
 
-{% set _show_sidenav = current_user.is_authenticated and current_user.is_subscribed and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
+
+{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
 {% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% else %}<main>{% endif %}
 {% block content %}{% endblock %}
 </main>{% if _show_sidenav %}</div>{% endif %}
 
+
 {# ── Mobile tab nav — fixed to top on mobile ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
-    {# Bottom nav — subscription-aware: Paid gets Improve tab, Haiku gets League+Profile tabs #}
-    {% if current_user.is_subscribed or current_user.role == 'admin' %}
-      {# Paid subscriber bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
-      <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>Dashboard</span>
-      </a>
-      <a href="{{ url_for('upload') }}" class="sl-nav-item {% if request.endpoint == 'upload' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span>Upload</span>
-      </a>
-      <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>My Gallery</span>
-      </a>
-      <a href="{{ url_for('mission') }}" class="sl-nav-item {% if request.endpoint == 'mission' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        <span>Improve</span>
-      </a>
+    {% if not current_user.is_subscribed and current_user.role != 'admin' %}
+    {# ── HAIKU (free) bottom nav: Home · Upload · My Gallery · League · Profile #}
+    <a href="{{ url_for('try_welcome') }}" class="sl-nav-item {% if request.endpoint == 'try_welcome' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-nav-item {% if request.endpoint in ['try_page','try_upload'] %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('try_gallery') }}" class="sl-nav-item {% if request.endpoint == 'try_gallery' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Gallery</span>
+    </a>
+    <a href="{{ url_for('standings') }}" class="sl-nav-item {% if request.endpoint == 'standings' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>League</span>
+    </a>
+    <a href="{{ url_for('profile') }}" class="sl-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </a>
     {% else %}
-      {# Haiku (free) bottom nav: Home · Upload · My Gallery · League · Profile #}
-      <a href="{{ url_for('try_welcome') }}" class="sl-nav-item {% if request.endpoint == 'try_welcome' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>Home</span>
-      </a>
-      <a href="{{ url_for('try_page') }}" class="sl-nav-item {% if request.endpoint == 'try_page' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span>Upload</span>
-      </a>
-      <a href="{{ url_for('try_gallery') }}" class="sl-nav-item {% if request.endpoint == 'try_gallery' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>My Gallery</span>
-      </a>
-      <a href="{{ url_for('standings_public') }}" class="sl-nav-item {% if request.endpoint == 'standings_public' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        <span>League</span>
-      </a>
-      <a href="{{ url_for('profile') }}" class="sl-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>Profile</span>
-      </a>
-    {% endif %}
+    {# ── PAID bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
+    <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('upload') }}" class="sl-nav-item {% if request.endpoint == 'upload' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Gallery</span>
+    </a>
+    <a href="{{ url_for('mission') }}" class="sl-nav-item {% if request.endpoint == 'mission' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>Improve</span>
+    </a>
     {# More button — triggers drawer #}
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
-      <button class="sl-nav-item sl-nav-more-btn {% if (current_user.is_subscribed and request.endpoint in ['learning','recent_work','mentors','weekly_challenge','poty','mission_detail']) or request.endpoint == 'profile' %}active{% endif %}"
+      <button class="sl-nav-item sl-nav-more-btn {% if request.endpoint in ['learning','recent_work','mentors','weekly_challenge','poty','profile','mission_detail'] %}active{% endif %}"
               onclick="toggleBottomMore(event)" aria-label="More"
               style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
@@ -1885,8 +1872,6 @@ img {
       </button>
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
         <div class="sl-bottom-more-menu__list">
-          {% if current_user.is_subscribed %}
-          {# Paid subscriber More drawer #}
           <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()" class="{% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}">Explore</a>
           <a href="{{ url_for('learning') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'learning' %}active{% endif %}">Learn</a>
           <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'mentors' %}active{% endif %}">Mentor Review</a>
@@ -1894,18 +1879,12 @@ img {
           <a href="{{ url_for('poty') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'poty' %}active{% endif %}">Annual Excellence</a>
           <a href="{{ url_for('profile') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'profile' %}active{% endif %}">Profile &amp; Settings</a>
           <a href="/contact" onclick="closeBottomMore()">Help &amp; Support</a>
-          {% else %}
-          {# Haiku (free) user More drawer — no paid links #}
-          <a href="{{ url_for('standings_public') }}" onclick="closeBottomMore()">League of Photographers</a>
-          <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()" style="color:var(--gold);font-weight:600;">Join the League →</a>
-          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()" class="{% if request.endpoint == 'profile' %}active{% endif %}">Profile &amp; Settings</a>
-          <a href="/contact" onclick="closeBottomMore()">Help &amp; Support</a>
-          {% endif %}
           <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:var(--gold);">Log out</a>
           <div class="sl-bottom-more-menu__fade"></div>
         </div>
       </div>
     </div>
+    {% endif %}
   {% else %}
     {# Non-authenticated bottom nav — minimal #}
     <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
