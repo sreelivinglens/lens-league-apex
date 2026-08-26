@@ -1,0 +1,610 @@
+{# SL-VERSION: 1.0-staging (Session 200) — try_standing: read-only Sonnet eval view for Haiku users. Full scorecard experience — identical depth to paid eval. No owner actions (no delete, save, share, mentor review). Single column 720px. Standalone — does not extend base.html. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>{{ photographer_name }} — Shutter League Standing</title>
+<meta property="og:title" content="{{ photographer_name }} — Shutter League Standing">
+<meta property="og:description" content="{{ photographer_name }} holds a {{ tier }} standing with a {{ '%.2f'|format(score) }} evaluation on Shutter League.">
+<meta property="og:image" content="{{ thumb_url }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ thumb_url }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webkit-font-smoothing:antialiased; }
+h1, h2, h3 { text-shadow: none; }
+
+/* ── TOP BAR ── */
+.sl-topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 48px; background:#F5F3EF;
+  border-bottom:0.5px solid rgba(26,39,68,0.10);
+  position:sticky; top:0; z-index:100;
+}
+.sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
+.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
+.sl-brand-sub { font-size:13px; letter-spacing:0.10em; color:rgba(26,39,68,0.52); text-transform:uppercase; }
+.sl-nav { display:flex; gap:32px; }
+.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; }
+.sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+.sl-nav-logout { background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; }
+.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(26,39,68,0.38); fill:none; stroke-width:1.5; stroke-linecap:round; }
+.sl-nav-logout:hover svg { stroke:#1A2744; }
+
+/* ── WRAP ── */
+.sl-page { background:#F5F3EF; }
+.sl-wrap { max-width:720px; margin:0 auto; padding:0 48px 100px; }
+
+.sl-back { padding:20px 0 0; display:block; font-size:13px; color:rgba(26,39,68,0.40); letter-spacing:0.06em; text-decoration:none; }
+.sl-back:hover { color:#1A2744; }
+
+/* ── IMAGE ── */
+.sl-img-wrap { width:100%; background:#0C1018; display:block; margin-top:20px; border-radius:2px; overflow:hidden; }
+.sl-img { width:100%; display:block; object-fit:contain; max-height:520px; }
+.sl-img-caption { display:flex; justify-content:space-between; margin-top:8px; font-size:13px; color:rgba(26,39,68,0.52); letter-spacing:0.03em; }
+.sl-view-full { text-decoration:underline; cursor:pointer; background:none; border:none; font-size:13px; color:rgba(26,39,68,0.52); font-family:'Inter',sans-serif; letter-spacing:0.03em; }
+
+/* ── VERIFIED STRIP ── */
+.sl-verified { display:flex; gap:20px; margin:18px 0 0; flex-wrap:wrap; }
+.sl-vtag { font-size:13px; color:rgba(26,39,68,0.50); display:flex; align-items:center; gap:5px; }
+.sl-vtag b { color:#1A2744; font-weight:600; }
+
+/* ── SCORE HEADER ── */
+.sl-score-wrap { margin:16px 0 0; padding:20px 0; border-top:1px solid rgba(26,39,68,0.10); border-bottom:1px solid rgba(26,39,68,0.10); }
+.sl-score-name { font-family:'Playfair Display',serif; font-size:28px; font-weight:400; color:#1A2744; }
+.sl-score-sub { font-size:13px; color:rgba(26,39,68,0.45); margin-top:4px; letter-spacing:0.03em; }
+.sl-score-row { display:flex; align-items:baseline; margin-top:12px; gap:0; }
+.sl-score-big { font-family:'Playfair Display',serif; font-size:72px; color:#1A2744; line-height:1; letter-spacing:-0.01em; }
+.sl-score-denom { font-family:'Playfair Display',serif; font-size:22px; color:rgba(26,39,68,0.50); margin-left:3px; }
+.sl-score-right { margin-left:24px; padding-left:24px; border-left:1px solid rgba(26,39,68,0.10); }
+.sl-tier-name { font-size:13px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#1A2744; }
+.sl-pct-line { font-size:13px; color:rgba(26,39,68,0.50); margin-top:5px; }
+.sl-genre-pill { display:inline-block; font-size:13px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#1A2744; background:#EDE9E1; padding:3px 10px; border-radius:2px; margin-top:8px; }
+
+/* STRENGTH / LEAP */
+.sl-snl { display:flex; gap:8px; margin:16px 0 0; flex-wrap:wrap; }
+.sl-snl-pill { font-size:13px; padding:6px 14px; border-radius:2px; display:flex; align-items:center; gap:8px; font-weight:500; }
+.sl-snl-s { background:#EBF4EB; color:#1A5C1A; }
+.sl-snl-n { background:#FEF4E6; color:#8A4A00; }
+.sl-snl-key { font-size:13px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; }
+
+/* AT A GLANCE — horizontal strip */
+.sl-glance { display:grid; grid-template-columns:repeat(5,1fr); margin:24px 0 0; border:0.5px solid rgba(26,39,68,0.10); border-radius:3px; overflow:hidden; }
+.sl-glance-cell { padding:14px 16px; border-right:0.5px solid rgba(26,39,68,0.08); }
+.sl-glance-cell:last-child { border-right:none; }
+.sl-glance-key { font-size:13px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,39,68,0.52); margin-bottom:5px; }
+.sl-glance-val { font-size:13px; font-weight:600; color:#1A2744; }
+
+/* STANDING BLOCK */
+.sl-standing { margin:16px 0 0; background:#EDE9E1; border-radius:3px; padding:20px 24px; display:flex; align-items:center; gap:24px; }
+.sl-standing-num-wrap { flex-shrink:0; text-align:center; }
+.sl-standing-num { font-family:'Playfair Display',serif; font-size:52px; color:#1A2744; line-height:1; }
+.sl-standing-sfx { font-family:'Playfair Display',serif; font-size:22px; color:#1A2744; }
+.sl-standing-word { font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(26,39,68,0.45); margin-top:3px; }
+.sl-standing-div { width:1px; background:rgba(26,39,68,0.15); align-self:stretch; }
+.sl-standing-detail { flex:1; }
+.sl-standing-desc { font-size:13px; color:rgba(26,39,68,0.65); line-height:1.65; margin-bottom:10px; }
+.sl-ms-bar-bg { height:4px; background:rgba(26,39,68,0.12); border-radius:2px; margin-bottom:5px; }
+.sl-ms-bar-fill { height:4px; background:#C8A84B; border-radius:2px; }
+.sl-ms-labels { display:flex; justify-content:space-between; font-size:13px; color:rgba(26,39,68,0.52); }
+.sl-ms-cur { color:#1A2744; font-weight:600; }
+
+/* EVAL PROCESS */
+.sl-process { display:flex; margin:16px 0 0; border:0.5px solid rgba(26,39,68,0.10); border-radius:3px; overflow:hidden; }
+.sl-process-cell { flex:1; padding:12px 14px; border-right:0.5px solid rgba(26,39,68,0.08); display:flex; align-items:center; gap:7px; font-size:13px; color:#1A2744; }
+.sl-process-cell:last-child { border-right:none; font-size:13px; color:rgba(26,39,68,0.52); }
+.sl-ptick { color:#1A6A3A; font-weight:700; font-size:13px; }
+
+/* ── SECTION TITLE ── */
+.sl-sec { margin:32px 0 14px; display:flex; align-items:center; gap:14px; }
+.sl-sec-label { font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:#C8A84B; white-space:nowrap; }
+.sl-sec-rule { flex:1; height:1px; background:rgba(200,168,75,0.25); }
+
+/* COLLAPSIBLE */
+.sl-sec-btn { display:flex; align-items:center; gap:14px; width:100%; cursor:pointer; background:none; border:none; padding:0; text-align:left; }
+.sl-sec-arrow { font-size:13px; color:rgba(26,39,68,0.50); transition:transform .2s; margin-left:auto; }
+.sl-sec-arrow.open { transform:rotate(180deg); }
+
+/* ── FIVE DIMENSIONS ── */
+.sl-dims { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.sl-dim-card { background:#fff; border:0.5px solid rgba(26,39,68,0.10); border-radius:3px; padding:14px 8px 12px; text-align:center; }
+.sl-dim-card.sl-dim-top { border-top:2px solid #C8A84B; }
+.sl-dim-card.sl-dim-leap { border-top:2px solid #D4860A; }
+.sl-dim-name { font-size:13px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(26,39,68,0.40); margin-bottom:8px; line-height:1.5; min-height:22px; display:flex; align-items:center; justify-content:center; }
+.sl-dim-num { font-family:'Playfair Display',serif; font-size:28px; color:#1A2744; line-height:1; }
+.sl-dim-arrow { font-size:13px; }
+.sl-dim-tag { font-size:13px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; margin-top:6px; }
+.sl-dim-tag.strong { color:#1A5C1A; }
+.sl-dim-tag.good { color:rgba(26,39,68,0.50); }
+.sl-dim-tag.leap { color:#8A4A00; }
+.sl-dim-tag.top { color:#C8A84B; }
+.sl-dim-bar-bg { height:2px; background:rgba(26,39,68,0.07); border-radius:1px; margin-top:8px; }
+.sl-dim-bar-fill { height:2px; background:#C8A84B; border-radius:1px; }
+.sl-dim-bar-leap { background:#D4860A; }
+.sl-dims-note { font-size:13px; color:rgba(26,39,68,0.50); margin-top:8px; text-align:right; }
+
+/* DISTRIBUTION */
+.sl-dist-outer { height:6px; background:rgba(26,39,68,0.07); border-radius:3px; position:relative; margin:10px 0 5px; }
+.sl-dist-fill { height:6px; background:rgba(200,168,75,0.22); border-radius:3px; width:100%; }
+.sl-dist-marker { position:absolute; top:-5px; width:2px; height:16px; background:#1A2744; border-radius:1px; }
+.sl-dist-labels { display:flex; justify-content:space-between; font-size:13px; color:rgba(26,39,68,0.50); }
+.sl-dist-cur { color:#1A2744; font-weight:600; }
+
+/* VERDICT BOX */
+.sl-verdict { background:#fff; border:0.5px solid rgba(26,39,68,0.10); border-left:3px solid #C8A84B; border-radius:0 3px 3px 0; padding:22px 26px; }
+.sl-verdict-txt { font-size:16px; line-height:1.88; color:#1A2744; }
+.sl-verdict-attr { font-size:13px; color:rgba(26,39,68,0.50); margin-top:10px; letter-spacing:0.05em; }
+
+/* BODY COPY — 70yr rule */
+.sl-body { font-size:16px; line-height:1.88; color:rgba(26,39,68,0.72); }
+.sl-body .hl { color:#1A2744; font-weight:600; }
+.sl-body .ref { color:#C8A84B; text-decoration:underline; cursor:pointer; font-weight:500; }
+
+/* WTM */
+.sl-wtm-item { padding:14px 0 14px 18px; border-bottom:0.5px solid rgba(26,39,68,0.07); position:relative; }
+.sl-wtm-item::before { content:'▪'; position:absolute; left:0; top:16px; color:rgba(200,168,75,0.60); font-size:13px; }
+.sl-wtm-item:last-child { border-bottom:none; }
+
+/* TAKE-AWAY */
+.sl-takeaway { background:#EDE9E1; border-radius:3px; padding:22px 26px; border-left:3px solid #C8A84B; }
+.sl-ta-item { padding-left:16px; position:relative; margin-bottom:16px; }
+.sl-ta-item:last-child { margin-bottom:0; }
+.sl-ta-item::before { content:'▪'; position:absolute; left:0; top:4px; color:#C8A84B; font-size:13px; }
+
+/* SAW */
+.sl-saw-item { padding:14px 0; border-bottom:0.5px solid rgba(26,39,68,0.07); }
+.sl-saw-item:last-child { border-bottom:none; }
+.sl-saw-head { font-size:13px; font-weight:600; color:#1A2744; margin-bottom:6px; letter-spacing:0.02em; }
+
+/* NEXT SHOT */
+.sl-next-shot { background:#EBF5EE; border:0.5px solid rgba(26,100,60,0.15); border-radius:3px; padding:20px 22px; }
+.sl-ns-label { font-size:13px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#1A5C1A; margin-bottom:7px; }
+.sl-ns-title { font-size:15px; font-weight:600; color:#1A2744; margin-bottom:10px; }
+.sl-go-shoot { display:inline-block; font-size:13px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:#fff; background:#1A5C1A; padding:9px 20px; border-radius:2px; cursor:pointer; margin-top:14px; min-height:44px; border:none; font-family:'Inter',sans-serif; }
+
+/* EDIT */
+.sl-edit-card { background:#fff; border:0.5px solid rgba(26,39,68,0.10); border-radius:3px; padding:18px 22px; margin-bottom:8px; }
+.sl-edit-type { font-size:13px; font-weight:700; letter-spacing:0.13em; text-transform:uppercase; color:#C8A84B; margin-bottom:5px; }
+.sl-edit-hl { font-size:14px; font-weight:600; color:#1A2744; margin-bottom:12px; }
+.sl-edit-bullet { padding-left:16px; position:relative; margin-bottom:8px; }
+.sl-edit-bullet::before { content:'·'; position:absolute; left:0; color:#C8A84B; font-size:20px; font-weight:700; }
+.sl-edit-bullet:last-child { margin-bottom:0; }
+
+/* TREND LINES */
+.sl-trend { padding:18px 0; border-bottom:0.5px solid rgba(26,39,68,0.07); }
+.sl-trend:last-child { border-bottom:none; padding-bottom:0; }
+.sl-trend-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
+.sl-trend-name { font-size:13px; font-weight:500; color:#1A2744; }
+.sl-trend-score { font-family:'Playfair Display',serif; font-size:22px; color:#1A2744; }
+.sl-trend-desc { font-size:13px; color:rgba(26,39,68,0.40); margin-bottom:8px; }
+.sl-trend-nums { display:flex; gap:3px; margin-bottom:5px; }
+.sl-trend-n { font-size:13px; color:rgba(26,39,68,0.50); flex:1; text-align:center; }
+.sl-trend-n.cur { color:#1A2744; font-weight:600; }
+canvas.sl-spark { width:100%; height:44px; display:block; }
+
+/* CTA */
+.sl-cta { margin-top:48px; padding:36px 32px; border:1px solid rgba(200,168,75,0.30); border-radius:3px; background:#fff; text-align:center; }
+.sl-cta-rule { width:40px; height:1px; background:#C8A84B; margin:0 auto 20px; }
+.sl-cta-ey { font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(26,39,68,0.40); margin-bottom:14px; }
+.sl-cta-h { font-family:'Playfair Display',serif; font-size:24px; color:#1A2744; margin-bottom:10px; line-height:1.50; }
+.sl-cta-sub { font-size:13px; color:rgba(26,39,68,0.45); margin-bottom:26px; line-height:1.72; }
+.sl-cta-btn { background:#1A2744; color:#C8A84B; font-family:'Inter',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; padding:14px 40px; border:none; border-radius:2px; cursor:pointer; min-height:44px; text-decoration:none; display:inline-block; }
+.sl-cta-btn:hover { background:#243660; }
+.sl-cta-rule-bot { width:40px; height:1px; background:rgba(200,168,75,0.30); margin:22px auto 0; }
+
+/* KYC + FOOTER */
+.sl-kyc { background:#EDE9E1; padding:14px 48px; font-size:13px; color:rgba(26,39,68,0.42); line-height:1.65; border-top:0.5px solid rgba(26,39,68,0.08); }
+.sl-kyc a { color:rgba(26,39,68,0.42); text-decoration:underline; }
+.sl-footer { background:#F5F3EF; border-top:0.5px solid rgba(26,39,68,0.09); padding:20px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:rgba(26,39,68,0.52); }
+.sl-footer-kyc { display:flex; gap:20px; flex-wrap:wrap; }
+.sl-footer-kyc a { color:rgba(26,39,68,0.52); text-decoration:none; }
+.sl-footer-kyc a:hover { color:#1A2744; }
+
+/* MOBILE BOTTOM NAV */
+.sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#F5F3EF; border-top:0.5px solid rgba(26,39,68,0.12); padding:6px 0 8px; z-index:200; }
+.sl-mob-nav-items { display:flex; justify-content:space-around; align-items:flex-end; }
+.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,39,68,0.42); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; }
+.sl-mob-nav-item.active { color:#F4C20D; }
+.sl-mob-nav-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.sl-mob-more-drawer { display:none; position:fixed; bottom:56px; left:0; right:0; background:#F5F3EF; border-top:0.5px solid rgba(26,39,68,0.12); z-index:199; padding:8px 0; }
+.sl-mob-more-drawer.open { display:block; }
+.sl-mob-drawer-item { display:block; padding:13px 24px; font-size:14px; color:rgba(26,39,68,0.65); text-decoration:none; border-bottom:0.5px solid rgba(26,39,68,0.06); }
+.sl-mob-drawer-item:last-child { border-bottom:none; }
+.sl-mob-drawer-item:hover { color:#1A2744; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .sl-dims { grid-template-columns:repeat(3,1fr); }
+  .sl-glance { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width: 899px) {
+  .sl-wrap { padding:0 24px 80px; }
+  .sl-topbar { padding:14px 24px; }
+  .sl-nav { display:none; }
+  .sl-dims { grid-template-columns:repeat(3,1fr); }
+  .sl-glance { grid-template-columns:repeat(3,1fr); }
+  .sl-glance-cell:nth-child(n+4) { border-top:0.5px solid rgba(26,39,68,0.08); }
+  .sl-process { flex-direction:column; }
+  .sl-process-cell { border-right:none; border-bottom:0.5px solid rgba(26,39,68,0.08); }
+  .sl-process-cell:last-child { border-bottom:none; }
+  .sl-standing { flex-direction:column; align-items:flex-start; gap:16px; }
+  .sl-standing-div { width:100%; height:1px; }
+  .sl-mob-nav { display:block; }
+  body { padding-bottom:60px; }
+  .sl-kyc { padding:14px 24px; }
+  .sl-footer { padding:16px 24px; }
+}
+@media (max-width: 480px) {
+  .sl-body, .sl-verdict-txt, .sl-standing-desc, .sl-edit-bullet, .sl-trend-name, .sl-cta-sub, .sl-cta-h { font-size: 16px !important; }
+  .sl-body { font-size: 16px; }
+  p, .sl-body, .sl-verdict-txt, .sl-wtm-item, .sl-ta-item, .sl-saw-item, .sl-edit-bullet, .sl-trend-name, .sl-cta-sub { font-size: 16px; }
+  .sl-verdict-txt { font-size: 16px; }
+  .sl-page { flex-direction: column !important; }
+  .sl-wrap { padding:0 16px 60px; }
+  .sl-dims { grid-template-columns:repeat(2,1fr); }
+  .sl-score-row { flex-direction:column; gap:8px; }
+  .sl-score-right { border-left:none; padding-left:0; border-top:1px solid rgba(26,39,68,0.10); padding-top:12px; margin-left:0; }
+  .sl-glance { grid-template-columns:repeat(2,1fr); }
+  .sl-cta { padding:28px 20px; }
+  .sl-kyc { padding:14px 16px; }
+  .sl-footer { padding:14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="sl-topbar">
+  <a href="{{ url_for('try_welcome') }}" class="sl-brand">
+    <span class="sl-brand-name">Shutter League</span>
+    <span class="sl-brand-sub">Photography Institution</span>
+  </a>
+  <nav class="sl-nav">
+    <a href="{{ url_for('try_welcome') }}">Home</a>
+    <a href="{{ url_for('try_gallery') }}">My Evaluations</a>
+    <a href="{{ url_for('try_page') }}">Upload</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">League</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </a>
+  </nav>
+</div>
+
+<div class="sl-page">
+<div class="sl-wrap">
+
+  <a href="{{ url_for('league_haiku') }}" class="sl-back">← Back to the League</a>
+
+  <!-- IMAGE -->
+  <div class="sl-img-wrap">
+    <img src="{{ thumb_url }}" alt="{{ photographer_name }}" class="sl-img" onerror="this.style.display='none'">
+  </div>
+  <div class="sl-img-caption">
+    <span>{{ photographer_name }} &nbsp;·&nbsp; {{ genre }} &nbsp;·&nbsp; © {{ photographer_name }}</span>
+    <button class="sl-view-full" onclick="window.open('{{ thumb_url }}','_blank')">View full size</button>
+  </div>
+
+  <!-- VERIFIED -->
+  <div class="sl-verified">
+    <div class="sl-vtag">✓ <b>AI verified</b></div>
+    <div class="sl-vtag">◉ <b>Calibrated · {{ calibrated_count }} images</b></div>
+    <div class="sl-vtag">★ <b>Expert calibrated</b></div>
+  </div>
+
+  <!-- SCORE HEADER -->
+  <div class="sl-score-wrap">
+    <div class="sl-score-name">{{ photographer_name }}</div>
+    <div class="sl-score-sub">{{ genre }} &nbsp;·&nbsp; {{ camera }} &nbsp;·&nbsp; {{ eval_count }} evaluations on record</div>
+    <div class="sl-score-row">
+      <div>
+        <span class="sl-score-big">{{ "%.2f"|format(score) }}</span><span class="sl-score-denom">/10</span>
+      </div>
+      <div class="sl-score-right">
+        <div class="sl-tier-name">{{ tier }}</div>
+        <div class="sl-pct-line">Higher than {{ percentile }}% of images in the League</div>
+        <div class="sl-genre-pill">{{ genre }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRENGTH / LEAP -->
+  <div class="sl-snl">
+    <div class="sl-snl-pill sl-snl-s"><span class="sl-snl-key">Strength</span> {{ strength_dim }} — {{ "%.1f"|format(strength_score) }}</div>
+    <div class="sl-snl-pill sl-snl-n"><span class="sl-snl-key">Next leap</span> {{ leap_dim }} — {{ "%.1f"|format(leap_score) }}</div>
+  </div>
+
+  <!-- AT A GLANCE -->
+  <div class="sl-glance">
+    <div class="sl-glance-cell"><div class="sl-glance-key">Tier</div><div class="sl-glance-val">{{ tier }}</div></div>
+    <div class="sl-glance-cell"><div class="sl-glance-key">Evaluations</div><div class="sl-glance-val">{{ eval_count }}</div></div>
+    <div class="sl-glance-cell"><div class="sl-glance-key">Best this year</div><div class="sl-glance-val">{{ "%.2f"|format(best_this_year) }}</div></div>
+    <div class="sl-glance-cell"><div class="sl-glance-key">Interest</div><div class="sl-glance-val">{{ genre }}</div></div>
+    <div class="sl-glance-cell"><div class="sl-glance-key">Camera</div><div class="sl-glance-val">{{ camera }}</div></div>
+  </div>
+
+  <!-- STANDING BLOCK -->
+  <div class="sl-standing">
+    <div class="sl-standing-num-wrap">
+      <div><span class="sl-standing-num">{{ percentile }}</span><span class="sl-standing-sfx">th</span></div>
+      <div class="sl-standing-word">Percentile</div>
+    </div>
+    <div class="sl-standing-div"></div>
+    <div class="sl-standing-detail">
+      <div class="sl-standing-desc">Higher than {{ percentile }}% of images in the League. {{ tier }} — {{ tier_description }}</div>
+      <div class="sl-ms-bar-bg"><div class="sl-ms-bar-fill" style="width:{{ score_pct }}%"></div></div>
+      <div class="sl-ms-labels"><span>{{ tier_floor }}</span><span class="sl-ms-cur">{{ "%.2f"|format(score) }}</span><span>10</span></div>
+    </div>
+  </div>
+
+  <!-- EVAL PROCESS -->
+  <div class="sl-process">
+    <div class="sl-process-cell"><span class="sl-ptick">✓</span> Apex DDI across 5 dimensions</div>
+    <div class="sl-process-cell"><span class="sl-ptick">✓</span> Expert review by Grandmaster mentor</div>
+    <div class="sl-process-cell"><span class="sl-ptick">✓</span> Final evaluation calibrated</div>
+    <div class="sl-process-cell">Evaluated {{ eval_date }} · Public</div>
+  </div>
+
+  <!-- FIVE DIMENSIONS -->
+  <div class="sl-sec"><span class="sl-sec-label">The five dimensions</span><div class="sl-sec-rule"></div></div>
+  <div class="sl-dims">
+    {% for dim in dimensions %}
+    <div class="sl-dim-card{% if dim.is_top %} sl-dim-top{% elif dim.is_leap %} sl-dim-leap{% endif %}">
+      <div class="sl-dim-name">{{ dim.name }}</div>
+      <div class="sl-dim-num">{{ "%.1f"|format(dim.score) }}{% if dim.is_top %}<span class="sl-dim-arrow" style="color:#C8A84B;font-size:16px">↑</span>{% elif dim.is_leap %}<span class="sl-dim-arrow" style="color:#D4860A;font-size:16px">↓</span>{% endif %}</div>
+      <div class="sl-dim-tag {% if dim.score >= 8.5 %}top{% elif dim.score >= 7.5 %}strong{% elif dim.is_leap %}leap{% else %}good{% endif %}">
+        {% if dim.is_top %}Your Strongest{% elif dim.is_leap %}Your Next Leap{% elif dim.score >= 7.5 %}Strong{% else %}Good{% endif %}
+      </div>
+      <div class="sl-dim-bar-bg"><div class="sl-dim-bar-fill{% if dim.is_leap %} sl-dim-bar-leap{% endif %}" style="width:{{ (dim.score / 10 * 100)|round(1) }}%"></div></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="sl-dims-note">Tap a dimension to see the engine's reasoning &nbsp;·&nbsp; All evaluations out of 10</div>
+
+  <!-- DISTRIBUTION -->
+  <div class="sl-sec" style="margin-top:20px"><span class="sl-sec-label">SL evaluation distribution</span><div class="sl-sec-rule"></div></div>
+  <div class="sl-dist-outer">
+    <div class="sl-dist-fill"></div>
+    <div class="sl-dist-marker" style="left:{{ score_pct }}%"></div>
+  </div>
+  <div class="sl-dist-labels"><span>0</span><span>5</span><span class="sl-dist-cur">{{ "%.2f"|format(score) }}</span><span>10</span></div>
+
+  <!-- VERDICT -->
+  <div class="sl-sec"><span class="sl-sec-label">What Shutter League saw</span><div class="sl-sec-rule"></div></div>
+  <div class="sl-verdict">
+    <div class="sl-verdict-txt">{{ verdict }}</div>
+    <div class="sl-verdict-attr">SL Evaluation &nbsp;·&nbsp; Expert-calibrated</div>
+  </div>
+
+  <!-- WHAT THIS MEANS -->
+  <div class="sl-sec">
+    <button class="sl-sec-btn" onclick="slTog('sl-wtm','sl-wtm-a')" type="button">
+      <span class="sl-sec-label">What this evaluation means</span><div class="sl-sec-rule"></div><span class="sl-sec-arrow open" id="sl-wtm-a">⌄</span>
+    </button>
+  </div>
+  <div id="sl-wtm">
+    {% for item in what_it_means %}
+    <div class="sl-wtm-item"><div class="sl-body">{{ item | safe }}</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- TAKE-AWAY -->
+  <div class="sl-sec">
+    <button class="sl-sec-btn" onclick="slTog('sl-ta','sl-ta-a')" type="button">
+      <span class="sl-sec-label">Your one take-away</span><div class="sl-sec-rule"></div><span class="sl-sec-arrow open" id="sl-ta-a">⌄</span>
+    </button>
+  </div>
+  <div id="sl-ta">
+    <div class="sl-takeaway">
+      {% for item in takeaway_items %}
+      <div class="sl-ta-item"><div class="sl-body">{{ item | safe }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- WHAT SL SAW -->
+  {% if what_sl_saw %}
+  <div class="sl-sec">
+    <button class="sl-sec-btn" onclick="slTog('sl-saw','sl-saw-a')" type="button">
+      <span class="sl-sec-label">What SL saw in your photograph</span><div class="sl-sec-rule"></div><span class="sl-sec-arrow open" id="sl-saw-a">⌄</span>
+    </button>
+  </div>
+  <div id="sl-saw">
+    {% for item in what_sl_saw %}
+    <div class="sl-saw-item">
+      {% if item.head %}<div class="sl-saw-head">{{ item.head }}</div>{% endif %}
+      <div class="sl-body">{{ item.body | safe }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- NEXT SHOT -->
+  {% if next_shot %}
+  <div class="sl-sec">
+    <button class="sl-sec-btn" onclick="slTog('sl-nxt','sl-nxt-a')" type="button">
+      <span class="sl-sec-label">🟢 Your next shot — bookmarked</span><div class="sl-sec-rule"></div><span class="sl-sec-arrow open" id="sl-nxt-a">⌄</span>
+    </button>
+  </div>
+  <div id="sl-nxt">
+    <div class="sl-next-shot">
+      <div class="sl-ns-label">Next shot — bookmarked</div>
+      <div class="sl-ns-title">{{ next_shot.title }}</div>
+      <div class="sl-body">{{ next_shot.body }}</div>
+      <button class="sl-go-shoot" type="button">Go shoot →</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- EDIT SUGGESTIONS -->
+  {% if edit_suggestions %}
+  <div class="sl-sec"><span class="sl-sec-label">Edit suggestions</span><div class="sl-sec-rule"></div></div>
+  {% for edit in edit_suggestions %}
+  <div class="sl-edit-card">
+    <div class="sl-edit-type">{{ edit.type }}</div>
+    <div class="sl-edit-hl">{{ edit.headline }}</div>
+    {% if edit.bullets %}
+      {% for bullet in edit.bullets %}
+      <div class="sl-edit-bullet"><div class="sl-body">{{ bullet }}</div></div>
+      {% endfor %}
+    {% else %}
+      <div class="sl-body">{{ edit.body }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- HOW YOU'RE DEVELOPING -->
+  {% if trend_lines %}
+  <div class="sl-sec">
+    <span class="sl-sec-label">How this photographer is developing</span>
+    <span style="font-size:16px;color:rgba(26,39,68,0.50);margin-left:8px">Last {{ trend_count }} photographs</span>
+    <div class="sl-sec-rule"></div>
+  </div>
+  {% for t in trend_lines %}
+  <div class="sl-trend">
+    <div class="sl-trend-head">
+      <div class="sl-trend-name">{{ t.label }}</div>
+      <div class="sl-trend-score">{{ "%.1f"|format(t.current) }}</div>
+    </div>
+    <div class="sl-trend-desc">{{ t.description }}</div>
+    <div class="sl-trend-nums">
+      {% for v in t.values %}
+      <span class="sl-trend-n{% if loop.last %} cur{% endif %}">{{ "%.1f"|format(v) }}</span>
+      {% endfor %}
+    </div>
+    <canvas class="sl-spark" id="sl-spark-{{ loop.index }}" height="44" data-values="{{ t.values | join(',') }}"></canvas>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- CTA -->
+  <div class="sl-cta">
+    <div class="sl-cta-rule"></div>
+    <div class="sl-cta-ey">This is what an evaluation looks like</div>
+    <div class="sl-cta-h">To have your own images evaluated against this standard —</div>
+    <div class="sl-cta-sub">Honest. Unbiased. The work determines everything.</div>
+    <a href="{{ url_for('pricing') }}" class="sl-cta-btn">Join the League of Photographers →</a>
+    <div class="sl-cta-rule-bot"></div>
+  </div>
+
+</div><!-- /sl-wrap -->
+</div><!-- /sl-page -->
+
+<!-- KYC -->
+<div class="sl-kyc">
+  League standing is determined by calibrated evaluation against the Shutter League standard. Standings reflect evaluated photographs only.
+  &nbsp;<a href="{{ url_for('terms') }}">Terms &amp; Conditions</a> &nbsp;·&nbsp;
+  <a href="{{ url_for('privacy') }}">Privacy Policy</a> &nbsp;·&nbsp;
+  <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+</div>
+
+<!-- FOOTER -->
+<div class="sl-footer">
+  <span>© 2026 Shutter League &nbsp;·&nbsp; Bengaluru, India &nbsp;·&nbsp; UDYAM-KR-03-0697280</span>
+  <div class="sl-footer-kyc">
+    <a href="{{ url_for('terms') }}">Terms</a>
+    <a href="{{ url_for('privacy') }}">Privacy</a>
+    <a href="{{ url_for('refund_policy') }}">Refunds</a>
+    <a href="{{ url_for('shipping_policy') }}">Shipping</a>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="sl-mob-nav">
+  <div class="sl-mob-nav-items">
+    <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>
+      Upload
+    </a>
+    <a href="{{ url_for('try_gallery') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      My Evals
+    </a>
+    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Pricing
+    </a>
+    <button class="sl-mob-nav-item active" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
+      More
+    </button>
+  </div>
+</nav>
+<div class="sl-mob-more-drawer" id="sl-mob-more-drawer">
+  <a href="{{ url_for('league_haiku') }}" class="sl-mob-drawer-item">League</a>
+  <a href="{{ url_for('profile') }}" class="sl-mob-drawer-item">Profile</a>
+  <a href="#" class="sl-mob-drawer-item">Help</a>
+  <a href="{{ url_for('logout') }}" class="sl-mob-drawer-item">Log out</a>
+</div>
+
+<script>
+// Sparklines
+function slDrawSpark(id, values) {
+  var c = document.getElementById(id);
+  if (!c) return;
+  var W = c.offsetWidth || 600, H = 44, dpr = window.devicePixelRatio || 1;
+  c.width = W * dpr; c.height = H * dpr;
+  c.style.width = W + 'px'; c.style.height = H + 'px';
+  var ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  var mn = Math.min.apply(null, values) - 0.8;
+  var mx = Math.max.apply(null, values) + 0.8;
+  var xs = (W - 20) / (values.length - 1);
+  var yf = function(v) { return H - 5 - ((v - mn) / (mx - mn)) * (H - 10); };
+  ctx.beginPath();
+  ctx.strokeStyle = '#C8A84B';
+  ctx.lineWidth = 1.8;
+  ctx.lineJoin = 'round';
+  values.forEach(function(v, i) {
+    var x = 10 + i * xs, y = yf(v);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  var lx = 10 + (values.length - 1) * xs, ly = yf(values[values.length - 1]);
+  ctx.beginPath();
+  ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#C8A84B';
+  ctx.fill();
+}
+
+window.addEventListener('load', function() {
+  document.querySelectorAll('canvas.sl-spark').forEach(function(c) {
+    var vals = c.dataset.values.split(',').map(Number);
+    slDrawSpark(c.id, vals);
+  });
+});
+
+// Collapsible sections
+function slTog(id, aid) {
+  var el = document.getElementById(id);
+  var ar = document.getElementById(aid);
+  var hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  if (ar) ar.classList.toggle('open', hidden);
+}
+
+// Mobile more drawer
+function toggleBottomMoreHaiku(e) {
+  e.stopPropagation();
+  document.getElementById('sl-mob-more-drawer').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var drawer = document.getElementById('sl-mob-more-drawer');
+  var btn = document.getElementById('sl-mob-more-btn');
+  if (drawer && drawer.classList.contains('open') && !drawer.contains(e.target) && e.target !== btn) {
+    drawer.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
