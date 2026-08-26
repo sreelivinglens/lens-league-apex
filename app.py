@@ -1,3 +1,4 @@
+# SL-VERSION: 181.52-staging (Session 199, 2026-08-26 — CACHE BUST: Force worker restart to flush Jinja2 template cache and pick up dashboard_haiku.html pricing icon fix. RETAINS 181.50.)
 # SL-VERSION: 181.50-staging (Session 191, 2026-08-24 — FIX: league_hero photographer attribution changed to Shutter League — avoids partial name. RETAINS 181.49.)
 # SL-VERSION: 181.49-staging (Session 191, 2026-08-24 — FIX: league_hero query relaxed to score>=8.5 and Master tier included, excludes current user. RETAINS 181.48.)
 # SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — HAIKU SHERPA: _generate_haiku_sherpa cross-image synthesis, Peter Evans Signals of Seeing, one Haiku call per eval stored in mentor_advice_json. try_welcome passes sherpa_obs, sherpa_nudge, user_hero, league_hero. RETAINS 181.47.)
