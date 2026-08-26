@@ -143,9 +143,10 @@ a, button { cursor:pointer; color:inherit; }
 /* GM image — full card width bleed, navy meta strip above */
 .sl-gm-container { margin:0 -32px 0; background:#0C1018; position:relative; overflow:hidden; }
 .sl-gm-meta-top {
-  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  display:flex; flex-direction:column; gap:4px;
   padding:12px 32px 10px; background:#1A2744;
 }
+.sl-gm-meta-row { display:flex; align-items:baseline; gap:14px; }
 .sl-gm-meta-score {
   font-family:'Playfair Display',Georgia,serif;
   font-size:28px; color:#C8A84B; font-weight:400; letter-spacing:-0.02em;
@@ -154,7 +155,7 @@ a, button { cursor:pointer; color:inherit; }
   font-size:13px; letter-spacing:0.14em; text-transform:uppercase;
   color:#C8A84B; font-weight:600;
 }
-.sl-gm-meta-name { font-size:14px; color:rgba(255,255,255,0.60); margin-left:auto; }
+.sl-gm-meta-name { font-size:14px; color:rgba(255,255,255,0.75); margin-top:2px; }
 .sl-gm-img { width:100%; max-height:440px; object-fit:contain; display:block; }
 .sl-gm-ph {
   width:100%; height:220px; background:#D0CCC6;
@@ -181,8 +182,9 @@ a, button { cursor:pointer; color:inherit; }
   margin-bottom:16px;
 }
 .sl-dims-block {
-  background:rgba(26,39,68,0.05); border-radius:6px;
+  background:#FFFFFF; border-radius:6px;
   padding:16px 20px; text-align:left; margin-bottom:0;
+  border:0.5px solid rgba(26,39,68,0.12);
 }
 .sl-dims-hdr { font-size:13px; letter-spacing:0.09em; text-transform:uppercase; color:rgba(26,39,68,0.60); margin-bottom:10px; }
 .sl-dim-row { display:flex; justify-content:space-between; align-items:baseline; padding:10px 0; border-bottom:0.5px solid rgba(26,39,68,0.07); }
@@ -508,8 +510,10 @@ a, button { cursor:pointer; color:inherit; }
     {# GM image container — larger, full card width, score/tier/name above #}
     <div class="sl-gm-container">
       <div class="sl-gm-meta-top">
-        <span class="sl-gm-meta-score">{{ "%.2f"|format(league_hero.score) }}</span>
-        <span class="sl-gm-meta-tier">{{ league_hero.tier }}</span>
+        <div class="sl-gm-meta-row">
+          <span class="sl-gm-meta-score">{{ "%.2f"|format(league_hero.score) }}</span>
+          <span class="sl-gm-meta-tier">{{ league_hero.tier }}</span>
+        </div>
         <span class="sl-gm-meta-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
       </div>
       {% if league_hero.id is defined and league_hero.id %}
