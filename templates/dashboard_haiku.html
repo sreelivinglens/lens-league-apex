@@ -516,16 +516,11 @@ a, button { cursor:pointer; color:inherit; }
         </div>
         <span class="sl-gm-meta-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
       </div>
-      {% if league_hero.id is defined and league_hero.id %}
-      <a href="{{ url_for('try_result', image_id=league_hero.id) }}" class="sl-gm-link" title="View scorecard →">
+      <a href="{{ url_for('standings_public') }}" class="sl-gm-link" title="See their standing in the League →">
         <img class="sl-gm-img" src="{{ league_hero.thumb_url }}"
              alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-        <div class="sl-gm-overlay">View scorecard →</div>
+        <div class="sl-gm-overlay">See their standing in the League →</div>
       </a>
-      {% else %}
-      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}"
-           alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-      {% endif %}
     </div>
     {% else %}
     <div class="sl-gm-ph">Grandmaster photograph</div>
