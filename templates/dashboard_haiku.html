@@ -533,7 +533,7 @@ a, button { cursor:pointer; color:inherit; }
 
     {# Text + dimensions — tighter, centred container, no loose spacing #}
     <div class="sl-std-body">
-      <p class="sl-std-copy">At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.</p>
+      <p class="sl-std-copy">{{ league_hero_copy if league_hero_copy else "At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera." }}</p>
       <div class="sl-dims-block">
         <div class="sl-dims-hdr">The five dimensions every evaluation is built on</div>
         <div class="sl-dim-row"><span class="sl-dim-plain">The difficulty of getting to the shot</span><span class="sl-dim-official">Depth of Difficulty</span></div>
