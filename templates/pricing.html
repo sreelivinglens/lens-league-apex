@@ -1,11 +1,4 @@
-{# pricing.html — Production Pricing Page
-   Route: /pricing → pricing() in app-staging.py
-   Visual specification: APPROVED_pricing.html — CSS and copy verbatim
-   Payment: Razorpay JS preserved verbatim from pricing-v3.1-staging
-   SL-VERSION: pricing-v4.1-staging (Session 194, 2026-08-25 — APPROVED design:
-   CSS and copy taken verbatim from APPROVED_pricing.html. No copy changes.
-   No font/size/colour changes. Razorpay payment JS preserved from v3.1. RETAINS v3.1 payment logic.)
-#}
+{# SL-VERSION: pricing-v3.1-staging (Session 190, 2026-08-19 — QUOTES: Hero quote → Vaibhav Parakh (mobile, beginner). Mahesh quote moved to Honest why-block. RETAINS v3., 2026-08-19 — FULL REDESIGN: Three plans (Annual ₹4,000 / 6 Months ₹2,500 / 100-for-100 ₹100). No monthly plan. No free column. Track selection modal. International waitlist form. Founding Member band. Three why-blocks. Making Images Matter sign-off. KYC clean. Jinja2 validated.) #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
@@ -16,367 +9,395 @@
 
 {% block content %}
 <style>
-
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; }
-.sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
-.sl-col { max-width:760px; margin:0 auto; padding:0 48px; }
-.sl-rule { height:0.5px; background:rgba(26,39,68,0.09); }
-
-/* TOP BAR */
-.sl-topbar {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:18px 48px;
-  border-bottom:0.5px solid rgba(26,39,68,0.10);
-}
-.sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
-.sl-brand-name { font-size:12px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
-.sl-brand-sub { font-size:10px; letter-spacing:0.10em; color:rgba(26,39,68,0.36); text-transform:uppercase; }
-.sl-nav { display:flex; gap:32px; }
-.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; }
-.sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
-
-/* ── OPENING STATEMENT
-   No hero photograph. The page opens with the decision itself.
-   The largest text on the page. */
-.sl-opening { padding:72px 48px 0; max-width:760px; margin:0 auto; }
-.sl-opening-eyebrow {
-  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.38); margin-bottom:24px;
-}
-.sl-opening-statement {
-  font-family:'Playfair Display',serif;
-  font-size:44px; color:#1A2744; font-weight:400;
-  line-height:1.2; letter-spacing:-0.02em; margin-bottom:32px;
-}
-.sl-opening-sub {
-  font-size:18px; color:rgba(26,39,68,0.58); line-height:1.75;
-  margin-bottom:56px;
+/* ── Token override — align with dashboard_haiku design system ── */
+:root {
+  --gold:           #C8A84B;
+  --gold-light:     #C8A84B;
+  --gold-dark:      #A8883B;
+  --gold-subtle:    rgba(200,168,75,0.12);
+  --gold-glow:      rgba(200,168,75,0.22);
+  --text-primary:   #1A2744;
+  --text-secondary: #1A2744;
+  --text-muted:     rgba(26,39,68,0.55);
+  --navy:           #1A2744;
+  --blue-dark:      #1A2744;
+  --surface-1:      #F5F3EF;
+  --surface-2:      #EDE9E1;
+  --surface-3:      #E2DDD4;
+  --border:         rgba(26,39,68,0.12);
+  --border-subtle:  rgba(26,39,68,0.08);
+  --border-strong:  rgba(26,39,68,0.20);
 }
 
-/* ── FOUR TRUST STATEMENTS
-   Plain prose. Not icons. Not a feature grid. */
-.sl-trust { padding:0 48px 64px; max-width:760px; margin:0 auto; }
-.sl-trust-item {
-  padding:24px 0;
-  border-bottom:0.5px solid rgba(26,39,68,0.09);
-  display:flex; align-items:baseline; gap:24px;
+/* ── Pricing Page — v3 redesign, Session 190 ─────────────────────── */
+
+/* ── Hero ── */
+.pr-hero {
+  text-align: center;
+  padding: 56px var(--page-pad) 28px;
+  max-width: 700px;
+  margin: 0 auto;
 }
-.sl-trust-item:first-child { border-top:0.5px solid rgba(26,39,68,0.09); }
-.sl-trust-heading {
-  font-size:17px; color:#1A2744; font-weight:500;
-  min-width:200px; flex-shrink:0;
+.pr-hero-eye {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 16px;
 }
-.sl-trust-body {
-  font-size:17px; color:rgba(26,39,68,0.58); line-height:1.65;
+.pr-hero h1 {
+  font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+  color: var(--text-primary); line-height: 1.5;
+  letter-spacing: -0.02em; margin-bottom: 16px;
+}
+.pr-hero-built {
+  font-size: 17px; color: var(--text-secondary);
+  line-height: 1.65; margin-bottom: 16px;
+}
+.pr-hero-200 {
+  font-size: 18px; font-weight: 600;
+  color: var(--text-primary); line-height: 1.65;
+  max-width: 560px; margin: 0 auto 8px;
+}
+.pr-hero-std {
+  font-size: 15px; font-style: italic;
+  color: var(--text-muted); margin-top: 8px;
+}
+.pr-proof {
+  max-width: 620px; margin: 28px auto 0;
+  border-left: 3px solid var(--gold);
+  padding: 16px 22px; background: var(--surface-2);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.pr-proof-q {
+  font-size: 17px; font-style: italic;
+  color: var(--text-primary); line-height: 1.7; margin-bottom: 8px;
+}
+.pr-proof-a { font-size: 14px; color: var(--text-muted); }
+.pr-proof-a strong { color: var(--text-primary); }
+
+/* ── Plans grid ── */
+.pr-plans {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1080px;
+  margin: 44px auto 0;
+  padding: 0 var(--page-pad);
+}
+.pr-plan {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.pr-plan.featured {
+  border: 2px solid var(--gold);
+}
+.pr-plan-pill {
+  position: absolute; top: -13px;
+  left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: #1a1200;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 16px; border-radius: 20px;
+  white-space: nowrap;
+}
+.pr-plan-label {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 10px;
+}
+.pr-plan-price {
+  font-size: 38px; font-weight: 700;
+  color: var(--text-primary); line-height: 1;
+  margin-bottom: 6px;
+}
+.pr-plan-price sup { font-size: 18px; vertical-align: super; }
+.pr-plan-period {
+  font-size: 14px; color: var(--text-muted); margin-bottom: 18px;
+}
+.pr-plan-tagline {
+  font-size: 16px; color: var(--text-secondary);
+  line-height: 1.7; margin-bottom: 18px;
+  min-height: 140px;
+}
+.pr-divider {
+  height: 1px; background: var(--border); margin-bottom: 18px;
+}
+.pr-features { list-style: none; flex: 1; }
+.pr-features li {
+  font-size: 15px; color: var(--text-secondary);
+  line-height: 1.6; padding: 7px 0 7px 26px;
+  position: relative;
+  border-bottom: 1px solid var(--surface-3);
+}
+.pr-features li:last-child { border-bottom: none; }
+.pr-features li::before {
+  content: '✓'; position: absolute; left: 0;
+  color: var(--text-primary); font-weight: 700;
+}
+.pr-features li.dim { color: var(--text-muted); }
+.pr-features li.dim::before { content: '—'; color: var(--border-strong); }
+.pr-sample {
+  font-size: 14px; color: var(--text-primary);
+  font-weight: 600; text-decoration: underline;
+  margin-top: 16px; display: block;
+  text-align: center; cursor: pointer;
+}
+.pr-cta {
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 14px; padding: 14px;
+  font-size: 16px; font-weight: 700;
+  border-radius: 8px; cursor: pointer;
+  min-height: 52px; text-decoration: none;
+  border: none; width: 100%; text-align: center;
+}
+.pr-cta-gold { background: var(--gold); color: #1a1200; }
+.pr-cta-outline {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1.5px solid var(--gold);
+}
+.pr-cta-navy {
+  background: var(--blue-dark, #2C3E6B);
+  color: #fff;
 }
 
-/* ── GRANDMASTER PHOTOGRAPH
-   The standard the photographer is deciding whether to build toward.
-   Not decorative. Earns its place. */
-.sl-gm-section { padding:0; }
-.sl-gm-img { width:100%; display:block; }
-.sl-gm-credit {
-  max-width:760px; margin:0 auto; padding:16px 48px 64px;
-  display:flex; justify-content:space-between; align-items:baseline;
-  border-bottom:0.5px solid rgba(26,39,68,0.09);
+/* ── Founding Member ── */
+.pr-founding {
+  max-width: 1080px; margin: 32px auto 0;
+  padding: 0 var(--page-pad);
 }
-.sl-gm-name { font-size:16px; color:#1A2744; font-weight:500; }
-.sl-gm-score { font-size:16px; color:#C8A84B; letter-spacing:0.06em; }
-
-/* ── TIERS — editorial prose, not pricing cards
-   Each tier is a passage of copy. The institution explains
-   what is possible. The photographer decides. */
-.sl-tiers { padding:64px 0 0; }
-
-.sl-tier-block {
-  padding:0 0 72px;
-  border-bottom:0.5px solid rgba(26,39,68,0.09);
-  margin-bottom:72px;
+.pr-founding-inner {
+  background: var(--navy, #2C3E6B); color: #fff;
+  border-radius: 12px; padding: 24px 32px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 24px;
 }
-.sl-tier-block:last-of-type {
-  border-bottom:none; margin-bottom:0; padding-bottom:0;
+.pr-founding-label {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 8px;
 }
-
-.sl-tier-eyebrow {
-  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.38); margin-bottom:16px;
+.pr-founding-h {
+  font-size: 18px; font-weight: 700;
+  color: #fff; margin-bottom: 6px;
 }
-.sl-tier-name {
-  font-family:'Playfair Display',serif;
-  font-size:32px; color:#1A2744; font-weight:400;
-  margin-bottom:8px; line-height:1.2;
+.pr-founding-sub {
+  font-size: 15px; color: rgba(255,255,255,.65);
+  line-height: 1.6;
 }
-.sl-tier-tag {
-  font-size:15px; letter-spacing:0.08em; text-transform:uppercase;
-  color:#C8A84B; font-weight:500; margin-bottom:28px; display:block;
-}
-.sl-tier-price {
-  font-family:'Playfair Display',serif;
-  font-size:64px; color:#1A2744; line-height:1;
-  letter-spacing:-0.03em; margin-bottom:8px;
-}
-.sl-tier-price-sub {
-  font-size:16px; color:rgba(26,39,68,0.48); margin-bottom:36px;
-  line-height:1.5;
-}
-.sl-tier-desc {
-  font-size:18px; color:#1A2744; line-height:1.85; margin-bottom:32px;
-}
-/* What is included — plain sentences, not bullet list */
-.sl-tier-includes {
-  display:flex; flex-direction:column; gap:0;
-  margin-bottom:40px;
-}
-.sl-tier-include-row {
-  font-size:17px; color:rgba(26,39,68,0.70); line-height:1.7;
-  padding:10px 0;
-  border-bottom:0.5px solid rgba(26,39,68,0.07);
-}
-.sl-tier-include-row:last-child { border-bottom:none; }
-/* Single CTA per tier — quiet, not aggressive */
-.sl-tier-cta {
-  font-size:17px; color:#1A2744; letter-spacing:0.02em;
-  text-decoration:none; cursor:pointer;
-  border-bottom:1px solid rgba(26,39,68,0.30);
-  padding-bottom:2px;
-  display:inline-block;
-}
-.sl-tier-cta:hover { color:#C8A84B; border-color:#C8A84B; }
-
-/* Founding member note */
-.sl-founding-note {
-  margin-top:20px;
-  font-size:15px; color:rgba(26,39,68,0.45); font-style:italic; line-height:1.65;
+.pr-founding-price {
+  font-size: 30px; font-weight: 700;
+  color: var(--gold); white-space: nowrap;
+  flex-shrink: 0; text-align: center; line-height: 1.5;
 }
 
-/* League-standing clarification — appears below Annual CTA only */
-.sl-league-clarification {
-  margin-top:16px;
-  font-size:15px; color:rgba(26,39,68,0.42); line-height:1.7;
+/* ── International waitlist ── */
+.pr-intl {
+  max-width: 1080px; margin: 20px auto 0;
+  padding: 0 var(--page-pad);
+}
+.pr-intl-inner {
+  background: var(--surface-1);
+  border-left: 3px solid var(--text-primary);
+  border-radius: 0 8px 8px 0;
+  padding: 18px 22px;
+}
+.pr-intl-inner p {
+  font-size: 15px; color: var(--text-primary);
+  line-height: 1.65; margin-bottom: 10px;
+}
+.pr-intl-inner p.muted {
+  color: var(--text-secondary); margin-bottom: 12px;
+}
+.pr-intl-form {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.pr-intl-form input {
+  flex: 1; min-width: 160px; padding: 10px 14px;
+  font-size: 15px; border: 1px solid var(--border-strong);
+  border-radius: 6px; background: var(--surface-2);
+  color: var(--text-primary);
+}
+.pr-intl-form button {
+  padding: 10px 20px; font-size: 15px; font-weight: 700;
+  background: var(--text-primary); color: var(--surface-2);
+  border: none; border-radius: 6px; cursor: pointer;
+  min-height: 44px;
+}
+.pr-intl-note {
+  font-size: 13px; color: var(--text-muted); margin-top: 8px;
 }
 
-/* ── INDIA PAYMENTS NOTE ── */
-.sl-payments-note {
-  padding:48px 0;
-  border-top:0.5px solid rgba(26,39,68,0.09);
-  margin-top:72px;
+/* ── Comparison table ── */
+.pr-compare {
+  max-width: 1080px; margin: 44px auto 0;
+  padding: 0 var(--page-pad);
 }
-.sl-payments-heading {
-  font-size:17px; color:#1A2744; font-weight:500; margin-bottom:12px;
+.pr-compare h2 {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 20px;
 }
-.sl-payments-body {
-  font-size:16px; color:rgba(26,39,68,0.55); line-height:1.75; margin-bottom:24px;
+.pr-table-wrap { overflow-x: auto; }
+.pr-table {
+  width: 100%; border-collapse: collapse; font-size: 15px;
 }
-.sl-international-note {
-  font-size:16px; color:rgba(26,39,68,0.55); line-height:1.75;
-  padding:20px 0; border-top:0.5px solid rgba(26,39,68,0.09);
+.pr-table th {
+  text-align: left; padding: 10px 14px;
+  border-bottom: 2px solid var(--border-strong);
+  color: var(--text-muted); font-weight: 700;
+  font-size: 13px; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.pr-table th.hl { color: var(--text-primary); }
+.pr-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary); vertical-align: middle;
+  line-height: 1.5;
+}
+.pr-table tr:last-child td { border-bottom: none; }
+.pr-table .check { color: var(--text-primary); font-weight: 700; }
+.pr-table .dash { color: var(--border-strong); }
+.pr-table .row-key { font-weight: 500; color: var(--text-primary); }
+
+/* ── Why three blocks ── */
+.pr-why {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; max-width: 1080px;
+  margin: 36px auto 0; padding: 0 var(--page-pad);
+}
+.pr-why-item {
+  background: var(--surface-1); border-radius: 10px;
+  padding: 24px 22px;
+}
+.pr-why-h {
+  font-size: 17px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 10px; line-height: 1.5;
+}
+.pr-why-b {
+  font-size: 15px; color: var(--text-secondary); line-height: 1.75;
 }
 
-/* KYC NOTE */
-.sl-kyc-note {
-  padding:32px 48px;
-  border-top:0.5px solid rgba(26,39,68,0.08);
-  max-width:760px; margin:0 auto;
+/* ── Sign-off ── */
+.pr-signoff {
+  text-align: center; padding: 44px var(--page-pad) 56px;
+  border-top: 1px solid var(--border); margin-top: 44px;
 }
-.sl-kyc-text {
-  font-size:15px; color:rgba(26,39,68,0.45); line-height:1.7;
+.pr-signoff-h {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 6px;
 }
-.sl-kyc-text a { color:rgba(26,39,68,0.45); text-decoration:underline; }
+.pr-signoff-sub { font-size: 15px; color: var(--text-muted); }
 
-/* FOOTER */
-.sl-footer {
-  padding:24px 48px;
-  display:flex; justify-content:space-between; align-items:center;
-  border-top:0.5px solid rgba(26,39,68,0.08);
-  flex-wrap:wrap; gap:12px;
+/* ── Mobile ── */
+@media (max-width: 900px) {
+  .pr-plans { grid-template-columns: 1fr; max-width: 480px; }
+  .pr-plan-tagline { min-height: unset; }
+  .pr-why { grid-template-columns: 1fr; }
+  .pr-founding-inner { flex-direction: column; gap: 12px; }
+  .pr-founding-price { font-size: 24px; }
 }
-.sl-footer-copy { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.04em; }
-.sl-footer-kyc { display:flex; gap:20px; flex-wrap:wrap; }
-.sl-footer-kyc a {
-  font-size:12px; color:rgba(26,39,68,0.30);
-  letter-spacing:0.05em; text-transform:uppercase; text-decoration:none;
+@media (max-width: 600px) {
+  .pr-hero h1 { font-size: clamp(24px, 7vw, 32px); }
+  .pr-hero-200 { font-size: 16px; }
+  .pr-plan-tagline { font-size: 15px; }
+  .pr-features li { font-size: 14px; }
+  .pr-table { font-size: 14px; }
+  .pr-table th, .pr-table td { padding: 8px 10px; }
 }
-
-@media(max-width:768px) {
-  .sl-topbar,.sl-opening,.sl-trust,.sl-gm-credit,.sl-kyc-note,.sl-footer {
-    padding-left:24px; padding-right:24px;
-  }
-  .sl-col { padding-left:24px; padding-right:24px; }
-  .sl-nav { display:none; }
-  .sl-opening-statement { font-size:32px; }
-  .sl-tier-price { font-size:48px; }
-  .sl-trust-item { flex-direction:column; gap:8px; }
-  .sl-trust-heading { min-width:unset; }
-}
-
-/* Production additions — not in approved standalone spec */
-main { background:#E8E5DF; padding:0 !important; }
-@media(max-width:900px) { main { padding:0 !important; } }
-.sl-tier-cta { background:none; border:none; border-bottom:1px solid rgba(26,39,68,0.30); padding-bottom:2px; font-family:'Inter',sans-serif; }
 </style>
 
-<div class="sl-page">
+{# ── Hero ── #}
+<div class="pr-hero">
+  <div class="pr-hero-eye">Photography evaluation platform</div>
+  <h1>You've seen what the platform sees.<br>Now build the record.</h1>
+  <p class="pr-hero-built">Built by award-winning photographers, for photographers who want to get better.</p>
+  <p class="pr-hero-200">Chess has Elo. Cricket has ICC standings.<br>In 200 years of photography — nobody built one. Until now.</p>
+  <p class="pr-hero-std">The standard is the same whether you are in Bengaluru or Berlin.</p>
+  <div class="pr-proof">
+    <p class="pr-proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
+    <p class="pr-proof-a"><strong>Vaibhav Parakh</strong> · Mobile photographer · Shutter League</p>
+  </div>
+</div>
 
-  
+{# ── Plans ── #}
+<div class="pr-plans">
 
-<!-- OPENING STATEMENT — no photograph at top -->
-  <div class="sl-opening">
-    <div class="sl-opening-eyebrow">Build your record</div>
-    <div class="sl-opening-statement">
-      You have seen what the platform sees.<br>Now build the record.
-    </div>
-    <div class="sl-opening-sub">
-      Chess has Elo. Cricket has ICC standings. In 200 years of photography — nobody built one. Until now.
-    </div>
+  {# Annual #}
+  <div class="pr-plan featured">
+    <div class="pr-plan-pill">★ Build the record</div>
+    <div class="pr-plan-label">Annual</div>
+    <div class="pr-plan-price"><sup>₹</sup>4,000<span style="font-size:16px;font-weight:400;color:var(--text-muted);white-space:nowrap"> / year</span></div>
+    <div class="pr-plan-period">₹333 per month · 48 Full Evaluations</div>
+    <p class="pr-plan-tagline">The complete record begins here. Every photograph remembered. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>48 Full Evaluations per year</li>
+      <li>Mentor narrative on every photograph</li>
+      <li>Annual Excellence Award eligibility</li>
+      <li>Calibrated standing — Camera or Mobile League</li>
+      <li>Your evolving portrait — begins at 10 evaluations</li>
+      <li>Missions and weekly challenges</li>
+      <li>Next Shot advisory after every evaluation</li>
+      <li>Memory-aware re-evaluation</li>
+      <li>Location advisory — where to shoot next</li>
+      <li>Founding Member price — locked forever</li>
+    </ul>
+    <a href="/image/47" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
 
-  <!-- FOUR TRUST STATEMENTS — prose, not icons -->
-  <div class="sl-trust">
-    <div class="sl-trust-item">
-      <span class="sl-trust-heading">Honest, not algorithmic.</span>
-      <span class="sl-trust-body">Evaluations are blind and calibrated by experienced photographers evaluating real images. The standard does not move.</span>
-    </div>
-    <div class="sl-trust-item">
-      <span class="sl-trust-heading">The record is permanent.</span>
-      <span class="sl-trust-body">Every photograph you upload stays. The record of how your eye evolved is permanent. Nothing is lost. Nothing resets.</span>
-    </div>
-    <div class="sl-trust-item">
-      <span class="sl-trust-heading">The credential compounds.</span>
-      <span class="sl-trust-body">The Annual Excellence Award is decided by consistency across twelve months. The longer your record, the stronger your standing.</span>
-    </div>
-    <div class="sl-trust-item">
-      <span class="sl-trust-heading">Same standard, anywhere.</span>
-      <span class="sl-trust-body">The bar is the same whether you are in Bengaluru or Berlin. One standard. One League.</span>
-    </div>
+  {# 6 Months #}
+  <div class="pr-plan">
+    <div class="pr-plan-label">6 Months</div>
+    <div class="pr-plan-price"><sup>₹</sup>2,500</div>
+    <div class="pr-plan-period">₹417 per month · 24 Full Evaluations</div>
+    <p class="pr-plan-tagline">Six months of the full record. The Mentor narrative, the calibrated standing, the Annual Excellence Award — all of it starts from your first evaluation. When you are ready to extend, the annual record is waiting.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>24 Full Evaluations over 6 months</li>
+      <li>Mentor narrative on every photograph</li>
+      <li>Annual Excellence Award eligibility</li>
+      <li>Calibrated standing — Camera or Mobile League</li>
+      <li>Your evolving portrait — begins at 10 evaluations</li>
+      <li>Missions and weekly challenges</li>
+      <li>Next Shot advisory</li>
+      <li>Memory-aware re-evaluation</li>
+      <li>Location advisory</li>
+      <li class="dim">Founding Member price — annual only</li>
+    </ul>
+    <a href="/image/47" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
 
-  <!-- GRANDMASTER PHOTOGRAPH — live from database -->
-  {% if poty_hero and poty_hero.thumb_url %}
-  <div class="sl-gm-section">
-    <img class="sl-gm-img"
-         src="{{ poty_hero.thumb_url }}"
-         alt="Grandmaster photograph from the League"
-         onerror="this.parentElement.style.display='none'">
-  </div>
-  <div class="sl-gm-credit">
-    <span class="sl-gm-name">{{ poty_hero.photographer_name or 'Shutter League' }}{% if poty_hero.genre %} &nbsp;·&nbsp; {{ poty_hero.genre }}{% endif %}</span>
-    <span class="sl-gm-score">{{ poty_hero.tier or 'Grandmaster' }}{% if poty_hero.score %} &nbsp;·&nbsp; {{ "%.2f"|format(poty_hero.score|float) }}{% endif %}</span>
-  </div>
-  {% endif %}
-
-  <!-- THREE TIERS — editorial prose -->
-  <div class="sl-col">
-  <div class="sl-tiers">
-
-    <!-- ANNUAL -->
-    <div class="sl-tier-block">
-      <div class="sl-tier-eyebrow">The complete record</div>
-      <div class="sl-tier-name">Annual</div>
-      <span class="sl-tier-tag">Founding Member price locked forever</span>
-      <div class="sl-tier-price">₹4,000</div>
-      <div class="sl-tier-price-sub">per year &nbsp;·&nbsp; ₹333 per month &nbsp;·&nbsp; 48 full evaluations</div>
-      <div class="sl-tier-desc">
-        The complete record begins here. Every photograph evaluated. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.
-      </div>
-      <div class="sl-tier-includes">
-        <div class="sl-tier-include-row">48 full evaluations per year — Mentor narrative on every photograph</div>
-        <div class="sl-tier-include-row">Calibrated standing — Camera or Mobile League</div>
-        <div class="sl-tier-include-row">Your evolving portrait — begins at 10 evaluations</div>
-        <div class="sl-tier-include-row">Annual Excellence Award eligibility</div>
-        <div class="sl-tier-include-row">Missions and weekly challenges</div>
-        <div class="sl-tier-include-row">Next Shot advisory after every evaluation</div>
-        <div class="sl-tier-include-row">Memory-aware re-evaluation</div>
-        <div class="sl-tier-include-row">Location advisory — where to photograph next</div>
-        <div class="sl-tier-include-row">Founding Member price — locked forever</div>
-      </div>
-      <button class="sl-tier-cta" onclick="startPricing('annual')">Build your annual record — ₹4,000 →</button>
-      <div class="sl-league-clarification">Membership gives you the opportunity to build your record. League standing is earned through the work.</div>
-      <div class="sl-founding-note">
-        Founding Member pricing. This rate is locked for the life of the membership. It will not be available once the founding cohort closes.
-      </div>
-    </div>
-
-    <!-- SIX MONTHS -->
-    <div class="sl-tier-block">
-      <div class="sl-tier-eyebrow">Six months of the full record</div>
-      <div class="sl-tier-name">Six Months</div>
-      <span class="sl-tier-tag">&nbsp;</span>
-      <div class="sl-tier-price">₹2,500</div>
-      <div class="sl-tier-price-sub">for six months &nbsp;·&nbsp; ₹417 per month &nbsp;·&nbsp; 24 full evaluations</div>
-      <div class="sl-tier-desc">
-        Six months of the full record. The Mentor narrative, the calibrated standing, the Annual Excellence Award — all of it starts with your first evaluation. When you are ready to extend, the annual record is waiting.
-      </div>
-      <div class="sl-tier-includes">
-        <div class="sl-tier-include-row">24 full evaluations over six months — Mentor narrative on every photograph</div>
-        <div class="sl-tier-include-row">Calibrated standing — Camera or Mobile League</div>
-        <div class="sl-tier-include-row">Your evolving portrait — begins at 10 evaluations</div>
-        <div class="sl-tier-include-row">Annual Excellence Award eligibility</div>
-        <div class="sl-tier-include-row">Missions and weekly challenges</div>
-        <div class="sl-tier-include-row">Next Shot advisory after every evaluation</div>
-        <div class="sl-tier-include-row">Memory-aware re-evaluation</div>
-        <div class="sl-tier-include-row">Location advisory — where to photograph next</div>
-      </div>
-      <button class="sl-tier-cta" onclick="startPricing('half_yearly')">Start six months — ₹2,500 →</button>
-      <div class="sl-league-clarification">Membership gives you the opportunity to build your record. League standing is earned through the work.</div>
-    </div>
-
-    <!-- 100 FOR 100 -->
-    <div class="sl-tier-block">
-      <div class="sl-tier-eyebrow">The evaluation. Without the record.</div>
-      <div class="sl-tier-name">100 for 100</div>
-      <span class="sl-tier-tag">&nbsp;</span>
-      <div class="sl-tier-price">₹100</div>
-      <div class="sl-tier-price-sub">one time &nbsp;·&nbsp; 100 basic evaluations &nbsp;·&nbsp; five dimensions</div>
-      <div class="sl-tier-desc">
-        For everyone serious about improving, or an organisation running courses or workshops. You get the same five-dimensional evaluation calibrated against our standard — no Mentor narrative. Use within your own timelines.
-      </div>
-      <div class="sl-tier-includes">
-        <div class="sl-tier-include-row">100 basic evaluations — five dimensions on every photograph</div>
-        <div class="sl-tier-include-row">Visual gradient score</div>
-        <div class="sl-tier-include-row">Use within your own timelines</div>
-      </div>
-      <button class="sl-tier-cta" onclick="startPricing('play')">Start with 100 evaluations — ₹100 →</button>
-    </div>
-
+  {# 100 for 100 #}
+  <div class="pr-plan">
+    <div class="pr-plan-label">100 for 100</div>
+    <div class="pr-plan-price"><sup>₹</sup>100</div>
+    <div class="pr-plan-period">One-time · 100 Basic Evaluations</div>
+    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League of Photographers is here.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>100 Basic Evaluations</li>
+      <li>Five-dimension feedback on every photograph</li>
+      <li>Your pattern across 100 photographs</li>
+      <li>See how your eye develops over time</li>
+      <li>One-time purchase — no subscription</li>
+    </ul>
+    <a href="/try/result/33" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
   </div>
 
-  <!-- INDIA PAYMENTS NOTE -->
-  <div class="sl-payments-note">
-    <div class="sl-payments-heading">India payments</div>
-    <div class="sl-payments-body">
-      Membership payments are currently accepted through Indian bank accounts, UPI, and Indian debit or credit cards only. International payments are not yet supported.
-    </div>
-    <div class="sl-international-note">
-      Photographer outside India? Leave your email and we will notify you when international payments open.
-      <form style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;" onsubmit="submitIntlWaitlist(event)">
-        <input type="email" name="email" placeholder="your@email.com" required style="flex:1;min-width:160px;padding:10px 14px;font-size:15px;border:1px solid rgba(26,39,68,0.20);border-radius:6px;background:#fff;color:#1A2744;">
-        <input type="text" name="country" placeholder="Country" required style="max-width:150px;padding:10px 14px;font-size:15px;border:1px solid rgba(26,39,68,0.20);border-radius:6px;background:#fff;color:#1A2744;">
-        <button type="submit" style="padding:10px 20px;font-size:15px;font-weight:700;background:#1A2744;color:#F5F3EF;border:none;border-radius:6px;cursor:pointer;min-height:44px;">Notify me</button>
-      </form>
-      <div style="font-size:13px;color:rgba(26,39,68,0.38);margin-top:8px;">Your details are stored securely. We will only contact you when international payments are available.</div>
-    </div>
-  </div>
-
-  </div><!-- end .sl-col -->
-
-  <!-- KYC NOTE -->
-  <div class="sl-kyc-note">
-    <div class="sl-kyc-text">
-      All memberships are subject to the Shutter League Terms and Conditions. Evaluations are conducted against the calibrated Shutter League standard.
-      &nbsp;<a href="/terms">Terms &amp; Conditions</a> &nbsp;·&nbsp;
-      <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
-      <a href="/refund-policy">Refund Policy</a> &nbsp;·&nbsp;
-      <a href="/shipping-policy">Shipping &amp; Returns</a>
-    </div>
-  </div>
-
-  
+</div>
 
 {# ── Track selection modal (hidden) ── #}
 <div id="pr-track-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
   <div style="background:var(--surface-2);border-radius:14px;padding:32px;max-width:440px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
-    <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
     <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">Annual — ₹4,000</div>
     <p style="font-size:15px;color:var(--text-secondary);margin-bottom:24px;line-height:1.6">Camera League for DSLR, mirrorless, and medium format. Mobile League for smartphone photographers — evaluated on its own terms.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
@@ -387,6 +408,88 @@ main { background:#E8E5DF; padding:0 !important; }
   </div>
 </div>
 
+{# ── Founding Member ── #}
+<div class="pr-founding">
+  <div class="pr-founding-inner">
+    <div style="flex:1">
+      <div class="pr-founding-label">Founding Member</div>
+      <div class="pr-founding-h">Join before January 2027. Your price is locked forever.</div>
+      <p class="pr-founding-sub">Standard pricing increases after January 2027. Founding Members remain at ₹4,000 per year for as long as they remain subscribed. The record you build never resets.</p>
+    </div>
+    <div class="pr-founding-price">₹4,000<br><span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.45)">forever</span></div>
+  </div>
+</div>
+
+{# ── India only + International waitlist ── #}
+<div class="pr-intl">
+  <div class="pr-intl-inner">
+    <p><strong>India payments only.</strong> Membership payments are currently accepted through Indian bank accounts, UPI, and Indian debit or credit cards only. International payments are not yet supported.</p>
+    <p class="muted">Photographer outside India? Leave your email and we will notify you when international payments open.</p>
+    <form class="pr-intl-form" onsubmit="submitIntlWaitlist(event)">
+      <input type="email" name="email" placeholder="your@email.com" required>
+      <input type="text" name="country" placeholder="Country" style="max-width:150px" required>
+      <button type="submit">Notify me</button>
+    </form>
+    <div class="pr-intl-note">Your details are stored securely. We will only contact you when international payments are available.</div>
+  </div>
+</div>
+
+{# ── Comparison table ── #}
+<div class="pr-compare">
+  <h2>What you get</h2>
+  <div class="pr-table-wrap">
+  <table class="pr-table">
+    <thead>
+      <tr>
+        <th style="width:36%"> </th>
+        <th class="hl">Annual ₹4,000</th>
+        <th>6 Months ₹2,500</th>
+        <th>100 for 100 ₹100</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="row-key">Evaluations</td><td class="check">48 Full / year</td><td class="check">24 Full / 6 months</td><td class="check">100 Basic</td></tr>
+      <tr><td class="row-key">Evaluation type</td><td class="check">Full — Mentor + five dimensions</td><td class="check">Full — Mentor + five dimensions</td><td style="color:var(--text-secondary)">Basic — five dimensions</td></tr>
+      <tr><td class="row-key">Mentor narrative</td><td class="check">✓ every photograph</td><td class="check">✓ every photograph</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Annual Excellence Award</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Calibrated standing</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Your evolving portrait</td><td class="check">✓ begins at 10</td><td class="check">✓ begins at 10</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Missions and challenges</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Next Shot advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Founding Member price lock</td><td class="check">✓ annual only</td><td class="dash">—</td><td class="dash">—</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+{# ── Why three blocks ── #}
+<div class="pr-why">
+  <div class="pr-why-item">
+    <div class="pr-why-h">Honest, not algorithmic</div>
+    <p class="pr-why-b">When this platform says your photograph is Grandmaster level, that tier was calibrated by photographers evaluating real images blind — not an algorithm rating itself.</p>
+    <div class="pr-proof" style="margin-top:16px;padding:12px 16px">
+      <p class="pr-proof-q" style="font-size:15px">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
+      <p class="pr-proof-a" style="font-size:13px"><strong>Mahesh Iyer</strong> · Grandmaster · Standing 105 of 20,000 globally, PhotoCrowd · 37 evaluations</p>
+    </div>
+  </div>
+  <div class="pr-why-item">
+    <div class="pr-why-h">The record is permanent</div>
+    <p class="pr-why-b">One year from now — or three — every photograph you uploaded is still here. The record of how your eye changed is permanent. Nothing is lost. Nothing resets.</p>
+  </div>
+  <div class="pr-why-item">
+    <div class="pr-why-h">The credential compounds</div>
+    <p class="pr-why-b">The Annual Excellence Award is decided by consistency across twelve months. The longer you are on the platform, the more it has seen of your eye. The credential you earn in year three means more than year one — because it was harder to earn.</p>
+  </div>
+</div>
+
+{# ── Sign-off ── #}
+<div class="pr-signoff">
+  <div class="pr-signoff-h">Shutter League · Making Images Matter</div>
+  <div class="pr-signoff-sub">Bengaluru, India · UDYAM-KR-03-0697280</div>
+</div>
 
 {# ── Razorpay ── #}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -401,9 +504,14 @@ main { background:#E8E5DF; padding:0 !important; }
   <input type="hidden" name="plan"                      id="cf_plan">
 </form>
 
+<div id="pr-data"
+     data-loggedin="{{ 'true' if current_user.is_authenticated else 'false' }}"
+     data-loginurl="{{ url_for('login') }}?next={{ url_for('pricing') }}"
+     data-payurl="{{ url_for('api_create_payment') }}"
+     aria-hidden="true" style="display:none;"></div>
 <script>
-var _isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
-var _loginUrl   = '{{ url_for("login") }}?next={{ url_for("pricing") }}';
+var _isLoggedIn = document.getElementById('pr-data').dataset.loggedin === 'true';
+var _loginUrl   = document.getElementById('pr-data').dataset.loginurl;
 var _currentPlan = 'annual';
 var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 for 100 — ₹100'];
 var _planKeys    = ['annual','half_yearly','play'];
@@ -431,7 +539,7 @@ function startDirectPayment(track) {
   var d = _getPlanData(_currentPlan);
   if (!d) return;
   var payload = JSON.stringify({'track': track, 'plan': d.rzpPlan});
-  fetch('{{ url_for("api_create_payment") }}', {method:'POST', headers:{'Content-Type':'application/json'}, body:payload})
+  fetch(document.getElementById('pr-data').dataset.payurl, {method:'POST', headers:{'Content-Type':'application/json'}, body:payload})
   .then(function(r) { return r.json(); })
   .then(function(res) {
     if (res.error) { alert(res.error); return; }
@@ -481,6 +589,5 @@ document.getElementById('pr-track-modal').addEventListener('click', function(e) 
   if (e.target === this) this.style.display = 'none';
 });
 </script>
-
 
 {% endblock %}
