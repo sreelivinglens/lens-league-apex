@@ -140,19 +140,50 @@ a, button { cursor:pointer; color:inherit; }
 .sl-tl.past { background:#1A2744; }
 .sl-tlbl { font-size:13px; letter-spacing:0.03em; text-transform:uppercase; color:rgba(26,39,68,0.50); text-align:center; max-width:60px; white-space:nowrap; }
 .sl-tlbl.active { color:#1A2744; font-weight:700; }
-.sl-gm-img { width:75%; max-width:480px; display:block; border-radius:4px; margin:0 auto; }
-.sl-gm-ph { width:75%; max-width:480px; height:200px; background:#D0CCC6; border-radius:4px; display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase; }
-.sl-gm-link { display:block; text-decoration:none; color:inherit; }
-.sl-gm-link:hover .sl-gm-img { opacity:0.88; }
+/* GM image — full card width bleed, navy meta strip above */
+.sl-gm-container { margin:0 -32px 0; background:#0C1018; position:relative; overflow:hidden; }
+.sl-gm-meta-top {
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  padding:12px 32px 10px; background:#1A2744;
+}
+.sl-gm-meta-score {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:28px; color:#C8A84B; font-weight:400; letter-spacing:-0.02em;
+}
+.sl-gm-meta-tier {
+  font-size:13px; letter-spacing:0.14em; text-transform:uppercase;
+  color:#C8A84B; font-weight:600;
+}
+.sl-gm-meta-name { font-size:14px; color:rgba(255,255,255,0.60); margin-left:auto; }
+.sl-gm-img { width:100%; max-height:440px; object-fit:contain; display:block; }
+.sl-gm-ph {
+  width:100%; height:220px; background:#D0CCC6;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase;
+}
+.sl-gm-link { display:block; text-decoration:none; color:inherit; position:relative; cursor:pointer; }
+.sl-gm-overlay {
+  display:none; position:absolute; bottom:0; left:0; right:0;
+  background:rgba(26,39,68,0.75); color:#C8A84B;
+  font-size:14px; letter-spacing:0.08em; text-transform:uppercase;
+  padding:12px; text-align:center;
+}
+.sl-gm-link:hover .sl-gm-overlay { display:block; }
+/* Standard body — centred tight container */
+.sl-std-body { max-width:560px; margin:24px auto 0; text-align:center; }
 .sl-obs-follow {
   font-size:16px; line-height:1.82; color:rgba(26,39,68,0.70);
   margin-top:16px; padding-top:14px;
   border-top:0.5px solid rgba(26,39,68,0.12);
 }
-.sl-gm-credit { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:16px; }
-.sl-gm-name { font-size:14px; color:#1A2744; font-weight:500; }
-.sl-gm-result { font-size:13px; color:#C8A84B; letter-spacing:0.06em; }
-.sl-std-copy { font-size:15px; line-height:1.82; color:#1A2744; margin-bottom:16px; }
+.sl-std-copy {
+  font-size:15px; line-height:1.75; color:rgba(26,39,68,0.70);
+  margin-bottom:16px;
+}
+.sl-dims-block {
+  background:rgba(26,39,68,0.05); border-radius:6px;
+  padding:16px 20px; text-align:left; margin-bottom:0;
+}
 .sl-dims-hdr { font-size:13px; letter-spacing:0.09em; text-transform:uppercase; color:rgba(26,39,68,0.60); margin-bottom:10px; }
 .sl-dim-row { display:flex; justify-content:space-between; align-items:baseline; padding:10px 0; border-bottom:0.5px solid rgba(26,39,68,0.07); }
 .sl-dim-row:last-child { border-bottom:none; }
@@ -474,35 +505,41 @@ a, button { cursor:pointer; color:inherit; }
       {% endfor %}
     </div>
     {% if league_hero and league_hero.thumb_url %}
-    {% if league_hero.id is defined and league_hero.id %}
-    <a href="{{ url_for('try_result', image_id=league_hero.id) }}" class="sl-gm-link">
-      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-      <div class="sl-gm-credit">
-        <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
-        <span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
+    {# GM image container — larger, full card width, score/tier/name above #}
+    <div class="sl-gm-container">
+      <div class="sl-gm-meta-top">
+        <span class="sl-gm-meta-score">{{ "%.2f"|format(league_hero.score) }}</span>
+        <span class="sl-gm-meta-tier">{{ league_hero.tier }}</span>
+        <span class="sl-gm-meta-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
       </div>
-    </a>
-    {% else %}
-    <div class="sl-gm-link">
-      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-      <div class="sl-gm-credit">
-        <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
-        <span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
-      </div>
+      {% if league_hero.id is defined and league_hero.id %}
+      <a href="{{ url_for('try_result', image_id=league_hero.id) }}" class="sl-gm-link" title="View scorecard →">
+        <img class="sl-gm-img" src="{{ league_hero.thumb_url }}"
+             alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
+        <div class="sl-gm-overlay">View scorecard →</div>
+      </a>
+      {% else %}
+      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}"
+           alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
+      {% endif %}
     </div>
-    {% endif %}
     {% else %}
     <div class="sl-gm-ph">Grandmaster photograph</div>
-    <div class="sl-gm-credit"><span class="sl-gm-name">Grandmaster · Shutter League</span><span class="sl-gm-result">9.00</span></div>
     {% endif %}
-    <div class="sl-std-copy">At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.</div>
-    <div class="sl-dims-hdr">The five dimensions every evaluation is built on</div>
-    <div class="sl-dim-row"><span class="sl-dim-plain">The difficulty of getting to the shot</span><span class="sl-dim-official">Depth of Difficulty</span></div>
-    <div class="sl-dim-row"><span class="sl-dim-plain">Whether it is visually disruptive</span><span class="sl-dim-official">Visual Disruption</span></div>
-    <div class="sl-dim-row"><span class="sl-dim-plain">Whether it caught the decisive moment</span><span class="sl-dim-official">Decisive Moment</span></div>
-    <div class="sl-dim-row"><span class="sl-dim-plain">Whether it creates wonder</span><span class="sl-dim-official">Wonder Factor</span></div>
-    <div class="sl-dim-row"><span class="sl-dim-plain">The emotion it carries</span><span class="sl-dim-official">Affective Quotient</span></div>
-    <div class="sl-std-close">The highest standard demands strength across all five.</div>
+
+    {# Text + dimensions — tighter, centred container, no loose spacing #}
+    <div class="sl-std-body">
+      <p class="sl-std-copy">At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.</p>
+      <div class="sl-dims-block">
+        <div class="sl-dims-hdr">The five dimensions every evaluation is built on</div>
+        <div class="sl-dim-row"><span class="sl-dim-plain">The difficulty of getting to the shot</span><span class="sl-dim-official">Depth of Difficulty</span></div>
+        <div class="sl-dim-row"><span class="sl-dim-plain">Whether it is visually disruptive</span><span class="sl-dim-official">Visual Disruption</span></div>
+        <div class="sl-dim-row"><span class="sl-dim-plain">Whether it caught the decisive moment</span><span class="sl-dim-official">Decisive Moment</span></div>
+        <div class="sl-dim-row"><span class="sl-dim-plain">Whether it creates wonder</span><span class="sl-dim-official">Wonder Factor</span></div>
+        <div class="sl-dim-row"><span class="sl-dim-plain">The emotion it carries</span><span class="sl-dim-official">Affective Quotient</span></div>
+        <div class="sl-std-close">The highest standard demands strength across all five.</div>
+      </div>
+    </div>
   </div>
 
 </div>
