@@ -32634,12 +32634,18 @@ def try_welcome():
         """), {'uid': current_user.id}).fetchone()
         if _lh_row:
             from types import SimpleNamespace as _LHSN
+            _lh_full_name = (_lh_row[4] or '').strip()
+            if _lh_full_name:
+                _parts = _lh_full_name.split()
+                _lh_display = (_parts[0] + ' ' + _parts[-1][0] + '.') if len(_parts) > 1 else _parts[0]
+            else:
+                _lh_display = 'Shutter League'
             _league_hero = _LHSN(
                 thumb_url    = _lh_row[0],
                 score        = float(_lh_row[1]),
                 tier         = _lh_row[2],
                 genre        = _lh_row[3] or '',
-                photographer = 'Shutter League',
+                photographer = _lh_display,
             )
     except Exception as _lhe:
         app.logger.warning(f'[try_welcome] league_hero failed: {_lhe}')
