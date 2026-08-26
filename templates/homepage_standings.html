@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: homepage_standings-2.3-staging
+  SL-VERSION: homepage_standings-2.4-staging
   Session 199 · 2026-08-26
-  NAV FIX: Haiku (free) users now see correct nav — Home / My evaluations / Upload / Pricing / League of Photographers / Profile / Log out.
+  BACK LINK: Haiku users see "← Back to my dashboard" above standings header — visible only to authenticated free users. NAV FIX: Haiku (free) users now see correct nav — Home / My evaluations / Upload / Pricing / League of Photographers / Profile / Log out.
   AUDIT FIXES: Twitter meta tags added. Font sizes raised to 13px minimum (was 11px/12px). Line-heights raised to 1.3+ (was 1.05/1.2). KYC: "ICC rankings" → "ICC standings". RETAINS homepage_standings-2.2.
 
   DELIVERY AUDIT
@@ -11,7 +11,7 @@
   Mobile  : Hamburger overlay ✅ · Bottom nav (authenticated only) ✅ · 2-col grid ≤768px ✅ · Footer 2-col ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
   iPad    : Grid 3-col ≤1024px ✅ · Nav padding reduced ✅
   70yr    : Header h1 clamp(32px,4vw,52px) ✅ · Desc 17px ✅ · Card name 15px ✅ · Footer links 15px ✅ · Strip 13px fine print ✅
-  Version : homepage_standings-2.3-staging — matches filename
+  Version : homepage_standings-2.4-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -281,6 +281,11 @@ a{text-decoration:none;color:inherit}
 
 {# ── HEADER ── #}
 <div class="pub-header">
+  {% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %}
+  <a href="{{ url_for('try_welcome') }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:rgba(26,39,68,0.55);text-decoration:none;margin-bottom:20px;border-bottom:1px solid rgba(26,39,68,0.18);padding-bottom:1px;">
+    ← Back to my dashboard
+  </a>
+  {% endif %}
   <div class="pub-header-eyebrow">Overall Standings</div>
   <h1 class="pub-header-h1">These are photographers<br>building their record.</h1>
   <p class="pub-header-desc">Every evaluation is calibrated against the same standard. The tier a photographer holds is earned — not by a single image, but by what their eye consistently does across time.</p>
