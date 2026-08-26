@@ -1,36 +1,4 @@
-# SL-VERSION: 181.52-staging (Session 199, 2026-08-26 — CACHE BUST: Force worker restart to flush Jinja2 template cache and pick up dashboard_haiku.html pricing icon fix. RETAINS 181.50.)
-# SL-VERSION: 181.50-staging (Session 191, 2026-08-24 — FIX: league_hero photographer attribution changed to Shutter League — avoids partial name. RETAINS 181.49.)
-# SL-VERSION: 181.49-staging (Session 191, 2026-08-24 — FIX: league_hero query relaxed to score>=8.5 and Master tier included, excludes current user. RETAINS 181.48.)
-# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — HAIKU SHERPA: _generate_haiku_sherpa cross-image synthesis, Peter Evans Signals of Seeing, one Haiku call per eval stored in mentor_advice_json. try_welcome passes sherpa_obs, sherpa_nudge, user_hero, league_hero. RETAINS 181.47.)
-# SL-VERSION: 181.43-staging (Session 190, 2026-08-19 — HOTFIX: admin_international_waitlist % format conflict with CSS — replaced with string replace. RETAINS 181.42.)
-# SL-VERSION: 181.42-staging (Session 190, 2026-08-19 — INTERNATIONAL WAITLIST: (1) waitlist_international table added to startup schema. (2) /api/international-waitlist writes to dedicated table. (3) /admin/international-waitlist admin view. (4) /admin/international-waitlist/export CSV export. RETAINS 181.41.)
-# SL-VERSION: 181.41-staging (Session 190, 2026-08-19 — PRICING UPDATE: (1) display_prices updated: annual 2000→4000, halfyearly 1100→2500. (2) plan_ids updated with new Razorpay plan IDs for ₹4,000 annual and ₹2,500 half-yearly. (3) api_create_payment: play plan added (₹100 one-time order for 100-for-100). (4) /api/international-waitlist route added. RETAINS 181.40.)
-# SL-VERSION: 181.40-staging (Session 190, 2026-08-19 — try_welcome() SMART DASHBOARD: (1) dashboard_visit_count incremented on every visit, passed as visit_count. (2) next_leap_name extracted from audit_json of most recent image. (3) prev_score + score_trend (up/down/same) from last 2 images. (4) gallery_images: 4 random high-scoring non-Haiku images for visual strip. All raw SQL per Rule 10. RETAINS 181.39.)
-# SL-VERSION: 181.39-staging (Session 190, 2026-08-19 — Rule 10 fix: is_haiku_try.isnot(True) ORM calls in weekly_challenge() and challenge_submit() replaced with raw SQL. ORM filter on unmapped column silently fails. RETAINS 181.38.)
-# SL-VERSION: 181.38-staging (Session 190, 2026-08-19 — try_welcome() hero query: adds width+height to SELECT so template can compute container aspect ratio. is_portrait flag computed in Python. RETAINS 181.37.)
-# SL-VERSION: 181.37-staging (Session 190, 2026-08-19 — CHALLENGE GATE: (1) weekly_challenge(): Haiku users get read-only view (can_submit=False, slot_limit=0); Haiku images excluded from top_subs display. (2) challenge_submit(): Haiku users redirected immediately with flash; paid-only; Haiku images excluded from eligible_images picker; extra guard on POST to reject is_haiku_try images. Rule: Haiku images never enter challenge pool. RETAINS 181.36.)
-# SL-VERSION: 181.36-staging (Session 190, 2026-08-19 — try_welcome() hero query: removed width>height filter. Portrait images now serve — container uses object-fit:contain so both orientations letterbox/pillarbox correctly. RETAINS 181.35.)
-# SL-VERSION: 181.35-staging (Session 190, 2026-08-19 — try_welcome() FOUR FIXES: (1) evals_remaining: was "remaining", template needs "evals_remaining" — silent zero on remaining count. (2) images: not passed — all users saw State 1 regardless of uploads. (3) milestone_strength: not passed — States 5-9 blank. (4) hero_image: new — random Master+ landscape for HAIKU-178.0 split panel. Raw SQL throughout. make_response + Cache-Control:no-store added. RETAINS 181.34.)
-# SL-VERSION: 181.34-staging (Session 189, 2026-08-18 — NEW ROUTE /try/welcome renders dashboard_haiku.html. Free user redirect: /dashboard → /try/welcome → /try. RETAINS 181.33.)
-# SL-VERSION: 181.33-staging (Session 189, 2026-08-18 — NEW ROUTE: /standings public standings page. No login required. Paid photographers only, Haiku images excluded. Raw SQL for thumb_url. Template: leaderboard_public.html. RETAINS 181.32-staging.)
-# SL-VERSION: 181.32-staging (Session 189, 2026-08-18 — ROOT FIX: raw SQL Row objects passed directly to Jinja2 — attribute access silently returns None in some SQLAlchemy versions. Fix: convert all raw SQL rows to SimpleNamespace objects in route before passing to template. RETAINS 181.31-staging.)
-# SL-VERSION: 181.31-staging (Session 189, 2026-08-18 — Added exc_info=True logging to index() except block so future errors are visible in Railway deploy logs. RETAINS 181.30-staging.)
-# SL-VERSION: 181.30-staging (Session 189, 2026-08-18 — ROOT FIX: both carousel and recent_images queries converted to raw SQL. ORM Image.thumb_url.like() was silently throwing AttributeError. RETAINS 181.29-staging.)
-# SL-VERSION: 181.29-staging (Session 189, 2026-08-17 — HOTFIX: ghost thumb_url records returning 404. Added thumb_url LIKE filter to carousel and recent_images queries. RETAINS 181.28-staging.)
-# SL-VERSION: 181.28-staging (Session 189, 2026-08-17 — HOTFIX: _mentor_user_ids fetch removed in 181.27 but still referenced — NameError at runtime. Restored. RETAINS 181.27-staging.)
-# SL-VERSION: 181.27-staging (Session 189, 2026-08-17 — index() hero carousel: score>=8.5, thumb_url required, removed landscape filter. RETAINS 181.26-staging.)
-# SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — replaced fixed mandatory opening with HISTORY OPENING INSTRUCTION. RETAINS 181.25-staging.)
-# SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE. ORM cannot set unmapped columns. Fixed with raw SQL UPDATE after insert. RETAINS 181.24-staging.)
-# SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. RETAINS 181.23-staging.)
-# SL-VERSION: 181.23-staging (Session 187, 2026-08-17 — TWO FIXES: _get_haiku_history_context rebuilt. Gate/display count fixed. RETAINS 181.22-staging.)
-# SL-VERSION: 181.22-staging (Session 187, 2026-08-17 — Free users redirected from /dashboard to /try. RETAINS 181.21-staging.)
-# SL-VERSION: 181.21-staging (Session 187, 2026-08-17 — ADD: /try/gallery route + try_gallery.html template. RETAINS 181.20-staging.)
-# SL-VERSION: 181.20-staging (Session 187, 2026-08-17 — FIX: _get_haiku_history_context fallback for pre-181.15 images. RETAINS 181.19-staging.)
-# SL-VERSION: 181.19-staging (Session 187, 2026-08-17 — THREE CHANGES: Wonder prompt, Emotion prompt, delete_image redirect. RETAINS 181.18-staging.)
-# SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: my_gallery, poty/standings Haiku exclusions, try_result display/gate count split. RETAINS 181.17-staging.)
-# SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota counted from upload_history_log, not live images. RETAINS 181.16-staging.)
-# SL-VERSION: 181.16-staging (Session 187, 2026-08-16 — PROMPT FIX: DOD and DM bands for technique-driven images. RETAINS 181.15-staging.)
-# SL-VERSION: 181.15-staging (Session 187, 2026-08-16 — FOUR CHANGES: image_detail redirect, _TRY_HAIKU_PROMPT expanded to 10 fields, history context, try_result milestone_strength. RETAINS 181.14n-staging.)
+# SL-VERSION: 181.53-staging (Session 200, 2026-08-27 — LEAGUE BUILD: (1) league_haiku() route: /league/photographers, Haiku gate, League+Masters grids, daily spotlight with AhA line from audit_json. (2) try_standing() route: /try/standing/<id>, full Sonnet scorecard read-only for Haiku users, all eval data from audit_json. (3) league_hero SELECT: added i.id field — was missing, broke league_hero_copy rotation and try_standing link. Previous clean version: 181.52.)
 
 import os
 import re
@@ -32388,6 +32356,409 @@ def try_gallery():
 
 
 
+@app.route('/league/photographers')
+@login_required
+def league_haiku():
+    """
+    GET /league/photographers — Haiku world League page.
+    Session 200. Standalone template — does not extend base.html.
+    Gate: paid Sonnet subscribers redirected to standings_public.
+    Shows: League (score>=8.0) + Masters in Making (6.0-7.9) grids.
+    Spotlight: daily-rotating photographer from 9.0+ pool, AhA line from audit_json.
+    Raw SQL throughout per Constitution Rule 10.
+    """
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('standings_public'))
+
+    import json as _lj
+    import re as _lre
+    from datetime import date as _ldate
+    from types import SimpleNamespace as _LSN
+
+    # ── League photographers — score >= 8.0, sorted desc ──────────────
+    _league_rows = db.session.execute(db.text("""
+        SELECT
+            i.id,
+            i.thumb_url,
+            CONCAT(
+                SPLIT_PART(u.full_name, ' ', 1), ' ',
+                LEFT(SPLIT_PART(u.full_name, ' ', -1), 1), '.'
+            ) AS photographer,
+            i.score,
+            i.tier,
+            i.genre,
+            u.subscription_track AS camera
+        FROM images i
+        JOIN users u ON u.id = i.user_id
+        WHERE i.score >= 8.0
+          AND (i.is_haiku_try IS NOT TRUE)
+          AND i.is_public = TRUE
+          AND i.status = 'scored'
+          AND i.thumb_url IS NOT NULL
+          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+          AND u.is_subscribed = TRUE
+        ORDER BY i.score DESC
+        LIMIT 200
+    """)).fetchall()
+
+    _league_photographers = [
+        _LSN(
+            id=r[0], thumb_url=r[1], photographer=r[2] or 'Shutter League',
+            score=float(r[3] or 0), tier=r[4] or 'Maverick',
+            genre=r[5] or '', camera=r[6] or 'camera'
+        )
+        for r in _league_rows if r[1]
+    ]
+
+    # ── Masters in the Making — score 6.0–7.9 ─────────────────────────
+    _masters_rows = db.session.execute(db.text("""
+        SELECT
+            i.id,
+            i.thumb_url,
+            CONCAT(
+                SPLIT_PART(u.full_name, ' ', 1), ' ',
+                LEFT(SPLIT_PART(u.full_name, ' ', -1), 1), '.'
+            ) AS photographer,
+            i.score,
+            i.tier,
+            i.genre,
+            u.subscription_track AS camera
+        FROM images i
+        JOIN users u ON u.id = i.user_id
+        WHERE i.score >= 6.0
+          AND i.score < 8.0
+          AND (i.is_haiku_try IS NOT TRUE)
+          AND i.is_public = TRUE
+          AND i.status = 'scored'
+          AND i.thumb_url IS NOT NULL
+          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+          AND u.is_subscribed = TRUE
+        ORDER BY i.score DESC
+        LIMIT 200
+    """)).fetchall()
+
+    _masters_photographers = [
+        _LSN(
+            id=r[0], thumb_url=r[1], photographer=r[2] or 'Shutter League',
+            score=float(r[3] or 0), tier=r[4] or 'Craftsman',
+            genre=r[5] or '', camera=r[6] or 'camera'
+        )
+        for r in _masters_rows if r[1]
+    ]
+
+    # ── Spotlight — daily rotation from 9.0+ pool ─────────────────────
+    _spotlight = None
+    try:
+        _top_pool = [p for p in _league_photographers if p.score >= 9.0]
+        if _top_pool:
+            _day_idx = _ldate.today().toordinal() % len(_top_pool)
+            _sp = _top_pool[_day_idx]
+
+            # AhA line — first punchy sentence from audit_json impression/takeaway
+            _aha_row = db.session.execute(db.text("""
+                SELECT audit_json FROM images WHERE id = :iid LIMIT 1
+            """), {'iid': _sp.id}).fetchone()
+
+            _aha_line = ''
+            if _aha_row and _aha_row[0]:
+                try:
+                    _aj = _lj.loads(_aha_row[0])
+                    # Try impression first, then takeaway, then strength_obs
+                    _aha_src = (
+                        _aj.get('impression', '') or
+                        _aj.get('strength_obs', '') or
+                        _aj.get('takeaway', '') or ''
+                    ).strip()
+                    if _aha_src:
+                        _sents = _lre.split(r'(?<=[.!?])\s+', _aha_src)
+                        for _s in _sents:
+                            _s = _s.strip()
+                            if 40 <= len(_s) <= 220:
+                                _aha_line = '\u201c' + _s + '\u201d'
+                                break
+                        if not _aha_line and _sents:
+                            _aha_line = '\u201c' + _sents[0][:220].strip() + '\u201d'
+                except Exception:
+                    pass
+
+            _spotlight = _LSN(
+                id=_sp.id, thumb_url=_sp.thumb_url, photographer=_sp.photographer,
+                score=_sp.score, tier=_sp.tier, genre=_sp.genre,
+                aha_line=_aha_line or '\u201cThe eye does not look for the extraordinary. It waits until the ordinary becomes unbearable to ignore.\u201d'
+            )
+    except Exception as _spe:
+        app.logger.warning(f'[league_haiku] spotlight failed: {_spe}')
+
+    # ── JSON for JS — Jinja-in-script fix (Constitution §15) ──────────
+    _league_json = _lj.dumps([
+        {'id': p.id, 'thumb_url': p.thumb_url, 'photographer': p.photographer,
+         'score': p.score, 'tier': p.tier, 'genre': p.genre, 'camera': p.camera}
+        for p in _league_photographers
+    ])
+    _masters_json = _lj.dumps([
+        {'id': p.id, 'thumb_url': p.thumb_url, 'photographer': p.photographer,
+         'score': p.score, 'tier': p.tier, 'genre': p.genre, 'camera': p.camera}
+        for p in _masters_photographers
+    ])
+
+    return render_template(
+        'league_haiku-staging.html',
+        league_photographers=_league_photographers,
+        masters_photographers=_masters_photographers,
+        league_photographers_json=_league_json,
+        masters_photographers_json=_masters_json,
+        spotlight=_spotlight,
+    )
+
+
+@app.route('/try/standing/<int:image_id>')
+@login_required
+def try_standing(image_id):
+    """
+    GET /try/standing/<id> — Read-only eval view of a Sonnet image for Haiku users.
+    Session 200. Full scorecard experience — identical depth to paid eval.
+    No owner actions (no delete/save/share/mentor review).
+    Gate: paid Sonnet subscribers redirected to image_detail.
+    Data: DB read of existing eval data — zero new AI cost.
+    Raw SQL throughout per Constitution Rule 10.
+    """
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    import json as _tsj
+    import re as _tsr
+    from types import SimpleNamespace as _TSSN
+
+    # ── Core image row ─────────────────────────────────────────────────
+    _img_row = db.session.execute(db.text("""
+        SELECT
+            i.id,
+            i.thumb_url,
+            i.score,
+            i.tier,
+            i.genre,
+            u.subscription_track AS camera,
+            i.scored_at,
+            CONCAT(
+                SPLIT_PART(u.full_name, ' ', 1), ' ',
+                LEFT(SPLIT_PART(u.full_name, ' ', -1), 1), '.'
+            ) AS photographer_name,
+            u.id AS owner_id,
+            i.audit_json
+        FROM images i
+        JOIN users u ON u.id = i.user_id
+        WHERE i.id = :iid
+          AND (i.is_haiku_try IS NOT TRUE)
+          AND i.is_public = TRUE
+          AND i.status = 'scored'
+          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+          AND u.is_subscribed = TRUE
+        LIMIT 1
+    """), {'iid': image_id}).fetchone()
+
+    if not _img_row:
+        abort(404)
+
+    _score      = float(_img_row[2] or 0)
+    _tier       = _img_row[3] or 'Maverick'
+    _genre      = _img_row[4] or ''
+    _camera     = (_img_row[5] or 'camera').capitalize()
+    _eval_date  = _img_row[6].strftime('%-d %b %Y') if _img_row[6] else ''
+    _owner_id   = _img_row[8]
+    _audit_raw  = _img_row[9] or '{}'
+
+    # ── Parse audit_json ───────────────────────────────────────────────
+    try:
+        _audit = _tsj.loads(_audit_raw)
+    except Exception:
+        _audit = {}
+
+    _verdict         = _audit.get('impression', '') or _audit.get('what_stood_out', '') or ''
+    _strength_name   = _audit.get('strength_name', '')
+    _strength_obs    = _audit.get('strength_obs', '')
+    _next_leap_name  = _audit.get('next_leap_name', '')
+    _next_leap_obs   = _audit.get('next_leap_obs', '')
+    _takeaway_raw    = _audit.get('takeaway', '')
+    _what_next       = _audit.get('what_next', '')
+    _master_name     = _audit.get('master_name', '')
+    _master_why      = _audit.get('master_why', '')
+
+    # Five dimension scores from audit_json keys: dod, vd, dm, wf, aq
+    _DIM_MAP = [
+        ('Depth of Difficulty',  'dod'),
+        ('Visual Disruption',    'vd'),
+        ('The Decisive Moment',  'dm'),
+        ('Wonder Factor',        'wf'),
+        ('Affective Quotient',   'aq'),
+    ]
+    _raw_scores = [float(_audit.get(k) or _score) for _, k in _DIM_MAP]
+    _max_s, _min_s = max(_raw_scores), min(_raw_scores)
+    _dimensions = []
+    for _i, ((name, _), _ds) in enumerate(zip(_DIM_MAP, _raw_scores)):
+        _dimensions.append(_TSSN(
+            name=name, score=_ds,
+            is_top=(_ds == _max_s and _raw_scores.index(_max_s) == _i),
+            is_leap=(_ds == _min_s and _raw_scores.index(_min_s) == _i),
+        ))
+    _strength_dim = next((d.name for d in _dimensions if d.is_top), _DIM_MAP[0][0])
+    _leap_dim     = next((d.name for d in _dimensions if d.is_leap), _DIM_MAP[-1][0])
+
+    # ── Eval count + best this year for this photographer ──────────────
+    _stats = db.session.execute(db.text("""
+        SELECT COUNT(*) AS eval_count, MAX(score) AS best_year
+        FROM images
+        WHERE user_id = :uid
+          AND score IS NOT NULL
+          AND status = 'scored'
+          AND (is_haiku_try IS NOT TRUE)
+          AND EXTRACT(YEAR FROM scored_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+    """), {'uid': _owner_id}).fetchone()
+    _eval_count    = int(_stats[0] or 0)
+    _best_this_yr  = float(_stats[1] or _score)
+
+    # Calibrated count — total scored non-haiku images for this user
+    _calib_count = int(db.session.execute(db.text("""
+        SELECT COUNT(*) FROM images
+        WHERE user_id = :uid AND status = 'scored'
+          AND (is_haiku_try IS NOT TRUE) AND score IS NOT NULL
+    """), {'uid': _owner_id}).scalar() or 0)
+
+    # ── Percentile ─────────────────────────────────────────────────────
+    _pct_row = db.session.execute(db.text("""
+        SELECT
+            COUNT(*) AS total,
+            COUNT(CASE WHEN score < :s THEN 1 END) AS below
+        FROM images
+        WHERE score IS NOT NULL AND status = 'scored'
+          AND (is_haiku_try IS NOT TRUE)
+          AND (is_flagged = FALSE OR is_flagged IS NULL)
+    """), {'s': _score}).fetchone()
+    _percentile = max(1, round((_pct_row[1] / _pct_row[0]) * 100)) if (_pct_row and _pct_row[0] > 0) else 50
+
+    # ── Tier metadata ──────────────────────────────────────────────────
+    _TIER_DATA = {
+        'Legend':      ('9.5', 'one in ten thousand. The work that will be remembered.'),
+        'Grandmaster': ('9.0', 'fewer than 1 in 100 to reach 9. Accumulated decision-making, photograph by photograph.'),
+        'Master':      ('8.5', 'the signature is forming. The eye is consistent.'),
+        'Maverick':    ('8.0', 'the eye is developing. The signature is forming.'),
+        'Craftsman':   ('7.0', 'the instincts are present. The technique is catching up.'),
+        'Shooter':     ('6.0', 'building the foundation. Every photograph adds to the record.'),
+        'Rookie':      ('0',   'the record is beginning. Every photograph moves you forward.'),
+    }
+    _tier_floor, _tier_desc = _TIER_DATA.get(_tier, ('0', 'building the record.'))
+    _score_pct = min(99, max(1, int((_score / 10) * 100)))
+
+    # ── Structured eval sections ───────────────────────────────────────
+    # what_it_means — 3 paragraphs built from audit fields
+    _what_it_means = []
+    if _verdict:
+        _what_it_means.append(_verdict)
+    if _strength_obs and _strength_name:
+        _what_it_means.append(f'<strong>{_strength_name}</strong> — {_strength_obs}')
+    elif _strength_obs:
+        _what_it_means.append(_strength_obs)
+    if _next_leap_obs and _next_leap_name:
+        _what_it_means.append(f'<strong>Your next leap: {_next_leap_name}</strong> — {_next_leap_obs}')
+
+    # takeaway_items — split takeaway into paragraphs
+    _takeaway_items = []
+    if _takeaway_raw:
+        _takeaway_items = [p.strip() for p in _tsr.split(r'\n\n|\n(?=\n)', _takeaway_raw) if p.strip()]
+        if not _takeaway_items:
+            _takeaway_items = [_takeaway_raw.strip()]
+    if _what_next:
+        _takeaway_items.append(_what_next)
+
+    # what_sl_saw — master reference if present
+    _what_sl_saw = []
+    if _master_name and _master_why:
+        _what_sl_saw.append(_TSSN(head=f'The eye behind this — {_master_name}', body=_master_why))
+
+    # next_shot — not stored on Haiku eval, omit
+    _next_shot = None
+
+    # edit_suggestions — not stored on Haiku eval format, omit
+    _edit_suggestions = []
+
+    # ── Trend lines — last 18 scored images for this photographer ──────
+    _trend_rows = db.session.execute(db.text("""
+        SELECT score, audit_json
+        FROM images
+        WHERE user_id = :uid
+          AND score IS NOT NULL
+          AND status = 'scored'
+          AND (is_haiku_try IS NOT TRUE)
+        ORDER BY scored_at DESC
+        LIMIT 18
+    """), {'uid': _owner_id}).fetchall()
+
+    _trend_rows = list(reversed(_trend_rows))
+    _trend_count = len(_trend_rows)
+    _trend_lines = []
+
+    if _trend_rows:
+        def _td(vals):
+            if len(vals) < 3:
+                return '\u2014 Building the record'
+            slope = vals[-1] - vals[0]
+            if slope > 0.3:
+                return '\u2014 Rising \u2014 the eye is sharpening'
+            elif slope < -0.3:
+                return '\u2014 Variable \u2014 your next opportunity to grow'
+            return '\u2014 Steady \u2014 consistent across the record'
+
+        _aq_vals, _dm_vals, _dod_vals = [], [], []
+        for _tr in _trend_rows:
+            try:
+                _ta = _tsj.loads(_tr[1] or '{}')
+            except Exception:
+                _ta = {}
+            _fs = float(_tr[0] or 0)
+            _aq_vals.append(float(_ta.get('aq') or _fs))
+            _dm_vals.append(float(_ta.get('dm') or _fs))
+            _dod_vals.append(float(_ta.get('dod') or _fs))
+
+        _trend_lines = [
+            _TSSN(label='Whether it made one feel something', values=_aq_vals,  current=_aq_vals[-1],  description=_td(_aq_vals)),
+            _TSSN(label='Whether the timing was right',       values=_dm_vals,  current=_dm_vals[-1],  description=_td(_dm_vals)),
+            _TSSN(label='How difficult it was',               values=_dod_vals, current=_dod_vals[-1], description=_td(_dod_vals)),
+        ]
+
+    return render_template(
+        'try_standing.html',
+        thumb_url        = _img_row[1],
+        photographer_name= _img_row[7],
+        genre            = _genre,
+        camera           = _camera,
+        eval_date        = _eval_date,
+        score            = _score,
+        tier             = _tier,
+        percentile       = _percentile,
+        score_pct        = _score_pct,
+        tier_floor       = _tier_floor,
+        tier_description = _tier_desc,
+        eval_count       = _eval_count,
+        best_this_year   = _best_this_yr,
+        calibrated_count = _calib_count,
+        dimensions       = _dimensions,
+        strength_dim     = _strength_dim,
+        strength_score   = _max_s,
+        leap_dim         = _leap_dim,
+        leap_score       = _min_s,
+        verdict          = _verdict,
+        what_it_means    = _what_it_means,
+        takeaway_items   = _takeaway_items,
+        what_sl_saw      = _what_sl_saw,
+        next_shot        = _next_shot,
+        edit_suggestions = _edit_suggestions,
+        trend_lines      = _trend_lines,
+        trend_count      = _trend_count,
+    )
+
+
 @app.route('/try/welcome')
 @login_required
 def try_welcome():
@@ -32618,7 +32989,7 @@ def try_welcome():
     _league_hero = None
     try:
         _lh_row = db.session.execute(db.text("""
-            SELECT i.thumb_url, i.score, i.tier, i.genre,
+            SELECT i.id, i.thumb_url, i.score, i.tier, i.genre,
                    u.full_name
             FROM images i
             JOIN users u ON u.id = i.user_id
@@ -32635,17 +33006,18 @@ def try_welcome():
         """), {'uid': current_user.id}).fetchone()
         if _lh_row:
             from types import SimpleNamespace as _LHSN
-            _lh_full_name = (_lh_row[4] or '').strip()
+            _lh_full_name = (_lh_row[5] or '').strip()
             if _lh_full_name:
                 _parts = _lh_full_name.split()
                 _lh_display = (_parts[0] + ' ' + _parts[-1][0] + '.') if len(_parts) > 1 else _parts[0]
             else:
                 _lh_display = 'Shutter League'
             _league_hero = _LHSN(
-                thumb_url    = _lh_row[0],
-                score        = float(_lh_row[1]),
-                tier         = _lh_row[2],
-                genre        = _lh_row[3] or '',
+                id           = _lh_row[0],
+                thumb_url    = _lh_row[1],
+                score        = float(_lh_row[2]),
+                tier         = _lh_row[3],
+                genre        = _lh_row[4] or '',
                 photographer = _lh_display,
             )
     except Exception as _lhe:
