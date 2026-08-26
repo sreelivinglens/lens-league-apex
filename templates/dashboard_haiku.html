@@ -140,8 +140,15 @@ a, button { cursor:pointer; color:inherit; }
 .sl-tl.past { background:#1A2744; }
 .sl-tlbl { font-size:13px; letter-spacing:0.03em; text-transform:uppercase; color:rgba(26,39,68,0.50); text-align:center; max-width:60px; white-space:nowrap; }
 .sl-tlbl.active { color:#1A2744; font-weight:700; }
-.sl-gm-img { width:50%; max-width:340px; display:block; border-radius:4px; margin:0 auto; }
-.sl-gm-ph { width:50%; max-width:340px; height:160px; background:#D0CCC6; border-radius:4px; display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase; }
+.sl-gm-img { width:75%; max-width:480px; display:block; border-radius:4px; margin:0 auto; }
+.sl-gm-ph { width:75%; max-width:480px; height:200px; background:#D0CCC6; border-radius:4px; display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase; }
+.sl-gm-link { display:block; text-decoration:none; color:inherit; }
+.sl-gm-link:hover .sl-gm-img { opacity:0.88; }
+.sl-obs-follow {
+  font-size:16px; line-height:1.82; color:rgba(26,39,68,0.70);
+  margin-top:16px; padding-top:14px;
+  border-top:0.5px solid rgba(26,39,68,0.12);
+}
 .sl-gm-credit { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:16px; }
 .sl-gm-name { font-size:14px; color:#1A2744; font-weight:500; }
 .sl-gm-result { font-size:13px; color:#C8A84B; letter-spacing:0.06em; }
@@ -358,25 +365,25 @@ a, button { cursor:pointer; color:inherit; }
         <stop offset="100%" stop-color="#C8A84B" stop-opacity="0"/>
       </linearGradient>
     </defs>
-    <line x1="0" y1="10" x2="580" y2="10" stroke="rgba(200,168,75,0.35)" stroke-width="1" stroke-dasharray="3,4"/>
-    <text x="4" y="9" fill="rgba(200,168,75,0.65)" font-size="8" font-family="Inter,sans-serif">Grandmaster 9.0</text>
+    <line x1="0" y1="10" x2="580" y2="10" stroke="rgba(26,39,68,0.18)" stroke-width="1" stroke-dasharray="3,4"/>
+    <text x="20" y="9" fill="rgba(26,39,68,0.40)" font-size="8" font-family="Inter,sans-serif">Grandmaster 9.0</text>
     {%- set imgs_s = images | selectattr('score') | list | reverse | list -%}
     {%- set n = imgs_s | length -%}
     {%- if n > 0 -%}
       {%- set x_step = (290 / [n - 1, 1] | max) -%}
       {%- set pts = [] -%}
-      {%- for img in imgs_s -%}{%- set x = (loop.index0 * x_step) | int -%}{%- set y = (72 - (img.score / 10.0 * 62)) | int -%}{%- set _ = pts.append(x ~ ',' ~ y) -%}{%- endfor -%}
-    <path d="{{ 'M' + pts[0] + ' L' + pts | join(' L') }} L{{ ((n-1)*x_step)|int }},72 L0,72 Z" fill="url(#sl-sf)"/>
-    <polyline points="{{ pts | join(' ') }}" fill="none" stroke="#C8A84B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    {%- for img in imgs_s -%}{%- set x = (loop.index0 * x_step) | int -%}{%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
-    <circle cx="{{ x }}" cy="{{ y }}" r="{{ 5 if loop.last else 3.5 }}" fill="#C8A84B"/>
+      {%- for img in imgs_s -%}{%- set x = (loop.index0 * x_step + 20) | int -%}{%- set y = (72 - (img.score / 10.0 * 62)) | int -%}{%- set _ = pts.append(x ~ ',' ~ y) -%}{%- endfor -%}
+    <path d="{{ 'M' + pts[0] + ' L' + pts | join(' L') }} L{{ ((n-1)*x_step + 20)|int }},72 L20,72 Z" fill="url(#sl-sf)"/>
+    <polyline points="{{ pts | join(' ') }}" fill="none" stroke="#1A2744" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    {%- for img in imgs_s -%}{%- set x = (loop.index0 * x_step + 20) | int -%}{%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
+    <circle cx="{{ x }}" cy="{{ y }}" r="{{ 5 if loop.last else 3.5 }}" fill="#1A2744"/>
+    <text x="{{ x }}" y="{{ y - 8 }}" text-anchor="middle" fill="#1A2744" font-size="9" font-family="Inter,sans-serif" font-weight="600">{{ "%.2f"|format(img.score) }}</text>
     {%- endfor -%}
-    {%- set first = imgs_s[0] -%}{%- set last = imgs_s[-1] -%}{%- set lx = ((n-1) * x_step) | int -%}{%- set ly = (72 - (last.score / 10.0 * 62)) | int -%}
-    <text x="4" y="76" fill="rgba(26,39,68,0.40)" font-size="9" font-family="Inter,sans-serif">#1 · {{ "%.2f"|format(first.score) }}</text>
-    <text x="{{ lx - 2 }}" y="{{ ly - 8 }}" fill="rgba(200,168,75,0.85)" font-size="9" font-family="Inter,sans-serif">Today · {{ "%.2f"|format(last.score) }}</text>
+    {%- set first = imgs_s[0] -%}{%- set last = imgs_s[-1] -%}{%- set lx = ((n-1) * x_step + 20) | int -%}{%- set ly = (72 - (last.score / 10.0 * 62)) | int -%}
+    <text x="20" y="76" fill="rgba(26,39,68,0.40)" font-size="9" font-family="Inter,sans-serif">#1</text>
     {%- endif -%}
-    <polyline points="290,{{ (72 - (best_score.val / 10.0 * 62)) | int }} 350,{{ (72 - (best_score.val / 10.0 * 62 + 5)) | int }} 420,{{ (72 - (best_score.val / 10.0 * 62 + 12)) | int }} 490,{{ (72 - (best_score.val / 10.0 * 62 + 18)) | int }} 560,{{ (72 - (best_score.val / 10.0 * 62 + 28)) | int }}" fill="none" stroke="#C8A84B" stroke-width="1.5" stroke-dasharray="4,5" stroke-linecap="round" stroke-linejoin="round" opacity="0.28"/>
-    <text x="310" y="76" fill="rgba(26,39,68,0.25)" font-size="9" font-family="Inter,sans-serif">Your arc continues inside the League →</text>
+    <polyline points="{{ (20 + 290)|int }},{{ (72 - (best_score.val / 10.0 * 62)) | int }} {{ (20 + 350)|int }},{{ (72 - (best_score.val / 10.0 * 62 + 5)) | int }} {{ (20 + 420)|int }},{{ (72 - (best_score.val / 10.0 * 62 + 12)) | int }} {{ (20 + 490)|int }},{{ (72 - (best_score.val / 10.0 * 62 + 18)) | int }} 560,{{ (72 - (best_score.val / 10.0 * 62 + 28)) | int }}" fill="none" stroke="#1A2744" stroke-width="1.5" stroke-dasharray="4,5" stroke-linecap="round" stroke-linejoin="round" opacity="0.22"/>
+    <text x="330" y="76" fill="rgba(26,39,68,0.25)" font-size="9" font-family="Inter,sans-serif">Your arc continues inside the League →</text>
   </svg>
 </div>
 
@@ -409,6 +416,13 @@ a, button { cursor:pointer; color:inherit; }
 <div class="sl-obs-band">
   <div class="sl-obs-eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
   <div class="sl-obs-text">{{ sherpa_obs }}</div>
+  <div class="sl-obs-follow">
+    What this means in practice: instead of finding a beautiful scene and waiting
+    for the right moment within it, move toward the subject — get physically closer,
+    change your angle, return at a different hour. The photograph you pursue rather
+    than wait for carries a different kind of energy in the image. That energy is
+    what the next tier recognises.
+  </div>
 </div>
 {% endif %}
 
@@ -460,8 +474,13 @@ a, button { cursor:pointer; color:inherit; }
       {% endfor %}
     </div>
     {% if league_hero and league_hero.thumb_url %}
-    <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-    <div class="sl-gm-credit"><span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span><span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span></div>
+    <a href="{{ url_for('try_result', image_id=league_hero.id) }}" class="sl-gm-link">
+      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
+      <div class="sl-gm-credit">
+        <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
+        <span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
+      </div>
+    </a>
     {% else %}
     <div class="sl-gm-ph">Grandmaster photograph</div>
     <div class="sl-gm-credit"><span class="sl-gm-name">Grandmaster · Shutter League</span><span class="sl-gm-result">9.00</span></div>
@@ -479,16 +498,7 @@ a, button { cursor:pointer; color:inherit; }
 </div>
 
 <!-- THE PULL -->
-{% if league_hero and league_hero.thumb_url %}
-<div class="sl-pull-photo"><img src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ league_hero.genre }}"></div>
-<div class="sl-pull-caption">
-  <span class="sl-pull-cap-l">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
-  <span class="sl-pull-cap-r">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
-</div>
-{% else %}
-<div class="sl-pull-photo" style="height:180px;display:flex;align-items:center;justify-content:center;"><span style="font-size:14px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.55);">Grandmaster photograph</span></div>
-<div class="sl-pull-caption"><span class="sl-pull-cap-l">Grandmaster · Shutter League</span><span class="sl-pull-cap-r">Grandmaster &nbsp;·&nbsp; 9.00</span></div>
-{% endif %}
+
 
 <div class="sl-pull-body">
   <div class="sl-pull-ey">League of Photographers</div>
