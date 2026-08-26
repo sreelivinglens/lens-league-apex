@@ -32669,6 +32669,17 @@ def try_welcome():
     except Exception as _pce:
         app.logger.warning(f'[try_welcome] haiku_percentile failed: {_pce}')
 
+    # GM copy pool — rotates per league_hero.id so each image shows a different line
+    _gm_copy_pool = [
+        "At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.",
+        "The photograph that earns a Grandmaster standing is not the most expensive camera in the room. It is the most committed eye.",
+        "Difficulty is not what makes an image hard to take. It is what makes it impossible to ignore.",
+        "The standard does not ask for the perfect moment. It asks whether you were already moving toward it.",
+        "Every tier boundary is crossed the same way — one image that cost the photographer something real.",
+        "The eye that waits for the scene to arrange itself produces good photographs. The eye that moves into the scene produces great ones.",
+        "What separates an image at 7.0 from one at 9.0 is rarely the camera, the light, or the subject. It is the decision made three seconds before the shutter.",
+    ]
+
     resp = make_response(render_template(
         'dashboard_haiku.html',
         evals_used         = evals_used,
@@ -32679,6 +32690,7 @@ def try_welcome():
         hero_image         = _hero,
         user_hero          = _user_hero,
         league_hero        = _league_hero,
+        league_hero_copy   = _gm_copy_pool[(_league_hero.id if _league_hero and getattr(_league_hero, 'id', None) else 0) % len(_gm_copy_pool)],
         sherpa_obs         = _sherpa_obs,
         sherpa_nudge       = _sherpa_nudge,
         visit_count        = _visit_count,
