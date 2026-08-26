@@ -108,13 +108,10 @@ a, button { cursor:pointer; color:inherit; }
 ══════════════════════════════════════ */
 .sl-standing {
   background:#EDE9E1;
-  padding:24px 40px;
+  padding:18px 40px;
   border-bottom:0.5px solid rgba(26,39,68,0.09);
 }
-.sl-standing-main {
-  display:flex; align-items:baseline; gap:18px;
-  margin-bottom:14px; flex-wrap:wrap;
-}
+.sl-standing-main { display:flex; align-items:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
 .sl-standing-score {
   font-family:'Playfair Display',Georgia,serif;
   font-size:64px; color:#1A2744; line-height:1; letter-spacing:-0.04em;
@@ -182,7 +179,8 @@ a, button { cursor:pointer; color:inherit; }
 .sl-rc-tier { font-size:13px; letter-spacing:0.07em; text-transform:uppercase; color:#C8A84B; margin-top:3px; }
 .sl-rc-best {
   font-size:13px; text-transform:uppercase; background:#C8A84B; color:#1A2744;
-  padding:2px 8px; border-radius:2px; font-weight:700; display:inline-block; margin-top:3px;
+  padding:2px 8px; border-radius:2px; font-weight:700;
+  display:inline-block; margin-top:3px; max-width:100%;
 }
 .sl-view-all {
   font-size:14px; color:#1A2744; text-decoration:none;
@@ -191,9 +189,9 @@ a, button { cursor:pointer; color:inherit; }
 }
 
 /* ══════════════════════════════════════
-   TREND LINE — your arc, immediately after record
+   TREND LINE — distinct bg so gold pops
 ══════════════════════════════════════ */
-.sl-trend-band { background:#F5F3EF; padding:8px 40px 28px; }
+.sl-trend-band { background:#EEF2FA; padding:24px 40px 28px; border-top:0.5px solid rgba(26,39,68,0.08); }
 .sl-trend-eyebrow {
   font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
   color:rgba(26,39,68,0.50); margin-bottom:10px; font-weight:500;
@@ -210,7 +208,6 @@ a, button { cursor:pointer; color:inherit; }
 .sl-obs-text {
   font-family:'Playfair Display',Georgia,serif;
   font-size:19px; line-height:1.85; color:#1A2744;
-  max-width:680px;
 }
 
 /* ══════════════════════════════════════
@@ -637,11 +634,10 @@ a, button { cursor:pointer; color:inherit; }
   <span class="sl-hero-greeting" id="sl-greeting">Good morning</span>
 </div>
 
-<!-- ════ STANDING BAND ════ -->
+<!-- ════ STANDING BAND — metadata only, score already in hero caption ════ -->
 <div class="sl-standing">
+  {% if user_hero %}
   <div class="sl-standing-main">
-    {% if user_hero %}
-    <span class="sl-standing-score">{{ "%.2f"|format(user_hero.score) }}</span>
     <div class="sl-standing-right">
       <span class="sl-standing-tier">{{ user_hero.tier }}</span>
       <span class="sl-standing-sub">
@@ -650,8 +646,8 @@ a, button { cursor:pointer; color:inherit; }
         {% if haiku_percentile %} &nbsp;·&nbsp; Top {{ haiku_percentile }}%{% endif %}
       </span>
     </div>
-    {% endif %}
   </div>
+  {% endif %}
   <div class="sl-standing-rule"></div>
   <div class="sl-standing-footer">
     <span class="sl-standing-stat"><strong>{{ evals_remaining }}</strong> evaluations remaining</span>
@@ -775,15 +771,19 @@ a, button { cursor:pointer; color:inherit; }
   </div>
   {% endif %}
 
-  <!-- Frontier -->
+  <!-- Frontier — milestone_strength is the photographer's STRENGTH -->
   {% if milestone_strength %}
   <div class="sl-sc sl-sc-frontier">
-    <div class="sl-se">Where your next evaluation point lives</div>
-    <div class="sl-f-dim">Your next frontier: {{ milestone_strength }}</div>
+    <div class="sl-se">What your evaluation record reveals</div>
+    <div class="sl-f-dim">Your instinctive strength: {{ milestone_strength }}</div>
     <div class="sl-f-para">
-      Your instinctive strength shows clearly across your evaluated photographs.
-      The next tier asks you to direct that instinct into situations that are
-      genuinely harder to reach — not just harder to frame.
+      Your {{ milestone_strength }} shows clearly and consistently across your evaluated photographs —
+      the emotional atmosphere your eye creates without effort.
+      That is your voice. The next tier asks you to direct that voice into situations
+      that are genuinely harder to reach, so the strength carries more weight.
+    </div>
+    <div class="sl-f-para" style="font-weight:600;color:#1A2744;">
+      Your recurring gap: Depth of Difficulty
     </div>
     <div class="sl-f-tips">
       <div class="sl-f-tip">
@@ -800,9 +800,8 @@ a, button { cursor:pointer; color:inherit; }
       </div>
     </div>
     <div class="sl-f-trend">
-      Your {{ milestone_strength }} is your instinctive strength.
-      Depth of Difficulty is your recurring gap.
-      One is the voice — the other is what makes the voice matter.
+      Your {{ milestone_strength }} is the voice. Depth of Difficulty is what makes the voice matter.
+      The two together are what the next tier is built from.
     </div>
   </div>
   {% endif %}
