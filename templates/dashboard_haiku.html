@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.39-staging (Session 199) #}
+{# SL-VERSION: 181.51-staging (Session 199, 2026-08-26 — dashboard_haiku redesign: (1) trend line moved above record strip. (2) Record images enlarged 190→240px. (3) Standing band tier/metadata fonts increased for visibility. (4) BEST badge width fixed. (5) Record band padding corrected — images no longer clipped. (6) 70yr, mobile, iPad audit clean.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,567 +32,271 @@ a, button { cursor:pointer; color:inherit; }
 /* ── PAGE ── */
 .sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; padding-bottom:80px; }
 
-/* ══════════════════════════════════════
-   TOP NAV
-══════════════════════════════════════ */
+/* ══ TOP NAV ══ */
 .sl-top-nav {
   display:flex; justify-content:space-between; align-items:center;
-  padding:0 40px; height:64px;
-  background:#1A2744;
+  padding:0 40px; height:64px; background:#1A2744;
   border-bottom:1px solid rgba(255,255,255,0.07);
   position:sticky; top:0; z-index:100;
 }
-.sl-nav-brand {
-  display:flex; flex-direction:column; align-items:flex-start;
-  gap:2px; text-decoration:none;
-}
+.sl-nav-brand { display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-decoration:none; }
 .sl-nav-brand img { height:34px; width:auto; display:block; }
-.sl-nav-brand-fallback {
-  font-size:14px; font-weight:700; letter-spacing:0.18em;
-  color:rgba(255,255,255,0.50); text-transform:uppercase; line-height:1;
-}
+.sl-nav-brand-fallback { font-size:14px; font-weight:700; letter-spacing:0.18em; color:rgba(255,255,255,0.50); text-transform:uppercase; line-height:1; }
 .sl-nav-links { display:flex; align-items:center; gap:2px; }
-.sl-nav-links a {
-  font-size:13px; font-weight:500; color:rgba(255,255,255,0.65);
-  text-decoration:none; padding:6px 8px; border-radius:4px; white-space:nowrap;
-  transition:color 0.15s,background 0.15s;
-}
+.sl-nav-links a { font-size:13px; font-weight:500; color:rgba(255,255,255,0.65); text-decoration:none; padding:6px 8px; border-radius:4px; white-space:nowrap; transition:color 0.15s,background 0.15s; }
 .sl-nav-links a:hover { color:#fff; background:rgba(255,255,255,0.09); }
-.sl-nav-links a.nav-active {
-  color:#fff !important; font-weight:600;
-  background:rgba(255,255,255,0.11);
-  border-bottom:2px solid rgba(255,255,255,0.55);
-  padding-bottom:4px;
-}
-.sl-nav-logout {
-  display:flex; align-items:center; justify-content:center;
-  padding:6px; margin-left:4px; border:none; background:none;
-  cursor:pointer; color:rgba(255,255,255,0.45); border-radius:4px;
-  min-width:36px; min-height:44px;
-}
+.sl-nav-links a.nav-active { color:#fff !important; font-weight:600; background:rgba(255,255,255,0.11); border-bottom:2px solid rgba(255,255,255,0.55); padding-bottom:4px; }
+.sl-nav-logout { display:flex; align-items:center; justify-content:center; padding:6px; margin-left:4px; border:none; background:none; cursor:pointer; color:rgba(255,255,255,0.45); border-radius:4px; min-width:36px; min-height:44px; }
 
-/* ══════════════════════════════════════
-   HERO — best image + caption + greeting
-══════════════════════════════════════ */
+/* ══ HERO — best image + caption ══ */
 .sl-hero-img-wrap { width:100%; background:#0C1018; line-height:0; }
 .sl-hero-img-wrap img { width:100%; max-height:400px; object-fit:contain; display:block; }
 .sl-hero-caption {
-  background:#1A2744;
-  padding:14px 40px;
+  background:#1A2744; padding:14px 40px;
   display:flex; justify-content:space-between; align-items:baseline;
-  flex-wrap:wrap; gap:8px;
-  border-bottom:0.5px solid rgba(255,255,255,0.07);
+  flex-wrap:wrap; gap:8px; border-bottom:0.5px solid rgba(255,255,255,0.07);
 }
-.sl-hero-caption-score {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:22px; color:#fff; font-weight:400; letter-spacing:-0.02em;
-}
-.sl-hero-caption-tier {
-  font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:#C8A84B; font-weight:600;
-}
-.sl-hero-caption-link {
-  font-size:13px; color:rgba(255,255,255,0.55); text-decoration:none;
-  border-bottom:1px solid rgba(255,255,255,0.25); padding-bottom:1px;
-}
-.sl-hero {
-  background:#1A2744;
-  padding:20px 40px 24px;
-}
-.sl-hero-greeting {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(255,255,255,0.45);
-}
+.sl-hero-caption-score { font-family:'Playfair Display',Georgia,serif; font-size:24px; color:#fff; font-weight:400; letter-spacing:-0.02em; }
+.sl-hero-caption-tier { font-size:14px; letter-spacing:0.14em; text-transform:uppercase; color:#C8A84B; font-weight:600; }
+.sl-hero-caption-link { font-size:14px; color:rgba(255,255,255,0.60); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.25); padding-bottom:1px; }
+.sl-hero { background:#1A2744; padding:16px 40px 20px; }
+.sl-hero-greeting { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.45); }
 
-/* ══════════════════════════════════════
-   STANDING BAND
-══════════════════════════════════════ */
-.sl-standing {
-  background:#EDE9E1;
-  padding:18px 40px;
-  border-bottom:0.5px solid rgba(26,39,68,0.09);
-}
-.sl-standing-main { display:flex; align-items:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
-.sl-standing-score {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:64px; color:#1A2744; line-height:1; letter-spacing:-0.04em;
-}
-.sl-standing-right { display:flex; flex-direction:column; gap:5px; padding-top:6px; }
-.sl-standing-tier {
-  font-size:13px; letter-spacing:0.16em; text-transform:uppercase;
-  color:#C8A84B; font-weight:600;
-}
-.sl-standing-sub {
-  font-size:13px; color:rgba(26,39,68,0.60); letter-spacing:0.04em; text-transform:uppercase;
-}
-.sl-standing-rule { width:100%; height:0.5px; background:rgba(26,39,68,0.12); margin-bottom:12px; }
-.sl-standing-footer { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
-.sl-standing-stat {
-  font-size:14px; color:rgba(26,39,68,0.65);
-  padding-right:16px; margin-right:16px;
-  border-right:0.5px solid rgba(26,39,68,0.15);
-}
+/* ══ STANDING BAND — larger, more visible ══ */
+.sl-standing { background:#EDE9E1; padding:22px 40px; border-bottom:0.5px solid rgba(26,39,68,0.09); }
+.sl-standing-main { display:flex; align-items:center; gap:18px; margin-bottom:16px; flex-wrap:wrap; }
+.sl-standing-right { display:flex; flex-direction:column; gap:6px; }
+.sl-standing-tier { font-size:24px; letter-spacing:0.12em; text-transform:uppercase; color:#1A2744; font-weight:700; }
+.sl-standing-sub { font-size:16px; color:rgba(26,39,68,0.65); letter-spacing:0.03em; text-transform:uppercase; font-weight:500; }
+.sl-standing-rule { width:100%; height:0.5px; background:rgba(26,39,68,0.12); margin-bottom:14px; }
+.sl-standing-footer { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.sl-standing-stat { font-size:17px; color:rgba(26,39,68,0.65); padding-right:20px; margin-right:20px; border-right:0.5px solid rgba(26,39,68,0.15); }
 .sl-standing-stat:last-of-type { border-right:none; margin-right:0; padding-right:0; }
-.sl-standing-stat strong { color:#1A2744; font-weight:600; }
-.sl-standing-newgm {
-  margin-left:auto; font-size:14px; color:#1A2744; font-weight:600;
-  text-decoration:none; border-bottom:1px solid #C8A84B; padding-bottom:1px;
-}
+.sl-standing-stat strong { color:#1A2744; font-weight:700; font-size:19px; }
+.sl-standing-newgm { margin-left:auto; font-size:15px; color:#1A2744; font-weight:600; text-decoration:none; border-bottom:1px solid #C8A84B; padding-bottom:1px; }
 
-/* ══════════════════════════════════════
-   RECORD STRIP — images FIRST
-══════════════════════════════════════ */
-.sl-record-band { background:#F5F3EF; padding:28px 40px 0; }
-.sl-record-eyebrow {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(26,39,68,0.50); margin-bottom:6px; font-weight:500;
-}
-.sl-record-title { font-size:18px; color:#1A2744; font-weight:600; margin-bottom:16px; }
+/* ══ TREND LINE — first, distinct bg ══ */
+.sl-trend-band { background:#EEF2FA; padding:26px 40px 30px; border-top:0.5px solid rgba(26,39,68,0.08); border-bottom:0.5px solid rgba(26,39,68,0.08); }
+.sl-trend-eyebrow { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.50); margin-bottom:12px; font-weight:500; }
+
+/* ══ RECORD STRIP — below trend, larger images ══ */
+.sl-record-band { background:#F5F3EF; padding:28px 40px; }
+.sl-record-eyebrow { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.50); margin-bottom:6px; font-weight:500; }
+.sl-record-title { font-size:19px; color:#1A2744; font-weight:600; margin-bottom:18px; }
 .sl-rec-strip {
-  display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px;
-  -webkit-overflow-scrolling:touch;
+  display:flex; gap:16px; overflow-x:auto; padding:4px 0 12px;
+  margin-bottom:16px; -webkit-overflow-scrolling:touch;
+  /* ensure first/last cards are not clipped */
+  margin-left:0; margin-right:0;
 }
 .sl-rec-strip::-webkit-scrollbar { height:3px; }
-.sl-rc {
-  flex:0 0 auto; width:190px; text-decoration:none;
-  color:inherit; display:flex; flex-direction:column;
-}
-.sl-rc-img {
-  width:190px; height:142px; background:#2A2118;
-  border-radius:4px; overflow:hidden; margin-bottom:9px;
-  position:relative;
-}
-.sl-rc-img img { width:190px; height:142px; object-fit:contain; display:block; }
-.sl-rc-hover {
-  display:none; position:absolute; inset:0;
-  background:rgba(26,39,68,0.80); align-items:center; justify-content:center;
-  font-size:13px; color:#C8A84B; letter-spacing:0.06em; text-transform:uppercase;
-}
+.sl-rc { flex:0 0 auto; width:240px; text-decoration:none; color:inherit; display:flex; flex-direction:column; }
+.sl-rc-img { width:240px; height:180px; background:#2A2118; border-radius:5px; overflow:hidden; margin-bottom:10px; position:relative; }
+.sl-rc-img img { width:240px; height:180px; object-fit:contain; display:block; }
+.sl-rc-hover { display:none; position:absolute; inset:0; background:rgba(26,39,68,0.80); align-items:center; justify-content:center; font-size:14px; color:#C8A84B; letter-spacing:0.06em; text-transform:uppercase; }
 .sl-rc:hover .sl-rc-hover { display:flex; }
-.sl-rc-num {
-  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.06em;
-  text-transform:uppercase; margin-bottom:2px;
-}
-.sl-rc-res {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:22px; color:#1A2744; line-height:1;
-}
-.sl-rc-tier { font-size:13px; letter-spacing:0.07em; text-transform:uppercase; color:#C8A84B; margin-top:3px; }
-.sl-rc-best {
-  font-size:13px; text-transform:uppercase; background:#C8A84B; color:#1A2744;
-  padding:2px 8px; border-radius:2px; font-weight:700;
-  display:inline-block; margin-top:3px; max-width:100%;
-}
-.sl-view-all {
-  font-size:14px; color:#1A2744; text-decoration:none;
-  border-bottom:1px solid rgba(26,39,68,0.20); padding-bottom:1px;
-  display:inline-flex; align-items:center; min-height:44px; font-weight:500;
-}
+.sl-rc-num { font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:3px; }
+.sl-rc-res { font-family:'Playfair Display',Georgia,serif; font-size:26px; color:#1A2744; line-height:1; }
+.sl-rc-tier { font-size:14px; letter-spacing:0.07em; text-transform:uppercase; color:#C8A84B; margin-top:4px; }
+.sl-rc-best { font-size:13px; text-transform:uppercase; background:#C8A84B; color:#1A2744; padding:3px 10px; border-radius:3px; font-weight:700; display:inline-block; margin-top:5px; width:fit-content; }
+.sl-view-all { font-size:15px; color:#1A2744; text-decoration:none; border-bottom:1px solid rgba(26,39,68,0.20); padding-bottom:1px; display:inline-flex; align-items:center; min-height:44px; font-weight:500; }
 
-/* ══════════════════════════════════════
-   TREND LINE — distinct bg so gold pops
-══════════════════════════════════════ */
-.sl-trend-band { background:#EEF2FA; padding:24px 40px 28px; border-top:0.5px solid rgba(26,39,68,0.08); }
-.sl-trend-eyebrow {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(26,39,68,0.50); margin-bottom:10px; font-weight:500;
-}
-
-/* ══════════════════════════════════════
-   OBS BAND — institution speaks, once
-══════════════════════════════════════ */
+/* ══ OBS BAND ══ */
 .sl-obs-band { background:#E2DDD4; padding:28px 40px; }
-.sl-obs-eyebrow {
-  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:12px;
-}
-.sl-obs-text {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:19px; line-height:1.85; color:#1A2744;
-}
+.sl-obs-eyebrow { font-size:13px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-bottom:12px; }
+.sl-obs-text { font-family:'Playfair Display',Georgia,serif; font-size:19px; line-height:1.85; color:#1A2744; }
 
-/* ══════════════════════════════════════
-   SECTION CARDS
-══════════════════════════════════════ */
+/* ══ SECTION CARDS ══ */
 .sl-sections { padding:16px 40px 0; }
 .sl-sc { border-radius:8px; padding:28px 32px; margin-bottom:14px; }
 .sl-sc-sherpa   { background:#EEF2FA; }
 .sl-sc-frontier { background:#F4EEE3; }
 .sl-sc-mentor   { background:#EAF0E8; }
 .sl-sc-standard { background:#F0EEF8; }
-
-.sl-se {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:4px; font-weight:500;
-}
+.sl-se { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-bottom:4px; font-weight:500; }
 .sl-st { font-size:18px; color:#1A2744; font-weight:600; margin-bottom:14px; }
-
-/* Sherpa nudge */
-.sl-nudge {
-  font-size:15px; color:#1A2744; line-height:1.78;
-  border-left:2px solid #C8A84B; padding:10px 16px;
-  background:rgba(200,168,75,0.07); border-radius:0 4px 4px 0;
-}
-.sl-nudge-lbl {
-  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
-  color:#C8A84B; font-weight:600; display:block; margin-bottom:4px;
-}
-
-/* Frontier */
+.sl-nudge { font-size:15px; color:#1A2744; line-height:1.78; border-left:2px solid #C8A84B; padding:10px 16px; background:rgba(200,168,75,0.07); border-radius:0 4px 4px 0; }
+.sl-nudge-lbl { font-size:13px; letter-spacing:0.10em; text-transform:uppercase; color:#C8A84B; font-weight:600; display:block; margin-bottom:4px; }
 .sl-f-dim { font-size:20px; color:#1A2744; font-weight:600; margin-bottom:8px; }
 .sl-f-para { font-size:15px; line-height:1.82; color:#1A2744; margin-bottom:12px; }
-.sl-f-tips {
-  display:flex; flex-direction:column; gap:8px;
-  padding:12px 14px; background:rgba(26,39,68,0.04);
-  border-radius:6px; margin-bottom:12px;
-}
+.sl-f-tips { display:flex; flex-direction:column; gap:8px; padding:12px 14px; background:rgba(26,39,68,0.04); border-radius:6px; margin-bottom:12px; }
 .sl-f-tip { display:flex; gap:10px; align-items:flex-start; font-size:15px; line-height:1.65; color:#1A2744; }
 .sl-f-dot { width:6px; height:6px; border-radius:50%; background:#C8A84B; flex:0 0 auto; margin-top:8px; }
-.sl-f-trend {
-  font-size:14px; color:rgba(26,39,68,0.60); line-height:1.82;
-  border-left:2px solid rgba(26,39,68,0.14); padding-left:14px;
-}
-
-/* Mentor */
-.sl-m-lbl {
-  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
-  color:#C8A84B; font-weight:600; margin-bottom:10px;
-}
-.sl-m-qwrap {
-  background:rgba(200,168,75,0.11); border-left:3px solid #C8A84B;
-  border-radius:0 6px 6px 0; padding:12px 18px; margin-bottom:16px;
-}
-.sl-m-quote {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:20px; line-height:1.58; color:#1A2744; font-weight:500;
-}
+.sl-f-trend { font-size:14px; color:rgba(26,39,68,0.60); line-height:1.82; border-left:2px solid rgba(26,39,68,0.14); padding-left:14px; }
+.sl-m-lbl { font-size:13px; letter-spacing:0.10em; text-transform:uppercase; color:#C8A84B; font-weight:600; margin-bottom:10px; }
+.sl-m-qwrap { background:rgba(200,168,75,0.11); border-left:3px solid #C8A84B; border-radius:0 6px 6px 0; padding:12px 18px; margin-bottom:16px; }
+.sl-m-quote { font-family:'Playfair Display',Georgia,serif; font-size:20px; line-height:1.58; color:#1A2744; font-weight:500; }
 .sl-m-p { font-size:15px; line-height:1.78; color:#1A2744; margin-bottom:10px; }
 .sl-m-p:last-child { margin-bottom:0; }
 .sl-m-p a { color:#1A2744; border-bottom:1px solid #C8A84B; text-decoration:none; }
-
-/* Standard — tier ladder */
 .sl-tier-prog { display:flex; align-items:center; margin-bottom:22px; overflow-x:auto; padding-bottom:4px; }
 .sl-tier-prog::-webkit-scrollbar { height:2px; }
 .sl-tn { display:flex; flex-direction:column; align-items:center; gap:6px; flex:0 0 auto; }
 .sl-tc { width:18px; height:18px; border-radius:50%; border:2px solid rgba(26,39,68,0.18); background:#E8E5E0; }
 .sl-tc.past { background:#1A2744; border-color:#1A2744; }
-.sl-tc.cur {
-  width:26px; height:26px; background:#F5C700; border:2.5px solid #D4AA00;
-  box-shadow:0 0 0 4px rgba(245,199,0,0.28),0 0 0 8px rgba(245,199,0,0.10);
-}
+.sl-tc.cur { width:26px; height:26px; background:#F5C700; border:2.5px solid #D4AA00; box-shadow:0 0 0 4px rgba(245,199,0,0.28),0 0 0 8px rgba(245,199,0,0.10); }
 .sl-tc.fut { background:#E8E5E0; border-color:rgba(26,39,68,0.13); }
 .sl-tl { flex:1 1 10px; height:2px; background:rgba(26,39,68,0.12); min-width:8px; max-width:26px; }
 .sl-tl.past { background:#1A2744; }
-.sl-tlbl {
-  font-size:13px; letter-spacing:0.03em; text-transform:uppercase;
-  color:rgba(26,39,68,0.50); text-align:center; max-width:60px; white-space:nowrap;
-}
+.sl-tlbl { font-size:13px; letter-spacing:0.03em; text-transform:uppercase; color:rgba(26,39,68,0.50); text-align:center; max-width:60px; white-space:nowrap; }
 .sl-tlbl.active { color:#1A2744; font-weight:700; }
-
-/* GM image — 50% width centred */
 .sl-gm-img { width:50%; max-width:340px; display:block; border-radius:4px; margin:0 auto; }
-.sl-gm-ph {
-  width:50%; max-width:340px; height:160px; background:#D0CCC6; border-radius:4px;
-  display:flex; align-items:center; justify-content:center; margin:0 auto;
-  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase;
-}
-.sl-gm-credit {
-  display:flex; justify-content:space-between; align-items:baseline;
-  padding:8px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:16px;
-}
+.sl-gm-ph { width:50%; max-width:340px; height:160px; background:#D0CCC6; border-radius:4px; display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase; }
+.sl-gm-credit { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:16px; }
 .sl-gm-name { font-size:14px; color:#1A2744; font-weight:500; }
 .sl-gm-result { font-size:13px; color:#C8A84B; letter-spacing:0.06em; }
 .sl-std-copy { font-size:15px; line-height:1.82; color:#1A2744; margin-bottom:16px; }
-.sl-dims-hdr {
-  font-size:13px; letter-spacing:0.09em; text-transform:uppercase;
-  color:rgba(26,39,68,0.60); margin-bottom:10px;
-}
-.sl-dim-row {
-  display:flex; justify-content:space-between; align-items:baseline;
-  padding:10px 0; border-bottom:0.5px solid rgba(26,39,68,0.07);
-}
+.sl-dims-hdr { font-size:13px; letter-spacing:0.09em; text-transform:uppercase; color:rgba(26,39,68,0.60); margin-bottom:10px; }
+.sl-dim-row { display:flex; justify-content:space-between; align-items:baseline; padding:10px 0; border-bottom:0.5px solid rgba(26,39,68,0.07); }
 .sl-dim-row:last-child { border-bottom:none; }
 .sl-dim-plain { font-size:15px; color:#1A2744; }
-.sl-dim-official {
-  font-size:13px; letter-spacing:0.07em; text-transform:uppercase; color:rgba(26,39,68,0.50);
-}
+.sl-dim-official { font-size:13px; letter-spacing:0.07em; text-transform:uppercase; color:rgba(26,39,68,0.50); }
 .sl-std-close { font-size:15px; color:#1A2744; font-weight:600; margin-top:14px; }
 
-/* ══════════════════════════════════════
-   THE PULL — photograph + cream body
-══════════════════════════════════════ */
+/* ══ THE PULL ══ */
 .sl-pull-photo { width:100%; background:#0C1018; margin-top:14px; line-height:0; }
 .sl-pull-photo img { width:100%; max-height:320px; object-fit:contain; display:block; }
-.sl-pull-caption {
-  background:#1A2744; padding:14px 40px;
-  display:flex; justify-content:space-between; align-items:baseline;
-  flex-wrap:wrap; gap:8px;
-  border-bottom:0.5px solid rgba(255,255,255,0.07);
-}
-.sl-pull-cap-l {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:16px; color:rgba(255,255,255,0.70);
-}
+.sl-pull-caption { background:#1A2744; padding:14px 40px; display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; border-bottom:0.5px solid rgba(255,255,255,0.07); }
+.sl-pull-cap-l { font-family:'Playfair Display',Georgia,serif; font-size:16px; color:rgba(255,255,255,0.70); }
 .sl-pull-cap-r { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#C8A84B; }
-
-/* Pull body — warm cream */
 .sl-pull-body { background:#EDE8DF; padding:36px 40px 28px; }
-.sl-pull-ey {
-  font-size:13px; letter-spacing:0.14em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:12px;
-}
-.sl-pull-decl {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:26px; color:#1A2744; line-height:1.50; font-weight:400; margin-bottom:10px;
-}
+.sl-pull-ey { font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-bottom:12px; }
+.sl-pull-decl { font-family:'Playfair Display',Georgia,serif; font-size:26px; color:#1A2744; line-height:1.50; font-weight:400; margin-bottom:10px; }
 .sl-pull-decl em { color:#C8A84B; font-style:normal; }
-.sl-pull-sub {
-  font-size:16px; color:rgba(26,39,68,0.65); line-height:1.82;
-  margin-bottom:26px; max-width:620px;
-}
-
-/* Portfolio sale card */
-.sl-portfolio-card {
-  background:#1A2744; border-radius:8px; padding:20px 24px;
-  margin-bottom:22px; display:flex; gap:16px; align-items:flex-start;
-}
-.sl-pc-icon {
-  width:38px; height:38px; border-radius:50%;
-  background:rgba(200,168,75,0.15); border:1px solid rgba(200,168,75,0.28);
-  display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;
-}
-.sl-pc-eyebrow {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:#C8A84B; font-weight:600; margin-bottom:6px;
-}
-.sl-pc-title {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:18px; color:#fff; line-height:1.50; margin-bottom:6px; font-weight:400;
-}
+.sl-pull-sub { font-size:16px; color:rgba(26,39,68,0.65); line-height:1.82; margin-bottom:26px; max-width:620px; }
+.sl-portfolio-card { background:#1A2744; border-radius:8px; padding:20px 24px; margin-bottom:22px; display:flex; gap:16px; align-items:flex-start; }
+.sl-pc-icon { width:38px; height:38px; border-radius:50%; background:rgba(200,168,75,0.15); border:1px solid rgba(200,168,75,0.28); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.sl-pc-eyebrow { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#C8A84B; font-weight:600; margin-bottom:6px; }
+.sl-pc-title { font-family:'Playfair Display',Georgia,serif; font-size:18px; color:#fff; line-height:1.50; margin-bottom:6px; font-weight:400; }
 .sl-pc-text { font-size:14px; color:rgba(255,255,255,0.60); line-height:1.72; }
-
-/* Benefits — white cards on cream */
-.sl-ben-hdr {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:14px;
-}
+.sl-ben-hdr { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-bottom:14px; }
 .sl-ben-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-.sl-ben {
-  background:#FFFFFF; border-radius:8px; padding:18px;
-  border:0.5px solid rgba(26,39,68,0.11);
-}
-.sl-ben-icon {
-  width:30px; height:30px; border-radius:6px; background:rgba(200,168,75,0.13);
-  display:flex; align-items:center; justify-content:center; margin-bottom:10px;
-}
+.sl-ben { background:#FFFFFF; border-radius:8px; padding:18px; border:0.5px solid rgba(26,39,68,0.11); }
+.sl-ben-icon { width:30px; height:30px; border-radius:6px; background:rgba(200,168,75,0.13); display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
 .sl-ben-icon svg { width:15px; height:15px; stroke:#C8A84B; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
 .sl-ben-title { font-size:14px; color:#1A2744; font-weight:600; margin-bottom:5px; line-height:1.55; }
 .sl-ben-text  { font-size:13px; color:rgba(26,39,68,0.60); line-height:1.65; }
 
-/* Gap panel — light cream, gold on light */
+/* ══ GAP PANEL ══ */
 .sl-gap-panel { background:#EDE8DF; padding:32px 40px 36px; }
-.sl-gap-hdr {
-  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:18px;
-}
-.sl-gap-track {
-  position:relative; height:3px; background:rgba(26,39,68,0.12);
-  border-radius:2px; margin-bottom:36px;
-}
+.sl-gap-hdr { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-bottom:18px; }
+.sl-gap-track { position:relative; height:3px; background:rgba(26,39,68,0.12); border-radius:2px; margin-bottom:36px; }
 .sl-gap-fill { height:3px; background:linear-gradient(to right,rgba(200,168,75,0.45),#C8A84B); border-radius:2px; }
 .sl-gap-you { position:absolute; top:-6px; transform:translateX(-50%); }
-.sl-gap-you-dot {
-  width:15px; height:15px; border-radius:50%; background:#C8A84B;
-  border:2.5px solid #EDE8DF; margin:0 auto; box-shadow:0 0 0 3px rgba(200,168,75,0.22);
-}
-.sl-gap-you-lbl {
-  font-size:13px; color:#C8A84B; letter-spacing:0.06em; text-transform:uppercase;
-  white-space:nowrap; margin-top:8px; text-align:center; font-weight:600;
-}
+.sl-gap-you-dot { width:15px; height:15px; border-radius:50%; background:#C8A84B; border:2.5px solid #EDE8DF; margin:0 auto; box-shadow:0 0 0 3px rgba(200,168,75,0.22); }
+.sl-gap-you-lbl { font-size:13px; color:#C8A84B; letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; margin-top:8px; text-align:center; font-weight:600; }
 .sl-gap-gm { position:absolute; top:-6px; right:0; transform:translateX(50%); }
-.sl-gap-gm-dot {
-  width:15px; height:15px; border-radius:50%; background:#D8D4CC;
-  border:2px solid rgba(26,39,68,0.25); margin:0 auto;
-}
-.sl-gap-gm-lbl {
-  font-size:13px; color:rgba(26,39,68,0.50); letter-spacing:0.06em; text-transform:uppercase;
-  white-space:nowrap; margin-top:8px; text-align:center;
-}
+.sl-gap-gm-dot { width:15px; height:15px; border-radius:50%; background:#D8D4CC; border:2px solid rgba(26,39,68,0.25); margin:0 auto; }
+.sl-gap-gm-lbl { font-size:13px; color:rgba(26,39,68,0.50); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; margin-top:8px; text-align:center; }
 .sl-gap-nums { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; }
-.sl-gap-yn {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:52px; color:#1A2744; line-height:1; letter-spacing:-0.03em;
-}
+.sl-gap-yn { font-family:'Playfair Display',Georgia,serif; font-size:52px; color:#1A2744; line-height:1; letter-spacing:-0.03em; }
 .sl-gap-ys { font-size:13px; letter-spacing:0.07em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-top:4px; }
 .sl-gap-mid { font-size:14px; color:rgba(26,39,68,0.40); letter-spacing:0.06em; align-self:center; padding-bottom:14px; }
-.sl-gap-gn {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:52px; color:rgba(26,39,68,0.50); line-height:1; letter-spacing:-0.03em;
-}
+.sl-gap-gn { font-family:'Playfair Display',Georgia,serif; font-size:52px; color:rgba(26,39,68,0.50); line-height:1; letter-spacing:-0.03em; }
 .sl-gap-gs { font-size:13px; letter-spacing:0.07em; text-transform:uppercase; color:rgba(26,39,68,0.40); margin-top:4px; text-align:right; }
-.sl-tension {
-  font-family:'Playfair Display',Georgia,serif;
-  font-size:19px; color:#1A2744; line-height:1.65;
-  border-left:2px solid #C8A84B; padding-left:20px; margin-bottom:6px;
-}
-.sl-tension-sub {
-  font-size:15px; color:rgba(26,39,68,0.65); line-height:1.75;
-  padding-left:22px; margin-bottom:26px;
-}
-.sl-spark-hdr {
-  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:10px;
-}
+.sl-tension { font-family:'Playfair Display',Georgia,serif; font-size:19px; color:#1A2744; line-height:1.65; border-left:2px solid #C8A84B; padding-left:20px; margin-bottom:6px; }
+.sl-tension-sub { font-size:15px; color:rgba(26,39,68,0.65); line-height:1.75; padding-left:22px; margin-bottom:26px; }
+.sl-spark-hdr { font-size:13px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,39,68,0.55); margin-bottom:10px; }
 .sl-spark-note { font-size:13px; color:rgba(26,39,68,0.45); text-align:center; margin-top:5px; margin-bottom:26px; }
 .sl-gap-rule { width:100%; height:0.5px; background:rgba(26,39,68,0.10); margin-bottom:22px; }
-.sl-cta-primary {
-  font-size:17px; color:#1A2744; text-decoration:none; font-weight:700;
-  border-bottom:2px solid #C8A84B; padding-bottom:2px;
-  display:inline-flex; align-items:center; min-height:44px; margin-bottom:10px;
-}
-.sl-cta-secondary {
-  font-size:15px; color:rgba(26,39,68,0.55); text-decoration:none;
-  border-bottom:1px solid rgba(26,39,68,0.18); padding-bottom:1px;
-  display:inline-flex; align-items:center; min-height:44px;
-}
+.sl-cta-primary { font-size:17px; color:#1A2744; text-decoration:none; font-weight:700; border-bottom:2px solid #C8A84B; padding-bottom:2px; display:inline-flex; align-items:center; min-height:44px; margin-bottom:10px; }
+.sl-cta-secondary { font-size:15px; color:rgba(26,39,68,0.55); text-decoration:none; border-bottom:1px solid rgba(26,39,68,0.18); padding-bottom:1px; display:inline-flex; align-items:center; min-height:44px; }
 .sl-cta-free { font-size:13px; color:rgba(26,39,68,0.45); margin-top:6px; display:block; }
 
-/* ══════════════════════════════════════
-   FOOTER
-══════════════════════════════════════ */
-.sl-footer {
-  padding:18px 40px;
-  display:flex; justify-content:space-between; align-items:center;
-  flex-wrap:wrap; gap:10px; border-top:0.5px solid rgba(26,39,68,0.09);
-}
+/* ══ FOOTER ══ */
+.sl-footer { padding:18px 40px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:0.5px solid rgba(26,39,68,0.09); }
 .sl-footer-copy { font-size:13px; color:rgba(26,39,68,0.50); }
 .sl-footer-links { display:flex; gap:16px; flex-wrap:wrap; }
-.sl-footer-links a {
-  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.06em;
-  text-transform:uppercase; text-decoration:none;
-  min-height:44px; display:inline-flex; align-items:center;
-}
+.sl-footer-links a { font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.06em; text-transform:uppercase; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; }
 
-/* ══════════════════════════════════════
-   MOBILE BOTTOM NAV — exact base-staging Haiku pattern
-══════════════════════════════════════ */
+/* ══ MOBILE BOTTOM NAV ══ */
 .sl-bottom-nav {
   position:fixed; top:auto !important;
   bottom:env(safe-area-inset-bottom, 34px);
   left:0; right:0; height:62px; z-index:998;
   background:rgba(26,24,20,0.98);
   border-top:1.5px solid rgba(245,197,24,0.25);
-  display:none;
-  justify-content:space-around; align-items:flex-start;
+  display:none; justify-content:space-around; align-items:flex-start;
   padding-top:12px; overflow:visible;
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
 }
-.sl-bottom-nav .sl-nav-item {
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  text-decoration:none; color:rgba(255,255,255,0.40);
-  font-size:13px; font-weight:500; letter-spacing:0.02em;
-  min-width:44px; min-height:44px; justify-content:flex-start;
-  padding-top:4px; transition:color 0.1s;
-  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
-}
+.sl-bottom-nav .sl-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; text-decoration:none; color:rgba(255,255,255,0.40); font-size:13px; font-weight:500; letter-spacing:0.02em; min-width:44px; min-height:44px; justify-content:flex-start; padding-top:4px; transition:color 0.1s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
 .sl-bottom-nav .sl-nav-item.active { color:#F4C20D; }
 .sl-bottom-nav .sl-nav-item:hover  { color:#F4C20D; }
 .sl-bottom-nav .sl-nav-item:active { color:#F4C20D; transform:scale(1.15); transition:transform 0.1s; }
-.sl-bottom-nav .sl-nav-item__icon { font-size:20px; line-height:1; }
-.sl-bottom-nav .sl-nav-more-btn {
-  background:none; border:none; cursor:pointer; padding:0; font-family:inherit;
-}
-/* More drawer */
+.sl-bottom-nav .sl-nav-item svg { width:20px; height:20px; flex-shrink:0; }
+.sl-bottom-nav .sl-nav-more-btn { background:none; border:none; cursor:pointer; padding:0; font-family:inherit; }
 .sl-nav-more-wrap { position:relative; display:flex; flex-direction:column; align-items:center; }
-.sl-bottom-more-menu {
-  display:none; position:fixed; top:68px; right:0;
-  min-width:210px; max-width:80vw;
-  background:#1A1A18; border-left:1px solid rgba(245,197,24,0.15);
-  border-bottom:1px solid rgba(245,197,24,0.25);
-  z-index:1999; box-shadow:-4px 0 32px rgba(0,0,0,0.60);
-}
+.sl-bottom-more-menu { display:none; position:fixed; top:68px; right:0; min-width:210px; max-width:80vw; background:#1A1A18; border-left:1px solid rgba(245,197,24,0.15); border-bottom:1px solid rgba(245,197,24,0.25); z-index:1999; box-shadow:-4px 0 32px rgba(0,0,0,0.60); }
 .sl-bottom-more-menu.open { display:flex; flex-direction:column; }
-.sl-bottom-more-menu__list {
-  overflow-y:auto; max-height:55dvh; padding:8px 0; position:relative;
-  -webkit-overflow-scrolling:touch;
-}
-.sl-bottom-more-menu a {
-  display:block; color:rgba(255,255,255,0.80); text-decoration:none;
-  font-size:15px; font-weight:500; padding:11px 24px 11px 16px;
-  transition:background 0.15s,color 0.15s; white-space:nowrap;
-}
-.sl-bottom-more-menu a:hover,
-.sl-bottom-more-menu a:active { background:rgba(255,255,255,0.09); color:#fff; }
+.sl-bottom-more-menu__list { overflow-y:auto; max-height:55dvh; padding:8px 0; -webkit-overflow-scrolling:touch; }
+.sl-bottom-more-menu a { display:block; color:rgba(255,255,255,0.80); text-decoration:none; font-size:15px; font-weight:500; padding:11px 24px 11px 16px; transition:background 0.15s,color 0.15s; white-space:nowrap; }
+.sl-bottom-more-menu a:hover, .sl-bottom-more-menu a:active { background:rgba(255,255,255,0.09); color:#fff; }
 .sl-bottom-more-menu a.active { color:#F4C20D; }
-/* More drawer — mobile anchors above button */
-@media (max-width:899px) {
-  .sl-bottom-more-menu {
-    position:absolute; top:auto; bottom:calc(100% + 10px);
-    right:-8px; left:auto; min-width:210px; max-width:74vw;
-    border:1px solid rgba(245,197,24,0.25); border-radius:10px;
-    overflow:hidden; box-shadow:0 -6px 28px rgba(0,0,0,0.55); z-index:1999;
-  }
-  .sl-bottom-more-menu__list { max-height:58dvh; }
-  .sl-bottom-nav .sl-nav-item,
-  .sl-bottom-nav .sl-nav-more-btn,
-  .sl-bottom-more-menu a { touch-action:manipulation; }
-}
 
-/* ══════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════ */
+/* ══ RESPONSIVE ══ */
 @media (max-width:899px) {
+  .sl-bottom-more-menu { position:absolute; top:auto; bottom:calc(100% + 10px); right:-8px; left:auto; min-width:210px; max-width:74vw; border:1px solid rgba(245,197,24,0.25); border-radius:10px; overflow:hidden; box-shadow:0 -6px 28px rgba(0,0,0,0.55); z-index:1999; }
+  .sl-bottom-more-menu__list { max-height:58dvh; }
+  .sl-bottom-nav .sl-nav-item, .sl-bottom-nav .sl-nav-more-btn, .sl-bottom-more-menu a { touch-action:manipulation; }
   .sl-top-nav .sl-nav-links { display:none; }
   .sl-bottom-nav { display:flex; }
   .sl-page { padding-bottom:80px; }
 }
 @media (max-width:768px) {
-  .sl-top-nav,
-  .sl-hero, .sl-hero-caption,
+  .sl-top-nav, .sl-hero, .sl-hero-caption,
   .sl-standing, .sl-record-band, .sl-trend-band,
-  .sl-obs-band, .sl-pull-caption,
-  .sl-pull-body, .sl-gap-panel, .sl-footer { padding-left:20px; padding-right:20px; }
+  .sl-obs-band, .sl-pull-caption, .sl-pull-body,
+  .sl-gap-panel, .sl-footer { padding-left:20px; padding-right:20px; }
   .sl-sections { padding:12px 16px 0; }
   .sl-ben-grid { grid-template-columns:1fr 1fr; }
-  .sl-standing-score { font-size:52px; }
+  .sl-standing-tier { font-size:20px; }
+  .sl-standing-sub { font-size:15px; }
+  .sl-standing-stat { font-size:15px; }
+  .sl-standing-stat strong { font-size:17px; }
   .sl-gap-yn, .sl-gap-gn { font-size:42px; }
   .sl-pull-decl { font-size:22px; }
   .sl-tension { font-size:18px; }
   .sl-obs-text { font-size:18px; }
   .sl-standing-newgm { margin-left:0; }
+  .sl-rc { width:200px; }
+  .sl-rc-img { width:200px; height:150px; }
+  .sl-rc-img img { width:200px; height:150px; }
 }
 @media (max-width:480px) {
-  .sl-top-nav,
-  .sl-hero, .sl-hero-caption,
+  .sl-top-nav, .sl-hero, .sl-hero-caption,
   .sl-standing, .sl-record-band, .sl-trend-band,
-  .sl-obs-band, .sl-pull-caption,
-  .sl-pull-body, .sl-gap-panel, .sl-footer { padding-left:16px; padding-right:16px; }
+  .sl-obs-band, .sl-pull-caption, .sl-pull-body,
+  .sl-gap-panel, .sl-footer { padding-left:16px; padding-right:16px; }
   .sl-sections { padding:10px 12px 0; }
   .sl-ben-grid { grid-template-columns:1fr; }
+  .sl-standing-tier { font-size:18px; }
+  .sl-standing-sub { font-size:14px; }
+  .sl-standing-stat { font-size:14px; }
+  .sl-standing-stat strong { font-size:16px; }
   .sl-gap-yn, .sl-gap-gn { font-size:36px; }
-  .sl-standing-score { font-size:44px; }
-  .sl-rc { width:160px; }
-  .sl-rc-img { width:160px; height:120px; }
-  .sl-rc-img img { width:160px; height:120px; }
   .sl-pull-decl { font-size:20px; }
   .sl-tension { font-size:17px; }
   .sl-obs-text { font-size:17px; }
+  .sl-rc { width:170px; }
+  .sl-rc-img { width:170px; height:128px; }
+  .sl-rc-img img { width:170px; height:128px; }
 }
 </style>
 </head>
 <body>
 <div class="sl-page">
 
-{# ── compute best_score once ── #}
+{# ── compute once ── #}
 {% set best_score = namespace(val=0.0) %}
 {% for img in images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
 {% set gap = [9.0 - best_score.val, 0.0] | max %}
 {% set pct = [(best_score.val / 9.0 * 100), 100.0] | min %}
 
-<!-- ════ TOP NAV ════ -->
+<!-- TOP NAV -->
 <nav class="sl-top-nav">
   <a href="{{ url_for('try_welcome') }}" class="sl-nav-brand">
-    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-         alt="Shutter League" onerror="this.style.display='none'">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" onerror="this.style.display='none'">
     <span class="sl-nav-brand-fallback">Shutter League</span>
   </a>
   <div class="sl-nav-links">
@@ -603,48 +307,35 @@ a, button { cursor:pointer; color:inherit; }
     <a href="{{ url_for('standings_public') }}">League of Photographers</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out" aria-label="Log out">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </a>
   </div>
 </nav>
 
-<!-- ════ ACT 1 — BEST PHOTOGRAPH ════ -->
+<!-- HERO — best photograph -->
 {% if user_hero and user_hero.thumb_url %}
 <div class="sl-hero-img-wrap">
-  <img src="{{ user_hero.thumb_url }}"
-       alt="Your best photograph — {{ user_hero.tier }}, {{ '%.2f'|format(user_hero.score) }}">
+  <img src="{{ user_hero.thumb_url }}" alt="Your best photograph — {{ user_hero.tier }}, {{ '%.2f'|format(user_hero.score) }}">
 </div>
 <div class="sl-hero-caption">
   <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
     <span class="sl-hero-caption-score">{{ "%.2f"|format(user_hero.score) }}</span>
     <span class="sl-hero-caption-tier">{{ user_hero.tier }}</span>
   </div>
-  <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="sl-hero-caption-link">
-    See full evaluation →
-  </a>
+  <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="sl-hero-caption-link">See full evaluation →</a>
 </div>
 {% endif %}
-
 <div class="sl-hero">
-  <span class="sl-hero-greeting" id="sl-greeting">Good morning</span>
+  <span class="sl-hero-greeting" id="sl-greeting">Good afternoon</span>
 </div>
 
-<!-- ════ STANDING BAND — metadata only, score already in hero caption ════ -->
+<!-- STANDING BAND -->
 <div class="sl-standing">
   {% if user_hero %}
   <div class="sl-standing-main">
     <div class="sl-standing-right">
       <span class="sl-standing-tier">{{ user_hero.tier }}</span>
-      <span class="sl-standing-sub">
-        {{ user_hero.genre }}
-        &nbsp;·&nbsp; {{ evals_used }} evaluated
-        {% if haiku_percentile %} &nbsp;·&nbsp; Top {{ haiku_percentile }}%{% endif %}
-      </span>
+      <span class="sl-standing-sub">{{ user_hero.genre }} &nbsp;·&nbsp; {{ evals_used }} evaluated{% if haiku_percentile %} &nbsp;·&nbsp; Top {{ haiku_percentile }}%{% endif %}</span>
     </div>
   </div>
   {% endif %}
@@ -652,14 +343,44 @@ a, button { cursor:pointer; color:inherit; }
   <div class="sl-standing-footer">
     <span class="sl-standing-stat"><strong>{{ evals_remaining }}</strong> evaluations remaining</span>
     <span class="sl-standing-stat"><strong>{{ evals_used }} of 10</strong> free used</span>
-    <a href="{{ url_for('standings_public') }}" class="sl-standing-newgm">
-      See the latest in the League →
-    </a>
+    <a href="{{ url_for('standings_public') }}" class="sl-standing-newgm">See the latest in the League →</a>
   </div>
 </div>
 
-<!-- ════ YOUR RECORD — images first ════ -->
+<!-- TREND LINE — first -->
 {% if images %}
+<div class="sl-trend-band">
+  <div class="sl-trend-eyebrow">Your arc · {{ evals_used }} evaluation{{ 's' if evals_used != 1 else '' }} · what the journey builds toward</div>
+  <svg viewBox="0 0 580 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;" aria-hidden="true">
+    <defs>
+      <linearGradient id="sl-sf" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#C8A84B" stop-opacity="0.14"/>
+        <stop offset="100%" stop-color="#C8A84B" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <line x1="0" y1="10" x2="580" y2="10" stroke="rgba(200,168,75,0.35)" stroke-width="1" stroke-dasharray="3,4"/>
+    <text x="4" y="9" fill="rgba(200,168,75,0.65)" font-size="8" font-family="Inter,sans-serif">Grandmaster 9.0</text>
+    {%- set imgs_s = images | selectattr('score') | list | reverse | list -%}
+    {%- set n = imgs_s | length -%}
+    {%- if n > 0 -%}
+      {%- set x_step = (290 / [n - 1, 1] | max) -%}
+      {%- set pts = [] -%}
+      {%- for img in imgs_s -%}{%- set x = (loop.index0 * x_step) | int -%}{%- set y = (72 - (img.score / 10.0 * 62)) | int -%}{%- set _ = pts.append(x ~ ',' ~ y) -%}{%- endfor -%}
+    <path d="{{ 'M' + pts[0] + ' L' + pts | join(' L') }} L{{ ((n-1)*x_step)|int }},72 L0,72 Z" fill="url(#sl-sf)"/>
+    <polyline points="{{ pts | join(' ') }}" fill="none" stroke="#C8A84B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    {%- for img in imgs_s -%}{%- set x = (loop.index0 * x_step) | int -%}{%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
+    <circle cx="{{ x }}" cy="{{ y }}" r="{{ 5 if loop.last else 3.5 }}" fill="#C8A84B"/>
+    {%- endfor -%}
+    {%- set first = imgs_s[0] -%}{%- set last = imgs_s[-1] -%}{%- set lx = ((n-1) * x_step) | int -%}{%- set ly = (72 - (last.score / 10.0 * 62)) | int -%}
+    <text x="4" y="76" fill="rgba(26,39,68,0.40)" font-size="9" font-family="Inter,sans-serif">#1 · {{ "%.2f"|format(first.score) }}</text>
+    <text x="{{ lx - 2 }}" y="{{ ly - 8 }}" fill="rgba(200,168,75,0.85)" font-size="9" font-family="Inter,sans-serif">Today · {{ "%.2f"|format(last.score) }}</text>
+    {%- endif -%}
+    <polyline points="290,{{ (72 - (best_score.val / 10.0 * 62)) | int }} 350,{{ (72 - (best_score.val / 10.0 * 62 + 5)) | int }} 420,{{ (72 - (best_score.val / 10.0 * 62 + 12)) | int }} 490,{{ (72 - (best_score.val / 10.0 * 62 + 18)) | int }} 560,{{ (72 - (best_score.val / 10.0 * 62 + 28)) | int }}" fill="none" stroke="#C8A84B" stroke-width="1.5" stroke-dasharray="4,5" stroke-linecap="round" stroke-linejoin="round" opacity="0.28"/>
+    <text x="310" y="76" fill="rgba(26,39,68,0.25)" font-size="9" font-family="Inter,sans-serif">Your arc continues inside the League →</text>
+  </svg>
+</div>
+
+<!-- RECORD STRIP — below trend -->
 <div class="sl-record-band">
   <div class="sl-record-eyebrow">Your evaluated images</div>
   <div class="sl-record-title">Your record</div>
@@ -668,170 +389,64 @@ a, button { cursor:pointer; color:inherit; }
     {% if img.thumb_url %}
     <a href="{{ url_for('try_result', image_id=img.id) }}" class="sl-rc">
       <div class="sl-rc-img">
-        <img src="{{ img.thumb_url }}"
-             alt="Evaluation {{ loop.revindex }}"
-             style="width:190px;height:142px;object-fit:contain;display:block;">
+        <img src="{{ img.thumb_url }}" alt="Evaluation {{ loop.revindex }}" style="width:240px;height:180px;object-fit:contain;display:block;">
         <div class="sl-rc-hover">↗ Scorecard</div>
       </div>
       <div class="sl-rc-num">Eval {{ loop.revindex }}</div>
       <div class="sl-rc-res">{{ "%.2f"|format(img.score) if img.score else '—' }}</div>
       <div class="sl-rc-tier">{{ img.tier if img.tier else '' }}</div>
-      {% if img.score == best_score.val and best_score.val > 0 %}
-      <span class="sl-rc-best">Best</span>
-      {% endif %}
+      {% if img.score == best_score.val and best_score.val > 0 %}<span class="sl-rc-best">Best</span>{% endif %}
     </a>
     {% endif %}
     {% endfor %}
   </div>
   <a href="{{ url_for('try_gallery') }}" class="sl-view-all">View all →</a>
 </div>
-
-<!-- ════ TREND LINE — arc immediately after record ════ -->
-<div class="sl-trend-band">
-  <div class="sl-trend-eyebrow">
-    Your arc · {{ evals_used }} evaluation{{ 's' if evals_used != 1 else '' }} · what the journey builds toward
-  </div>
-  <svg viewBox="0 0 580 80" xmlns="http://www.w3.org/2000/svg"
-       style="width:100%;display:block;" aria-hidden="true">
-    <defs>
-      <linearGradient id="sl-sf" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#C8A84B" stop-opacity="0.14"/>
-        <stop offset="100%" stop-color="#C8A84B" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <line x1="0" y1="10" x2="580" y2="10"
-          stroke="rgba(200,168,75,0.35)" stroke-width="1" stroke-dasharray="3,4"/>
-    <text x="4" y="9" fill="rgba(200,168,75,0.65)"
-          font-size="8" font-family="Inter,sans-serif">Grandmaster 9.0</text>
-    {%- set imgs_s = images | selectattr('score') | list | reverse | list -%}
-    {%- set n = imgs_s | length -%}
-    {%- if n > 0 -%}
-      {%- set x_step = (290 / [n - 1, 1] | max) -%}
-      {%- set pts = [] -%}
-      {%- for img in imgs_s -%}
-        {%- set x = (loop.index0 * x_step) | int -%}
-        {%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
-        {%- set _ = pts.append(x ~ ',' ~ y) -%}
-      {%- endfor -%}
-    <path d="{{ 'M' + pts[0] + ' L' + pts | join(' L') }} L{{ ((n-1)*x_step)|int }},72 L0,72 Z"
-          fill="url(#sl-sf)"/>
-    <polyline points="{{ pts | join(' ') }}"
-              fill="none" stroke="#C8A84B" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-    {%- for img in imgs_s -%}
-      {%- set x = (loop.index0 * x_step) | int -%}
-      {%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
-      <circle cx="{{ x }}" cy="{{ y }}" r="{{ 5 if loop.last else 3.5 }}" fill="#C8A84B"/>
-    {%- endfor -%}
-    {%- set first = imgs_s[0] -%}
-    {%- set last  = imgs_s[-1] -%}
-    {%- set lx = ((n-1) * x_step) | int -%}
-    {%- set ly = (72 - (last.score / 10.0 * 62)) | int -%}
-    <text x="4" y="76" fill="rgba(26,39,68,0.40)" font-size="9" font-family="Inter,sans-serif">
-      #1 · {{ "%.2f"|format(first.score) }}
-    </text>
-    <text x="{{ lx - 2 }}" y="{{ ly - 8 }}"
-          fill="rgba(200,168,75,0.85)" font-size="9" font-family="Inter,sans-serif">
-      Today · {{ "%.2f"|format(last.score) }}
-    </text>
-    {%- endif -%}
-    <polyline
-      points="290,{{ (72 - (best_score.val / 10.0 * 62)) | int }} 350,{{ (72 - (best_score.val / 10.0 * 62 + 5)) | int }} 420,{{ (72 - (best_score.val / 10.0 * 62 + 12)) | int }} 490,{{ (72 - (best_score.val / 10.0 * 62 + 18)) | int }} 560,{{ (72 - (best_score.val / 10.0 * 62 + 28)) | int }}"
-      fill="none" stroke="#C8A84B" stroke-width="1.5" stroke-dasharray="4,5"
-      stroke-linecap="round" stroke-linejoin="round" opacity="0.28"/>
-    <text x="310" y="76" fill="rgba(26,39,68,0.25)" font-size="9" font-family="Inter,sans-serif">
-      Your arc continues inside the League →
-    </text>
-  </svg>
-</div>
 {% endif %}
 
-<!-- ════ INSTITUTION SPEAKS — once, no duplicate thumbnail ════ -->
+<!-- INSTITUTION SPEAKS -->
 {% if sherpa_obs %}
 <div class="sl-obs-band">
-  <div class="sl-obs-eyebrow">
-    What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}
-  </div>
+  <div class="sl-obs-eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
   <div class="sl-obs-text">{{ sherpa_obs }}</div>
 </div>
 {% endif %}
 
-<!-- ════ ACT 2 SECTION CARDS ════ -->
+<!-- SECTION CARDS -->
 <div class="sl-sections">
 
-  <!-- Sherpa — nudge only, no body repeat -->
   {% if sherpa_nudge %}
   <div class="sl-sc sl-sc-sherpa">
     <div class="sl-se">Shutter League Mentor note</div>
     <div class="sl-st">What to pursue next</div>
-    <div class="sl-nudge">
-      <span class="sl-nudge-lbl">Mentor note</span>
-      {{ sherpa_nudge }}
-    </div>
+    <div class="sl-nudge"><span class="sl-nudge-lbl">Mentor note</span>{{ sherpa_nudge }}</div>
   </div>
   {% endif %}
 
-  <!-- Frontier — milestone_strength is the photographer's STRENGTH -->
   {% if milestone_strength %}
   <div class="sl-sc sl-sc-frontier">
     <div class="sl-se">What your evaluation record reveals</div>
     <div class="sl-f-dim">Your instinctive strength: {{ milestone_strength }}</div>
-    <div class="sl-f-para">
-      Your {{ milestone_strength }} shows clearly and consistently across your evaluated photographs —
-      the emotional atmosphere your eye creates without effort.
-      That is your voice. The next tier asks you to direct that voice into situations
-      that are genuinely harder to reach, so the strength carries more weight.
-    </div>
-    <div class="sl-f-para" style="font-weight:600;color:#1A2744;">
-      Your recurring gap: Depth of Difficulty
-    </div>
+    <div class="sl-f-para">Your {{ milestone_strength }} shows clearly and consistently across your evaluated photographs — the emotional atmosphere your eye creates without effort. That is your voice. The next tier asks you to direct that voice into situations that are genuinely harder to reach.</div>
+    <div class="sl-f-para" style="font-weight:600;color:#1A2744;">Your recurring gap: Depth of Difficulty</div>
     <div class="sl-f-tips">
-      <div class="sl-f-tip">
-        <div class="sl-f-dot"></div>
-        <span>Shoot at the hour that costs you — pre-dawn, monsoon, extreme heat. That difficulty is legible in the image.</span>
-      </div>
-      <div class="sl-f-tip">
-        <div class="sl-f-dot"></div>
-        <span>Put yourself where you are waiting, not arranging. The decisive moment cannot be staged.</span>
-      </div>
-      <div class="sl-f-tip">
-        <div class="sl-f-dot"></div>
-        <span>Place your subject where tension lives — the edge of frame, the heavy negative space. Break the safe thirds.</span>
-      </div>
+      <div class="sl-f-tip"><div class="sl-f-dot"></div><span>Shoot at the hour that costs you — pre-dawn, monsoon, extreme heat. That difficulty is legible in the image.</span></div>
+      <div class="sl-f-tip"><div class="sl-f-dot"></div><span>Put yourself where you are waiting, not arranging. The decisive moment cannot be staged.</span></div>
+      <div class="sl-f-tip"><div class="sl-f-dot"></div><span>Place your subject where tension lives — the edge of frame, the heavy negative space. Break the safe thirds.</span></div>
     </div>
-    <div class="sl-f-trend">
-      Your {{ milestone_strength }} is the voice. Depth of Difficulty is what makes the voice matter.
-      The two together are what the next tier is built from.
-    </div>
+    <div class="sl-f-trend">Your {{ milestone_strength }} is the voice. Depth of Difficulty is what makes the voice matter. The two together are what the next tier is built from.</div>
   </div>
   {% endif %}
 
-  <!-- Mentor — one instance, craft guidance -->
   <div class="sl-sc sl-sc-mentor">
     <div class="sl-m-lbl">Shutter League Mentor note</div>
     <div class="sl-st">What the craft asks of you next</div>
-    <div class="sl-m-qwrap">
-      <div class="sl-m-quote">The photograph that costs you nothing costs the viewer nothing.</div>
-    </div>
-    <div class="sl-m-p">
-      Your emotional instinct is already strong — the atmosphere is there.
-      The next discipline is compositional commitment: pick one subject and
-      exclude everything that does not serve it.
-    </div>
-    <div class="sl-m-p">
-      The <a href="https://en.wikipedia.org/wiki/Gestalt_psychology" target="_blank" rel="noopener">Gestalt principles</a>
-      at work in your best image — the figure-ground separation, the way the
-      eye is guided before the mind intervenes — are there by instinct.
-      Now apply them by intention.
-    </div>
-    <div class="sl-m-p">
-      Leading lines, deliberate negative space, the decisive moment as geometry
-      rather than feeling. That is the distance between where you are and
-      where the next tier begins.
-    </div>
+    <div class="sl-m-qwrap"><div class="sl-m-quote">The photograph that costs you nothing costs the viewer nothing.</div></div>
+    <div class="sl-m-p">Your emotional instinct is already strong — the atmosphere is there. The next discipline is compositional commitment: pick one subject and exclude everything that does not serve it.</div>
+    <div class="sl-m-p">The <a href="https://en.wikipedia.org/wiki/Gestalt_psychology" target="_blank" rel="noopener">Gestalt principles</a> at work in your best image — the figure-ground separation, the way the eye is guided before the mind intervenes — are there by instinct. Now apply them by intention.</div>
+    <div class="sl-m-p">Leading lines, deliberate negative space, the decisive moment as geometry rather than feeling. That is the distance between where you are and where the next tier begins.</div>
   </div>
 
-  <!-- The Standard -->
   <div class="sl-sc sl-sc-standard">
     <div class="sl-se">The standard you are building toward</div>
     <div class="sl-st">Where you stand on the tier ladder</div>
@@ -839,198 +454,89 @@ a, button { cursor:pointer; color:inherit; }
     {% set current_tier = user_hero.tier if user_hero else '' %}
     {% set current_idx = tiers.index(current_tier) if current_tier in tiers else -1 %}
     <div class="sl-tier-prog">
-      {% for t in tiers %}
-      {% set t_idx = loop.index0 %}
-      <div class="sl-tn">
-        <div class="sl-tc {% if t == current_tier %}cur{% elif t_idx < current_idx %}past{% else %}fut{% endif %}"></div>
-        <div class="sl-tlbl {% if t == current_tier %}active{% endif %}">{{ t }}</div>
-      </div>
-      {% if not loop.last %}
-      <div class="sl-tl {% if t_idx < current_idx %}past{% endif %}"></div>
-      {% endif %}
+      {% for t in tiers %}{% set t_idx = loop.index0 %}
+      <div class="sl-tn"><div class="sl-tc {% if t == current_tier %}cur{% elif t_idx < current_idx %}past{% else %}fut{% endif %}"></div><div class="sl-tlbl {% if t == current_tier %}active{% endif %}">{{ t }}</div></div>
+      {% if not loop.last %}<div class="sl-tl {% if t_idx < current_idx %}past{% endif %}"></div>{% endif %}
       {% endfor %}
     </div>
     {% if league_hero and league_hero.thumb_url %}
-    <img class="sl-gm-img" src="{{ league_hero.thumb_url }}"
-         alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-    <div class="sl-gm-credit">
-      <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
-      <span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
-    </div>
+    <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
+    <div class="sl-gm-credit"><span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span><span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span></div>
     {% else %}
     <div class="sl-gm-ph">Grandmaster photograph</div>
-    <div class="sl-gm-credit">
-      <span class="sl-gm-name">Grandmaster · Shutter League</span>
-      <span class="sl-gm-result">9.00</span>
-    </div>
+    <div class="sl-gm-credit"><span class="sl-gm-name">Grandmaster · Shutter League</span><span class="sl-gm-result">9.00</span></div>
     {% endif %}
-    <div class="sl-std-copy">
-      At every festival, a thousand photographers press the shutter at the same moment.
-      One image stands apart — because that photographer saw differently before they raised the camera.
-    </div>
+    <div class="sl-std-copy">At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.</div>
     <div class="sl-dims-hdr">The five dimensions every evaluation is built on</div>
-    <div class="sl-dim-row">
-      <span class="sl-dim-plain">The difficulty of getting to the shot</span>
-      <span class="sl-dim-official">Depth of Difficulty</span>
-    </div>
-    <div class="sl-dim-row">
-      <span class="sl-dim-plain">Whether it is visually disruptive</span>
-      <span class="sl-dim-official">Visual Disruption</span>
-    </div>
-    <div class="sl-dim-row">
-      <span class="sl-dim-plain">Whether it caught the decisive moment</span>
-      <span class="sl-dim-official">Decisive Moment</span>
-    </div>
-    <div class="sl-dim-row">
-      <span class="sl-dim-plain">Whether it creates wonder</span>
-      <span class="sl-dim-official">Wonder Factor</span>
-    </div>
-    <div class="sl-dim-row">
-      <span class="sl-dim-plain">The emotion it carries</span>
-      <span class="sl-dim-official">Affective Quotient</span>
-    </div>
+    <div class="sl-dim-row"><span class="sl-dim-plain">The difficulty of getting to the shot</span><span class="sl-dim-official">Depth of Difficulty</span></div>
+    <div class="sl-dim-row"><span class="sl-dim-plain">Whether it is visually disruptive</span><span class="sl-dim-official">Visual Disruption</span></div>
+    <div class="sl-dim-row"><span class="sl-dim-plain">Whether it caught the decisive moment</span><span class="sl-dim-official">Decisive Moment</span></div>
+    <div class="sl-dim-row"><span class="sl-dim-plain">Whether it creates wonder</span><span class="sl-dim-official">Wonder Factor</span></div>
+    <div class="sl-dim-row"><span class="sl-dim-plain">The emotion it carries</span><span class="sl-dim-official">Affective Quotient</span></div>
     <div class="sl-std-close">The highest standard demands strength across all five.</div>
   </div>
 
-</div>{# /sl-sections #}
-
-<!-- ════ THE PULL — Grandmaster photograph ════ -->
-{% if league_hero and league_hero.thumb_url %}
-<div class="sl-pull-photo">
-  <img src="{{ league_hero.thumb_url }}"
-       alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ league_hero.genre }}">
 </div>
+
+<!-- THE PULL -->
+{% if league_hero and league_hero.thumb_url %}
+<div class="sl-pull-photo"><img src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ league_hero.genre }}"></div>
 <div class="sl-pull-caption">
   <span class="sl-pull-cap-l">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
   <span class="sl-pull-cap-r">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
 </div>
 {% else %}
-<div class="sl-pull-photo" style="height:200px;display:flex;align-items:center;justify-content:center;">
-  <span style="font-size:13px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.55);">Grandmaster photograph</span>
-</div>
-<div class="sl-pull-caption">
-  <span class="sl-pull-cap-l">Grandmaster · Shutter League</span>
-  <span class="sl-pull-cap-r">Grandmaster &nbsp;·&nbsp; 9.00</span>
-</div>
+<div class="sl-pull-photo" style="height:180px;display:flex;align-items:center;justify-content:center;"><span style="font-size:14px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.55);">Grandmaster photograph</span></div>
+<div class="sl-pull-caption"><span class="sl-pull-cap-l">Grandmaster · Shutter League</span><span class="sl-pull-cap-r">Grandmaster &nbsp;·&nbsp; 9.00</span></div>
 {% endif %}
 
-<!-- Pull body -->
 <div class="sl-pull-body">
   <div class="sl-pull-ey">League of Photographers</div>
-  <div class="sl-pull-decl">
-    The League is selective<br>because <em>the standard is real.</em>
-  </div>
-  <div class="sl-pull-sub">
-    That standing was not purchased. It was accumulated, photograph by photograph,
-    against the same five-dimension standard that evaluated every one of your images.
-    That is what makes a standing here worth having — and worth working toward.
-  </div>
-
-  <!-- Portfolio sale -->
+  <div class="sl-pull-decl">The League is selective<br>because <em>the standard is real.</em></div>
+  <div class="sl-pull-sub">That standing was not purchased. It was accumulated, photograph by photograph, against the same five-dimension standard that evaluated every one of your images. That is what makes a standing here worth having — and worth working toward.</div>
   <div class="sl-portfolio-card">
-    <div class="sl-pc-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-           stroke="#C8A84B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
-      </svg>
-    </div>
+    <div class="sl-pc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8A84B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
     <div>
       <div class="sl-pc-eyebrow">This already happened on Shutter League</div>
       <div class="sl-pc-title">A League member's photograph was purchased by a client directly from their portfolio.</div>
-      <div class="sl-pc-text">
-        Your League portfolio is a living showreel — evaluated, credentialed work that clients
-        and galleries take seriously. Not a private record. A public showcase of what your eye has earned.
-      </div>
+      <div class="sl-pc-text">Your League portfolio is a living showreel — evaluated, credentialed work that clients and galleries take seriously. Not a private record. A public showcase of what your eye has earned.</div>
     </div>
   </div>
-
-  <!-- Benefits -->
   <div class="sl-ben-hdr">What membership in the League gives you</div>
   <div class="sl-ben-grid">
-    <div class="sl-ben">
-      <div class="sl-ben-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-      <div class="sl-ben-title">A portfolio clients can browse and buy from</div>
-      <div class="sl-ben-text">Your evaluated work, publicly visible. The kind clients and galleries take seriously.</div>
-    </div>
-    <div class="sl-ben">
-      <div class="sl-ben-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-      <div class="sl-ben-title">Exhibitions</div>
-      <div class="sl-ben-text">League members considered for curated physical and digital exhibitions. Your work shown, not stored.</div>
-    </div>
-    <div class="sl-ben">
-      <div class="sl-ben-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-      <div class="sl-ben-title">Programme guidance</div>
-      <div class="sl-ben-text">The platform identifies which image is strong enough to submit to programmes. Your best, not your favourite.</div>
-    </div>
-    <div class="sl-ben">
-      <div class="sl-ben-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-      <div class="sl-ben-title">Expert Mentor advice</div>
-      <div class="sl-ben-text">A practitioner's eye on your specific work — real feedback, not an algorithm's note.</div>
-    </div>
-    <div class="sl-ben">
-      <div class="sl-ben-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-      <div class="sl-ben-title">Lessons tied to your gaps</div>
-      <div class="sl-ben-text">Structured learning chosen because of what your record reveals — not a generic curriculum.</div>
-    </div>
-    <div class="sl-ben">
-      <div class="sl-ben-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
-      <div class="sl-ben-title">A public standing that means something</div>
-      <div class="sl-ben-text">Your name, your tier, your arc — visible on the League page. A credential the standard awarded you.</div>
-    </div>
+    <div class="sl-ben"><div class="sl-ben-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="sl-ben-title">A portfolio clients can browse and buy from</div><div class="sl-ben-text">Your evaluated work, publicly visible. The kind clients and galleries take seriously.</div></div>
+    <div class="sl-ben"><div class="sl-ben-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="sl-ben-title">Exhibitions</div><div class="sl-ben-text">League members considered for curated physical and digital exhibitions. Your work shown, not stored.</div></div>
+    <div class="sl-ben"><div class="sl-ben-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="sl-ben-title">Programme guidance</div><div class="sl-ben-text">The platform identifies which image is strong enough to submit to programmes. Your best, not your favourite.</div></div>
+    <div class="sl-ben"><div class="sl-ben-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="sl-ben-title">Expert Mentor advice</div><div class="sl-ben-text">A practitioner's eye on your specific work — real feedback, not an algorithm's note.</div></div>
+    <div class="sl-ben"><div class="sl-ben-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="sl-ben-title">Lessons tied to your gaps</div><div class="sl-ben-text">Structured learning chosen because of what your record reveals — not a generic curriculum.</div></div>
+    <div class="sl-ben"><div class="sl-ben-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div><div class="sl-ben-title">A public standing that means something</div><div class="sl-ben-text">Your name, your tier, your arc — visible on the League page. A credential the standard awarded you.</div></div>
   </div>
 </div>
 
-<!-- Gap panel -->
 <div class="sl-gap-panel">
   <div class="sl-gap-hdr">Your distance from Grandmaster standing</div>
   <div class="sl-gap-track">
     <div class="sl-gap-fill" style="width:{{ '%.1f'|format(pct) }}%;"></div>
-    <div class="sl-gap-you" style="left:{{ '%.1f'|format(pct) }}%;">
-      <div class="sl-gap-you-dot"></div>
-      <div class="sl-gap-you-lbl">You &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }}</div>
-    </div>
-    <div class="sl-gap-gm">
-      <div class="sl-gap-gm-dot"></div>
-      <div class="sl-gap-gm-lbl">Grandmaster</div>
-    </div>
+    <div class="sl-gap-you" style="left:{{ '%.1f'|format(pct) }}%;"><div class="sl-gap-you-dot"></div><div class="sl-gap-you-lbl">You &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }}</div></div>
+    <div class="sl-gap-gm"><div class="sl-gap-gm-dot"></div><div class="sl-gap-gm-lbl">Grandmaster</div></div>
   </div>
   <div class="sl-gap-nums">
-    <div>
-      <div class="sl-gap-yn">{{ "%.2f"|format(best_score.val) }}</div>
-      <div class="sl-gap-ys">Your best &nbsp;·&nbsp; {{ user_hero.tier if user_hero else '' }}</div>
-    </div>
+    <div><div class="sl-gap-yn">{{ "%.2f"|format(best_score.val) }}</div><div class="sl-gap-ys">Your best &nbsp;·&nbsp; {{ user_hero.tier if user_hero else '' }}</div></div>
     <div class="sl-gap-mid">← {{ "%.2f"|format(gap) }} →</div>
-    <div style="text-align:right;">
-      <div class="sl-gap-gn">9.00</div>
-      <div class="sl-gap-gs">Grandmaster threshold</div>
-    </div>
+    <div style="text-align:right;"><div class="sl-gap-gn">9.00</div><div class="sl-gap-gs">Grandmaster threshold</div></div>
   </div>
-  <div class="sl-tension">
-    Your evaluation result puts you at the threshold of serious consideration.
-  </div>
-  <div class="sl-tension-sub">
-    The gap is not talent. It is accumulated decision-making — photograph by photograph.
-    Every image you submit either closes this distance or widens it. The League records both.
-  </div>
+  <div class="sl-tension">Your evaluation result puts you at the threshold of serious consideration.</div>
+  <div class="sl-tension-sub">The gap is not talent. It is accumulated decision-making — photograph by photograph. Every image you submit either closes this distance or widens it. The League records both.</div>
   <div class="sl-gap-rule"></div>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    <a href="{{ url_for('standings_public') }}" class="sl-cta-primary">
-      See who has earned a standing in the League →
-    </a>
-    <a href="{{ url_for('try_page') }}" class="sl-cta-secondary">
-      Build my record toward the League →
-    </a>
+    <a href="{{ url_for('standings_public') }}" class="sl-cta-primary">See who has earned a standing in the League →</a>
+    <a href="{{ url_for('try_page') }}" class="sl-cta-secondary">Build my record toward the League →</a>
     <span class="sl-cta-free">Your first 10 evaluations are free. No subscription required to begin.</span>
   </div>
 </div>
 
-<!-- ════ FOOTER ════ -->
 <div class="sl-footer">
-  <span class="sl-footer-copy">
-    © 2026 Shutter League &nbsp;·&nbsp; Bengaluru, India &nbsp;·&nbsp; UDYAM-KR-03-0697280
-  </span>
+  <span class="sl-footer-copy">© 2026 Shutter League &nbsp;·&nbsp; Bengaluru, India &nbsp;·&nbsp; UDYAM-KR-03-0697280</span>
   <div class="sl-footer-links">
     <a href="{{ url_for('terms') }}">Terms</a>
     <a href="{{ url_for('privacy') }}">Privacy</a>
@@ -1039,53 +545,29 @@ a, button { cursor:pointer; color:inherit; }
   </div>
 </div>
 
-</div>{# /sl-page #}
+</div>
 
-<!-- ════ MOBILE BOTTOM NAV — exact Haiku pattern from base-staging ════ -->
+<!-- MOBILE BOTTOM NAV -->
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   <a href="{{ url_for('try_welcome') }}" class="sl-nav-item active" aria-label="Home">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-      <polyline points="9 22 9 12 15 12 15 22"/>
-    </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </a>
   <a href="{{ url_for('try_page') }}" class="sl-nav-item" aria-label="Upload">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-      <polyline points="17 8 12 3 7 8"/>
-      <line x1="12" y1="3" x2="12" y2="15"/>
-    </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span>Upload</span>
   </a>
   <a href="{{ url_for('try_gallery') }}" class="sl-nav-item" aria-label="My Evaluations">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <polyline points="21 15 16 10 5 21"/>
-    </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     <span>My Evals</span>
   </a>
   <a href="{{ url_for('pricing') }}" class="sl-nav-item" aria-label="Pricing">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="1" x2="12" y2="23"/>
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-    </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     <span>Pricing</span>
   </a>
-  <!-- More drawer — League, Profile, Help, Log out -->
   <div class="sl-nav-more-wrap" id="slNavMoreWrapHaiku">
-    <button class="sl-nav-item sl-nav-more-btn"
-            onclick="toggleBottomMoreHaiku(event)" aria-label="More"
-            style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-      </svg>
+    <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMoreHaiku(event)" aria-label="More" style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
       <span>More</span>
     </button>
     <div class="sl-bottom-more-menu" id="slBottomMoreMenuHaiku">
@@ -1100,30 +582,10 @@ a, button { cursor:pointer; color:inherit; }
 </nav>
 
 <script>
-/* Time-aware greeting */
-(function(){
-  var h=new Date().getHours();
-  var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-  var el=document.getElementById('sl-greeting');
-  if(el) el.textContent=g;
-})();
-/* Haiku More drawer */
-function toggleBottomMoreHaiku(e){
-  e.stopPropagation();
-  var m=document.getElementById('slBottomMoreMenuHaiku');
-  if(m) m.classList.toggle('open');
-}
-function closeBottomMoreHaiku(){
-  var m=document.getElementById('slBottomMoreMenuHaiku');
-  if(m) m.classList.remove('open');
-}
-document.addEventListener('click',function(e){
-  var w=document.getElementById('slNavMoreWrapHaiku');
-  var m=document.getElementById('slBottomMoreMenuHaiku');
-  if(m && m.classList.contains('open') && w && !w.contains(e.target)){
-    m.classList.remove('open');
-  }
-});
+(function(){var h=new Date().getHours();var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';var el=document.getElementById('sl-greeting');if(el)el.textContent=g;})();
+function toggleBottomMoreHaiku(e){e.stopPropagation();var m=document.getElementById('slBottomMoreMenuHaiku');if(m)m.classList.toggle('open');}
+function closeBottomMoreHaiku(){var m=document.getElementById('slBottomMoreMenuHaiku');if(m)m.classList.remove('open');}
+document.addEventListener('click',function(e){var w=document.getElementById('slNavMoreWrapHaiku');var m=document.getElementById('slBottomMoreMenuHaiku');if(m&&m.classList.contains('open')&&w&&!w.contains(e.target))m.classList.remove('open');});
 </script>
 </body>
 </html>
