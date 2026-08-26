@@ -706,34 +706,31 @@ a, button { cursor:pointer; }
 <div class="sl-hero">
   <div class="sl-hero-greeting" id="sl-greeting">Good morning</div>
   <div class="sl-hero-rule"></div>
-  {% if sherpa_obs %}
-  <div class="sl-hero-obs">{{ sherpa_obs | truncate(180, true, '…') }}</div>
-  {% endif %}
 </div>
 
 <!-- STANDING BAND -->
 {% set best_score = namespace(val=0.0) %}
-{% for img in all_images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
-{% set evals_used = all_images | length %}
+{% for img in images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
+{% set evals_used = images | length %}
 {% set evals_remaining = [10 - evals_used, 0] | max %}
 
 <div class="sl-standing">
   <div class="sl-standing-main">
-    {% if user_hero %}
-    <span class="sl-standing-score">{{ "%.2f"|format(user_hero.score) }}</span>
+    {% if hero_image %}
+    <span class="sl-standing-score">{{ "%.2f"|format(hero_image.score) }}</span>
     <div class="sl-standing-right">
-      <span class="sl-standing-tier">{{ user_hero.tier }}</span>
+      <span class="sl-standing-tier">{{ hero_image.tier }}</span>
       <span class="sl-standing-sub">
-        {{ user_hero.genre }} &nbsp;·&nbsp; {{ evals_used }} evaluated
+        {{ hero_image.genre }} &nbsp;·&nbsp; {{ evals_used }} evaluated
         {% if haiku_percentile %} &nbsp;·&nbsp; Top {{ haiku_percentile }}%{% endif %}
       </span>
-      <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="sl-standing-link">
+      <a href="{{ url_for('try_result', image_id=hero_image.id) }}" class="sl-standing-link">
         Your best evaluation →
       </a>
     </div>
-    {% if user_hero.thumb_url %}
+    {% if hero_image.thumb_url %}
     <div class="sl-standing-thumb">
-      <img src="{{ user_hero.thumb_url }}" alt="Your best photograph">
+      <img src="{{ hero_image.thumb_url }}" alt="Your best photograph">
     </div>
     {% endif %}
     {% endif %}
@@ -754,17 +751,17 @@ a, button { cursor:pointer; }
 <div class="sl-obs-band">
   <div class="sl-obs-eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
   <div class="sl-obs-text">{{ sherpa_obs }}</div>
-  {% if user_hero and user_hero.thumb_url %}
+  {% if hero_image and hero_image.thumb_url %}
   <div class="sl-obs-row">
     <div class="sl-obs-thumb">
-      <img src="{{ user_hero.thumb_url }}"
-           alt="Your best photograph — {{ user_hero.tier }}, {{ '%.2f'|format(user_hero.score) }}">
+      <img src="{{ hero_image.thumb_url }}"
+           alt="Your best photograph — {{ hero_image.tier }}, {{ '%.2f'|format(hero_image.score) }}">
     </div>
     <div class="sl-obs-standing">
       {% if haiku_percentile %}
       <span class="sl-obs-pct">Top {{ haiku_percentile }}% of Haiku photographers</span>
       {% endif %}
-      <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="sl-obs-link">
+      <a href="{{ url_for('try_result', image_id=hero_image.id) }}" class="sl-obs-link">
         Your best evaluation →
       </a>
     </div>
@@ -783,7 +780,6 @@ a, button { cursor:pointer; }
   <div class="sl-sc sl-sc-sherpa">
     <div class="sl-se">What the platform sees</div>
     <div class="sl-st">Your photographic eye</div>
-    <div class="sl-sbody">{{ sherpa_obs }}</div>
     {% if sherpa_nudge %}
     <div class="sl-nudge">
       <span class="sl-nudge-lbl">Shutter League Mentor note</span>
@@ -857,7 +853,7 @@ a, button { cursor:pointer; }
 
     <!-- Dot-line tier progression -->
     {% set tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
-    {% set current_tier = user_hero.tier if user_hero else '' %}
+    {% set current_tier = hero_image.tier if hero_image else '' %}
     {% set current_idx = tiers.index(current_tier) if current_tier in tiers else -1 %}
     <div class="sl-tier-prog">
       {% for t in tiers %}
@@ -919,12 +915,12 @@ a, button { cursor:pointer; }
   </div>
 
   <!-- RECORD CARD -->
-  {% if all_images %}
+  {% if images %}
   <div class="sl-sc sl-sc-record">
     <div class="sl-se">Your evaluated images</div>
     <div class="sl-st">Your record</div>
     <div class="sl-rec-strip">
-      {% for img in all_images | reverse %}
+      {% for img in images | reverse %}
       {% if img.thumb_url %}
       <a href="{{ url_for('try_result', image_id=img.id) }}" class="sl-rc">
         <div class="sl-rc-img">
@@ -1091,7 +1087,7 @@ a, button { cursor:pointer; }
   <div class="sl-gap-nums">
     <div>
       <div class="sl-gap-yn">{{ "%.2f"|format(best_score.val) }}</div>
-      <div class="sl-gap-ys">Your best &nbsp;·&nbsp; {{ user_hero.tier if user_hero else '' }}</div>
+      <div class="sl-gap-ys">Your best &nbsp;·&nbsp; {{ hero_image.tier if hero_image else '' }}</div>
     </div>
     <div class="sl-gap-mid">← {{ "%.2f"|format(gap) }} →</div>
     <div style="text-align:right;">
@@ -1109,7 +1105,7 @@ a, button { cursor:pointer; }
     The League records both.
   </div>
 
-  <!-- Sparkline — SVG, real data points from all_images -->
+  <!-- Sparkline — SVG, real data points from images -->
   <div class="sl-spark-hdr">
     Your arc · {{ evals_used }} evaluation{{ 's' if evals_used != 1 else '' }} · what the journey builds toward
   </div>
@@ -1126,8 +1122,8 @@ a, button { cursor:pointer; }
           stroke="rgba(200,168,75,0.28)" stroke-width="1" stroke-dasharray="3,4"/>
     <text x="4" y="9" fill="rgba(200,168,75,0.80)"
           font-size="8" font-family="Inter,sans-serif">Grandmaster 9.0</text>
-    <!-- Real data polyline built from all_images scores -->
-    {%- set imgs_with_scores = all_images | selectattr('score') | list | reverse | list -%}
+    <!-- Real data polyline built from images scores -->
+    {%- set imgs_with_scores = images | selectattr('score') | list | reverse | list -%}
     {%- set n = imgs_with_scores | length -%}
     {%- if n > 0 -%}
       {%- set x_step = (290 / [n - 1, 1] | max) -%}
