@@ -1,7 +1,8 @@
 {#
-  SL-VERSION: homepage_standings-2.2-staging
-  Session 192 · 2026-08-24
-  HAMBURGER FIX: compact dropdown anchored top-right — was left:0;right:0 full-bleed. RETAINS homepage_standings-2.1.
+  SL-VERSION: homepage_standings-2.3-staging
+  Session 199 · 2026-08-26
+  NAV FIX: Haiku (free) users now see correct nav — Home / My evaluations / Upload / Pricing / League of Photographers / Profile / Log out.
+  AUDIT FIXES: Twitter meta tags added. Font sizes raised to 13px minimum (was 11px/12px). Line-heights raised to 1.3+ (was 1.05/1.2). KYC: "ICC rankings" → "ICC standings". RETAINS homepage_standings-2.2.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -10,7 +11,7 @@
   Mobile  : Hamburger overlay ✅ · Bottom nav (authenticated only) ✅ · 2-col grid ≤768px ✅ · Footer 2-col ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
   iPad    : Grid 3-col ≤1024px ✅ · Nav padding reduced ✅
   70yr    : Header h1 clamp(32px,4vw,52px) ✅ · Desc 17px ✅ · Card name 15px ✅ · Footer links 15px ✅ · Strip 13px fine print ✅
-  Version : homepage_standings-2.2-staging — matches filename
+  Version : homepage_standings-2.3-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 <!DOCTYPE html>
@@ -23,7 +24,13 @@
 <meta property="og:title" content="The League — Shutter League">
 <meta property="og:description" content="See where photographers stand. The first calibrated photography credential in India.">
 <meta property="og:image" content="https://shutterleague.com/static/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The League — Shutter League">
+<meta name="twitter:image" content="https://shutterleague.com/static/og-image.jpg">
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The League — Shutter League">
+<meta name="twitter:image" content="https://shutterleague.com/static/og-image.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <style>
 :root{
@@ -42,8 +49,8 @@ a{text-decoration:none;color:inherit}
 .pub-nav-link:hover{color:#fff;background:rgba(255,255,255,.08)}
 .pub-nav-link.on{color:#fff;font-weight:600}
 .pub-brand{display:flex;align-items:center;gap:10px;color:#fff}
-.pub-crest{width:28px;height:28px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:.5px}
-.pub-brandword{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
+.pub-crest{width:28px;height:28px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:.5px}
+.pub-brandword{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
 .pub-nav-right{display:flex;align-items:center;gap:2px}
 .pub-login{font-size:13px;color:rgba(255,255,255,.65);padding:6px 8px;border:1px solid rgba(255,255,255,.25);border-radius:5px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
 .pub-login:hover{color:#fff}
@@ -68,13 +75,13 @@ a{text-decoration:none;color:inherit}
 
 /* ── PAGE HEADER ── */
 .pub-header{padding:52px 48px 36px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--line)}
-.pub-header-eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
-.pub-header-h1{font-size:clamp(32px,4vw,52px);font-weight:600;color:var(--blue);line-height:1.05;letter-spacing:-.04em;margin-bottom:16px}
+.pub-header-eyebrow{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.pub-header-h1{font-size:clamp(32px,4vw,52px);font-weight:600;color:var(--blue);line-height:1.5;letter-spacing:-.04em;margin-bottom:16px}
 .pub-header-desc{font-size:17px;color:var(--muted);line-height:1.8;max-width:640px;margin-bottom:24px}
 .pub-header-stat-row{display:flex;gap:32px;flex-wrap:wrap}
 .pub-stat{display:flex;flex-direction:column;gap:2px}
 .pub-stat-val{font-size:24px;font-weight:700;color:var(--blue);line-height:1}
-.pub-stat-lbl{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.pub-stat-lbl{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 
 /* ── TRACK TABS ── */
 .pub-tabs{max-width:1200px;margin:0 auto;padding:20px 48px 0;display:flex;gap:4px;border-bottom:1px solid var(--line)}
@@ -86,7 +93,7 @@ a{text-decoration:none;color:inherit}
 .pub-grid-wrap{max-width:1200px;margin:0 auto;padding:36px 48px 80px}
 .pub-tier-section{margin-bottom:52px}
 .pub-tier-label{display:inline-flex;align-items:center;gap:10px;margin-bottom:20px}
-.pub-tier-name{font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:4px 14px;border-radius:99px}
+.pub-tier-name{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:4px 14px;border-radius:99px}
 .pub-tier-count{font-size:13px;color:var(--muted)}
 .pub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 
@@ -96,7 +103,7 @@ a{text-decoration:none;color:inherit}
 .pub-card-img-placeholder{width:100%;aspect-ratio:3/2;background:linear-gradient(145deg,#1a2540 0%,#0f1828 100%);display:flex;align-items:center;justify-content:center}
 .pub-card-img-wrap{position:relative;display:block;overflow:hidden}
 .pub-card-score{position:absolute;bottom:10px;right:12px;font-size:28px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.04em;text-shadow:0 1px 4px rgba(0,0,0,.6)}
-.pub-card-tier-ov{position:absolute;bottom:10px;left:12px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.pub-card-tier-ov{position:absolute;bottom:10px;left:12px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .pub-card-body{padding:14px 16px 16px}
 .pub-card-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pub-card-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
@@ -116,7 +123,7 @@ a{text-decoration:none;color:inherit}
 
 /* ── JOIN BANNER ── */
 .pub-join{background:var(--dark);padding:52px 48px;text-align:center}
-.pub-join-h{font-size:clamp(24px,3.5vw,40px);font-weight:600;color:#fff;line-height:1.2;letter-spacing:-.03em;margin-bottom:14px}
+.pub-join-h{font-size:clamp(24px,3.5vw,40px);font-weight:600;color:#fff;line-height:1.5;letter-spacing:-.03em;margin-bottom:14px}
 .pub-join-sub{font-size:17px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.7}
 .pub-join-cta{display:inline-block;background:var(--gold);color:var(--dark);font-size:16px;font-weight:700;padding:15px 32px;border-radius:2px}
 .pub-join-note{font-size:14px;color:rgba(255,255,255,.35);margin-top:14px}
@@ -124,7 +131,7 @@ a{text-decoration:none;color:inherit}
 /* ── FOOTER ── */
 .pub-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:56px 48px 28px}
 .pub-footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
-.pub-footer-col h4{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
+.pub-footer-col h4{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
 .pub-footer-col a{display:block;color:rgba(255,255,255,.52);font-size:15px;margin-bottom:9px;transition:color .15s;text-decoration:none}
 .pub-footer-col a:hover{color:#fff}
 .pub-footer-tagline{font-size:15px;color:rgba(255,255,255,.38);line-height:1.7;margin-bottom:12px}
@@ -144,7 +151,7 @@ a{text-decoration:none;color:inherit}
 .pub-bn-tab{
   display:flex;flex-direction:column;align-items:center;gap:3px;
   color:rgba(255,255,255,.5);text-decoration:none;
-  font-size:11px;font-weight:600;
+  font-size:13px;font-weight:600;
   min-width:0;flex:1 1 0;min-height:44px;
   padding:10px 2px 4px;background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
@@ -188,21 +195,30 @@ a{text-decoration:none;color:inherit}
     <span class="pub-brandword">Shutter League</span>
   </a>
   <div class="pub-nav-right">
-    <a href="{{ url_for('how_it_works') }}" class="pub-nav-link">How it works</a>
-    <a href="{{ url_for('science') }}" class="pub-nav-link">Science</a>
-    <a href="{{ url_for('contests') }}" class="pub-nav-link">Programmes</a>
-    <a href="{{ url_for('pricing') }}" class="pub-nav-link">Pricing</a>
-    <a href="{{ url_for('standings_public') }}" class="pub-nav-link on">League of Photographers</a>
-    {% if current_user.is_authenticated %}
-      {% if current_user.is_subscribed or current_user.role == 'admin' %}
-        <a href="{{ url_for('dashboard') }}" class="pub-login">My dashboard</a>
-      {% else %}
-        <a href="{{ url_for('try_gallery') }}" class="pub-login">My evaluations</a>
-        <a href="{{ url_for('logout') }}" class="pub-nav-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;">Log out</a>
-      {% endif %}
+    {% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %}
+      {# Haiku (free) user nav — matches base-staging Haiku nav order #}
+      <a href="{{ url_for('try_welcome') }}" class="pub-nav-link">Home</a>
+      <a href="{{ url_for('try_gallery') }}" class="pub-nav-link">My evaluations</a>
+      <a href="{{ url_for('try_page') }}" class="pub-nav-link">Upload</a>
+      <a href="{{ url_for('pricing') }}" class="pub-nav-link">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" class="pub-nav-link on">League of Photographers</a>
+      <a href="{{ url_for('profile') }}" class="pub-nav-link">Profile</a>
+      <a href="{{ url_for('logout') }}" class="pub-nav-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:44px;">Log out</a>
     {% else %}
-      <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
-      <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
+      {# Public / paid nav #}
+      <a href="{{ url_for('how_it_works') }}" class="pub-nav-link">How it works</a>
+      <a href="{{ url_for('science') }}" class="pub-nav-link">Science</a>
+      <a href="{{ url_for('contests') }}" class="pub-nav-link">Programmes</a>
+      <a href="{{ url_for('pricing') }}" class="pub-nav-link">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" class="pub-nav-link on">League of Photographers</a>
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_subscribed or current_user.role == 'admin' %}
+          <a href="{{ url_for('dashboard') }}" class="pub-login">My dashboard</a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
+        <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
+      {% endif %}
     {% endif %}
   </div>
   {# Hamburger — mobile only, replaces pub-nav-right which hides at ≤768px #}
@@ -352,7 +368,7 @@ a{text-decoration:none;color:inherit}
 {# ── JOIN BANNER ── #}
 <div class="pub-join">
   <div class="pub-join-h">Your record starts with<br>your first photograph.</div>
-  <p class="pub-join-sub">Chess has Elo. Cricket has ICC rankings. In 200 years of photography, nobody built one. Until now.</p>
+  <p class="pub-join-sub">Chess has Elo. Cricket has ICC standings. In 200 years of photography, nobody built one. Until now.</p>
   {% if current_user.is_authenticated and not current_user.is_subscribed %}
   <a href="{{ url_for('try_page') }}" class="pub-join-cta">Upload your first photograph →</a>
   <p class="pub-join-note">{{ 10 }} free evaluations remaining. No subscription needed.</p>
@@ -370,8 +386,8 @@ a{text-decoration:none;color:inherit}
   <div class="pub-footer-grid">
     <div class="pub-footer-col">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-        <div style="width:28px;height:28px;border:1.5px solid rgba(255,255,255,.3);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#D4A428;flex-shrink:0">SL</div>
-        <span style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5)">Shutter League</span>
+        <div style="width:28px;height:28px;border:1.5px solid rgba(255,255,255,.3);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#D4A428;flex-shrink:0">SL</div>
+        <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5)">Shutter League</span>
       </div>
       <div class="pub-footer-tagline">Photography Assessment &amp; Evolution Platform<br><em>Making Images Matter</em></div>
       <div style="font-size:14px;color:rgba(255,255,255,.35);margin-top:8px">support@shutterleague.com</div>
