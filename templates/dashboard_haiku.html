@@ -74,8 +74,15 @@ a, button { cursor:pointer; }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ACT 1 — HERO: greeting + institution sentence
+   ACT 1 — HERO: best image + greeting + score
    ══════════════════════════════════════════════════════════════ */
+/* User's best image — full width, object-fit:contain, dark bg */
+.sl-hero-img-wrap {
+  width:100%; background:#0C1018; line-height:0;
+}
+.sl-hero-img-wrap img {
+  width:100%; max-height:420px; object-fit:contain; display:block;
+}
 .sl-hero {
   background:#1A2744;
   padding:28px 40px 32px;
@@ -301,10 +308,10 @@ a, button { cursor:pointer; }
 .sl-tlbl.active { color:#1A2744; font-weight:700; }
 
 /* Grandmaster reference image */
-.sl-gm-img { width:100%; display:block; border-radius:4px; }
+.sl-gm-img { width:50%; max-width:360px; display:block; border-radius:4px; margin:0 auto 0; }
 .sl-gm-ph {
-  width:100%; height:140px; background:#D0CCC6; border-radius:4px;
-  display:flex; align-items:center; justify-content:center;
+  width:50%; max-width:360px; height:180px; background:#D0CCC6; border-radius:4px;
+  display:flex; align-items:center; justify-content:center; margin:0 auto;
   font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase;
 }
 .sl-gm-credit {
@@ -332,20 +339,20 @@ a, button { cursor:pointer; }
 
 /* Record strip */
 .sl-rec-strip {
-  display:flex; gap:11px; overflow-x:auto; padding-bottom:5px; margin-bottom:12px;
+  display:flex; gap:16px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px;
 }
-.sl-rec-strip::-webkit-scrollbar { height:2px; }
+.sl-rec-strip::-webkit-scrollbar { height:3px; }
 .sl-rc {
-  flex:0 0 auto; width:132px; text-decoration:none;
+  flex:0 0 auto; width:200px; text-decoration:none;
   color:inherit; display:flex; flex-direction:column;
 }
 .sl-rc-img {
-  width:132px; height:99px; background:#2A2118;
-  border-radius:3px; overflow:hidden; margin-bottom:7px;
+  width:200px; height:150px; background:#2A2118;
+  border-radius:4px; overflow:hidden; margin-bottom:10px;
   position:relative; display:flex; align-items:center; justify-content:center;
 }
 .sl-rc-img img {
-  width:132px; height:99px; object-fit:contain; display:block;
+  width:200px; height:150px; object-fit:contain; display:block;
 }
 .sl-rc-hover {
   display:none; position:absolute; inset:0;
@@ -703,6 +710,14 @@ a, button { cursor:pointer; }
 <!-- ════════════════════════════════════════════════════════════
      ACT 1 — HERO: greeting + sherpa_obs sentence
      ════════════════════════════════════════════════════════════ -->
+<!-- User's best image — full width, object-fit:contain, dark bg letterbox -->
+{% if user_hero and user_hero.thumb_url %}
+<div class="sl-hero-img-wrap">
+  <img src="{{ user_hero.thumb_url }}"
+       alt="Your best photograph — {{ user_hero.tier }}, {{ '%.2f'|format(user_hero.score) }}">
+</div>
+{% endif %}
+
 <div class="sl-hero">
   <div class="sl-hero-greeting" id="sl-greeting">Good morning</div>
   <div class="sl-hero-rule"></div>
@@ -924,7 +939,7 @@ a, button { cursor:pointer; }
         <div class="sl-rc-img">
           <img src="{{ img.thumb_url }}"
                alt="Evaluation {{ loop.revindex }} — {{ img.genre }}"
-               style="width:132px;height:99px;object-fit:contain;display:block;">
+               style="width:200px;height:150px;object-fit:contain;display:block;">
           <div class="sl-rc-hover">↗ Scorecard</div>
         </div>
         <div class="sl-rc-num">Eval {{ loop.revindex }}</div>
