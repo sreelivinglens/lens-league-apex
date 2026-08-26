@@ -1,16 +1,16 @@
 {#
-  SL-VERSION: profile-181.4-staging
-  Session 192 · 2026-08-24
-  LAYOUT FIX: max-width 1060→1200px, sidebar 200→220px, grid gap 20→28px, acc-section min-width:0 to prevent grid collapse, upgrade buttons flex with word-break. JS FIX: Jinja2 dict literal expressions {{ {}.get() }} replaced with {% if/elif %} blocks — eliminates Unexpected token "{"" SyntaxError risk. Also: pricing updated to current rates (halfyearly ₹2,500, annual ₹4,000). HAIKU FIXES: (1) Points Balance section gated to is_subscribed — was visible to Haiku users. (2) Referral Code section gated to is_subscribed — was visible if referral_code set. (3) Sidenav Points/Referral links hidden for Haiku. (4) Account State free copy: hardcoded "3" → evals_limit variable, pricing ₹200/mo → ₹4,000/yr. AUDIT FIXES: (1) Font: Inter → Aptos. (2) Free tier upgrade CTA hardcoded '3 evaluations' → evals_limit variable (staging=10). RETAINS profile-181.0.
+  SL-VERSION: profile-181.5-staging
+  Session 199 · 2026-08-26
+  LAYOUT FIX: (1) Added 900px breakpoint — sidebar collapses to horizontal strip, content goes full width. Eliminates narrow columns and text truncation on iPad and small desktop. (2) Mobile acc-section overflow:hidden → overflow:visible — was clipping card content. (3) Mobile acc-wrap padding 56px top → 24px. (4) Two-column card grid collapses at 600px not 768px. (5) acc-detail-body word-break:break-word. (6) acc-email font-size 13px → 14px on mobile. RETAINS profile-181.4.
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
   Audit   : Extends base.html ✅ · @login_required ✅ · Sidenav anchor-only (no paid-only page links) ✅ · Subscription panel correctly gated ✅
   KYC     : Footer KYC inherited from base.html ✅ · Refund policy mentioned in cancel confirmation ✅
   Mobile  : Inherits base.html bottom nav (now subscription-aware) ✅ · acc-nav-border hidden on mobile ✅ · 44px tap targets ✅
-  iPad    : acc-sidebar static at ≤900px ✅ · Single column ✅
+  iPad    : acc-sidebar horizontal strip at ≤900px ✅ · Two-col cards → single col at 600px ✅
   70yr    : Page header clamp(24px,4vw,32px) ✅ · Section titles 16px+ ✅ · Form inputs 16px ✅ · acc-logout-btn 15px acceptable (button label) ✅
-  Version : profile-181.4-staging — matches filename
+  Version : profile-181.5-staging — matches filename
   ──────────────────────────────────────────────────────
 #}
 {% extends "base.html" %}
@@ -19,6 +19,10 @@
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
+<script type="application/json" id="acc-loc-location">{{ location_data_json | safe }}</script>
+<script type="application/json" id="acc-loc-country">{{ (current_user.country or '') | tojson }}</script>
+<script type="application/json" id="acc-loc-state">{{ (current_user.state or '') | tojson }}</script>
+<script type="application/json" id="acc-loc-city">{{ (current_user.city or '') | tojson }}</script>
 {% endblock %}
 
 {% block extra_css %}
@@ -440,32 +444,84 @@
     margin-bottom: 20px;
   }
 
+  /* ── iPad / narrow desktop — sidebar collapses to top, content full width ── */
+  @media (max-width: 900px) {
+    .acc-layout {
+      grid-template-columns: 1fr;
+    }
+    .acc-sidebar {
+      grid-row: 1;
+      grid-column: 1;
+      position: static;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
+      background: var(--acc-cream);
+      border: 1px solid var(--acc-border);
+      border-radius: var(--acc-radius);
+      padding: 16px 20px;
+      margin-bottom: 4px;
+    }
+    .acc-identity {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+    }
+    .acc-avatar { margin: 0; flex-shrink: 0; }
+    .acc-nav-border { display: none; }
+    .acc-grid-top,
+    .acc-grid-bottom {
+      grid-column: 1;
+    }
+  }
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .acc-layout { display: flex; flex-direction: column; }
     .acc-grid-top,
-    .acc-grid-bottom { grid-template-columns: 1fr; }
-    .acc-sidebar { position: static; }
-    .acc-identity { text-align: center; padding: 16px 12px; display: block; }
-    .acc-avatar { margin: 0 auto 10px; width: 56px; height: 56px; font-size: 22px; display: flex; }
-    .acc-name  { display: block; text-align: center; }
-    .acc-email { display: block; text-align: center; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .acc-handle { display: block; text-align: center; }
+    .acc-grid-bottom { grid-template-columns: 1fr 1fr; }
+    .acc-sidebar {
+      position: static;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+    }
+    .acc-identity { text-align: left; padding: 0; display: flex; align-items: center; gap: 12px; flex: 1; }
+    .acc-avatar { margin: 0; width: 44px; height: 44px; font-size: 18px; display: flex; flex-shrink: 0; }
+    .acc-name  { display: block; text-align: left; font-size: 15px; }
+    .acc-email {
+      display: block; font-size: 14px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 200px;
+    }
+    .acc-handle { display: block; text-align: left; }
     .acc-nav-border { display: none; }
-    .acc-section { padding: 16px; width: 100%; box-sizing: border-box; overflow: hidden; }
+    .acc-section { padding: 16px; width: 100%; box-sizing: border-box; overflow: visible; }
     .acc-detail-row { flex-wrap: wrap; }
-    .acc-detail-body { min-width: 0; flex: 1 1 0; }
+    .acc-detail-body { min-width: 0; flex: 1 1 0; word-break: break-word; }
     .acc-points-actions { flex-direction: column; }
     .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
     .acc-ref-share { flex-wrap: wrap; }
     .acc-plan-row { flex-direction: column; gap: 8px; }
     .acc-quota-inner { flex-direction: column; align-items: flex-start; }
     .acc-league-badge { flex-direction: column; align-items: flex-start; }
-    .acc-wrap { padding: 56px 12px 60px; }
+    .acc-wrap { padding: 24px 16px 60px; }
+  }
+  @media (max-width: 600px) {
+    .acc-grid-top,
+    .acc-grid-bottom { grid-template-columns: 1fr; }
+    .acc-email { max-width: 160px; font-size: 13px; }
+    .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
+    .acc-wrap { padding: 20px 12px 60px; }
   }
   @media (max-width: 480px) {
     .acc-ref-stats { grid-template-columns: 1fr; }
+    .acc-grid-top,
+    .acc-grid-bottom { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
@@ -1044,6 +1100,7 @@
 </div>
 {% endblock %}
 
+{# Location data passed via data-attributes — avoids Jinja-in-script SyntaxError #}
 {% block extra_js %}
 <script>
 // ── Toggle inline sections ──────────────────────────────────────
@@ -1114,10 +1171,15 @@ function validatePasswords() {
 
 // ── Location dropdowns ──────────────────────────────────────────
 (function () {
-  var LOCATION_DATA   = {{ location_data_json | safe }};
-  var CURRENT_COUNTRY = {{ (current_user.country or '') | tojson }};
-  var CURRENT_STATE   = {{ (current_user.state or '')   | tojson }};
-  var CURRENT_CITY    = {{ (current_user.city or '')    | tojson }};
+  function _json(id){
+    var el = document.getElementById(id);
+    if (!el) return null;
+    try { return JSON.parse(el.textContent.trim()); } catch(e) { return null; }
+  }
+  var LOCATION_DATA   = _json('acc-loc-location') || {};
+  var CURRENT_COUNTRY = _json('acc-loc-country') || '';
+  var CURRENT_STATE   = _json('acc-loc-state')   || '';
+  var CURRENT_CITY    = _json('acc-loc-city')    || '';
 
   var countrySel = document.getElementById('loc_country');
   var stateSel   = document.getElementById('loc_state');
