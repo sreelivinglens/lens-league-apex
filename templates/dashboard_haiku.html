@@ -858,13 +858,17 @@ a, button { cursor:pointer; }
     <!-- Dot-line tier progression -->
     {% set tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
     {% set current_tier = user_hero.tier if user_hero else '' %}
+    {% set current_idx = tiers.index(current_tier) if current_tier in tiers else -1 %}
     <div class="sl-tier-prog">
       {% for t in tiers %}
+      {% set t_idx = loop.index0 %}
       <div class="sl-tn">
-        <div class="sl-tc {% if t == current_tier %}cur{% elif tiers.index(t) < tiers.index(current_tier) if current_tier in tiers else False %}past{% else %}fut{% endif %}"></div>
+        <div class="sl-tc {% if t == current_tier %}cur{% elif t_idx < current_idx %}past{% else %}fut{% endif %}"></div>
         <div class="sl-tlbl {% if t == current_tier %}active{% endif %}">{{ t }}</div>
       </div>
-      {% if not loop.last %}<div class="sl-tl {% if tiers.index(t) < tiers.index(current_tier) if current_tier in tiers else False %}past{% endif %}"></div>{% endif %}
+      {% if not loop.last %}
+      <div class="sl-tl {% if t_idx < current_idx %}past{% endif %}"></div>
+      {% endif %}
       {% endfor %}
     </div>
 
