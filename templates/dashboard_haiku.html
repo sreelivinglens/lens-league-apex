@@ -1,412 +1,1240 @@
-{# SL-VERSION: 181.38-staging (Session 197, 2026-08-26 — (1) Hero link fixed: "See the full evaluation" now goes to url_for('try_result', image_id=user_hero.id) not try_page. (2) Record strip: uniform 260px card containers with object-fit:contain + dark #2A2118 background — portrait images letterbox cleanly, all metadata aligns at same vertical position. (3) Tier position text opacity raised 35%→65% for readability on navy. RETAINS 181.37.) #}
+{# SL-VERSION: 181.39-staging (Session 199) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 <meta name="robots" content="noindex, nofollow">
 <title>Shutter League — Dashboard</title>
+<meta property="og:title" content="Shutter League — Your Photographer Dashboard">
+<meta property="og:description" content="Your evaluation record, tier standing, and the path toward the League of Photographers.">
+<meta property="og:image" content="{{ url_for('static', filename='og-image.jpg', _external=True) }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Shutter League — Your Photographer Dashboard">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-image.jpg', _external=True) }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+/* ── RESET ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; overflow-x:hidden; }
 body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webkit-font-smoothing:antialiased; }
-.sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
-.sl-col { max-width:760px; margin:0 auto; padding:0 48px; }
-.sl-rule { width:100%; height:0.5px; background:rgba(26,39,68,0.09); }
+img { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; max-width:100%; display:block; }
+a { color:inherit; }
 
-/* ── TOP BAR ── */
-.sl-topbar {
+/* ── PAGE SHELL ── */
+.sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; padding-bottom:80px; }
+
+/* ══════════════════════════════════════════════════════════════
+   TOP NAV — exact base-staging nav-haiku pattern
+   #1A2744 bg · logo left · links right · active = white bold
+   ══════════════════════════════════════════════════════════════ */
+.sl-top-nav {
   display:flex; justify-content:space-between; align-items:center;
-  padding:18px 48px;
-  border-bottom:0.5px solid rgba(26,39,68,0.10);
+  padding:0 40px; height:64px;
+  background:#1A2744;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  position:sticky; top:0; z-index:100;
 }
-.sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
-.sl-brand-name { font-size:12px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
-.sl-brand-sub { font-size:10px; letter-spacing:0.10em; color:rgba(26,39,68,0.36); text-transform:uppercase; }
-.sl-nav { display:flex; gap:32px; }
-.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; cursor:pointer; }
-.sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+.sl-nav-brand {
+  display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  text-decoration:none;
+}
+.sl-nav-brand img {
+  height:34px; width:auto; display:block;
+}
+.sl-nav-brand-fallback {
+  font-size:14px; font-weight:700; letter-spacing:0.18em;
+  color:rgba(255,255,255,0.50); text-transform:uppercase; line-height:1;
+}
+.sl-nav-links {
+  display:flex; align-items:center; gap:2px;
+}
+.sl-nav-links a {
+  font-size:13px; font-weight:500; color:rgba(255,255,255,0.65);
+  text-decoration:none; padding:6px 8px; border-radius:4px; white-space:nowrap;
+  transition:color 0.15s, background 0.15s;
+}
+.sl-nav-links a:hover { color:#fff; background:rgba(255,255,255,0.09); }
+a, button { cursor:pointer; }
+:focus-visible { outline:2px solid #C8A84B; outline-offset:3px; border-radius:2px; }
+.sl-nav-links a.nav-active {
+  color:#fff !important; font-weight:600;
+  background:rgba(255,255,255,0.11);
+  border-bottom:2px solid rgba(255,255,255,0.55);
+  padding-bottom:4px;
+}
+.sl-nav-logout {
+  display:flex; align-items:center; justify-content:center;
+  padding:6px; margin-left:4px; border:none; background:none;
+  cursor:pointer; color:rgba(255,255,255,0.45); border-radius:4px;
+  min-width:36px; min-height:44px;
+}
 
-/* ── HERO ── */
-.sl-hero { width:100%; background:#0C1018; }
-.sl-hero img { width:100%; display:block; }
-.sl-hero-bar { background:#1A2744; padding:28px 48px 36px; }
-/* Tier position + percentile — between image and greeting */
-.sl-hero-position { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
-.sl-hero-tier-pos { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.65); }
-.sl-hero-percentile { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.65); }
-.sl-hero-pos-sep { font-size:11px; color:rgba(255,255,255,0.35); }
-.sl-hero-greeting { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:10px; }
-.sl-hero-name { font-family:'Playfair Display',serif; font-size:28px; color:#fff; font-weight:400; line-height:1.5; margin-bottom:24px; }
-.sl-hero-meta { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; }
-.sl-hero-standing { display:flex; align-items:baseline; gap:12px; }
-.sl-hero-score { font-family:'Playfair Display',serif; font-size:56px; color:#fff; line-height:1; letter-spacing:-0.03em; }
-.sl-hero-tier-block { display:flex; flex-direction:column; gap:4px; padding-left:4px; }
-.sl-hero-tier { font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:#C8A84B; font-weight:500; }
-.sl-hero-genre { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.26); }
-.sl-hero-link { font-size:13px; color:rgba(255,255,255,0.36); letter-spacing:0.04em; }
-.sl-hero-link a { color:rgba(255,255,255,0.36); text-decoration:none; cursor:pointer; }
-.sl-hero-link a:hover { color:#C8A84B; }
+/* ══════════════════════════════════════════════════════════════
+   ACT 1 — HERO: greeting + institution sentence
+   ══════════════════════════════════════════════════════════════ */
+.sl-hero {
+  background:#1A2744;
+  padding:28px 40px 32px;
+}
+.sl-hero-greeting {
+  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(255,255,255,0.55); margin-bottom:14px;
+}
+.sl-hero-rule {
+  width:28px; height:1.5px; background:#C8A84B; margin-bottom:18px;
+}
+.sl-hero-obs {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:21px; line-height:1.72;
+  color:rgba(255,255,255,0.84); max-width:600px; font-weight:400;
+}
 
-/* ── SHARED EYEBROW ── */
-.sl-eyebrow { font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(26,39,68,0.45); margin-bottom:36px; }
+/* ══════════════════════════════════════════════════════════════
+   STANDING BAND — cream, one dominant number
+   ══════════════════════════════════════════════════════════════ */
+.sl-standing {
+  background:#EDE9E1;
+  padding:26px 40px;
+  border-bottom:0.5px solid rgba(26,39,68,0.09);
+}
+.sl-standing-main {
+  display:flex; align-items:baseline; gap:20px;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.sl-standing-score {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:68px; color:#1A2744; line-height:1; letter-spacing:-0.04em;
+}
+.sl-standing-right {
+  display:flex; flex-direction:column; gap:5px; padding-top:6px;
+}
+.sl-standing-tier {
+  font-size:13px; letter-spacing:0.16em; text-transform:uppercase;
+  color:#C8A84B; font-weight:600;
+}
+.sl-standing-sub {
+  font-size:13px; letter-spacing:0.05em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55);
+}
+.sl-standing-link {
+  font-size:13px; color:#1A2744; border-bottom:1px solid #C8A84B;
+  padding-bottom:1px; text-decoration:none; font-weight:500;
+  display:inline-block; margin-top:3px;
+}
+.sl-standing-thumb {
+  width:74px; height:50px; background:#2A2030; border-radius:2px;
+  overflow:hidden; margin-left:auto; align-self:flex-end; flex-shrink:0;
+}
+.sl-standing-thumb img {
+  width:74px; height:50px; object-fit:contain; display:block;
+}
+.sl-standing-rule {
+  width:100%; height:0.5px; background:rgba(26,39,68,0.12); margin-bottom:12px;
+}
+.sl-standing-footer {
+  display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+}
+.sl-standing-stat {
+  font-size:13px; color:rgba(26,39,68,0.65);
+  padding-right:16px; margin-right:16px;
+  border-right:0.5px solid rgba(26,39,68,0.15);
+}
+.sl-standing-stat:last-of-type { border-right:none; }
+.sl-standing-stat strong { color:#1A2744; font-weight:600; }
+.sl-standing-newgm {
+  margin-left:auto; font-size:13px; color:#1A2744; font-weight:600;
+  text-decoration:none; border-bottom:1px solid #C8A84B; padding-bottom:1px;
+}
 
-/* ── GOLD RULE ── */
-.sl-gold-rule { width:32px; height:1.5px; background:#C8A84B; margin-bottom:32px; }
+/* ══════════════════════════════════════════════════════════════
+   INSTITUTION SPEAKS — cream band, sherpa_obs + best image
+   ══════════════════════════════════════════════════════════════ */
+.sl-obs-band {
+  background:#E2DDD4;
+  padding:30px 40px;
+}
+.sl-obs-eyebrow {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-bottom:13px;
+}
+.sl-obs-text {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:19px; line-height:1.85; color:#1A2744; margin-bottom:22px;
+}
+.sl-obs-row {
+  display:flex; gap:22px; align-items:flex-start;
+}
+.sl-obs-thumb {
+  width:160px; flex-shrink:0;
+  background:#2A2030; border-radius:3px; overflow:hidden;
+}
+.sl-obs-thumb img {
+  width:160px; height:auto; max-height:200px;
+  object-fit:contain; display:block;
+}
+.sl-obs-standing {
+  display:flex; flex-direction:column; gap:10px; padding-top:4px;
+}
+.sl-obs-pct {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55);
+}
+.sl-obs-link {
+  font-size:14px; color:#1A2744; text-decoration:none;
+  border-bottom:1px solid #C8A84B; padding-bottom:1px;
+  display:inline-block; font-weight:500;
+}
 
-/* ── SHERPA ── */
-.sl-sherpa { padding:72px 0 80px; }
-.sl-sherpa-body { font-family:'Playfair Display',serif; font-size:22px; line-height:1.9; color:#1A2744; font-weight:400; margin-bottom:40px; }
-.sl-sherpa-nudge { font-size:17px; color:rgba(26,39,68,0.56); line-height:1.8; border-left:1.5px solid #C8A84B; padding-left:22px; font-style:italic; }
+/* ══════════════════════════════════════════════════════════════
+   ACT 2 SECTION CARDS — pastel, each section distinct
+   ══════════════════════════════════════════════════════════════ */
+.sl-sections {
+  padding:16px 40px 0;
+}
+.sl-sc {
+  border-radius:8px; padding:28px 32px; margin-bottom:13px;
+}
+.sl-sc-sherpa   { background:#EEF2FA; }
+.sl-sc-frontier { background:#F4EEE3; }
+.sl-sc-mentor   { background:#EAF0E8; }
+.sl-sc-standard { background:#F0EEF8; }
+.sl-sc-record   { background:#FDF6EE; }
 
-/* ── THE STANDARD ── */
-.sl-standard { padding:80px 0; }
-.sl-tier-strip { display:flex; flex-wrap:wrap; gap:0; margin-bottom:48px; border-bottom:0.5px solid rgba(26,39,68,0.09); padding-bottom:20px; }
-.sl-tier-pill { font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:rgba(26,39,68,0.25); padding:8px 14px 8px 0; white-space:nowrap; }
-.sl-tier-pill.active { color:#1A2744; font-weight:600; border-bottom:2px solid #C8A84B; margin-bottom:-0.5px; }
-.sl-gm-img { width:100%; display:block; }
-.sl-gm-credit { display:flex; justify-content:space-between; align-items:baseline; padding:16px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:40px; }
-.sl-gm-name { font-size:15px; color:#1A2744; font-weight:500; }
-.sl-gm-score { font-size:15px; color:#C8A84B; letter-spacing:0.06em; }
-.sl-standard-copy { font-size:18px; line-height:1.85; color:#1A2744; margin-bottom:36px; }
-.sl-five-dims { margin-bottom:36px; }
-.sl-dim-row { display:flex; justify-content:space-between; align-items:baseline; padding:13px 0; border-bottom:0.5px solid rgba(26,39,68,0.08); font-size:16px; }
+.sl-se {
+  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-bottom:4px; font-weight:500;
+}
+.sl-st {
+  font-size:18px; color:#1A2744; font-weight:600; margin-bottom:14px;
+}
+.sl-sbody {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:17px; line-height:1.85; color:#1A2744; margin-bottom:12px;
+}
+
+/* Sherpa nudge */
+.sl-nudge {
+  font-size:15px; color:#1A2744; line-height:1.76;
+  border-left:2px solid #C8A84B; padding:10px 16px;
+  background:rgba(200,168,75,0.07); border-radius:0 4px 4px 0; margin-top:12px;
+}
+.sl-nudge-lbl {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:#C8A84B; font-weight:600; display:block; margin-bottom:4px;
+}
+
+/* Frontier */
+.sl-f-dim {
+  font-size:20px; color:#1A2744; font-weight:600; margin-bottom:8px;
+}
+.sl-f-para {
+  font-size:15px; line-height:1.82; color:#1A2744; margin-bottom:12px;
+}
+.sl-f-tips {
+  display:flex; flex-direction:column; gap:8px;
+  padding:12px 14px; background:rgba(26,39,68,0.04);
+  border-radius:6px; margin-bottom:12px;
+}
+.sl-f-tip {
+  display:flex; gap:10px; align-items:flex-start;
+  font-size:15px; line-height:1.65; color:#1A2744;
+}
+.sl-f-dot {
+  width:6px; height:6px; border-radius:50%; background:#C8A84B;
+  flex:0 0 auto; margin-top:8px;
+}
+.sl-f-trend {
+  font-size:14px; color:rgba(26,39,68,0.54); line-height:1.82;
+  border-left:2px solid rgba(26,39,68,0.11); padding-left:14px;
+}
+
+/* Mentor */
+.sl-m-lbl {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:#C8A84B; font-weight:600; margin-bottom:10px;
+}
+.sl-m-qwrap {
+  background:rgba(200,168,75,0.11); border-left:3px solid #C8A84B;
+  border-radius:0 6px 6px 0; padding:12px 18px; margin-bottom:16px;
+}
+.sl-m-quote {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:20px; line-height:1.58; color:#1A2744; font-weight:500;
+}
+.sl-m-p {
+  font-size:15px; line-height:1.75; color:#1A2744; margin-bottom:10px;
+}
+.sl-m-p:last-child { margin-bottom:0; }
+.sl-m-p a { color:#1A2744; border-bottom:1px solid #C8A84B; text-decoration:none; }
+
+/* Standard — tier dot-line progression */
+.sl-tier-prog {
+  display:flex; align-items:center; margin-bottom:24px;
+  overflow-x:auto; padding-bottom:4px;
+}
+.sl-tier-prog::-webkit-scrollbar { height:2px; }
+.sl-tn { display:flex; flex-direction:column; align-items:center; gap:6px; flex:0 0 auto; }
+.sl-tc {
+  width:18px; height:18px; border-radius:50%;
+  border:2px solid rgba(26,39,68,0.16); background:#E8E5E0;
+}
+.sl-tc.past { background:#1A2744; border-color:#1A2744; }
+.sl-tc.cur {
+  width:26px; height:26px; background:#F5C700;
+  border:2.5px solid #D4AA00;
+  box-shadow:0 0 0 4px rgba(245,199,0,0.26), 0 0 0 8px rgba(245,199,0,0.10);
+}
+.sl-tc.fut { background:#E8E5E0; border-color:rgba(26,39,68,0.13); }
+.sl-tl {
+  flex:1 1 10px; height:2px; background:rgba(26,39,68,0.11);
+  min-width:8px; max-width:26px;
+}
+.sl-tl.past { background:#1A2744; }
+.sl-tlbl {
+  font-size:13px; letter-spacing:0.04em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); text-align:center; max-width:60px; white-space:nowrap;
+}
+.sl-tlbl.active { color:#1A2744; font-weight:700; }
+
+/* Grandmaster reference image */
+.sl-gm-img { width:100%; display:block; border-radius:4px; }
+.sl-gm-ph {
+  width:100%; height:140px; background:#D0CCC6; border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.07em; text-transform:uppercase;
+}
+.sl-gm-credit {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:8px 0; border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:18px;
+}
+.sl-gm-name { font-size:13px; color:#1A2744; font-weight:500; }
+.sl-gm-result { font-size:13px; color:#C8A84B; letter-spacing:0.06em; }
+.sl-std-copy { font-size:15px; line-height:1.82; color:#1A2744; margin-bottom:16px; }
+.sl-dims-hdr {
+  font-size:13px; letter-spacing:0.09em; text-transform:uppercase;
+  color:rgba(26,39,68,0.60); margin-bottom:10px;
+}
+.sl-dim-row {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:9px 0; border-bottom:0.5px solid rgba(26,39,68,0.07);
+}
 .sl-dim-row:last-child { border-bottom:none; }
-.sl-dim-plain { color:rgba(26,39,68,0.60); }
-.sl-dim-official { font-size:12px; letter-spacing:0.09em; text-transform:uppercase; color:rgba(26,39,68,0.34); }
-.sl-standard-close { font-family:'Playfair Display',serif; font-size:20px; line-height:1.8; color:#1A2744; font-style:italic; }
+.sl-dim-plain { font-size:15px; color:#1A2744; }
+.sl-dim-official {
+  font-size:13px; letter-spacing:0.07em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55);
+}
+.sl-std-close { font-size:15px; color:#1A2744; font-weight:600; margin-top:14px; }
 
-/* ── WHERE YOU STAND ── */
-.sl-where { padding:80px 0; }
-.sl-counters { display:flex; gap:56px; margin-bottom:64px; flex-wrap:wrap; }
-.sl-counter { display:flex; flex-direction:column; gap:8px; }
-.sl-counter-num { font-family:'Playfair Display',serif; font-size:64px; color:#1A2744; line-height:1; letter-spacing:-0.04em; }
-.sl-counter-label { font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,39,68,0.42); }
-.sl-record-statement { font-family:'Playfair Display',serif; font-size:20px; color:rgba(26,39,68,0.52); line-height:1.8; font-style:italic; margin-bottom:64px; }
-/* Horizontal strip — uniform card height, portrait letterboxes inside */
-.sl-record-strip { display:flex; flex-direction:row; gap:24px; align-items:flex-start; overflow-x:auto; padding-bottom:4px; }
-.sl-record-strip::-webkit-scrollbar { display:none; }
-.sl-record-card { flex:0 0 auto; width:200px; display:flex; flex-direction:column; }
-.sl-record-img-wrap { width:200px; height:260px; background:#2A2118; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-.sl-record-img { width:200px; height:260px; object-fit:contain; display:block; }
-.sl-record-meta { padding:14px 0 0; display:flex; flex-direction:column; gap:4px; }
-.sl-record-eval { font-size:11px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,39,68,0.38); }
-.sl-record-name { font-size:15px; color:#1A2744; font-weight:400; line-height:1.5; margin-top:4px; }
-.sl-record-score-row { display:flex; align-items:baseline; gap:8px; margin-top:4px; }
-.sl-record-score { font-family:'Playfair Display',serif; font-size:22px; color:#1A2744; line-height:1; letter-spacing:-0.02em; }
-.sl-record-tier { font-size:11px; letter-spacing:0.09em; text-transform:uppercase; color:#C8A84B; }
-.sl-progression-note { margin-top:32px; padding-top:28px; border-top:0.5px solid rgba(26,39,68,0.09); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:12px; }
-.sl-progression-text { font-size:17px; color:rgba(26,39,68,0.50); font-style:italic; line-height:1.7; }
-.sl-progression-best { font-size:14px; color:rgba(26,39,68,0.38); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; }
-.sl-record-link { margin-top:20px; display:inline-block; font-size:15px; color:rgba(26,39,68,0.50); letter-spacing:0.04em; text-decoration:none; cursor:pointer; }
-.sl-record-link:hover { color:#1A2744; }
-
-/* ── THE JOURNEY ── */
-.sl-journey { padding:80px 0; }
-.sl-journey-copy { font-family:'Playfair Display',serif; font-size:22px; line-height:1.85; color:#1A2744; font-weight:400; margin-bottom:56px; }
-.sl-gap-block { padding:36px 0; border-top:0.5px solid rgba(26,39,68,0.09); border-bottom:0.5px solid rgba(26,39,68,0.09); margin-bottom:48px; }
-.sl-gap-num { font-family:'Playfair Display',serif; font-size:80px; color:#1A2744; line-height:1; letter-spacing:-0.04em; margin-bottom:12px; }
-.sl-gap-label { font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(26,39,68,0.38); margin-bottom:16px; }
-.sl-gap-copy { font-size:17px; color:rgba(26,39,68,0.58); line-height:1.8; }
-.sl-milestone { font-size:18px; color:#1A2744; line-height:1.8; }
-.sl-milestone strong { font-weight:500; }
-
-/* ── THE INVITATION ── */
-.sl-invitation { background:#1A2744; padding:72px 48px; }
-.sl-inv-inner { max-width:760px; margin:0 auto; }
-.sl-inv-eyebrow { font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:32px; }
-.sl-inv-copy { font-family:'Playfair Display',serif; font-size:26px; color:rgba(255,255,255,0.88); line-height:1.75; font-weight:400; margin-bottom:52px; }
-.sl-inv-gap { margin-bottom:48px; padding-bottom:48px; border-bottom:0.5px solid rgba(255,255,255,0.09); }
-.sl-inv-gap-num { font-family:'Playfair Display',serif; font-size:72px; color:rgba(255,255,255,0.88); line-height:1; letter-spacing:-0.04em; margin-bottom:10px; }
-.sl-inv-gap-label { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.28); }
-.sl-inv-cta { font-size:18px; color:#F5C518; letter-spacing:0.02em; cursor:pointer; line-height:1.5; display:block; margin-bottom:20px; text-decoration:none; padding:14px 0; min-height:44px; }
-.sl-inv-secondary { font-size:15px; color:rgba(255,255,255,0.24); line-height:1.5; cursor:pointer; padding:12px 0; min-height:44px; display:block; }
-
-/* ── FOOTER ── */
-.sl-footer { padding:24px 48px; display:flex; justify-content:space-between; align-items:center; border-top:0.5px solid rgba(26,39,68,0.08); flex-wrap:wrap; gap:12px; }
-.sl-footer-copy { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.04em; }
-.sl-footer-kyc { display:flex; gap:20px; }
-.sl-footer-kyc a { font-size:12px; color:rgba(26,39,68,0.30); letter-spacing:0.05em; text-transform:uppercase; text-decoration:none; cursor:pointer; padding:8px 0; min-height:44px; display:flex; align-items:center; }
-
-/* ── MOBILE — 768px ── */
-@media(max-width:768px) {
-  .sl-topbar,.sl-hero-bar,.sl-invitation,.sl-footer { padding-left:24px; padding-right:24px; }
-  .sl-col { padding-left:24px; padding-right:24px; }
-  .sl-nav { display:none; }
-  .sl-hero-score { font-size:40px; }
-  .sl-counter-num { font-size:48px; }
-  .sl-gap-num,.sl-inv-gap-num { font-size:56px; }
-  .sl-sherpa-body,.sl-journey-copy,.sl-inv-copy { font-size:19px; }
-  .sl-counters { gap:32px; }
-  .sl-record-strip { gap:16px; }
-  .sl-record-card { width:160px; }
-  .sl-record-img-wrap { width:160px; height:210px; }
-  .sl-record-img { width:160px; height:210px; }
-  .sl-progression-note { flex-direction:column; }
-  .sl-hero-meta { flex-direction:column; align-items:flex-start; }
+/* Record strip */
+.sl-rec-strip {
+  display:flex; gap:11px; overflow-x:auto; padding-bottom:5px; margin-bottom:12px;
+}
+.sl-rec-strip::-webkit-scrollbar { height:2px; }
+.sl-rc {
+  flex:0 0 auto; width:132px; text-decoration:none;
+  color:inherit; display:flex; flex-direction:column;
+}
+.sl-rc-img {
+  width:132px; height:99px; background:#2A2118;
+  border-radius:3px; overflow:hidden; margin-bottom:7px;
+  position:relative; display:flex; align-items:center; justify-content:center;
+}
+.sl-rc-img img {
+  width:132px; height:99px; object-fit:contain; display:block;
+}
+.sl-rc-hover {
+  display:none; position:absolute; inset:0;
+  background:rgba(26,39,68,0.80); align-items:center; justify-content:center;
+  font-size:13px; color:#C8A84B; letter-spacing:0.06em; text-transform:uppercase;
+}
+.sl-rc:hover .sl-rc-hover { display:flex; }
+.sl-rc-num {
+  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.06em;
+  text-transform:uppercase; margin-bottom:2px;
+}
+.sl-rc-res {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:21px; color:#1A2744; line-height:1;
+}
+.sl-rc-tier {
+  font-size:13px; letter-spacing:0.07em; text-transform:uppercase;
+  color:#C8A84B; margin-top:3px;
+}
+.sl-rc-best {
+  font-size:13px; text-transform:uppercase; background:#C8A84B; color:#1A2744;
+  padding:2px 8px; border-radius:2px; font-weight:700;
+  display:inline-block; margin-top:3px;
+}
+.sl-view-all {
+  font-size:14px; color:#1A2744; text-decoration:none;
+  border-bottom:1px solid rgba(26,39,68,0.18); padding-bottom:1px;
+  display:inline-block; font-weight:500; min-height:44px;
+  display:inline-flex; align-items:center;
 }
 
-/* ── MOBILE — 600px ── */
-@media(max-width:600px) {
-  .sl-topbar { padding-left:16px; padding-right:16px; }
-  .sl-col { padding-left:16px; padding-right:16px; }
-  .sl-hero-bar { padding-left:16px; padding-right:16px; padding-bottom:28px; }
-  .sl-invitation { padding-left:16px; padding-right:16px; }
-  .sl-footer { padding-left:16px; padding-right:16px; flex-direction:column; align-items:flex-start; gap:16px; }
-  .sl-footer-kyc { flex-wrap:wrap; gap:16px; }
-  .sl-hero-name { font-size:24px; }
-  .sl-hero-score { font-size:36px; }
-  .sl-sherpa-body,.sl-journey-copy { font-size:18px; }
-  .sl-inv-copy { font-size:22px; }
-  .sl-inv-gap-num { font-size:48px; }
-  .sl-gap-num { font-size:48px; }
-  .sl-counter-num { font-size:40px; }
-  .sl-record-card { width:140px; }
-  .sl-record-img-wrap { width:140px; height:180px; }
-  .sl-record-img { width:140px; height:180px; }
-  .sl-counters { gap:24px; }
-  .sl-dim-row { flex-direction:column; gap:4px; }
-  .sl-record-meta { gap:16px; }
+/* ══════════════════════════════════════════════════════════════
+   THE PULL — Grandmaster photograph + light cream body + dark gap panel
+   ══════════════════════════════════════════════════════════════ */
+
+/* Full-width photograph */
+.sl-pull-photo {
+  width:100%; background:#0C1018;
+  margin-top:13px;
+}
+.sl-pull-photo img {
+  width:100%; display:block;
+  /* object-fit:contain so neither landscape nor portrait is cropped.
+     Letterbox appears in #0C1018 above/below or sides. */
+  object-fit:contain;
+  max-height:340px;
+}
+
+/* Caption strip — narrow navy, like league page */
+.sl-pull-caption {
+  background:#1A2744;
+  padding:15px 40px;
+  display:flex; justify-content:space-between; align-items:baseline;
+  flex-wrap:wrap; gap:8px;
+  border-bottom:0.5px solid rgba(255,255,255,0.07);
+}
+.sl-pull-cap-l {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:16px; color:rgba(255,255,255,0.70);
+}
+.sl-pull-cap-r {
+  font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#C8A84B;
+}
+
+/* Pull body — warm cream, open */
+.sl-pull-body {
+  background:#EDE8DF;
+  padding:38px 40px 32px;
+}
+.sl-pull-ey {
+  font-size:13px; letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-bottom:12px;
+}
+.sl-pull-decl {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:26px; color:#1A2744; line-height:1.55; font-weight:400; margin-bottom:10px;
+}
+.sl-pull-decl em { color:#C8A84B; font-style:normal; }
+.sl-pull-sub {
+  font-size:15px; color:rgba(26,39,68,0.55); line-height:1.82;
+  margin-bottom:28px; max-width:620px;
+}
+
+/* Portfolio sale — dark navy card, leads everything */
+.sl-portfolio-card {
+  background:#1A2744; border-radius:8px; padding:22px 26px;
+  margin-bottom:24px; display:flex; gap:18px; align-items:flex-start;
+}
+.sl-pc-icon-wrap {
+  width:40px; height:40px; border-radius:50%;
+  background:rgba(200,168,75,0.15); border:1px solid rgba(200,168,75,0.28);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;
+}
+.sl-pc-eyebrow {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:#C8A84B; font-weight:600; margin-bottom:6px;
+}
+.sl-pc-title {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:19px; color:#fff; line-height:1.55; margin-bottom:8px; font-weight:400;
+}
+.sl-pc-text {
+  font-size:14px; color:rgba(255,255,255,0.65); line-height:1.72;
+}
+
+/* Benefits grid — white cards on cream */
+.sl-ben-hdr {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-bottom:14px;
+}
+.sl-ben-grid {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:0;
+}
+.sl-ben {
+  background:#FFFFFF; border-radius:8px; padding:18px 18px;
+  border:0.5px solid rgba(26,39,68,0.11);
+}
+.sl-ben-icon {
+  width:32px; height:32px; border-radius:6px;
+  background:rgba(200,168,75,0.13);
+  display:flex; align-items:center; justify-content:center; margin-bottom:10px;
+}
+.sl-ben-icon svg {
+  width:16px; height:16px; stroke:#C8A84B; stroke-width:1.8;
+  fill:none; stroke-linecap:round; stroke-linejoin:round;
+}
+.sl-ben-title { font-size:14px; color:#1A2744; font-weight:600; margin-bottom:5px; line-height:1.6; }
+.sl-ben-text  { font-size:13px; color:rgba(26,39,68,0.65); line-height:1.65; }
+
+/* ── GAP PANEL — warm cream, gold on light ── */
+.sl-gap-panel {
+  background:#EDE8DF;
+  padding:36px 40px 40px;
+}
+.sl-gap-hdr {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-bottom:20px;
+}
+
+/* Progress track */
+.sl-gap-track {
+  position:relative; height:3px;
+  background:rgba(26,39,68,0.12); border-radius:2px; margin-bottom:38px;
+}
+.sl-gap-fill {
+  height:3px; background:linear-gradient(to right, rgba(200,168,75,0.50), #C8A84B);
+  border-radius:2px;
+  /* width set inline via Jinja: (best_score / 9.0 * 100)% */
+}
+.sl-gap-you {
+  position:absolute; top:-6px; transform:translateX(-50%);
+}
+.sl-gap-you-dot {
+  width:16px; height:16px; border-radius:50%; background:#C8A84B;
+  border:2.5px solid #EDE8DF; margin:0 auto;
+  box-shadow:0 0 0 4px rgba(200,168,75,0.28);
+}
+.sl-gap-you-lbl {
+  font-size:13px; color:#C8A84B; letter-spacing:0.06em; text-transform:uppercase;
+  white-space:nowrap; margin-top:8px; text-align:center; font-weight:600;
+}
+.sl-gap-gm {
+  position:absolute; top:-6px; right:0; transform:translateX(50%);
+}
+.sl-gap-gm-dot {
+  width:16px; height:16px; border-radius:50%;
+  background:#D8D4CC; border:2px solid rgba(26,39,68,0.25); margin:0 auto;
+}
+.sl-gap-gm-lbl {
+  font-size:13px; color:rgba(26,39,68,0.45); letter-spacing:0.06em; text-transform:uppercase;
+  white-space:nowrap; margin-top:8px; text-align:center;
+}
+
+/* Numbers */
+.sl-gap-nums {
+  display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px;
+}
+.sl-gap-yn {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:56px; color:#1A2744; line-height:1; letter-spacing:-0.03em;
+}
+.sl-gap-ys {
+  font-size:13px; letter-spacing:0.07em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-top:4px;
+}
+.sl-gap-mid {
+  font-size:14px; color:rgba(26,39,68,0.45); letter-spacing:0.08em;
+  align-self:center; padding-bottom:18px;
+}
+.sl-gap-gn {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:56px; color:rgba(26,39,68,0.50); line-height:1; letter-spacing:-0.03em;
+}
+.sl-gap-gs {
+  font-size:13px; letter-spacing:0.07em; text-transform:uppercase;
+  color:rgba(26,39,68,0.40); margin-top:4px; text-align:right;
+}
+
+/* Tension */
+.sl-tension {
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:19px; color:#1A2744; line-height:1.65;
+  border-left:2px solid #C8A84B; padding-left:20px; margin-bottom:6px;
+}
+.sl-tension-sub {
+  font-size:14px; color:rgba(26,39,68,0.65); line-height:1.72;
+  padding-left:22px; margin-bottom:28px;
+}
+
+/* Sparkline */
+.sl-spark-hdr {
+  font-size:13px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,39,68,0.55); margin-bottom:10px;
+}
+.sl-spark-note {
+  font-size:13px; color:rgba(26,39,68,0.45);
+  text-align:center; margin-top:5px; margin-bottom:28px;
+}
+
+/* CTAs */
+.sl-gap-rule {
+  width:100%; height:0.5px; background:rgba(26,39,68,0.10); margin-bottom:22px;
+}
+.sl-cta-primary {
+  font-size:17px; color:#1A2744; text-decoration:none; font-weight:700;
+  border-bottom:2px solid #C8A84B; padding-bottom:2px;
+  display:inline-flex; align-items:center; margin-bottom:10px; min-height:44px;
+}
+.sl-cta-secondary {
+  font-size:14px; color:rgba(26,39,68,0.55); text-decoration:none;
+  border-bottom:1px solid rgba(26,39,68,0.20); padding-bottom:1px;
+  display:inline-flex; align-items:center; min-height:44px;
+}
+.sl-cta-free {
+  font-size:13px; color:rgba(26,39,68,0.45); margin-top:6px; display:block;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FOOTER
+   ══════════════════════════════════════════════════════════════ */
+.sl-footer {
+  padding:20px 40px;
+  display:flex; justify-content:space-between; align-items:center;
+  flex-wrap:wrap; gap:10px;
+  border-top:0.5px solid rgba(26,39,68,0.09);
+}
+.sl-footer-copy { font-size:13px; color:rgba(26,39,68,0.50); letter-spacing:0.03em; }
+.sl-footer-links { display:flex; gap:16px; flex-wrap:wrap; }
+.sl-footer-links a {
+  font-size:13px; color:rgba(26,39,68,0.55); letter-spacing:0.06em;
+  text-transform:uppercase; text-decoration:none;
+  min-height:44px; display:inline-flex; align-items:center;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV — exact sl-bottom-nav from base-staging
+   ══════════════════════════════════════════════════════════════ */
+.sl-bottom-nav {
+  display:none;
+  position:fixed; bottom:env(safe-area-inset-bottom, 0); left:0; right:0;
+  height:62px; z-index:998;
+  background:rgba(26,24,20,0.98);
+  border-top:1.5px solid rgba(245,197,24,0.25);
+  justify-content:space-around; align-items:flex-start;
+  padding-top:12px;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+}
+.sl-nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  text-decoration:none; color:rgba(255,255,255,0.55);
+  font-size:13px; font-weight:500; letter-spacing:0.02em;
+  min-width:44px; min-height:44px; justify-content:flex-start;
+  padding-top:4px; touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.sl-nav-item.active { color:#F4C20D; }
+.sl-nav-item__icon { font-size:22px; line-height:1; }
+/* Upload FAB */
+.sl-nav-fab {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  text-decoration:none; color:rgba(255,255,255,0.60);
+  font-size:13px; font-weight:700; min-height:44px;
+  justify-content:center; touch-action:manipulation;
+}
+.sl-nav-fab__circle {
+  width:44px; height:44px; border-radius:50%;
+  background:#F4C20D; display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:700; color:#1A1A18;
+  box-shadow:0 -2px 16px rgba(244,194,13,0.50); margin-top:-10px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width:900px) {
+  .sl-top-nav .sl-nav-links { display:none; }
+  .sl-bottom-nav { display:flex; }
+  .sl-page { padding-bottom:80px; }
+}
+@media (max-width:768px) {
+  .sl-top-nav, .sl-hero, .sl-standing, .sl-obs-band,
+  .sl-pull-caption, .sl-pull-body, .sl-gap-panel, .sl-footer {
+    padding-left:20px; padding-right:20px;
+  }
+  .sl-sections { padding:12px 18px 0; }
+  .sl-ben-grid { grid-template-columns:1fr 1fr; }
+  .sl-standing-score { font-size:52px; }
+  .sl-hero-obs { font-size:18px; }
+  .sl-obs-thumb { width:120px; }
+  .sl-obs-thumb img { width:120px; }
+  .sl-pull-decl { font-size:22px; }
+  .sl-gap-yn, .sl-gap-gn { font-size:44px; }
+  .sl-tension { font-size:17px; }
+}
+@media (max-width:480px) {
+  .sl-ben-grid { grid-template-columns:1fr; }
+  .sl-gap-yn, .sl-gap-gn { font-size:38px; }
+  .sl-standing-score { font-size:44px; }
+  .sl-obs-row { flex-direction:column; }
+  .sl-standing-newgm { margin-left:0; margin-top:6px; }
 }
 </style>
 </head>
 <body>
 <div class="sl-page">
 
-  <!-- TOP BAR -->
-  <div class="sl-topbar">
-    <a href="{{ url_for('index') }}" class="sl-brand">
-      <span class="sl-brand-name">Shutter League</span>
-      <span class="sl-brand-sub">Making Images Matter</span>
+<!-- ════════════════════════════════════════════════════════════
+     TOP NAV — Haiku nav from base-staging
+     ════════════════════════════════════════════════════════════ -->
+<nav class="sl-top-nav">
+  <a href="{{ url_for('try_welcome') }}" class="sl-nav-brand">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League"
+         onerror="this.style.display='none'">
+    <span class="sl-nav-brand-fallback">Shutter League</span>
+  </a>
+  <div class="sl-nav-links">
+    <a href="{{ url_for('try_welcome') }}" class="nav-active">Home</a>
+    <a href="{{ url_for('try_gallery') }}">My evaluations</a>
+    <a href="{{ url_for('try_page') }}">Upload</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('standings_public') }}">League of Photographers</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out" aria-label="Log out">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
     </a>
-    <nav class="sl-nav">
-      <a href="{{ url_for('try_welcome') }}" class="active">Dashboard</a>
-      <a href="{{ url_for('try_page') }}">Evaluate</a>
-      <a href="{{ url_for('standings_public') }}">League</a>
-    </nav>
   </div>
+</nav>
 
-  <!-- ═══ HERO ═══ -->
+<!-- ════════════════════════════════════════════════════════════
+     ACT 1 — HERO: greeting + sherpa_obs sentence
+     ════════════════════════════════════════════════════════════ -->
+<div class="sl-hero">
+  <div class="sl-hero-greeting" id="sl-greeting">Good morning</div>
+  <div class="sl-hero-rule"></div>
+  {% if sherpa_obs %}
+  <div class="sl-hero-obs">{{ sherpa_obs | truncate(180, true, '…') }}</div>
+  {% endif %}
+</div>
+
+<!-- STANDING BAND -->
+{% set best_score = namespace(val=0.0) %}
+{% for img in all_images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
+{% set evals_used = all_images | length %}
+{% set evals_remaining = [10 - evals_used, 0] | max %}
+
+<div class="sl-standing">
+  <div class="sl-standing-main">
+    {% if user_hero %}
+    <span class="sl-standing-score">{{ "%.2f"|format(user_hero.score) }}</span>
+    <div class="sl-standing-right">
+      <span class="sl-standing-tier">{{ user_hero.tier }}</span>
+      <span class="sl-standing-sub">
+        {{ user_hero.genre }} &nbsp;·&nbsp; {{ evals_used }} evaluated
+        {% if haiku_percentile %} &nbsp;·&nbsp; Top {{ haiku_percentile }}%{% endif %}
+      </span>
+      <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="sl-standing-link">
+        Your best evaluation →
+      </a>
+    </div>
+    {% if user_hero.thumb_url %}
+    <div class="sl-standing-thumb">
+      <img src="{{ user_hero.thumb_url }}" alt="Your best photograph">
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+  <div class="sl-standing-rule"></div>
+  <div class="sl-standing-footer">
+    <span class="sl-standing-stat"><strong>{{ evals_remaining }}</strong> evaluations remaining</span>
+    <span class="sl-standing-stat"><strong>{{ evals_used }} of 10</strong> free used</span>
+    {# "What changed" — links to League page where new GM images appear #}
+    <a href="{{ url_for('standings_public') }}" class="sl-standing-newgm">
+      See the latest in the League →
+    </a>
+  </div>
+</div>
+
+<!-- INSTITUTION SPEAKS — obs_band only if sherpa_obs exists -->
+{% if sherpa_obs %}
+<div class="sl-obs-band">
+  <div class="sl-obs-eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
+  <div class="sl-obs-text">{{ sherpa_obs }}</div>
   {% if user_hero and user_hero.thumb_url %}
-  <div class="sl-hero">
-    <img src="{{ user_hero.thumb_url }}" alt="Your best photograph so far">
-    <div class="sl-hero-bar">
-      <div class="sl-hero-position">
-        <span class="sl-hero-tier-pos">{{ user_hero.tier }}</span>
-        {% if haiku_percentile %}
-        <span class="sl-hero-pos-sep">·</span>
-        <span class="sl-hero-percentile">Top {{ haiku_percentile }}%</span>
-        {% endif %}
+  <div class="sl-obs-row">
+    <div class="sl-obs-thumb">
+      <img src="{{ user_hero.thumb_url }}"
+           alt="Your best photograph — {{ user_hero.tier }}, {{ '%.2f'|format(user_hero.score) }}">
+    </div>
+    <div class="sl-obs-standing">
+      {% if haiku_percentile %}
+      <span class="sl-obs-pct">Top {{ haiku_percentile }}% of Haiku photographers</span>
+      {% endif %}
+      <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="sl-obs-link">
+        Your best evaluation →
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════
+     ACT 2 — PLATFORM'S VOICE: section cards
+     ════════════════════════════════════════════════════════════ -->
+<div class="sl-sections">
+
+  <!-- SHERPA CARD -->
+  {% if sherpa_obs %}
+  <div class="sl-sc sl-sc-sherpa">
+    <div class="sl-se">What the platform sees</div>
+    <div class="sl-st">Your photographic eye</div>
+    <div class="sl-sbody">{{ sherpa_obs }}</div>
+    {% if sherpa_nudge %}
+    <div class="sl-nudge">
+      <span class="sl-nudge-lbl">Shutter League Mentor note</span>
+      {{ sherpa_nudge }}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- FRONTIER CARD -->
+  {% if milestone_strength %}
+  <div class="sl-sc sl-sc-frontier">
+    <div class="sl-se">Where your next evaluation point lives</div>
+    <div class="sl-f-dim">Your next frontier: {{ milestone_strength }}</div>
+    <div class="sl-f-para">
+      Your instinctive strength shows clearly across your evaluated photographs.
+      The next tier asks you to direct that instinct into situations that are
+      genuinely harder to reach — not just harder to frame.
+    </div>
+    <div class="sl-f-tips">
+      <div class="sl-f-tip">
+        <div class="sl-f-dot"></div>
+        <span>Shoot at the hour that costs you — pre-dawn, monsoon, extreme heat. That difficulty is legible in the image.</span>
       </div>
-      <div class="sl-hero-greeting" id="sl-greeting">Good morning</div>
-      <div class="sl-hero-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
-      <div class="sl-hero-meta">
-        <div class="sl-hero-standing">
-          <span class="sl-hero-score">{{ "%.2f"|format(user_hero.score) }}</span>
-          <div class="sl-hero-tier-block">
-            <span class="sl-hero-tier">{{ user_hero.tier }}</span>
-            <span class="sl-hero-genre">{{ user_hero.genre }}</span>
-          </div>
-        </div>
-        <div class="sl-hero-link">
-          <a href="{{ url_for('try_result', image_id=user_hero.id) }}">Your best so far &nbsp;·&nbsp; See the full evaluation →</a>
-        </div>
+      <div class="sl-f-tip">
+        <div class="sl-f-dot"></div>
+        <span>Put yourself where you are waiting, not arranging. The decisive moment cannot be staged.</span>
       </div>
+      <div class="sl-f-tip">
+        <div class="sl-f-dot"></div>
+        <span>Place your subject where tension lives — the edge of frame, the heavy negative space. Break the safe thirds.</span>
+      </div>
+    </div>
+    <div class="sl-f-trend">
+      Your {{ milestone_strength }} is your instinctive strength.
+      Depth of Difficulty is your recurring gap.
+      One is the voice — the other is what makes the voice matter.
     </div>
   </div>
   {% endif %}
 
-  <div class="sl-col">
-
-    <!-- ═══ SHERPA ═══ -->
-    {% if sherpa_obs %}
-    <div class="sl-sherpa">
-      <div class="sl-eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
-      <div class="sl-sherpa-body">{{ sherpa_obs }}</div>
-      {% if sherpa_nudge %}
-      <div class="sl-sherpa-nudge">{{ sherpa_nudge }}</div>
-      {% endif %}
+  <!-- MENTOR CARD -->
+  <div class="sl-sc sl-sc-mentor">
+    <div class="sl-m-lbl">Shutter League Mentor note</div>
+    <div class="sl-st">What the craft asks of you next</div>
+    <div class="sl-m-qwrap">
+      <div class="sl-m-quote">The photograph that costs you nothing costs the viewer nothing.</div>
     </div>
-    <div class="sl-rule"></div>
+    <div class="sl-m-p">
+      Your emotional instinct is already strong — the atmosphere is there.
+      The next discipline is compositional commitment: pick one subject and
+      exclude everything that does not serve it.
+    </div>
+    <div class="sl-m-p">
+      The <a href="https://en.wikipedia.org/wiki/Gestalt_psychology" target="_blank" rel="noopener">Gestalt principles</a>
+      at work in your best image — the figure-ground separation, the way the
+      eye is guided before the mind intervenes — are there by instinct.
+      Now apply them by intention.
+    </div>
+    <div class="sl-m-p">
+      Leading lines, deliberate negative space, the decisive moment as geometry
+      rather than feeling. That is the distance between where you are and
+      where the next tier begins.
+    </div>
+  </div>
+
+  <!-- THE STANDARD CARD -->
+  <div class="sl-sc sl-sc-standard">
+    <div class="sl-se">The standard you are building toward</div>
+    <div class="sl-st">Where you stand on the tier ladder</div>
+
+    <!-- Dot-line tier progression -->
+    {% set tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+    {% set current_tier = user_hero.tier if user_hero else '' %}
+    <div class="sl-tier-prog">
+      {% for t in tiers %}
+      <div class="sl-tn">
+        <div class="sl-tc {% if t == current_tier %}cur{% elif tiers.index(t) < tiers.index(current_tier) if current_tier in tiers else False %}past{% else %}fut{% endif %}"></div>
+        <div class="sl-tlbl {% if t == current_tier %}active{% endif %}">{{ t }}</div>
+      </div>
+      {% if not loop.last %}<div class="sl-tl {% if tiers.index(t) < tiers.index(current_tier) if current_tier in tiers else False %}past{% endif %}"></div>{% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Grandmaster reference photograph -->
+    {% if league_hero and league_hero.thumb_url %}
+    <img class="sl-gm-img" src="{{ league_hero.thumb_url }}"
+         alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
+    <div class="sl-gm-credit">
+      <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
+      <span class="sl-gm-result">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
+    </div>
+    {% else %}
+    <div class="sl-gm-ph">Grandmaster photograph</div>
+    <div class="sl-gm-credit">
+      <span class="sl-gm-name">Grandmaster · Shutter League</span>
+      <span class="sl-gm-result">9.00</span>
+    </div>
     {% endif %}
 
-    <!-- ═══ THE STANDARD ═══ -->
-    <div class="sl-standard">
-      <div class="sl-eyebrow">The standard you are building toward</div>
-      <div class="sl-tier-strip">
-        {% set tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
-        {% set current_tier = user_hero.tier if user_hero else '' %}
-        {% for t in tiers %}
-        <span class="sl-tier-pill{% if t == current_tier %} active{% endif %}">{{ t }}</span>
-        {% endfor %}
-      </div>
-      {% if league_hero and league_hero.thumb_url %}
-      <img class="sl-gm-img" src="{{ league_hero.thumb_url }}" alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ '%.2f'|format(league_hero.score) }}">
-      <div class="sl-gm-credit">
-        <span class="sl-gm-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}</span>
-        <span class="sl-gm-score">{{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}</span>
-      </div>
-      {% endif %}
-      <div class="sl-standard-copy">
-        At every festival, a thousand photographers press the shutter at the same moment. One image stands apart. Not because of the camera. Because that photographer saw differently — before they raised it.
-      </div>
-      <div class="sl-five-dims">
-        <div class="sl-dim-row">
-          <span class="sl-dim-plain">The difficulty of getting the shot</span>
-          <span class="sl-dim-official">Depth of Difficulty</span>
-        </div>
-        <div class="sl-dim-row">
-          <span class="sl-dim-plain">Whether it is visually disruptive</span>
-          <span class="sl-dim-official">Visual Disruption</span>
-        </div>
-        <div class="sl-dim-row">
-          <span class="sl-dim-plain">Whether it caught the decisive moment</span>
-          <span class="sl-dim-official">Decisive Moment</span>
-        </div>
-        <div class="sl-dim-row">
-          <span class="sl-dim-plain">Whether it creates wonder</span>
-          <span class="sl-dim-official">Wonder Factor</span>
-        </div>
-        <div class="sl-dim-row">
-          <span class="sl-dim-plain">The emotion it carries</span>
-          <span class="sl-dim-official">Affective Quotient</span>
-        </div>
-      </div>
-      <div class="sl-standard-close">
-        The highest standard demands strength across all five dimensions.
-      </div>
+    <div class="sl-std-copy">
+      At every festival, a thousand photographers press the shutter at the same
+      moment. One image stands apart — because that photographer saw differently
+      before they raised the camera.
     </div>
 
-    <div class="sl-rule"></div>
-
-    <!-- ═══ WHERE YOU STAND ═══ -->
-    <div class="sl-where">
-      <div class="sl-eyebrow">Where you stand</div>
-      {% set best_score = namespace(val=0.0) %}
-      {% for img in images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
-      <div class="sl-counters">
-        <div class="sl-counter">
-          <span class="sl-counter-num">{{ evals_used }}</span>
-          <span class="sl-counter-label">Photographs evaluated</span>
-        </div>
-        <div class="sl-counter">
-          <span class="sl-counter-num">{{ evals_remaining }}</span>
-          <span class="sl-counter-label">Remaining free</span>
-        </div>
-        {% if best_score.val > 0 %}
-        <div class="sl-counter">
-          <span class="sl-counter-num">{{ "%.2f"|format(best_score.val) }}</span>
-          <span class="sl-counter-label">Best evaluation</span>
-        </div>
-        {% endif %}
-      </div>
-      <div class="sl-record-statement">
-        {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}. This is what your record looks like so far.
-      </div>
-      {% if images %}
-      <div class="sl-record-strip">
-        {% for img in images %}
-        {% if img.thumb_url %}
-        <div class="sl-record-card">
-          <div class="sl-record-img-wrap">
-            <img class="sl-record-img" src="{{ img.thumb_url }}" alt="Evaluation {{ loop.revindex }} — {{ img.genre }}">
-          </div>
-          <div class="sl-record-meta">
-            <span class="sl-record-eval">Evaluation {{ loop.revindex }}</span>
-            <span class="sl-record-name">{{ img.genre }}</span>
-            {% if img.score %}
-            <div class="sl-record-score-row">
-              <span class="sl-record-score">{{ "%.2f"|format(img.score) }}</span>
-              <span class="sl-record-tier">{{ img.tier }}</span>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-      </div>
-      {% endif %}
-      <div class="sl-progression-note">
-        <span class="sl-progression-text">Your record is accumulating. Each photograph stays — nothing resets.</span>
-        {% if best_score.val > 0 %}
-        {% set best_tier = namespace(val='') %}
-        {% for img in images %}{% if img.score == best_score.val %}{% set best_tier.val = img.tier %}{% endif %}{% endfor %}
-        <span class="sl-progression-best">Best &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }} &nbsp;·&nbsp; {{ best_tier.val }}</span>
-        {% endif %}
-      </div>
-      {% if images %}
-      <a href="{{ url_for('try_gallery') }}" class="sl-record-link">View my full record →</a>
-      {% endif %}
+    <div class="sl-dims-hdr">The five dimensions every evaluation is built on</div>
+    <div class="sl-dim-row">
+      <span class="sl-dim-plain">The difficulty of getting to the shot</span>
+      <span class="sl-dim-official">Depth of Difficulty</span>
     </div>
-
-    <div class="sl-rule"></div>
-
-    <!-- ═══ THE JOURNEY ═══ -->
-    <div class="sl-journey">
-      <div class="sl-eyebrow">What you are becoming</div>
-      <div class="sl-journey-copy">
-        Your signature becomes your voice. Your voice becomes a body of work. Your body of work stands apart from five billion.
-      </div>
-      {% set gap = [9.0 - best_score.val, 0.0]|max %}
-      <div class="sl-gap-block">
-        <div class="sl-gap-num">{{ "%.2f"|format(gap) }}</div>
-        <div class="sl-gap-label">Points from Grandmaster</div>
-        <div class="sl-gap-copy">
-          The distance is not talent. It is accumulated decision-making — photograph by photograph. Honest evaluation by honest evaluation.
-        </div>
-      </div>
-      <div class="sl-gold-rule"></div>
-      {% if milestone_strength %}
-      <div class="sl-milestone">
-        Your milestone strength is <strong>{{ milestone_strength }}</strong> — the emotional atmosphere your eye creates instinctively. That quality, directed into more demanding situations, is what closes the gap.
-      </div>
-      {% else %}
-      <div class="sl-milestone">
-        Each evaluation reveals what your eye reaches for before your mind intervenes. That instinct is the beginning of your voice.
-      </div>
-      {% endif %}
+    <div class="sl-dim-row">
+      <span class="sl-dim-plain">Whether it is visually disruptive</span>
+      <span class="sl-dim-official">Visual Disruption</span>
     </div>
-
+    <div class="sl-dim-row">
+      <span class="sl-dim-plain">Whether it caught the decisive moment</span>
+      <span class="sl-dim-official">Decisive Moment</span>
+    </div>
+    <div class="sl-dim-row">
+      <span class="sl-dim-plain">Whether it creates wonder</span>
+      <span class="sl-dim-official">Wonder Factor</span>
+    </div>
+    <div class="sl-dim-row">
+      <span class="sl-dim-plain">The emotion it carries</span>
+      <span class="sl-dim-official">Affective Quotient</span>
+    </div>
+    <div class="sl-std-close">The highest standard demands strength across all five.</div>
   </div>
 
-  <!-- ═══ THE INVITATION ═══ -->
-  <div class="sl-invitation">
-    <div class="sl-inv-inner">
-      <div class="sl-inv-eyebrow">The League of Photographers</div>
-      {% if evals_used > 0 %}
-      <div class="sl-inv-copy">
-        Your record is growing. Your next photograph continues it.
-      </div>
-      {% else %}
-      <div class="sl-inv-copy">
-        Your standing has not started yet. Your record begins with your next photograph.
-      </div>
+  <!-- RECORD CARD -->
+  {% if all_images %}
+  <div class="sl-sc sl-sc-record">
+    <div class="sl-se">Your evaluated images</div>
+    <div class="sl-st">Your record</div>
+    <div class="sl-rec-strip">
+      {% for img in all_images | reverse %}
+      {% if img.thumb_url %}
+      <a href="{{ url_for('try_result', image_id=img.id) }}" class="sl-rc">
+        <div class="sl-rc-img">
+          <img src="{{ img.thumb_url }}"
+               alt="Evaluation {{ loop.revindex }} — {{ img.genre }}"
+               style="width:132px;height:99px;object-fit:contain;display:block;">
+          <div class="sl-rc-hover">↗ Scorecard</div>
+        </div>
+        <div class="sl-rc-num">Eval {{ loop.revindex }}</div>
+        <div class="sl-rc-res">{{ "%.2f"|format(img.score) if img.score else '—' }}</div>
+        <div class="sl-rc-tier">{{ img.tier if img.tier else '' }}</div>
+        {% if img.score == best_score.val and best_score.val > 0 %}
+        <span class="sl-rc-best">Best</span>
+        {% endif %}
+      </a>
       {% endif %}
-      <div class="sl-inv-gap">
-        <div class="sl-inv-gap-num">{{ "%.2f"|format(gap) }}</div>
-        <div class="sl-inv-gap-label">Points separate your best from Grandmaster</div>
+      {% endfor %}
+    </div>
+    <a href="{{ url_for('try_gallery') }}" class="sl-view-all">View all →</a>
+  </div>
+  {% endif %}
+
+</div>{# /sl-sections #}
+
+<!-- ════════════════════════════════════════════════════════════
+     THE PULL — Grandmaster photograph + cream body + dark gap panel
+     ════════════════════════════════════════════════════════════ -->
+
+<!-- Full-width photograph — work speaks first -->
+{% if league_hero and league_hero.thumb_url %}
+<div class="sl-pull-photo">
+  <img src="{{ league_hero.thumb_url }}"
+       alt="Grandmaster photograph — {{ league_hero.photographer }}, {{ league_hero.genre }}">
+</div>
+<div class="sl-pull-caption">
+  <span class="sl-pull-cap-l">
+    {{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }}
+  </span>
+  <span class="sl-pull-cap-r">
+    {{ league_hero.tier }} &nbsp;·&nbsp; {{ "%.2f"|format(league_hero.score) }}
+  </span>
+</div>
+{% else %}
+<div class="sl-pull-photo" style="height:220px;display:flex;align-items:center;justify-content:center;">
+  <span style="font-size:13px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.55);">Grandmaster photograph</span>
+</div>
+<div class="sl-pull-caption">
+  <span class="sl-pull-cap-l">Grandmaster · Shutter League</span>
+  <span class="sl-pull-cap-r">Grandmaster &nbsp;·&nbsp; 9.00</span>
+</div>
+{% endif %}
+
+<!-- Pull body — cream, declaration + benefits -->
+<div class="sl-pull-body">
+  <div class="sl-pull-ey">League of Photographers</div>
+  <div class="sl-pull-decl">
+    The League is selective<br>
+    because <em>the standard is real.</em>
+  </div>
+  <div class="sl-pull-sub">
+    That standing was not purchased. It was accumulated, photograph by photograph,
+    against the same five-dimension standard that evaluated every one of your images.
+    That is what makes a standing here worth having — and worth working toward.
+  </div>
+
+  <!-- Portfolio sale — dark navy card, leads everything -->
+  <div class="sl-portfolio-card">
+    <div class="sl-pc-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="#C8A84B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    </div>
+    <div>
+      <div class="sl-pc-eyebrow">This already happened on Shutter League</div>
+      <div class="sl-pc-title">
+        A League member's photograph was purchased by a client directly from their portfolio.
       </div>
-      <a href="{{ url_for('try_page') }}" class="sl-inv-cta">{% if evals_used > 0 %}Continue your record →{% else %}Start your record →{% endif %}</a>
-      <span class="sl-inv-secondary">I am here to explore. This is enough for now.</span>
+      <div class="sl-pc-text">
+        Your League portfolio is a living showreel — evaluated, credentialed work
+        that clients and galleries take seriously. Not a private record.
+        A public showcase of what your eye has earned.
+      </div>
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <div class="sl-footer">
-    <span class="sl-footer-copy">© 2026 Shutter League &nbsp;·&nbsp; Bengaluru, India &nbsp;·&nbsp; UDYAM-KR-03-0697280</span>
-    <div class="sl-footer-kyc">
-      <a href="{{ url_for('terms') }}">Terms</a>
-      <a href="{{ url_for('privacy') }}">Privacy</a>
-      <a href="{{ url_for('refund_policy') }}">Refunds</a>
-      <a href="{{ url_for('shipping_policy') }}">Shipping</a>
+  <!-- Benefits — white cards on cream -->
+  <div class="sl-ben-hdr">What membership in the League gives you</div>
+  <div class="sl-ben-grid">
+
+    <div class="sl-ben">
+      <div class="sl-ben-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <div class="sl-ben-title">A portfolio clients can browse and buy from</div>
+      <div class="sl-ben-text">Your evaluated work, publicly visible. The kind clients and galleries take seriously.</div>
+    </div>
+
+    <div class="sl-ben">
+      <div class="sl-ben-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="sl-ben-title">Exhibitions</div>
+      <div class="sl-ben-text">League members considered for curated physical and digital exhibitions. Your work shown, not stored.</div>
+    </div>
+
+    <div class="sl-ben">
+      <div class="sl-ben-icon">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="sl-ben-title">Programme guidance</div>
+      <div class="sl-ben-text">The platform identifies which image is strong enough to submit to programmes and exhibitions. Your best, not your favourite.</div>
+    </div>
+
+    <div class="sl-ben">
+      <div class="sl-ben-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="sl-ben-title">Expert Mentor advice</div>
+      <div class="sl-ben-text">A practitioner's eye on your specific work — not an algorithm's note, real feedback from experienced photographers.</div>
+    </div>
+
+    <div class="sl-ben">
+      <div class="sl-ben-icon">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <div class="sl-ben-title">Lessons tied to your gaps</div>
+      <div class="sl-ben-text">Structured learning chosen because of what your record reveals — not a generic curriculum.</div>
+    </div>
+
+    <div class="sl-ben">
+      <div class="sl-ben-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      </div>
+      <div class="sl-ben-title">A public standing that means something</div>
+      <div class="sl-ben-text">Your name, your tier, your arc — visible on the League page. A credential the standard awarded you.</div>
+    </div>
+
+  </div>
+</div>{# /sl-pull-body #}
+
+<!-- ── GAP PANEL — dark navy — the emotional moment ── -->
+{% set gap = [9.0 - best_score.val, 0.0] | max %}
+{% set pct = [(best_score.val / 9.0 * 100), 100.0] | min %}
+<div class="sl-gap-panel">
+
+  <div class="sl-gap-hdr">Your distance from Grandmaster standing</div>
+
+  <!-- Progress track -->
+  <div class="sl-gap-track">
+    <div class="sl-gap-fill" style="width:{{ '%.1f'|format(pct) }}%;"></div>
+    <div class="sl-gap-you" style="left:{{ '%.1f'|format(pct) }}%;">
+      <div class="sl-gap-you-dot"></div>
+      <div class="sl-gap-you-lbl">You &nbsp;·&nbsp; {{ "%.2f"|format(best_score.val) }}</div>
+    </div>
+    <div class="sl-gap-gm">
+      <div class="sl-gap-gm-dot"></div>
+      <div class="sl-gap-gm-lbl">Grandmaster</div>
     </div>
   </div>
 
+  <div class="sl-gap-nums">
+    <div>
+      <div class="sl-gap-yn">{{ "%.2f"|format(best_score.val) }}</div>
+      <div class="sl-gap-ys">Your best &nbsp;·&nbsp; {{ user_hero.tier if user_hero else '' }}</div>
+    </div>
+    <div class="sl-gap-mid">← {{ "%.2f"|format(gap) }} →</div>
+    <div style="text-align:right;">
+      <div class="sl-gap-gn">9.00</div>
+      <div class="sl-gap-gs">Grandmaster threshold</div>
+    </div>
+  </div>
+
+  <div class="sl-tension">
+    Your evaluation result puts you at the threshold of serious consideration.
+  </div>
+  <div class="sl-tension-sub">
+    The gap is not talent. It is accumulated decision-making — photograph by photograph.
+    Every image you submit either closes this distance or widens it.
+    The League records both.
+  </div>
+
+  <!-- Sparkline — SVG, real data points from all_images -->
+  <div class="sl-spark-hdr">
+    Your arc · {{ evals_used }} evaluation{{ 's' if evals_used != 1 else '' }} · what the journey builds toward
+  </div>
+  <svg viewBox="0 0 580 80" xmlns="http://www.w3.org/2000/svg"
+       style="width:100%;display:block;" aria-hidden="true">
+    <defs>
+      <linearGradient id="sl-sfill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#C8A84B" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#C8A84B" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <!-- GM threshold line -->
+    <line x1="0" y1="10" x2="580" y2="10"
+          stroke="rgba(200,168,75,0.28)" stroke-width="1" stroke-dasharray="3,4"/>
+    <text x="4" y="9" fill="rgba(200,168,75,0.80)"
+          font-size="8" font-family="Inter,sans-serif">Grandmaster 9.0</text>
+    <!-- Real data polyline built from all_images scores -->
+    {%- set imgs_with_scores = all_images | selectattr('score') | list | reverse | list -%}
+    {%- set n = imgs_with_scores | length -%}
+    {%- if n > 0 -%}
+      {%- set x_step = (290 / [n - 1, 1] | max) -%}
+      {# map score 0–10 → y 72–10 (bottom to top) #}
+      {%- set pts = [] -%}
+      {%- for img in imgs_with_scores -%}
+        {%- set x = (loop.index0 * x_step) | int -%}
+        {%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
+        {%- set _ = pts.append(x ~ ',' ~ y) -%}
+      {%- endfor -%}
+    <!-- fill area -->
+    <path d="{{ 'M' + pts[0] + ' L' + pts | join(' L') }} L{{ (n-1)*x_step|int }},72 L0,72 Z"
+          fill="url(#sl-sfill)"/>
+    <!-- real arc -->
+    <polyline points="{{ pts | join(' ') }}"
+              fill="none" stroke="#C8A84B" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- data points -->
+    {%- for img in imgs_with_scores -%}
+      {%- set x = (loop.index0 * x_step) | int -%}
+      {%- set y = (72 - (img.score / 10.0 * 62)) | int -%}
+      <circle cx="{{ x }}" cy="{{ y }}"
+              r="{{ 5 if loop.last else 3.5 }}" fill="#C8A84B"/>
+    {%- endfor -%}
+    <!-- first + last labels -->
+    {%- set first = imgs_with_scores[0] -%}
+    {%- set last = imgs_with_scores[-1] -%}
+    {%- set last_x = ((n-1) * x_step) | int -%}
+    {%- set last_y = (72 - (last.score / 10.0 * 62)) | int -%}
+    <text x="4" y="76" fill="rgba(26,39,68,0.50)"
+          font-size="9" font-family="Inter,sans-serif">
+      #1 · {{ "%.2f"|format(first.score) }}
+    </text>
+    <text x="{{ last_x - 2 }}" y="{{ last_y - 8 }}"
+          fill="rgba(200,168,75,0.85)" font-size="9" font-family="Inter,sans-serif">
+      Today · {{ "%.2f"|format(last.score) }}
+    </text>
+    {%- endif -%}
+    <!-- ghost continuation -->
+    <polyline points="290,{{ (72 - (best_score.val / 10.0 * 62)) | int }} 350,{{ (72 - (best_score.val / 10.0 * 62) - 5) | int }} 420,{{ (72 - (best_score.val / 10.0 * 62) - 12) | int }} 490,{{ (72 - (best_score.val / 10.0 * 62) - 18) | int }} 560,{{ (72 - (best_score.val / 10.0 * 62) - 28) | int }}"
+              fill="none" stroke="#C8A84B" stroke-width="1.5" stroke-dasharray="4,5"
+              stroke-linecap="round" stroke-linejoin="round" opacity="0.28"/>
+    <text x="310" y="76" fill="rgba(26,39,68,0.30)"
+          font-size="9" font-family="Inter,sans-serif">
+      Your arc continues inside the League →
+    </text>
+  </svg>
+  <div class="sl-spark-note">
+    {{ evals_used }} evaluation{{ 's' if evals_used != 1 else '' }} recorded
+    &nbsp;·&nbsp; the arc closes toward Grandmaster with every image you submit
+  </div>
+
+  <div class="sl-gap-rule"></div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <a href="{{ url_for('standings_public') }}" class="sl-cta-primary">
+      See who has earned a standing in the League →
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-cta-secondary">
+      Build my record toward the League →
+    </a>
+    <span class="sl-cta-free">
+      Your first 10 evaluations are free. No subscription required to begin.
+    </span>
+  </div>
+
+</div>{# /sl-gap-panel #}
+
+<!-- ════════════════════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════════════════════ -->
+<div class="sl-footer">
+  <span class="sl-footer-copy">
+    © 2026 Shutter League &nbsp;·&nbsp; Bengaluru, India &nbsp;·&nbsp; UDYAM-KR-03-0697280
+  </span>
+  <div class="sl-footer-links">
+    <a href="{{ url_for('terms') }}">Terms</a>
+    <a href="{{ url_for('privacy') }}">Privacy</a>
+    <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+    <a href="{{ url_for('shipping_policy') }}">Shipping</a>
+  </div>
 </div>
 
+</div>{# /sl-page #}
+
+<!-- ════════════════════════════════════════════════════════════
+     MOBILE BOTTOM NAV — base-staging sl-bottom-nav pattern
+     ════════════════════════════════════════════════════════════ -->
+<nav class="sl-bottom-nav" aria-label="Mobile navigation">
+  <a href="{{ url_for('try_welcome') }}" class="sl-nav-item active" aria-label="Home">
+    <span class="sl-nav-item__icon">⊞</span>
+    Home
+  </a>
+  <a href="{{ url_for('try_gallery') }}" class="sl-nav-item" aria-label="My evaluations">
+    <span class="sl-nav-item__icon">◫</span>
+    My evals
+  </a>
+  <a href="{{ url_for('try_page') }}" class="sl-nav-fab" aria-label="Upload photograph">
+    <div class="sl-nav-fab__circle">+</div>
+  </a>
+  <a href="{{ url_for('standings_public') }}" class="sl-nav-item" aria-label="League of Photographers">
+    <span class="sl-nav-item__icon">◈</span>
+    League
+  </a>
+  <a href="{{ url_for('profile') }}" class="sl-nav-item" aria-label="Profile">
+    <span class="sl-nav-item__icon">○</span>
+    Profile
+  </a>
+</nav>
+
 <script>
-// Time-aware greeting
+/* Time-aware greeting */
 (function() {
   var h = new Date().getHours();
   var g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
