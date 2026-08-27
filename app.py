@@ -32699,15 +32699,19 @@ def league_haiku():
     # Build JSON for JS tabs — template reads from script tags
     import json as _lhjson
     def _to_json(items):
-        return _lhjson.dumps([{
-            'id': p.id,
-            'thumb_url': p.thumb_url,
-            'photographer': p.photographer,
-            'score': p.score,
-            'tier': p.tier,
-            'genre': p.genre,
-            'impression': getattr(p, 'impression', ''),
-        } for p in items])
+        try:
+            return _lhjson.dumps([{
+                'id': int(p.id) if p.id else None,
+                'thumb_url': str(p.thumb_url or ''),
+                'photographer': str(p.photographer or ''),
+                'score': float(p.score) if p.score else 0.0,
+                'tier': str(p.tier or ''),
+                'genre': str(p.genre or ''),
+                'impression': str(getattr(p, 'impression', '') or '')[:120],
+            } for p in items], ensure_ascii=False)
+        except Exception as _je:
+            app.logger.warning(f'[league_haiku] _to_json failed: {_je}')
+            return '[]' 
 
     # Add aha_line to spotlight from impression field
     if _spotlight:
