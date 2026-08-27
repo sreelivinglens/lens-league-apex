@@ -33085,7 +33085,7 @@ def try_welcome():
     try:
         _lh_row = db.session.execute(db.text("""
             SELECT i.thumb_url, i.score, i.tier, i.genre,
-                   u.full_name
+                   u.full_name, i.id
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.status = 'scored'
@@ -33113,6 +33113,7 @@ def try_welcome():
                 tier         = _lh_row[2],
                 genre        = _lh_row[3] or '',
                 photographer = _lh_display,
+                id           = _lh_row[5],
             )
     except Exception as _lhe:
         app.logger.warning(f'[try_welcome] league_hero failed: {_lhe}')
