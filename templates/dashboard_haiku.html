@@ -285,8 +285,10 @@ canvas.spark{flex:1;height:48px;display:block}
       <strong>Yesterday</strong> was your last evaluation. Your record stands at <strong>{{ "%.2f"|format(user_hero.score) if user_hero else "—" }}</strong>.
     {% elif days_since %}
       <strong>{{ days_since }} days</strong> since your last evaluation. Your record stands at <strong>{{ "%.2f"|format(user_hero.score) if user_hero else "—" }}</strong>.
+    {% elif user_hero %}
+      Your record stands at <strong>{{ "%.2f"|format(user_hero.score) }}</strong>.
     {% else %}
-      Your record is waiting to begin.
+      Your record begins with your first photograph.
     {% endif %}
   </span>
   <span class="since-evals">{{ evals_used }} of {{ limit }} free evaluations used</span>
