@@ -31997,8 +31997,8 @@ Return ONLY valid JSON, no markdown:
 
         _payload = _sj.dumps({
             'model': _HAIKU_MODEL,
-            'max_tokens': 600,
-            'temperature': 0.4,
+            'max_tokens': 1200,
+            'temperature': 0.3,
             'messages': [{'role': 'user', 'content': _prompt}]
         }).encode()
 
@@ -32027,6 +32027,16 @@ Return ONLY valid JSON, no markdown:
             if _text.startswith('json'):
                 _text = _text[4:]
             _text = _text.strip()
+
+        # Truncation guard — if output was cut mid-string, attempt repair
+        if _text and not _text.rstrip().endswith('}'):
+            # Find last complete key-value pair and close the JSON
+            _last_complete = max(_text.rfind('",\n'), _text.rfind('"}'))
+            if _last_complete > len(_text) * 0.5:
+                _text = _text[:_last_complete + 1] + '\n}'
+            else:
+                app.logger.warning(f'[haiku_sherpa] JSON too truncated to repair for user {user_id}')
+                return
 
         _result = _sj.loads(_text)
         if not _result.get('observation'):
