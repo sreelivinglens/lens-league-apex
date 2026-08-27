@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.0-staging (Session 200) — try_standing: read-only Sonnet eval view for Haiku users. Full scorecard experience — identical depth to paid eval. No owner actions (no delete, save, share, mentor review). Single column 720px. Standalone — does not extend base.html. #}
+{# SL-VERSION: 1.1-staging (Session 201) — try_standing: full Sonnet scorecard depth for Haiku users. All sections: verdict, what_it_means bullets, takeaway, what_sl_saw, next_shot, edit_suggestions, real dimension trend sparklines. No owner actions. #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -425,7 +425,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
   {% endif %}
 
   <!-- NEXT SHOT -->
-  {% if next_shot %}
+  {% if next_shot and next_shot.title %}
   <div class="sl-sec">
     <button class="sl-sec-btn" onclick="slTog('sl-nxt','sl-nxt-a')" type="button">
       <span class="sl-sec-label">🟢 Your next shot — bookmarked</span><div class="sl-sec-rule"></div><span class="sl-sec-arrow open" id="sl-nxt-a">⌄</span>
@@ -433,7 +433,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
   </div>
   <div id="sl-nxt">
     <div class="sl-next-shot">
-      <div class="sl-ns-label">Next shot — bookmarked</div>
+      <div class="sl-ns-label">Your next shot — bookmarked</div>
       <div class="sl-ns-title">{{ next_shot.title }}</div>
       <div class="sl-body">{{ next_shot.body }}</div>
       <button class="sl-go-shoot" type="button">Go shoot →</button>
@@ -447,12 +447,12 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
   {% for edit in edit_suggestions %}
   <div class="sl-edit-card">
     <div class="sl-edit-type">{{ edit.type }}</div>
-    <div class="sl-edit-hl">{{ edit.headline }}</div>
+    {% if edit.headline %}<div class="sl-edit-hl">{{ edit.headline }}</div>{% endif %}
     {% if edit.bullets %}
       {% for bullet in edit.bullets %}
       <div class="sl-edit-bullet"><div class="sl-body">{{ bullet }}</div></div>
       {% endfor %}
-    {% else %}
+    {% elif edit.body %}
       <div class="sl-body">{{ edit.body }}</div>
     {% endif %}
   </div>
