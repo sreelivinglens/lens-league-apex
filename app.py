@@ -32748,6 +32748,7 @@ def try_standing(image_id):
     """
     from flask_login import current_user
     import json as _tsj
+    from types import SimpleNamespace as _TSSN
 
     # Paid users see their own scorecard
     if getattr(current_user, 'is_subscribed', False):
