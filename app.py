@@ -32880,18 +32880,18 @@ def try_standing(image_id):
         if _next_leap_obs: _what_sl_saw.append({'head': '',               'body': _strip_md(_next_leap_obs)})
 
         # ── "Your next shot — bookmarked" ─────────────────────────────────────
-        # mentor_location_1 is the full body. Extract location name as title
-        # (first phrase before " — " or " is nearby" or first 50 chars)
+        # mentor_location_1 is the full body paragraph.
+        # Title = the location name only (before " is nearby" / " is 30 minutes" / " —")
         _ml1_full = (_audit.get('mentor_location_1', '') or '').strip()
         _next_shot = None
         if _ml1_full:
-            # Try "Location Name is nearby" or "Location Name — description"
-            _loc_match = _re.match(r'^([A-Z][^—\n]{5,60?}?)(?:\s+is\s+nearby|\s+—)', _ml1_full)
+            # Match "Location Name is ..." or "Location Name —"
+            _loc_match = _re.match(r'^([A-Z][A-Za-z\s]+?)(?=\s+is\b|\s+—)', _ml1_full)
             if _loc_match:
                 _ml1_title = _loc_match.group(1).strip()
             else:
-                # Fall back: first clause before first comma, max 60 chars
-                _ml1_title = _ml1_full.split(',')[0].strip()[:60]
+                # Fallback: everything before the first comma, max 50 chars
+                _ml1_title = _ml1_full.split(',')[0].strip()[:50]
             _next_shot = _TSSN(title=_ml1_title, body=_ml1_full)
 
         # Edit suggestions
