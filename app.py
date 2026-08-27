@@ -33029,12 +33029,11 @@ def try_welcome():
     try:
         if evals_used > 0 and _signature_insight is None:
             import threading as _bft
-            _bft_thread = _bft.Thread(
-                target=_generate_haiku_sherpa,
-                args=(current_user.id,),
-                daemon=True
-            )
-            _bft_thread.start()
+            _bft_uid = current_user.id
+            def _run_backfill():
+                with app.app_context():
+                    _generate_haiku_sherpa(_bft_uid)
+            _bft.Thread(target=_run_backfill, daemon=True).start()
             app.logger.info(f'[try_welcome] 181.54 backfill triggered uid={current_user.id}')
     except Exception as _bfe:
         app.logger.warning(f'[try_welcome] backfill failed: {_bfe}')
