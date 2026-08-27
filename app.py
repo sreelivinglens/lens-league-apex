@@ -1,4 +1,4 @@
-# SL-VERSION: 181.55-staging (Session 200d, 2026-08-27 — ROUTES: league_haiku + try_standing properly added to app (were in 181.53 live but lost from working file). Dashboard LOP link now resolves. RETAINS 181.54.)
+# SL-VERSION: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
 
 import os
 import re
