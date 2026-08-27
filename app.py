@@ -1,4 +1,4 @@
-# SL-VERSION: 181.66-staging (Session 200e, try_standing: removed is_public filter — images in league are already public by virtue of being in the league query. Also removes calibration_logs query. Original: 181.65 (Session 200e, try_standing: removed calibration_logs query — column image_id does not exist. Using static 312. Original: 181.64 (Session 200e, try_standing trend_lines fixed: keys renamed label/current to match template. Original: 181.63 (Session 200e, try_standing: complete rewrite — single try/except wrapping all logic, single SQL fetch with user data joined, no subqueries outside try block. Original: 181.62 (Session 200e, league_haiku: removed DISTINCT ON — now shows all qualifying Sonnet images by score DESC, not one per photographer. Spotlight lowered to 8.5+. Original: 181.61 (Session 200e, try_standing: complete data contract built from template read — dimensions list, verdict, what_sl_saw, trend_lines, all scalar vars. Original: 181.60-staging (Session 200e, try_standing: added strength_dim/score, next_leap_dim/score, dod/vd/dm/wf/aq_score aliases, evals_used/remaining/percentile/all_masters. Original: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
+# SL-VERSION: 181.70-staging (Session 200e, try_result evals_used fixed: was _display_count, now _gate_count — consistent with dashboard/profile/upload. All pages now show same gate count. Original: 181.69 (Session 200e, EVAL COUNT CORRECT: gate = images+history_log (permanent slots). evals_used=gate_count so display matches gate. Delete writes to history_log — slot consumed permanently. No abuse possible. Original: 181.68 (Session 200e, EVAL COUNT COMPLETE FIX: ALL 4 gate_count queries fixed — removed upload_history_log from every location. Original: 181.67 (Session 200e, EVAL COUNT FIX: gate_count now = COUNT(active images) only — no upload_history_log. Haiku delete frees slot. evals_used = gate_count. delete_image stops writing history_log for Haiku. Fixes "5 of 10" wrong count. Original: 181.66 (Session 200e, try_standing: removed is_public filter — images in league are already public by virtue of being in the league query. Also removes calibration_logs query. Original: 181.65 (Session 200e, try_standing: removed calibration_logs query — column image_id does not exist. Using static 312. Original: 181.64 (Session 200e, try_standing trend_lines fixed: keys renamed label/current to match template. Original: 181.63 (Session 200e, try_standing: complete rewrite — single try/except wrapping all logic, single SQL fetch with user data joined, no subqueries outside try block. Original: 181.62 (Session 200e, league_haiku: removed DISTINCT ON — now shows all qualifying Sonnet images by score DESC, not one per photographer. Spotlight lowered to 8.5+. Original: 181.61 (Session 200e, try_standing: complete data contract built from template read — dimensions list, verdict, what_sl_saw, trend_lines, all scalar vars. Original: 181.60-staging (Session 200e, try_standing: added strength_dim/score, next_leap_dim/score, dod/vd/dm/wf/aq_score aliases, evals_used/remaining/percentile/all_masters. Original: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
 
 import os
 import re
@@ -7929,7 +7929,14 @@ def set_mission_genre():
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    images_used = Image.query.filter_by(user_id=current_user.id).count()
+    # Session 200e: Haiku users — gate = images + history_log (permanent, delete does not restore slot)
+    if not getattr(current_user, 'is_subscribed', False):
+        images_used = int(db.session.execute(
+            db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+            {'uid': current_user.id}
+        ).scalar() or 0)
+    else:
+        images_used = Image.query.filter_by(user_id=current_user.id).count()
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -32930,8 +32937,7 @@ def try_welcome():
     # Gate count — permanent, never decrements on delete (from log)
     _gate_count = int(db.session.execute(
         db.text(
-            "SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE)"
-            " + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"
+            "SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"
         ),
         {'uid': current_user.id}
     ).scalar() or 0)
@@ -32956,7 +32962,7 @@ def try_welcome():
         }
         for _r in _rows
     ]
-    evals_used      = len(_images)
+    evals_used      = _gate_count
     evals_remaining = max(0, (_FIL + _bonus) - _gate_count)
 
     # milestone_strength — most common strength_name across history (evals 5+)
@@ -33750,7 +33756,7 @@ def try_result(image_id):
         db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
         {'uid': current_user.id}
     ).scalar() or 0)
-    evals_used      = _display_count
+    evals_used      = _gate_count
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
 
     # 181.15: milestone_strength — most common strength_name across history
