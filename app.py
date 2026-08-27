@@ -1,4 +1,4 @@
-# SL-VERSION: 181.53-staging (Session 200, 2026-08-27 — LEAGUE BUILD: (1) league_haiku() route: /league/photographers, Haiku gate, League+Masters grids, daily spotlight with AhA line from audit_json. (2) try_standing() route: /try/standing/<id>, full Sonnet scorecard read-only for Haiku users, all eval data from audit_json. (3) league_hero SELECT: added i.id field — was missing, broke league_hero_copy rotation and try_standing link. Previous clean version: 181.52.)
+# SL-VERSION: 181.54-staging (Session 200b, 2026-08-27 — DASHBOARD SYNTHESIS: _generate_haiku_sherpa expanded from 2 to 8 fields. New: signature_insight, gap_insight, next_session, aq_insight (warm/spiritual), tier_insight, master_insight. try_welcome() passes all 8. Budget ₹0.85/call. Also: league_haiku + try_standing routes, league_hero.id fix from 181.53.)
 
 import os
 import re
@@ -31636,12 +31636,20 @@ def _generate_haiku_sherpa(user_id):
     Budget: one Haiku call per new evaluation. ~₹0.50. Stored — never
     regenerated unless a new evaluation is scored.
 
-    Output JSON stored in mentor_advice_json:
+    Output JSON stored in mentor_advice_json (Session 200b expanded):
     {
-      "observation": "<2-3 sentence cross-image Sherpa observation>",
-      "nudge": "<one actionable sentence before next shutter press>",
+      "observation": "<60w cross-image Sherpa opening>",
+      "nudge": "<25w before-next-session nudge>",
+      "signature_insight": "<50w strength + what it means>",
+      "gap_insight": "<50w gap + psychological reason>",
+      "next_session": "<60w specific session instruction>",
+      "aq_insight": "<60w emotional quality, warmth, spiritual>",
+      "tier_insight": "<40w what blocks next tier>",
+      "master_insight": "<40w master reference specific to this eye>",
       "eval_count": N
     }
+    Budget: ~₹0.85 per call (600 output tokens at Haiku 4.5 ₹0.42/K output).
+    Fires after each new eval. Stored — never regenerated unless data changes.
     """
     import json as _sj
     import urllib.request as _sur
@@ -31651,12 +31659,24 @@ def _generate_haiku_sherpa(user_id):
         return
 
     try:
-        # Fetch all scored Haiku images for this user
+        # Camera track — mobile vs camera/mirrorless — for camera-aware insights
+        _cam_row = db.session.execute(db.text(
+            "SELECT subscription_track FROM users WHERE id = :uid"
+        ), {'uid': user_id}).fetchone()
+        _camera_track = (_cam_row[0] or 'camera') if _cam_row else 'camera'
+        _is_mobile = (_camera_track == 'mobile')
+
+        # Fetch all scored Haiku images for this user — including EXIF
         _rows = db.session.execute(db.text("""
             SELECT i.id, i.score, i.tier, i.genre, i.asset_name,
                    i.audit_json,
                    i.dod_score, i.disruption_score, i.dm_score,
-                   i.wonder_score, i.aq_score
+                   i.wonder_score, i.aq_score,
+                   i.exif_make, i.exif_model, i.exif_lens,
+                   i.exif_focal_length_35mm,
+                   i.exif_aperture_raw, i.exif_shutter_raw, i.exif_iso_raw,
+                   i.exif_capture_datetime, i.exif_software,
+                   i.exif_has_gps, i.exif_device_tier
             FROM images i
             WHERE i.user_id = :uid
               AND i.is_haiku_try IS TRUE
@@ -31669,6 +31689,126 @@ def _generate_haiku_sherpa(user_id):
             return
 
         # Build image summaries for the prompt
+        # ── EXIF pattern analysis across all images ──────────────────────
+        _exif_patterns = {}
+        _apertures, _shutters, _isos, _focals, _hours = [], [], [], [], []
+        _lenses_used, _software_used = set(), set()
+        _gps_count = 0
+
+        for _r in _rows:
+            try:
+                # Aperture pattern
+                if _r[14]:  # exif_aperture_raw
+                    _apertures.append(float(_r[14]))
+                # Shutter pattern
+                if _r[15]:  # exif_shutter_raw
+                    _shutters.append(float(_r[15]))
+                # ISO pattern
+                if _r[16]:  # exif_iso_raw
+                    _isos.append(int(_r[16]))
+                # Focal length
+                if _r[13]:  # exif_focal_length_35mm
+                    _focals.append(float(_r[13]))
+                # Time of day from capture datetime
+                if _r[17]:  # exif_capture_datetime
+                    try:
+                        _dt = str(_r[17])
+                        # Format: YYYY:MM:DD HH:MM:SS or similar
+                        _hr = int(_dt.split(' ')[1].split(':')[0]) if ' ' in _dt else None
+                        if _hr is not None:
+                            _hours.append(_hr)
+                    except Exception:
+                        pass
+                # Lens
+                if _r[12]:  # exif_lens
+                    _lenses_used.add(str(_r[12]).strip())
+                # Software / post processing
+                if _r[18]:  # exif_software
+                    _sw = str(_r[18]).strip()
+                    if _sw and _sw.lower() not in ('', 'none'):
+                        _software_used.add(_sw[:40])
+                # GPS
+                if _r[19]:  # exif_has_gps
+                    _gps_count += 1
+            except Exception:
+                pass
+
+        # Build EXIF insight block
+        _exif_lines = []
+
+        if _apertures:
+            _avg_ap = sum(_apertures) / len(_apertures)
+            if _avg_ap <= 2.0:
+                _exif_lines.append(f"Aperture: shoots wide open (avg f/{_avg_ap:.1f}) — consistently separating subject from world, or seeking light")
+            elif _avg_ap >= 8.0:
+                _exif_lines.append(f"Aperture: shoots stopped down (avg f/{_avg_ap:.1f}) — seeking depth and sharpness across the frame")
+            else:
+                _exif_lines.append(f"Aperture: mid-range average (f/{_avg_ap:.1f}) — not yet making strong aperture decisions")
+
+        if _shutters:
+            _fast = sum(1 for s in _shutters if s >= 500)
+            _slow = sum(1 for s in _shutters if s <= 30)
+            _total_sh = len(_shutters)
+            if _fast > _total_sh * 0.6:
+                _exif_lines.append(f"Shutter: predominantly fast ({_fast}/{_total_sh} images >= 1/500) — freezing motion, avoiding blur")
+            elif _slow > _total_sh * 0.3:
+                _exif_lines.append(f"Shutter: uses slow shutter deliberately ({_slow}/{_total_sh} images <= 1/30) — comfortable with motion and blur")
+            else:
+                _exif_lines.append("Shutter: varied — no strong shutter preference emerging yet")
+
+        if _isos:
+            _avg_iso = int(sum(_isos) / len(_isos))
+            _high_iso = sum(1 for i in _isos if i >= 1600)
+            if _high_iso > len(_isos) * 0.4:
+                _exif_lines.append(f"ISO: frequently pushes high ({_high_iso}/{len(_isos)} images >= 1600, avg {_avg_iso}) — shooting in challenging light, accepting noise")
+            elif _avg_iso <= 400:
+                _exif_lines.append(f"ISO: shoots in good light (avg ISO {_avg_iso}) — tends toward controlled conditions")
+            else:
+                _exif_lines.append(f"ISO: moderate (avg {_avg_iso})")
+
+        if _focals:
+            _avg_focal = int(sum(_focals) / len(_focals))
+            _wide = sum(1 for f in _focals if f <= 35)
+            _tele = sum(1 for f in _focals if f >= 100)
+            if _wide > len(_focals) * 0.5:
+                _exif_lines.append(f"Focal length: wide-angle preference (avg {_avg_focal}mm equiv) — gets close, includes context, wide perspective")
+            elif _tele > len(_focals) * 0.4:
+                _exif_lines.append(f"Focal length: telephoto preference (avg {_avg_focal}mm equiv) — compresses, isolates, shoots from distance")
+            elif 45 <= _avg_focal <= 65:
+                _exif_lines.append(f"Focal length: natural perspective ({_avg_focal}mm equiv) — sees the way the eye does")
+            else:
+                _exif_lines.append(f"Focal length: varied (avg {_avg_focal}mm equiv)")
+
+        if _hours:
+            _avg_hour = int(sum(_hours) / len(_hours))
+            _golden = sum(1 for h in _hours if h <= 8 or h >= 17)
+            _midday = sum(1 for h in _hours if 11 <= h <= 14)
+            _night = sum(1 for h in _hours if h <= 5 or h >= 21)
+            if _night > len(_hours) * 0.25:
+                _exif_lines.append(f"Shooting time: shoots at night or very early morning ({_night}/{len(_hours)} images) — drawn to difficult light")
+            elif _golden > len(_hours) * 0.5:
+                _exif_lines.append(f"Shooting time: golden hour preference ({_golden}/{len(_hours)} images in early morning or late afternoon)")
+            elif _midday > len(_hours) * 0.4:
+                _exif_lines.append(f"Shooting time: shoots in midday light ({_midday}/{len(_hours)} images) — not yet chasing the difficult light hours")
+            if _avg_hour <= 7:
+                _exif_lines.append("Pattern: early riser — out before most photographers")
+            elif _avg_hour >= 19:
+                _exif_lines.append("Pattern: shoots late — evening and night light")
+
+        if _lenses_used and not _is_mobile:
+            _lens_list = ', '.join(list(_lenses_used)[:3])
+            _exif_lines.append(f"Lenses used: {_lens_list}")
+
+        if _gps_count > 0:
+            _exif_lines.append(f"Location data: {_gps_count}/{len(_rows)} images have GPS — explores varied locations")
+
+        if _software_used:
+            _sw_list = ', '.join(list(_software_used)[:2])
+            _exif_lines.append(f"Post-processing: {_sw_list}")
+
+        _exif_block = '\n'.join(_exif_lines) if _exif_lines else 'No EXIF data available for this photographer.'
+
+        # ── Build per-image summaries ─────────────────────────────────────
         _summaries = []
         for _r in _rows:
             try:
@@ -31679,7 +31819,7 @@ def _generate_haiku_sherpa(user_id):
                 _summary = (
                     f"Image: {_name} · {_r[3]} · {float(_r[1]):.2f} · {_r[2]}\n"
                     f"Takeaway: {_tk}\n"
-                    f"Weakest dimension: {_a.get('next_leap_name', '')}"
+                    f"Strongest: {_a.get('strength_name', '')} · Weakest: {_a.get('next_leap_name', '')}"
                 )
                 if _wn:
                     _summary += f"\nNext action given: {_wn[:80]}"
@@ -31694,46 +31834,166 @@ def _generate_haiku_sherpa(user_id):
         _history_block = "\n\n".join(_summaries)
 
         _prompt = f"""You are the Shutter League Sherpa — a senior photographer and mentor
-who has now watched {_n} photographs from this photographer.
+who has been watching this photographer across {_n} evaluated photographs.
 
-You are writing the centrepiece of their personal dashboard. This is the most
-important text they will read every time they return to the platform.
+You are writing the soul of their personal dashboard. Every word will be read
+by a photographer who wants to grow. Make them feel seen. Make them want to
+go out and shoot.
 
-WHAT YOU MUST PRODUCE:
-1. observation: 2-3 sentences that name what you have seen ACROSS ALL {_n} photographs
-   as a body of work — not about any single image. Look for:
-   - What does the photographer consistently do well? (the signal)
-   - What keeps appearing as the limiting factor? (the gap) — name it in plain
-     English, never use dimension codes or jargon
-   - Use Peter Evans' Signals of Seeing: focal point commitment, exclusion
-     (deciding what NOT to include), background awareness, specificity of subject
-   - The observation must feel like it could ONLY have been written about THIS
-     photographer's {_n} specific photographs — not a generic observation
+THE FIVE QUESTIONS EVERY SHUTTER LEAGUE EVALUATION ANSWERS:
+1. Depth of Difficulty — did you pursue this shot, or wait for it?
+2. Visual Disruption — does the image stop the eye, or confirm what was expected?
+3. The Decisive Moment — was there a reason for this frame, and not the one before or after?
+4. Wonder Factor — does something happen to the person who sees this?
+5. Affective Quotient — is there a story only this photographer could have seen?
 
-2. nudge: ONE sentence. The single most useful thing they can do before their
-   next shutter press. Concrete. Specific to the pattern you named. Something
-   a Sherpa who has watched all {_n} images would say.
+These are not technical scores. They are questions about how the photographer sees.
+Your insights must be rooted in these five questions — always.
+
+CAMERA CONTEXT — critical, read carefully:
+This photographer shoots on: {"a mobile phone" if _is_mobile else "a camera (DSLR or mirrorless)"}
+{"MOBILE RULES — non-negotiable:" if _is_mobile else "CAMERA RULES:"}
+{"- Never mention: changing lenses, telephoto, aperture ring, f-stops, full-frame sensor" if _is_mobile else "- Aperture, shutter speed, ISO are all available — use them specifically when relevant"}
+{"- Depth of field: achieved through PROXIMITY on mobile, not aperture — say move closer, not open up" if _is_mobile else "- Lens choice (wide, 50mm, telephoto) creates perspective — reference this when it fits"}
+{"- Shutter speed: reference Night mode, Pro mode, or burst — never shutter dial" if _is_mobile else "- Shutter speed is a creative decision — freeze or blur, both deliberate"}
+{"- Grain/noise: computational on mobile, different character to film grain — be honest" if _is_mobile else "- ISO grain on large sensors is filmic — can be used deliberately"}
+{"- Mobile's greatest tool: position — feet, angle, distance, light direction" if _is_mobile else "- Both position AND glass are available — reference whichever fits the pattern"}
+{"- Mobile's strengths: Portrait mode separation, Night mode, computational HDR, always-available" if _is_mobile else ""}
+
+WHAT YOU MUST PRODUCE — 8 fields, all from the pattern across ALL {_n} images:
+
+1. observation (60 words max)
+   What you have seen across all {_n} photographs as a body of work.
+   Name the consistent strength. Name the persistent gap. Be specific — this
+   must feel like it could only be written about THIS photographer.
+   Choose ONE invisible principle from this pool and weave it in naturally —
+   never name the principle, just use its truth:
+   DIMENSION LANGUAGE (use the question, never the name):
+   [Did they pursue this shot or wait for it? |
+    Does the image stop the eye or confirm what was expected? |
+    Was there a reason for this frame and not the one before or after? |
+    Does something happen to the person who sees this? |
+    Is there a story only this photographer could have seen?]
+   VISUAL: [Empty space gives subjects room to breathe and feel significant |
+    The frame must decide what is foreground before the viewer does |
+    The mind completes what it is given — leaving things out forces participation |
+    Repeating shapes with one broken element create wonder |
+    Elements close together are read as belonging together |
+    Placing opposing elements — light and dark, rough and smooth — adds depth |
+    Dark or large objects feel heavier — balance can be asymmetric and still resolved]
+   TECHNICAL (camera-aware — only suggest what this photographer's equipment can do):
+   FOR ALL CAMERAS: [Going into difficult light — low light, grain, noise — is a
+    decision most photographers walk away from |
+    Peak action timing is a seeing decision, not a camera decision]
+   FOR CAMERA/MIRRORLESS ONLY — skip if mobile: [Aperture separates subject from world —
+    depth of field is a compositional choice, not just an exposure one |
+    Shutter speed decides whether the world is frozen or flowing — both are deliberate]
+   FOR MOBILE ONLY — skip if camera: [Moving closer is the mobile photographer's
+    aperture — proximity creates the separation a lens would |
+    Portrait mode used deliberately is a compositional choice, not a shortcut]
+
+2. nudge (25 words max)
+   The single most useful thing before their next shutter press.
+   Concrete. Specific to the pattern. What a Sherpa who watched all {_n} images
+   would say before they walked out the door.
+
+3. signature_insight (50 words max)
+   Their consistent strength — what their eye does instinctively across all images.
+   What this means for their photography going forward.
+   Warm, affirming but honest. Choose ONE principle naturally:
+   [Colour and atmosphere as the subject itself, not decoration |
+    Emotional atmosphere created through purely visual means |
+    The feeling of transience — light, moments, things that pass |
+    Emphasis — the eye knows exactly where to go first in this frame |
+    Pattern and rhythm used with intention, not accident |
+    The aperture choice — background dissolving behind the subject]
+
+4. gap_insight (50 words max)
+   Their persistent gap — what keeps appearing in every evaluation.
+   The psychological reason it exists, not just what to fix.
+   Frank. Name the habit. Choose ONE principle naturally:
+   [The most vital decision is what NOT to include |
+    Safe frames show what was there — earned frames show what only you could find |
+    Asymmetry and irregularity require moving past the centred position |
+    Background and subject competing at the same plane — aperture as a decision |
+    The shutter speed is not matching the intention — motion neither frozen nor flowing |
+    Contrast between elements is being avoided — everything sits at the same weight |
+    The frame confirms what was expected — nothing stops the eye |
+    The image could have been taken one second earlier or later — the reason
+    for this specific frame is not yet visible |
+    Nothing happens to the person who sees this — the image records without revealing]
+
+5. next_session (60 words max)
+   The specific instruction for their next shoot — drawn from the pattern across
+   all {_n} images, not from one image.
+   Paragraphed thinking. Should feel like a Sherpa walking beside them.
+   Choose ONE principle naturally — match it to the gap pattern:
+   [The empty space only appears when you stop standing where everyone else stands |
+    Seeing familiar environments as if for the very first time |
+    This exact configuration of light and subject will never happen again |
+    Set the shutter speed before raising the camera — decide whether this
+    world will be frozen or moving before you compose |
+    Choose your aperture for the background first, then find the subject |
+    Go toward the difficult light — the light that everyone else has already left]
+
+6. aq_insight (60 words max)
+   About their emotional quality — their Affective Quotient across all images.
+   This section should carry warmth, spirituality, longing, nostalgia.
+   Make the photographer feel that what their eye reaches for is rare and worth
+   pursuing. If AQ is their strength — celebrate it with depth.
+   If AQ is their gap — name what emotional truth the frame is not yet reaching.
+   Choose ONE principle naturally — this section carries the most emotional weight:
+   [Mono no aware — the bittersweet awareness of imperfection and impermanence,
+    the gentle sadness of things that are already passing as you photograph them |
+    Wabi-sabi — finding profound beauty in what is imperfect, weathered, unfinished |
+    Ichi-go Ichi-e — this moment, this light, this subject will never exist again —
+    the photograph is the only proof it happened |
+    The grain in difficult light is not a flaw — it is the texture of a decision
+    most photographers did not make |
+    Slow shutter and presence — some subjects need to be felt, not frozen |
+    The story only this photographer could have seen — not the obvious subject,
+    but what the obvious subject is standing in front of, or next to, or becoming]
+
+7. tier_insight (40 words max)
+   What specifically — in plain English — is preventing them from reaching the
+   next tier. One dimension named plainly. The habit behind it. What changes.
+
+8. master_insight (40 words max)
+   Connect the master photographer reference to this photographer's SPECIFIC
+   pattern — not a generic "this master is great". Why THIS master for THIS eye.
 
 RULES — non-negotiable:
-- Never say "your metrics" or "your data" or "your scores" — you are a Sherpa, not a bot
-- Never use dimension codes: AQ, DM, DOD, WF, VD — plain English only
-- Never say "Shutter League" — you are speaking as the Sherpa, not the platform
-- Never be generic — "keep shooting" or "practice more" is failure
-- Warm, direct, specific. A trusted friend who is also a master photographer.
-- The gap must be named with precision — not "composition" but "the subject gets
-  lost in what's behind it" or "the moment you're choosing is one second too early"
-- Maximum 60 words for observation, 25 words for nudge
+- You are a Sherpa, not a bot. Never say "your metrics", "your data", "your scores"
+- Never use dimension codes: AQ, DM, DOD, WF, VD — plain English always
+- Never name any principle, framework, or philosophy — use its truth invisibly
+- Never be generic. Every sentence must be true only of THIS photographer
+- Warm, direct, specific. Frank about the gap. Inspiring about the path.
+- No italics, no em-dashes used decoratively, no filler words
+- The AQ section especially: feel, warmth, spirituality — make it land
 
-PHOTOGRAPHER'S {_n} IMAGES:
+PHOTOGRAPHER'S TECHNICAL BEHAVIOUR (from EXIF data across {_n} images):
+{_exif_block}
+
+Use this to make your insights camera-specific and behaviourally accurate.
+If EXIF shows they shoot at night — acknowledge the courage of that.
+If they shoot wide open — they are already separating subject from world.
+If they shoot midday — they may not yet be chasing the light.
+If shutter is always fast — they may be avoiding the deliberate blur.
+Never mention specific f-stop numbers or shutter values to the photographer —
+translate them into plain English observations about their behaviour and intent.
+
+PHOTOGRAPHER'S {_n} EVALUATED IMAGES:
 {_history_block}
 
 Return ONLY valid JSON, no markdown:
-{{"observation": "<2-3 sentences>", "nudge": "<one sentence>", "eval_count": {_n}}}"""
+{{"observation": "...", "nudge": "...", "signature_insight": "...",
+  "gap_insight": "...", "next_session": "...", "aq_insight": "...",
+  "tier_insight": "...", "master_insight": "...", "eval_count": {_n}}}"""
 
         _payload = _sj.dumps({
             'model': _HAIKU_MODEL,
-            'max_tokens': 300,
-            'temperature': 0.3,
+            'max_tokens': 600,
+            'temperature': 0.4,
             'messages': [{'role': 'user', 'content': _prompt}]
         }).encode()
 
@@ -32356,409 +32616,6 @@ def try_gallery():
 
 
 
-@app.route('/league/photographers')
-@login_required
-def league_haiku():
-    """
-    GET /league/photographers — Haiku world League page.
-    Session 200. Standalone template — does not extend base.html.
-    Gate: paid Sonnet subscribers redirected to standings_public.
-    Shows: League (score>=8.0) + Masters in Making (6.0-7.9) grids.
-    Spotlight: daily-rotating photographer from 9.0+ pool, AhA line from audit_json.
-    Raw SQL throughout per Constitution Rule 10.
-    """
-    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
-        return redirect(url_for('standings_public'))
-
-    import json as _lj
-    import re as _lre
-    from datetime import date as _ldate
-    from types import SimpleNamespace as _LSN
-
-    # ── League photographers — score >= 8.0, sorted desc ──────────────
-    _league_rows = db.session.execute(db.text("""
-        SELECT
-            i.id,
-            i.thumb_url,
-            CONCAT(
-                SPLIT_PART(u.full_name, ' ', 1), ' ',
-                LEFT(SPLIT_PART(u.full_name, ' ', -1), 1), '.'
-            ) AS photographer,
-            i.score,
-            i.tier,
-            i.genre,
-            u.subscription_track AS camera
-        FROM images i
-        JOIN users u ON u.id = i.user_id
-        WHERE i.score >= 8.0
-          AND (i.is_haiku_try IS NOT TRUE)
-          AND i.is_public = TRUE
-          AND i.status = 'scored'
-          AND i.thumb_url IS NOT NULL
-          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
-          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
-          AND u.is_subscribed = TRUE
-        ORDER BY i.score DESC
-        LIMIT 200
-    """)).fetchall()
-
-    _league_photographers = [
-        _LSN(
-            id=r[0], thumb_url=r[1], photographer=r[2] or 'Shutter League',
-            score=float(r[3] or 0), tier=r[4] or 'Maverick',
-            genre=r[5] or '', camera=r[6] or 'camera'
-        )
-        for r in _league_rows if r[1]
-    ]
-
-    # ── Masters in the Making — score 6.0–7.9 ─────────────────────────
-    _masters_rows = db.session.execute(db.text("""
-        SELECT
-            i.id,
-            i.thumb_url,
-            CONCAT(
-                SPLIT_PART(u.full_name, ' ', 1), ' ',
-                LEFT(SPLIT_PART(u.full_name, ' ', -1), 1), '.'
-            ) AS photographer,
-            i.score,
-            i.tier,
-            i.genre,
-            u.subscription_track AS camera
-        FROM images i
-        JOIN users u ON u.id = i.user_id
-        WHERE i.score >= 6.0
-          AND i.score < 8.0
-          AND (i.is_haiku_try IS NOT TRUE)
-          AND i.is_public = TRUE
-          AND i.status = 'scored'
-          AND i.thumb_url IS NOT NULL
-          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
-          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
-          AND u.is_subscribed = TRUE
-        ORDER BY i.score DESC
-        LIMIT 200
-    """)).fetchall()
-
-    _masters_photographers = [
-        _LSN(
-            id=r[0], thumb_url=r[1], photographer=r[2] or 'Shutter League',
-            score=float(r[3] or 0), tier=r[4] or 'Craftsman',
-            genre=r[5] or '', camera=r[6] or 'camera'
-        )
-        for r in _masters_rows if r[1]
-    ]
-
-    # ── Spotlight — daily rotation from 9.0+ pool ─────────────────────
-    _spotlight = None
-    try:
-        _top_pool = [p for p in _league_photographers if p.score >= 9.0]
-        if _top_pool:
-            _day_idx = _ldate.today().toordinal() % len(_top_pool)
-            _sp = _top_pool[_day_idx]
-
-            # AhA line — first punchy sentence from audit_json impression/takeaway
-            _aha_row = db.session.execute(db.text("""
-                SELECT audit_json FROM images WHERE id = :iid LIMIT 1
-            """), {'iid': _sp.id}).fetchone()
-
-            _aha_line = ''
-            if _aha_row and _aha_row[0]:
-                try:
-                    _aj = _lj.loads(_aha_row[0])
-                    # Try impression first, then takeaway, then strength_obs
-                    _aha_src = (
-                        _aj.get('impression', '') or
-                        _aj.get('strength_obs', '') or
-                        _aj.get('takeaway', '') or ''
-                    ).strip()
-                    if _aha_src:
-                        _sents = _lre.split(r'(?<=[.!?])\s+', _aha_src)
-                        for _s in _sents:
-                            _s = _s.strip()
-                            if 40 <= len(_s) <= 220:
-                                _aha_line = '\u201c' + _s + '\u201d'
-                                break
-                        if not _aha_line and _sents:
-                            _aha_line = '\u201c' + _sents[0][:220].strip() + '\u201d'
-                except Exception:
-                    pass
-
-            _spotlight = _LSN(
-                id=_sp.id, thumb_url=_sp.thumb_url, photographer=_sp.photographer,
-                score=_sp.score, tier=_sp.tier, genre=_sp.genre,
-                aha_line=_aha_line or '\u201cThe eye does not look for the extraordinary. It waits until the ordinary becomes unbearable to ignore.\u201d'
-            )
-    except Exception as _spe:
-        app.logger.warning(f'[league_haiku] spotlight failed: {_spe}')
-
-    # ── JSON for JS — Jinja-in-script fix (Constitution §15) ──────────
-    _league_json = _lj.dumps([
-        {'id': p.id, 'thumb_url': p.thumb_url, 'photographer': p.photographer,
-         'score': p.score, 'tier': p.tier, 'genre': p.genre, 'camera': p.camera}
-        for p in _league_photographers
-    ])
-    _masters_json = _lj.dumps([
-        {'id': p.id, 'thumb_url': p.thumb_url, 'photographer': p.photographer,
-         'score': p.score, 'tier': p.tier, 'genre': p.genre, 'camera': p.camera}
-        for p in _masters_photographers
-    ])
-
-    return render_template(
-        'league_haiku-staging.html',
-        league_photographers=_league_photographers,
-        masters_photographers=_masters_photographers,
-        league_photographers_json=_league_json,
-        masters_photographers_json=_masters_json,
-        spotlight=_spotlight,
-    )
-
-
-@app.route('/try/standing/<int:image_id>')
-@login_required
-def try_standing(image_id):
-    """
-    GET /try/standing/<id> — Read-only eval view of a Sonnet image for Haiku users.
-    Session 200. Full scorecard experience — identical depth to paid eval.
-    No owner actions (no delete/save/share/mentor review).
-    Gate: paid Sonnet subscribers redirected to image_detail.
-    Data: DB read of existing eval data — zero new AI cost.
-    Raw SQL throughout per Constitution Rule 10.
-    """
-    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
-        return redirect(url_for('image_detail', image_id=image_id))
-
-    import json as _tsj
-    import re as _tsr
-    from types import SimpleNamespace as _TSSN
-
-    # ── Core image row ─────────────────────────────────────────────────
-    _img_row = db.session.execute(db.text("""
-        SELECT
-            i.id,
-            i.thumb_url,
-            i.score,
-            i.tier,
-            i.genre,
-            u.subscription_track AS camera,
-            i.scored_at,
-            CONCAT(
-                SPLIT_PART(u.full_name, ' ', 1), ' ',
-                LEFT(SPLIT_PART(u.full_name, ' ', -1), 1), '.'
-            ) AS photographer_name,
-            u.id AS owner_id,
-            i.audit_json
-        FROM images i
-        JOIN users u ON u.id = i.user_id
-        WHERE i.id = :iid
-          AND (i.is_haiku_try IS NOT TRUE)
-          AND i.is_public = TRUE
-          AND i.status = 'scored'
-          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
-          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
-          AND u.is_subscribed = TRUE
-        LIMIT 1
-    """), {'iid': image_id}).fetchone()
-
-    if not _img_row:
-        abort(404)
-
-    _score      = float(_img_row[2] or 0)
-    _tier       = _img_row[3] or 'Maverick'
-    _genre      = _img_row[4] or ''
-    _camera     = (_img_row[5] or 'camera').capitalize()
-    _eval_date  = _img_row[6].strftime('%-d %b %Y') if _img_row[6] else ''
-    _owner_id   = _img_row[8]
-    _audit_raw  = _img_row[9] or '{}'
-
-    # ── Parse audit_json ───────────────────────────────────────────────
-    try:
-        _audit = _tsj.loads(_audit_raw)
-    except Exception:
-        _audit = {}
-
-    _verdict         = _audit.get('impression', '') or _audit.get('what_stood_out', '') or ''
-    _strength_name   = _audit.get('strength_name', '')
-    _strength_obs    = _audit.get('strength_obs', '')
-    _next_leap_name  = _audit.get('next_leap_name', '')
-    _next_leap_obs   = _audit.get('next_leap_obs', '')
-    _takeaway_raw    = _audit.get('takeaway', '')
-    _what_next       = _audit.get('what_next', '')
-    _master_name     = _audit.get('master_name', '')
-    _master_why      = _audit.get('master_why', '')
-
-    # Five dimension scores from audit_json keys: dod, vd, dm, wf, aq
-    _DIM_MAP = [
-        ('Depth of Difficulty',  'dod'),
-        ('Visual Disruption',    'vd'),
-        ('The Decisive Moment',  'dm'),
-        ('Wonder Factor',        'wf'),
-        ('Affective Quotient',   'aq'),
-    ]
-    _raw_scores = [float(_audit.get(k) or _score) for _, k in _DIM_MAP]
-    _max_s, _min_s = max(_raw_scores), min(_raw_scores)
-    _dimensions = []
-    for _i, ((name, _), _ds) in enumerate(zip(_DIM_MAP, _raw_scores)):
-        _dimensions.append(_TSSN(
-            name=name, score=_ds,
-            is_top=(_ds == _max_s and _raw_scores.index(_max_s) == _i),
-            is_leap=(_ds == _min_s and _raw_scores.index(_min_s) == _i),
-        ))
-    _strength_dim = next((d.name for d in _dimensions if d.is_top), _DIM_MAP[0][0])
-    _leap_dim     = next((d.name for d in _dimensions if d.is_leap), _DIM_MAP[-1][0])
-
-    # ── Eval count + best this year for this photographer ──────────────
-    _stats = db.session.execute(db.text("""
-        SELECT COUNT(*) AS eval_count, MAX(score) AS best_year
-        FROM images
-        WHERE user_id = :uid
-          AND score IS NOT NULL
-          AND status = 'scored'
-          AND (is_haiku_try IS NOT TRUE)
-          AND EXTRACT(YEAR FROM scored_at) = EXTRACT(YEAR FROM CURRENT_DATE)
-    """), {'uid': _owner_id}).fetchone()
-    _eval_count    = int(_stats[0] or 0)
-    _best_this_yr  = float(_stats[1] or _score)
-
-    # Calibrated count — total scored non-haiku images for this user
-    _calib_count = int(db.session.execute(db.text("""
-        SELECT COUNT(*) FROM images
-        WHERE user_id = :uid AND status = 'scored'
-          AND (is_haiku_try IS NOT TRUE) AND score IS NOT NULL
-    """), {'uid': _owner_id}).scalar() or 0)
-
-    # ── Percentile ─────────────────────────────────────────────────────
-    _pct_row = db.session.execute(db.text("""
-        SELECT
-            COUNT(*) AS total,
-            COUNT(CASE WHEN score < :s THEN 1 END) AS below
-        FROM images
-        WHERE score IS NOT NULL AND status = 'scored'
-          AND (is_haiku_try IS NOT TRUE)
-          AND (is_flagged = FALSE OR is_flagged IS NULL)
-    """), {'s': _score}).fetchone()
-    _percentile = max(1, round((_pct_row[1] / _pct_row[0]) * 100)) if (_pct_row and _pct_row[0] > 0) else 50
-
-    # ── Tier metadata ──────────────────────────────────────────────────
-    _TIER_DATA = {
-        'Legend':      ('9.5', 'one in ten thousand. The work that will be remembered.'),
-        'Grandmaster': ('9.0', 'fewer than 1 in 100 to reach 9. Accumulated decision-making, photograph by photograph.'),
-        'Master':      ('8.5', 'the signature is forming. The eye is consistent.'),
-        'Maverick':    ('8.0', 'the eye is developing. The signature is forming.'),
-        'Craftsman':   ('7.0', 'the instincts are present. The technique is catching up.'),
-        'Shooter':     ('6.0', 'building the foundation. Every photograph adds to the record.'),
-        'Rookie':      ('0',   'the record is beginning. Every photograph moves you forward.'),
-    }
-    _tier_floor, _tier_desc = _TIER_DATA.get(_tier, ('0', 'building the record.'))
-    _score_pct = min(99, max(1, int((_score / 10) * 100)))
-
-    # ── Structured eval sections ───────────────────────────────────────
-    # what_it_means — 3 paragraphs built from audit fields
-    _what_it_means = []
-    if _verdict:
-        _what_it_means.append(_verdict)
-    if _strength_obs and _strength_name:
-        _what_it_means.append(f'<strong>{_strength_name}</strong> — {_strength_obs}')
-    elif _strength_obs:
-        _what_it_means.append(_strength_obs)
-    if _next_leap_obs and _next_leap_name:
-        _what_it_means.append(f'<strong>Your next leap: {_next_leap_name}</strong> — {_next_leap_obs}')
-
-    # takeaway_items — split takeaway into paragraphs
-    _takeaway_items = []
-    if _takeaway_raw:
-        _takeaway_items = [p.strip() for p in _tsr.split(r'\n\n|\n(?=\n)', _takeaway_raw) if p.strip()]
-        if not _takeaway_items:
-            _takeaway_items = [_takeaway_raw.strip()]
-    if _what_next:
-        _takeaway_items.append(_what_next)
-
-    # what_sl_saw — master reference if present
-    _what_sl_saw = []
-    if _master_name and _master_why:
-        _what_sl_saw.append(_TSSN(head=f'The eye behind this — {_master_name}', body=_master_why))
-
-    # next_shot — not stored on Haiku eval, omit
-    _next_shot = None
-
-    # edit_suggestions — not stored on Haiku eval format, omit
-    _edit_suggestions = []
-
-    # ── Trend lines — last 18 scored images for this photographer ──────
-    _trend_rows = db.session.execute(db.text("""
-        SELECT score, audit_json
-        FROM images
-        WHERE user_id = :uid
-          AND score IS NOT NULL
-          AND status = 'scored'
-          AND (is_haiku_try IS NOT TRUE)
-        ORDER BY scored_at DESC
-        LIMIT 18
-    """), {'uid': _owner_id}).fetchall()
-
-    _trend_rows = list(reversed(_trend_rows))
-    _trend_count = len(_trend_rows)
-    _trend_lines = []
-
-    if _trend_rows:
-        def _td(vals):
-            if len(vals) < 3:
-                return '\u2014 Building the record'
-            slope = vals[-1] - vals[0]
-            if slope > 0.3:
-                return '\u2014 Rising \u2014 the eye is sharpening'
-            elif slope < -0.3:
-                return '\u2014 Variable \u2014 your next opportunity to grow'
-            return '\u2014 Steady \u2014 consistent across the record'
-
-        _aq_vals, _dm_vals, _dod_vals = [], [], []
-        for _tr in _trend_rows:
-            try:
-                _ta = _tsj.loads(_tr[1] or '{}')
-            except Exception:
-                _ta = {}
-            _fs = float(_tr[0] or 0)
-            _aq_vals.append(float(_ta.get('aq') or _fs))
-            _dm_vals.append(float(_ta.get('dm') or _fs))
-            _dod_vals.append(float(_ta.get('dod') or _fs))
-
-        _trend_lines = [
-            _TSSN(label='Whether it made one feel something', values=_aq_vals,  current=_aq_vals[-1],  description=_td(_aq_vals)),
-            _TSSN(label='Whether the timing was right',       values=_dm_vals,  current=_dm_vals[-1],  description=_td(_dm_vals)),
-            _TSSN(label='How difficult it was',               values=_dod_vals, current=_dod_vals[-1], description=_td(_dod_vals)),
-        ]
-
-    return render_template(
-        'try_standing.html',
-        thumb_url        = _img_row[1],
-        photographer_name= _img_row[7],
-        genre            = _genre,
-        camera           = _camera,
-        eval_date        = _eval_date,
-        score            = _score,
-        tier             = _tier,
-        percentile       = _percentile,
-        score_pct        = _score_pct,
-        tier_floor       = _tier_floor,
-        tier_description = _tier_desc,
-        eval_count       = _eval_count,
-        best_this_year   = _best_this_yr,
-        calibrated_count = _calib_count,
-        dimensions       = _dimensions,
-        strength_dim     = _strength_dim,
-        strength_score   = _max_s,
-        leap_dim         = _leap_dim,
-        leap_score       = _min_s,
-        verdict          = _verdict,
-        what_it_means    = _what_it_means,
-        takeaway_items   = _takeaway_items,
-        what_sl_saw      = _what_sl_saw,
-        next_shot        = _next_shot,
-        edit_suggestions = _edit_suggestions,
-        trend_lines      = _trend_lines,
-        trend_count      = _trend_count,
-    )
-
-
 @app.route('/try/welcome')
 @login_required
 def try_welcome():
@@ -32938,8 +32795,15 @@ def try_welcome():
         app.logger.warning(f'[try_welcome] gallery_images failed: {_ge}')
 
     # SL-181.48: fetch Sherpa cross-image observation from mentor_advice_json
-    _sherpa_obs = None
-    _sherpa_nudge = None
+    # Session 200b: expanded to 8 fields
+    _sherpa_obs        = None
+    _sherpa_nudge      = None
+    _signature_insight = None
+    _gap_insight       = None
+    _next_session      = None
+    _aq_insight        = None
+    _tier_insight      = None
+    _master_insight    = None
     try:
         import json as _saj
         _sadv_row = db.session.execute(
@@ -32948,8 +32812,14 @@ def try_welcome():
         ).fetchone()
         if _sadv_row and _sadv_row[0]:
             _sadv = _saj.loads(_sadv_row[0])
-            _sherpa_obs   = _sadv.get('observation', '').strip() or None
-            _sherpa_nudge = _sadv.get('nudge', '').strip() or None
+            _sherpa_obs         = _sadv.get('observation', '').strip() or None
+            _sherpa_nudge       = _sadv.get('nudge', '').strip() or None
+            _signature_insight  = _sadv.get('signature_insight', '').strip() or None
+            _gap_insight        = _sadv.get('gap_insight', '').strip() or None
+            _next_session       = _sadv.get('next_session', '').strip() or None
+            _aq_insight         = _sadv.get('aq_insight', '').strip() or None
+            _tier_insight       = _sadv.get('tier_insight', '').strip() or None
+            _master_insight     = _sadv.get('master_insight', '').strip() or None
     except Exception as _sae:
         app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
 
@@ -32989,7 +32859,7 @@ def try_welcome():
     _league_hero = None
     try:
         _lh_row = db.session.execute(db.text("""
-            SELECT i.id, i.thumb_url, i.score, i.tier, i.genre,
+            SELECT i.thumb_url, i.score, i.tier, i.genre,
                    u.full_name
             FROM images i
             JOIN users u ON u.id = i.user_id
@@ -33006,18 +32876,17 @@ def try_welcome():
         """), {'uid': current_user.id}).fetchone()
         if _lh_row:
             from types import SimpleNamespace as _LHSN
-            _lh_full_name = (_lh_row[5] or '').strip()
+            _lh_full_name = (_lh_row[4] or '').strip()
             if _lh_full_name:
                 _parts = _lh_full_name.split()
                 _lh_display = (_parts[0] + ' ' + _parts[-1][0] + '.') if len(_parts) > 1 else _parts[0]
             else:
                 _lh_display = 'Shutter League'
             _league_hero = _LHSN(
-                id           = _lh_row[0],
-                thumb_url    = _lh_row[1],
-                score        = float(_lh_row[2]),
-                tier         = _lh_row[3],
-                genre        = _lh_row[4] or '',
+                thumb_url    = _lh_row[0],
+                score        = float(_lh_row[1]),
+                tier         = _lh_row[2],
+                genre        = _lh_row[3] or '',
                 photographer = _lh_display,
             )
     except Exception as _lhe:
@@ -33048,6 +32917,98 @@ def try_welcome():
     except Exception as _pce:
         app.logger.warning(f'[try_welcome] haiku_percentile failed: {_pce}')
 
+    # ── Additional dashboard variables — computed from DB ────────────────
+    # score_history: list of floats chronological for sparkline
+    # days_since_last_eval: for "since last visit" bar
+    # signature_strength / persistent_gap: most common strength/gap names
+    # dimensions_avg: avg score per dim across all haiku evals
+    _score_history     = []
+    _days_since        = None
+    _signature_name    = _milestone_strength or ''
+    _persistent_gap    = _next_leap_name or ''
+    _dimensions_avg    = {}
+    _best_score_val    = 0.0
+    try:
+        import json as _dvj
+        from datetime import date as _dvd
+        _dv_rows = db.session.execute(db.text("""
+            SELECT score, audit_json, scored_at,
+                   dod_score, disruption_score, dm_score,
+                   wonder_score, aq_score
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try = TRUE
+              AND status = 'scored'
+              AND score IS NOT NULL
+            ORDER BY id ASC
+        """), {'uid': current_user.id}).fetchall()
+
+        if _dv_rows:
+            _score_history = [float(r[0]) for r in _dv_rows]
+            _best_score_val = max(_score_history)
+            # Days since last eval
+            _last_scored = _dv_rows[-1][2]
+            if _last_scored:
+                _delta = _dvd.today() - _last_scored.date() if hasattr(_last_scored, 'date') else None
+                _days_since = _delta.days if _delta else None
+
+            # Dimension averages from dim score columns + audit_json fallback
+            _dod_l, _vd_l, _dm_l, _wf_l, _aq_l = [], [], [], [], []
+            for _dvr in _dv_rows:
+                _dva = _dvj.loads(_dvr[1] or '{}')
+                _dod_l.append(float(_dvr[3] or _dva.get('dod') or _score_history[0]))
+                _vd_l.append(float(_dvr[4] or _dva.get('vd') or _score_history[0]))
+                _dm_l.append(float(_dvr[5] or _dva.get('dm') or _score_history[0]))
+                _wf_l.append(float(_dvr[6] or _dva.get('wf') or _score_history[0]))
+                _aq_l.append(float(_dvr[7] or _dva.get('aq') or _score_history[0]))
+
+            def _avg(lst): return round(sum(lst)/len(lst), 1) if lst else 0.0
+            def _trend(lst):
+                if len(lst) < 2: return 'steady'
+                slope = lst[-1] - lst[0]
+                return 'up' if slope > 0.3 else ('down' if slope < -0.3 else 'steady')
+
+            _dimensions_avg = {
+                'dod': {'score': _avg(_dod_l), 'trend': _trend(_dod_l), 'vals': _dod_l, 'name': 'Depth of Difficulty'},
+                'vd':  {'score': _avg(_vd_l),  'trend': _trend(_vd_l),  'vals': _vd_l,  'name': 'Visual Disruption'},
+                'dm':  {'score': _avg(_dm_l),  'trend': _trend(_dm_l),  'vals': _dm_l,  'name': 'The Decisive Moment'},
+                'wf':  {'score': _avg(_wf_l),  'trend': _trend(_wf_l),  'vals': _wf_l,  'name': 'Wonder Factor'},
+                'aq':  {'score': _avg(_aq_l),  'trend': _trend(_aq_l),  'vals': _aq_l,  'name': 'Affective Quotient'},
+            }
+            # Sort by score desc for display
+            _dims_sorted = sorted(_dimensions_avg.values(), key=lambda d: d['score'], reverse=True)
+            _dims_sorted[0]['tag'] = 'strongest'
+            _dims_sorted[-1]['tag'] = 'leap'
+            for _d in _dims_sorted[1:-1]:
+                _d['tag'] = 'mid'
+
+    except Exception as _dve:
+        app.logger.warning(f'[try_welcome] dimension vars failed: {_dve}')
+
+    # Tier progression data
+    _TIER_BOUNDS = {
+        'Rookie': (0, 4), 'Shooter': (4, 5), 'Contender': (5, 6),
+        'Craftsman': (6, 7), 'Maverick': (7, 8), 'Master': (8, 9),
+        'Grandmaster': (9, 9.7), 'Legend': (9.7, 10)
+    }
+    _TIER_ORDER = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
+    _current_tier = (_user_hero.tier if _user_hero else 'Rookie') or 'Rookie'
+    _current_score = float(_user_hero.score if _user_hero else 0)
+    _current_tier_idx = _TIER_ORDER.index(_current_tier) if _current_tier in _TIER_ORDER else 0
+    _next_tier = _TIER_ORDER[_current_tier_idx + 1] if _current_tier_idx < len(_TIER_ORDER) - 1 else 'Legend'
+    _next_tier_floor = _TIER_BOUNDS.get(_next_tier, (10, 10))[0]
+    _gap_to_next = round(max(0, _next_tier_floor - _current_score), 2)
+    _prev_tier = _TIER_ORDER[_current_tier_idx - 1] if _current_tier_idx > 0 else None
+    _tier_display = {
+        'prev': _prev_tier,
+        'current': _current_tier,
+        'current_score': _current_score,
+        'current_range': f"{_TIER_BOUNDS.get(_current_tier, (0,0))[0]}–{_TIER_BOUNDS.get(_current_tier, (0,0))[1]}",
+        'next': _next_tier,
+        'next_floor': _next_tier_floor,
+        'gap': _gap_to_next,
+    }
+
     # GM copy pool — rotates per league_hero.id so each image shows a different line
     _gm_copy_pool = [
         "At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.",
@@ -33072,12 +33033,24 @@ def try_welcome():
         league_hero_copy   = _gm_copy_pool[(_league_hero.id if _league_hero and getattr(_league_hero, 'id', None) else 0) % len(_gm_copy_pool)],
         sherpa_obs         = _sherpa_obs,
         sherpa_nudge       = _sherpa_nudge,
+        signature_insight  = _signature_insight,
+        gap_insight        = _gap_insight,
+        next_session       = _next_session,
+        aq_insight         = _aq_insight,
+        tier_insight       = _tier_insight,
+        master_insight     = _master_insight,
         visit_count        = _visit_count,
         next_leap_name     = _next_leap_name,
         prev_score         = _prev_score,
         score_trend        = _score_trend,
         gallery_images     = _gallery_images,
         haiku_percentile   = _haiku_percentile,
+        score_history      = _score_history,
+        days_since         = _days_since,
+        dimensions_avg     = _dimensions_avg,
+        dims_sorted        = _dims_sorted if '_dims_sorted' in dir() else [],
+        tier_display       = _tier_display,
+        best_score_val     = _best_score_val,
     ))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return resp
