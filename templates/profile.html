@@ -435,6 +435,9 @@
     .acc-layout {
       grid-template-columns: 1fr;
     }
+    .acc-layout > main {
+      grid-column: 1;
+    }
     .acc-sidebar {
       grid-row: 1;
       grid-column: 1;
@@ -567,7 +570,7 @@
     </aside>
 
     {# ── Main content — 2×2 grid ── #}
-    <main>
+    <main style="grid-column:2/4;min-width:0;">
       <div class="acc-grid-top" style="margin-top:0;">
 
       {# ══ Section 1 — Account Details ══ #}
