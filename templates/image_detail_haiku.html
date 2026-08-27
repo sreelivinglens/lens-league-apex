@@ -1,4 +1,5 @@
 {# image_detail_haiku.html — Production Score Card for Haiku free-try evaluations
+   Session 200d: (1) Fixed conversion statement — dynamic based on evals_used. (2) Removed explore secondary CTA. (3) Added delete button. (4) Back link → try_gallery.
    Route: /try/result/<image_id>  →  try_result() in app-staging.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -241,7 +242,7 @@ main { padding:0 !important; background:#E8E5DF; }
   .sl-content { padding-left:20px; padding-right:20px; }
   .sl-score-num { font-size:68px; }
   .sl-score-denom { font-size:20px; }
-  .sl-tier-item { font-size:12px; padding-right:8px; }
+  .sl-tier-item { font-size:13px; padding-right:8px; }
   .sl-narrative-body { font-size:18px; }
   .sl-dim-val { font-size:22px; }
   .sl-dim-right { gap:10px; }
@@ -253,12 +254,12 @@ main { padding:0 !important; background:#E8E5DF; }
 
 {% block content %}
 
-<div style="background:#E8E5DF; min-height:100vh;">
+<div style="background:#E8E5DF; min-height:100svh; min-height:100vh;">
 <div class="sl-page">
 
   {# ── TOP BAR ── #}
   <div class="sl-topbar">
-    <a href="{{ url_for('try_page') }}" class="sl-topbar-back">← My evaluations</a>
+    <a href="{{ url_for('try_gallery') }}" class="sl-topbar-back">← My evaluations</a>
     <div class="sl-topbar-actions">
       <a href="{{ url_for('try_result_download', image_id=image_id) }}">Save PDF</a>
     </div>
@@ -419,10 +420,22 @@ main { padding:0 !important; background:#E8E5DF; }
         {% if evals_remaining is not none %}&nbsp;·&nbsp; {{ evals_remaining }} remaining{% endif %}
       </div>
       <div class="sl-conv-statement">
-        Your standing has not started yet. Your record begins with your next photograph.
+        {% if evals_used and evals_used >= 1 %}
+          {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }} evaluated. Your record is being built, one image at a time.
+        {% else %}
+          Your record begins with your next photograph.
+        {% endif %}
       </div>
-      <a href="{{ url_for('pricing') }}" class="sl-conv-primary">Build your record →</a>
-      <a href="{{ url_for('try_page') }}" class="sl-conv-secondary">I came to explore. This is enough for now.</a>
+      <a href="{{ url_for('try_page') }}" class="sl-conv-primary">Continue my record →</a>
+      <form method="POST" action="{{ url_for('delete_image', image_id=image_id) }}"
+            onsubmit="return confirm('Delete this evaluation? This cannot be undone. Your slot count will not be restored.')"
+            style="display:inline;margin-top:12px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="sl-conv-secondary"
+                style="background:none;border:none;cursor:pointer;font-family:inherit;padding:8px 0;text-align:left;min-height:44px;display:block;">
+          Delete this evaluation
+        </button>
+      </form>
     </div>
   </div>
 
