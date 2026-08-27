@@ -32841,7 +32841,16 @@ def try_standing(image_id):
         _trend_rows = db.session.execute(db.text(
             "SELECT score, genre FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL AND (is_haiku_try IS NOT TRUE) ORDER BY id DESC LIMIT 6"
         ), {'uid': _uid}).fetchall()
-        _trend_lines = [{'label': r[1] or 'Eval', 'current': float(r[0]), 'values': [float(r[0])]} for r in reversed(_trend_rows)]
+        from types import SimpleNamespace as _TSSN
+        _trend_lines = [
+            _TSSN(
+                label=r[1] or 'Eval',
+                current=float(r[0]),
+                values=[float(r[0])],
+                description='',
+            )
+            for r in reversed(_trend_rows)
+        ]
 
         _cal_count = 312  # blind calibration count — static display value
 
