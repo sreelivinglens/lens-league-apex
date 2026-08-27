@@ -452,7 +452,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
       <div class="sl-edit-bullet"><div class="sl-body">{{ bullet }}</div></div>
       {% endfor %}
     {% elif edit.body %}
-      {% for bullet in edit.body.split('▪') %}
+      {% for bullet in edit.body.replace('■', '▪').split('▪') %}
         {% set b = bullet.strip() %}
         {% if b %}
         <div class="sl-edit-bullet"><div class="sl-body">{{ b }}</div></div>
