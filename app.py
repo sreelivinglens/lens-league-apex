@@ -32773,13 +32773,13 @@ def try_standing(image_id):
         _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (_row[12] or '')
         _uid   = _row[15]
 
-        # Dimensions
+        # ── Dimensions (sorted strongest → weakest) ───────────────────────────
         _dim_data = [
-            {'name': 'Affective Quotient',  'plain': 'The emotional quality it carries',      'score': float(_row[11] or _audit.get('aq',  0) or 0)},
-            {'name': 'Visual Disruption',   'plain': 'Whether it is visually disruptive',     'score': float(_row[8]  or _audit.get('vd',  0) or 0)},
-            {'name': 'The Decisive Moment', 'plain': 'Whether it caught the decisive moment', 'score': float(_row[9]  or _audit.get('dm',  0) or 0)},
-            {'name': 'Wonder Factor',       'plain': 'Whether it creates wonder',             'score': float(_row[10] or _audit.get('wf',  0) or 0)},
-            {'name': 'Depth of Difficulty', 'plain': 'The difficulty of getting the shot',    'score': float(_row[7]  or _audit.get('dod', 0) or 0)},
+            {'name': 'Emotion',          'score': float(_row[11] or _audit.get('aq',  0) or 0)},
+            {'name': 'Visual Impact',    'score': float(_row[8]  or _audit.get('vd',  0) or 0)},
+            {'name': 'Timing',           'score': float(_row[9]  or _audit.get('dm',  0) or 0)},
+            {'name': 'Wonder Factor',    'score': float(_row[10] or _audit.get('wf',  0) or 0)},
+            {'name': 'Difficulty',       'score': float(_row[7]  or _audit.get('dod', 0) or 0)},
         ]
         _dim_sorted = sorted(_dim_data, key=lambda d: d['score'], reverse=True)
         for _i, _d in enumerate(_dim_sorted):
@@ -32790,14 +32790,36 @@ def try_standing(image_id):
         _tier_val  = _row[2] or ''
         _camera    = 'Mobile' if (_row[13] == 'mobile') else 'Camera'
 
-        # tier_floor — lower bound of current tier band (progress bar in template)
+        # tier_floor — lower bound of current tier band (progress bar)
         _tier_floors = {
             'Rookie': 0, 'Shooter': 3, 'Contender': 5, 'Craftsman': 6,
             'Maverick': 7, 'Master': 8, 'Grandmaster': 9, 'Legend': 9.5,
         }
         _tier_floor = _tier_floors.get(_tier_val, 0)
 
-        # best_this_year — highest Sonnet score this calendar year for this user
+        _tier_descs = {
+            'Rookie':      'Starting the journey.',
+            'Shooter':     'Building the eye.',
+            'Contender':   'Developing consistently.',
+            'Craftsman':   'Reliable across dimensions.',
+            'Maverick':    'Distinctive. Forming a signature.',
+            'Master':      'Exceptional. Fewer than 1 in 10 reach this.',
+            'Grandmaster': 'Fewer than 1 in 100 reach 9.',
+            'Legend':      '9.5 and above. The work that will be remembered.',
+        }
+
+        _eval_date = ''
+        if _row[14]:
+            try:    _eval_date = _row[14].strftime('%d %b %Y')
+            except: _eval_date = str(_row[14])[:10]
+
+        # ── Eval count ────────────────────────────────────────────────────────
+        _eval_count = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"
+            " AND (is_haiku_try IS NOT TRUE)"
+        ), {'uid': _uid}).scalar() or 1
+
+        # ── Best this year ────────────────────────────────────────────────────
         from datetime import datetime as _tsdt
         _best_this_year = db.session.execute(db.text(
             "SELECT MAX(score) FROM images WHERE user_id=:uid AND status='scored'"
@@ -32806,51 +32828,100 @@ def try_standing(image_id):
         ), {'uid': _uid, 'yr': _tsdt.now().year}).scalar()
         _best_this_year = float(_best_this_year) if _best_this_year else _score_val
 
-        _eval_date = ''
-        if _row[14]:
-            try:    _eval_date = _row[14].strftime('%d %b %Y')
-            except: _eval_date = str(_row[14])[:10]
+        # ── Audit JSON fields — Sonnet field names ────────────────────────────
+        _impression    = (_audit.get('impression',    '') or '').strip()
+        _strength_obs  = (_audit.get('strength_obs',  '') or '').strip()
+        _next_leap_obs = (_audit.get('next_leap_obs', '') or '').strip()
+        _master_name   = (_audit.get('master_name',  '') or '').strip()
+        _master_why    = (_audit.get('master_why',   '') or '').strip()
 
-        _tier_descs = {
-            'Rookie':'Starting the journey.','Shooter':'Building the eye.',
-            'Contender':'Developing consistently.','Craftsman':'Reliable across dimensions.',
-            'Maverick':'Distinctive. Forming a signature.',
-            'Master':'Exceptional. Fewer than 1 in 10 reach this.',
-            'Grandmaster':'Fewer than 1 in 100 reach 9.',
-            'Legend':'9.5 and above. The work that will be remembered.',
-        }
+        # Verdict box — impression is the opening evaluation paragraph
+        _verdict = _impression
 
-        _impression   = _audit.get('impression', '') or ''
-        _strength_obs = _audit.get('strength_obs', '') or ''
-        _next_leap_obs = _audit.get('next_leap_obs', '') or ''
-        _what_next    = _audit.get('what_next', '') or ''
-        _takeaway     = _audit.get('takeaway', '') or ''
-        _master_name  = _audit.get('master_name', '') or ''
-        _master_why   = _audit.get('master_why', '') or ''
+        # "What this evaluation means" — bullets from Sonnet audit
+        _transferable = (_audit.get('transferable_advice', '') or '').strip()
+        _byline2      = (_audit.get('byline_2_body',       '') or (_audit.get('byline_2', '') or '')).strip()
+        _bgcheck      = (_audit.get('background_check',    '') or (_audit.get('byline_1', '') or '')).strip()
+        _rows_audit   = _audit.get('rows') or []
+        _tech_val = _mom_val = _next_val = ''
+        for _r in _rows_audit:
+            if _r and len(_r) >= 2:
+                if _r[0] == 'Technical': _tech_val = _r[1] or ''
+                if _r[0] == 'Moment':    _mom_val  = _r[1] or ''
+                if _r[0] == 'Next':      _next_val = _r[1] or ''
 
+        _what_it_means = [b for b in [
+            _transferable or _tech_val,
+            (_tech_val if _transferable else _mom_val),
+            _bgcheck or _next_val,
+            _byline2,
+        ] if b]
+
+        # "Your one take-away" — the actionable paragraph
+        _one_takeaway = (
+            (_audit.get('one_takeaway', '') or '')
+            or (_audit.get('sherpa_takeaway', '') or '')
+            or (_audit.get('what_next', '') or '')
+        ).strip()
+        _takeaway_items = [_one_takeaway] if _one_takeaway else []
+
+        # "What SL saw" — what_stood_out + strength_obs + next_leap_obs
+        _wso = ((_audit.get('what_stood_out', '') or '') or (_audit.get('hard_truth', '') or '')).strip()
         _what_sl_saw = []
-        if _impression:    _what_sl_saw.append({'head': '',               'body': _impression})
-        if _strength_obs:  _what_sl_saw.append({'head': 'Strongest moment','body': _strength_obs})
-        if _next_leap_obs: _what_sl_saw.append({'head': 'Next leap',       'body': _next_leap_obs})
+        if _wso:          _what_sl_saw.append({'head': 'What stood out', 'body': _wso})
+        if _strength_obs: _what_sl_saw.append({'head': '',               'body': _strength_obs})
+        if _next_leap_obs:_what_sl_saw.append({'head': '',               'body': _next_leap_obs})
 
-        # Eval count + trend
-        _eval_count = db.session.execute(db.text(
-            "SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND (is_haiku_try IS NOT TRUE)"
-        ), {'uid': _uid}).scalar() or 1
-
-        _trend_rows = db.session.execute(db.text(
-            "SELECT score, genre FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL AND (is_haiku_try IS NOT TRUE) ORDER BY id DESC LIMIT 6"
-        ), {'uid': _uid}).fetchall()
+        # "Your next shot — bookmarked"
+        _ml1 = (_audit.get('mentor_location_1', '') or '').strip()
+        _ml1_body = (_audit.get('mentor_location_1_body', '') or _ml1).strip()
         from types import SimpleNamespace as _TSSN
-        _trend_lines = [
-            _TSSN(
-                label=r[1] or 'Eval',
-                current=float(r[0]),
-                values=[float(r[0])],
-                description='',
-            )
-            for r in reversed(_trend_rows)
-        ]
+        _next_shot = _TSSN(title=_ml1, body=_ml1_body) if _ml1 else None
+
+        # Edit suggestions
+        _edit_base     = (_audit.get('edit_base',     '') or (_audit.get('edit_balanced', '') or '')).strip()
+        _edit_creative = (_audit.get('edit_creative', '') or '').strip()
+        _edit_suggestions = []
+        if _edit_base:
+            _edit_suggestions.append({'type': 'Balanced · Light editing', 'headline': '', 'body': _edit_base, 'bullets': []})
+        if _edit_creative:
+            _edit_suggestions.append({'type': 'Artistic · Heavy editing', 'headline': '', 'body': _edit_creative, 'bullets': []})
+
+        # ── Trend lines — dimension sparklines (mirrors image_detail logic) ──
+        _trend_rows = db.session.execute(db.text(
+            "SELECT aq_score, dm_score, dod_score FROM images"
+            " WHERE user_id=:uid AND status='scored'"
+            " AND (is_haiku_try IS NOT TRUE)"
+            " ORDER BY scored_at DESC LIMIT 30"
+        ), {'uid': _uid}).fetchall()
+
+        _trend_lines = []
+        if _trend_rows and len(_trend_rows) >= 2:
+            _trend_rows = list(reversed(_trend_rows))  # oldest first
+
+            def _ts_trend_pill(vals):
+                if len(vals) < 3:
+                    return '— Steady — your next opportunity to grow'
+                first  = sum(vals[:len(vals)//2]) / (len(vals)//2)
+                second = sum(vals[len(vals)//2:]) / (len(vals) - len(vals)//2)
+                diff   = second - first
+                if diff > 0.3:  return '↑ Climbing — getting stronger'
+                if diff < -0.3: return '↓ Dipped recently'
+                return '— Steady — your next opportunity to grow'
+
+            for _ts_label, _ts_idx in [
+                ('Whether it made one feel something', 0),
+                ('Whether the timing was right',       1),
+                ('How difficult it was',               2),
+            ]:
+                _ts_vals = [float(r[_ts_idx]) for r in _trend_rows if r[_ts_idx] is not None]
+                if len(_ts_vals) >= 2:
+                    _trend_lines.append(_TSSN(
+                        label=_ts_label,
+                        current=_ts_vals[-1],
+                        values=_ts_vals,
+                        description=_ts_trend_pill(_ts_vals),
+                    ))
 
         _cal_count = 312  # blind calibration count — static display value
 
@@ -32878,22 +32949,19 @@ def try_standing(image_id):
         leap_score=_dim_sorted[-1]['score'],
         tier_floor=_tier_floor,
         best_this_year=_best_this_year,
-        verdict=_impression,
-        what_it_means=[_takeaway] if _takeaway else [],
-        takeaway_items=[_what_next] if _what_next else [],
+        verdict=_verdict,
+        what_it_means=_what_it_means,
+        takeaway_items=_takeaway_items,
         what_sl_saw=_what_sl_saw,
-        next_shot=_what_next,
-        edit_suggestions=[],
+        next_shot=_next_shot,
+        edit_suggestions=_edit_suggestions,
         master_name=_master_name,
         master_why=_master_why,
-        all_masters={},
         eval_date=_eval_date,
         eval_count=_eval_count,
         trend_lines=_trend_lines,
         trend_count=len(_trend_lines),
         image_id=image_id,
-        evals_used=0,
-        evals_remaining=0,
         current_user=current_user,
     )
 
