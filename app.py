@@ -32823,6 +32823,22 @@ def try_welcome():
     except Exception as _sae:
         app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
 
+    # SL-181.54: Backfill — existing users have old 2-field synthesis.
+    # If they have evals but signature_insight is missing, fire fresh synthesis.
+    # Fires once per user on first dashboard load after 181.54 deploy.
+    try:
+        if _evals_used > 0 and _signature_insight is None:
+            import threading as _bft
+            _bft_thread = _bft.Thread(
+                target=_generate_haiku_sherpa,
+                args=(current_user.id,),
+                daemon=True
+            )
+            _bft_thread.start()
+            app.logger.info(f'[try_welcome] 181.54 backfill triggered uid={current_user.id}')
+    except Exception as _bfe:
+        app.logger.warning(f'[try_welcome] backfill failed: {_bfe}')
+
     # SL-181.48: user's own best image as hero (highest score, has thumb)
     # Falls back to League hero if no user images exist
     _user_hero = None
