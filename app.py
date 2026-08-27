@@ -1,4 +1,4 @@
-# SL-VERSION: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
+# SL-VERSION: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
 
 import os
 import re
@@ -32633,7 +32633,7 @@ def league_haiku():
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.score >= 8.0
-              AND i.is_haiku_try IS TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
@@ -32650,7 +32650,7 @@ def league_haiku():
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.score >= 6.0 AND i.score < 8.0
-              AND i.is_haiku_try IS TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
@@ -32665,7 +32665,7 @@ def league_haiku():
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.score >= 9.0
-              AND i.is_haiku_try IS TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
@@ -32755,7 +32755,6 @@ def try_standing(image_id):
             WHERE i.id = :iid
               AND i.is_public IS TRUE
               AND i.status = 'scored'
-              AND i.is_haiku_try IS FALSE
         """), {'iid': image_id}).fetchone()
 
         if not _row:
