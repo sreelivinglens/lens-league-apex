@@ -32690,7 +32690,7 @@ def league_haiku():
                 genre=_sr[3],
                 thumb_url=_sr[4],
                 id=_sr[5],
-                impression=_sa.get('impression', '') or _sa.get('takeaway', '') or '',
+                impression=_sa.get('impression', '') or _sa.get('takeaway', '') or _sa.get('strength_obs', '') or '',
             )
 
         _league  = _build_lh(_league_rows, _lhj)
@@ -32718,9 +32718,10 @@ def league_haiku():
             app.logger.warning(f'[league_haiku] _to_json failed: {_je}')
             return '[]' 
 
-    # Add aha_line to spotlight from impression field
+    # Add aha_line to spotlight — impression already has 3-way fallback (impression/takeaway/strength_obs)
     if _spotlight:
-        _spotlight.aha_line = getattr(_spotlight, 'impression', '')[:120] if getattr(_spotlight, 'impression', '') else ''
+        _imp = getattr(_spotlight, 'impression', '') or ''
+        _spotlight.aha_line = _imp[:120]
 
     return render_template('league_haiku.html',
         league_photographers=_league,
@@ -32764,6 +32765,7 @@ def try_standing(image_id):
         """), {'iid': image_id}).fetchone()
 
         if not _row:
+            app.logger.warning(f'[try_standing] image_id={image_id} not found or not scored')
             abort(404)
 
         _audit = _tsj.loads(_row[5] or '{}')
@@ -32828,8 +32830,9 @@ def try_standing(image_id):
         _cal_count = 312  # blind calibration count — static display value
 
     except Exception as _tse:
-        app.logger.error(f'[try_standing] failed: {_tse}')
-        abort(404)
+        import traceback as _trtb
+        app.logger.error(f'[try_standing] image_id={image_id} unexpected error: {_tse}\n{_trtb.format_exc()}')
+        abort(500)
 
     return render_template('try_standing.html',
         score=_score_val,
