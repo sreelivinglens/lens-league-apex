@@ -19,16 +19,16 @@ h1,h2,h3{text-shadow:none}
 html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:antialiased;background:#E8E5DF}
 
 /* ── NAV ── */
-.nav{height:60px;background:#F5F3EF;border-bottom:0.5px solid rgba(26,39,68,0.10);display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
+.nav{height:60px;background:#1A2744;border-bottom:none;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
 .nav-brand{display:flex;flex-direction:column;gap:3px;text-decoration:none}
-.nav-brand-name{font-size:13px;font-weight:600;letter-spacing:0.22em;color:#1A2744;text-transform:uppercase}
-.nav-brand-sub{font-size:13px;letter-spacing:0.12em;color:rgba(26,39,68,0.52);text-transform:uppercase}
+.nav-brand-name{font-size:13px;font-weight:600;letter-spacing:0.22em;color:#F5F3EF;text-transform:uppercase}
+.nav-brand-sub{font-size:13px;letter-spacing:0.12em;color:rgba(245,243,239,0.45);text-transform:uppercase}
 .nav-links{display:flex;gap:32px;align-items:center}
-.nav-links a{font-size:14px;color:rgba(26,39,68,0.42);text-decoration:none;letter-spacing:0.02em;transition:color .15s}
-.nav-links a:hover{color:#1A2744}
-.nav-links a.active{color:#1A2744;font-weight:500;border-bottom:1.5px solid #C8A84B;padding-bottom:2px}
+.nav-links a{font-size:14px;color:rgba(245,243,239,0.55);text-decoration:none;letter-spacing:0.02em;transition:color .15s}
+.nav-links a:hover{color:#F5F3EF}
+.nav-links a.active{color:#F5F3EF;font-weight:500;border-bottom:1.5px solid #C8A84B;padding-bottom:2px}
 .nav-logout{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center}
-.nav-logout svg{width:18px;height:18px;stroke:rgba(26,39,68,0.35);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-logout svg{width:18px;height:18px;stroke:rgba(245,243,239,0.55);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── PAGE ── */
 .page{max-width:760px;margin:0 auto;padding:0 0 80px}
@@ -253,9 +253,15 @@ canvas.spark{flex:1;height:48px;display:block}
 
 <!-- NAV -->
 <nav class="nav">
-  <a href="{{ url_for('try_welcome') }}" class="nav-brand">
-    <span class="nav-brand-name">Shutter League</span>
-    <span class="nav-brand-sub">Photography Institution</span>
+  <a href="{{ url_for('try_welcome') }}" class="nav-brand" style="flex-direction:row;align-items:center;gap:10px">
+    <img src="{{ url_for('static', filename='img/sl-crest.png') }}"
+         alt="Shutter League"
+         style="height:36px;width:auto;display:block"
+         onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="nav-brand-name">Shutter League</span>
+      <span class="nav-brand-sub">Photography Institution</span>
+    </div>
   </a>
   <div class="nav-links">
     <a href="{{ url_for('try_welcome') }}" class="active">Home</a>
