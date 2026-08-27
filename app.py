@@ -20813,6 +20813,9 @@ def mentor_register(slug):
 
 @app.route('/pricing')
 def pricing():
+    # Paid subscribers have no need to see pricing
+    if current_user.is_authenticated and getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('dashboard'))
     try:
         poty_hero = (Image.query
                      .filter(Image.status == 'scored', Image.is_public == True,
@@ -20821,7 +20824,8 @@ def pricing():
                      .first())
     except Exception:
         poty_hero = None
-    return render_template('pricing.html',
+    return render_template('pricing_haiku.html',
+                           current_user=current_user,
                            open_contest_active=is_open_contest_active(),
                            poty_hero=poty_hero)
 
@@ -32838,32 +32842,45 @@ def try_standing(image_id):
         # Verdict box — impression is the opening evaluation paragraph
         _verdict = _impression
 
-        # "What this evaluation means" — bullets from Sonnet audit
-        _transferable = (_audit.get('transferable_advice', '') or '').strip()
-        _byline2      = (_audit.get('byline_2_body',       '') or (_audit.get('byline_2', '') or '')).strip()
-        _bgcheck      = (_audit.get('background_check',    '') or (_audit.get('byline_1', '') or '')).strip()
-        _rows_audit   = _audit.get('rows') or []
-        _tech_val = _mom_val = _next_val = ''
-        for _r in _rows_audit:
-            if _r and len(_r) >= 2:
-                if _r[0] == 'Technical': _tech_val = _r[1] or ''
-                if _r[0] == 'Moment':    _mom_val  = _r[1] or ''
-                if _r[0] == 'Next':      _next_val = _r[1] or ''
-
-        _what_it_means = [b for b in [
-            _transferable or _tech_val,
-            (_tech_val if _transferable else _mom_val),
-            _bgcheck or _next_val,
-            _byline2,
-        ] if b]
-
-        # "Your one take-away" — the actionable paragraph
-        _one_takeaway = (
-            (_audit.get('one_takeaway', '') or '')
-            or (_audit.get('sherpa_takeaway', '') or '')
-            or (_audit.get('what_next', '') or '')
+        # "What this evaluation means" — pull the main narrative block and split into bullets
+        # Sonnet scoring writes long text with ■ as bullet separator
+        # The primary field is byline_2_body (the deep "what this means" narrative)
+        # Fall back to background_check, then rows for older images
+        _wtm_raw = (
+            (_audit.get('byline_2_body',       '') or '')
+            or (_audit.get('byline_2',          '') or '')
+            or (_audit.get('background_check',  '') or (_audit.get('byline_1', '') or ''))
         ).strip()
-        _takeaway_items = [_one_takeaway] if _one_takeaway else []
+
+        def _split_bullets(text):
+            """Split on ■ separator, clean leading/trailing markers."""
+            if not text:
+                return []
+            parts = [p.strip().lstrip('■▪ ').strip() for p in text.split('■') if p.strip()]
+            return [p for p in parts if p]
+
+        _what_it_means = _split_bullets(_wtm_raw)
+
+        # If byline fields empty, fall back to rows (older audit schema)
+        if not _what_it_means:
+            _rows_audit = _audit.get('rows') or []
+            for _r in _rows_audit:
+                if _r and len(_r) >= 2 and _r[1]:
+                    _what_it_means.append(_r[1].strip())
+
+        # "Your one take-away" — transferable_advice is the Sonnet field
+        # one_takeaway/sherpa_takeaway are old schema names never written by Sonnet scoring
+        _one_takeaway = (
+            (_audit.get('transferable_advice', '') or '')
+            or (_audit.get('one_takeaway',       '') or '')
+            or (_audit.get('sherpa_takeaway',     '') or '')
+            or (_audit.get('what_next',           '') or '')
+        ).strip()
+        # Split on ■ separator if present (Sonnet audit trims to 2 bullets with ■ join)
+        if _one_takeaway and ' ■ ' in _one_takeaway:
+            _takeaway_items = [b.strip() for b in _one_takeaway.split(' ■ ') if b.strip()]
+        else:
+            _takeaway_items = [_one_takeaway] if _one_takeaway else []
 
         # "What SL saw" — what_stood_out + strength_obs + next_leap_obs
         _wso = ((_audit.get('what_stood_out', '') or '') or (_audit.get('hard_truth', '') or '')).strip()
@@ -32909,19 +32926,34 @@ def try_standing(image_id):
                 if diff < -0.3: return '↓ Dipped recently'
                 return '— Steady — your next opportunity to grow'
 
-            for _ts_label, _ts_idx in [
-                ('Whether it made one feel something', 0),
-                ('Whether the timing was right',       1),
-                ('How difficult it was',               2),
+            for _ts_label, _ts_idx, _ts_own in [
+                ('Whether it made one feel something', 0, float(_row[11] or 0)),
+                ('Whether the timing was right',       1, float(_row[9]  or 0)),
+                ('How difficult it was',               2, float(_row[7]  or 0)),
             ]:
                 _ts_vals = [float(r[_ts_idx]) for r in _trend_rows if r[_ts_idx] is not None]
                 if len(_ts_vals) >= 2:
                     _trend_lines.append(_TSSN(
                         label=_ts_label,
-                        current=_ts_vals[-1],
+                        current=_ts_own,  # this image's own dimension score
                         values=_ts_vals,
                         description=_ts_trend_pill(_ts_vals),
                     ))
+
+        # Percentile — compute from actual score, not hardcoded
+        _percentile = 80  # safe fallback
+        try:
+            from engine.scoring import compute_percentile as _cp
+            _pct_data = _cp(
+                _score_val,
+                genre=_row[3],
+                camera_track=_row[13],
+            )
+            if _pct_data and _pct_data.get('top_pct') is not None:
+                # top_pct = "top X%" → percentile = 100 - top_pct
+                _percentile = max(1, 100 - int(_pct_data['top_pct']))
+        except Exception as _pe:
+            app.logger.warning(f'[try_standing] percentile failed: {_pe}')
 
         _cal_count = 312  # blind calibration count — static display value
 
@@ -32940,7 +32972,7 @@ def try_standing(image_id):
         camera=_camera,
         score_pct=round(min(_score_val/10*100,100),1),
         tier_description=_tier_descs.get(_tier_val,''),
-        percentile=80,
+        percentile=_percentile,
         calibrated_count=_cal_count,
         dimensions=_dim_sorted,
         strength_dim=_dim_sorted[0]['name'],
@@ -32960,10 +32992,81 @@ def try_standing(image_id):
         eval_date=_eval_date,
         eval_count=_eval_count,
         trend_lines=_trend_lines,
-        trend_count=len(_trend_lines),
+        trend_count=len(_trend_rows) if _trend_rows else 0,
         image_id=image_id,
         current_user=current_user,
     )
+
+
+@app.route('/try/sample')
+def try_sample():
+    """
+    GET /try/sample — Public sample Haiku evaluation for pricing page.
+    Session 201: Shows a real Haiku scorecard to anonymous visitors.
+    No login required. Pulls the highest-scoring public Haiku-try image.
+    Renders image_detail_haiku.html in read-only mode (no delete/share actions).
+    """
+    import json as _smj
+
+    try:
+        # Find best public Haiku-scored image — highest score, has audit_json
+        _sm_row = db.session.execute(db.text("""
+            SELECT id, score, tier, genre, thumb_url, audit_json,
+                   asset_name, original_filename
+            FROM images
+            WHERE is_haiku_try = TRUE
+              AND status = 'scored'
+              AND is_public = TRUE
+              AND is_flagged = FALSE
+              AND audit_json IS NOT NULL
+              AND thumb_url IS NOT NULL
+            ORDER BY score DESC NULLS LAST
+            LIMIT 1
+        """)).fetchone()
+
+        if not _sm_row:
+            return redirect(url_for('pricing'))
+
+        _sm_audit = _smj.loads(_sm_row[5] or '{}')
+        _sm_dims = {
+            'dod': _sm_audit.get('dod'),
+            'vd':  _sm_audit.get('vd'),
+            'dm':  _sm_audit.get('dm'),
+            'wf':  _sm_audit.get('wf'),
+            'aq':  _sm_audit.get('aq'),
+        }
+
+        return render_template(
+            'image_detail_haiku.html',
+            image_id           = _sm_row[0],
+            thumb_url          = _sm_row[4] or '',
+            asset_name         = _sm_row[6] or _sm_row[7] or '',
+            score              = _sm_row[1],
+            tier               = _sm_row[2] or '—',
+            genre              = _sm_row[3] or '—',
+            percentile         = {},
+            dod                = _sm_dims.get('dod'),
+            vd                 = _sm_dims.get('vd'),
+            dm                 = _sm_dims.get('dm'),
+            wf                 = _sm_dims.get('wf'),
+            aq                 = _sm_dims.get('aq'),
+            takeaway           = _sm_audit.get('takeaway', ''),
+            impression         = _sm_audit.get('impression', ''),
+            strength_name      = _sm_audit.get('strength_name', ''),
+            strength_obs       = _sm_audit.get('strength_obs', ''),
+            next_leap_name     = _sm_audit.get('next_leap_name', ''),
+            next_leap_obs      = _sm_audit.get('next_leap_obs', ''),
+            what_next          = _sm_audit.get('what_next', ''),
+            master_name        = _sm_audit.get('master_name', ''),
+            master_why         = _sm_audit.get('master_why', ''),
+            evals_used         = 1,
+            evals_remaining    = 9,
+            milestone_strength = '',
+            is_sample          = True,
+        )
+    except Exception as _sme:
+        app.logger.warning(f'[try_sample] failed: {_sme}')
+        return redirect(url_for('pricing'))
 
 
 @app.route('/try/gallery')
