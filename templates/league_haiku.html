@@ -293,6 +293,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     </div>
 
     <!-- SPOTLIGHT — Visit 2+ -->
+    {% if spotlight %}<span id="sl-has-spotlight" style="display:none"></span>{% endif %}
     <div class="sl-spot" id="sl-state-spot">
       <div class="sl-spot-date" id="sl-spot-date"></div>
       {% if spotlight %}
@@ -424,12 +425,13 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   <a href="{{ url_for('logout') }}" class="sl-mob-drawer-item">Log out</a>
 </div>
 
-<script type="application/json" id="sl-league-data">{{ league_photographers_json | safe }}</script>
-<script type="application/json" id="sl-masters-data">{{ masters_photographers_json | safe }}</script>
+<script type="application/json" id="sl-league-data">{{ league_photographers_json | default('[]') | safe }}</script>
+<script type="application/json" id="sl-masters-data">{{ masters_photographers_json | default('[]') | safe }}</script>
 
 <script>
-var leagueData = JSON.parse(document.getElementById('sl-league-data').textContent.trim());
-var mastersData = JSON.parse(document.getElementById('sl-masters-data').textContent.trim());
+var leagueData = [], mastersData = [];
+try { leagueData = JSON.parse(document.getElementById('sl-league-data').textContent.trim()) || []; } catch(e) { leagueData = []; }
+try { mastersData = JSON.parse(document.getElementById('sl-masters-data').textContent.trim()) || []; } catch(e) { mastersData = []; }
 
 // Spotlight state — localStorage visit flag
 (function() {
@@ -437,10 +439,11 @@ var mastersData = JSON.parse(document.getElementById('sl-masters-data').textCont
   var d = new Date();
   var el = document.getElementById('sl-spot-date');
   if (el) el.textContent = 'Today \u00b7 ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-  if (localStorage.getItem('sl_league_visited')) {
+  var hasSpotlight = document.getElementById('sl-has-spotlight');
+  if (hasSpotlight && localStorage.getItem('sl_league_visited')) {
     document.getElementById('sl-state-decl').style.display = 'none';
     document.getElementById('sl-state-spot').style.display = 'flex';
-  } else {
+  } else if (hasSpotlight) {
     localStorage.setItem('sl_league_visited', '1');
   }
 })();
