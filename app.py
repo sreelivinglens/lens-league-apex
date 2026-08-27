@@ -1,4 +1,4 @@
-# SL-VERSION: 181.62-staging (Session 200e, league_haiku: removed DISTINCT ON — now shows all qualifying Sonnet images by score DESC, not one per photographer. Spotlight lowered to 8.5+. Original: 181.61 (Session 200e, try_standing: complete data contract built from template read — dimensions list, verdict, what_sl_saw, trend_lines, all scalar vars. Original: 181.60-staging (Session 200e, try_standing: added strength_dim/score, next_leap_dim/score, dod/vd/dm/wf/aq_score aliases, evals_used/remaining/percentile/all_masters. Original: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
+# SL-VERSION: 181.64-staging (Session 200e, try_standing trend_lines fixed: keys renamed label/current to match template. Original: 181.63 (Session 200e, try_standing: complete rewrite — single try/except wrapping all logic, single SQL fetch with user data joined, no subqueries outside try block. Original: 181.62 (Session 200e, league_haiku: removed DISTINCT ON — now shows all qualifying Sonnet images by score DESC, not one per photographer. Spotlight lowered to 8.5+. Original: 181.61 (Session 200e, try_standing: complete data contract built from template read — dimensions list, verdict, what_sl_saw, trend_lines, all scalar vars. Original: 181.60-staging (Session 200e, try_standing: added strength_dim/score, next_leap_dim/score, dod/vd/dm/wf/aq_score aliases, evals_used/remaining/percentile/all_masters. Original: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
 
 import os
 import re
@@ -32742,12 +32742,14 @@ def try_standing(image_id):
         return redirect(url_for('image_detail', image_id=image_id))
 
     try:
+        # Single query — get everything needed
         _row = db.session.execute(db.text("""
             SELECT i.id, i.score, i.tier, i.genre, i.thumb_url,
                    i.audit_json, i.asset_name,
                    i.dod_score, i.disruption_score, i.dm_score,
                    i.wonder_score, i.aq_score,
-                   u.full_name
+                   u.full_name, u.subscription_track,
+                   i.scored_at, i.user_id
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.id = :iid
@@ -32761,156 +32763,71 @@ def try_standing(image_id):
         _audit = _tsj.loads(_row[5] or '{}')
         _name  = (_row[12] or '').split()
         _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (_row[12] or '')
+        _uid   = _row[15]
 
-        from types import SimpleNamespace as _SN
-        _image = _SN(
-            id=_row[0],
-            score=float(_row[1]),
-            tier=_row[2],
-            genre=_row[3],
-            thumb_url=_row[4],
-            asset_name=_row[6],
-            dod=float(_row[7] or _audit.get('dod') or 0),
-            vd=float(_row[8]  or _audit.get('vd')  or 0),
-            dm=float(_row[9]  or _audit.get('dm')  or 0),
-            wf=float(_row[10] or _audit.get('wf')  or 0),
-            aq=float(_row[11] or _audit.get('aq')  or 0),
-            photographer=_short,
-            impression=_audit.get('impression', ''),
-            strength_name=_audit.get('strength_name', ''),
-            strength_obs=_audit.get('strength_obs', ''),
-            next_leap_name=_audit.get('next_leap_name', ''),
-            next_leap_obs=_audit.get('next_leap_obs', ''),
-            what_next=_audit.get('what_next', ''),
-            takeaway=_audit.get('takeaway', ''),
-            master_name=_audit.get('master_name', ''),
-            master_why=_audit.get('master_why', ''),
-        )
+        # Dimensions
+        _dim_data = [
+            {'name': 'Affective Quotient',  'plain': 'The emotional quality it carries',      'score': float(_row[11] or _audit.get('aq',  0) or 0)},
+            {'name': 'Visual Disruption',   'plain': 'Whether it is visually disruptive',     'score': float(_row[8]  or _audit.get('vd',  0) or 0)},
+            {'name': 'The Decisive Moment', 'plain': 'Whether it caught the decisive moment', 'score': float(_row[9]  or _audit.get('dm',  0) or 0)},
+            {'name': 'Wonder Factor',       'plain': 'Whether it creates wonder',             'score': float(_row[10] or _audit.get('wf',  0) or 0)},
+            {'name': 'Depth of Difficulty', 'plain': 'The difficulty of getting the shot',    'score': float(_row[7]  or _audit.get('dod', 0) or 0)},
+        ]
+        _dim_sorted = sorted(_dim_data, key=lambda d: d['score'], reverse=True)
+        for _i, _d in enumerate(_dim_sorted):
+            _d['is_top']  = (_i == 0)
+            _d['is_leap'] = (_i == len(_dim_sorted) - 1)
+
+        _score_val = float(_row[1]) if _row[1] else 0.0
+        _tier_val  = _row[2] or ''
+        _camera    = 'Mobile' if (_row[13] == 'mobile') else 'Camera'
+
+        _eval_date = ''
+        if _row[14]:
+            try:    _eval_date = _row[14].strftime('%d %b %Y')
+            except: _eval_date = str(_row[14])[:10]
+
+        _tier_descs = {
+            'Rookie':'Starting the journey.','Shooter':'Building the eye.',
+            'Contender':'Developing consistently.','Craftsman':'Reliable across dimensions.',
+            'Maverick':'Distinctive. Forming a signature.',
+            'Master':'Exceptional. Fewer than 1 in 10 reach this.',
+            'Grandmaster':'Fewer than 1 in 100 reach 9.',
+            'Legend':'9.5 and above. The work that will be remembered.',
+        }
+
+        _impression   = _audit.get('impression', '') or ''
+        _strength_obs = _audit.get('strength_obs', '') or ''
+        _next_leap_obs = _audit.get('next_leap_obs', '') or ''
+        _what_next    = _audit.get('what_next', '') or ''
+        _takeaway     = _audit.get('takeaway', '') or ''
+        _master_name  = _audit.get('master_name', '') or ''
+        _master_why   = _audit.get('master_why', '') or ''
+
+        _what_sl_saw = []
+        if _impression:    _what_sl_saw.append({'head': '',               'body': _impression})
+        if _strength_obs:  _what_sl_saw.append({'head': 'Strongest moment','body': _strength_obs})
+        if _next_leap_obs: _what_sl_saw.append({'head': 'Next leap',       'body': _next_leap_obs})
+
+        # Eval count + trend
+        _eval_count = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored' AND (is_haiku_try IS NOT TRUE)"
+        ), {'uid': _uid}).scalar() or 1
+
+        _trend_rows = db.session.execute(db.text(
+            "SELECT score, genre FROM images WHERE user_id=:uid AND status='scored' AND score IS NOT NULL AND (is_haiku_try IS NOT TRUE) ORDER BY id DESC LIMIT 6"
+        ), {'uid': _uid}).fetchall()
+        _trend_lines = [{'label': r[1] or 'Eval', 'current': float(r[0]), 'values': [float(r[0])]} for r in reversed(_trend_rows)]
+
+        _cal_count = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM calibration_logs WHERE image_id=:iid"
+        ), {'iid': image_id}).scalar() or 312
 
     except Exception as _tse:
         app.logger.error(f'[try_standing] failed: {_tse}')
         abort(404)
 
-    # Build complete data contract for try_standing.html
-    import json as _tsj2
-    _audit = _tsj2.loads(_row[5] or '{}')
-
-    # Dimensions list — sorted by score desc
-    _dim_data = [
-        {'name': 'Affective Quotient',  'plain': 'The emotional quality it carries',      'score': float(_row[11] or _audit.get('aq',  0) or 0)},
-        {'name': 'Visual Disruption',   'plain': 'Whether it is visually disruptive',     'score': float(_row[8]  or _audit.get('vd',  0) or 0)},
-        {'name': 'The Decisive Moment', 'plain': 'Whether it caught the decisive moment', 'score': float(_row[9]  or _audit.get('dm',  0) or 0)},
-        {'name': 'Wonder Factor',       'plain': 'Whether it creates wonder',             'score': float(_row[10] or _audit.get('wf',  0) or 0)},
-        {'name': 'Depth of Difficulty', 'plain': 'The difficulty of getting the shot',    'score': float(_row[7]  or _audit.get('dod', 0) or 0)},
-    ]
-    _dim_sorted = sorted(_dim_data, key=lambda d: d['score'], reverse=True)
-    for _i, _d in enumerate(_dim_sorted):
-        _d['is_top']  = (_i == 0)
-        _d['is_leap'] = (_i == len(_dim_sorted) - 1)
-
-    _strength_dim   = _dim_sorted[0]['name']
-    _strength_score = _dim_sorted[0]['score']
-    _next_leap_dim  = _dim_sorted[-1]['name']
-    _next_leap_score = _dim_sorted[-1]['score']
-
-    # Parse audit fields
-    _impression  = _audit.get('impression', '') or ''
-    _strength_obs = _audit.get('strength_obs', '') or ''
-    _next_leap_obs = _audit.get('next_leap_obs', '') or ''
-    _what_next   = _audit.get('what_next', '') or ''
-    _takeaway    = _audit.get('takeaway', '') or ''
-    _master_name = _audit.get('master_name', '') or ''
-    _master_why  = _audit.get('master_why', '') or ''
-
-    # Score percentage for bar (0-10 → 0-100%)
-    _score_val  = float(_row[1]) if _row[1] else 0.0
-    _score_pct  = round(min(_score_val / 10 * 100, 100), 1)
-
-    # Tier description
-    _tier_descs = {
-        'Rookie': 'Starting the journey.',
-        'Shooter': 'Building the eye.',
-        'Contender': 'Developing consistently.',
-        'Craftsman': 'Reliable across dimensions.',
-        'Maverick': 'Distinctive. Forming a signature.',
-        'Master': 'Exceptional. Fewer than 1 in 10 reach this.',
-        'Grandmaster': 'Fewer than 1 in 100 reach 9.',
-        'Legend': '9.5 and above. The work that will be remembered.',
-    }
-    _tier_val = _row[2] or ''
-    _tier_description = _tier_descs.get(_tier_val, '')
-
-    # Camera
-    _cam_row2 = db.session.execute(db.text(
-        "SELECT subscription_track FROM users WHERE id = (SELECT user_id FROM images WHERE id = :iid)"
-    ), {'iid': image_id}).fetchone()
-    _camera = 'Mobile' if (_cam_row2 and _cam_row2[0] == 'mobile') else 'Camera'
-
-    # Eval date
-    _date_row = db.session.execute(db.text(
-        "SELECT scored_at FROM images WHERE id = :iid"
-    ), {'iid': image_id}).fetchone()
-    _eval_date = ''
-    if _date_row and _date_row[0]:
-        try:
-            _eval_date = _date_row[0].strftime('%d %b %Y')
-        except Exception:
-            _eval_date = str(_date_row[0])[:10]
-
-    # what_it_means — from takeaway field, split into list
-    _what_it_means = [_takeaway] if _takeaway else []
-
-    # takeaway_items — from what_next
-    _takeaway_items = [_what_next] if _what_next else []
-
-    # what_sl_saw — from impression + strength/leap obs
-    _what_sl_saw = []
-    if _impression:
-        _what_sl_saw.append({'head': '', 'body': _impression})
-    if _strength_obs:
-        _what_sl_saw.append({'head': 'Strongest moment', 'body': _strength_obs})
-    if _next_leap_obs:
-        _what_sl_saw.append({'head': 'Next leap', 'body': _next_leap_obs})
-
-    # calibrated_count — blind calibration count from DB
-    try:
-        _cal_count = db.session.execute(db.text(
-            "SELECT COUNT(*) FROM calibration_logs WHERE image_id = :iid"
-        ), {'iid': image_id}).scalar() or 312
-    except Exception:
-        _cal_count = 312
-
-    # trend_lines — photographer's last N scores
-    try:
-        _trend_rows = db.session.execute(db.text("""
-            SELECT score, genre FROM images
-            WHERE user_id = (SELECT user_id FROM images WHERE id = :iid)
-              AND status = 'scored' AND score IS NOT NULL
-              AND is_haiku_try IS NOT TRUE
-            ORDER BY id DESC LIMIT 6
-        """), {'iid': image_id}).fetchall()
-        _trend_lines = [{
-            'name': r[1] or 'Evaluation',
-            'values': [float(r[0])]
-        } for r in reversed(_trend_rows)] if _trend_rows else []
-        _trend_count = len(_trend_rows)
-    except Exception:
-        _trend_lines = []
-        _trend_count = 0
-
-    # eval_count — photographer's total evaluations
-    try:
-        _eval_count = db.session.execute(db.text(
-            "SELECT COUNT(*) FROM images WHERE user_id = (SELECT user_id FROM images WHERE id = :iid) AND status = 'scored' AND is_haiku_try IS NOT TRUE"
-        ), {'iid': image_id}).scalar() or 1
-    except Exception:
-        _eval_count = 1
-
-    # Master reference — all_masters dict not needed, handled inline
-    _all_masters = {}
-
     return render_template('try_standing.html',
-        # Core
         score=_score_val,
         tier=_tier_val,
         genre=_row[3] or '',
@@ -32918,38 +32835,28 @@ def try_standing(image_id):
         asset_name=_row[6] or '',
         photographer_name=_short,
         camera=_camera,
-        # Score display
-        score_pct=_score_pct,
-        tier_description=_tier_description,
+        score_pct=round(min(_score_val/10*100,100),1),
+        tier_description=_tier_descs.get(_tier_val,''),
         percentile=80,
         calibrated_count=_cal_count,
-        # Dimensions
         dimensions=_dim_sorted,
-        strength_dim=_strength_dim,
-        strength_score=_strength_score,
-        next_leap_dim=_next_leap_dim,
-        next_leap_score=_next_leap_score,
-        dod=_dim_data[4]['score'],
-        vd=_dim_data[1]['score'],
-        dm=_dim_data[2]['score'],
-        wf=_dim_data[3]['score'],
-        aq=_dim_data[0]['score'],
-        # Narrative
+        strength_dim=_dim_sorted[0]['name'],
+        strength_score=_dim_sorted[0]['score'],
+        next_leap_dim=_dim_sorted[-1]['name'],
+        next_leap_score=_dim_sorted[-1]['score'],
         verdict=_impression,
-        what_it_means=_what_it_means,
-        takeaway_items=_takeaway_items,
+        what_it_means=[_takeaway] if _takeaway else [],
+        takeaway_items=[_what_next] if _what_next else [],
         what_sl_saw=_what_sl_saw,
         next_shot=_what_next,
         edit_suggestions=[],
-        # Master
         master_name=_master_name,
         master_why=_master_why,
-        all_masters=_all_masters,
-        # Meta
+        all_masters={},
         eval_date=_eval_date,
         eval_count=_eval_count,
         trend_lines=_trend_lines,
-        trend_count=_trend_count,
+        trend_count=len(_trend_lines),
         image_id=image_id,
         evals_used=0,
         evals_remaining=0,
