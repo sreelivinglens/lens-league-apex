@@ -1,4 +1,4 @@
-# SL-VERSION: 181.54-staging (Session 200b, 2026-08-27 — DASHBOARD SYNTHESIS: _generate_haiku_sherpa expanded from 2 to 8 fields. New: signature_insight, gap_insight, next_session, aq_insight (warm/spiritual), tier_insight, master_insight. try_welcome() passes all 8. Budget ₹0.85/call. Also: league_haiku + try_standing routes, league_hero.id fix from 181.53.)
+# SL-VERSION: 181.55-staging (Session 200d, 2026-08-27 — ROUTES: league_haiku + try_standing properly added to app (were in 181.53 live but lost from working file). Dashboard LOP link now resolves. RETAINS 181.54.)
 
 import os
 import re
@@ -32563,6 +32563,196 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
             except Exception:
                 pass
             return None
+
+
+@app.route('/league/photographers')
+@login_required
+def league_haiku():
+    """
+    GET /league/photographers — Haiku world League of Photographers page.
+    Session 200: Haiku free-tier users see League (score>=8.0) and Masters (6.0-7.9).
+    Daily spotlight from 9.0+ pool. Paid users redirect to standings_public.
+    """
+    from flask_login import current_user
+    import json as _lhj
+    from datetime import date as _lhd
+
+    # Paid users see the full standings page
+    if getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('standings_public'))
+
+    try:
+        # League tier: score >= 8.0
+        _league_rows = db.session.execute(db.text("""
+            SELECT u.full_name, u.subscription_track,
+                   i.score, i.tier, i.genre, i.thumb_url, i.id,
+                   i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 8.0
+              AND i.is_haiku_try IS TRUE
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+            LIMIT 24
+        """)).fetchall()
+
+        # Masters tier: score 6.0 - 7.99
+        _masters_rows = db.session.execute(db.text("""
+            SELECT u.full_name, u.subscription_track,
+                   i.score, i.tier, i.genre, i.thumb_url, i.id,
+                   i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 6.0 AND i.score < 8.0
+              AND i.is_haiku_try IS TRUE
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+            LIMIT 24
+        """)).fetchall()
+
+        # Daily spotlight: rotate through 9.0+ pool by day ordinal
+        _spotlight_rows = db.session.execute(db.text("""
+            SELECT u.full_name, i.score, i.tier, i.genre,
+                   i.thumb_url, i.id, i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 9.0
+              AND i.is_haiku_try IS TRUE
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+        """)).fetchall()
+
+        _spotlight = None
+        if _spotlight_rows:
+            _idx = _lhd.today().toordinal() % len(_spotlight_rows)
+            _sr = _spotlight_rows[_idx]
+            _sa = _lhj.loads(_sr[6] or '{}')
+            from types import SimpleNamespace as _SN
+            _spotlight = _SN(
+                photographer=(_sr[0] or '').split()[0] + ' ' + ((_sr[0] or '').split()[1][0] + '.') if len((_sr[0] or '').split()) >= 2 else (_sr[0] or ''),
+                score=float(_sr[1]),
+                tier=_sr[2],
+                genre=_sr[3],
+                thumb_url=_sr[4],
+                id=_sr[5],
+                impression=_sa.get('impression', '') or _sa.get('takeaway', '') or '',
+            )
+
+        def _build(rows):
+            out = []
+            for r in rows:
+                try:
+                    _a = _lhj.loads(r[7] or '{}')
+                    _name = (r[0] or '').split()
+                    _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (r[0] or '')
+                    from types import SimpleNamespace as _SN2
+                    out.append(_SN2(
+                        photographer=_short,
+                        track=r[1],
+                        score=float(r[2]),
+                        tier=r[3],
+                        genre=r[4],
+                        thumb_url=r[5],
+                        id=r[6],
+                        impression=_a.get('impression', '') or '',
+                    ))
+                except Exception:
+                    pass
+            return out
+
+        _league  = _build(_league_rows)
+        _masters = _build(_masters_rows)
+
+    except Exception as _lhe:
+        app.logger.error(f'[league_haiku] failed: {_lhe}')
+        _league = _masters = []
+        _spotlight = None
+
+    return render_template('league_haiku-staging.html',
+        league=_league,
+        masters=_masters,
+        spotlight=_spotlight,
+        current_user=current_user,
+    )
+
+
+@app.route('/try/standing/<int:image_id>')
+@login_required
+def try_standing(image_id):
+    """
+    GET /try/standing/<image_id> — Read-only Sonnet scorecard for Haiku users.
+    Session 200: Haiku users can view public Sonnet-scored images.
+    Zero new AI cost — all data from stored audit_json.
+    Paid users redirect to image_detail.
+    """
+    from flask_login import current_user
+    import json as _tsj
+
+    # Paid users see their own scorecard
+    if getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    try:
+        _row = db.session.execute(db.text("""
+            SELECT i.id, i.score, i.tier, i.genre, i.thumb_url,
+                   i.audit_json, i.asset_name,
+                   i.dod_score, i.disruption_score, i.dm_score,
+                   i.wonder_score, i.aq_score,
+                   u.full_name
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.id = :iid
+              AND i.is_public IS TRUE
+              AND i.status = 'scored'
+              AND i.is_haiku_try IS FALSE
+        """), {'iid': image_id}).fetchone()
+
+        if not _row:
+            abort(404)
+
+        _audit = _tsj.loads(_row[5] or '{}')
+        _name  = (_row[12] or '').split()
+        _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (_row[12] or '')
+
+        from types import SimpleNamespace as _SN
+        _image = _SN(
+            id=_row[0],
+            score=float(_row[1]),
+            tier=_row[2],
+            genre=_row[3],
+            thumb_url=_row[4],
+            asset_name=_row[6],
+            dod=float(_row[7] or _audit.get('dod') or 0),
+            vd=float(_row[8]  or _audit.get('vd')  or 0),
+            dm=float(_row[9]  or _audit.get('dm')  or 0),
+            wf=float(_row[10] or _audit.get('wf')  or 0),
+            aq=float(_row[11] or _audit.get('aq')  or 0),
+            photographer=_short,
+            impression=_audit.get('impression', ''),
+            strength_name=_audit.get('strength_name', ''),
+            strength_obs=_audit.get('strength_obs', ''),
+            next_leap_name=_audit.get('next_leap_name', ''),
+            next_leap_obs=_audit.get('next_leap_obs', ''),
+            what_next=_audit.get('what_next', ''),
+            takeaway=_audit.get('takeaway', ''),
+            master_name=_audit.get('master_name', ''),
+            master_why=_audit.get('master_why', ''),
+        )
+
+    except Exception as _tse:
+        app.logger.error(f'[try_standing] failed: {_tse}')
+        abort(404)
+
+    return render_template('try_standing.html',
+        image=_image,
+        current_user=current_user,
+    )
 
 
 @app.route('/try/gallery')
