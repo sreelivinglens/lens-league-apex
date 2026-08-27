@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing-v3.2-staging (Session 190, 2026-08-19 — QUOTES: Hero quote → Vaibhav Parakh (mobile, beginner). Mahesh quote moved to Honest why-block. RETAINS v3., 2026-08-19 — FULL REDESIGN: Three plans (Annual ₹4,000 / 6 Months ₹2,500 / 100-for-100 ₹100). No monthly plan. No free column. Track selection modal. International waitlist form. Founding Member band. Three why-blocks. Making Images Matter sign-off. KYC clean. Jinja2 validated.) #}
+{# SL-VERSION: pricing-v3.3-staging (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
@@ -348,7 +348,7 @@
       <li>Location advisory — where to shoot next</li>
       <li>Founding Member price — locked forever</li>
     </ul>
-    <a href="/image/47" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
 
@@ -371,7 +371,7 @@
       <li>Location advisory</li>
       <li class="dim">Founding Member price — annual only</li>
     </ul>
-    <a href="/image/47" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
 
@@ -389,7 +389,7 @@
       <li>See how your eye develops over time</li>
       <li>One-time purchase — no subscription</li>
     </ul>
-    <a href="/try/result/33" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
+    <a href="{{ url_for('try_standing', image_id=28) }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
     <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
   </div>
 
