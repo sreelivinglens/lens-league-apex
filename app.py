@@ -32624,9 +32624,10 @@ def league_haiku():
         return out
 
     try:
-        # League tier: score >= 8.0
+        # League tier: score >= 8.0 — one best image per photographer
         _league_rows = db.session.execute(db.text("""
-            SELECT u.full_name, u.subscription_track,
+            SELECT DISTINCT ON (u.id)
+                   u.full_name, u.subscription_track,
                    i.score, i.tier, i.genre, i.thumb_url, i.id,
                    i.audit_json
             FROM images i
@@ -32636,13 +32637,14 @@ def league_haiku():
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
-            ORDER BY i.score DESC
+            ORDER BY u.id, i.score DESC
             LIMIT 24
         """)).fetchall()
 
-        # Masters tier: score 6.0 - 7.99
+        # Masters tier: score 6.0 - 7.99 — one best image per photographer
         _masters_rows = db.session.execute(db.text("""
-            SELECT u.full_name, u.subscription_track,
+            SELECT DISTINCT ON (u.id)
+                   u.full_name, u.subscription_track,
                    i.score, i.tier, i.genre, i.thumb_url, i.id,
                    i.audit_json
             FROM images i
@@ -32652,7 +32654,7 @@ def league_haiku():
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
-            ORDER BY i.score DESC
+            ORDER BY u.id, i.score DESC
             LIMIT 24
         """)).fetchall()
 
