@@ -32790,6 +32790,22 @@ def try_standing(image_id):
         _tier_val  = _row[2] or ''
         _camera    = 'Mobile' if (_row[13] == 'mobile') else 'Camera'
 
+        # tier_floor — lower bound of current tier band (progress bar in template)
+        _tier_floors = {
+            'Rookie': 0, 'Shooter': 3, 'Contender': 5, 'Craftsman': 6,
+            'Maverick': 7, 'Master': 8, 'Grandmaster': 9, 'Legend': 9.5,
+        }
+        _tier_floor = _tier_floors.get(_tier_val, 0)
+
+        # best_this_year — highest Sonnet score this calendar year for this user
+        from datetime import datetime as _tsdt
+        _best_this_year = db.session.execute(db.text(
+            "SELECT MAX(score) FROM images WHERE user_id=:uid AND status='scored'"
+            " AND score IS NOT NULL AND (is_haiku_try IS NOT TRUE)"
+            " AND EXTRACT(year FROM scored_at) = :yr"
+        ), {'uid': _uid, 'yr': _tsdt.now().year}).scalar()
+        _best_this_year = float(_best_this_year) if _best_this_year else _score_val
+
         _eval_date = ''
         if _row[14]:
             try:    _eval_date = _row[14].strftime('%d %b %Y')
@@ -32849,8 +32865,10 @@ def try_standing(image_id):
         dimensions=_dim_sorted,
         strength_dim=_dim_sorted[0]['name'],
         strength_score=_dim_sorted[0]['score'],
-        next_leap_dim=_dim_sorted[-1]['name'],
-        next_leap_score=_dim_sorted[-1]['score'],
+        leap_dim=_dim_sorted[-1]['name'],
+        leap_score=_dim_sorted[-1]['score'],
+        tier_floor=_tier_floor,
+        best_this_year=_best_this_year,
         verdict=_impression,
         what_it_means=[_takeaway] if _takeaway else [],
         takeaway_items=[_what_next] if _what_next else [],
