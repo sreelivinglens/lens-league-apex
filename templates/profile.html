@@ -1,6 +1,6 @@
 {#
-  SL-VERSION: profile-181.5-staging
-  Session 199 · 2026-08-26
+  SL-VERSION: profile-181.54-staging
+  Session 200d · 2026-08-27 — LAYOUT FIX: card overlap at 768px. acc-grid-top/bottom reset to flex column when acc-layout becomes flex. RETAINS profile-181.5.
   LAYOUT FIX: (1) Added 900px breakpoint — sidebar collapses to horizontal strip, content goes full width. Eliminates narrow columns and text truncation on iPad and small desktop. (2) Mobile acc-section overflow:hidden → overflow:visible — was clipping card content. (3) Mobile acc-wrap padding 56px top → 24px. (4) Two-column card grid collapses at 600px not 768px. (5) acc-detail-body word-break:break-word. (6) acc-email font-size 13px → 14px on mobile. RETAINS profile-181.4.
 
   DELIVERY AUDIT
@@ -475,6 +475,8 @@
     .acc-grid-top,
     .acc-grid-bottom {
       grid-column: 1;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
     }
   }
 
@@ -482,7 +484,12 @@
   @media (max-width: 768px) {
     .acc-layout { display: flex; flex-direction: column; }
     .acc-grid-top,
-    .acc-grid-bottom { grid-template-columns: 1fr 1fr; }
+    .acc-grid-bottom {
+      display: flex;
+      flex-direction: column;
+      grid-column: unset;
+      width: 100%;
+    }
     .acc-sidebar {
       position: static;
       flex-direction: row;
