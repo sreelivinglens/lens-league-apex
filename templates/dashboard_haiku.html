@@ -104,10 +104,10 @@ html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:an
 canvas.spark{flex:1;height:48px;display:block}
 
 .dims-list{display:flex;flex-direction:column;gap:0}
-.dim-row{padding:14px 0;border-bottom:0.5px solid rgba(26,39,68,0.06)}
+.dim-row{padding:8px 0;border-bottom:0.5px solid rgba(26,39,68,0.06)}
 .dim-row:last-child{border-bottom:none}
-.dim-header{display:grid;grid-template-columns:1fr 48px 120px;align-items:center;gap:16px}
-.dim-row-expanded .dim-header{margin-bottom:12px}
+.dim-header{display:grid;grid-template-columns:1fr 44px 100px;align-items:center;gap:8px}
+.dim-row-expanded .dim-header{margin-bottom:8px}
 .dim-signal{font-size:17px;line-height:1.85;color:#1A2744;padding:18px 22px;background:#fff;border-radius:4px;border-left:3px solid #C8A84B;box-shadow:0 1px 4px rgba(26,39,68,0.07);margin-top:4px}
 .signal-label{display:block;font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:10px;font-weight:600}
 .dim-name{font-size:15px;color:rgba(26,39,68,0.60);line-height:1.55}
@@ -393,7 +393,7 @@ canvas.spark{flex:1;height:48px;display:block}
 
   <!-- ══ HOW YOUR EYE IS DEVELOPING ══ -->
   {% if dims_sorted %}
-  <div class="section">
+  <div class="section" style="background:#fff;border-radius:4px;margin:0 0 2px">
     <div class="eyebrow eyebrow-gold">How your eye is developing</div>
 
     {% if score_history and score_history|length >= 2 %}
