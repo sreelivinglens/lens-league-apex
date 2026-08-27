@@ -430,7 +430,6 @@ main { padding:0 !important; background:#E8E5DF; }
       <form method="POST" action="{{ url_for('delete_image', image_id=image_id) }}"
             onsubmit="return confirm('Delete this evaluation? This cannot be undone. Your slot count will not be restored.')"
             style="display:inline;margin-top:12px;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="sl-conv-secondary"
                 style="background:none;border:none;cursor:pointer;font-family:inherit;padding:8px 0;text-align:left;min-height:44px;display:block;">
           Delete this evaluation
