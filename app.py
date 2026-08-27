@@ -8505,8 +8505,8 @@ def _check_upload_quota(user):
     _is_sub = getattr(user, 'is_subscribed', False)
 
     if not _is_sub:
-        # Free tier — 3 lifetime assessments per user_id + referral bonus
-        # Uses total_uploads_ever — never decremented on delete.
+        # Free tier — 10 lifetime assessments per user_id + referral bonus
+        # Uses gate_count — never decremented on delete.
         # Deleting images does NOT restore free slots.
         _lifetime = getattr(user, 'total_uploads_ever', None)
         if _lifetime is None:
@@ -8565,8 +8565,8 @@ def _check_upload_quota(user):
             _account_clause = f' {" · ".join(_account_parts)}.' if _account_parts else ''
 
             return (f'You have used your {_limit_shown} free assessments.{_account_clause} '
-                    'Deleting images does not restore free slots — '
-                    'upgrade to Mobile or Camera League (₹200/mo) to keep uploading.')
+                    'You can delete an image to free up a slot and resubmit. '
+                    'Upgrade to Mobile or Camera League (₹200/mo) for unlimited evaluations.')
         return None
 
     if _track == 'dormant':
@@ -16013,11 +16013,16 @@ def delete_image(image_id):
     # the real delete — if that fails and rolls back, this rolls back too.
     # 181.17: detect Haiku image before delete so we can log is_haiku_try
     # and show the correct message. Must read audit_json before DB delete.
+    # Gate count is permanent — deleting does NOT restore free slots.
+    # This prevents abuse (delete → resubmit → endless free evaluations).
     _is_haiku_delete = False
     try:
         import json as _dj
         _d_audit = _dj.loads(img._audit_json or '{}')
-        _is_haiku_delete = (_d_audit.get('source') == 'haiku_try')
+        _is_haiku_delete = (
+            bool(getattr(img, 'is_haiku_try', False)) or
+            _d_audit.get('source') == 'haiku_try'
+        )
     except Exception:
         pass
 
