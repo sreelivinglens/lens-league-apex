@@ -1,7 +1,7 @@
 {#
-  SL-VERSION: profile-181.54-staging
-  Session 200d · 2026-08-27 — LAYOUT FIX: card overlap at 768px. acc-grid-top/bottom reset to flex column when acc-layout becomes flex. RETAINS profile-181.5.
-  LAYOUT FIX: (1) Added 900px breakpoint — sidebar collapses to horizontal strip, content goes full width. Eliminates narrow columns and text truncation on iPad and small desktop. (2) Mobile acc-section overflow:hidden → overflow:visible — was clipping card content. (3) Mobile acc-wrap padding 56px top → 24px. (4) Two-column card grid collapses at 600px not 768px. (5) acc-detail-body word-break:break-word. (6) acc-email font-size 13px → 14px on mobile. RETAINS profile-181.4.
+  SL-VERSION: profile-181.56-staging
+  Session 200d · 2026-08-27
+  LAYOUT FIX: (1) Added 900px breakpoint — sidebar collapses to horizontal strip, content goes full width. Eliminates narrow columns and text truncation on iPad and small desktop. (2) Mobile acc-section overflow:hidden → overflow:visible — was clipping card content. (3) Mobile acc-wrap padding 56px top → 24px. (4) Two-column card grid collapses at 600px not 768px. (5) acc-detail-body word-break:break-word. (6) acc-email font-size 13px → 14px on mobile. RETAINS profile-181.5. Session 200d: (1) Removed <main> wrapper — acc-grid-top/bottom now direct children of acc-layout grid fixing card overlap. (2) Sidenav fix in base.html (separate file).
 
   DELIVERY AUDIT
   ──────────────────────────────────────────────────────
@@ -475,8 +475,6 @@
     .acc-grid-top,
     .acc-grid-bottom {
       grid-column: 1;
-      grid-template-columns: 1fr 1fr;
-      width: 100%;
     }
   }
 
@@ -484,12 +482,7 @@
   @media (max-width: 768px) {
     .acc-layout { display: flex; flex-direction: column; }
     .acc-grid-top,
-    .acc-grid-bottom {
-      display: flex;
-      flex-direction: column;
-      grid-column: unset;
-      width: 100%;
-    }
+    .acc-grid-bottom { grid-template-columns: 1fr 1fr; }
     .acc-sidebar {
       position: static;
       flex-direction: row;
@@ -588,8 +581,7 @@
     </aside>
 
     {# ── Main content — 2×2 grid ── #}
-    <main>
-      <div class="acc-grid-top" style="margin-top:0;">
+    <div class="acc-grid-top" style="margin-top:0;">
 
       {# ══ Section 1 — Account Details ══ #}
       <div class="acc-section" id="account-details" style="border-top:3px solid #2C3E6B;">
@@ -876,9 +868,9 @@
 
       </div>
       {# end section 2 #}
-      </div>{# /acc-grid-top #}
+    </div>{# /acc-grid-top #}
 
-      <div class="acc-grid-bottom">
+    <div class="acc-grid-bottom">
       {# ══ Section 3 — Points Balance — paid subscribers only ══ #}
       {% if current_user.is_subscribed %}
       <div class="acc-section" id="points-balance" style="border-top:3px solid #2E7D52;">
