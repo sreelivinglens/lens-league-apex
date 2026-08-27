@@ -262,7 +262,7 @@ canvas.spark{flex:1;height:48px;display:block}
     <a href="{{ url_for('try_gallery') }}">My Evaluations</a>
     <a href="{{ url_for('try_page') }}">Upload</a>
     <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}">League of Photographers</a>
+    <a href="{{ url_for('standings_public') }}">League of Photographers</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <button class="nav-logout" onclick="window.location='{{ url_for('logout') }}'" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -527,7 +527,7 @@ canvas.spark{flex:1;height:48px;display:block}
   {% if league_hero.id %}
   <a href="{{ url_for('try_standing', image_id=league_hero.id) }}" class="gm-section">
   {% else %}
-  <a href="{{ url_for('league_haiku') }}" class="gm-section">
+  <a href="{{ url_for('standings_public') }}" class="gm-section">
   {% endif %}
     <img src="{{ league_hero.thumb_url }}"
          alt="Grandmaster photograph — {{ league_hero.photographer }}"
@@ -622,7 +622,7 @@ canvas.spark{flex:1;height:48px;display:block}
   </div>
 </nav>
 <div class="mob-drawer" id="sl-mob-more-drawer">
-  <a href="{{ url_for('league_haiku') }}" class="mob-drawer-item">League of Photographers</a>
+  <a href="{{ url_for('standings_public') }}" class="mob-drawer-item">League of Photographers</a>
   <a href="{{ url_for('profile') }}" class="mob-drawer-item">Profile</a>
   <a href="#" class="mob-drawer-item">Help</a>
   <a href="{{ url_for('logout') }}" class="mob-drawer-item">Log out</a>
