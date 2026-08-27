@@ -32581,6 +32581,33 @@ def league_haiku():
     if getattr(current_user, 'is_subscribed', False):
         return redirect(url_for('standings_public'))
 
+    # Safe defaults
+    _league = []
+    _masters = []
+    _spotlight = None
+
+    def _build_lh(rows, json_mod):
+        out = []
+        for r in rows:
+            try:
+                _a = json_mod.loads(r[7] or '{}')
+                _name = (r[0] or '').split()
+                _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (r[0] or '')
+                from types import SimpleNamespace as _LHSN2
+                out.append(_LHSN2(
+                    photographer=_short,
+                    track=r[1],
+                    score=float(r[2]),
+                    tier=r[3],
+                    genre=r[4],
+                    thumb_url=r[5],
+                    id=r[6],
+                    impression=_a.get('impression', '') or '',
+                ))
+            except Exception:
+                pass
+        return out
+
     try:
         # League tier: score >= 8.0
         _league_rows = db.session.execute(db.text("""
@@ -32644,37 +32671,15 @@ def league_haiku():
                 impression=_sa.get('impression', '') or _sa.get('takeaway', '') or '',
             )
 
-        def _build(rows):
-            out = []
-            for r in rows:
-                try:
-                    _a = _lhj.loads(r[7] or '{}')
-                    _name = (r[0] or '').split()
-                    _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (r[0] or '')
-                    from types import SimpleNamespace as _SN2
-                    out.append(_SN2(
-                        photographer=_short,
-                        track=r[1],
-                        score=float(r[2]),
-                        tier=r[3],
-                        genre=r[4],
-                        thumb_url=r[5],
-                        id=r[6],
-                        impression=_a.get('impression', '') or '',
-                    ))
-                except Exception:
-                    pass
-            return out
-
-        _league  = _build(_league_rows)
-        _masters = _build(_masters_rows)
+        _league  = _build_lh(_league_rows, _lhj)
+        _masters = _build_lh(_masters_rows, _lhj)
 
     except Exception as _lhe:
         app.logger.error(f'[league_haiku] failed: {_lhe}')
         _league = _masters = []
         _spotlight = None
 
-    return render_template('league_haiku-staging.html',
+    return render_template('league_haiku.html',
         league=_league,
         masters=_masters,
         spotlight=_spotlight,
@@ -33017,7 +33022,7 @@ def try_welcome():
     # If they have evals but signature_insight is missing, fire fresh synthesis.
     # Fires once per user on first dashboard load after 181.54 deploy.
     try:
-        if _evals_used > 0 and _signature_insight is None:
+        if evals_used > 0 and _signature_insight is None:
             import threading as _bft
             _bft_thread = _bft.Thread(
                 target=_generate_haiku_sherpa,
@@ -33152,11 +33157,22 @@ def try_welcome():
         if _dv_rows:
             _score_history = [float(r[0]) for r in _dv_rows]
             _best_score_val = max(_score_history)
-            # Days since last eval
+            # Days since last eval — handle datetime, date, and string types
             _last_scored = _dv_rows[-1][2]
             if _last_scored:
-                _delta = _dvd.today() - _last_scored.date() if hasattr(_last_scored, 'date') else None
-                _days_since = _delta.days if _delta else None
+                try:
+                    from datetime import datetime as _dtt, date as _dtd
+                    if isinstance(_last_scored, _dtt):
+                        _last_date = _last_scored.date()
+                    elif isinstance(_last_scored, _dtd):
+                        _last_date = _last_scored
+                    else:
+                        # String fallback — try parsing
+                        _last_date = _dtt.strptime(str(_last_scored)[:10], '%Y-%m-%d').date()
+                    _days_since = (_dvd.today() - _last_date).days
+                except Exception as _dse:
+                    app.logger.warning(f'[try_welcome] days_since parse failed: {_dse}')
+                    _days_since = None
 
             # Dimension averages from dim score columns + audit_json fallback
             _dod_l, _vd_l, _dm_l, _wf_l, _aq_l = [], [], [], [], []
