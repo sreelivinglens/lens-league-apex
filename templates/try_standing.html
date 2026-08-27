@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.1-staging (Session 201) — try_standing: full Sonnet scorecard depth for Haiku users. All sections: verdict, what_it_means bullets, takeaway, what_sl_saw, next_shot, edit_suggestions, real dimension trend sparklines. No owner actions. #}
+{# SL-VERSION: 1.3-staging (Session 201) — bullet splitting fixed (▪ and ■), edit suggestions split per bullet, paragraph spacing, next_shot title extracted, trend query uses COALESCE(scored_at,created_at). #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,19 +21,19 @@ h1, h2, h3 { text-shadow: none; }
 /* ── TOP BAR ── */
 .sl-topbar {
   display:flex; justify-content:space-between; align-items:center;
-  padding:18px 48px; background:#F5F3EF;
-  border-bottom:0.5px solid rgba(26,39,68,0.10);
+  padding:18px 48px; background:#1A2744;
+  border-bottom:0.5px solid rgba(255,255,255,0.08);
   position:sticky; top:0; z-index:100;
 }
 .sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
-.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
-.sl-brand-sub { font-size:13px; letter-spacing:0.10em; color:rgba(26,39,68,0.52); text-transform:uppercase; }
+.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#fff; text-transform:uppercase; }
+.sl-brand-sub { font-size:13px; letter-spacing:0.10em; color:rgba(255,255,255,0.45); text-transform:uppercase; }
 .sl-nav { display:flex; gap:32px; }
-.sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; }
-.sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+.sl-nav a { font-size:13px; color:rgba(255,255,255,0.55); text-decoration:none; letter-spacing:0.03em; }
+.sl-nav a.active { color:#F4C20D; font-weight:500; border-bottom:1.5px solid #F4C20D; padding-bottom:2px; }
 .sl-nav-logout { background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; }
-.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(26,39,68,0.38); fill:none; stroke-width:1.5; stroke-linecap:round; }
-.sl-nav-logout:hover svg { stroke:#1A2744; }
+.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(255,255,255,0.45); fill:none; stroke-width:1.5; stroke-linecap:round; }
+.sl-nav-logout:hover svg { stroke:#fff; }
 
 /* ── WRAP ── */
 .sl-page { background:#F5F3EF; }
@@ -148,6 +148,7 @@ h1, h2, h3 { text-shadow: none; }
 .sl-wtm-item { padding:14px 0 14px 18px; border-bottom:0.5px solid rgba(26,39,68,0.07); position:relative; }
 .sl-wtm-item::before { content:'▪'; position:absolute; left:0; top:16px; color:rgba(200,168,75,0.60); font-size:13px; }
 .sl-wtm-item:last-child { border-bottom:none; }
+.sl-wtm-item + .sl-wtm-item { margin-top:2px; }
 
 /* TAKE-AWAY */
 .sl-takeaway { background:#EDE9E1; border-radius:3px; padding:22px 26px; border-left:3px solid #C8A84B; }
@@ -223,7 +224,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
 }
 @media (max-width: 899px) {
   .sl-wrap { padding:0 24px 80px; }
-  .sl-topbar { padding:14px 24px; }
+  .sl-topbar { padding:14px 24px; background:#1A2744; }
   .sl-nav { display:none; }
   .sl-dims { grid-template-columns:repeat(3,1fr); }
   .sl-glance { grid-template-columns:repeat(3,1fr); }
@@ -435,7 +436,6 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
       <div class="sl-ns-label">Your next shot — bookmarked</div>
       <div class="sl-ns-title">{{ next_shot.title }}</div>
       <div class="sl-body">{{ next_shot.body }}</div>
-      <button class="sl-go-shoot" type="button">Go shoot →</button>
     </div>
   </div>
   {% endif %}
@@ -452,7 +452,12 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
       <div class="sl-edit-bullet"><div class="sl-body">{{ bullet }}</div></div>
       {% endfor %}
     {% elif edit.body %}
-      <div class="sl-body">{{ edit.body }}</div>
+      {% for bullet in edit.body.split('▪') %}
+        {% set b = bullet.strip() %}
+        {% if b %}
+        <div class="sl-edit-bullet"><div class="sl-body">{{ b }}</div></div>
+        {% endif %}
+      {% endfor %}
     {% endif %}
   </div>
   {% endfor %}
@@ -558,8 +563,9 @@ function slDrawSpark(id, values) {
   ctx.scale(dpr, dpr);
   var mn = Math.min.apply(null, values) - 0.8;
   var mx = Math.max.apply(null, values) + 0.8;
-  var xs = (W - 20) / (values.length - 1);
+  var xs = (W - 20) / Math.max(values.length - 1, 1);
   var yf = function(v) { return H - 5 - ((v - mn) / (mx - mn)) * (H - 10); };
+  // Draw line
   ctx.beginPath();
   ctx.strokeStyle = '#C8A84B';
   ctx.lineWidth = 1.8;
@@ -569,11 +575,15 @@ function slDrawSpark(id, values) {
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   });
   ctx.stroke();
-  var lx = 10 + (values.length - 1) * xs, ly = yf(values[values.length - 1]);
-  ctx.beginPath();
-  ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
-  ctx.fillStyle = '#C8A84B';
-  ctx.fill();
+  // Draw dot on every point
+  values.forEach(function(v, i) {
+    var x = 10 + i * xs, y = yf(v);
+    var isLast = (i === values.length - 1);
+    ctx.beginPath();
+    ctx.arc(x, y, isLast ? 3.5 : 2, 0, Math.PI * 2);
+    ctx.fillStyle = isLast ? '#C8A84B' : 'rgba(200,168,75,0.45)';
+    ctx.fill();
+  });
 }
 
 window.addEventListener('load', function() {
