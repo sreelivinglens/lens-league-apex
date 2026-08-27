@@ -132,10 +132,10 @@ canvas.spark{flex:1;height:48px;display:block}
 .master-count{font-size:13px;color:rgba(26,39,68,0.52);margin-top:12px;letter-spacing:0.04em}
 
 /* ── GM STANDARD ── */
-.gm-section{background:#0C1018;position:relative;cursor:pointer;overflow:hidden}
+.gm-section{background:#0C1018;position:relative;cursor:pointer;overflow:hidden;display:block;width:100%}
 .gm-img{width:100%;display:block;max-height:300px;object-fit:contain}
 .gm-ph{width:100%;height:220px;display:flex;align-items:center;justify-content:center;font-size:72px}
-.gm-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,14,22,0.92) 0%,rgba(10,14,22,0.30) 60%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:28px 32px;overflow:hidden}
+.gm-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,14,22,0.92) 0%,rgba(10,14,22,0.30) 60%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:28px 32px;box-sizing:border-box}
 .gm-hover-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:#F5F3EF;letter-spacing:0.06em;opacity:0;transition:opacity .2s;background:rgba(26,39,68,0.55);padding:10px 20px;border-radius:2px;white-space:nowrap}
 .gm-section:hover .gm-hover-hint{opacity:1}
 .gm-caption-label{font-size:13px;letter-spacing:0.20em;text-transform:uppercase;color:rgba(245,243,239,0.52);margin-bottom:8px}
@@ -620,7 +620,7 @@ canvas.spark{flex:1;height:48px;display:block}
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>My Evals
     </a>
     <a href="{{ url_for('pricing') }}" class="mob-nav-item">
-      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Pricing
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Pricing
     </a>
     <button class="mob-nav-item" onclick="toggleBottomMoreHaiku(event)" id="sl-mob-more-btn" type="button">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>More
