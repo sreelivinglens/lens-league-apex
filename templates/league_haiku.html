@@ -502,7 +502,7 @@ function render() {
   var html = '<div class="' + gridCls + '">';
   slice.forEach(function(p) {
     html += '<a href="/try/standing/' + p.id + '" class="sl-card">';
-    html += '<img src="' + p.thumb_url + '" alt="' + p.photographer + '" class="sl-card-thumb" onerror="this.style.display='none'">';
+    html += '<img src="' + p.thumb_url + '" alt="' + p.photographer + '" class="sl-card-thumb" onerror="this.style.display=\u0027none\u0027">';
     html += '<div class="sl-card-meta">';
     html += '<div class="sl-card-name">' + p.photographer + '</div>';
     html += '<div class="sl-card-genre">' + p.genre + (p.camera ? ' \u00b7 ' + p.camera : '') + '</div>';
