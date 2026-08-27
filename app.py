@@ -32695,8 +32695,8 @@ def league_haiku():
         _spotlight = None
 
     return render_template('league_haiku.html',
-        league=_league,
-        masters=_masters,
+        league_photographers=_league,
+        masters_photographers=_masters,
         spotlight=_spotlight,
         current_user=current_user,
     )
