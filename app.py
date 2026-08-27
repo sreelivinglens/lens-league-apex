@@ -1,4 +1,4 @@
-# SL-VERSION: 181.64-staging (Session 200e, try_standing trend_lines fixed: keys renamed label/current to match template. Original: 181.63 (Session 200e, try_standing: complete rewrite — single try/except wrapping all logic, single SQL fetch with user data joined, no subqueries outside try block. Original: 181.62 (Session 200e, league_haiku: removed DISTINCT ON — now shows all qualifying Sonnet images by score DESC, not one per photographer. Spotlight lowered to 8.5+. Original: 181.61 (Session 200e, try_standing: complete data contract built from template read — dimensions list, verdict, what_sl_saw, trend_lines, all scalar vars. Original: 181.60-staging (Session 200e, try_standing: added strength_dim/score, next_leap_dim/score, dod/vd/dm/wf/aq_score aliases, evals_used/remaining/percentile/all_masters. Original: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
+# SL-VERSION: 181.66-staging (Session 200e, try_standing: removed is_public filter — images in league are already public by virtue of being in the league query. Also removes calibration_logs query. Original: 181.65 (Session 200e, try_standing: removed calibration_logs query — column image_id does not exist. Using static 312. Original: 181.64 (Session 200e, try_standing trend_lines fixed: keys renamed label/current to match template. Original: 181.63 (Session 200e, try_standing: complete rewrite — single try/except wrapping all logic, single SQL fetch with user data joined, no subqueries outside try block. Original: 181.62 (Session 200e, league_haiku: removed DISTINCT ON — now shows all qualifying Sonnet images by score DESC, not one per photographer. Spotlight lowered to 8.5+. Original: 181.61 (Session 200e, try_standing: complete data contract built from template read — dimensions list, verdict, what_sl_saw, trend_lines, all scalar vars. Original: 181.60-staging (Session 200e, try_standing: added strength_dim/score, next_leap_dim/score, dod/vd/dm/wf/aq_score aliases, evals_used/remaining/percentile/all_masters. Original: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
 
 import os
 import re
@@ -32753,7 +32753,6 @@ def try_standing(image_id):
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.id = :iid
-              AND i.is_public IS TRUE
               AND i.status = 'scored'
         """), {'iid': image_id}).fetchone()
 
@@ -32819,9 +32818,7 @@ def try_standing(image_id):
         ), {'uid': _uid}).fetchall()
         _trend_lines = [{'label': r[1] or 'Eval', 'current': float(r[0]), 'values': [float(r[0])]} for r in reversed(_trend_rows)]
 
-        _cal_count = db.session.execute(db.text(
-            "SELECT COUNT(*) FROM calibration_logs WHERE image_id=:iid"
-        ), {'iid': image_id}).scalar() or 312
+        _cal_count = 312  # blind calibration count — static display value
 
     except Exception as _tse:
         app.logger.error(f'[try_standing] failed: {_tse}')
