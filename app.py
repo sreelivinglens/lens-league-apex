@@ -32842,61 +32842,56 @@ def try_standing(image_id):
         # Verdict box — impression is the opening evaluation paragraph
         _verdict = _impression
 
-        # "What this evaluation means" — pull narrative block and split into bullets
-        # Sonnet scoring joins bullets with ' ■ ' or ' ▪ ' separator
-        _wtm_raw = (
-            (_audit.get('byline_2_body',      '') or '')
-            or (_audit.get('byline_2',         '') or '')
-            or (_audit.get('background_check', '') or (_audit.get('byline_1', '') or ''))
-        ).strip()
+        import re as _re
 
         def _split_bullets(text):
             """Split on ■ or ▪ separator (with or without surrounding spaces)."""
             if not text:
                 return []
-            import re as _re
-            # Split on either ■ or ▪ optionally surrounded by spaces
             parts = _re.split(r'\s*[■▪]\s*', text)
             return [p.strip() for p in parts if p.strip()]
 
-        _what_it_means = _split_bullets(_wtm_raw)
+        def _strip_md(text):
+            """Strip basic markdown — **bold** → plain text."""
+            if not text:
+                return text
+            return _re.sub(r'\*\*(.+?)\*\*', r'\1', text)
 
-        # Fallback to rows schema for older images
-        if not _what_it_means:
-            _rows_audit = _audit.get('rows') or []
-            for _r in _rows_audit:
-                if _r and len(_r) >= 2 and _r[1]:
-                    _what_it_means.append(_r[1].strip())
+        # ── "What this evaluation means" ─────────────────────────────────────
+        # = background_check / byline_1 (the "why this image matters" analysis)
+        # + byline_2_body as additional bullets (secondary narrative)
+        _bgcheck  = (_audit.get('background_check', '') or (_audit.get('byline_1', '') or '')).strip()
+        _byline2  = (_audit.get('byline_2_body',    '') or (_audit.get('byline_2',  '') or '')).strip()
+        _what_it_means = []
+        for _raw in [_bgcheck, _byline2]:
+            _what_it_means.extend([_strip_md(b) for b in _split_bullets(_raw)])
 
-        # "Your one take-away" — transferable_advice is the Sonnet field
-        _one_takeaway = (
-            (_audit.get('transferable_advice', '') or '')
-            or (_audit.get('one_takeaway',      '') or '')
-            or (_audit.get('sherpa_takeaway',    '') or '')
-            or (_audit.get('what_next',          '') or '')
-        ).strip()
-        _takeaway_items = _split_bullets(_one_takeaway) if _one_takeaway else []
+        # ── "Your one take-away" ──────────────────────────────────────────────
+        # = transferable_advice (c1 — the actionable photographer's advice)
+        _transferable = (_audit.get('transferable_advice', '') or '').strip()
+        _takeaway_items = [_strip_md(b) for b in _split_bullets(_transferable)]
 
-        # "What SL saw" — what_stood_out + strength_obs + next_leap_obs
+        # ── "What SL saw in your photograph" ─────────────────────────────────
         _wso = ((_audit.get('what_stood_out', '') or '') or (_audit.get('hard_truth', '') or '')).strip()
         _what_sl_saw = []
-        if _wso:           _what_sl_saw.append({'head': 'What stood out', 'body': _wso})
-        if _strength_obs:  _what_sl_saw.append({'head': '',               'body': _strength_obs})
-        if _next_leap_obs: _what_sl_saw.append({'head': '',               'body': _next_leap_obs})
+        if _wso:           _what_sl_saw.append({'head': 'What stood out', 'body': _strip_md(_wso)})
+        if _strength_obs:  _what_sl_saw.append({'head': '',               'body': _strip_md(_strength_obs)})
+        if _next_leap_obs: _what_sl_saw.append({'head': '',               'body': _strip_md(_next_leap_obs)})
 
-        # "Your next shot — bookmarked"
-        # mentor_location_1 is the full body text — extract first sentence as title
+        # ── "Your next shot — bookmarked" ─────────────────────────────────────
+        # mentor_location_1 is the full body. Extract location name as title
+        # (first phrase before " — " or " is nearby" or first 50 chars)
         _ml1_full = (_audit.get('mentor_location_1', '') or '').strip()
         _next_shot = None
         if _ml1_full:
-            from types import SimpleNamespace as _TSSN
-            # First sentence (up to first period + space, or first comma) = title
-            import re as _re2
-            _title_match = _re2.match(r'^([^.]{10,80}(?:\.|,))\s', _ml1_full)
-            _ml1_title = _title_match.group(1).rstrip('.,').strip() if _title_match else _ml1_full[:60].strip()
+            # Try "Location Name is nearby" or "Location Name — description"
+            _loc_match = _re.match(r'^([A-Z][^—\n]{5,60?}?)(?:\s+is\s+nearby|\s+—)', _ml1_full)
+            if _loc_match:
+                _ml1_title = _loc_match.group(1).strip()
+            else:
+                # Fall back: first clause before first comma, max 60 chars
+                _ml1_title = _ml1_full.split(',')[0].strip()[:60]
             _next_shot = _TSSN(title=_ml1_title, body=_ml1_full)
-        else:
-            from types import SimpleNamespace as _TSSN
 
         # Edit suggestions
         _edit_base     = (_audit.get('edit_base',     '') or (_audit.get('edit_balanced', '') or '')).strip()
