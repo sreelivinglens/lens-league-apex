@@ -32842,26 +32842,26 @@ def try_standing(image_id):
         # Verdict box — impression is the opening evaluation paragraph
         _verdict = _impression
 
-        # "What this evaluation means" — pull the main narrative block and split into bullets
-        # Sonnet scoring writes long text with ■ as bullet separator
-        # The primary field is byline_2_body (the deep "what this means" narrative)
-        # Fall back to background_check, then rows for older images
+        # "What this evaluation means" — pull narrative block and split into bullets
+        # Sonnet scoring joins bullets with ' ■ ' or ' ▪ ' separator
         _wtm_raw = (
-            (_audit.get('byline_2_body',       '') or '')
-            or (_audit.get('byline_2',          '') or '')
-            or (_audit.get('background_check',  '') or (_audit.get('byline_1', '') or ''))
+            (_audit.get('byline_2_body',      '') or '')
+            or (_audit.get('byline_2',         '') or '')
+            or (_audit.get('background_check', '') or (_audit.get('byline_1', '') or ''))
         ).strip()
 
         def _split_bullets(text):
-            """Split on ■ separator, clean leading/trailing markers."""
+            """Split on ■ or ▪ separator (with or without surrounding spaces)."""
             if not text:
                 return []
-            parts = [p.strip().lstrip('■▪ ').strip() for p in text.split('■') if p.strip()]
-            return [p for p in parts if p]
+            import re as _re
+            # Split on either ■ or ▪ optionally surrounded by spaces
+            parts = _re.split(r'\s*[■▪]\s*', text)
+            return [p.strip() for p in parts if p.strip()]
 
         _what_it_means = _split_bullets(_wtm_raw)
 
-        # If byline fields empty, fall back to rows (older audit schema)
+        # Fallback to rows schema for older images
         if not _what_it_means:
             _rows_audit = _audit.get('rows') or []
             for _r in _rows_audit:
@@ -32869,31 +32869,34 @@ def try_standing(image_id):
                     _what_it_means.append(_r[1].strip())
 
         # "Your one take-away" — transferable_advice is the Sonnet field
-        # one_takeaway/sherpa_takeaway are old schema names never written by Sonnet scoring
         _one_takeaway = (
             (_audit.get('transferable_advice', '') or '')
-            or (_audit.get('one_takeaway',       '') or '')
-            or (_audit.get('sherpa_takeaway',     '') or '')
-            or (_audit.get('what_next',           '') or '')
+            or (_audit.get('one_takeaway',      '') or '')
+            or (_audit.get('sherpa_takeaway',    '') or '')
+            or (_audit.get('what_next',          '') or '')
         ).strip()
-        # Split on ■ separator if present (Sonnet audit trims to 2 bullets with ■ join)
-        if _one_takeaway and ' ■ ' in _one_takeaway:
-            _takeaway_items = [b.strip() for b in _one_takeaway.split(' ■ ') if b.strip()]
-        else:
-            _takeaway_items = [_one_takeaway] if _one_takeaway else []
+        _takeaway_items = _split_bullets(_one_takeaway) if _one_takeaway else []
 
         # "What SL saw" — what_stood_out + strength_obs + next_leap_obs
         _wso = ((_audit.get('what_stood_out', '') or '') or (_audit.get('hard_truth', '') or '')).strip()
         _what_sl_saw = []
-        if _wso:          _what_sl_saw.append({'head': 'What stood out', 'body': _wso})
-        if _strength_obs: _what_sl_saw.append({'head': '',               'body': _strength_obs})
-        if _next_leap_obs:_what_sl_saw.append({'head': '',               'body': _next_leap_obs})
+        if _wso:           _what_sl_saw.append({'head': 'What stood out', 'body': _wso})
+        if _strength_obs:  _what_sl_saw.append({'head': '',               'body': _strength_obs})
+        if _next_leap_obs: _what_sl_saw.append({'head': '',               'body': _next_leap_obs})
 
         # "Your next shot — bookmarked"
-        _ml1 = (_audit.get('mentor_location_1', '') or '').strip()
-        _ml1_body = (_audit.get('mentor_location_1_body', '') or _ml1).strip()
-        from types import SimpleNamespace as _TSSN
-        _next_shot = _TSSN(title=_ml1, body=_ml1_body) if _ml1 else None
+        # mentor_location_1 is the full body text — extract first sentence as title
+        _ml1_full = (_audit.get('mentor_location_1', '') or '').strip()
+        _next_shot = None
+        if _ml1_full:
+            from types import SimpleNamespace as _TSSN
+            # First sentence (up to first period + space, or first comma) = title
+            import re as _re2
+            _title_match = _re2.match(r'^([^.]{10,80}(?:\.|,))\s', _ml1_full)
+            _ml1_title = _title_match.group(1).rstrip('.,').strip() if _title_match else _ml1_full[:60].strip()
+            _next_shot = _TSSN(title=_ml1_title, body=_ml1_full)
+        else:
+            from types import SimpleNamespace as _TSSN
 
         # Edit suggestions
         _edit_base     = (_audit.get('edit_base',     '') or (_audit.get('edit_balanced', '') or '')).strip()
@@ -32904,14 +32907,16 @@ def try_standing(image_id):
         if _edit_creative:
             _edit_suggestions.append({'type': 'Artistic · Heavy editing', 'headline': '', 'body': _edit_creative, 'bullets': []})
 
-        # ── Trend lines — dimension sparklines (mirrors image_detail logic) ──
+        # ── Trend lines — dimension sparklines ───────────────────────────────
+        # Order by scored_at DESC, fall back to id DESC for rows where scored_at is NULL
         _trend_rows = db.session.execute(db.text(
             "SELECT aq_score, dm_score, dod_score FROM images"
             " WHERE user_id=:uid AND status='scored'"
             " AND (is_haiku_try IS NOT TRUE)"
-            " ORDER BY scored_at DESC LIMIT 30"
+            " ORDER BY COALESCE(scored_at, created_at) DESC LIMIT 30"
         ), {'uid': _uid}).fetchall()
 
+        _trend_image_count = len(_trend_rows)  # capture before reversing
         _trend_lines = []
         if _trend_rows and len(_trend_rows) >= 2:
             _trend_rows = list(reversed(_trend_rows))  # oldest first
@@ -32992,7 +32997,7 @@ def try_standing(image_id):
         eval_date=_eval_date,
         eval_count=_eval_count,
         trend_lines=_trend_lines,
-        trend_count=len(_trend_rows) if _trend_rows else 0,
+        trend_count=_trend_image_count,
         image_id=image_id,
         current_user=current_user,
     )
