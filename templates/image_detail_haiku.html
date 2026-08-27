@@ -429,9 +429,11 @@ main { padding:0 !important; background:#E8E5DF; }
       <a href="{{ url_for('try_page') }}" class="sl-conv-primary">Continue my record →</a>
       <form method="POST" action="{{ url_for('delete_image', image_id=image_id) }}"
             onsubmit="return confirm('Delete this evaluation? This cannot be undone. Your slot count will not be restored.')"
-            style="display:inline;margin-top:12px;">
-        <button type="submit" class="sl-conv-secondary"
-                style="background:none;border:none;cursor:pointer;font-family:inherit;padding:8px 0;text-align:left;min-height:44px;display:block;">
+            style="display:block;margin-top:20px;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.08);">
+        <button type="submit"
+                style="background:none;border:1px solid rgba(255,255,255,0.20);border-radius:3px;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.45);padding:10px 20px;min-height:44px;display:inline-block;transition:border-color .15s,color .15s;"
+                onmouseover="this.style.borderColor='rgba(255,255,255,0.50)';this.style.color='rgba(255,255,255,0.70)'"
+                onmouseout="this.style.borderColor='rgba(255,255,255,0.20)';this.style.color='rgba(255,255,255,0.45)'">
           Delete this evaluation
         </button>
       </form>
