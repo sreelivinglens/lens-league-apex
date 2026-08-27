@@ -1,18 +1,4 @@
-{#
-  SL-VERSION: profile-181.5-staging
-  Session 199 · 2026-08-26
-  LAYOUT FIX: (1) Added 900px breakpoint — sidebar collapses to horizontal strip, content goes full width. Eliminates narrow columns and text truncation on iPad and small desktop. (2) Mobile acc-section overflow:hidden → overflow:visible — was clipping card content. (3) Mobile acc-wrap padding 56px top → 24px. (4) Two-column card grid collapses at 600px not 768px. (5) acc-detail-body word-break:break-word. (6) acc-email font-size 13px → 14px on mobile. RETAINS profile-181.4.
-
-  DELIVERY AUDIT
-  ──────────────────────────────────────────────────────
-  Audit   : Extends base.html ✅ · @login_required ✅ · Sidenav anchor-only (no paid-only page links) ✅ · Subscription panel correctly gated ✅
-  KYC     : Footer KYC inherited from base.html ✅ · Refund policy mentioned in cancel confirmation ✅
-  Mobile  : Inherits base.html bottom nav (now subscription-aware) ✅ · acc-nav-border hidden on mobile ✅ · 44px tap targets ✅
-  iPad    : acc-sidebar horizontal strip at ≤900px ✅ · Two-col cards → single col at 600px ✅
-  70yr    : Page header clamp(24px,4vw,32px) ✅ · Section titles 16px+ ✅ · Form inputs 16px ✅ · acc-logout-btn 15px acceptable (button label) ✅
-  Version : profile-181.5-staging — matches filename
-  ──────────────────────────────────────────────────────
-#}
+{# SL-VERSION: profile-181.71-staging (Session 200e, 2026-08-27 — grid layout restored, bottom logout removed, email prefs full-width, evals count fixed.) #}
 {% extends "base.html" %}
 {# SL:version S168-r4 profile — city_other free-text input: Other city → type sanctuary/town (Nalsarovar, Rann of Kutch etc) 2026-07-31 #}
 {% block title %}My Account — Shutter League{% endblock %}
