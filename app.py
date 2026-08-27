@@ -1,4 +1,4 @@
-# SL-VERSION: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
+# SL-VERSION: 181.59-staging (Session 200e, try_standing render_template reapplied with all individual variables — score, tier, photographer_name etc. Was lost in rebuild. Original: 181.58-staging (Session 200e, league_haiku queries fixed: was pulling Haiku images, now pulls Sonnet paid images scoring 8.0+/6.0-7.9/9.0+. Original: 181.57-staging (Session 200e, try_standing now accepts Haiku AND Sonnet public images — removed is_haiku_try IS FALSE filter. Original: 181.56-staging (Session 200e, 2026-08-27 — (1) try_standing: all variables passed individually to match template (score, tier, photographer_name etc — was causing 500). (2) league_haiku: DISTINCT ON per photographer, _to_json robust casting, league_photographers_json/masters_photographers_json, spotlight.aha_line. (3) league_hero.id added to try_welcome SELECT. (4) backfill app.app_context fix. (5) max_tokens 1200, JSON truncation guard. RETAINS 181.55.)
 
 import os
 import re
@@ -32795,6 +32795,27 @@ def try_standing(image_id):
 
     return render_template('try_standing.html',
         image=_image,
+        image_id=_image.id,
+        score=_image.score,
+        tier=_image.tier,
+        genre=_image.genre,
+        thumb_url=_image.thumb_url,
+        asset_name=_image.asset_name,
+        photographer_name=_image.photographer,
+        dod=_image.dod,
+        vd=_image.vd,
+        dm=_image.dm,
+        wf=_image.wf,
+        aq=_image.aq,
+        impression=_image.impression,
+        strength_name=_image.strength_name,
+        strength_obs=_image.strength_obs,
+        next_leap_name=_image.next_leap_name,
+        next_leap_obs=_image.next_leap_obs,
+        what_next=_image.what_next,
+        takeaway=_image.takeaway,
+        master_name=_image.master_name,
+        master_why=_image.master_why,
         current_user=current_user,
     )
 
