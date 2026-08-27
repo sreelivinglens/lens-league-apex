@@ -32694,9 +32694,28 @@ def league_haiku():
         _league = _masters = []
         _spotlight = None
 
+    # Build JSON for JS tabs — template reads from script tags
+    import json as _lhjson
+    def _to_json(items):
+        return _lhjson.dumps([{
+            'id': p.id,
+            'thumb_url': p.thumb_url,
+            'photographer': p.photographer,
+            'score': p.score,
+            'tier': p.tier,
+            'genre': p.genre,
+            'impression': getattr(p, 'impression', ''),
+        } for p in items])
+
+    # Add aha_line to spotlight from impression field
+    if _spotlight:
+        _spotlight.aha_line = getattr(_spotlight, 'impression', '')[:120] if getattr(_spotlight, 'impression', '') else ''
+
     return render_template('league_haiku.html',
         league_photographers=_league,
         masters_photographers=_masters,
+        league_photographers_json=_to_json(_league),
+        masters_photographers_json=_to_json(_masters),
         spotlight=_spotlight,
         current_user=current_user,
     )
