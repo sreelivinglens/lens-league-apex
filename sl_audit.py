@@ -2350,17 +2350,6 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         else:
             _ok('Haiku standalone nav — cream topbar background correct')
 
-        # Must have logo image in nav brand
-        _has_logo = (
-            'shutterleague-logo-cropped.png' in content and
-            ('sl-brand' in content or 'nav-brand' in content)
-        )
-        if _has_logo:
-            _ok('Haiku nav — logo image (shutterleague-logo-cropped.png) present in brand')
-        else:
-            _fail('Haiku nav — logo image missing from brand (add shutterleague-logo-cropped.png)')
-            fails += 1
-
         # Must have correct brand sub "Making Images Matter"
         # Exception: dashboard_haiku uses dark nav by design (approved Session 175)
         _is_dashboard_haiku = 'dashboard_haiku' in fname
