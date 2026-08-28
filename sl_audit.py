@@ -14,13 +14,22 @@ Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
 Session 168 (31 Jul 2026): Added check 0b — Jinja {{ }} inside <script> blocks.
-Session 201 (28 Aug 2026): Added Haiku nav consistency check — standalone pages
-  (try_standing, pricing_haiku, league_haiku, dashboard_haiku) checked for:
-  cream topbar, "Making Images Matter" brand sub, correct route items
-  (try_welcome/try_page/league_haiku), mobile bottom nav presence and items,
-  active colour #C8A84B not #F4C20D. Pages extending base.html flagged as
-  known gap (Session 202 cleanup). All Haiku page types added to
-  _is_detail_page and _is_mobile_app_page exemption lists.
+Session 201 (28 Aug 2026):
+  NAV CONSISTENCY — Haiku standalone pages checked for:
+    · Cream topbar background (not dark navy #1A2744)
+    · Logo image (shutterleague-logo-cropped.png) in brand
+    · "Making Images Matter" brand sub (not "Photography Institution")
+    · Correct Haiku route items (try_welcome/try_page/league_haiku)
+    · Mobile bottom nav present with Dashboard/Evaluate/League items
+    · Active colour #C8A84B not #F4C20D
+  META/OG — Smart noindex + canonical rules per page type:
+    · Public pages (league_haiku, pricing_haiku): noindex must be ABSENT
+    · Private pages (try_standing, dashboard_haiku, try_gallery, image_detail_haiku): noindex required
+    · Standalone pages (not extending base.html): canonical required
+  EXEMPTIONS — Added to _is_detail_page and _is_mobile_app_page:
+    · try_standing.html, pricing_haiku.html, league_haiku.html
+    · try_gallery, image_detail_haiku, upload-staging
+  LEGAL — Added terms-prod to _is_legal_doc exemption list
   Any {{ expr }} inside a <script> tag is a FAIL. Dynamic values must be passed
   via data- attributes on HTML elements and read in JS via el.dataset.myval.
   Introduced after dashboard.html and rate.html caused "Unexpected token '{'" errors.
@@ -327,7 +336,7 @@ def _banner():
     print()
     print('=' * 60)
     print('  SHUTTER LEAGUE — PRE-DEPLOY AUDIT')
-    print('  sl_audit.py  .  Unified  .  June 2026')
+    print('  sl_audit.py  .  Unified  .  Session 201  .  Aug 2026')
     print('  Rule 9: No push without explicit founder approval')
     print('=' * 60)
 
@@ -547,7 +556,7 @@ def audit_html(filepath):
         'faq.html', 'pricing.html', 'programmes.html', 'redeem.html', 'aea.html', 'aea_standings.html',
         'challenge.html',
         'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
-        'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
+        'contest_rules.html', 'terms.html', 'terms-prod.html', 'privacy.html', 'refund.html',
         'cancel_subscription.html', 'challenge_submit.html', 'change_password.html',
         'calibration_notes.html', 'example-score.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
@@ -612,7 +621,7 @@ def audit_html(filepath):
     # Legal document pages: deadline/submission/entry/genre are approved legal terms
     # confirmed Session 142 handoff.
     _is_legal_doc = any(x in fname for x in [
-        'contest_rules', 'terms.html', 'privacy.html', 'refund'
+        'contest_rules', 'terms.html', 'terms-prod', 'privacy.html', 'refund'
     ])
     # Snippet/render-only files — never served standalone as a browser page.
     # Meta tags and CSI checks are not applicable. Session 143.
