@@ -251,6 +251,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     </div>
   </a>
   <nav class="sl-nav">
+    {% if current_user.is_authenticated %}
     <a href="{{ url_for('try_welcome') }}">Home</a>
     <a href="{{ url_for('try_gallery') }}">My Evaluations</a>
     <a href="{{ url_for('try_page') }}">Upload</a>
@@ -260,6 +261,15 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </a>
+    {% else %}
+    <a href="{{ url_for('how_it_works') }}">How it works</a>
+    <a href="{{ url_for('science') }}">Science</a>
+    <a href="{{ url_for('programmes') }}">Programmes</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('login') }}">Login</a>
+    <a href="{{ url_for('register') }}" style="background:#1A2744;color:#fff;padding:8px 18px;border-radius:4px;font-weight:600;font-size:13px;">Register</a>
+    {% endif %}
   </nav>
 </div>
 
@@ -399,35 +409,63 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 <!-- MOBILE BOTTOM NAV -->
 <nav class="sl-mob-nav">
   <div class="sl-mob-nav-items">
+    {% if current_user.is_authenticated %}
     <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </a>
     <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>
       Upload
     </a>
-    <a href="{{ url_for('try_gallery') }}" class="sl-mob-nav-item">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      My Evals
-    </a>
     <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item">
-      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
       Pricing
     </a>
-    <button class="sl-mob-nav-item active" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
+    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      League
+    </a>
+    <button class="sl-mob-nav-item" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
       More
     </button>
+    {% else %}
+    <a href="{{ url_for('index') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Pricing
+    </a>
+    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      League
+    </a>
+    <a href="{{ url_for('login') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Login
+    </a>
+    <a href="{{ url_for('register') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Register
+    </a>
+    {% endif %}
   </div>
 </nav>
 
 <!-- MORE DRAWER -->
 <div class="sl-mob-more-drawer" id="sl-mob-more-drawer">
-  <a href="{{ url_for('league_haiku') }}" class="sl-mob-drawer-item">League</a>
+  {% if current_user.is_authenticated %}
+  <a href="{{ url_for('try_gallery') }}" class="sl-mob-drawer-item">My Evaluations</a>
   <a href="{{ url_for('profile') }}" class="sl-mob-drawer-item">Profile</a>
-  <a href="#" class="sl-mob-drawer-item">Help</a>
   <a href="{{ url_for('logout') }}" class="sl-mob-drawer-item">Log out</a>
+  {% else %}
+  <a href="{{ url_for('how_it_works') }}" class="sl-mob-drawer-item">How it works</a>
+  <a href="{{ url_for('science') }}" class="sl-mob-drawer-item">Science</a>
+  <a href="{{ url_for('programmes') }}" class="sl-mob-drawer-item">Programmes</a>
+  {% endif %}
 </div>
 
 <script type="application/json" id="sl-league-data">{{ league_photographers_json | default('[]') | safe }}</script>
