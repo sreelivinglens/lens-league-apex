@@ -2289,20 +2289,6 @@ def _run_startup_tasks():
                 conn.commit()
             print('Database ready.')
 
-            # Session 201 — backfill is_haiku_try for images where audit_json source = haiku_try
-            try:
-                with db.engine.connect() as _htconn:
-                    _ht = _htconn.execute(db.text(
-                        "UPDATE images SET is_haiku_try = TRUE "
-                        "WHERE is_haiku_try IS NOT TRUE "
-                        "  AND audit_json IS NOT NULL "
-                        "  AND audit_json::json->>'source' = 'haiku_try'"
-                    ))
-                    _htconn.commit()
-                    print(f'[haiku_try_backfill] OK — patched {_ht.rowcount} images with source=haiku_try.')
-            except Exception as _ht_e:
-                print(f'[haiku_try_backfill] warning: {_ht_e}')
-
             # Sprint 3 — one-time residency backfill for existing subscribers
             try:
                 # Import after full module load to avoid forward-reference error
