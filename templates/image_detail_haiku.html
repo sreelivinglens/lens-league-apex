@@ -1,5 +1,5 @@
 {# image_detail_haiku.html — Production Score Card for Haiku free-try evaluations
-   Session 200d: (1) Fixed conversion statement — dynamic based on evals_used. (2) Removed explore secondary CTA. (3) Added delete button. (4) Back link → try_gallery.
+   Session 201 — audit fixes: opacity 0.38/0.30→0.55, line-height 1.3→1.7, canonical+noindex meta, breakpoint spacing. Session 200d: (1) Fixed conversion statement — dynamic based on evals_used. (2) Removed explore secondary CTA. (3) Added delete button. (4) Back link → try_gallery.
    Route: /try/result/<image_id>  →  try_result() in app-staging.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -10,15 +10,19 @@
 
 {% block title %}Evaluation Score Card — Shutter League{% endblock %}
 
+{% block extra_head %}
+<link rel="canonical" href="{{ request.url }}">
+<meta name="robots" content="noindex,nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
 /* SCORECARD — overrides and additions on top of base */
 
 /* Remove default main padding that base adds — all breakpoints */
 main { padding:0 !important; background:#E8E5DF; }
-@media (max-width:900px) { main { padding:0 !important; } }
-@media (max-width:768px) { main { padding:0 !important; } }
-@media (max-width:600px) { main { padding:0 !important; } }
+@media (max-width: 900px) { main { padding:0 !important; } }
+@media (max-width: 768px) { main { padding:0 !important; } }
+@media (max-width: 600px) { main { padding:0 !important; } }
 
 /* PAGE */
 .sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
@@ -38,7 +42,7 @@ main { padding:0 !important; background:#E8E5DF; }
 .sl-topbar-back:hover { color:#C8A84B; }
 .sl-topbar-actions {
   display:flex; gap:28px;
-  font-size:13px; color:rgba(26,39,68,0.38);
+  font-size:13px; color:rgba(26,39,68,0.55);
   letter-spacing:0.06em; text-transform:uppercase;
 }
 .sl-topbar-actions a { color:inherit; text-decoration:none; }
@@ -59,7 +63,7 @@ main { padding:0 !important; background:#E8E5DF; }
   display:flex; justify-content:space-between; align-items:center;
 }
 .sl-photo-meta span {
-  font-size:13px; color:rgba(255,255,255,0.30);
+  font-size:13px; color:rgba(255,255,255,0.55);
   letter-spacing:0.08em; text-transform:uppercase;
 }
 
@@ -74,7 +78,7 @@ main { padding:0 !important; background:#E8E5DF; }
   font-size:104px; font-weight:400; color:#1A2744;
   line-height:1; letter-spacing:-0.04em;
 }
-.sl-score-denom { font-size:26px; color:rgba(26,39,68,0.25); font-weight:300; }
+.sl-score-denom { font-size:26px; color:rgba(26,39,68,0.45); font-weight:300; }
 
 /* Tier + genre — 15px, readable */
 .sl-tier-genre {
@@ -89,7 +93,7 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 .sl-tier-item {
   font-size:15px; letter-spacing:0.04em; text-transform:uppercase;
-  color:rgba(26,39,68,0.26); padding:8px 14px 8px 0; white-space:nowrap;
+  color:rgba(26,39,68,0.45); padding:8px 14px 8px 0; white-space:nowrap;
 }
 .sl-tier-item.active {
   color:#1A2744; font-weight:600;
@@ -108,7 +112,7 @@ main { padding:0 !important; background:#E8E5DF; }
 /* Section eyebrow — 15px */
 .sl-eyebrow {
   font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.36); margin-bottom:28px;
+  color:rgba(26,39,68,0.55); margin-bottom:28px;
 }
 
 /* FIVE DIMENSIONS */
@@ -125,7 +129,7 @@ main { padding:0 !important; background:#E8E5DF; }
   font-size:15px; letter-spacing:0.08em; text-transform:uppercase;
   color:rgba(26,39,68,0.45); font-weight:500;
 }
-.sl-dim-plain { font-size:17px; color:#1A2744; line-height:1.3; }
+.sl-dim-plain { font-size:17px; color:#1A2744; line-height:1.7; }
 .sl-dim-right {
   display:flex; align-items:baseline; gap:16px;
   flex-shrink:0; padding-left:24px;
@@ -140,11 +144,11 @@ main { padding:0 !important; background:#E8E5DF; }
   min-width:86px; text-align:right;
 }
 .sl-dim-tag.strongest { color:#C8A84B; }
-.sl-dim-tag.gap       { color:rgba(26,39,68,0.30); }
+.sl-dim-tag.gap       { color:rgba(26,39,68,0.55); }
 .sl-dim-tag.developing{ color:rgba(26,39,68,0.44); }
 .sl-dim-note {
   margin-top:24px;
-  font-size:15px; color:rgba(26,39,68,0.38);
+  font-size:15px; color:rgba(26,39,68,0.55);
   font-style:italic; line-height:1.7;
 }
 
@@ -163,7 +167,7 @@ main { padding:0 !important; background:#E8E5DF; }
 /* Block labels — 15px */
 .sl-block-label {
   font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.36); margin-bottom:14px;
+  color:rgba(26,39,68,0.55); margin-bottom:14px;
 }
 .sl-block-body { font-size:18px; line-height:1.85; color:#1A2744; }
 
@@ -176,7 +180,7 @@ main { padding:0 !important; background:#E8E5DF; }
 /* Eyebrow — 15px */
 .sl-ref-eyebrow {
   font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.36); margin-bottom:18px;
+  color:rgba(26,39,68,0.55); margin-bottom:18px;
 }
 .sl-ref-name {
   font-family:'Playfair Display',serif;
@@ -197,7 +201,7 @@ main { padding:0 !important; background:#E8E5DF; }
 .sl-conversion { background:#1A2744; padding:56px 48px; }
 .sl-conv-inner { max-width:760px; margin:0 auto; width:100%; }
 .sl-conv-count {
-  font-size:13px; color:rgba(255,255,255,0.32);
+  font-size:13px; color:rgba(255,255,255,0.55);
   letter-spacing:0.08em; text-transform:uppercase; margin-bottom:16px;
 }
 .sl-conv-statement {
@@ -211,17 +215,17 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 .sl-conv-primary:hover { text-decoration:underline; }
 .sl-conv-secondary {
-  font-size:15px; color:rgba(255,255,255,0.28);
+  font-size:15px; color:rgba(255,255,255,0.55);
   line-height:1.5; display:block; text-decoration:none;
 }
 
 /* NULL STATE */
-.sl-null { color:rgba(26,39,68,0.25); font-style:italic; }
+.sl-null { color:rgba(26,39,68,0.45); font-style:italic; }
 
 /* ── RESPONSIVE ───────────────────────────────────────── */
 
 /* iPad portrait — 768px */
-@media (max-width:768px) {
+@media (max-width: 768px) {
   .sl-topbar,
   .sl-photo-meta,
   .sl-conversion { padding-left:28px; padding-right:28px; }
@@ -235,7 +239,7 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 
 /* Mobile — 600px */
-@media (max-width:600px) {
+@media (max-width: 600px) {
   .sl-topbar,
   .sl-photo-meta,
   .sl-conversion { padding-left:20px; padding-right:20px; }
@@ -254,7 +258,7 @@ main { padding:0 !important; background:#E8E5DF; }
 
 {% block content %}
 
-<div style="background:#E8E5DF; min-height:100svh; min-height:100vh;">
+<div style="background:#E8E5DF; min-height: 100dvh; min-height: -webkit-fill-available; min-height: 100vh;">
 <div class="sl-page">
 
   {# ── TOP BAR ── #}
@@ -278,7 +282,7 @@ main { padding:0 !important; background:#E8E5DF; }
       >
     {% else %}
       <div style="width:100%;height:280px;background:#0C1018;display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:13px;color:rgba(255,255,255,0.25);letter-spacing:0.10em;text-transform:uppercase;">Photograph unavailable</span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.45);letter-spacing:0.10em;text-transform:uppercase;">Photograph unavailable</span>
       </div>
     {% endif %}
     <div class="sl-photo-meta">
