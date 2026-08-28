@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.46-staging
+  SL-VERSION: 181.47-staging (Session 201 — audit fixes: line-height 1.4→1.7, text-shadow:none, mobile 13px font fixes. RETAINS 181.46.)
   Session 192 · 2026-08-24
   VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
 
@@ -99,7 +99,7 @@
     .carousel-track   { height: auto; }
     .carousel-slide   { min-height: 88px; height: auto; padding: 12px 20px; }
     .carousel-msg     { font-size: 15px; line-height: 1.6; }
-    .carousel-sub     { font-size: 13px; }
+    .carousel-sub     { font-size: 14px; }
   }
 
   .drop-zone {
@@ -288,11 +288,11 @@
   /* ── Mobile overlay — compress vertical rhythm so Skip button is always visible ── */
   @media (max-height: 750px), (max-width: 430px) {
     #scoringOverlay { padding: 20px 24px 24px; }
-    .overlay-engine-tag { margin-bottom: 20px; font-size: 13px; }
+    .overlay-engine-tag { margin-bottom: 20px; font-size: 14px; }
     .breath-ring-hero { width: 100px; height: 100px; }
     .breath-hero { gap: 10px; margin-bottom: 16px; }
     .breath-word { font-size: 18px; }
-    .breath-counts { font-size: 13px; }
+    .breath-counts { font-size: 14px; }
     .breath-tagline { font-size: 15px; }
     .overlay-copy { margin-bottom: 16px; gap: 4px; }
     .overlay-status { font-size: 15px; }
@@ -472,7 +472,7 @@
   {% if evals_used >= _trial_limit %}
   {# Limit reached — block the upload form entirely #}
   <div style="background:#FEFCF8;border:1px solid #D4A428;border-radius:8px;padding:28px 24px;margin-bottom:24px;">
-    <div style="font-size:19px;font-weight:700;color:#1A1A18;margin-bottom:8px;line-height:1.4;">You've seen what the platform sees. Now build the record.</div>
+    <div style="font-size:19px;font-weight:700;color:#1A1A18;margin-bottom:8px;line-height:1.7;text-shadow:none;">You've seen what the platform sees. Now build the record.</div>
     <div style="font-size:15px;color:#4A4840;line-height:1.7;margin-bottom:20px;">You have used all {{ _trial_limit }} free evaluations. Two ways to continue:</div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
       <div style="background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:16px 18px;">
