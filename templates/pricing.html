@@ -167,35 +167,6 @@
   color: #fff;
 }
 
-/* ── Founding Member ── */
-.pr-founding {
-  max-width: 1080px; margin: 32px auto 0;
-  padding: 0 var(--page-pad);
-}
-.pr-founding-inner {
-  background: var(--navy, #1A2744); color: #fff;
-  border-radius: 12px; padding: 24px 32px;
-  display: flex; align-items: center;
-  justify-content: space-between; gap: 24px;
-}
-.pr-founding-label {
-  font-size: 13px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 8px;
-}
-.pr-founding-h {
-  font-size: 18px; font-weight: 700;
-  color: #fff; margin-bottom: 6px;
-}
-.pr-founding-sub {
-  font-size: 15px; color: rgba(255,255,255,.65);
-  line-height: 1.6;
-}
-.pr-founding-price {
-  font-size: 30px; font-weight: 700;
-  color: var(--gold); white-space: nowrap;
-  flex-shrink: 0; text-align: center; line-height: 1.5;
-}
 
 /* ── International waitlist ── */
 .pr-intl {
@@ -300,9 +271,7 @@
   .pr-plans { grid-template-columns: 1fr; max-width: 480px; }
   .pr-plan-tagline { min-height: unset; }
   .pr-why { grid-template-columns: 1fr; }
-  .pr-founding-inner { flex-direction: column; gap: 12px; }
-  .pr-founding-price { font-size: 24px; }
-}
+    }
 @media (max-width: 600px) {
   .pr-hero h1 { font-size: clamp(24px, 7vw, 32px); }
   .pr-hero-200 { font-size: 16px; }
@@ -347,8 +316,7 @@
       <li>Next Shot advisory after every evaluation</li>
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory — where to shoot next</li>
-      <li>Founding Member price — early access rate</li>
-    </ul>
+          </ul>
     <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
@@ -370,8 +338,7 @@
       <li>Next Shot advisory</li>
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory</li>
-      <li class="dim">Founding Member price — annual only</li>
-    </ul>
+          </ul>
     <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
@@ -407,18 +374,6 @@
       <button onclick="startDirectPayment('mobile')" style="padding:16px;font-size:15px;font-weight:700;background:var(--surface-1);color:var(--text-primary);border:1.5px solid var(--border-strong);border-radius:8px;cursor:pointer;min-height:52px">Mobile League →</button>
     </div>
     <button onclick="document.getElementById('pr-track-modal').style.display='none'" style="width:100%;padding:10px;font-size:14px;color:var(--text-muted);background:none;border:none;cursor:pointer">Cancel</button>
-  </div>
-</div>
-
-{# ── Founding Member ── #}
-<div class="pr-founding">
-  <div class="pr-founding-inner">
-    <div style="flex:1">
-      <div class="pr-founding-label">Founding Member</div>
-      <div class="pr-founding-h">Join before January 2027. Early access rate for as long as you stay subscribed.</div>
-      <p class="pr-founding-sub">Standard pricing increases after January 2027. Founding Members retain early access pricing for as long as their subscription remains active. Shutter League reserves the right to adjust pricing with 30 days notice. The record you build never resets.</p>
-    </div>
-    <div class="pr-founding-price">₹4,000<br><span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.45)">early access</span></div>
   </div>
 </div>
 
@@ -461,8 +416,7 @@
       <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Founding Member early access</td><td class="check">✓ annual only</td><td class="dash">—</td><td class="dash">—</td></tr>
-    </tbody>
+          </tbody>
   </table>
   </div>
 </div>
