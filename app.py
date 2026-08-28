@@ -32745,11 +32745,12 @@ def league_haiku():
 
 
 @app.route('/try/standing/<int:image_id>')
-@login_required
 def try_standing(image_id):
     """
     GET /try/standing/<image_id> — Read-only Sonnet scorecard for Haiku users.
     Session 200: Haiku users can view public Sonnet-scored images.
+    Session 201: Removed @login_required — page shows public data only (is_public=TRUE).
+    Anonymous users can view as sample eval from pricing page.
     Zero new AI cost — all data from stored audit_json.
     Paid users redirect to image_detail.
     """
