@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.1-staging (Session 200) — league_haiku: Haiku world League page. Two-column desktop. Left: declaration / spotlight. Right: league + masters grids. Mobile bottom nav. Standalone. #}
+{# SL-VERSION: 1.2-staging (Session 201 — audit fixes: line-height 1.12/1.15→1.5 on display elements. RETAINS 1.1.) — league_haiku: Haiku world League page. Two-column desktop. Left: declaration / spotlight. Right: league + masters grids. Mobile bottom nav. Standalone. #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +45,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 /* DECLARATION */
 .sl-decl { padding:28px 32px 20px; display:flex; flex-direction:column; height:100%; }
 .sl-decl-eyebrow { font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(26,39,68,0.45); margin-bottom:14px; flex-shrink:0; }
-.sl-decl-headline { font-family:'Playfair Display',serif; font-size:44px; font-weight:400; line-height:1.12; color:#1A2744; flex-shrink:0; }
+.sl-decl-headline { font-family:'Playfair Display',serif; font-size:44px; font-weight:400; line-height:1.5; color:#1A2744; flex-shrink:0; }
 .sl-decl-beats { flex:1; display:flex; flex-direction:column; justify-content:space-evenly; padding:2px 0; min-height:0; }
 .sl-beat-group { display:flex; flex-direction:column; }
 .sl-gold-rule { width:36px; height:1px; background:#C8A84B; margin:0 0 10px; flex-shrink:0; }
@@ -70,7 +70,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-spot-hover { position:absolute; inset:0; background:rgba(26,39,68,0.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; font-size:14px; color:#F5F3EF; letter-spacing:0.03em; }
 .sl-spot-img-wrap:hover .sl-spot-hover { opacity:1; }
 .sl-spot-strip { padding:16px 28px 0; flex-shrink:0; }
-.sl-spot-name { font-family:'Playfair Display',serif; font-size:24px; color:#1A2744; line-height:1.15; }
+.sl-spot-name { font-family:'Playfair Display',serif; font-size:24px; color:#1A2744; line-height:1.5; }
 .sl-spot-meta { display:flex; align-items:baseline; gap:10px; margin-top:6px; }
 .sl-spot-score { font-family:'Playfair Display',serif; font-size:30px; color:#1A2744; line-height:1; }
 .sl-spot-tier { font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:rgba(26,39,68,0.55); }
