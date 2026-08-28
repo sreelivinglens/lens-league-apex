@@ -393,27 +393,6 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 <!-- MOBILE BOTTOM NAV -->
 <nav class="sl-mob-nav">
   <div class="sl-mob-nav-items">
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Home
-    </a>
-    <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>
-      Evaluate
-    </a>
-    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-      League
-    </a>
-    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item active">
-      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-      Pricing
-    </a>
-    <button class="sl-mob-nav-item" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
-      More
-    </button>
     <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Dashboard
