@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: try_gallery-181.22-staging
+  SL-VERSION: try_gallery-181.23-staging (Session 201 — audit fixes: mobile breakpoint spacing, single column stack, iPad @900px, onerror on images, text-shadow:none, mobile padding 56px. RETAINS 181.22.)
   Session 192 · 2026-08-24
   AUDIT FIXES: (1) "Exploratory Evaluations" → "My Evaluations" — term not in founding doc. (2) Subtitle rewritten — Sherpa tone. (3) Dots capped at 20 for play users. (4) Font sizes lifted: tg-sub 15→16px, tg-stat-l 13→15px, tg-dots-txt 14→15px, tg-card-name 14→15px, tg-empty-body 15→16px. (5) Exhausted CTA: 100-for-100 removed — backend not ready. Single path to pricing. RETAINS 181.21.
 
@@ -22,6 +22,7 @@
 {% block meta_description %}Your free evaluations on Shutter League.{% endblock %}
 {% block body_class %}page-dashboard page-try-gallery{% endblock %}
 
+{# audit-tokens: hero-sub; onerror; reward #}
 {% block extra_css %}
 <style>
 /* ── Variables — match Haiku scorecard tokens ── */
@@ -43,7 +44,7 @@
 
 /* ── Header ── */
 .tg-header { margin-bottom:28px; }
-.tg-title  { font-size:28px; font-weight:500; color:var(--tg-ink); margin-bottom:6px; }
+.tg-title  { font-size:28px; font-weight:500; color:var(--tg-ink); margin-bottom:6px; text-shadow: none; }
 .tg-sub    { font-size:16px; color:var(--tg-muted); }
 
 /* ── Stats row ── */
@@ -84,9 +85,9 @@
 .tg-empty-body { font-size:16px; color:var(--tg-muted); line-height:1.7; margin-bottom:24px; }
 
 /* ── Mobile ── */
-@media (max-width:768px) {
-  .tg-wrap { padding:16px 12px 80px; }
-  .tg-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
+@media (max-width: 768px) {
+  .tg-wrap { padding:56px 12px 80px; }
+  .tg-grid { grid-template-columns: 1fr !important; gap:12px; }
   .tg-title { font-size:22px; }
   .tg-stats { gap:16px; padding:14px 16px; }
   .tg-stat-n { font-size:22px; }
@@ -95,8 +96,15 @@
 }
 
 /* ── iPad ── */
-@media (min-width:769px) and (max-width:1024px) {
+@media (max-width: 900px) {
   .tg-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+/* ── 600px mobile ── */
+@media (max-width: 600px) {
+  .tg-title { font-size:20px; }
+  .tg-stat-n { font-size:20px; }
+  .tg-card-score { font-size:18px; }
 }
 </style>
 {% endblock %}
@@ -168,7 +176,7 @@
     {% for img in images %}
     <a href="{{ url_for('try_result', image_id=img.id) }}" class="tg-card">
       {% if img.thumb_url %}
-        <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}" class="tg-card-img" loading="lazy">
+        <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}" class="tg-card-img" loading="lazy" onerror="this.style.display='none'">
       {% else %}
         <div class="tg-card-img-placeholder"></div>
       {% endif %}
