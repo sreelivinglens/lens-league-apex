@@ -29,7 +29,9 @@ Session 201 (28 Aug 2026):
   EXEMPTIONS — Added to _is_detail_page and _is_mobile_app_page:
     · try_standing.html, pricing_haiku.html, league_haiku.html
     · try_gallery, image_detail_haiku, upload-staging
-  LEGAL — Added terms-prod to _is_legal_doc exemption list
+  OG PREFIX — Every standalone page OG description must start with:
+    "Photography Assessment & Evolution Platform. Making Images Matter."
+    followed by page-specific copy. Flagged as FAIL if missing on standalone pages.
   Any {{ expr }} inside a <script> tag is a FAIL. Dynamic values must be passed
   via data- attributes on HTML elements and read in JS via el.dataset.myval.
   Introduced after dashboard.html and rate.html caused "Unexpected token '{'" errors.
@@ -2336,7 +2338,25 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         if meta_fails == 0:
             _ok('All meta tags present and correct')
 
-    # ── Summary ───────────────────────────────────────────────────────────────
+        # ── OG description brand prefix check (Session 201) ───────────────────
+        # Every page OG description must start with the brand signature:
+        # "Photography Assessment & Evolution Platform. Making Images Matter. "
+        # followed by page-specific copy.
+        _OG_PREFIX = 'Photography Assessment & Evolution Platform. Making Images Matter.'
+        _og_desc_match = re.search(r'og:description[^>]*content="([^"]+)"', content)
+        if _og_desc_match:
+            _og_desc_val = _og_desc_match.group(1)
+            if _og_desc_val.startswith(_OG_PREFIX):
+                _ok(f'[meta] OG description starts with brand signature')
+            elif _extends_base:
+                _note(f'[meta] OG description brand prefix — extends base.html, verify block override has prefix')
+            else:
+                _fail(f'[meta] OG description missing brand prefix — must start with: "{_OG_PREFIX}"')
+                fails += 1
+        elif not _extends_base:
+            _note(f'[meta] OG description not found inline — cannot verify brand prefix')
+
+
     _section('DELIVERY STANDARD — CSI note cards (image_detail.html only)')
     if is_snippet_file:
         _note('CSI checks skipped — snippet/render-only file (Session 143)')
