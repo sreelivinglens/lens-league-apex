@@ -2420,7 +2420,19 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     else:
         _note('CSI card checks skipped — not a detail/scorecard page')
 
-    # ── DELIVERY STANDARD — Haiku nav consistency (Session 201) ─────────────
+    # ── Known bad route names (Session 201) ──────────────────────────────────
+    # 'programmes' is not a route — the function is 'contests', URL is /programmes
+    _bad_routes = [
+        ("url_for('programmes')", "url_for('contests')  # /programmes URL is served by contests()"),
+    ]
+    for _bad, _fix in _bad_routes:
+        if _bad in content:
+            _fail(f'Bad route name: {_bad} — use {_fix}')
+            fails += 1
+        else:
+            _ok(f'Route name OK — no {_bad}')
+
+
     # Standalone Haiku pages must use the cream topbar nav matching dashboard_haiku.
     # Pages that extend base.html inherit Sonnet nav — flagged as a known gap.
     _section('DELIVERY STANDARD — Haiku nav consistency (Session 201)')
@@ -2492,8 +2504,37 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         else:
             _note('Haiku nav — route items not verified')
 
-        # Must have mobile bottom nav
-        if 'sl-mob-nav' in content or 'mob-nav' in content:
+        # Nav items must match the standard exactly (Session 201 — dashboard_haiku is source of truth)
+        # Standard: Home · My evaluations · Upload · Pricing · League of Photographers · Profile
+        _required_nav_items = [
+            ("url_for('try_welcome')", 'Home'),
+            ("url_for('try_gallery')", 'My evaluations'),
+            ("url_for('try_page')",    'Upload'),
+            ("url_for('pricing')",     'Pricing'),
+            ("url_for('league_haiku')", 'League of Photographers'),
+            ("url_for('profile')",     'Profile'),
+        ]
+        _nav_failures = []
+        for _route, _label in _required_nav_items:
+            if _route not in content:
+                _nav_failures.append(f'{_label} ({_route})')
+        if _nav_failures:
+            _fail(f'Haiku nav — missing standard items: {", ".join(_nav_failures)}')
+            fails += 1
+        else:
+            _ok('Haiku nav — all standard items present (Home/My evaluations/Upload/Pricing/League of Photographers/Profile)')
+
+        # Logo must be row layout (img left, text right) — not column
+        if 'sl-brand' in content:
+            _brand_css = content[content.find('.sl-brand'):content.find('.sl-brand')+100]
+            if 'flex-direction:column' in _brand_css or 'flex-direction: column' in _brand_css:
+                _fail('Haiku nav — logo brand uses column layout (should be row: img left, text right)')
+                fails += 1
+            else:
+                _ok('Haiku nav — logo brand uses row layout (img left, text right)')
+
+        # Must have mobile bottom nav (sl-mob-nav, mob-nav, or sl-bottom-nav)
+        if 'sl-mob-nav' in content or 'class="mob-nav"' in content or 'sl-bottom-nav' in content:
             _ok('Haiku nav — mobile bottom nav present')
         else:
             _fail('Haiku standalone nav — mobile bottom nav (sl-mob-nav) missing')
