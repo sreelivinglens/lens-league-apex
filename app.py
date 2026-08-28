@@ -3471,6 +3471,7 @@ def index():
             "FROM images "
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
+            "  AND (is_haiku_try IS NOT TRUE) "
             "  AND thumb_url LIKE :r2 "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
@@ -32770,6 +32771,7 @@ def try_standing(image_id):
 
     try:
         # Single query — get everything needed
+        # Only public, scored, non-Haiku images
         _row = db.session.execute(db.text("""
             SELECT i.id, i.score, i.tier, i.genre, i.thumb_url,
                    i.audit_json, i.asset_name,
@@ -32781,10 +32783,12 @@ def try_standing(image_id):
             JOIN users u ON u.id = i.user_id
             WHERE i.id = :iid
               AND i.status = 'scored'
+              AND i.is_public = TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
         """), {'iid': image_id}).fetchone()
 
         if not _row:
-            app.logger.warning(f'[try_standing] image_id={image_id} not found or not scored')
+            app.logger.warning(f'[try_standing] image_id={image_id} not found, not scored, not public, or is haiku trial')
             abort(404)
 
         _audit = _tsj.loads(_row[5] or '{}')
