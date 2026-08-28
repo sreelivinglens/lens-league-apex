@@ -14,6 +14,13 @@ Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
 Session 168 (31 Jul 2026): Added check 0b — Jinja {{ }} inside <script> blocks.
+Session 201 (28 Aug 2026): Added Haiku nav consistency check — standalone pages
+  (try_standing, pricing_haiku, league_haiku, dashboard_haiku) checked for:
+  cream topbar, "Making Images Matter" brand sub, correct route items
+  (try_welcome/try_page/league_haiku), mobile bottom nav presence and items,
+  active colour #C8A84B not #F4C20D. Pages extending base.html flagged as
+  known gap (Session 202 cleanup). All Haiku page types added to
+  _is_detail_page and _is_mobile_app_page exemption lists.
   Any {{ expr }} inside a <script> tag is a FAIL. Dynamic values must be passed
   via data- attributes on HTML elements and read in JS via el.dataset.myval.
   Introduced after dashboard.html and rate.html caused "Unexpected token '{'" errors.
@@ -561,6 +568,12 @@ def audit_html(filepath):
         'admin_registrations.html',
         'journey.html',                  # SL 175: full-page journey view, card layout, no hero
         'dashboard_haiku.html',          # SL 175: free user dashboard, card layout, own nav
+        'try_standing.html',             # SL 200: Haiku standalone scorecard, own nav
+        'pricing_haiku.html',            # SL 201: Haiku standalone pricing, own nav
+        'league_haiku.html',             # SL 200: Haiku standalone league, own nav
+        'try_gallery',                   # SL 181: Haiku gallery, extends base
+        'image_detail_haiku',            # SL 176: Haiku scorecard, extends base
+        'upload-staging',                # Haiku upload page, extends base
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -575,6 +588,12 @@ def audit_html(filepath):
         'my_gallery.html',
         'leaderboard.html',
         'dashboard_haiku.html',          # SL 175: free user card-layout dashboard
+        'try_standing.html',             # SL 200: Haiku standalone scorecard
+        'pricing_haiku.html',            # SL 201: Haiku standalone pricing
+        'league_haiku.html',             # SL 200: Haiku standalone league
+        'try_gallery',                   # SL 181: Haiku gallery
+        'image_detail_haiku',            # SL 176: Haiku scorecard
+        'upload-staging',                # Haiku upload
     ])
     # ── APPROVED FONT SIZE EXCEPTIONS (Session 175, approved by Sree) ──────────
     # dashboard.html body-text: 14px (deliberate 70yr improvement, Session 175)
@@ -2301,7 +2320,114 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     else:
         _note('CSI card checks skipped — not a detail/scorecard page')
 
-    _section('DELIVERY STANDARD — CSI exports in admin.html (admin page only)')
+    # ── DELIVERY STANDARD — Haiku nav consistency (Session 201) ─────────────
+    # Standalone Haiku pages must use the cream topbar nav matching dashboard_haiku.
+    # Pages that extend base.html inherit Sonnet nav — flagged as a known gap.
+    _section('DELIVERY STANDARD — Haiku nav consistency (Session 201)')
+
+    _HAIKU_STANDALONE = any(x in fname for x in [
+        'try_standing', 'pricing_haiku', 'league_haiku', 'dashboard_haiku',
+    ])
+    _HAIKU_BASE_EXTEND = any(x in fname for x in [
+        'try_gallery', 'image_detail_haiku', 'upload-staging', 'try-staging',
+    ])
+
+    if _HAIKU_STANDALONE:
+        # Must NOT have dark navy topbar in the .sl-topbar CSS definition
+        import re as _re_nav
+        _topbar_block = _re_nav.search(r'\.sl-topbar\s*\{([^}]+)\}', content)
+        _nav_block     = _re_nav.search(r'\.nav\s*\{([^}]+)\}', content)
+        _topbar_css = (_topbar_block.group(1) if _topbar_block else '') + (_nav_block.group(1) if _nav_block else '')
+        _is_dashboard_haiku_nav = 'dashboard_haiku' in fname  # approved dark nav
+        _has_dark_topbar = (
+            not _is_dashboard_haiku_nav and
+            _topbar_css and
+            'background:#1A2744' in _topbar_css.replace(' ', '')
+        )
+        if _has_dark_topbar:
+            _fail('Haiku standalone nav — topbar background is dark navy #1A2744 (should be cream #F5F3EF)')
+            fails += 1
+        else:
+            _ok('Haiku standalone nav — cream topbar background correct')
+
+        # Must have logo image in nav brand
+        _has_logo = (
+            'shutterleague-logo-cropped.png' in content and
+            ('sl-brand' in content or 'nav-brand' in content)
+        )
+        if _has_logo:
+            _ok('Haiku nav — logo image (shutterleague-logo-cropped.png) present in brand')
+        else:
+            _fail('Haiku nav — logo image missing from brand (add shutterleague-logo-cropped.png)')
+            fails += 1
+
+        # Must have correct brand sub "Making Images Matter"
+        # Exception: dashboard_haiku uses dark nav by design (approved Session 175)
+        _is_dashboard_haiku = 'dashboard_haiku' in fname
+        if _is_dashboard_haiku:
+            _note('Haiku nav — dashboard_haiku uses dark nav by design (approved Session 175), brand sub exempted')
+        elif 'Making Images Matter' in content:
+            _ok('Haiku nav — brand sub "Making Images Matter" present')
+        elif 'Photography Institution' in content and ('sl-brand-sub' in content or 'nav-brand-sub' in content):
+            _fail('Haiku nav — brand sub shows "Photography Institution" (should be "Making Images Matter")')
+            fails += 1
+        else:
+            _note('Haiku nav — brand sub text not verified')
+
+        # Must have Haiku nav items (Dashboard/Evaluate/League) not Sonnet items
+        _has_sonnet_nav = (
+            "url_for('my_gallery')" in content or
+            "url_for('dashboard')" in content and 'Evaluate' not in content
+        )
+        _has_haiku_nav = (
+            "url_for('try_welcome')" in content or
+            "url_for('try_page')" in content or
+            "url_for('league_haiku')" in content
+        )
+        if _has_sonnet_nav and not _has_haiku_nav:
+            _fail('Haiku standalone nav — Sonnet nav items present (My Gallery/dashboard) without Haiku items')
+            fails += 1
+        elif _has_haiku_nav:
+            _ok('Haiku nav — correct Haiku route items present (try_welcome/try_page/league_haiku)')
+        else:
+            _note('Haiku nav — route items not verified')
+
+        # Must have mobile bottom nav
+        if 'sl-mob-nav' in content or 'mob-nav' in content:
+            _ok('Haiku nav — mobile bottom nav present')
+        else:
+            _fail('Haiku standalone nav — mobile bottom nav (sl-mob-nav) missing')
+            fails += 1
+
+        # Mobile bottom nav must have correct items
+        _mob_has_dashboard = "url_for('try_welcome')" in content
+        _mob_has_evaluate  = "url_for('try_page')" in content
+        _mob_has_league    = "url_for('league_haiku')" in content
+        if _mob_has_dashboard and _mob_has_evaluate and _mob_has_league:
+            _ok('Haiku nav — mobile bottom nav has Dashboard/Evaluate/League items')
+        else:
+            missing = []
+            if not _mob_has_dashboard: missing.append('Dashboard')
+            if not _mob_has_evaluate:  missing.append('Evaluate')
+            if not _mob_has_league:    missing.append('League')
+            _fail(f'Haiku mobile nav — missing items: {", ".join(missing)}')
+            fails += 1
+
+        # Active colour must be gold #C8A84B not Haiku yellow #F4C20D
+        if '#F4C20D' in content and 'mob-nav-item.active' in content:
+            _fail('Haiku mobile nav — active colour is #F4C20D (should be #C8A84B to match desktop)')
+            fails += 1
+        else:
+            _ok('Haiku mobile nav — active colour correct (#C8A84B or not overridden)')
+
+    elif _HAIKU_BASE_EXTEND:
+        # Pages extending base.html — Sonnet nav is inherited, flag as known gap
+        _note('Haiku page extends base.html — inherits Sonnet nav (known gap, Session 202 cleanup)')
+        _note('Verify: Haiku user on this page sees correct content, no Sonnet route leaks')
+    else:
+        _note('Haiku nav check — not a Haiku page, skipped')
+
+
     # Exact filename match only -- the previous 'admin' in fname and 'admin_user'
     # not in fname substring check was written when admin.html was the only
     # non-admin_user admin page. It silently matched every NEW admin page added
