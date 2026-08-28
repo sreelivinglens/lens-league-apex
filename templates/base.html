@@ -1691,13 +1691,15 @@ img {
 <body class="{% block body_class %}{% endblock %}">
 
 <nav class="sl-top-nav{% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %} nav-haiku{% endif %}">
-  <a href="{% if current_user.is_authenticated %}{% if current_user.is_subscribed or current_user.role == 'admin' %}{{ url_for('dashboard') }}{% else %}{{ url_for('try_welcome') }}{% endif %}{% else %}{{ url_for('index') }}{% endif %}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
+  <a href="{% if current_user.is_authenticated %}{% if current_user.is_subscribed or current_user.role == 'admin' %}{{ url_for('dashboard') }}{% else %}{{ url_for('try_welcome') }}{% endif %}{% else %}{{ url_for('index') }}{% endif %}" class="nav-brand" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;">
     <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
          alt="Shutter League"
-         style="height:34px; width:auto; display:block;"
+         style="height:34px; width:auto; display:block; flex-shrink:0;"
          onerror="this.style.display='none'">
-    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
-    <span style="font-size:11px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">Making Images Matter</span>
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.85);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
+      <span style="font-size:11px;letter-spacing:1.5px;color:rgba(255,255,255,0.40);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">Making Images Matter</span>
+    </div>
   </a>
 
   <!-- Desktop nav -->
