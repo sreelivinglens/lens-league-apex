@@ -2289,6 +2289,20 @@ def _run_startup_tasks():
                 conn.commit()
             print('Database ready.')
 
+            # Session 201 — backfill is_haiku_try for images where audit_json source = haiku_try
+            try:
+                with db.engine.connect() as _htconn:
+                    _ht = _htconn.execute(db.text(
+                        "UPDATE images SET is_haiku_try = TRUE "
+                        "WHERE is_haiku_try IS NOT TRUE "
+                        "  AND audit_json IS NOT NULL "
+                        "  AND audit_json::json->>'source' = 'haiku_try'"
+                    ))
+                    _htconn.commit()
+                    print(f'[haiku_try_backfill] OK — patched {_ht.rowcount} images with source=haiku_try.')
+            except Exception as _ht_e:
+                print(f'[haiku_try_backfill] warning: {_ht_e}')
+
             # Sprint 3 — one-time residency backfill for existing subscribers
             try:
                 # Import after full module load to avoid forward-reference error
@@ -3472,6 +3486,7 @@ def index():
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
             "  AND (is_haiku_try IS NOT TRUE) "
+            "  AND (audit_json::json->>'source' != 'haiku_try' OR audit_json IS NULL) "
             "  AND thumb_url LIKE :r2 "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
@@ -32785,6 +32800,7 @@ def try_standing(image_id):
               AND i.status = 'scored'
               AND i.is_public = TRUE
               AND (i.is_haiku_try IS NOT TRUE)
+              AND (i.audit_json::json->>'source' != 'haiku_try' OR i.audit_json IS NULL)
         """), {'iid': image_id}).fetchone()
 
         if not _row:
@@ -32792,6 +32808,11 @@ def try_standing(image_id):
             abort(404)
 
         _audit = _tsj.loads(_row[5] or '{}')
+
+        # Guard: reject Haiku trial images — source field is ground truth
+        if _audit.get('source') == 'haiku_try':
+            app.logger.warning(f'[try_standing] image_id={image_id} is haiku_try source — rejecting')
+            abort(404)
         _name  = (_row[12] or '').split()
         _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (_row[12] or '')
         _uid   = _row[15]
