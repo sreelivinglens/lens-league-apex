@@ -24,7 +24,10 @@ Session 201 (28 Aug 2026):
     · Active colour #C8A84B not #F4C20D
   META/OG — Smart noindex + canonical rules per page type:
     · Public pages (league_haiku, pricing_haiku): noindex must be ABSENT
-    · Private pages (try_standing, dashboard_haiku, try_gallery, image_detail_haiku): noindex required
+    · Private pages (dashboard_haiku, try_gallery, image_detail_haiku): noindex required
+    · try_standing now PUBLIC (Session 201) — should be indexed (photographer name SEO)
+  PUBLIC ROUTES — league_haiku and try_standing must NOT have @login_required
+  POST-LOGIN — auth_google_callback must redirect Haiku users to try_welcome not dashboard
     · Standalone pages (not extending base.html): canonical required
   EXEMPTIONS — Added to _is_detail_page and _is_mobile_app_page:
     · try_standing.html, pricing_haiku.html, league_haiku.html
@@ -1739,7 +1742,36 @@ def audit_apppy(filepath):
     else:
         _ok('thumb_url: no ORM .like() (Rule 10 clean)')
 
-    # -- try_welcome() route integrity (Session 190)
+    # -- Public Haiku routes — must NOT have @login_required (Session 201)
+    _section('Public Haiku routes — no @login_required (Session 201)')
+    for _pub_route in ['league_haiku', 'try_standing']:
+        _ri = next((i for i,l in enumerate(lines) if f'def {_pub_route}(' in l), None)
+        if _ri is not None:
+            # Check the 3 lines before the def for @login_required
+            _before = ''.join(lines[max(0,_ri-3):_ri])
+            if '@login_required' in _before:
+                _fail(f'{_pub_route}() has @login_required — this is a PUBLIC page, remove the decorator')
+                fails += 1
+            else:
+                _ok(f'{_pub_route}() correctly has no @login_required (public page)')
+        else:
+            _note(f'{_pub_route}() not found in this file')
+
+    # -- Post-login redirect — Haiku users must land on try_welcome (Session 201)
+    _section('Post-login redirect — Haiku users → try_welcome (Session 201)')
+    _google_cb = next((i for i,l in enumerate(lines) if 'def auth_google_callback' in l), None)
+    if _google_cb is not None:
+        _cb_end = next((i for i in range(_google_cb+1, min(_google_cb+200, len(lines))) if lines[i].startswith('@app')), _google_cb+200)
+        _cb_src = ''.join(lines[_google_cb:_cb_end])
+        if 'try_welcome' in _cb_src:
+            _ok('auth_google_callback() redirects Haiku users to try_welcome')
+        else:
+            _fail('auth_google_callback() redirects to dashboard — Haiku users will get double redirect. Should redirect to try_welcome for free users.')
+            fails += 1
+    else:
+        _note('auth_google_callback() not found')
+
+
     _section('try_welcome() route integrity (Session 190)')
     _tw_i = next((i for i,l in enumerate(lines) if 'def try_welcome' in l), None)
     if _tw_i is not None:
@@ -2271,10 +2303,13 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
 
         # Session 201 — page indexing rules
         # Public standalone pages (should be indexed by Google)
-        _should_index = any(x in fname for x in ['league_haiku', 'pricing_haiku', 'index.html'])
+        # try_standing: public scorecard — good for SEO (photographer name searches)
+        # league_haiku: public league — good for SEO
+        # pricing_haiku: public pricing — good for SEO
+        _should_index = any(x in fname for x in ['league_haiku', 'pricing_haiku', 'try_standing', 'index.html'])
         # Private standalone pages (must NOT be indexed)
         _must_noindex = any(x in fname for x in [
-            'try_standing', 'dashboard_haiku', 'image_detail_haiku',
+            'dashboard_haiku', 'image_detail_haiku',
             'try_gallery', 'try_result', 'profile',
         ])
         # Standalone pages need explicit canonical (base.html pages inherit it via route)
