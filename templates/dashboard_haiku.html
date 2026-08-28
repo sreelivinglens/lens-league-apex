@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.54-staging (Session 200b, 2026-08-27 — Full dashboard redesign. Single column scorecard rhythm. 8 Haiku synthesis fields: sherpa, signature, gap, next_session, aq_insight, tier_insight, master_insight. Dims with signal observations. Tier progression. EXIF-aware engine. Mobile bottom nav. Standalone — does not extend base.html.) #}
+{# SL-VERSION: 181.55-staging (Session 201 — audit fixes: single column stack at 480px, gp-row single col. RETAINS 181.54. Session 200b, 2026-08-27 — Full dashboard redesign. Single column scorecard rhythm. 8 Haiku synthesis fields: sherpa, signature, gap, next_session, aq_insight, tier_insight, master_insight. Dims with signal observations. Tier progression. EXIF-aware engine. Mobile bottom nav. Standalone — does not extend base.html.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-h1,h2,h3{text-shadow:none}
+h1,h2,h3{text-shadow: none}
 html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:antialiased;background:#E8E5DF}
 
 /* ── NAV ── */
@@ -196,7 +196,8 @@ canvas.spark{flex:1;height:48px;display:block}
 }
 @media (max-width: 480px){
   .id-score{font-size:48px}
-  .evals-grid{grid-template-columns:repeat(2,1fr)}
+  .evals-grid{grid-template-columns: 1fr !important}
+  .gp-row{grid-template-columns:1fr}
 }
 
 /* TIER PROGRESSION */
