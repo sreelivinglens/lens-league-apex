@@ -2445,22 +2445,17 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     ])
 
     if _HAIKU_STANDALONE:
-        # Must NOT have dark navy topbar in the .sl-topbar CSS definition
+        # Must have dark navy topbar (#1A2744) — matching /try/gallery standard
         import re as _re_nav
+        _is_dashboard_haiku_nav = 'dashboard_haiku' in fname
         _topbar_block = _re_nav.search(r'\.sl-topbar\s*\{([^}]+)\}', content)
-        _nav_block     = _re_nav.search(r'\.nav\s*\{([^}]+)\}', content)
-        _topbar_css = (_topbar_block.group(1) if _topbar_block else '') + (_nav_block.group(1) if _nav_block else '')
-        _is_dashboard_haiku_nav = 'dashboard_haiku' in fname  # approved dark nav
-        _has_dark_topbar = (
-            not _is_dashboard_haiku_nav and
-            _topbar_css and
-            'background:#1A2744' in _topbar_css.replace(' ', '')
-        )
-        if _has_dark_topbar:
-            _fail('Haiku standalone nav — topbar background is dark navy #1A2744 (should be cream #F5F3EF)')
+        _topbar_css = _topbar_block.group(1) if _topbar_block else ''
+        _has_dark_topbar = 'background:#1A2744' in _topbar_css.replace(' ', '')
+        if _topbar_css and not _has_dark_topbar:
+            _fail('Haiku standalone nav — topbar background is NOT dark navy #1A2744 (must match /try/gallery standard)')
             fails += 1
         else:
-            _ok('Haiku standalone nav — cream topbar background correct')
+            _ok('Haiku standalone nav — dark navy topbar correct (#1A2744)')
 
         # Must have logo image in nav brand
         _has_logo = (
