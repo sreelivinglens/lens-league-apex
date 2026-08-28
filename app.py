@@ -3861,7 +3861,10 @@ def auth_google_callback():
         post_next = session.pop('post_login_next', None)
         if post_next:
             return redirect(post_next)
-        return redirect(url_for('dashboard'))
+        # Haiku free users → try_welcome; paid/admin → dashboard
+        if getattr(user, 'is_subscribed', False) or getattr(user, 'role', '') == 'admin':
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('try_welcome'))
     else:
         # New user — check allowlist before creating account
         if not is_email_allowed(email):
@@ -4173,7 +4176,10 @@ def login():
             return redirect(url_for('judge_dashboard'))
         if getattr(user, 'onboarding_complete', False) and not getattr(user, 'interests_complete', False):
             return redirect(url_for('onboarding_interests'))
-        return redirect(url_for('dashboard'))
+        # Haiku free users → try_welcome; paid/admin → dashboard
+        if getattr(user, 'is_subscribed', False):
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('try_welcome'))
 
     return render_template('login.html')
 
@@ -32599,11 +32605,11 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
 
 
 @app.route('/league/photographers')
-@login_required
 def league_haiku():
     """
     GET /league/photographers — Haiku world League of Photographers page.
     Session 200: Haiku free-tier users see League (score>=8.0) and Masters (6.0-7.9).
+    Session 201: Removed @login_required — public page, anonymous users can browse.
     Daily spotlight from 9.0+ pool. Paid users redirect to standings_public.
     """
     from flask_login import current_user
