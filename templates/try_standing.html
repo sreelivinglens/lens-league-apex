@@ -271,6 +271,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     </div>
   </a>
   <nav class="sl-nav">
+    {% if current_user.is_authenticated %}
     <a href="{{ url_for('try_welcome') }}">Home</a>
     <a href="{{ url_for('try_gallery') }}">My evaluations</a>
     <a href="{{ url_for('try_page') }}">Upload</a>
@@ -280,6 +281,15 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </a>
+    {% else %}
+    <a href="{{ url_for('how_it_works') }}">How it works</a>
+    <a href="{{ url_for('science') }}">Science</a>
+    <a href="{{ url_for('contests') }}">Programmes</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('login') }}">Login</a>
+    <a href="{{ url_for('register') }}" style="background:#1A2744;color:#C8A84B;padding:8px 18px;border-radius:4px;font-weight:600;font-size:13px;border:1px solid #C8A84B;">Register</a>
+    {% endif %}
   </nav>
 </div>
 
