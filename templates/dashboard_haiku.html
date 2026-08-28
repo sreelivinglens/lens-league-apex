@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="Shutter League — Dashboard">
-<meta property="og:description" content="Your standing, your record, your eye — Shutter League. Making Images Matter.">
+<meta property="og:description" content="Your standing, your record, your eye — Shutter League Photography Institution.">
 <meta property="og:image" content="{{ url_for('static', filename='img/og-default.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{{ url_for('static', filename='img/og-default.jpg') }}">
@@ -22,7 +22,7 @@ html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:an
 .nav{height:60px;background:#1A2744;border-bottom:none;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
 .nav-brand{display:flex;flex-direction:column;gap:3px;text-decoration:none}
 .nav-brand-name{font-size:13px;font-weight:600;letter-spacing:0.22em;color:#F5F3EF;text-transform:uppercase}
-.nav-brand-sub{font-size:13px;letter-spacing:0.12em;color:rgba(245,243,239,0.65);text-transform:uppercase}
+.nav-brand-sub{font-size:13px;letter-spacing:0.12em;color:rgba(245,243,239,0.45);text-transform:uppercase}
 .nav-links{display:flex;gap:32px;align-items:center}
 .nav-links a{font-size:14px;color:rgba(245,243,239,0.55);text-decoration:none;letter-spacing:0.02em;transition:color .15s}
 .nav-links a:hover{color:#F5F3EF}
@@ -261,13 +261,15 @@ canvas.spark{flex:1;height:48px;display:block}
          onerror="this.style.display='none'">
     <div style="display:flex;flex-direction:column;gap:2px">
       <span class="nav-brand-name">Shutter League</span>
-      <span class="nav-brand-sub">Making Images Matter</span>
+      <span class="nav-brand-sub">Photography Institution</span>
     </div>
   </a>
   <div class="nav-links">
-    <a href="{{ url_for('try_welcome') }}" class="active">Dashboard</a>
-    <a href="{{ url_for('try_page') }}">Evaluate</a>
-    <a href="{{ url_for('league_haiku') }}">League</a>
+    <a href="{{ url_for('try_welcome') }}" class="active">Home</a>
+    <a href="{{ url_for('try_gallery') }}">My Evaluations</a>
+    <a href="{{ url_for('try_page') }}">Upload</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}">League of Photographers</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <button class="nav-logout" onclick="window.location='{{ url_for('logout') }}'" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -617,11 +619,11 @@ canvas.spark{flex:1;height:48px;display:block}
     <a href="{{ url_for('try_page') }}" class="mob-nav-item">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload
     </a>
-    <a href="{{ url_for('try_page') }}" class="mob-nav-item">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>Evaluate
+    <a href="{{ url_for('try_gallery') }}" class="mob-nav-item">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>My Evals
     </a>
-    <a href="{{ url_for('league_haiku') }}" class="mob-nav-item">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>League
+    <a href="{{ url_for('pricing') }}" class="mob-nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Pricing
     </a>
     <button class="mob-nav-item" onclick="toggleBottomMoreHaiku(event)" id="sl-mob-more-btn" type="button">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>More
@@ -629,8 +631,9 @@ canvas.spark{flex:1;height:48px;display:block}
   </div>
 </nav>
 <div class="mob-drawer" id="sl-mob-more-drawer">
-  <a href="{{ url_for('try_gallery') }}" class="mob-drawer-item">My Evaluations</a>
+  <a href="{{ url_for('league_haiku') }}" class="mob-drawer-item">League of Photographers</a>
   <a href="{{ url_for('profile') }}" class="mob-drawer-item">Profile</a>
+  <a href="#" class="mob-drawer-item">Help</a>
   <a href="{{ url_for('logout') }}" class="mob-drawer-item">Log out</a>
 </div>
 
