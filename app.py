@@ -3472,6 +3472,8 @@ def index():
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
             "  AND thumb_url LIKE :r2 "
+            "  AND audit_json NOT LIKE '%\"source\":\"haiku_try\"%' "
+            "  AND audit_json NOT LIKE '%\"source\": \"haiku_try\"%' "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
         # Convert raw SQL rows to simple objects so Jinja2 attribute access works
@@ -3509,6 +3511,8 @@ def index():
                 "  AND is_public=true AND is_flagged=false "
                 "  AND thumb_url LIKE :r2 "
                 "  AND user_id != ALL(:mids) "
+                "  AND audit_json NOT LIKE '%\"source\":\"haiku_try\"%' "
+                "  AND audit_json NOT LIKE '%\"source\": \"haiku_try\"%' "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2, 'mids': list(_mentor_ids)}).fetchall()
         else:
@@ -3519,6 +3523,8 @@ def index():
                 "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
                 "  AND is_public=true AND is_flagged=false "
                 "  AND thumb_url LIKE :r2 "
+                "  AND audit_json NOT LIKE '%\"source\":\"haiku_try\"%' "
+                "  AND audit_json NOT LIKE '%\"source\": \"haiku_try\"%' "
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2}).fetchall()
         carousel_images = [_row_to_ns(r, _car_fields) for r in _carousel_rows]
