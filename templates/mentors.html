@@ -795,7 +795,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
             </div>
             {% endif %}
             <p class="sl-men-card-price">₹{{ m.get('price', 200) }} <span>per session</span></p>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="sl-men-card-btn" style="background:var(--gold-dark);color:#1A1A18;">Join the League →</a>
+            {% else %}
             <a href="{{ url_for('mentor_register', slug='ashok') }}" class="sl-men-card-btn">Review My Image</a>
+            {% endif %}
           </div>
         </div>
         {% endif %}{# /ashok #}
@@ -830,7 +834,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
             </div>
             {% endif %}
             <p class="sl-men-card-price">₹{{ m.get('price', 150) }} <span>per session</span></p>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="sl-men-card-btn" style="background:var(--gold-dark);color:#1A1A18;">Join the League →</a>
+            {% else %}
             <a href="{{ url_for('mentor_register', slug='gopal') }}" class="sl-men-card-btn">Review My Image</a>
+            {% endif %}
           </div>
         </div>
         {% endif %}{# /gopal #}
@@ -866,7 +874,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
             </div>
             {% endif %}
             <p class="sl-men-card-price">₹{{ m.get('price', 100) }} <span>per session</span></p>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="sl-men-card-btn" style="background:var(--gold-dark);color:#1A1A18;">Join the League →</a>
+            {% else %}
             <a href="{{ url_for('mentor_register', slug='sreekumar') }}" class="sl-men-card-btn">Review My Image</a>
+            {% endif %}
           </div>
         </div>
         {% endif %}{# /sreekumar #}
