@@ -23,18 +23,18 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-topbar {
   display:flex; justify-content:space-between; align-items:center;
   padding:0 48px; height:60px;
-  border-bottom:none;
-  background:#1A2744;
+  border-bottom:0.5px solid rgba(26,39,68,0.10);
+  background:#F5F3EF;
   position:sticky; top:0; z-index:100;
 }
 .sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
-.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#F5F3EF; text-transform:uppercase; }
-.sl-brand-sub { font-size:13px; letter-spacing:0.10em; color:rgba(245,243,239,0.45); text-transform:uppercase; }
+.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
+.sl-brand-sub { font-size:13px; letter-spacing:0.10em; color:rgba(26,39,68,0.55); text-transform:uppercase; }
 .sl-nav { display:flex; gap:32px; align-items:center; }
 .sl-nav a { font-size:13px; color:rgba(245,243,239,0.55); text-decoration:none; letter-spacing:0.03em; cursor:pointer; }
-.sl-nav a.active { color:#F5F3EF; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+.sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
 .sl-nav-logout { background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; }
-.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(245,243,239,0.55); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(26,39,68,0.55); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
 
 /* ── PAGE — two column, fills viewport ── */
 .sl-page { background:#F5F3EF; display:flex; height:calc(100vh - 61px); height:calc(100dvh - 61px); overflow:hidden; }
@@ -170,7 +170,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   min-height:44px;
   padding:4px 2px 2px;
 }
-.sl-mob-nav-item.active { color:#F4C20D; }
+.sl-mob-nav-item.active { color:#C8A84B; }
 .sl-mob-nav-item svg {
   width:22px; height:22px;
   stroke:currentColor; fill:none;
@@ -247,7 +247,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
          onerror="this.style.display='none'">
     <div style="display:flex;flex-direction:column;gap:2px">
       <span class="sl-brand-name">Shutter League</span>
-      <span class="sl-brand-sub">Photography Institution</span>
+      <span class="sl-brand-sub">Making Images Matter</span>
     </div>
   </a>
   <nav class="sl-nav">
