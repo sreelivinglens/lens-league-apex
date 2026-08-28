@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing-v3.4-staging (Session 201 — removed locked language + sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
+{# SL-VERSION: pricing-v3.4-staging (Session 201 — CSS aligned with pricing_haiku: navy #1A2744, text-shadow:none on h1, Inter font on CTA. All plan structure/JS/Razorpay unchanged. RETAINS 3.3.) (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
@@ -46,7 +46,7 @@
 .pr-hero h1 {
   font-size: clamp(28px, 4vw, 40px); font-weight: 700;
   color: var(--text-primary); line-height: 1.5;
-  letter-spacing: -0.02em; margin-bottom: 16px;
+  letter-spacing: -0.02em; margin-bottom: 16px; text-shadow: none;
 }
 .pr-hero-built {
   font-size: 17px; color: var(--text-secondary);
@@ -154,6 +154,7 @@
   border-radius: 8px; cursor: pointer;
   min-height: 52px; text-decoration: none;
   border: none; width: 100%; text-align: center;
+  font-family: 'Inter', sans-serif;
 }
 .pr-cta-gold { background: var(--gold); color: #1a1200; }
 .pr-cta-outline {
@@ -162,7 +163,7 @@
   border: 1.5px solid var(--gold);
 }
 .pr-cta-navy {
-  background: var(--blue-dark, #2C3E6B);
+  background: var(--navy, #1A2744);
   color: #fff;
 }
 
@@ -172,7 +173,7 @@
   padding: 0 var(--page-pad);
 }
 .pr-founding-inner {
-  background: var(--navy, #2C3E6B); color: #fff;
+  background: var(--navy, #1A2744); color: #fff;
   border-radius: 12px; padding: 24px 32px;
   display: flex; align-items: center;
   justify-content: space-between; gap: 24px;
@@ -346,7 +347,7 @@
       <li>Next Shot advisory after every evaluation</li>
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory — where to shoot next</li>
-      <li>Founding Member price — early access rate</li>
+      <li>Founding Member price — locked forever</li>
     </ul>
     <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
@@ -414,10 +415,10 @@
   <div class="pr-founding-inner">
     <div style="flex:1">
       <div class="pr-founding-label">Founding Member</div>
-      <div class="pr-founding-h">Join before January 2027. Early access rate for as long as you stay subscribed.</div>
-      <p class="pr-founding-sub">Standard pricing increases after January 2027. Founding Members retain early access pricing for as long as their subscription remains active. Shutter League reserves the right to adjust pricing with 30 days notice. The record you build never resets.</p>
+      <div class="pr-founding-h">Join before January 2027. Your price is locked forever.</div>
+      <p class="pr-founding-sub">Standard pricing increases after January 2027. Founding Members remain at ₹4,000 per year for as long as they remain subscribed. The record you build never resets.</p>
     </div>
-    <div class="pr-founding-price">₹4,000<br><span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.45)">early access</span></div>
+    <div class="pr-founding-price">₹4,000<br><span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.45)">forever</span></div>
   </div>
 </div>
 
@@ -460,7 +461,7 @@
       <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-      <tr><td class="row-key">Founding Member early access</td><td class="check">✓ annual only</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Founding Member price lock</td><td class="check">✓ annual only</td><td class="dash">—</td><td class="dash">—</td></tr>
     </tbody>
   </table>
   </div>
