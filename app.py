@@ -3471,7 +3471,6 @@ def index():
             "FROM images "
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
-            "  AND (is_haiku_try IS NOT TRUE) "
             "  AND thumb_url LIKE :r2 "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
