@@ -41,8 +41,8 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   position:sticky; top:0; z-index:100;
 }
 .sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
-.sl-brand-name { font-size:12px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
-.sl-brand-sub  { font-size:10px; letter-spacing:0.10em; color:rgba(26,39,68,0.36); text-transform:uppercase; }
+.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
+.sl-brand-sub  { font-size:13px; letter-spacing:0.10em; color:rgba(26,39,68,0.55); text-transform:uppercase; }
 .sl-nav { display:flex; gap:32px; align-items:center; }
 .sl-nav a { font-size:13px; color:rgba(26,39,68,0.42); text-decoration:none; letter-spacing:0.03em; }
 .sl-nav a.active { color:#1A2744; font-weight:500; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
@@ -57,7 +57,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   max-width:700px; margin:0 auto;
 }
 .pr-hero-eye { font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
-.pr-hero h1 { font-size:clamp(28px,4vw,40px); font-weight:700; color:var(--text-primary); line-height:1.5; letter-spacing:-0.02em; margin-bottom:16px; }
+.pr-hero h1 { font-size:clamp(28px,4vw,40px); font-weight:700; color:var(--text-primary); line-height:1.5; letter-spacing:-0.02em; margin-bottom:16px; text-shadow: none; }
 .pr-hero-built { font-size:17px; color:var(--text-primary); line-height:1.65; margin-bottom:16px; }
 .pr-hero-200 { font-size:18px; font-weight:600; color:var(--text-primary); line-height:1.65; max-width:560px; margin:0 auto 8px; }
 .pr-hero-std { font-size:15px; font-style:italic; color:var(--text-muted); margin-top:8px; }
@@ -144,8 +144,8 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 /* ── MOBILE BOTTOM NAV ── */
 .sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); padding:6px 0 8px; z-index:200; }
 .sl-mob-nav-items { display:flex; justify-content:space-around; align-items:flex-end; }
-.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; }
-.sl-mob-nav-item.active { color:#F4C20D; }
+.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; }
+.sl-mob-nav-item.active { color:#C8A84B; }
 .sl-mob-nav-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
 .sl-mob-more-drawer { display:none; position:fixed; bottom:56px; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); z-index:199; padding:8px 0; }
 .sl-mob-more-drawer.open { display:block; }
@@ -153,18 +153,26 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-mob-drawer-item:hover { color:#fff; }
 
 /* ── RESPONSIVE ── */
-@media (max-width:900px) {
+
+  @media (max-width: 768px) {
+    .pr-plans { grid-template-columns: 1fr !important; }
+    .pr-why { grid-template-columns: 1fr !important; }
+    .pr-compare { overflow-x:auto; }
+    .pr-table { min-width:500px; }
+    .pr-founding-inner { flex-direction:column; }
+  }
+  @media (max-width: 900px) {
   :root { --page-pad: 24px; }
   .sl-nav { display:none; }
   .sl-mob-nav { display:block; }
   body { padding-bottom:60px; }
   .pr-plans { grid-template-columns:1fr; max-width:480px; }
   .pr-plan-tagline { min-height:unset; }
-  .pr-why { grid-template-columns:1fr; }
+  .pr-why { grid-template-columns: 1fr !important; }
   .pr-founding-inner { flex-direction:column; gap:12px; }
   .pr-founding-price { font-size:24px; }
 }
-@media (max-width:600px) {
+@media (max-width: 600px) {
   :root { --page-pad: 16px; }
   .pr-hero h1 { font-size:clamp(24px,7vw,32px); }
   .pr-hero-200 { font-size:16px; }
