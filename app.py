@@ -20675,6 +20675,9 @@ def mentors():
 @app.route('/mentor-register/<slug>', methods=['GET', 'POST'])
 @login_required
 def mentor_register(slug):
+    # Haiku (free) users cannot book mentor reviews — hard gate
+    if not getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
+        return redirect(url_for('pricing'))
     mentor = MENTORS.get(slug)
     if not mentor:
         flash('Mentor not found.', 'error')
