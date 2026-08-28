@@ -261,9 +261,14 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
 
 <!-- TOP BAR -->
 <div class="sl-topbar">
-  <a href="{{ url_for('try_welcome') }}" class="sl-brand">
-    <span class="sl-brand-name">Shutter League</span>
-    <span class="sl-brand-sub">Making Images Matter</span>
+  <a href="{{ url_for('try_welcome') }}" class="sl-brand" style="flex-direction:row;align-items:center;gap:10px">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League" style="height:32px;width:auto;display:block"
+         onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="sl-brand-name">Shutter League</span>
+      <span class="sl-brand-sub">Making Images Matter</span>
+    </div>
   </a>
   <nav class="sl-nav">
     <a href="{{ url_for('try_welcome') }}">Dashboard</a>
