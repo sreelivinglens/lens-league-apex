@@ -1,4 +1,4 @@
-# SL-VERSION: 181.71-staging (Session 200e, 2026-08-27 — try_standing complete, league pulls Sonnet images, evals gate_count consistent across all pages, profile grid fixed, bottom logout removed. RETAINS 181.55.)
+# SL-VERSION: 181.72-staging (Session 201, 2026-08-28 — try_standing complete rewrite: correct Sonnet audit_json fields (byline_2_body→what_it_means, transferable_advice→takeaway, background_check→what_sl_saw), bullet splitting on ▪/■, markdown stripping, next_shot title regex, percentile via compute_percentile(), trend lines use COALESCE(scored_at,created_at) for full 17-image history, _TSSN import fixed, tier_floor, best_this_year. pricing() route → pricing_haiku.html for all non-paid users. try_sample() route added — public Haiku scorecard sample, no login required. RETAINS 181.71.)
 
 import os
 import re
