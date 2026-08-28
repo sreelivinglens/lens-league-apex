@@ -3486,7 +3486,6 @@ def index():
             "WHERE status='scored' AND score IS NOT NULL "
             "  AND is_public=true AND is_flagged=false "
             "  AND (is_haiku_try IS NOT TRUE) "
-            "  AND (audit_json::json->>'source' != 'haiku_try' OR audit_json IS NULL) "
             "  AND thumb_url LIKE :r2 "
             "ORDER BY scored_at DESC LIMIT 36"
         ), {'r2': _R2}).fetchall()
@@ -32800,7 +32799,6 @@ def try_standing(image_id):
               AND i.status = 'scored'
               AND i.is_public = TRUE
               AND (i.is_haiku_try IS NOT TRUE)
-              AND (i.audit_json::json->>'source' != 'haiku_try' OR i.audit_json IS NULL)
         """), {'iid': image_id}).fetchone()
 
         if not _row:
