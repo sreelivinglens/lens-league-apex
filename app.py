@@ -20613,6 +20613,9 @@ def _seed_mentors():
 
 @app.route('/mentors')
 def mentors():
+    # Haiku (free) users cannot book mentor reviews — redirect to pricing
+    if current_user.is_authenticated and not getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
+        return redirect(url_for('pricing'))
     try:
         men_hero = (Image.query
                     .filter(Image.status == 'scored',
