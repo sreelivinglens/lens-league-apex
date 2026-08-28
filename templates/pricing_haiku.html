@@ -131,6 +131,14 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 /* ── KYC + FOOTER ── */
 .sl-kyc { background:var(--surface-2); padding:14px var(--page-pad); font-size:13px; color:var(--text-muted); line-height:1.65; border-top:0.5px solid var(--border); }
 .sl-kyc a { color:var(--text-muted); text-decoration:underline; }
+.sl-footer-grid { display:grid; grid-template-columns:1.8fr 1fr 1fr 1fr 1fr; gap:2rem; margin-bottom:2.5rem; }
+@media (max-width: 768px) {
+  .sl-footer-grid { grid-template-columns: 1fr 1fr !important; gap:1.5rem; }
+  .sl-footer-grid > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .sl-footer-grid { grid-template-columns: 1fr !important; }
+}
 .sl-footer { background:#0F1F3D; border-top:0.5px solid rgba(255,255,255,0.08); padding:20px var(--page-pad); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:rgba(255,255,255,0.40); }
 .sl-footer-links { display:flex; gap:20px; flex-wrap:wrap; }
 .sl-footer-links a { color:rgba(255,255,255,0.45); text-decoration:none; }
@@ -381,7 +389,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 </div>
 
 <footer style="background:#0F1F3D;padding:3rem 48px 1.75rem;font-family:'Avenir Next',Avenir,'Helvetica Neue',Helvetica,Arial,sans-serif;border-top:0.5px solid rgba(255,255,255,0.08);">
-  <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem;max-width:1200px;margin-left:auto;margin-right:auto;">
+  <div class="sl-footer-grid">
     <div>
       <div style="font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1.5px;margin-bottom:6px;text-transform:uppercase;">SHUTTER LEAGUE</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;max-width:180px;">Photography Assessment<br>&amp; Evolution Platform</div>
