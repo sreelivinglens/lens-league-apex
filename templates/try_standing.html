@@ -25,7 +25,7 @@ h1, h2, h3 { text-shadow: none; }
   border-bottom:0.5px solid rgba(26,39,68,0.10);
   position:sticky; top:0; z-index:100;
 }
-.sl-brand { display:flex; flex-direction:column; gap:2px; text-decoration:none; }
+.sl-brand { display:flex; flex-direction:row; align-items:center; gap:10px; text-decoration:none; }
 .sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#1A2744; text-transform:uppercase; }
 .sl-brand-sub  { font-size:13px; letter-spacing:0.10em; color:rgba(26,39,68,0.55); text-transform:uppercase; }
 .sl-nav { display:flex; gap:32px; align-items:center; }
@@ -261,7 +261,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
 
 <!-- TOP BAR -->
 <div class="sl-topbar">
-  <a href="{{ url_for('try_welcome') }}" class="sl-brand" style="flex-direction:row;align-items:center;gap:10px">
+  <a href="{{ url_for('try_welcome') }}" class="sl-brand">
     <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
          alt="Shutter League" style="height:32px;width:auto;display:block"
          onerror="this.style.display='none'">
@@ -271,10 +271,11 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     </div>
   </a>
   <nav class="sl-nav">
-    <a href="{{ url_for('try_welcome') }}">Dashboard</a>
-    <a href="{{ url_for('try_page') }}">Evaluate</a>
+    <a href="{{ url_for('try_welcome') }}">Home</a>
+    <a href="{{ url_for('try_gallery') }}">My evaluations</a>
+    <a href="{{ url_for('try_page') }}">Upload</a>
     <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}" class="active">League</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
