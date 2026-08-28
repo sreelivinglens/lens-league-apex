@@ -2251,46 +2251,81 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     if is_snippet_file:
         _note('Meta tag checks skipped — snippet/render-only file, not a standalone browser page (Session 143)')
     else:
-        # base.html provides site-wide og:*/twitter:* defaults via Jinja blocks
-        # (og_title, og_description, og_image, twitter_title, twitter_description,
-        # twitter_image). Every page extending base.html inherits these even if
-        # it doesn't override them — so a literal <meta property="og:..."> tag
-        # is NOT required in this file. Only flag MISSING if the page neither
-        # has the literal tag NOR overrides the corresponding block NOR extends
-        # base.html (which would mean no inheritance at all).
         _extends_base = 'extends "base.html"' in content or "extends 'base.html'" in content
         _block_map = {
             'og:title': 'og_title', 'og:description': 'og_description', 'og:image': 'og_image',
             'twitter:image': 'twitter_image',
         }
+
+        # Session 201 — page indexing rules
+        # Public standalone pages (should be indexed by Google)
+        _should_index = any(x in fname for x in ['league_haiku', 'pricing_haiku', 'index.html'])
+        # Private standalone pages (must NOT be indexed)
+        _must_noindex = any(x in fname for x in [
+            'try_standing', 'dashboard_haiku', 'image_detail_haiku',
+            'try_gallery', 'try_result', 'profile',
+        ])
+        # Standalone pages need explicit canonical (base.html pages inherit it via route)
+        _needs_canonical = not _extends_base and not is_snippet_file
+
         meta_checks = [
-            ('og:title',         'Open Graph title (required for sharing)'),
-            ('og:description',   'Open Graph description'),
-            ('og:image',         'Open Graph image (photograph shows when shared)'),
-            ('twitter:card',     'Twitter/X card'),
-            ('twitter:image',    'Twitter/X image'),
-            ('canonical',        'Canonical URL (prevents duplicate content)'),
-            ('noindex',          'noindex (correct — private scored images should not be indexed)'),
+            ('og:title',       'Open Graph title (required for sharing)'),
+            ('og:description', 'Open Graph description'),
+            ('og:image',       'Open Graph image (photograph shows when shared)'),
+            ('twitter:card',   'Twitter/X card'),
+            ('twitter:image',  'Twitter/X image'),
+            ('canonical',      'Canonical URL (prevents duplicate content)'),
+            ('noindex',        'noindex robots directive'),
         ]
         meta_fails = 0
         for tag, desc in meta_checks:
-            _block = _block_map.get(tag)
+            _block  = _block_map.get(tag)
             _has_block_override = _block and ('{% block ' + _block in content)
-            if tag in content or _has_block_override:
-                _ok(f'[meta] {desc}')
-            elif tag == 'twitter:card' and _extends_base:
-                _ok(f'[meta] {desc} (inherited from base.html)')
-            elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
-                _ok(f'[meta] {desc} (inherited default from base.html)')
+            _present = tag in content or _has_block_override
+
+            if tag == 'canonical':
+                if _present:
+                    _ok(f'[meta] {desc}')
+                elif _needs_canonical:
+                    _fail(f'[meta] {desc} — MISSING on standalone page (required for SEO)')
+                    fails += 1; meta_fails += 1
+                elif _extends_base:
+                    _ok(f'[meta] {desc} (handled by base.html or route)')
+                else:
+                    _note(f'[meta] {desc} — not present (verify if needed)')
+
+            elif tag == 'noindex':
+                if _must_noindex:
+                    if _present:
+                        _ok(f'[meta] noindex present — correct (private page, must not be indexed)')
+                    else:
+                        _fail(f'[meta] noindex MISSING — private page must have robots noindex,nofollow')
+                        fails += 1; meta_fails += 1
+                elif _should_index:
+                    if _present:
+                        _fail(f'[meta] noindex present on PUBLIC page — remove so Google can index this page')
+                        fails += 1; meta_fails += 1
+                    else:
+                        _ok(f'[meta] noindex absent — correct (public page, indexable)')
+                else:
+                    if _present:
+                        _note(f'[meta] noindex present — verify this page should not be indexed')
+                    else:
+                        _note(f'[meta] noindex — not present (verify if needed)')
+
             else:
-                if tag in ('noindex', 'canonical') and 'image_detail' not in filepath.lower():
-                    _note(f'[meta] {desc} — not present (verify if needed for this template)')
+                if _present:
+                    _ok(f'[meta] {desc}')
+                elif tag == 'twitter:card' and _extends_base:
+                    _ok(f'[meta] {desc} (inherited from base.html)')
+                elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
+                    _ok(f'[meta] {desc} (inherited default from base.html)')
                 else:
                     _fail(f'[meta] {desc} — MISSING')
-                    fails += 1
-                    meta_fails += 1
+                    fails += 1; meta_fails += 1
+
         if meta_fails == 0:
-            _ok('All meta tags present')
+            _ok('All meta tags present and correct')
 
     # ── Summary ───────────────────────────────────────────────────────────────
     _section('DELIVERY STANDARD — CSI note cards (image_detail.html only)')
@@ -2349,6 +2384,17 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
             fails += 1
         else:
             _ok('Haiku standalone nav — cream topbar background correct')
+
+        # Must have logo image in nav brand
+        _has_logo = (
+            'shutterleague-logo-cropped.png' in content and
+            ('sl-brand' in content or 'nav-brand' in content)
+        )
+        if _has_logo:
+            _ok('Haiku nav — logo image (shutterleague-logo-cropped.png) present in brand')
+        else:
+            _fail('Haiku nav — logo image missing from brand (add shutterleague-logo-cropped.png)')
+            fails += 1
 
         # Must have correct brand sub "Making Images Matter"
         # Exception: dashboard_haiku uses dark nav by design (approved Session 175)
