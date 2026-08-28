@@ -1,3 +1,4 @@
+{# SL-VERSION: 182.26-staging (Session 201 — gallery photos → try_standing/<id>, hero/end CTA Haiku→try_welcome, nav League→league_haiku, AEA strip reworded for all users. RETAINS 182.25.)
 {# SL-VERSION: 182.25-staging (Session 194, 2026-08-25 — HAIKU MOBILE NAV FIX: Standalone page — has own bottom nav not inherited from base. Authenticated branch had no Haiku sub-branch. Haiku users saw Dashboard/Upload FAB/My Gallery — all paid routes. Fixed: added is_subscribed check. Paid: unchanged. Haiku: Home/Upload/My Evals/More with inline drawer (Pricing/League/Profile/Science/Help/Log out). Drawer uses inline style toggle (no base.html CSS classes available). JS added before </body>. Built from 23 Aug known-good baseline. RETAINS 182.24.) #}
 {# SL-VERSION: 182.24-staging (Session 191, 2026-08-23 — NAV FIX: logout link added to Haiku logged-in nav state. Was missing — user had no way to log out from index page. RETAINS 182.23.) #}
 {# SL-VERSION: 182.23-staging (Session 190, 2026-08-19 — NAV: SL logo image replacing text crest. RETAINS 182.22.)
@@ -224,7 +225,7 @@ body,html{overflow-x:hidden;max-width:100%}
     <a href="{{ url_for('science') }}" class="navsection">Science</a>
     <a href="{{ url_for('contests') }}" class="navsection">Programmes</a>
     <a href="{{ url_for('pricing') }}" class="navsection">Pricing</a>
-    <a href="{{ url_for('standings_public') }}" class="navsection">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}" class="navsection">League of Photographers</a>
     {% if current_user.is_authenticated %}
       {% if current_user.is_subscribed or current_user.role == 'admin' %}
         <a href="{{ url_for('dashboard') }}" class="navstart">My dashboard →</a>
@@ -264,7 +265,11 @@ body,html{overflow-x:hidden;max-width:100%}
     <p class="hero-lead">You've probably looked at one of your photographs and thought: <em>if only I had waited. Moved. Looked again.</em></p>
     <p class="hero-solve">How do I solve the what if?</p>
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+      {% if current_user.is_subscribed or current_user.role == 'admin' %}
+        <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+      {% else %}
+        <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
+      {% endif %}
     {% else %}
       <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
     {% endif %}
@@ -361,14 +366,14 @@ body,html{overflow-x:hidden;max-width:100%}
       <div class="kicker">League of Photographers</div>
       <h2 class="gallery-h2">Photographers building their record.</h2>
     </div>
-    <p class="gallery-sub">Every evaluation calibrated against the same standard. <a href="{{ url_for('standings_public') }}" style="color:var(--blue);font-weight:600;border-bottom:1px solid var(--line)">View all standings →</a></p>
+    <p class="gallery-sub">Every evaluation calibrated against the same standard. <a href="{{ url_for('league_haiku') }}" style="color:var(--blue);font-weight:600;border-bottom:1px solid var(--line)">View the League →</a></p>
   </div>
   <div class="photos">
   {% set ns = namespace(count=0) %}
   {% for gi in gallery_pool %}
     {% if gi.thumb_url and ns.count < 5 %}
       {% set ns.count = ns.count + 1 %}
-      <a href="{{ url_for('standings_public') }}" class="ph" style="text-decoration:none;display:block;position:relative;overflow:hidden">
+      <a href="{{ url_for('try_standing', image_id=gi.id) }}" class="ph" style="text-decoration:none;display:block;position:relative;overflow:hidden">
         <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.parentElement.style.display='none'">
         <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,.75));display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
           <div>
@@ -382,8 +387,48 @@ body,html{overflow-x:hidden;max-width:100%}
   {% endfor %}
   </div>
   <div class="aea-strip">
-    <p>At the end of every year, the most consistent work in the League is recognised by the <strong>Annual Excellence Award</strong> — the first photography credential in the world built on twelve months of honest evaluation, not a single submission.</p>
+    <p>At the end of every year, the most consistent work among <strong>League members</strong> is recognised by the <strong>Annual Excellence Award</strong> — the first photography credential built on twelve months of calibrated evaluation, not a single submission.</p>
     <span class="aea-date">Award date: 31 December 2026</span>
+  </div>
+</section>
+
+<!-- PAID VS FREE COMPARISON -->
+<section class="section" style="background:var(--paper)">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="kicker" style="margin-bottom:16px">Two ways in</div>
+    <p class="statement" style="font-size:clamp(32px,4vw,48px);margin-bottom:40px">Start free.<br>Build the record.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px">
+
+      <div style="border:1px solid var(--line);border-radius:4px;padding:28px 24px;background:var(--cream)">
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Free · 10 evaluations</div>
+        <div style="font-size:28px;font-weight:600;color:var(--blue);margin-bottom:20px">₹0</div>
+        <ul style="list-style:none;font-size:17px;color:var(--muted);line-height:2">
+          <li>✓ &nbsp;10 evaluations, no card</li>
+          <li>✓ &nbsp;Five-dimension feedback</li>
+          <li>✓ &nbsp;See the League standard</li>
+          <li style="color:var(--line)">— &nbsp;No standing or record</li>
+          <li style="color:var(--line)">— &nbsp;No Annual Excellence Award</li>
+          <li style="color:var(--line)">— &nbsp;No mentor calibration</li>
+        </ul>
+        <a href="{{ url_for('register') }}" style="display:block;margin-top:24px;padding:13px 20px;background:var(--dark);color:#fff;font-size:16px;font-weight:600;border-radius:2px;text-align:center">Start free →</a>
+      </div>
+
+      <div style="border:2px solid var(--blue);border-radius:4px;padding:28px 24px;background:var(--cream);position:relative">
+        <div style="position:absolute;top:-13px;left:24px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 14px;border-radius:2px">The League</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Annual membership</div>
+        <div style="font-size:28px;font-weight:600;color:var(--blue);margin-bottom:20px">₹4,000 <span style="font-size:16px;font-weight:400;color:var(--muted)">/ year</span></div>
+        <ul style="list-style:none;font-size:17px;color:var(--muted);line-height:2">
+          <li>✓ &nbsp;48 full evaluations</li>
+          <li>✓ &nbsp;Calibrated League standing</li>
+          <li>✓ &nbsp;Annual Excellence Award</li>
+          <li>✓ &nbsp;Grandmaster mentor review</li>
+          <li>✓ &nbsp;Your evolving portrait</li>
+          <li>✓ &nbsp;Next Shot advisory</li>
+        </ul>
+        <a href="{{ url_for('pricing') }}" style="display:block;margin-top:24px;padding:13px 20px;background:var(--gold);color:var(--dark);font-size:16px;font-weight:600;border-radius:2px;text-align:center">Join the League →</a>
+      </div>
+
+    </div>
   </div>
 </section>
 
@@ -392,7 +437,11 @@ body,html{overflow-x:hidden;max-width:100%}
   <h2 class="end-h2">We think you're capable of more.</h2>
   <p class="end-sub">Come see what your photographs say.</p>
   {% if current_user.is_authenticated %}
-    <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+    {% if current_user.is_subscribed or current_user.role == 'admin' %}
+      <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+    {% else %}
+      <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
+    {% endif %}
   {% else %}
     <a href="{{ url_for('register') }}" class="bigbtn">Show me what I'm missing →</a>
   {% endif %}
