@@ -20813,9 +20813,16 @@ def mentor_register(slug):
 
 @app.route('/pricing')
 def pricing():
-    # Paid subscribers have no need to see pricing
+    # Paid subscribers → dashboard
     if current_user.is_authenticated and getattr(current_user, 'is_subscribed', False):
         return redirect(url_for('dashboard'))
+    # Free logged-in Haiku users → Haiku pricing world
+    if current_user.is_authenticated:
+        return render_template('pricing_haiku.html',
+                               current_user=current_user,
+                               open_contest_active=is_open_contest_active(),
+                               poty_hero=None)
+    # Anonymous visitors → Sonnet marketing pricing (base.html nav, consistent with homepage)
     try:
         poty_hero = (Image.query
                      .filter(Image.status == 'scored', Image.is_public == True,
@@ -20824,7 +20831,7 @@ def pricing():
                      .first())
     except Exception:
         poty_hero = None
-    return render_template('pricing_haiku.html',
+    return render_template('pricing.html',
                            current_user=current_user,
                            open_contest_active=is_open_contest_active(),
                            poty_hero=poty_hero)
