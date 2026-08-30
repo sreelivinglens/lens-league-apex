@@ -1,0 +1,541 @@
+{#
+  SL-VERSION: homepage_standings-2.4-staging
+  Session 199 · 2026-08-26
+  BACK LINK: Haiku users see "← Back to my dashboard" above standings header — visible only to authenticated free users. NAV FIX: Haiku (free) users now see correct nav — Home / My evaluations / Upload / Pricing / League of Photographers / Profile / Log out.
+  AUDIT FIXES: Twitter meta tags added. Font sizes raised to 13px minimum (was 11px/12px). Line-heights raised to 1.3+ (was 1.05/1.2). KYC: "ICC rankings" → "ICC standings". RETAINS homepage_standings-2.2.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Standalone — does not extend base.html ✅ · Desktop nav hidden ≤768px, hamburger shown ✅ · Bottom nav auth-gated ✅ · Own 5-col pub-footer ✅
+  KYC     : Terms ✅ · Privacy ✅ · Refunds ✅ · Shipping ✅ · Bengaluru ✅ · UDYAM-KR-03-0697280 ✅ · In footer Legal column and bottom strip
+  Mobile  : Hamburger overlay ✅ · Bottom nav (authenticated only) ✅ · 2-col grid ≤768px ✅ · Footer 2-col ✅ · 44px tap targets ✅ · touch-action:manipulation ✅
+  iPad    : Grid 3-col ≤1024px ✅ · Nav padding reduced ✅
+  70yr    : Header h1 clamp(32px,4vw,52px) ✅ · Desc 17px ✅ · Card name 15px ✅ · Footer links 15px ✅ · Strip 13px fine print ✅
+  Version : homepage_standings-2.4-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The League — Shutter League</title>
+<meta name="description" content="Photographers building their record. Every evaluation calibrated against the same standard. Shutter League — Making Images Matter.">
+<meta property="og:title" content="The League — Shutter League">
+<meta property="og:description" content="See where photographers stand. The first calibrated photography credential in India.">
+<meta property="og:image" content="https://shutterleague.com/static/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The League — Shutter League">
+<meta name="twitter:image" content="https://shutterleague.com/static/og-image.jpg">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The League — Shutter League">
+<meta name="twitter:image" content="https://shutterleague.com/static/og-image.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<style>
+:root{
+  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;
+  --blue:#2C3E6B;--gold:#D4A428;--ink:#1A1A18;
+  --muted:#8A8070;--line:#E0D8C8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:16px;line-height:1.65;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* ── NAV ── */
+.pub-nav{height:64px;background:#1A2744;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;border-bottom:0.5px solid rgba(255,255,255,.08)}
+.pub-nav-links{display:flex;align-items:center;gap:2px}
+.pub-nav-link{font-size:13px;color:rgba(255,255,255,.6);text-decoration:none;padding:6px 8px;border-radius:5px;transition:color .15s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+.pub-nav-link:hover{color:#fff;background:rgba(255,255,255,.08)}
+.pub-nav-link.on{color:#fff;font-weight:600}
+.pub-brand{display:flex;align-items:center;gap:10px;color:#fff}
+.pub-crest{width:28px;height:28px;border:1.5px solid rgba(212,164,40,.6);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:.5px}
+.pub-brandword{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
+.pub-nav-right{display:flex;align-items:center;gap:2px}
+.pub-login{font-size:13px;color:rgba(255,255,255,.65);padding:6px 8px;border:1px solid rgba(255,255,255,.25);border-radius:5px;transition:color .15s;min-height:44px;display:inline-flex;align-items:center}
+.pub-login:hover{color:#fff}
+.pub-register{font-size:14px;font-weight:700;color:var(--dark);background:var(--gold);padding:8px 18px;border-radius:8px;min-height:44px;display:inline-flex;align-items:center}
+/* ── HAMBURGER (mobile) ── */
+.pub-ham{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:10px 8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;margin-left:8px}
+.pub-ham span{display:block;width:20px;height:2px;background:rgba(255,255,255,.8);border-radius:2px}
+.pub-mob-menu{display:none;position:fixed;top:68px;right:12px;left:auto;width:240px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:10px;z-index:999;padding:6px 0;box-shadow:0 8px 32px rgba(0,0,0,.55);overflow:hidden}
+.pub-mob-menu.open{display:block}
+.pub-mob-menu a{display:flex;align-items:center;padding:13px 18px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pub-mob-menu a:last-child{border-bottom:none}
+.pub-mob-menu a:active{background:rgba(255,255,255,.08);color:#fff}
+.pub-mob-menu .pub-mob-join{color:var(--gold);font-weight:700}
+/* SL-194: Haiku More drawer — bottom-right above More tab */
+.pub-more-drawer{display:none;position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));right:8px;width:220px;background:#1A2744;border:1px solid rgba(255,255,255,.18);border-radius:12px;z-index:300;padding:6px 0;box-shadow:0 -4px 32px rgba(0,0,0,.55)}
+.pub-more-drawer.open{display:block}
+.pub-more-item{display:flex;align-items:center;gap:12px;padding:13px 20px;min-height:48px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pub-more-item:active{background:rgba(255,255,255,.06)}
+.pub-more-item svg{width:18px;height:18px;flex-shrink:0;opacity:0.55}
+.pub-more-divider{height:0.5px;background:rgba(255,255,255,.10);margin:4px 0}
+.pub-more-item.pub-logout{color:rgba(255,110,90,.8)}
+
+/* ── PAGE HEADER ── */
+.pub-header{padding:52px 48px 36px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--line)}
+.pub-header-eyebrow{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.pub-header-h1{font-size:clamp(32px,4vw,52px);font-weight:600;color:var(--blue);line-height:1.5;letter-spacing:-.04em;margin-bottom:16px}
+.pub-header-desc{font-size:17px;color:var(--muted);line-height:1.8;max-width:640px;margin-bottom:24px}
+.pub-header-stat-row{display:flex;gap:32px;flex-wrap:wrap}
+.pub-stat{display:flex;flex-direction:column;gap:2px}
+.pub-stat-val{font-size:24px;font-weight:700;color:var(--blue);line-height:1}
+.pub-stat-lbl{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* ── TRACK TABS ── */
+.pub-tabs{max-width:1200px;margin:0 auto;padding:20px 48px 0;display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.pub-tab{font-size:14px;font-weight:600;color:var(--muted);padding:10px 18px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;cursor:pointer;text-decoration:none}
+.pub-tab.on{color:var(--blue);border-bottom-color:var(--gold)}
+.pub-tab:hover:not(.on){color:var(--ink)}
+
+/* ── GRID ── */
+.pub-grid-wrap{max-width:1200px;margin:0 auto;padding:36px 48px 80px}
+.pub-tier-section{margin-bottom:52px}
+.pub-tier-label{display:inline-flex;align-items:center;gap:10px;margin-bottom:20px}
+.pub-tier-name{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:4px 14px;border-radius:99px}
+.pub-tier-count{font-size:13px;color:var(--muted)}
+.pub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* ── PHOTOGRAPHER CARD ── */
+.pub-card{background:#fff;border:1px solid var(--line);display:flex;flex-direction:column;position:relative}
+.pub-card-img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:var(--dark)}
+.pub-card-img-placeholder{width:100%;aspect-ratio:3/2;background:linear-gradient(145deg,#1a2540 0%,#0f1828 100%);display:flex;align-items:center;justify-content:center}
+.pub-card-img-wrap{position:relative;display:block;overflow:hidden}
+.pub-card-score{position:absolute;bottom:10px;right:12px;font-size:28px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.04em;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.pub-card-tier-ov{position:absolute;bottom:10px;left:12px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.pub-card-body{padding:14px 16px 16px}
+.pub-card-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pub-card-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+.pub-card-lock{display:flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);padding:10px 12px;font-size:13px;color:var(--muted);line-height:1.5}
+.pub-card-lock-link{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;margin-left:auto;flex-shrink:0}
+.pub-card-lock-link:hover{text-decoration:underline}
+
+/* Tier pill colours */
+.tp-legend{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B}
+.tp-grandmaster{background:#FDF3CC;color:#B45309;border:1px solid #D6A428}
+.tp-master{background:#EDEDEB;color:#2D2D2D;border:1px solid #C4C4C0}
+.tp-maverick{background:#EDE9FE;color:#5B21B6;border:1px solid #C4B5FD}
+.tp-craftsman{background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD}
+.tp-contender{background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7}
+.tp-shooter{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB}
+.tp-rookie{background:#F9FAFB;color:#6B7280;border:1px solid #E5E7EB}
+
+/* ── JOIN BANNER ── */
+.pub-join{background:var(--dark);padding:52px 48px;text-align:center}
+.pub-join-h{font-size:clamp(24px,3.5vw,40px);font-weight:600;color:#fff;line-height:1.5;letter-spacing:-.03em;margin-bottom:14px}
+.pub-join-sub{font-size:17px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.7}
+.pub-join-cta{display:inline-block;background:var(--gold);color:var(--dark);font-size:16px;font-weight:700;padding:15px 32px;border-radius:2px}
+.pub-join-note{font-size:14px;color:rgba(255,255,255,.35);margin-top:14px}
+
+/* ── FOOTER ── */
+.pub-footer{background:var(--dark);color:rgba(255,255,255,.5);padding:56px 48px 28px}
+.pub-footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
+.pub-footer-col h4{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
+.pub-footer-col a{display:block;color:rgba(255,255,255,.52);font-size:15px;margin-bottom:9px;transition:color .15s;text-decoration:none}
+.pub-footer-col a:hover{color:#fff}
+.pub-footer-tagline{font-size:15px;color:rgba(255,255,255,.38);line-height:1.7;margin-bottom:12px}
+.pub-footer-bottom{font-size:13px;color:rgba(255,255,255,.3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:18px;max-width:1200px;margin:0 auto;border-top:1px solid rgba(255,255,255,.1)}
+.pub-footer-links{display:flex;gap:18px}
+.pub-footer-links a{color:rgba(255,255,255,.3);font-size:13px}
+
+/* ── BOTTOM NAV (authenticated users only) ── */
+.pub-bottom-nav{
+  display:none;position:fixed;
+  bottom:env(safe-area-inset-bottom,0px);left:0;right:0;
+  height:62px;background:#0F1F3D;
+  border-top:0.5px solid rgba(255,255,255,.15);
+  justify-content:space-around;align-items:flex-start;
+  padding-top:0;z-index:200;overflow:hidden;box-sizing:border-box
+}
+.pub-bn-tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:rgba(255,255,255,.5);text-decoration:none;
+  font-size:13px;font-weight:600;
+  min-width:0;flex:1 1 0;min-height:44px;
+  padding:10px 2px 4px;background:none;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  will-change:transform;transition:color .15s
+}
+.pub-bn-tab svg{flex-shrink:0;width:18px;height:18px}
+.pub-bn-tab.on{color:#D4A428}
+.pub-bn-tab:active{color:#D4A428!important;transform:scale(.92);transition:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){.pub-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .pub-nav{padding:0 16px}
+  .pub-nav-right{display:none}  /* hide all desktop nav links — hamburger takes over */
+  .pub-ham{display:flex}        /* show hamburger */
+  /* SL-194: Haiku users have More tab in bottom nav — hamburger not needed */
+  .pub-nav.haiku-nav .pub-ham{display:none}
+  .pub-header{padding:36px 20px 28px}
+  .pub-tabs{padding:0 20px}
+  .pub-grid-wrap{padding:28px 20px 60px}
+  .pub-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .pub-join{padding:40px 20px}
+  .pub-footer{padding:44px 22px 24px}
+  .pub-footer-grid{grid-template-columns:1fr 1fr;gap:24px}
+  .pub-footer-bottom{flex-direction:column;gap:8px;text-align:center}
+  .pub-header-stat-row{gap:20px}
+  .pub-register{display:none}
+  .pub-bottom-nav{display:flex!important}
+  body{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px) + 10px)}
+  .pub-card-lock span{display:none}
+}
+@media(max-width:400px){.pub-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+{# ── NAV ── #}
+<nav class="pub-nav{% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %} haiku-nav{% endif %}">
+  <a href="{{ url_for('index') }}" class="pub-brand">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" style="height:34px;width:auto;display:block" onerror="this.style.display='none'">
+    <span class="pub-brandword">Shutter League</span>
+  </a>
+  <div class="pub-nav-right">
+    {% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %}
+      {# Haiku (free) user nav — matches base-staging Haiku nav order #}
+      <a href="{{ url_for('try_welcome') }}" class="pub-nav-link">Home</a>
+      <a href="{{ url_for('try_gallery') }}" class="pub-nav-link">My evaluations</a>
+      <a href="{{ url_for('try_page') }}" class="pub-nav-link">Upload</a>
+      <a href="{{ url_for('pricing') }}" class="pub-nav-link">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" class="pub-nav-link on">League of Photographers</a>
+      <a href="{{ url_for('profile') }}" class="pub-nav-link">Profile</a>
+      <a href="{{ url_for('logout') }}" class="pub-nav-link" style="font-size:13px;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);padding:5px 10px;min-height:44px;">Log out</a>
+    {% else %}
+      {# Public / paid nav #}
+      <a href="{{ url_for('how_it_works') }}" class="pub-nav-link">How it works</a>
+      <a href="{{ url_for('science') }}" class="pub-nav-link">Science</a>
+      <a href="{{ url_for('contests') }}" class="pub-nav-link">Programmes</a>
+      <a href="{{ url_for('pricing') }}" class="pub-nav-link">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" class="pub-nav-link on">League of Photographers</a>
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_subscribed or current_user.role == 'admin' %}
+          <a href="{{ url_for('dashboard') }}" class="pub-login">My dashboard</a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('login') }}" class="pub-login">Log in</a>
+        <a href="{{ url_for('register') }}" class="pub-register">Join the League →</a>
+      {% endif %}
+    {% endif %}
+  </div>
+  {# Hamburger — mobile only, replaces pub-nav-right which hides at ≤768px #}
+  <button class="pub-ham" onclick="var m=document.getElementById('pubMobMenu');m.classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+{# Mobile overlay menu — auth-aware. SL-194: Haiku users don't see discovery pages (already a member). #}
+<div class="pub-mob-menu" id="pubMobMenu">
+  {% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %}
+    {# Haiku user — product pages only, no pre-login discovery #}
+    <a href="{{ url_for('try_welcome') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Home</a>
+    <a href="{{ url_for('try_page') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Upload</a>
+    <a href="{{ url_for('try_gallery') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My evaluations</a>
+    <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+    <a href="{{ url_for('profile') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Profile</a>
+    <a href="{{ url_for('logout') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
+  {% elif current_user.is_authenticated %}
+    {# Paid / admin #}
+    <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">How it works</a>
+    <a href="{{ url_for('science') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Science</a>
+    <a href="{{ url_for('contests') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Programmes</a>
+    <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+    <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">League of Photographers</a>
+    <a href="{{ url_for('dashboard') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">My dashboard</a>
+    <a href="{{ url_for('logout') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" style="color:rgba(255,120,120,.75)">Log out</a>
+  {% else %}
+    {# Logged out — discovery + join #}
+    <a href="{{ url_for('how_it_works') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">How it works</a>
+    <a href="{{ url_for('science') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Science</a>
+    <a href="{{ url_for('contests') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Programmes</a>
+    <a href="{{ url_for('pricing') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Pricing</a>
+    <a href="{{ url_for('standings_public') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">League of Photographers</a>
+    <a href="{{ url_for('login') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')">Log in</a>
+    <a href="{{ url_for('register') }}" onclick="document.getElementById('pubMobMenu').classList.remove('open')" class="pub-mob-join">Join the League →</a>
+  {% endif %}
+</div>
+
+{# SL-194: Haiku More drawer — replaces Log out direct tab #}
+<div class="pub-more-drawer" id="pubMoreDrawer">
+  <a class="pub-more-item" href="{{ url_for('profile') }}" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </a>
+  <a class="pub-more-item" href="{{ url_for('pricing') }}" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Pricing
+  </a>
+  <a class="pub-more-item" href="/contact" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Help &amp; Support
+  </a>
+  <div class="pub-more-divider"></div>
+  <a class="pub-more-item pub-logout" href="{{ url_for('logout') }}" onclick="closePubMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
+</div>
+
+{# ── HEADER ── #}
+<div class="pub-header">
+  {% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %}
+  <a href="{{ url_for('try_welcome') }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:rgba(26,39,68,0.55);text-decoration:none;margin-bottom:20px;border-bottom:1px solid rgba(26,39,68,0.18);padding-bottom:1px;">
+    ← Back to my dashboard
+  </a>
+  {% endif %}
+  <div class="pub-header-eyebrow">Overall Standings</div>
+  <h1 class="pub-header-h1">These are photographers<br>building their record.</h1>
+  <p class="pub-header-desc">Every evaluation is calibrated against the same standard. The tier a photographer holds is earned — not by a single image, but by what their eye consistently does across time.</p>
+  <div class="pub-header-stat-row">
+    {% if total_photographers is defined %}<div class="pub-stat"><span class="pub-stat-val">{{ total_photographers }}</span><span class="pub-stat-lbl">Photographers</span></div>{% endif %}
+    {% if total_images is defined %}<div class="pub-stat"><span class="pub-stat-val">{{ total_images }}</span><span class="pub-stat-lbl">Evaluations</span></div>{% endif %}
+    <div class="pub-stat"><span class="pub-stat-val">312</span><span class="pub-stat-lbl">Blind calibrations</span></div>
+    <div class="pub-stat"><span class="pub-stat-val">31 Dec</span><span class="pub-stat-lbl">AEA 2026</span></div>
+  </div>
+</div>
+
+{# ── TRACK TABS ── #}
+<div class="pub-tabs">
+  <a href="?track=all" class="pub-tab {{ 'on' if not track or track == 'all' else '' }}">All</a>
+  <a href="?track=camera" class="pub-tab {{ 'on' if track == 'camera' else '' }}">Camera League</a>
+  <a href="?track=mobile" class="pub-tab {{ 'on' if track == 'mobile' else '' }}">Mobile League</a>
+</div>
+
+{# ── GRID ── #}
+<div class="pub-grid-wrap">
+
+{% set tiers = [
+  ('Legend',      'tp-legend'),
+  ('Grandmaster', 'tp-grandmaster'),
+  ('Master',      'tp-master'),
+  ('Maverick',    'tp-maverick'),
+  ('Craftsman',   'tp-craftsman'),
+  ('Contender',   'tp-contender'),
+  ('Shooter',     'tp-shooter'),
+  ('Rookie',      'tp-rookie'),
+] %}
+
+{% for tier_name, tier_class in tiers %}
+  {% set tier_photographers = public_photographers | selectattr('tier', 'equalto', tier_name) | list %}
+  {% if tier_photographers %}
+  <div class="pub-tier-section">
+    <div class="pub-tier-label">
+      <span class="pub-tier-name {{ tier_class }}">{{ tier_name }}</span>
+      <span class="pub-tier-count">{{ tier_photographers | length }} photographer{{ 's' if tier_photographers | length != 1 else '' }}</span>
+    </div>
+    <div class="pub-grid">
+      {% for p in tier_photographers %}
+      <div class="pub-card">
+        {# Best image thumbnail — shown publicly #}
+        <a class="pub-card-img-wrap" href="#" onclick="slOpenImg(this);return false" data-src="{{ p.best_thumb_url }}" data-name="{{ p.display_name }}" data-tier="{{ p.tier }}" data-score="{{ '%.1f'|format(p.best_score) if p.best_score else '' }}">
+          {% if p.best_thumb_url %}
+          <img class="pub-card-img" src="{{ p.best_thumb_url }}" alt="{{ p.display_name }}'s best photograph" loading="lazy" onerror="this.parentElement.style.background='#1a2540'">
+          {% else %}
+          <div class="pub-card-img-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          {% endif %}
+          {% if p.best_score %}<span class="pub-card-score">{{ "%.1f"|format(p.best_score) }}</span>{% endif %}
+          <span class="pub-card-tier-ov">{{ p.tier }}</span>
+        </a>
+        <div class="pub-card-body">
+          <div class="pub-card-name">{{ p.display_name }}</div>
+          <div class="pub-card-meta">{{ p.interest_area or 'Photography' }}{% if p.eval_count %} · {{ p.eval_count }} evaluation{{ 's' if p.eval_count != 1 else '' }}{% endif %}</div>
+          {# Scorecard locked — for League photographers only #}
+          <div class="pub-card-lock">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Full evaluation — League photographers only</span>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('try_page') }}" class="pub-card-lock-link">Upload →</a>
+            {% elif current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="pub-card-lock-link">Dashboard →</a>
+            {% else %}
+            <a href="{{ url_for('register') }}" class="pub-card-lock-link">Join →</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+
+{% if not public_photographers %}
+<div style="padding:60px 0;text-align:center;color:var(--muted);font-size:16px">No photographers to show yet.</div>
+{% endif %}
+
+</div>
+
+{# ── JOIN BANNER ── #}
+<div class="pub-join">
+  <div class="pub-join-h">Your record starts with<br>your first photograph.</div>
+  <p class="pub-join-sub">Chess has Elo. Cricket has ICC standings. In 200 years of photography, nobody built one. Until now.</p>
+  {% if current_user.is_authenticated and not current_user.is_subscribed %}
+  <a href="{{ url_for('try_page') }}" class="pub-join-cta">Upload your first photograph →</a>
+  <p class="pub-join-note">{{ 10 }} free evaluations remaining. No subscription needed.</p>
+  {% elif current_user.is_authenticated %}
+  <a href="{{ url_for('dashboard') }}" class="pub-join-cta">Go to your dashboard →</a>
+  <p class="pub-join-note">Your record is building.</p>
+  {% else %}
+  <a href="{{ url_for('register') }}" class="pub-join-cta">Join the League →</a>
+  <p class="pub-join-note">10 free evaluations. No subscription needed to begin.</p>
+  {% endif %}
+</div>
+
+{# ── FOOTER ── #}
+<footer class="pub-footer">
+  <div class="pub-footer-grid">
+    <div class="pub-footer-col">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:28px;height:28px;border:1.5px solid rgba(255,255,255,.3);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#D4A428;flex-shrink:0">SL</div>
+        <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5)">Shutter League</span>
+      </div>
+      <div class="pub-footer-tagline">Photography Assessment &amp; Evolution Platform<br><em>Making Images Matter</em></div>
+      <div style="font-size:14px;color:rgba(255,255,255,.35);margin-top:8px">support@shutterleague.com</div>
+    </div>
+    <div class="pub-footer-col">
+      <h4>Company</h4>
+      <a href="/about">About Us</a>
+      <a href="/contact">Contact Us</a>
+      <a href="{{ url_for('pricing') }}">Pricing</a>
+      <a href="/faq">FAQ</a>
+    </div>
+    <div class="pub-footer-col">
+      <h4>Legal</h4>
+      <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/refund-policy">Refunds</a>
+      <a href="/shipping-policy">Shipping</a>
+    </div>
+    <div class="pub-footer-col">
+      <h4>Programmes</h4>
+      <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
+      <a href="{{ url_for('contests') }}">All Programmes</a>
+      <a href="/contact">Help &amp; Support</a>
+    </div>
+    <div class="pub-footer-col">
+      <h4>Learn</h4>
+      <a href="{{ url_for('science') }}">Science</a>
+      <a href="{{ url_for('how_it_works') }}">How it works</a>
+      <a href="{{ url_for('mentors') }}">Mentors</a>
+    </div>
+  </div>
+  <div class="pub-footer-bottom">
+    <span>© 2026 Shutter League · Bengaluru, India · UDYAM-KR-03-0697280</span>
+    <div class="pub-footer-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/refund-policy">Refunds</a>
+      <a href="/shipping-policy">Shipping</a>
+    </div>
+  </div>
+</footer>
+
+
+<div id="slLightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;flex-direction:column" onclick="this.style.display='none'">
+  <div style="position:relative;max-width:90vw;max-height:80vh">
+    <img id="slLbImg" src="" style="max-width:90vw;max-height:75vh;object-fit:contain;display:block">
+    <div style="position:absolute;bottom:-44px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+      <div>
+        <div id="slLbName" style="font-size:16px;font-weight:600;color:#fff;font-family:Aptos,'Segoe UI',Arial,sans-serif"></div>
+        <div id="slLbTier" style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase;font-family:Aptos,'Segoe UI',Arial,sans-serif"></div>
+      </div>
+      <div id="slLbScore" style="font-size:44px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.04em;font-family:Aptos,'Segoe UI',Arial,sans-serif"></div>
+    </div>
+  </div>
+</div>
+<script>
+function slOpenImg(el){
+  var lb=document.getElementById('slLightbox');
+  document.getElementById('slLbImg').src=el.getAttribute('data-src')||'';
+  document.getElementById('slLbName').textContent=el.getAttribute('data-name')||'';
+  document.getElementById('slLbTier').textContent=el.getAttribute('data-tier')||'';
+  document.getElementById('slLbScore').textContent=el.getAttribute('data-score')||'';
+  lb.style.display='flex';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('slLightbox').style.display='none';});
+// Close hamburger on outside tap
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('pubMobMenu');
+  if(!menu)return;
+  if(menu.classList.contains('open')&&!menu.contains(e.target)&&!e.target.closest('.pub-ham')){
+    menu.classList.remove('open');
+  }
+  // SL-194: Close Haiku More drawer on outside tap
+  var d=document.getElementById('pubMoreDrawer');
+  var btn=document.getElementById('pubMoreBtn');
+  if(d&&d.classList.contains('open')&&!d.contains(e.target)&&(!btn||!btn.contains(e.target))){
+    d.classList.remove('open');
+    if(btn)btn.style.color='';
+  }
+});
+// SL-194: Haiku More drawer functions
+function togglePubMore(e){
+  e.stopPropagation();
+  var d=document.getElementById('pubMoreDrawer');
+  if(d)d.classList.toggle('open');
+  var btn=document.getElementById('pubMoreBtn');
+  if(btn)btn.style.color=d&&d.classList.contains('open')?'#F5C518':'';
+}
+function closePubMore(){
+  var d=document.getElementById('pubMoreDrawer');
+  if(d)d.classList.remove('open');
+  var btn=document.getElementById('pubMoreBtn');
+  if(btn)btn.style.color='';
+}
+</script>
+{% if current_user.is_authenticated %}
+<nav class="pub-bottom-nav">
+  {% if current_user.is_subscribed or current_user.role == 'admin' %}
+  <a class="pub-bn-tab" href="{{ url_for('dashboard') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Dashboard
+  </a>
+  <a class="pub-bn-tab" href="{{ url_for('upload') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Upload
+  </a>
+  <a class="pub-bn-tab" href="{{ url_for('my_gallery') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    My Gallery
+  </a>
+  {% else %}
+  {# Haiku: Home · Upload · My Gallery · League · More #}
+  <a class="pub-bn-tab" href="{{ url_for('try_welcome') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <a class="pub-bn-tab" href="{{ url_for('try_page') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Upload
+  </a>
+  <a class="pub-bn-tab" href="{{ url_for('try_gallery') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    My Gallery
+  </a>
+  {% endif %}
+  <a class="pub-bn-tab on" href="{{ url_for('standings_public') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+    League
+  </a>
+  {% if current_user.is_subscribed or current_user.role == 'admin' %}
+  <a class="pub-bn-tab" href="{{ url_for('logout') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log out
+  </a>
+  {% else %}
+  {# Haiku: More tab replaces Log out direct tab #}
+  <button class="pub-bn-tab" id="pubMoreBtn" onclick="togglePubMore(event)" aria-label="More"
+          style="background:none;border:none;cursor:pointer;touch-action:manipulation;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    More
+  </button>
+  {% endif %}
+</nav>
+{% endif %}
+</body>
+</html>

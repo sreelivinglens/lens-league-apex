@@ -1,0 +1,617 @@
+{# SL-VERSION: 1.2-staging (Session 201 — audit fixes: line-height 1.12/1.15→1.5 on display elements. RETAINS 1.1.) — league_haiku: Haiku world League page. Two-column desktop. Left: declaration / spotlight. Right: league + masters grids. Mobile bottom nav. Standalone. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="{{ request.url }}">
+<title>League of Photographers — Shutter League</title>
+<meta property="og:title" content="League of Photographers — Shutter League">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. The standing earned by photographers who see differently. Honest evaluation. The work determines everything.">
+<meta property="og:image" content="{{ url_for('static', filename='img/og-league.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='img/og-league.jpg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+h1, h2, h3 { text-shadow: none; }
+body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webkit-font-smoothing:antialiased; }
+
+
+/* ── TOP NAV ── same pattern as dashboard_haiku exactly ── */
+.sl-topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0 48px; height:60px;
+  border-bottom:none;
+  background:#1A2744;
+  position:sticky; top:0; z-index:100;
+}
+.sl-brand { display:flex; flex-direction:row; align-items:center; gap:10px; text-decoration:none; }
+.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#fff; text-transform:uppercase; }
+.sl-brand-sub { font-size:13px; letter-spacing:0.10em; color:rgba(245,243,239,0.55); text-transform:uppercase; }
+.sl-nav { display:flex; gap:32px; align-items:center; }
+.sl-nav a { font-size:13px; color:rgba(245,243,239,0.65); text-decoration:none; letter-spacing:0.03em; cursor:pointer; }
+.sl-nav a:hover { color:#fff; }
+.sl-nav a.active { color:#fff; font-weight:600; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+.sl-nav-logout { background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; }
+.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(245,243,239,0.65); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ── PAGE — two column, fills viewport ── */
+.sl-page { background:#F5F3EF; display:flex; height:calc(100vh - 61px); height:calc(100dvh - 61px); overflow:hidden; }
+
+/* ── LEFT COLUMN ── */
+.sl-left { width:38%; border-right:0.5px solid rgba(26,39,68,0.10); display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
+
+/* DECLARATION */
+.sl-decl { padding:28px 32px 20px; display:flex; flex-direction:column; height:100%; }
+.sl-decl-eyebrow { font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(26,39,68,0.45); margin-bottom:14px; flex-shrink:0; }
+.sl-decl-headline { font-family:'Playfair Display',serif; font-size:44px; font-weight:400; line-height:1.5; color:#1A2744; flex-shrink:0; }
+.sl-decl-beats { flex:1; display:flex; flex-direction:column; justify-content:space-evenly; padding:2px 0; min-height:0; }
+.sl-beat-group { display:flex; flex-direction:column; }
+.sl-gold-rule { width:36px; height:1px; background:#C8A84B; margin:0 0 10px; flex-shrink:0; }
+.sl-beat { font-size:16px; line-height:1.80; color:rgba(26,39,68,0.70); }
+.sl-beat strong { color:#1A2744; font-weight:600; }
+.sl-final-line { font-size:16px; color:rgba(26,39,68,0.70); margin-top:8px; }
+
+/* TIER MAP */
+.sl-tmap { background:#EDE9E1; border:0.5px solid rgba(200,168,75,0.28); border-radius:3px; padding:14px 16px; flex-shrink:0; margin-top:16px; }
+.sl-tmap-label { font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(26,39,68,0.45); margin-bottom:10px; }
+.sl-tmap-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:13px; color:#1A2744; }
+.sl-tmap-row:last-child { margin-bottom:0; }
+.sl-tdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.sl-trange { margin-left:auto; font-size:13px; color:rgba(26,39,68,0.45); }
+.sl-tnote { font-size:13px; color:rgba(26,39,68,0.45); line-height:1.65; margin-top:8px; }
+
+/* SPOTLIGHT */
+.sl-spot { display:none; flex-direction:column; height:100%; overflow:hidden; }
+.sl-spot-date { padding:16px 28px 0; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(26,39,68,0.45); flex-shrink:0; }
+.sl-spot-img-wrap { flex:1; background:#0C1018; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:0; overflow:hidden; margin-top:12px; }
+.sl-spot-img { width:100%; height:100%; object-fit:contain; display:block; }
+.sl-spot-hover { position:absolute; inset:0; background:rgba(26,39,68,0.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; font-size:14px; color:#F5F3EF; letter-spacing:0.03em; }
+.sl-spot-img-wrap:hover .sl-spot-hover { opacity:1; }
+.sl-spot-strip { padding:16px 28px 0; flex-shrink:0; }
+.sl-spot-name { font-family:'Playfair Display',serif; font-size:24px; color:#1A2744; line-height:1.5; }
+.sl-spot-meta { display:flex; align-items:baseline; gap:10px; margin-top:6px; }
+.sl-spot-score { font-family:'Playfair Display',serif; font-size:30px; color:#1A2744; line-height:1; }
+.sl-spot-tier { font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:rgba(26,39,68,0.55); }
+.sl-spot-genre { font-size:13px; color:rgba(26,39,68,0.45); margin-left:auto; }
+.sl-spot-aha { margin:14px 28px 0; padding:14px 16px; background:#EDE9E1; border-left:2px solid #C8A84B; flex-shrink:0; }
+.sl-spot-aha-text { font-size:16px; line-height:1.72; color:#1A2744; }
+.sl-spot-cta { margin:14px 28px 18px; flex-shrink:0; }
+.sl-spot-cta-link { font-size:14px; color:rgba(26,39,68,0.65); letter-spacing:0.04em; text-decoration:none; border-bottom:1px solid rgba(26,39,68,0.25); padding-bottom:1px; display:inline-block; cursor:pointer; }
+.sl-spot-cta-link:hover { color:#1A2744; border-bottom-color:#1A2744; }
+
+/* ── RIGHT COLUMN ── */
+.sl-right { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+
+/* TABS */
+.sl-tabs { display:flex; border-bottom:0.5px solid rgba(200,168,75,0.18); padding:0 28px; flex-shrink:0; }
+.sl-tab { font-size:13px; letter-spacing:0.08em; text-transform:uppercase; padding:14px 14px 13px; cursor:pointer; color:rgba(26,39,68,0.42); border-bottom:2px solid transparent; transition:all .15s; background:none; border-top:none; border-left:none; border-right:none; font-family:'Inter',sans-serif; min-height:44px; }
+.sl-tab.active { color:#1A2744; border-bottom-color:#C8A84B; font-weight:500; }
+
+/* FILTERS */
+.sl-filters { display:flex; gap:8px; align-items:center; padding:10px 28px; border-bottom:0.5px solid rgba(26,39,68,0.06); flex-shrink:0; flex-wrap:wrap; }
+.sl-filters select,
+.sl-filters input { font-size:16px; background:#fff; border:0.5px solid rgba(26,39,68,0.18); color:#1A2744; font-family:'Inter',sans-serif; padding:6px 10px; border-radius:2px; outline:none; min-height:44px; }
+.sl-filters input { width:180px; }
+.sl-filters input::placeholder { color:rgba(26,39,68,0.40); }
+.sl-f-count { margin-left:auto; font-size:13px; color:rgba(26,39,68,0.45); letter-spacing:0.04em; white-space:nowrap; }
+
+/* MASTERS NOTE */
+.sl-masters-note { padding:8px 28px 0; font-size:13px; color:rgba(26,39,68,0.45); display:none; }
+
+/* GRID */
+.sl-grid-area { flex:1; padding:14px 28px 0; overflow:hidden; min-height:0; }
+.sl-grid { display:grid; gap:8px; height:100%; }
+.sl-grid-league { grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); }
+.sl-grid-masters { grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); }
+
+/* CARD */
+.sl-card { background:#fff; border:0.5px solid rgba(26,39,68,0.10); border-radius:3px; cursor:pointer; overflow:hidden; display:flex; flex-direction:column; transition:border-color .15s; text-decoration:none; }
+.sl-card:hover { border-color:#C8A84B; }
+.sl-card-thumb { flex:1; background:#0C1018; display:block; width:100%; object-fit:contain; min-height:0; }
+.sl-card-meta { padding:7px 10px 9px; flex-shrink:0; border-top:0.5px solid rgba(26,39,68,0.06); }
+.sl-card-name { font-size:13px; font-weight:600; color:#1A2744; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sl-card-genre { font-size:13px; color:rgba(26,39,68,0.45); margin-top:2px; }
+.sl-card-score { font-family:'Playfair Display',serif; font-size:20px; color:#1A2744; margin-top:4px; line-height:1; }
+.sl-card-score-blue { font-family:'Playfair Display',serif; font-size:20px; color:#7A9BBF; margin-top:4px; line-height:1; }
+.sl-card-tier-gold { font-size:13px; font-weight:600; letter-spacing:0.10em; text-transform:uppercase; color:#C8A84B; margin-top:3px; }
+.sl-card-tier-blue { font-size:13px; font-weight:600; letter-spacing:0.10em; text-transform:uppercase; color:#7A9BBF; margin-top:3px; }
+
+/* FOOTER STRIP */
+.sl-foot { display:flex; align-items:center; justify-content:space-between; padding:10px 28px; border-top:0.5px solid rgba(200,168,75,0.18); flex-shrink:0; }
+.sl-pgn { display:flex; gap:4px; }
+.sl-pbn { font-size:13px; padding:5px 12px; border:0.5px solid rgba(26,39,68,0.18); border-radius:2px; cursor:pointer; color:rgba(26,39,68,0.45); background:transparent; font-family:'Inter',sans-serif; min-height:44px; }
+.sl-pbn:hover, .sl-pbn.active { border-color:#C8A84B; color:#C8A84B; }
+.sl-aspiration { text-align:right; }
+.sl-asp1 { font-size:13px; color:rgba(26,39,68,0.45); margin-bottom:3px; }
+.sl-asp2 { font-family:'Playfair Display',serif; font-size:15px; color:#1A2744; }
+
+/* KYC + FOOTER */
+.sl-kyc { background:#EDE9E1; padding:14px 48px; font-size:13px; color:rgba(26,39,68,0.55); line-height:1.65; border-top:0.5px solid rgba(26,39,68,0.08); }
+.sl-kyc a { color:rgba(26,39,68,0.55); text-decoration:underline; }
+/* Full footer grid */
+.sl-full-footer-grid { display:grid; grid-template-columns:1.8fr 1fr 1fr 1fr 1fr; gap:2rem; margin-bottom:2.5rem; max-width:1200px; margin-left:auto; margin-right:auto; }
+@media (max-width: 768px) {
+  .sl-full-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 1.5rem; }
+  .sl-full-footer-grid > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .sl-full-footer-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── MOBILE BOTTOM NAV ── clean, aligned, same as base-staging pattern ── */
+.sl-mob-nav {
+  display:none;
+  position:fixed; bottom:0; left:0; right:0;
+  background:#F5F3EF;
+  border-top:0.5px solid rgba(26,39,68,0.12);
+  padding:0;
+  z-index:200;
+  -webkit-backdrop-filter:blur(10px);
+}
+.sl-mob-nav-items {
+  display:flex;
+  justify-content:space-around;
+  align-items:stretch;
+  height:56px;
+}
+.sl-mob-nav-item {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  font-size:13px;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:rgba(26,39,68,0.42);
+  cursor:pointer;
+  text-decoration:none;
+  background:none;
+  border:none;
+  font-family:'Inter',sans-serif;
+  min-height:44px;
+  padding:4px 2px 2px;
+}
+.sl-mob-nav-item.active { color:#C8A84B; }
+.sl-mob-nav-item svg {
+  width:22px; height:22px;
+  stroke:currentColor; fill:none;
+  stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round;
+}
+
+/* MORE DRAWER */
+.sl-mob-more-drawer {
+  display:none;
+  position:fixed; bottom:56px; left:0; right:0;
+  background:#F5F3EF;
+  border-top:0.5px solid rgba(26,39,68,0.12);
+  z-index:199;
+  padding:8px 0;
+  box-shadow:0 -4px 24px rgba(26,39,68,0.08);
+}
+.sl-mob-more-drawer.open { display:block; }
+.sl-mob-drawer-item {
+  display:block;
+  padding:14px 24px;
+  font-size:16px;
+  color:rgba(26,39,68,0.65);
+  text-decoration:none;
+  border-bottom:0.5px solid rgba(26,39,68,0.06);
+}
+.sl-mob-drawer-item:last-child { border-bottom:none; }
+.sl-mob-drawer-item:hover { color:#1A2744; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  html, body { overflow:auto; height:auto; }
+  .sl-page { flex-direction: column !important; height:auto; overflow:visible; }
+  .sl-left { width:100%; border-right:none; border-bottom:0.5px solid rgba(26,39,68,0.10); height:auto; overflow:visible; }
+  .sl-decl { padding:24px 20px 18px; height:auto; }
+  .sl-decl-beats { flex:none; }
+  .sl-decl-headline { font-size:36px; }
+  .sl-right { height:auto; overflow:visible; }
+  .sl-grid-area { height:auto; overflow:visible; padding-bottom:0; }
+  .sl-grid-league,
+  .sl-grid-masters { grid-template-columns:repeat(3,1fr); grid-template-rows:auto; height:auto; }
+  .sl-card-thumb { aspect-ratio:4/3; flex:none; height:auto; }
+  .sl-foot { flex-direction:column; align-items:flex-start; gap:8px; }
+  .sl-aspiration { text-align:left; }
+  .sl-mob-nav { display:block; }
+  .sl-topbar { padding:14px 20px; }
+  .sl-nav { display:none; }
+  body { padding-bottom:60px; }
+  .sl-spot { height:auto; }
+  .sl-spot-img-wrap { min-height:260px; flex:none; }
+  .sl-filters { padding:8px 20px; }
+  .sl-tabs { padding:0 20px; }
+  .sl-grid-area { padding:12px 20px 0; }
+  .sl-foot { padding:10px 20px; }
+  .sl-masters-note { padding:8px 20px 0; }
+  .sl-kyc { padding:14px 20px; }
+}
+@media (max-width: 480px) {
+  .sl-page { flex-direction: column !important; }
+  .sl-grid-league,
+  .sl-grid-masters { grid-template-columns:repeat(2,1fr); gap:6px; }
+  .sl-topbar { padding:12px 16px; }
+  .sl-decl-headline { font-size:32px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV — exact dashboard_haiku pattern -->
+<div class="sl-topbar">
+  <a href="{{ url_for('try_welcome') }}" class="sl-brand">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League" style="height:36px;width:auto;display:block"
+         onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="sl-brand-name">Shutter League</span>
+      <span class="sl-brand-sub">Making Images Matter</span>
+    </div>
+  </a>
+  <nav class="sl-nav">
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('try_welcome') }}">Home</a>
+    <a href="{{ url_for('try_gallery') }}">My evaluations</a>
+    <a href="{{ url_for('try_page') }}">Upload</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </a>
+    {% else %}
+    <a href="{{ url_for('how_it_works') }}">How it works</a>
+    <a href="{{ url_for('science') }}">Science</a>
+    <a href="{{ url_for('contests') }}">Programmes</a>
+    <a href="{{ url_for('pricing') }}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('login') }}">Login</a>
+    <a href="{{ url_for('register') }}" style="background:#1A2744;color:#fff;padding:8px 18px;border-radius:4px;font-weight:600;font-size:13px;">Register</a>
+    {% endif %}
+  </nav>
+</div>
+
+<!-- PAGE -->
+<div class="sl-page">
+
+  <!-- LEFT -->
+  <div class="sl-left">
+
+    <!-- DECLARATION — Visit 1 -->
+    <div class="sl-decl" id="sl-state-decl">
+      <div class="sl-decl-eyebrow">The League of Photographers</div>
+      <div class="sl-decl-headline">Earned.<br>Not purchased.</div>
+      <div class="sl-decl-beats">
+        <div class="sl-beat-group">
+          <div class="sl-gold-rule"></div>
+          <div class="sl-beat">Fewer than one in a hundred reaches <strong>9.</strong><br>Crossing <strong>9.5</strong> — Legend — is rarer still.</div>
+        </div>
+        <div class="sl-beat-group">
+          <div class="sl-gold-rule"></div>
+          <div class="sl-beat">They didn't arrive here with better equipment.<br>They learned <strong>to see differently</strong> — to stop a stranger cold.<br>To create something the world hasn't seen before.</div>
+        </div>
+        <div class="sl-beat-group">
+          <div class="sl-gold-rule"></div>
+          <div class="sl-beat">Every image. The same five dimensions.<br>The same bar. No exceptions.</div>
+          <div class="sl-final-line">Honest. Unbiased. The work determines everything.</div>
+        </div>
+      </div>
+      <div class="sl-tmap">
+        <div class="sl-tmap-label">The path</div>
+        <div class="sl-tmap-row"><div class="sl-tdot" style="background:#C8A84B"></div><span>The League of Photographers</span><span class="sl-trange">8.0 +</span></div>
+        <div class="sl-tmap-row"><div class="sl-tdot" style="background:#7A9BBF"></div><span>Masters in the Making</span><span class="sl-trange">6.0 – 7.9</span></div>
+        <div class="sl-tmap-row"><div class="sl-tdot" style="background:rgba(26,39,68,0.20)"></div><span>Emerging Photographers</span><span class="sl-trange">below 6.0</span></div>
+        <div class="sl-tnote">Emerging photographers build their record privately.<br>Every photograph moves you forward.</div>
+      </div>
+    </div>
+
+    <!-- SPOTLIGHT — Visit 2+ -->
+    {% if spotlight %}<span id="sl-has-spotlight" style="display:none"></span>{% endif %}
+    <div class="sl-spot" id="sl-state-spot">
+      <div class="sl-spot-date" id="sl-spot-date"></div>
+      {% if spotlight %}
+      <a href="{{ url_for('try_standing', image_id=spotlight.id) }}" class="sl-spot-img-wrap">
+        <img src="{{ spotlight.thumb_url }}" alt="{{ spotlight.photographer }}" class="sl-spot-img" onerror="this.style.display='none'">
+        <div class="sl-spot-hover">See their standing in the League →</div>
+      </a>
+      <div class="sl-spot-strip">
+        <div class="sl-spot-name">{{ spotlight.photographer }}</div>
+        <div class="sl-spot-meta">
+          <div class="sl-spot-score">{{ "%.2f"|format(spotlight.score) }}</div>
+          <div>
+            <div class="sl-spot-tier">{{ spotlight.tier }}</div>
+            <div class="sl-spot-genre">{{ spotlight.genre }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-spot-aha">
+        <div class="sl-spot-aha-text">{{ spotlight.aha_line }}</div>
+      </div>
+      <div class="sl-spot-cta">
+        <a href="{{ url_for('try_standing', image_id=spotlight.id) }}" class="sl-spot-cta-link">See the full evaluation →</a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div><!-- /sl-left -->
+
+  <!-- RIGHT -->
+  <div class="sl-right">
+    <div class="sl-tabs">
+      <button class="sl-tab active" onclick="switchTab('league',this)" type="button">The League of Photographers</button>
+      <button class="sl-tab" onclick="switchTab('masters',this)" type="button">Masters in the Making</button>
+    </div>
+    <div class="sl-filters" id="sl-filters">
+      <select id="sl-f-tier" onchange="applyFilters()">
+        <option value="">All tiers</option>
+        <option value="Legend">Legend</option>
+        <option value="Grandmaster">Grandmaster</option>
+        <option value="Maverick">Maverick</option>
+      </select>
+      <select id="sl-f-cam" onchange="applyFilters()">
+        <option value="">All cameras</option>
+        <option value="DSLR">DSLR</option>
+        <option value="Mirrorless">Mirrorless</option>
+        <option value="Film">Film</option>
+        <option value="Mobile">Mobile</option>
+      </select>
+      <input id="sl-f-search" placeholder="Search photographer or image…" oninput="applyFilters()" type="search">
+      <div class="sl-f-count" id="sl-f-count"></div>
+    </div>
+    <div class="sl-masters-note" id="sl-masters-note">Building their record. Evaluated against the same standard. 6.0 – 7.9.</div>
+    <div class="sl-grid-area" id="sl-grid-area">
+      <div class="sl-grid sl-grid-league" id="sl-grid">
+        {% for p in league_photographers[:8] %}
+        <a href="{{ url_for('try_standing', image_id=p.id) }}" class="sl-card">
+          <img src="{{ p.thumb_url }}" alt="{{ p.photographer }}" class="sl-card-thumb" onerror="this.style.display='none'">
+          <div class="sl-card-meta">
+            <div class="sl-card-name">{{ p.photographer }}</div>
+            <div class="sl-card-genre">{{ p.genre }}{% if p.camera %} · {{ p.camera }}{% endif %}</div>
+            <div class="sl-card-score">{{ "%.2f"|format(p.score) }}</div>
+            <div class="sl-card-tier-gold">{{ p.tier }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="sl-foot">
+      <div class="sl-pgn" id="sl-pgn"></div>
+      <div class="sl-aspiration" id="sl-aspiration">
+        <div class="sl-asp1">We are looking for photographers who see differently.</div>
+        <div class="sl-asp2">If that is you — your place is waiting.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /sl-page -->
+
+<!-- KYC -->
+<div class="sl-kyc">
+  League standing is determined by calibrated evaluation against the Shutter League standard.
+  &nbsp;<a href="{{ url_for('terms') }}">Terms &amp; Conditions</a> &nbsp;·&nbsp;
+  <a href="{{ url_for('privacy') }}">Privacy Policy</a> &nbsp;·&nbsp;
+  <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+</div>
+
+<!-- FOOTER -->
+<footer style="background:#0F1F3D;padding:3rem 48px 1.75rem;font-family:'Avenir Next',Avenir,'Helvetica Neue',Helvetica,Arial,sans-serif;border-top:0.5px solid rgba(255,255,255,0.08);">
+  <div class="sl-full-footer-grid">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1.5px;margin-bottom:6px;text-transform:uppercase;">SHUTTER LEAGUE</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;max-width:180px;">Photography Assessment<br>&amp; Evolution Platform</div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Company</div>
+      <a href="/about" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">About Us</a>
+      <a href="/contact" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Contact Us</a>
+      <a href="/pricing" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Pricing</a>
+      <a href="/faq" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">FAQ</a>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Legal</div>
+      <a href="/terms" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Terms &amp; Conditions</a>
+      <a href="/privacy" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Privacy Policy</a>
+      <a href="/refund-policy" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Refund Policy</a>
+      <a href="/shipping-policy" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Shipping &amp; Returns</a>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Programmes</div>
+      <a href="/annual-excellence" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Annual Excellence Award</a>
+      <a href="/programme-rules" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Programme Rules</a>
+      <a href="/weekly-challenge" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Weekly Challenge</a>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Learn</div>
+      <a href="/science" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Science</a>
+      <a href="/learning" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Lessons</a>
+      <a href="/mentors" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Mentor Review</a>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid rgba(255,255,255,0.08);padding-top:1.25rem;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span style="font-size:13px;color:rgba(255,255,255,0.55);">&copy; 2026 Shutter League &middot; Bengaluru, India &middot; UDYAM-KR-03-0697280</span>
+    <div style="display:flex;gap:20px;">
+      <a href="#" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;">Instagram</a>
+      <a href="#" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;">Facebook</a>
+      <a href="#" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;">YouTube</a>
+    </div>
+  </div>
+</footer>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="sl-mob-nav">
+  <div class="sl-mob-nav-items">
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>
+      Upload
+    </a>
+    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Pricing
+    </a>
+    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      League
+    </a>
+    <button class="sl-mob-nav-item" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+      More
+    </button>
+    {% else %}
+    <a href="{{ url_for('index') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Pricing
+    </a>
+    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      League
+    </a>
+    <a href="{{ url_for('login') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Login
+    </a>
+    <a href="{{ url_for('register') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Register
+    </a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- MORE DRAWER -->
+<div class="sl-mob-more-drawer" id="sl-mob-more-drawer">
+  {% if current_user.is_authenticated %}
+  <a href="{{ url_for('try_gallery') }}" class="sl-mob-drawer-item">My Evaluations</a>
+  <a href="{{ url_for('profile') }}" class="sl-mob-drawer-item">Profile</a>
+  <a href="{{ url_for('logout') }}" class="sl-mob-drawer-item">Log out</a>
+  {% else %}
+  <a href="{{ url_for('how_it_works') }}" class="sl-mob-drawer-item">How it works</a>
+  <a href="{{ url_for('science') }}" class="sl-mob-drawer-item">Science</a>
+  <a href="{{ url_for('contests') }}" class="sl-mob-drawer-item">Programmes</a>
+  {% endif %}
+</div>
+
+<script type="application/json" id="sl-league-data">{{ league_photographers_json | default('[]') | safe }}</script>
+<script type="application/json" id="sl-masters-data">{{ masters_photographers_json | default('[]') | safe }}</script>
+
+<script>
+var leagueData = [], mastersData = [];
+try { leagueData = JSON.parse(document.getElementById('sl-league-data').textContent.trim()) || []; } catch(e) { leagueData = []; }
+try { mastersData = JSON.parse(document.getElementById('sl-masters-data').textContent.trim()) || []; } catch(e) { mastersData = []; }
+
+// Spotlight state — localStorage visit flag
+(function() {
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var d = new Date();
+  var el = document.getElementById('sl-spot-date');
+  if (el) el.textContent = 'Today \u00b7 ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  var hasSpotlight = document.getElementById('sl-has-spotlight');
+  if (hasSpotlight && localStorage.getItem('sl_league_visited')) {
+    document.getElementById('sl-state-decl').style.display = 'none';
+    document.getElementById('sl-state-spot').style.display = 'flex';
+  } else if (hasSpotlight) {
+    localStorage.setItem('sl_league_visited', '1');
+  }
+})();
+
+var currentTab = 'league', currentPage = 1, PER = 8;
+
+function applyFilters() { currentPage = 1; render(); }
+
+function getFiltered() {
+  var t = document.getElementById('sl-f-tier').value;
+  var c = document.getElementById('sl-f-cam').value;
+  var q = (document.getElementById('sl-f-search').value || '').toLowerCase();
+  return leagueData.filter(function(p) {
+    if (t && p.tier !== t) return false;
+    if (c && p.camera !== c) return false;
+    if (q && p.photographer.toLowerCase().indexOf(q) === -1 && p.genre.toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+}
+
+function switchTab(tab, el) {
+  currentTab = tab; currentPage = 1;
+  document.querySelectorAll('.sl-tab').forEach(function(b) { b.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('sl-filters').style.display = tab === 'league' ? 'flex' : 'none';
+  document.getElementById('sl-masters-note').style.display = tab === 'masters' ? 'block' : 'none';
+  render();
+}
+
+function render() {
+  var ga = document.getElementById('sl-grid-area');
+  var pgn = document.getElementById('sl-pgn');
+  var asp = document.getElementById('sl-aspiration');
+  var fc = document.getElementById('sl-f-count');
+  var data = currentTab === 'league' ? getFiltered() : mastersData;
+  var gridCls = currentTab === 'league' ? 'sl-grid sl-grid-league' : 'sl-grid sl-grid-masters';
+  var scoreCls = currentTab === 'league' ? 'sl-card-score' : 'sl-card-score-blue';
+  var tierCls = currentTab === 'league' ? 'sl-card-tier-gold' : 'sl-card-tier-blue';
+
+  if (currentTab === 'league') {
+    fc.textContent = data.length + ' photographers with standing';
+    asp.innerHTML = '<div class="sl-asp1">We are looking for photographers who see differently.</div><div class="sl-asp2">If that is you — your place is waiting.</div>';
+  } else {
+    fc.textContent = '';
+    asp.innerHTML = '<div class="sl-asp1">Building their record. Every photograph moves them forward.</div>';
+  }
+
+  var pages = Math.ceil(data.length / PER);
+  var slice = data.slice((currentPage - 1) * PER, currentPage * PER);
+
+  var html = '<div class="' + gridCls + '">';
+  slice.forEach(function(p) {
+    html += '<a href="/try/standing/' + p.id + '" class="sl-card">';
+    html += '<img src="' + p.thumb_url + '" alt="' + p.photographer + '" class="sl-card-thumb" onerror="this.style.display=\u0027none\u0027">';
+    html += '<div class="sl-card-meta">';
+    html += '<div class="sl-card-name">' + p.photographer + '</div>';
+    html += '<div class="sl-card-genre">' + p.genre + (p.camera ? ' \u00b7 ' + p.camera : '') + '</div>';
+    html += '<div class="' + scoreCls + '">' + p.score.toFixed(2) + '</div>';
+    html += '<div class="' + tierCls + '">' + p.tier + '</div>';
+    html += '</div></a>';
+  });
+  html += '</div>';
+  ga.innerHTML = html;
+
+  pgn.innerHTML = '';
+  if (pages > 1) {
+    for (var i = 1; i <= pages; i++) {
+      var b = document.createElement('button');
+      b.className = 'sl-pbn' + (i === currentPage ? ' active' : '');
+      b.textContent = i; b.type = 'button';
+      (function(pi) { b.onclick = function() { currentPage = pi; render(); }; })(i);
+      pgn.appendChild(b);
+    }
+  }
+}
+
+function toggleBottomMoreHaiku(e) {
+  e.stopPropagation();
+  document.getElementById('sl-mob-more-drawer').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var drawer = document.getElementById('sl-mob-more-drawer');
+  var btn = document.getElementById('sl-mob-more-btn');
+  if (drawer && drawer.classList.contains('open') && !drawer.contains(e.target) && !btn.contains(e.target)) {
+    drawer.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

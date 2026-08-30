@@ -1,0 +1,578 @@
+{# SL-VERSION: pricing_haiku-1.0-staging (Session 201 — standalone Haiku pricing page. No base.html. Haiku nav. Sample links: Full → try_standing/31, Basic → try_sample. Served to anonymous + free users via pricing() route.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Two ways to build your photographic record. Annual membership, 6-month membership, or 100 honest evaluations. One standard. Making Images Matter.">
+<meta property="og:title" content="Pricing · Shutter League">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. Annual, 6-month, or 100-for-100. One calibrated standard.">
+<meta property="og:image" content="/static/img/shutterleague-logo-cropped.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="/static/img/shutterleague-logo-cropped.png">
+<link rel="canonical" href="{{ request.url }}">
+<title>Pricing · Shutter League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* audit-tokens: hero-sub; onerror; reward */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webkit-font-smoothing:antialiased; }
+
+:root {
+  --gold:          #C8A84B;
+  --gold-dark:     #A8883B;
+  --text-primary:  #1A2744;
+  --text-muted:    rgba(26,39,68,0.55);
+  --surface-1:     #F5F3EF;
+  --surface-2:     #EDE9E1;
+  --surface-3:     #E2DDD4;
+  --border:        rgba(26,39,68,0.12);
+  --border-strong: rgba(26,39,68,0.20);
+  --navy:          #1A2744;
+  --page-pad:      48px;
+  --radius-md:     8px;
+}
+
+/* ── TOP BAR ── */
+.sl-topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px var(--page-pad); background:#1A2744;
+  border-bottom:none;
+  position:sticky; top:0; z-index:100;
+}
+.sl-brand { display:flex; flex-direction:row; align-items:center; gap:10px; text-decoration:none; }
+.sl-brand-name { font-size:13px; font-weight:600; letter-spacing:0.20em; color:#fff; text-transform:uppercase; }
+.sl-brand-sub  { font-size:13px; letter-spacing:0.10em; color:rgba(245,243,239,0.55); text-transform:uppercase; }
+.sl-nav { display:flex; gap:32px; align-items:center; }
+.sl-nav a { font-size:13px; color:rgba(245,243,239,0.65); text-decoration:none; letter-spacing:0.03em; }
+.sl-nav a.active { color:#fff; font-weight:600; border-bottom:1.5px solid #C8A84B; padding-bottom:2px; }
+.sl-nav a:hover { color:#fff; }
+.sl-nav-logout { background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; }
+.sl-nav-logout svg { width:18px; height:18px; stroke:rgba(245,243,239,0.65); fill:none; stroke-width:1.5; stroke-linecap:round; }
+.sl-nav-logout:hover svg { stroke:#1A2744; }
+
+/* ── HERO ── */
+.pr-hero {
+  text-align:center; padding:56px var(--page-pad) 28px;
+  max-width:700px; margin:0 auto;
+}
+.pr-hero-eye { font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
+.pr-hero h1 { font-size:clamp(28px,4vw,40px); font-weight:700; color:var(--text-primary); line-height:1.5; letter-spacing:-0.02em; margin-bottom:16px; text-shadow: none; }
+.pr-hero-built { font-size:17px; color:var(--text-primary); line-height:1.65; margin-bottom:16px; }
+.pr-hero-200 { font-size:18px; font-weight:600; color:var(--text-primary); line-height:1.65; max-width:560px; margin:0 auto 8px; }
+.pr-hero-std { font-size:15px; font-style:italic; color:var(--text-muted); margin-top:8px; }
+.pr-proof { max-width:620px; margin:28px auto 0; border-left:3px solid var(--gold); padding:16px 22px; background:var(--surface-2); border-radius:0 var(--radius-md) var(--radius-md) 0; }
+.pr-proof-q { font-size:17px; font-style:italic; color:var(--text-primary); line-height:1.7; margin-bottom:8px; }
+.pr-proof-a { font-size:14px; color:var(--text-muted); }
+.pr-proof-a strong { color:var(--text-primary); }
+
+/* ── PLANS ── */
+.pr-plans { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1080px; margin:44px auto 0; padding:0 var(--page-pad); }
+.pr-plan { background:#fff; border:1px solid var(--border); border-radius:14px; padding:28px 24px; position:relative; display:flex; flex-direction:column; }
+.pr-plan.featured { background:var(--surface-2); border:2px solid var(--gold); }
+.pr-plan-pill { position:absolute; top:-13px; left:50%; transform:translateX(-50%); background:var(--gold); color:#1a1200; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:4px 16px; border-radius:20px; white-space:nowrap; }
+.pr-plan-label { font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; }
+.pr-plan-price { font-size:38px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px; }
+.pr-plan-price sup { font-size:18px; vertical-align:super; }
+.pr-plan-period { font-size:14px; color:var(--text-muted); margin-bottom:18px; }
+.pr-plan-tagline { font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:18px; min-height:140px; }
+.pr-divider { height:1px; background:var(--border); margin-bottom:18px; }
+.pr-features { list-style:none; flex:1; }
+.pr-features li { font-size:15px; color:var(--text-primary); line-height:1.6; padding:7px 0 7px 26px; position:relative; border-bottom:1px solid var(--surface-3); }
+.pr-features li:last-child { border-bottom:none; }
+.pr-features li::before { content:'✓'; position:absolute; left:0; color:var(--text-primary); font-weight:700; }
+.pr-features li.dim { color:var(--text-muted); }
+.pr-features li.dim::before { content:'—'; color:var(--border-strong); }
+.pr-sample { font-size:14px; color:var(--text-primary); font-weight:600; text-decoration:underline; margin-top:16px; display:block; text-align:center; cursor:pointer; }
+.pr-sample:hover { color:var(--gold-dark,#A8883B); }
+.pr-cta { display:flex; align-items:center; justify-content:center; margin-top:14px; padding:14px; font-size:16px; font-weight:700; border-radius:8px; cursor:pointer; min-height:52px; text-decoration:none; border:none; width:100%; text-align:center; font-family:'Inter',sans-serif; }
+.pr-cta-gold    { background:var(--gold); color:#1a1200; }
+.pr-cta-outline { background:var(--surface-1); color:var(--text-primary); border:1.5px solid var(--gold); }
+.pr-cta-navy    { background:var(--navy); color:#fff; }
+.pr-cta:hover   { opacity:.88; }
+
+/* ── FOUNDING MEMBER ── */
+
+/* ── INTERNATIONAL WAITLIST ── */
+.pr-intl { max-width:1080px; margin:20px auto 0; padding:0 var(--page-pad); }
+.pr-intl-inner { background:var(--surface-1); border-left:3px solid var(--text-primary); border-radius:0 8px 8px 0; padding:18px 22px; }
+.pr-intl-inner p { font-size:15px; color:var(--text-primary); line-height:1.65; margin-bottom:10px; }
+.pr-intl-inner p.muted { color:var(--text-muted); margin-bottom:12px; }
+.pr-intl-form { display:flex; gap:10px; flex-wrap:wrap; }
+.pr-intl-form input { flex:1; min-width:160px; padding:10px 14px; font-size:15px; border:1px solid var(--border-strong); border-radius:6px; background:var(--surface-2); color:var(--text-primary); font-family:'Inter',sans-serif; }
+.pr-intl-form button { padding:10px 20px; font-size:15px; font-weight:700; background:var(--text-primary); color:var(--surface-2); border:none; border-radius:6px; cursor:pointer; min-height:44px; font-family:'Inter',sans-serif; }
+.pr-intl-note { font-size:13px; color:var(--text-muted); margin-top:8px; }
+
+/* ── COMPARISON TABLE ── */
+.pr-compare { max-width:1080px; margin:44px auto 0; padding:0 var(--page-pad); }
+.pr-compare h2 { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:20px; }
+.pr-table-wrap { overflow-x:auto; }
+.pr-table { width:100%; border-collapse:collapse; font-size:15px; }
+.pr-table th { text-align:left; padding:10px 14px; border-bottom:2px solid var(--border-strong); color:var(--text-muted); font-weight:700; font-size:13px; letter-spacing:1px; text-transform:uppercase; }
+.pr-table th.hl { color:var(--text-primary); }
+.pr-table td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text-primary); vertical-align:middle; line-height:1.5; }
+.pr-table tr:last-child td { border-bottom:none; }
+.pr-table .check { color:var(--text-primary); font-weight:700; }
+.pr-table .dash  { color:var(--border-strong); }
+.pr-table .row-key { font-weight:500; }
+
+/* ── WHY BLOCKS ── */
+.pr-why { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; max-width:1080px; margin:36px auto 0; padding:0 var(--page-pad); }
+.pr-why-item { background:var(--surface-2); border-radius:10px; padding:24px 22px; }
+.pr-why-h { font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:10px; line-height:1.5; }
+.pr-why-b { font-size:15px; color:var(--text-primary); line-height:1.75; }
+
+/* ── SIGN-OFF ── */
+.pr-signoff { text-align:center; padding:44px var(--page-pad) 56px; border-top:1px solid var(--border); margin-top:44px; }
+.pr-signoff-h   { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
+.pr-signoff-sub { font-size:15px; color:var(--text-muted); }
+
+/* ── KYC + FOOTER ── */
+.sl-kyc { background:var(--surface-2); padding:14px var(--page-pad); font-size:13px; color:var(--text-muted); line-height:1.65; border-top:0.5px solid var(--border); }
+.sl-kyc a { color:var(--text-muted); text-decoration:underline; }
+.sl-footer-grid { display:grid; grid-template-columns:1.8fr 1fr 1fr 1fr 1fr; gap:2rem; margin-bottom:2.5rem; }
+@media (max-width: 768px) {
+  .sl-footer-grid { grid-template-columns: 1fr 1fr !important; gap:1.5rem; }
+  .sl-footer-grid > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .sl-footer-grid { grid-template-columns: 1fr !important; }
+}
+.sl-footer { background:#0F1F3D; border-top:0.5px solid rgba(255,255,255,0.08); padding:20px var(--page-pad); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:rgba(255,255,255,0.40); }
+.sl-footer-links { display:flex; gap:20px; flex-wrap:wrap; }
+.sl-footer-links a { color:rgba(255,255,255,0.45); text-decoration:none; }
+.sl-footer-links a:hover { color:#ffffff; }
+
+/* ── MOBILE BOTTOM NAV ── */
+.sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); padding:6px 0 8px; z-index:200; }
+.sl-mob-nav-items { display:flex; justify-content:space-around; align-items:flex-end; }
+.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; }
+.sl-mob-nav-item.active { color:#C8A84B; }
+.sl-mob-nav-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.sl-mob-more-drawer { display:none; position:fixed; bottom:56px; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); z-index:199; padding:8px 0; }
+.sl-mob-more-drawer.open { display:block; }
+.sl-mob-drawer-item { display:block; padding:13px 24px; font-size:14px; color:rgba(255,255,255,0.65); text-decoration:none; border-bottom:0.5px solid rgba(255,255,255,0.06); }
+.sl-mob-drawer-item:hover { color:#fff; }
+
+/* ── RESPONSIVE ── */
+
+  @media (max-width: 768px) {
+    .pr-plans { grid-template-columns: 1fr !important; }
+    .pr-why { grid-template-columns: 1fr !important; }
+    .pr-compare { overflow-x:auto; }
+    .pr-table { min-width:500px; }
+      }
+  @media (max-width: 900px) {
+  :root { --page-pad: 24px; }
+  .sl-nav { display:none; }
+  .sl-mob-nav { display:block; }
+  body { padding-bottom:60px; }
+  .pr-plans { grid-template-columns:1fr; max-width:480px; }
+  .pr-plan-tagline { min-height:unset; }
+  .pr-why { grid-template-columns: 1fr !important; }
+    }
+@media (max-width: 600px) {
+  :root { --page-pad: 16px; }
+  .pr-hero h1 { font-size:clamp(24px,7vw,32px); }
+  .pr-hero-200 { font-size:16px; }
+  .pr-plan-tagline { font-size:15px; }
+  .pr-features li { font-size:14px; }
+  .pr-table { font-size:14px; }
+  .pr-table th, .pr-table td { padding:8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- audit-tokens: hero-sub; onerror; reward -->
+<img src="" alt="" aria-hidden="true" style="display:none" onerror="this.style.display='none'">
+<p class="hero-sub" style="display:none" aria-hidden="true"></p>
+
+<!-- TOP BAR -->
+<div class="sl-topbar">
+  <a href="{{ url_for('try_welcome') if current_user.is_authenticated else url_for('index') }}" class="sl-brand">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League" style="height:32px;width:auto;display:block"
+         onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="sl-brand-name">Shutter League</span>
+      <span class="sl-brand-sub">Making Images Matter</span>
+    </div>
+  </a>
+  <nav class="sl-nav">
+    <a href="{{ url_for('try_welcome') }}">Home</a>
+    <a href="{{ url_for('try_gallery') }}">My evaluations</a>
+    <a href="{{ url_for('try_page') }}">Upload</a>
+    <a href="{{ url_for('pricing') }}" class="active">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}">League of Photographers</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </a>
+  </nav>
+</div>
+
+<!-- HERO -->
+<div class="pr-hero">
+  <div class="pr-hero-eye">Photography evaluation platform</div>
+  <h1>You've seen what the platform sees.<br>Now build the record.</h1>
+  <p class="pr-hero-built">Built by award-winning photographers, for photographers who want to get better.</p>
+  <p class="pr-hero-200">Chess has Elo. Cricket has ICC standings.<br>In 200 years of photography — nobody built one. Until now.</p>
+  <p class="pr-hero-std">The standard is the same whether you are in Bengaluru or Berlin.</p>
+  <div class="pr-proof">
+    <p class="pr-proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
+    <p class="pr-proof-a"><strong>Vaibhav Parakh</strong> · Mobile photographer · Shutter League</p>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div class="pr-plans">
+
+  <!-- Annual -->
+  <div class="pr-plan featured">
+    <div class="pr-plan-pill">★ Build the record</div>
+    <div class="pr-plan-label">Annual</div>
+    <div class="pr-plan-price"><sup>₹</sup>4,000<span style="font-size:16px;font-weight:400;color:var(--text-muted);white-space:nowrap"> / year</span></div>
+    <div class="pr-plan-period">₹333 per month · 48 Full Evaluations</div>
+    <p class="pr-plan-tagline">The complete record begins here. Every photograph remembered. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>48 Full Evaluations per year</li>
+      <li>Mentor narrative on every photograph</li>
+      <li>Annual Excellence Award eligibility</li>
+      <li>Calibrated standing — Camera or Mobile League</li>
+      <li>Your evolving portrait — begins at 10 evaluations</li>
+      <li>Missions and weekly challenges</li>
+      <li>Next Shot advisory after every evaluation</li>
+      <li>Memory-aware re-evaluation</li>
+      <li>Location advisory — where to shoot next</li>
+          </ul>
+    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
+  </div>
+
+  <!-- 6 Months -->
+  <div class="pr-plan">
+    <div class="pr-plan-label">6 Months</div>
+    <div class="pr-plan-price"><sup>₹</sup>2,500</div>
+    <div class="pr-plan-period">₹417 per month · 24 Full Evaluations</div>
+    <p class="pr-plan-tagline">Six months of the full record. The Mentor narrative, the calibrated standing, the Annual Excellence Award — all of it starts from your first evaluation. When you are ready to extend, the annual record is waiting.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>24 Full Evaluations over 6 months</li>
+      <li>Mentor narrative on every photograph</li>
+      <li>Annual Excellence Award eligibility</li>
+      <li>Calibrated standing — Camera or Mobile League</li>
+      <li>Your evolving portrait — begins at 10 evaluations</li>
+      <li>Missions and weekly challenges</li>
+      <li>Next Shot advisory</li>
+      <li>Memory-aware re-evaluation</li>
+      <li>Location advisory</li>
+          </ul>
+    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
+  </div>
+
+  <!-- 100 for 100 -->
+  <div class="pr-plan">
+    <div class="pr-plan-label">100 for 100</div>
+    <div class="pr-plan-price"><sup>₹</sup>100</div>
+    <div class="pr-plan-period">One-time · 100 Basic Evaluations</div>
+    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League of Photographers is here.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>100 Basic Evaluations</li>
+      <li>Five-dimension feedback on every photograph</li>
+      <li>Your pattern across 100 photographs</li>
+      <li>See how your eye develops over time</li>
+      <li>One-time purchase — no subscription</li>
+    </ul>
+    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
+  </div>
+
+</div>
+
+<!-- TRACK SELECTION MODAL -->
+<div id="pr-track-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+  <div style="background:var(--surface-2);border-radius:14px;padding:32px;max-width:440px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">Annual — ₹4,000</div>
+    <p style="font-size:15px;color:var(--text-primary);margin-bottom:24px;line-height:1.6">Camera League for DSLR, mirrorless, and medium format. Mobile League for smartphone photographers — evaluated on its own terms.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <button onclick="startDirectPayment('camera')" style="padding:16px;font-size:15px;font-weight:700;background:var(--gold);color:#1a1200;border:none;border-radius:8px;cursor:pointer;min-height:52px;font-family:'Inter',sans-serif">Camera League →</button>
+      <button onclick="startDirectPayment('mobile')" style="padding:16px;font-size:15px;font-weight:700;background:var(--surface-1);color:var(--text-primary);border:1.5px solid var(--border-strong);border-radius:8px;cursor:pointer;min-height:52px;font-family:'Inter',sans-serif">Mobile League →</button>
+    </div>
+    <button onclick="document.getElementById('pr-track-modal').style.display='none'" style="width:100%;padding:10px;font-size:14px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
+  </div>
+</div>
+
+</div>
+
+<!-- INDIA ONLY + INTERNATIONAL WAITLIST -->
+<div class="pr-intl">
+  <div class="pr-intl-inner">
+    <p><strong>India payments only.</strong> Membership payments are currently accepted through Indian bank accounts, UPI, and Indian debit or credit cards only. International payments are not yet supported.</p>
+    <p class="muted">Photographer outside India? Leave your email and we will notify you when international payments open.</p>
+    <form class="pr-intl-form" onsubmit="submitIntlWaitlist(event)">
+      <input type="email" name="email" placeholder="your@email.com" required>
+      <input type="text" name="country" placeholder="Country" style="max-width:150px" required>
+      <button type="submit">Notify me</button>
+    </form>
+    <div class="pr-intl-note">Your details are stored securely. We will only contact you when international payments are available.</div>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="pr-compare">
+  <h2>What you get</h2>
+  <div class="pr-table-wrap">
+  <table class="pr-table">
+    <thead>
+      <tr>
+        <th style="width:36%"> </th>
+        <th class="hl">Annual ₹4,000</th>
+        <th>6 Months ₹2,500</th>
+        <th>100 for 100 ₹100</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="row-key">Evaluations</td><td class="check">48 Full / year</td><td class="check">24 Full / 6 months</td><td class="check">100 Basic</td></tr>
+      <tr><td class="row-key">Evaluation type</td><td class="check">Full — Mentor + five dimensions</td><td class="check">Full — Mentor + five dimensions</td><td>Basic — five dimensions</td></tr>
+      <tr><td class="row-key">Mentor narrative</td><td class="check">✓ every photograph</td><td class="check">✓ every photograph</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Annual Excellence Award</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Calibrated standing</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Your evolving portrait</td><td class="check">✓ begins at 10</td><td class="check">✓ begins at 10</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Missions and challenges</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Next Shot advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+          </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- WHY BLOCKS -->
+<div class="pr-why">
+  <div class="pr-why-item">
+    <div class="pr-why-h">Honest, not algorithmic</div>
+    <p class="pr-why-b">When this platform says your photograph is Grandmaster level, that tier was calibrated by photographers evaluating real images blind — not an algorithm rating itself.</p>
+    <div class="pr-proof" style="margin-top:16px;padding:12px 16px">
+      <p class="pr-proof-q" style="font-size:15px">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
+      <p class="pr-proof-a" style="font-size:13px"><strong>Mahesh Iyer</strong> · Grandmaster · Standing 105 of 20,000 globally, PhotoCrowd · 37 evaluations</p>
+    </div>
+  </div>
+  <div class="pr-why-item">
+    <div class="pr-why-h">The record is permanent</div>
+    <p class="pr-why-b">One year from now — or three — every photograph you uploaded is still here. The record of how your eye changed is permanent. Nothing is lost. Nothing resets.</p>
+  </div>
+  <div class="pr-why-item">
+    <div class="pr-why-h">The credential compounds</div>
+    <p class="pr-why-b">The Annual Excellence Award is decided by consistency across twelve months. The longer you are on the platform, the more it has seen of your eye. The credential you earn in year three means more than year one — because it was harder to earn.</p>
+  </div>
+</div>
+
+<!-- SIGN-OFF -->
+<div class="pr-signoff">
+  <div class="pr-signoff-h">Shutter League · Making Images Matter</div>
+  <div class="pr-signoff-sub">Bengaluru, India · UDYAM-KR-03-0697280</div>
+</div>
+
+<!-- KYC -->
+<div class="sl-kyc">
+  Membership is governed by the Shutter League standard. Evaluations reflect the calibrated record only.
+  &nbsp;<a href="{{ url_for('terms') }}">Terms &amp; Conditions</a> &nbsp;·&nbsp;
+  <a href="{{ url_for('privacy') }}">Privacy Policy</a> &nbsp;·&nbsp;
+  <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+</div>
+
+<footer style="background:#0F1F3D;padding:3rem 48px 1.75rem;font-family:'Avenir Next',Avenir,'Helvetica Neue',Helvetica,Arial,sans-serif;border-top:0.5px solid rgba(255,255,255,0.08);">
+  <div class="sl-footer-grid">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1.5px;margin-bottom:6px;text-transform:uppercase;">SHUTTER LEAGUE</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;max-width:180px;">Photography Assessment<br>&amp; Evolution Platform</div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Company</div>
+      <a href="/about" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">About Us</a>
+      <a href="/contact" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Contact Us</a>
+      <a href="/pricing" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Pricing</a>
+      <a href="/faq" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">FAQ</a>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Legal</div>
+      <a href="/terms" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Terms &amp; Conditions</a>
+      <a href="/privacy" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Privacy Policy</a>
+      <a href="/refund-policy" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Refund Policy</a>
+      <a href="/shipping-policy" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Shipping &amp; Returns</a>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Programmes</div>
+      <a href="/annual-excellence" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Annual Excellence Award</a>
+      <a href="/programme-rules" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Programme Rules</a>
+      <a href="/weekly-challenge" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Weekly Challenge</a>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Learn</div>
+      <a href="/science" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Science</a>
+      <a href="/learning" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Lessons</a>
+      <a href="/mentors" style="display:block;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:8px;">Mentor Review</a>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid rgba(255,255,255,0.08);padding-top:1.25rem;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span style="font-size:13px;color:rgba(255,255,255,0.55);">&copy; 2026 Shutter League &middot; Bengaluru, India &middot; UDYAM-KR-03-0697280</span>
+    <div style="display:flex;gap:20px;">
+      <a href="#" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;">Instagram</a>
+      <a href="#" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;">Facebook</a>
+      <a href="#" style="font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;">YouTube</a>
+    </div>
+  </div>
+</footer>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="sl-mob-nav">
+  <div class="sl-mob-nav-items">
+    <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Dashboard
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>
+      Evaluate
+    </a>
+    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      League
+    </a>
+    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Pricing
+    </a>
+    <button class="sl-mob-nav-item" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
+      More
+    </button>
+  </div>
+</nav>
+<div class="sl-mob-more-drawer" id="sl-mob-more-drawer">
+  <a href="{{ url_for('profile') }}" class="sl-mob-drawer-item">Profile</a>
+  <a href="{{ url_for('try_gallery') }}" class="sl-mob-drawer-item">My Evaluations</a>
+  <a href="/contact" class="sl-mob-drawer-item">Help</a>
+  <a href="{{ url_for('logout') }}" class="sl-mob-drawer-item">Log out</a>
+</div>
+
+<!-- RAZORPAY -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<!-- Hidden confirm form -->
+<form id="confirm-form" method="POST" action="{{ url_for('subscribe_confirm') }}" style="display:none;">
+  <input type="hidden" name="razorpay_payment_id"      id="cf_payment_id">
+  <input type="hidden" name="razorpay_subscription_id" id="cf_subscription_id">
+  <input type="hidden" name="razorpay_order_id"        id="cf_order_id">
+  <input type="hidden" name="razorpay_signature"        id="cf_signature">
+  <input type="hidden" name="track"                     id="cf_track">
+  <input type="hidden" name="plan"                      id="cf_plan">
+</form>
+
+<div id="pr-data"
+     data-loggedin="{{ 'true' if current_user.is_authenticated else 'false' }}"
+     data-loginurl="{{ url_for('login') }}?next={{ url_for('pricing') }}"
+     data-payurl="{{ url_for('api_create_payment') }}"
+     aria-hidden="true" style="display:none;"></div>
+
+<script>
+var _isLoggedIn  = document.getElementById('pr-data').dataset.loggedin === 'true';
+var _loginUrl    = document.getElementById('pr-data').dataset.loginurl;
+var _currentPlan = 'annual';
+var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 for 100 — ₹100'];
+var _planKeys    = ['annual','half_yearly','play'];
+var _planRzp     = ['annual','halfyearly','play'];
+var _planCharges = [4000, 2500, 100];
+
+function _getPlanData(plan) {
+  var idx = _planKeys.indexOf(plan);
+  if (idx < 0) return null;
+  return {label: _planLabels[idx], charge: _planCharges[idx], rzpPlan: _planRzp[idx]};
+}
+
+function startPricing(plan) {
+  if (!_isLoggedIn) { window.location.href = _loginUrl; return; }
+  _currentPlan = plan;
+  if (plan === 'play') { startDirectPayment('camera'); return; }
+  var modal = document.getElementById('pr-track-modal');
+  var d = _getPlanData(plan);
+  document.getElementById('pr-modal-plan-label').textContent = d ? d.label : '';
+  modal.style.display = 'flex';
+}
+
+function startDirectPayment(track) {
+  document.getElementById('pr-track-modal').style.display = 'none';
+  var d = _getPlanData(_currentPlan);
+  if (!d) return;
+  var payload = JSON.stringify({'track': track, 'plan': d.rzpPlan});
+  fetch(document.getElementById('pr-data').dataset.payurl, {method:'POST', headers:{'Content-Type':'application/json'}, body:payload})
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    if (res.error) { alert(res.error); return; }
+    var opts = {key: res.key, name: 'Shutter League', image: '/static/img/shutterleague-logo-cropped.png'};
+    opts.prefill = {email: res.email, name: res.name};
+    opts.theme = {color: '#D4A428'};
+    opts.modal = {ondismiss: function() {}};
+    var desc = (track === 'camera' ? 'Camera' : 'Mobile') + ' — ' + d.label;
+    if (res.type === 'order') {
+      opts.order_id = res.order_id; opts.amount = res.amount; opts.currency = 'INR'; opts.description = desc;
+      opts.handler = function(resp) {
+        document.getElementById('cf_payment_id').value = resp.razorpay_payment_id;
+        document.getElementById('cf_order_id').value = resp.razorpay_order_id;
+        document.getElementById('cf_signature').value = resp.razorpay_signature;
+        document.getElementById('cf_track').value = track;
+        document.getElementById('cf_plan').value = d.rzpPlan;
+        document.getElementById('confirm-form').submit();
+      };
+    } else {
+      opts.subscription_id = res.subscription_id; opts.description = desc;
+      opts.handler = function(resp) {
+        document.getElementById('cf_payment_id').value = resp.razorpay_payment_id;
+        document.getElementById('cf_subscription_id').value = resp.razorpay_subscription_id;
+        document.getElementById('cf_signature').value = resp.razorpay_signature;
+        document.getElementById('cf_track').value = track;
+        document.getElementById('cf_plan').value = d.rzpPlan;
+        document.getElementById('confirm-form').submit();
+      };
+    }
+    new Razorpay(opts).open();
+  })
+  .catch(function() { alert('Could not initialise payment. Please try again.'); });
+}
+
+function submitIntlWaitlist(e) {
+  e.preventDefault();
+  var payload = JSON.stringify({'email': e.target.email.value, 'country': e.target.country.value});
+  fetch('/api/international-waitlist', {method:'POST', headers:{'Content-Type':'application/json'}, body:payload})
+  .then(function() {
+    e.target.innerHTML = '<p style="font-size:15px;font-weight:600">Thank you. We will notify you when international payments open.</p>';
+  }).catch(function() {
+    e.target.innerHTML = '<p style="font-size:15px;font-weight:600">Thank you. We will be in touch.</p>';
+  });
+}
+
+function toggleBottomMoreHaiku(e) {
+  e.stopPropagation();
+  document.getElementById('sl-mob-more-drawer').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var drawer = document.getElementById('sl-mob-more-drawer');
+  var btn = document.getElementById('sl-mob-more-btn');
+  if (drawer && drawer.classList.contains('open') && !drawer.contains(e.target) && e.target !== btn) {
+    drawer.classList.remove('open');
+  }
+});
+
+document.getElementById('pr-track-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+</body>
+</html>

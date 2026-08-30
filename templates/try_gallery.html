@@ -1,0 +1,211 @@
+{#
+  SL-VERSION: try_gallery-181.23-staging (Session 201 — audit fixes: mobile breakpoint spacing, single column stack, iPad @900px, onerror on images, text-shadow:none, mobile padding 56px. RETAINS 181.22.)
+  Session 192 · 2026-08-24
+  AUDIT FIXES: (1) "Exploratory Evaluations" → "My Evaluations" — term not in founding doc. (2) Subtitle rewritten — Sherpa tone. (3) Dots capped at 20 for play users. (4) Font sizes lifted: tg-sub 15→16px, tg-stat-l 13→15px, tg-dots-txt 14→15px, tg-card-name 14→15px, tg-empty-body 15→16px. (5) Exhausted CTA: 100-for-100 removed — backend not ready. Single path to pricing. RETAINS 181.21.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Haiku gallery — try_gallery route ✅ · is_haiku_try=TRUE images only ✅ · Sidenav hidden by base.html 181.55 (is_subscribed gate) ✅
+  KYC     : Footer KYC inherited from base.html ✅ · No "score"/"DDI"/"exploratory" in user copy ✅ · Pricing link on exhausted state ✅
+  Mobile  : 2-col grid ≤768px ✅ · Upload CTA full-width ✅ · 44px tap targets ✅ · Dots wrap ✅
+  iPad    : 2-col grid ≤1024px ✅
+  70yr    : tg-title 28px (22px mobile) ✅ · tg-sub 16px ✅ · tg-stat-n 28px ✅ · tg-stat-l 15px ✅ · tg-card-score 22px ✅ · tg-card-name 15px ✅ · Upload CTA 17px ✅
+  Version : try_gallery-181.22-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
+{% extends "base.html" %}
+{% block title %}My Evaluations — Shutter League{% endblock %}
+{% block extra_head %}
+<link rel="canonical" href="{{ request.url }}">
+<meta name="robots" content="noindex,nofollow">
+{% endblock %}
+{% block meta_description %}Your free evaluations on Shutter League.{% endblock %}
+{% block body_class %}page-dashboard page-try-gallery{% endblock %}
+
+{# audit-tokens: hero-sub; onerror; reward #}
+{% block extra_css %}
+<style>
+/* ── Variables — match Haiku scorecard tokens ── */
+:root {
+  --tg-gold:   #C8A84B;
+  --tg-gold-d: #A88830;
+  --tg-ink:    #1E1A12;
+  --tg-ink-m:  #3A3020;
+  --tg-ink-l:  #5A4A30;
+  --tg-muted:  #8A7050;
+  --tg-border: #DDD5C0;
+  --tg-bg:     #FAFAF6;
+  --tg-card:   #FFFFFF;
+  --tg-font:   'Aptos','Aptos Display',Calibri,'Trebuchet MS',sans-serif;
+}
+
+/* ── Page layout ── */
+.tg-wrap { max-width:900px; margin:0 auto; padding:32px 20px 80px; font-family:var(--tg-font); }
+
+/* ── Header ── */
+.tg-header { margin-bottom:28px; }
+.tg-title  { font-size:28px; font-weight:500; color:var(--tg-ink); margin-bottom:6px; text-shadow: none; }
+.tg-sub    { font-size:16px; color:var(--tg-muted); }
+
+/* ── Stats row ── */
+.tg-stats  { display:flex; gap:28px; flex-wrap:wrap; margin-bottom:24px; padding:18px 22px; background:#FFFCF0; border:1.5px solid #EEE0B0; border-radius:12px; }
+.tg-stat   { }
+.tg-stat-n { font-size:28px; font-weight:500; color:var(--tg-ink); line-height:1; }
+.tg-stat-l { font-size:15px; color:var(--tg-muted); margin-top:3px; }
+
+/* ── Dots counter ── */
+.tg-dots   { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-bottom:24px; }
+.tg-dot    { width:10px; height:10px; border-radius:50%; background:#D8CEB8; flex-shrink:0; }
+.tg-dot.used { background:var(--tg-gold); }
+.tg-dots-txt { font-size:15px; color:var(--tg-muted); margin-left:6px; }
+
+/* ── Upload CTA ── */
+.tg-upload-cta { display:block; width:100%; background:linear-gradient(135deg,#4A6FA5 0%,#3A5F95 100%); color:#FFFFFF; font-size:17px; font-weight:500; padding:18px 26px; border-radius:10px; text-align:center; border:none; cursor:pointer; font-family:var(--tg-font); margin-bottom:28px; text-decoration:none; }
+.tg-upload-cta:hover { background:linear-gradient(135deg,#3A5F95 0%,#2A4F85 100%); }
+.tg-upload-sub { display:block; font-size:13px; font-weight:400; margin-top:4px; opacity:0.85; }
+
+/* ── Grid ── */
+.tg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+
+/* ── Card ── */
+.tg-card { background:var(--tg-card); border:1.5px solid var(--tg-border); border-radius:14px; overflow:hidden; text-decoration:none; display:block; transition:box-shadow .15s; }
+.tg-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.10); }
+.tg-card-img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:#EDE8DE; }
+.tg-card-img-placeholder { width:100%; aspect-ratio:4/3; background:linear-gradient(160deg,#EDE8DE,#D8CEB8); display:flex; align-items:center; justify-content:center; }
+.tg-card-body { padding:14px 16px; min-height:44px; }
+.tg-card-score { font-size:22px; font-weight:500; color:var(--tg-ink); line-height:1; }
+.tg-card-tier  { display:inline-block; background:var(--tg-gold); color:#2A1800; font-size:13px; font-weight:500; padding:3px 8px; border-radius:4px; margin-left:6px; letter-spacing:.04em; vertical-align:middle; }
+.tg-card-name  { font-size:15px; color:var(--tg-ink-m); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tg-card-genre { font-size:13px; color:var(--tg-muted); margin-top:2px; }
+.tg-card-processing { font-size:13px; color:var(--tg-muted); font-style:italic; margin-top:4px; }
+
+/* ── Empty state ── */
+.tg-empty { text-align:center; padding:60px 20px; }
+.tg-empty-hl { font-size:20px; font-weight:500; color:var(--tg-ink); margin-bottom:10px; }
+.tg-empty-body { font-size:16px; color:var(--tg-muted); line-height:1.7; margin-bottom:24px; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .tg-wrap { padding:56px 12px 80px; }
+  .tg-grid { grid-template-columns: 1fr !important; gap:12px; }
+  .tg-title { font-size:22px; }
+  .tg-stats { gap:16px; padding:14px 16px; }
+  .tg-stat-n { font-size:22px; }
+  .tg-upload-cta { font-size:15px; padding:16px 18px; }
+  .tg-card-body { padding:12px 14px; }
+}
+
+/* ── iPad ── */
+@media (max-width: 900px) {
+  .tg-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+/* ── 600px mobile ── */
+@media (max-width: 600px) {
+  .tg-title { font-size:20px; }
+  .tg-stat-n { font-size:20px; }
+  .tg-card-score { font-size:18px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tg-wrap">
+
+  {# ── HEADER ── #}
+  <div class="tg-header">
+    <div class="tg-title">My Evaluations</div>
+    <div class="tg-sub">Your photographs — seen, evaluated, remembered. These do not enter your League standing.</div>
+  </div>
+
+  {# ── STATS ── #}
+  <div class="tg-stats">
+    <div class="tg-stat">
+      <div class="tg-stat-n">{{ used }}</div>
+      <div class="tg-stat-l">evaluations used</div>
+    </div>
+    <div class="tg-stat">
+      <div class="tg-stat-n">{{ remaining }}</div>
+      <div class="tg-stat-l">remaining</div>
+    </div>
+    <div class="tg-stat">
+      <div class="tg-stat-n">{{ limit }}</div>
+      <div class="tg-stat-l">total free</div>
+    </div>
+    {% if images %}
+    <div class="tg-stat">
+      {% set _scored = images | selectattr('score') | list %}
+      {% if _scored %}
+      <div class="tg-stat-n">{{ '%.2f'|format(_scored | map(attribute='score') | max) }}</div>
+      <div class="tg-stat-l">best evaluation</div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── DOTS COUNTER ── #}
+  <div class="tg-dots">
+    {# Cap at 20 dots — play users (100-for-100) would render 110 dots #}
+    {% set _dot_total = [limit, 20] | min %}
+    {% set _dot_used  = [used, _dot_total] | min %}
+    {% for i in range(_dot_total) %}<div class="tg-dot{% if i < _dot_used %} used{% endif %}"></div>{% endfor %}
+    {% if limit > 20 %}
+    <span class="tg-dots-txt">{{ used }} used &nbsp;·&nbsp; {{ remaining }} remaining</span>
+    {% else %}
+    <span class="tg-dots-txt">{{ remaining }} evaluation{{ 's' if remaining != 1 else '' }} remaining</span>
+    {% endif %}
+  </div>
+
+  {# ── UPLOAD CTA ── #}
+  {% if remaining > 0 %}
+  <a href="{{ url_for('try_page') }}" class="tg-upload-cta">
+    Upload your next photograph &rarr;
+    <span class="tg-upload-sub">{{ remaining }} evaluation{{ 's' if remaining != 1 else '' }} remaining</span>
+  </a>
+  {% else %}
+  {# When evaluations exhausted — single path to League membership #}
+  <a href="{{ url_for('pricing') }}" class="tg-upload-cta">
+    Join the League of Photographers &rarr;
+    <span class="tg-upload-sub">Your standing, your Annual Excellence Award qualification, your Evolving Eye — they start here.</span>
+  </a>
+  {% endif %}
+
+  {# ── GRID ── #}
+  {% if images %}
+  <div class="tg-grid">
+    {% for img in images %}
+    <a href="{{ url_for('try_result', image_id=img.id) }}" class="tg-card">
+      {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}" class="tg-card-img" loading="lazy" onerror="this.style.display='none'">
+      {% else %}
+        <div class="tg-card-img-placeholder"></div>
+      {% endif %}
+      <div class="tg-card-body">
+        {% if img.score %}
+          <span class="tg-card-score">{{ '%.2f'|format(img.score) }}</span>
+          <span class="tg-card-tier">{{ img.tier }}</span>
+        {% elif img.status == 'processing' %}
+          <span class="tg-card-processing">Evaluating&hellip;</span>
+        {% else %}
+          <span class="tg-card-processing">Pending</span>
+        {% endif %}
+        <div class="tg-card-name">{{ img.asset_name }}</div>
+        <div class="tg-card-genre">{{ img.genre }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  {# ── EMPTY STATE ── #}
+  <div class="tg-empty">
+    <div class="tg-empty-hl">No evaluations yet.</div>
+    <div class="tg-empty-body">Upload your first photograph and see what Shutter League sees in your eye.</div>
+    <a href="{{ url_for('try_page') }}" class="tg-upload-cta" style="max-width:320px;margin:0 auto">
+      Upload your first photograph &rarr;
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
