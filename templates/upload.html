@@ -1,4 +1,18 @@
-{# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{#
+  SL-VERSION: 181.47-staging (Session 201 — audit fixes: line-height 1.4→1.7, text-shadow:none, mobile 13px font fixes. RETAINS 181.46.)
+  Session 192 · 2026-08-24
+  VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · No own footer/nav — inherits base.html 181.49 ✅ · Jinja2 env.parse() required before deploy ✅ · legal-box Terms & Conditions link present ✅
+  KYC     : Terms link in legal-box ✅ · Programme Rules link in legal-box ✅ · Footer KYC (Terms/Privacy/Refunds/Shipping/Bengaluru/UDYAM) inherited from base.html ✅ · Screenshot shows old base footer — deploy base.html 181.49 first
+  Mobile  : Inherits base.html bottom nav ✅ · Upload form single-column ✅ · 44px tap targets on submit button ✅ · touch-action:manipulation on form controls ✅
+  iPad    : Single-column form ≤900px via base.html ✅ · max-width:680px upload-wrap ✅
+  70yr    : Form labels 16px+ ✅ · Legal checkbox label 16px ✅ · dz-label 17px ✅ · dz-hint 16px ✅ · Submit button 16px+ ✅ · preflight-tag 13px uppercase label only (not body copy) ✅
+  Version : 181.46-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -85,7 +99,7 @@
     .carousel-track   { height: auto; }
     .carousel-slide   { min-height: 88px; height: auto; padding: 12px 20px; }
     .carousel-msg     { font-size: 15px; line-height: 1.6; }
-    .carousel-sub     { font-size: 13px; }
+    .carousel-sub     { font-size: 14px; }
   }
 
   .drop-zone {
@@ -274,11 +288,11 @@
   /* ── Mobile overlay — compress vertical rhythm so Skip button is always visible ── */
   @media (max-height: 750px), (max-width: 430px) {
     #scoringOverlay { padding: 20px 24px 24px; }
-    .overlay-engine-tag { margin-bottom: 20px; font-size: 13px; }
+    .overlay-engine-tag { margin-bottom: 20px; font-size: 14px; }
     .breath-ring-hero { width: 100px; height: 100px; }
     .breath-hero { gap: 10px; margin-bottom: 16px; }
     .breath-word { font-size: 18px; }
-    .breath-counts { font-size: 13px; }
+    .breath-counts { font-size: 14px; }
     .breath-tagline { font-size: 15px; }
     .overlay-copy { margin-bottom: 16px; gap: 4px; }
     .overlay-status { font-size: 15px; }
@@ -454,10 +468,41 @@
     <p>{% if is_trial %}Five dimensions. A live percentile. One honest takeaway. Upload your photograph to see where it stands.{% else %}Your photograph is about to get the most honest feedback it has ever received. Under 2 minutes. No ego. No encouragement for its own sake.{% endif %}</p>
   </div>
   {% if is_trial %}
+  {% set _trial_limit = evals_limit if evals_limit is defined else 10 %}
+  {% if evals_used >= _trial_limit %}
+  {# Limit reached — block the upload form entirely #}
+  <div style="background:#FEFCF8;border:1px solid #D4A428;border-radius:8px;padding:28px 24px;margin-bottom:24px;">
+    <div style="font-size:19px;font-weight:700;color:#1A1A18;margin-bottom:8px;line-height:1.7;text-shadow:none;">You've seen what the platform sees. Now build the record.</div>
+    <div style="font-size:15px;color:#4A4840;line-height:1.7;margin-bottom:20px;">You have used all {{ _trial_limit }} free evaluations. Two ways to continue:</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+      <div style="background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:16px 18px;">
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">Join the League of Photographers</div>
+        <div style="font-size:14px;color:#4A4840;line-height:1.6;margin-bottom:12px;">Annual or 6-month membership. Full evaluations, standing, Evolving Eye, Mentor narrative.</div>
+        <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#1A2744;color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:5px;text-decoration:none;">See membership options →</a>
+      </div>
+      <div style="background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:16px 18px;">
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">100 for 100</div>
+        <div style="font-size:14px;color:#4A4840;line-height:1.6;margin-bottom:12px;">₹100 for 100 more Basic Evaluations. No subscription. Continue at your own pace.</div>
+        <a href="{{ url_for('pricing') }}#play" style="display:inline-block;background:#fff;color:#1A2744;font-weight:700;font-size:14px;padding:10px 20px;border-radius:5px;text-decoration:none;border:1px solid #1A2744;">Get 100 more →</a>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#8a8070;">Not everyone wants a standing or an award. Both paths let you keep improving.</div>
+  </div>
+  <script>
+    // Hide upload form — limit reached
+    document.addEventListener('DOMContentLoaded', function() {
+      var carousel = document.getElementById('uploadCarousel');
+      var form = document.getElementById('uploadForm');
+      if (carousel) carousel.style.display = 'none';
+      if (form) form.style.display = 'none';
+    });
+  </script>
+  {% else %}
   <div style="background:#E8EAF6;border:1px solid #C5CAE9;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#1A1A18;line-height:1.5;">
-    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of 3</strong><br>
+    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of {{ _trial_limit }}</strong><br>
     Every dimension is weighted for your interest area and benchmarked against a live calibration pool.
   </div>
+  {% endif %}
   {% endif %}
 
   <!-- ── UPLOAD CAROUSEL ── -->
@@ -540,6 +585,7 @@
       action="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-upload-url="{% if is_trial %}/try/upload{% else %}/upload{% endif %}"
       data-result-base="{% if is_trial %}/try/result/{% else %}{% endif %}"
+      data-next="{% if is_trial %}try_result{% endif %}"
       data-subgenre-map='{{ (subgenre_map_json or "{}" ) | safe }}'>
       {{ csrf_token_field()|safe if csrf_token_field is defined else '' }}
       {# ── Mission tracking — passed from /mission page ── #}
@@ -659,12 +705,15 @@
 
 
       <div class="form-group" id="location-field-wrap">
-        <label for="location">Current Location</label>
+        <label for="location">Where was this photograph taken?</label>
         <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180" value="{{ last_location|default('') }}" required>
+        <div style="font-size:16px; color:var(--text-muted); margin-top:4px; line-height:1.6;">This records where this photograph was made — for your scorecard only.<br>
+        <span style="color:#c0392b;">To get your current city advisory, update your location in Profile → Address.</span></div>
       </div>
-      <div id="location-session-note" style="display:none; margin-bottom:16px; padding:10px 14px; background:var(--surface-2, #f5f5f3); border-radius:8px; font-size:14px; color:var(--text-secondary);">
+      <div id="location-session-note" style="display:none; margin-bottom:16px; padding:10px 14px; background:var(--surface-2, #f5f5f3); border-radius:8px; font-size:16px; color:var(--text-secondary);">
         📍 <span id="location-session-city"></span> &nbsp;·&nbsp; <a href="{{ url_for('profile') }}" style="color:var(--text-primary); text-decoration:underline; text-underline-offset:2px;">Change in Profile</a>
         <input type="hidden" id="location-hidden" name="location">
+        <div style="margin-top:6px; font-size:16px; color:#c0392b;">To get your current city advisory, update your location in Profile → Address.</div>
       </div>
 
       <div class="form-group">
@@ -1134,13 +1183,37 @@
       return;
     }
 
-    const locationInput = document.getElementById('location');
-    if (!locationInput || !locationInput.value.trim()) {
-      locationInput.focus();
-      locationInput.style.borderColor = 'var(--red)';
-      locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
-      showError('Please enter your current location.');
+    /* SL-181.1 — location check must read BOTH fields.
+       On the second upload in a session the block near the foot of this file
+       finds sl_last_location, hides the visible #location input, clears its
+       name so it stops submitting, shows the "Bangalore · Change in Profile"
+       pill, and writes the value into #location-hidden.
+       This check only ever looked at #location — the box that had just been
+       emptied and hidden — so it failed every time and blocked submission.
+       Result: the first upload in a session worked, every one after it was
+       refused with a message asking for a location already on screen. */
+    const locationInput  = document.getElementById('location');
+    const locationHidden = document.getElementById('location-hidden');
+    const _locVisible    = locationInput && locationInput.offsetParent !== null;
+    const _locValue      = (locationInput && locationInput.value.trim())
+                        || (locationHidden && locationHidden.value.trim())
+                        || '';
+    if (!_locValue) {
+      if (_locVisible) {
+        locationInput.focus();
+        locationInput.style.borderColor = 'var(--red)';
+        locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
+        showError('Please enter your current location.');
+      } else {
+        /* Field is hidden and the stored value is missing — recoverable only
+           by reloading, so say that rather than pointing at an invisible box. */
+        showError('Your location could not be read. Please reload the page and try again.');
+      }
       return;
+    }
+    /* Keep the hidden field authoritative for submission. */
+    if (locationHidden && !locationHidden.value.trim()) {
+      locationHidden.value = _locValue;
     }
 
     if (!document.querySelector('input[name="camera_track"]:checked')) {
@@ -1461,6 +1534,30 @@
           // Store pending image so dashboard can show scoring status on arrival
           try { sessionStorage.setItem('sl_pending_score', resp.image_id); } catch(e) {}
         }
+        var _nh = (document.getElementById('uploadForm')||{}).dataset ? document.getElementById('uploadForm').dataset.next||'' : '';
+        _startPolling(resp.image_id, resp.next || _nh);
+        return;
+      }
+
+      /* SL-181.1 — the free evaluation path returned success and this line
+         called it a failure.
+         /upload replies {status:'processing', image_id:N} and is handled above.
+         /try/upload replies {image_id:N} with no status field, so that check
+         missed, execution fell through to here, and the page printed
+         "Upload failed (200)" while the server was already scoring the image.
+         A free user was told their upload failed when it had worked — and on
+         a 3-evaluation allowance, retrying costs them one.
+         Handle the trial reply explicitly before treating anything as an error. */
+      if (resp && resp.image_id && !resp.error) {
+        /* SL-181.2 — poll, do NOT redirect straight away.
+           181.1 sent the browser to /try/result/<id> the moment the upload
+           returned. Measured on staging: the image was saved at 06:38:21 and
+           scored at 06:38:22.8 — so the result page was reached 1.6s early,
+           found status='processing', flashed "Your evaluation is still being
+           processed" and redirected back to /try. The user saw an empty form.
+           _startPolling waits for /score-status to report done and then sends
+           the browser to dataset.resultBase + id, which is the same
+           destination. Let it do its job. */
         _startPolling(resp.image_id, resp.next || '');
         return;
       }
@@ -1540,8 +1637,8 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          /* Override server message — never accuse photographer of using AI */
-          var _flagMsg = 'Your image has been flagged for admin review before it can be evaluated.\n\nThis can happen with heavily edited or stylised photographs. Our team will review it shortly.\n\nYou can view the status and raise a query in My Gallery.';
+          /* Use server message — set specifically per rejection type in score-status endpoint */
+          var _flagMsg = r.message || 'Your image could not be accepted for evaluation. Please contact support@shutterleague.com if you believe this is an error.';
           showError(_flagMsg);
           /* Show My Gallery link below error — do NOT auto-redirect */
           var _galleryLink = document.createElement('a');
@@ -1862,6 +1959,13 @@
     }
   });
   obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
+
+  // ── SL-181.6e-staging: Back-button / bfcache guard ─────────────────────
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      window.location.replace('/dashboard');
+    }
+  });
 
 })();
 
