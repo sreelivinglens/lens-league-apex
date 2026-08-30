@@ -1,0 +1,701 @@
+{# SL-VERSION: 181.55-staging (Session 201 — audit fixes: single column stack at 480px, gp-row single col. RETAINS 181.54. Session 200b, 2026-08-27 — Full dashboard redesign. Single column scorecard rhythm. 8 Haiku synthesis fields: sherpa, signature, gap, next_session, aq_insight, tier_insight, master_insight. Dims with signal observations. Tier progression. EXIF-aware engine. Mobile bottom nav. Standalone — does not extend base.html.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="Shutter League — Dashboard">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. Your standing, your record, your eye — Shutter League.">
+<meta property="og:image" content="{{ url_for('static', filename='img/og-default.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='img/og-default.jpg') }}">
+<link rel="canonical" href="{{ request.url }}">
+<title>Shutter League — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+h1,h2,h3{text-shadow: none}
+html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:antialiased;background:#E8E5DF}
+
+/* ── NAV ── */
+.nav{height:60px;background:#1A2744;border-bottom:none;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;flex-direction:column;gap:3px;text-decoration:none}
+.nav-brand-name{font-size:13px;font-weight:600;letter-spacing:0.22em;color:#F5F3EF;text-transform:uppercase}
+.nav-brand-sub{font-size:13px;letter-spacing:0.12em;color:rgba(245,243,239,0.65);text-transform:uppercase}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{font-size:14px;color:rgba(245,243,239,0.55);text-decoration:none;letter-spacing:0.02em;transition:color .15s}
+.nav-links a:hover{color:#F5F3EF}
+.nav-links a.active{color:#F5F3EF;font-weight:500;border-bottom:1.5px solid #C8A84B;padding-bottom:2px}
+.nav-logout{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center}
+.nav-logout svg{width:18px;height:18px;stroke:rgba(245,243,239,0.55);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── PAGE ── */
+.page{max-width:760px;margin:0 auto;padding:0 0 80px}
+
+/* ── SINCE LAST VISIT — top bar ── */
+.since-bar{background:#1A2744;padding:11px 48px;display:flex;align-items:center;justify-content:space-between}
+.since-text{font-size:13px;color:rgba(245,243,239,0.65);letter-spacing:0.02em}
+.since-text strong{color:#C8A84B;font-weight:500}
+.since-evals{font-size:13px;color:rgba(245,243,239,0.52);letter-spacing:0.04em}
+
+/* ── HERO IMAGE ── */
+.hero-wrap{width:100%;background:#0C1018;position:relative;overflow:hidden}
+.hero-img{width:100%;display:block;max-height:420px;object-fit:contain}
+.hero-ph{width:100%;height:340px;display:flex;align-items:center;justify-content:center;font-size:100px;background:#0C1018}
+
+/* ── IDENTITY BAR ── */
+.identity{padding:28px 48px 24px;background:#F5F3EF;border-bottom:1px solid rgba(200,168,75,0.18)}
+.id-greeting{font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(26,39,68,0.52);margin-bottom:8px}
+.id-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:#1A2744;margin-bottom:18px;line-height:1.55}
+.id-score-row{display:flex;align-items:baseline;gap:20px;margin-bottom:14px}
+.id-score{font-family:'Playfair Display',serif;font-size:72px;color:#1A2744;line-height:1;letter-spacing:-0.03em}
+.id-meta{border-left:2px solid #C8A84B;padding-left:16px;display:flex;flex-direction:column;gap:5px}
+.id-tier{font-size:13px;font-weight:600;letter-spacing:0.20em;text-transform:uppercase;color:#C8A84B}
+.id-genre{font-size:14px;color:rgba(26,39,68,0.55)}
+.id-pct{font-size:14px;color:rgba(26,39,68,0.45)}
+.id-link{font-size:14px;color:rgba(26,39,68,0.42);text-decoration:none;letter-spacing:0.02em;border-bottom:1px solid rgba(26,39,68,0.15);padding-bottom:1px;display:inline-block}
+.id-link:hover{color:#C8A84B;border-bottom-color:#C8A84B}
+
+/* ── SECTION DIVIDER ── */
+.sec-rule{height:0.5px;background:rgba(26,39,68,0.08);margin:0}
+
+/* ── CONTENT SECTIONS ── */
+.section{padding:40px 48px}
+.section + .section{border-top:0.5px solid rgba(26,39,68,0.07)}
+
+/* Section eyebrow */
+.eyebrow{font-size:13px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(26,39,68,0.52);margin-bottom:20px}
+.eyebrow-gold{color:#8A6A00}
+
+/* ── SHERPA — what the platform has been watching ── */
+.sherpa-section{background:#EDE9E1;padding:40px 48px}
+.sherpa-section .eyebrow{color:#6A4E00}
+.sherpa-opening{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;line-height:1.75;color:#1A2744;margin-bottom:24px}
+.sherpa-detail{font-size:17px;line-height:1.85;color:rgba(26,39,68,0.70);margin-bottom:20px}
+.sherpa-truth{font-size:17px;line-height:1.85;color:#1A2744;padding:20px 24px;background:#fff;border-left:3px solid #C8A84B;border-radius:0 3px 3px 0;margin-bottom:20px}
+.sherpa-nudge{font-family:'Inter',sans-serif;font-size:17px;font-weight:500;line-height:1.80;color:#1A2744;margin-top:20px;padding-top:20px;border-top:0.5px solid rgba(26,39,68,0.10)}
+
+/* ── SIGNATURE ── */
+.signature-card{background:#fff;border:0.5px solid rgba(26,39,68,0.10);border-left:3px solid #C8A84B;border-radius:0 4px 4px 0;padding:28px 32px}
+.sig-label{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#8A6A00;margin-bottom:12px}
+.sig-name{font-family:'Playfair Display',serif;font-size:24px;color:#1A2744;margin-bottom:10px}
+.sig-obs{font-size:16px;line-height:1.80;color:rgba(26,39,68,0.65)}
+.sig-count{font-size:13px;color:rgba(26,39,68,0.52);margin-top:12px;letter-spacing:0.04em}
+
+/* ── THE GAP ── */
+.gap-card{background:#fff;border:0.5px solid rgba(26,39,68,0.10);border-left:3px solid #D4860A;border-radius:0 4px 4px 0;padding:28px 32px}
+.gap-label{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#8A4A00;margin-bottom:12px}
+.gap-name{font-family:'Playfair Display',serif;font-size:24px;color:#1A2744;margin-bottom:10px}
+.gap-truth{font-size:16px;line-height:1.80;color:rgba(26,39,68,0.65)}
+.gap-count{font-size:13px;color:rgba(26,39,68,0.52);margin-top:12px;letter-spacing:0.04em}
+
+/* ── NEXT SESSION ── */
+.next-card{background:#EEF2FA;border:0.5px solid rgba(80,120,200,0.15);border-left:3px solid #4A6FA8;border-radius:0 4px 4px 0;padding:28px 32px}
+.next-label{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#2A4A7A;margin-bottom:12px}
+.next-body{font-size:17px;line-height:1.85;color:#1A2744}
+
+/* ── HOW YOUR EYE IS DEVELOPING ── */
+.spark-row{display:flex;align-items:center;gap:24px;margin-bottom:32px}
+.spark-stat{flex-shrink:0}
+.spark-stat-num{font-family:'Playfair Display',serif;font-size:32px;color:#1A2744;line-height:1}
+.spark-stat-label{font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,39,68,0.52);margin-top:3px}
+.spark-stat-sub{font-size:13px;color:rgba(26,39,68,0.45);margin-top:2px}
+canvas.spark{flex:1;height:48px;display:block}
+
+.dims-list{display:flex;flex-direction:column;gap:0}
+.dim-row{padding:8px 0;border-bottom:0.5px solid rgba(26,39,68,0.06)}
+.dim-row:last-child{border-bottom:none}
+.dim-header{display:grid;grid-template-columns:1fr 44px 100px;align-items:center;gap:8px}
+.dim-row-expanded .dim-header{margin-bottom:8px}
+.dim-signal{font-size:17px;line-height:1.85;color:#1A2744;padding:18px 22px;background:#fff;border-radius:4px;border-left:3px solid #C8A84B;box-shadow:0 1px 4px rgba(26,39,68,0.07);margin-top:4px}
+.signal-label{display:block;font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:10px;font-weight:600}
+.dim-name{font-size:15px;color:rgba(26,39,68,0.60);line-height:1.55}
+.dim-name.strong{color:#1A2744;font-weight:600}
+.dim-score{font-family:'Playfair Display',serif;font-size:24px;color:#1A2744;text-align:right}
+.dim-right{}
+.dim-bar-bg{height:4px;background:rgba(26,39,68,0.08);border-radius:2px;margin-bottom:5px}
+.dim-bar-fill{height:4px;border-radius:2px}
+.bar-gold{background:#C8A84B}
+.bar-amber{background:#D4860A}
+.bar-dim{background:rgba(26,39,68,0.15)}
+.dim-tag{font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase}
+.tag-gold{color:#8A6A00}
+.tag-amber{color:#8A4A00}
+.dim-trend{font-size:13px;color:rgba(26,39,68,0.52);margin-top:2px}
+
+/* ── MASTER REFERENCE ── */
+.master-card{background:#E8F0E8;border:0.5px solid rgba(60,120,60,0.15);border-left:3px solid #5A8A5A;border-radius:0 4px 4px 0;padding:28px 32px}
+.master-label{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#2A5A2A;margin-bottom:12px}
+.master-name{font-family:'Playfair Display',serif;font-size:24px;color:#1A2744;margin-bottom:10px}
+.master-why{font-size:16px;line-height:1.80;color:rgba(26,39,68,0.65)}
+.master-count{font-size:13px;color:rgba(26,39,68,0.52);margin-top:12px;letter-spacing:0.04em}
+
+/* ── GM STANDARD ── */
+.gm-section{background:#0C1018;position:relative;cursor:pointer;overflow:hidden;display:block;width:100%}
+.gm-img{width:100%;display:block;max-height:300px;object-fit:contain}
+.gm-ph{width:100%;height:220px;display:flex;align-items:center;justify-content:center;font-size:72px}
+.gm-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,14,22,0.92) 0%,rgba(10,14,22,0.30) 60%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:28px 32px;box-sizing:border-box}
+.gm-hover-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:#F5F3EF;letter-spacing:0.06em;opacity:0;transition:opacity .2s;background:rgba(26,39,68,0.55);padding:10px 20px;border-radius:2px;white-space:nowrap}
+.gm-section:hover .gm-hover-hint{opacity:1}
+.gm-caption-label{font-size:13px;letter-spacing:0.20em;text-transform:uppercase;color:rgba(245,243,239,0.52);margin-bottom:8px}
+.gm-caption-name{font-family:'Playfair Display',serif;font-size:20px;color:rgba(245,243,239,0.88);margin-bottom:6px}
+.gm-caption-score{font-size:13px;color:#C8A84B;letter-spacing:0.06em}
+.gm-gap-row{display:flex;align-items:baseline;gap:12px;margin-top:16px}
+.gm-gap-num{font-family:'Playfair Display',serif;font-size:44px;color:#fff;line-height:1;letter-spacing:-0.02em}
+.gm-gap-label{font-size:13px;color:rgba(245,243,239,0.42);letter-spacing:0.06em;text-transform:uppercase}
+
+/* ── MY EVALUATIONS ── */
+.evals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.eval-card{background:#fff;border:0.5px solid rgba(26,39,68,0.10);border-radius:4px;overflow:hidden;text-decoration:none;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column}
+.eval-card:hover{border-color:#C8A84B;box-shadow:0 2px 12px rgba(200,168,75,0.12)}
+.eval-card.best{border-color:#C8A84B}
+.eval-thumb{height:110px;background:#0C1018;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+.eval-meta{padding:10px 12px 12px;flex-shrink:0}
+.eval-score{font-family:'Playfair Display',serif;font-size:22px;color:#1A2744;line-height:1}
+.eval-tier{font-size:13px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:#C8A84B;margin-top:3px}
+.eval-genre{font-size:13px;color:rgba(26,39,68,0.42);margin-top:2px}
+.eval-empty{height:110px;background:rgba(26,39,68,0.02);border:0.5px dashed rgba(26,39,68,0.12);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none;transition:border-color .15s}
+.eval-empty:hover{border-color:#C8A84B}
+.eval-empty-plus{font-size:22px;color:rgba(26,39,68,0.40)}
+.eval-empty-label{font-size:13px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,39,68,0.45)}
+
+/* ── PROGRESS + CTA ── */
+.cta-section{padding:36px 48px;border-top:0.5px solid rgba(200,168,75,0.18);background:#F5F3EF}
+.progress-label{display:flex;justify-content:space-between;margin-bottom:8px}
+.progress-text{font-size:13px;color:rgba(26,39,68,0.50);letter-spacing:0.02em}
+.progress-num{font-size:13px;color:#1A2744;font-weight:500}
+.progress-bar-bg{height:4px;background:rgba(26,39,68,0.08);border-radius:2px;margin-bottom:24px}
+.progress-bar-fill{height:4px;background:#C8A84B;border-radius:2px}
+.cta-primary{display:block;width:100%;background:#1A2744;color:#C8A84B;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:16px;border:none;border-radius:3px;cursor:pointer;text-align:center;text-decoration:none;min-height:52px;transition:background .15s}
+.cta-primary:hover{background:#243660}
+.cta-secondary{display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(26,39,68,0.52);text-decoration:none;letter-spacing:0.03em}
+
+/* ── MOBILE BOTTOM NAV ── */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#F5F3EF;border-top:0.5px solid rgba(26,39,68,0.12);z-index:200}
+.mob-nav-items{display:flex;height:56px}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:rgba(26,39,68,0.42);text-decoration:none;background:none;border:none;font-family:'Inter',sans-serif;min-height:44px;padding:4px 2px}
+.mob-nav-item.active{color:#C8A84B}
+.mob-nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mob-drawer{display:none;position:fixed;bottom:56px;left:0;right:0;background:#F5F3EF;border-top:0.5px solid rgba(26,39,68,0.12);z-index:199;box-shadow:0 -4px 24px rgba(26,39,68,0.08)}
+.mob-drawer.open{display:block}
+.mob-drawer-item{display:block;padding:15px 24px;font-size:16px;color:rgba(26,39,68,0.65);text-decoration:none;border-bottom:0.5px solid rgba(26,39,68,0.06)}
+.mob-drawer-item:last-child{border-bottom:none}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px){
+  .nav{padding:0 20px}
+  .nav-links{display:none}
+  .since-bar{padding:11px 20px}
+  .page{padding:0 0 70px}
+  .identity,.section,.sherpa-section,.cta-section{padding-left:20px;padding-right:20px}
+  .evals-grid{grid-template-columns:repeat(2,1fr)}
+  .id-score{font-size:56px}
+  .mob-nav{display:block}
+  .gm-overlay{padding:20px}
+}
+@media (max-width: 480px){
+  .id-score{font-size:48px}
+  .evals-grid{grid-template-columns: 1fr !important}
+  .gp-row{grid-template-columns:1fr}
+}
+
+/* TIER PROGRESSION */
+.tier-section{background:#fff;border:0.5px solid rgba(26,39,68,0.10);border-radius:4px;overflow:hidden}
+.tier-header{padding:20px 28px 16px;border-bottom:0.5px solid rgba(26,39,68,0.07)}
+.tier-eyebrow{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#8A6A00;margin-bottom:10px}
+.tier-headline{font-family:"Playfair Display",serif;font-size:22px;color:#1A2744;line-height:1.60}
+.tier-strip{display:flex;align-items:stretch;overflow:hidden}
+.tier-cell{flex:1;padding:14px 12px;border-right:0.5px solid rgba(26,39,68,0.07);display:flex;flex-direction:column;gap:4px;position:relative}
+.tier-cell:last-child{border-right:none}
+.tier-cell.current{background:#EDE9E1}
+.tier-cell.next{background:#F0F4EE}
+.tier-name{font-size:13px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,39,68,0.52)}
+.tier-name.current{color:#8A6A00}
+.tier-name.next{color:#2A5A2A}
+.tier-score{font-family:"Playfair Display",serif;font-size:20px;color:#1A2744;line-height:1}
+.tier-score.current{color:#C8A84B}
+.tier-score.next{color:#5A8A5A}
+.tier-gap{font-size:13px;color:rgba(26,39,68,0.42);margin-top:2px}
+.tier-body{padding:20px 28px}
+.tier-next-label{font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#2A5A2A;margin-bottom:10px}
+.tier-next-name{font-family:"Playfair Display",serif;font-size:20px;color:#1A2744;margin-bottom:10px}
+.tier-next-what{font-size:15px;line-height:1.80;color:rgba(26,39,68,0.65);margin-bottom:14px}
+.tier-next-dims{display:flex;flex-direction:column;gap:8px}
+.tier-dim-need{display:flex;align-items:center;gap:12px;font-size:14px;color:rgba(26,39,68,0.60)}
+.tier-dim-need .dn{color:#1A2744;font-weight:500;min-width:160px}
+.tier-dim-need .dc{font-family:"Playfair Display",serif;font-size:16px;color:#5A8A5A;min-width:32px}
+.tier-dim-need .dg{font-size:13px;color:#D4860A}
+
+
+/* GESTALT */
+.gestalt-section{background:#F5F3EF;padding:0}
+.gestalt-card{background:#fff;border:0.5px solid rgba(26,39,68,0.10);border-radius:4px;overflow:hidden}
+.gestalt-header{padding:20px 28px 16px;border-bottom:0.5px solid rgba(26,39,68,0.07)}
+.gestalt-eyebrow{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(26,39,68,0.52);margin-bottom:8px}
+.gestalt-headline{font-family:"Playfair Display",serif;font-size:18px;color:#1A2744;line-height:1.70}
+.gestalt-principles{display:flex;flex-direction:column;gap:0}
+.gp-row{padding:16px 28px;border-bottom:0.5px solid rgba(26,39,68,0.06);display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:start}
+.gp-row:last-child{border-bottom:none}
+.gp-row.active-principle{background:#EDE9E1}
+.gp-row.gap-principle{background:#FEF9F0}
+.gp-name{font-size:13px;font-weight:600;color:#1A2744;letter-spacing:0.02em;margin-bottom:3px}
+.gp-source{font-size:13px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,39,68,0.52)}
+.gp-verdict{font-size:14px;line-height:1.75;color:rgba(26,39,68,0.65)}
+.gp-verdict strong{color:#1A2744;font-weight:600}
+.gp-tag{display:inline-block;font-size:13px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;padding:2px 8px;border-radius:2px;margin-bottom:6px}
+.gp-tag-strong{background:#EBF4EB;color:#2A5A2A}
+.gp-tag-gap{background:#FEF0E0;color:#8A4A00}
+.gp-tag-neutral{background:rgba(26,39,68,0.06);color:rgba(26,39,68,0.45)}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="{{ url_for('try_welcome') }}" class="nav-brand" style="flex-direction:row;align-items:center;gap:10px">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         alt="Shutter League"
+         style="height:36px;width:auto;display:block"
+         onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="nav-brand-name">Shutter League</span>
+      <span class="nav-brand-sub">Making Images Matter</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="{{ url_for('try_welcome') }}" class="{% if request.endpoint == 'try_welcome' %}nav-active{% endif %}">Home</a>
+    <a href="{{ url_for('try_gallery') }}" class="{% if request.endpoint == 'try_gallery' %}nav-active{% endif %}">My evaluations</a>
+    <a href="{{ url_for('try_page') }}" class="{% if request.endpoint == 'try_page' %}nav-active{% endif %}">Upload</a>
+    <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+    <a href="{{ url_for('league_haiku') }}" class="{% if request.endpoint == 'league_haiku' %}nav-active{% endif %}">League of Photographers</a>
+    <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+    <button class="nav-logout" onclick="window.location='{{ url_for('logout') }}'" title="Log out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- SINCE LAST VISIT -->
+<div class="since-bar">
+  <span class="since-text">
+    {% if days_since == 0 %}
+      Welcome back today. Your record stands at <strong>{{ "%.2f"|format(user_hero.score) if user_hero else "—" }}</strong>.
+    {% elif days_since == 1 %}
+      <strong>Yesterday</strong> was your last evaluation. Your record stands at <strong>{{ "%.2f"|format(user_hero.score) if user_hero else "—" }}</strong>.
+    {% elif days_since %}
+      <strong>{{ days_since }} days</strong> since your last evaluation. Your record stands at <strong>{{ "%.2f"|format(user_hero.score) if user_hero else "—" }}</strong>.
+    {% elif user_hero %}
+      Your record stands at <strong>{{ "%.2f"|format(user_hero.score) }}</strong>.
+    {% else %}
+      Your record begins with your first photograph.
+    {% endif %}
+  </span>
+  <span class="since-evals">{{ evals_used }} of {{ limit }} free evaluations used</span>
+</div>
+
+<div class="page">
+
+  <!-- HERO IMAGE -->
+  {% if user_hero and user_hero.thumb_url %}
+  <div class="hero-wrap">
+    <img src="{{ user_hero.thumb_url }}" alt="Your best photograph so far" class="hero-img" onerror="this.style.display='none'">
+  </div>
+  {% endif %}
+
+  <!-- IDENTITY -->
+  {% if user_hero %}
+  <div class="identity">
+    <div class="id-greeting" id="sl-greeting">Good morning</div>
+    <div class="id-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
+    <div class="id-score-row">
+      <span class="id-score">{{ "%.2f"|format(user_hero.score) }}</span>
+      <div class="id-meta">
+        <span class="id-tier">{{ user_hero.tier }}</span>
+        <span class="id-genre">{{ user_hero.genre }}</span>
+        {% if haiku_percentile %}<span class="id-pct">Top {{ haiku_percentile }}% of all evaluated</span>{% endif %}
+      </div>
+    </div>
+    <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="id-link">Your best so far — see the full evaluation →</a>
+  </div>
+  {% else %}
+  <div class="identity">
+    <div class="id-greeting" id="sl-greeting">Good morning</div>
+    <div class="id-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
+    <div style="font-size:17px;color:rgba(26,39,68,0.55);line-height:1.80;margin-top:12px">
+      Your standing has not started yet. Your record begins with your next photograph.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ WHAT WE SEE ══ -->
+  {% if sherpa_obs %}
+  <div class="sherpa-section">
+    <div class="eyebrow">What we see across your {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }}</div>
+    <div class="sherpa-opening">{{ sherpa_obs }}</div>
+    {% if sherpa_nudge %}
+    <div class="sherpa-nudge">{{ sherpa_nudge }}</div>
+    {% endif %}
+  </div>
+  {% elif evals_used == 0 %}
+  <div class="sherpa-section">
+    <div class="eyebrow">The standard you are building toward</div>
+    <div class="sherpa-opening">Every photographer who has reached the League of Photographers began with their first evaluated photograph. The standard is the same for everyone. The work determines everything.</div>
+  </div>
+  {% endif %}
+
+  <!-- ══ SIGNATURE ══ -->
+  {% if signature_insight %}
+  <div class="section">
+    <div class="signature-card">
+      <div class="sig-label">Your signature</div>
+      {% if milestone_strength %}<div class="sig-name">{{ milestone_strength }}</div>{% endif %}
+      <div class="sig-obs">{{ signature_insight }}</div>
+      {% if evals_used >= 2 %}
+      <div class="sig-count">Named your strongest dimension across your evaluations</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ THE GAP ══ -->
+  {% if gap_insight %}
+  <div class="section">
+    <div class="gap-card">
+      <div class="gap-label">The gap that follows you</div>
+      {% if next_leap_name %}<div class="gap-name">{{ next_leap_name }}</div>{% endif %}
+      <div class="gap-truth">{{ gap_insight }}</div>
+      {% if evals_used >= 2 %}
+      <div class="gap-count">Your lowest-scoring dimension across your evaluations</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ BEFORE YOUR NEXT SESSION ══ -->
+  {% if next_session %}
+  <div class="section">
+    <div class="next-card">
+      <div class="next-label">Before your next session</div>
+      {% set paras = next_session.split('
+
+') %}
+      {% if paras|length > 1 %}
+        {% for para in paras %}
+        <div class="next-body"{% if not loop.first %} style="margin-top:14px"{% endif %}>{{ para }}</div>
+        {% endfor %}
+      {% else %}
+      <div class="next-body">{{ next_session }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ HOW YOUR EYE IS DEVELOPING ══ -->
+  {% if dims_sorted %}
+  <div class="section" style="background:#fff;border-radius:4px;margin:0 0 2px">
+    <div class="eyebrow eyebrow-gold">How your eye is developing</div>
+
+    {% if score_history and score_history|length >= 2 %}
+    <div class="spark-row">
+      <div class="spark-stat">
+        <div class="spark-stat-num">
+          {% if score_trend == 'up' %}↑{% elif score_trend == 'down' %}↓{% else %}—{% endif %}
+        </div>
+        <div class="spark-stat-label">
+          {% if score_trend == 'up' %}Rising{% elif score_trend == 'down' %}Variable{% else %}Steady{% endif %}
+        </div>
+        <div class="spark-stat-sub">
+          {{ "%.2f"|format(score_history[0]) }} → {{ "%.2f"|format(score_history[-1]) }} across {{ score_history|length }} evaluations
+        </div>
+      </div>
+      <canvas class="spark" id="spark" height="48"
+        data-values="{{ score_history|join(',') }}"></canvas>
+    </div>
+    {% endif %}
+
+    <div class="dims-list">
+      {% for dim in dims_sorted %}
+      <div class="dim-row dim-row-expanded">
+        <div class="dim-header">
+          <div class="dim-name{% if dim.tag == 'strongest' %} strong{% endif %}">{{ dim.name }}</div>
+          <div class="dim-score">{{ "%.1f"|format(dim.score) }}</div>
+          <div class="dim-right">
+            <div class="dim-bar-bg">
+              <div class="dim-bar-fill {% if dim.tag == 'strongest' %}bar-gold{% elif dim.tag == 'leap' %}bar-amber{% else %}bar-dim{% endif %}"
+                style="width:{{ (dim.score / 10 * 100)|round(1) }}%"></div>
+            </div>
+            {% if dim.tag == 'strongest' %}
+            <div class="dim-tag tag-gold">Your Strongest</div>
+            {% elif dim.tag == 'leap' %}
+            <div class="dim-tag tag-amber">Your Next Leap</div>
+            {% else %}
+            <div class="dim-tag">&nbsp;</div>
+            {% endif %}
+            <div class="dim-trend">
+              {% if dim.trend == 'up' %}↑ rising across your record
+              {% elif dim.trend == 'down' %}↓ lowest across your record
+              {% else %}— steady{% endif %}
+            </div>
+          </div>
+        </div>
+        {% if dim.tag == 'strongest' and aq_insight and dim.name == 'Affective Quotient' %}
+        <div class="dim-signal">
+          <span class="signal-label">What your eye does</span>
+          {{ aq_insight }}
+        </div>
+        {% elif dim.tag == 'leap' %}
+        <div class="dim-signal">
+          <span class="signal-label">Where to focus next</span>
+          {{ tier_insight if tier_insight else 'This dimension is what your next tier is waiting for.' }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ WHAT IT TAKES — TIER PROGRESSION ══ -->
+  {% if tier_display and user_hero %}
+  <div class="section">
+    <div class="tier-section">
+      <div class="tier-header">
+        <div class="tier-eyebrow">What it takes to move forward</div>
+        <div class="tier-headline">
+          You are at {{ "%.2f"|format(tier_display.current_score) }}.
+          {{ tier_display.next }} begins at {{ tier_display.next_floor }}.
+          {% if tier_display.gap > 0 %}
+          The gap is {{ "%.2f"|format(tier_display.gap) }} points.
+          {% else %}
+          You are in {{ tier_display.current }} territory.
+          {% endif %}
+        </div>
+      </div>
+      <div class="tier-strip">
+        {% if tier_display.prev %}
+        <div class="tier-cell">
+          <div class="tier-name">{{ tier_display.prev }}</div>
+        </div>
+        {% endif %}
+        <div class="tier-cell current">
+          <div class="tier-name current">{{ tier_display.current }} — you are here</div>
+          <div class="tier-score current">{{ "%.2f"|format(tier_display.current_score) }}</div>
+          <div class="tier-gap">{{ tier_display.current_range }}</div>
+        </div>
+        <div class="tier-cell next">
+          <div class="tier-name next">{{ tier_display.next }} — next</div>
+          <div class="tier-score next">{{ tier_display.next_floor }}+</div>
+          {% if tier_display.gap > 0 %}
+          <div class="tier-gap">{{ "%.2f"|format(tier_display.gap) }} away</div>
+          {% endif %}
+        </div>
+      </div>
+      {% if dims_sorted %}
+      <div class="tier-body">
+        <div class="tier-next-label">To reach {{ tier_display.next }}</div>
+        <div class="tier-next-name">Every dimension must move. One is critical.</div>
+        <div class="tier-next-what">{{ tier_display.next }}-tier images do not have a weak dimension. Right now, one dimension is carrying your record. One is holding it back.</div>
+        <div class="tier-next-dims">
+          {% for dim in dims_sorted %}
+          <div class="tier-dim-need">
+            <span class="dn">{{ dim.name }}</span>
+            <span class="dc">{{ "%.1f"|format(dim.score) }}</span>
+            {% set gap_to_tier = tier_display.next_floor - dim.score %}
+            {% if gap_to_tier <= 0 %}
+            <span style="font-size:13px;color:#2A5A2A">already {{ tier_display.next }} range</span>
+            {% elif gap_to_tier <= 0.3 %}
+            <span style="font-size:13px;color:#8A6A00">{{ "%.1f"|format(gap_to_tier) }} from {{ tier_display.next }}</span>
+            {% elif dim.tag == 'leap' %}
+            <span class="dg">{{ "%.1f"|format(gap_to_tier) }} to go — this is the ceiling</span>
+            {% else %}
+            <span style="font-size:13px;color:rgba(26,39,68,0.40)">{{ "%.1f"|format(gap_to_tier) }} to go</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ MASTER REFERENCE ══ -->
+  {% if master_insight %}
+  <div class="section">
+    <div class="master-card">
+      <div class="master-label">The eye behind this</div>
+      <div class="master-why">{{ master_insight }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ THE STANDARD ══ -->
+  {% if league_hero and league_hero.thumb_url %}
+  {% if league_hero.id %}
+  <a href="{{ url_for('try_standing', image_id=league_hero.id) }}" class="gm-section">
+  {% else %}
+  <a href="{{ url_for('standings_public') }}" class="gm-section">
+  {% endif %}
+    <img src="{{ league_hero.thumb_url }}"
+         alt="Grandmaster photograph — {{ league_hero.photographer }}"
+         class="gm-img"
+         onerror="this.style.display='none'">
+    <div class="gm-overlay">
+      <div class="gm-caption-label">The standard you are building toward</div>
+      <div class="gm-caption-name">{{ league_hero.photographer }} &nbsp;·&nbsp; {{ league_hero.genre }} &nbsp;·&nbsp; {{ league_hero.tier }}</div>
+      <div class="gm-caption-score">{{ "%.2f"|format(league_hero.score) }} &nbsp;·&nbsp; See their full evaluation →</div>
+      {% if user_hero %}
+      <div class="gm-gap-row">
+        <span class="gm-gap-num">{{ "%.2f"|format([league_hero.score - user_hero.score, 0]|max) }}</span>
+        <span class="gm-gap-label">points from Grandmaster</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="gm-hover-hint">See their standing in the League →</div>
+  </a>
+  {% endif %}
+
+  <!-- ══ MY EVALUATIONS ══ -->
+  {% if images %}
+  <div class="section">
+    <div class="eyebrow eyebrow-gold" style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <span>My Evaluations</span>
+      <a href="{{ url_for('try_gallery') }}" style="font-size:13px;color:rgba(26,39,68,0.42);text-decoration:none;letter-spacing:0.03em">View all →</a>
+    </div>
+    <div class="evals-grid">
+      {% set best_score = namespace(val=0) %}
+      {% for img in images %}{% if img.score and img.score > best_score.val %}{% set best_score.val = img.score %}{% endif %}{% endfor %}
+      {% for img in images[:8] %}
+      <a href="{{ url_for('try_result', image_id=img.id) }}" class="eval-card{% if img.score == best_score.val %} best{% endif %}">
+        {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre }}" class="eval-thumb" style="object-fit:contain;width:100%;height:110px;background:#0C1018" onerror="this.style.display='none'">
+        {% else %}
+        <div class="eval-thumb"></div>
+        {% endif %}
+        <div class="eval-meta">
+          <div class="eval-score">{{ "%.2f"|format(img.score) if img.score else '—' }}</div>
+          <div class="eval-tier">{{ img.tier }}{% if img.score == best_score.val %} ★{% endif %}</div>
+          <div class="eval-genre">{{ img.genre }}</div>
+        </div>
+      </a>
+      {% endfor %}
+      {% if evals_remaining > 0 %}
+      <a href="{{ url_for('try_page') }}" class="eval-empty">
+        <div class="eval-empty-plus">+</div>
+        <div class="eval-empty-label">Upload</div>
+      </a>
+      {% endif %}
+      {% for _ in range([8 - images|length - (1 if evals_remaining > 0 else 0), 0]|max) %}
+      <div class="eval-empty" style="cursor:default;border-color:transparent"></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ PROGRESS + CTA ══ -->
+  <div class="cta-section">
+    <div class="progress-label">
+      <span class="progress-text">Free evaluations</span>
+      <span class="progress-num">{{ evals_used }} of {{ limit }} used</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" style="width:{{ [(evals_used / limit * 100)|round(0)|int, 100]|min }}%"></div>
+    </div>
+    <a href="{{ url_for('try_page') }}" class="cta-primary">
+      {% if evals_used > 0 %}Continue my record →{% else %}Start my record →{% endif %}
+    </a>
+  </div>
+
+</div><!-- /page -->
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-nav">
+  <div class="mob-nav-items">
+    <a href="{{ url_for('try_welcome') }}" class="mob-nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+    </a>
+    <a href="{{ url_for('try_gallery') }}" class="mob-nav-item">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>My Evals
+    </a>
+    <a href="{{ url_for('try_page') }}" class="mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>Upload
+    </a>
+    <a href="{{ url_for('pricing') }}" class="mob-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Pricing
+    </a>
+    <button class="mob-nav-item" onclick="toggleBottomMoreHaiku(event)" id="sl-mob-more-btn" type="button">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>More
+    </button>
+  </div>
+</nav>
+<div class="mob-drawer" id="sl-mob-more-drawer">
+  <a href="{{ url_for('league_haiku') }}" class="mob-drawer-item">League of Photographers</a>
+  <a href="{{ url_for('profile') }}" class="mob-drawer-item">Profile</a>
+  <a href="{{ url_for('logout') }}" class="mob-drawer-item">Log out</a>
+</div>
+
+<script type="application/json" id="sl-score-data">{{ score_history | tojson }}</script>
+
+<script>
+// Greeting
+(function(){
+  var h=new Date().getHours();
+  var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  var el=document.getElementById('sl-greeting');
+  if(el) el.textContent=g;
+})();
+
+// Sparkline — reads from data-values attribute (no Jinja in script)
+function drawSpark(id){
+  var c=document.getElementById(id);
+  if(!c) return;
+  var raw=document.getElementById('sl-score-data');
+  if(!raw) return;
+  var data;
+  try{ data=JSON.parse(raw.textContent.trim()); } catch(e){ return; }
+  if(!data||data.length<2) return;
+  var W=c.offsetWidth||400,H=48,dpr=window.devicePixelRatio||1;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  var ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+  var mn=Math.min.apply(null,data)-0.2,mx=Math.max.apply(null,data)+0.2;
+  var xs=(W-24)/(data.length-1);
+  var yf=function(v){return H-8-((v-mn)/(mx-mn))*(H-16)};
+  var grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(200,168,75,0.15)');
+  grad.addColorStop(1,'rgba(200,168,75,0)');
+  ctx.beginPath();
+  ctx.moveTo(12,yf(data[0]));
+  data.forEach(function(v,i){if(i>0)ctx.lineTo(12+i*xs,yf(v))});
+  ctx.lineTo(12+(data.length-1)*xs,H);ctx.lineTo(12,H);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#C8A84B';ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';
+  data.forEach(function(v,i){var x=12+i*xs,y=yf(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.stroke();
+  data.forEach(function(v,i){
+    var x=12+i*xs,y=yf(v),last=i===data.length-1;
+    ctx.beginPath();ctx.arc(x,y,last?5:3,0,Math.PI*2);
+    ctx.fillStyle=last?'#C8A84B':'rgba(200,168,75,0.45)';ctx.fill();
+    if(last){ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.strokeStyle='rgba(200,168,75,0.20)';ctx.lineWidth=3;ctx.stroke();}
+  });
+}
+window.addEventListener('load',function(){drawSpark('spark');});
+window.addEventListener('resize',function(){drawSpark('spark');});
+
+// Mobile more drawer
+function toggleBottomMoreHaiku(e){
+  e.stopPropagation();
+  document.getElementById('sl-mob-more-drawer').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  var d=document.getElementById('sl-mob-more-drawer');
+  var b=document.getElementById('sl-mob-more-btn');
+  if(d&&d.classList.contains('open')&&!d.contains(e.target)&&!b.contains(e.target)){
+    d.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
