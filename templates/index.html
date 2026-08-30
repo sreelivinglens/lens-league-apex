@@ -1,5 +1,4 @@
-{# SL-VERSION: 182.30-main (Session 204, 2026-08-31 — Audit fixes: OG prefix added, font sizes raised to 13px minimum, DDI label→Evaluation, Dec→December, 768px breakpoint added, line-heights raised on body headings. RETAINS 182.29.)
-SL-VERSION: 182.29-main (Session 204, 2026-08-31 — Full homepage redesign. 3-scroll structure: (1) Hero + credential panel, (2) Progression + Standard + Mahesh + Gallery, (3) Founder card + AEA + CTA. Removed: statement section, moment section, pull dark, reveal, pricing comparison. Accessibility pass: all text ≥13px, opacity ≥0.65 on dark bg, body text #2d2926 on white. Responsive: tablet collapses nav/hero/gallery, mobile stacks all sections. RETAINS 182.28 hero lightbox, bottom nav, cookie banner.) #}
+{# SL-VERSION: 182.31-main (Session 204, 2026-08-31 — AEA date copy fixed, blue palette lightened on light surfaces, version headers cleaned. RETAINS 182.30.) #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -21,8 +20,8 @@ SL-VERSION: 182.29-main (Session 204, 2026-08-31 — Full homepage redesign. 3-s
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <style>
 :root{
-  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;--blue:#1A2744;
-  --gold:#C8A84B;--ink:#1A1A18;--muted:#8A8070;--line:#E0D8C8;
+  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;--blue:#1A2744;--blue-mid:#2C4070;
+  --gold:#C8A84B;--ink:#1A1A18;--muted:#6a6055;--line:#E0D8C8;
   --panel-bg:#060e1c;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -73,10 +72,10 @@ button{font:inherit;cursor:pointer}
 /* Hero text */
 .hero-text{display:flex;flex-direction:column;justify-content:center;padding:0 6vw;background:var(--cream)}
 .hero-kicker{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:24px}
-.hero-h1{font-size:clamp(34px,4vw,58px);line-height:1.5;letter-spacing:-.04em;color:var(--blue);font-weight:600;margin-bottom:22px}
+.hero-h1{font-size:clamp(34px,4vw,58px);line-height:1.5;letter-spacing:-.04em;color:var(--blue-mid);font-weight:600;margin-bottom:22px}
 .hero-h1 em{font-style:italic;color:var(--gold)}
 .hero-lead{font-size:17px;line-height:1.75;color:#3d3530;margin-bottom:12px;max-width:420px}
-.hero-solve{font-size:19px;font-weight:600;color:var(--blue);margin-bottom:30px}
+.hero-solve{font-size:19px;font-weight:600;color:var(--blue-mid);margin-bottom:30px}
 .bigbtn{background:var(--dark);color:#fff;border:none;padding:16px 28px;min-height:52px;font-size:16px;font-weight:600;letter-spacing:.2px;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}
 .micronote{font-size:14px;color:var(--muted);margin-top:12px}
 
@@ -101,10 +100,10 @@ button{font:inherit;cursor:pointer}
 .s2-band-b{background:#EDE8DF;padding:56px 48px}
 .s2-band-b-inner{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start}
 .std-kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8a6a30;margin-bottom:16px}
-.std-h{font-size:22px;font-weight:600;color:var(--blue);margin-bottom:16px;line-height:1.5}
+.std-h{font-size:22px;font-weight:600;color:var(--blue-mid);margin-bottom:16px;line-height:1.5}
 .std-body{font-size:16px;line-height:1.8;color:#3d3530}
 .mahesh{border-left:3px solid var(--gold);padding:22px 24px;background:#fff;border-radius:0 3px 3px 0}
-.mahesh-quote{font-size:18px;font-style:italic;color:var(--blue);line-height:1.7;margin-bottom:14px;font-family:'Playfair Display',Georgia,serif}
+.mahesh-quote{font-size:18px;font-style:italic;color:var(--blue-mid);line-height:1.7;margin-bottom:14px;font-family:'Playfair Display',Georgia,serif}
 .mahesh-attr{font-size:14px;color:#8a6a30;letter-spacing:.3px}
 
 /* Band C — gallery (dark) */
@@ -130,7 +129,7 @@ button{font:inherit;cursor:pointer}
 .founder-badge-name{font-size:14px;font-weight:700;color:#F5F3EF}
 .founder-badge-sub{font-size:13px;color:rgba(245,243,239,.7);margin-top:3px}
 .founder-kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.founder-h{font-size:22px;font-weight:600;color:var(--blue);letter-spacing:-.02em;margin-bottom:18px;line-height:1.5}
+.founder-h{font-size:22px;font-weight:600;color:var(--blue-mid);letter-spacing:-.02em;margin-bottom:18px;line-height:1.5}
 .founder-body{font-size:16px;line-height:1.8;color:#2d2926;margin-bottom:14px}
 .founder-cred{font-size:14px;color:#5a5248;line-height:2;border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
 
@@ -140,7 +139,7 @@ button{font:inherit;cursor:pointer}
 .aea-date{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);white-space:nowrap}
 
 .final-cta{text-align:center}
-.final-h{font-size:32px;font-weight:600;color:var(--blue);letter-spacing:-.03em;margin-bottom:10px}
+.final-h{font-size:32px;font-weight:600;color:var(--blue-mid);letter-spacing:-.03em;margin-bottom:10px}
 .final-sub{font-size:17px;color:var(--muted);margin-bottom:24px}
 .final-note{font-size:14px;color:var(--muted);margin-top:12px}
 
@@ -402,7 +401,7 @@ button{font:inherit;cursor:pointer}
 
   <div class="aea-strip">
     <div class="aea-text">At the end of every year, the most consistent work among <strong>League members</strong> is recognised by the <strong>Annual Excellence Award</strong> — the first photography credential built on twelve months of calibrated evaluation, not a single submission.</div>
-    <div class="aea-date">Award: 31 December 2026</div>
+    <div class="aea-date">Evaluations for this year's Excellence Awards closes on: 31 December 2026</div>
   </div>
 
   <div class="final-cta">
