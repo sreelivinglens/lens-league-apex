@@ -1117,7 +1117,146 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ⑨ HOW YOU'RE DEVELOPING — per-dimension sparklines matching main scorecard #}
+    {# ⑨ CONTEST LAUNCHPAD — Session 203
+         Shown to subscribed owners of scored images only.
+         JS fetches /api/contest-suggestions async — no page-load delay.
+         Below 8.5: motivational gap block (static, no API call).
+         Language: "photography awards" / "submit your work" — NOT "contests" (KYC).
+         Dynamic values are passed via data- attributes on the container div;
+         the inline JS reads them via getAttribute — no Jinja in executable JS.
+    #}
+    {% if current_user.is_authenticated and image.user_id == current_user.id and image.status == 'scored' and image.score %}
+    <div id="sl-launchpad"
+         data-image-id="{{ image.id }}"
+         data-score="{{ '%.2f'|format(image.score) }}"
+         data-threshold="8.5"
+         data-tier="{{ image.tier or '' }}"
+         style="margin-bottom:10px">
+
+      {% set _lp_score = image.score | float %}
+      {% if _lp_score >= 8.5 %}
+      {# Above threshold — async card, fills in from API #}
+      <div class="sc-card" id="sl-lp-card" style="display:none">
+        <div class="sc-card-body">
+          <div class="sc-card-hdr" style="margin-bottom:14px">
+            <span class="sc-card-title">Photography awards worth entering</span>
+            <span id="sl-lp-badge" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#2A7A3A;padding:3px 8px;border-radius:4px">{{ '%.2f'|format(image.score) }}</span>
+          </div>
+          <div id="sl-lp-loading" style="padding:12px 0;color:var(--sc-muted);font-size:15px;line-height:1.6">
+            Finding open awards for your work…
+          </div>
+          <div id="sl-lp-awards" style="display:none"></div>
+          <div id="sl-lp-empty" style="display:none;font-size:15px;color:var(--sc-muted);line-height:1.7">
+            No awards found right now — check back in a few days as new calls open regularly.
+          </div>
+          <div id="sl-lp-error" style="display:none;font-size:14px;color:var(--sc-muted)">
+            Could not load award suggestions. Try again later.
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      {# Below threshold — static motivational gap block #}
+      {% set _lp_gap = (8.5 - _lp_score) | round(1) %}
+      {% set _weakest_dim = '' %}
+      {% if image.aq_score and image.dm_score and image.dod_score %}
+        {% set _dims_map = [('Whether it made you feel something', image.aq_score), ('Whether the timing was right', image.dm_score), ('How difficult it was', image.dod_score)] %}
+        {% set _weakest_dim = (_dims_map | sort(attribute=1) | first)[0] %}
+      {% endif %}
+      <div class="sc-card">
+        <div class="sc-card-body">
+          <div class="sc-card-hdr" style="margin-bottom:10px">
+            <span class="sc-card-title">Photography awards</span>
+          </div>
+          <p style="font-size:15px;color:var(--sc-text);line-height:1.75;margin:0 0 8px">
+            An 8.5 is where Shutter League points you to specific photography awards your work is ready for.
+          </p>
+          <p style="font-size:15px;color:var(--sc-text);line-height:1.75;margin:0 0 8px">
+            Your evaluation of <strong>{{ '%.2f'|format(image.score) }}</strong> is <strong>{{ _lp_gap }}</strong> point{{ 's' if _lp_gap != 1.0 else '' }} away.{% if _weakest_dim %} Your weakest dimension right now is <em>{{ _weakest_dim }}</em> — focus there.{% endif %}
+          </p>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <script>
+    (function() {
+      var el = document.getElementById('sl-launchpad');
+      if (!el) return;
+      var score = parseFloat(el.getAttribute('data-score') || '0');
+      var threshold = parseFloat(el.getAttribute('data-threshold') || '8.5');
+      if (score < threshold) return;  // gap block is static, nothing to fetch
+
+      var imageId = el.getAttribute('data-image-id');
+      var card    = document.getElementById('sl-lp-card');
+      var loading = document.getElementById('sl-lp-loading');
+      var awardsEl = document.getElementById('sl-lp-awards');
+      var emptyEl  = document.getElementById('sl-lp-empty');
+      var errorEl  = document.getElementById('sl-lp-error');
+      if (!card || !loading || !awardsEl || !emptyEl || !errorEl) return;
+
+      card.style.display = 'block';
+
+      fetch('/api/contest-suggestions?image_id=' + imageId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          loading.style.display = 'none';
+          if (!data.eligible || !data.awards || data.awards.length === 0) {
+            emptyEl.style.display = 'block';
+            return;
+          }
+          var html = '';
+          data.awards.forEach(function(a, i) {
+            var isFree = (a.entry_fee || '').toLowerCase() === 'free';
+            var feeBadge = isFree
+              ? '<span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2A7A3A;background:#E8F5E2;border:0.5px solid #C5E0BB;padding:2px 7px;border-radius:4px">Free</span>'
+              : '<span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7A5E00;background:#FDF6E3;border:0.5px solid #D6A42840;padding:2px 7px;border-radius:4px">' + (a.entry_fee || 'Paid') + '</span>';
+            var border = i < data.awards.length - 1
+              ? 'border-bottom:0.5px solid var(--sc-border);margin-bottom:16px;padding-bottom:16px'
+              : '';
+            html += '<div style="' + border + '">';
+            html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">';
+            html += '<div style="font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.4">' + _esc(a.name) + '</div>';
+            html += feeBadge;
+            html += '</div>';
+            if (a.organiser) {
+              html += '<div style="font-size:13px;color:var(--sc-muted);margin-bottom:4px">' + _esc(a.organiser) + '</div>';
+            }
+            if (a.deadline) {
+              html += '<div style="font-size:13px;color:var(--sc-muted);margin-bottom:8px">Deadline: ' + _esc(a.deadline) + '</div>';
+            }
+            if (a.why_this_image) {
+              html += '<div style="font-size:14px;color:var(--sc-text);line-height:1.6;margin-bottom:10px">' + _esc(a.why_this_image) + '</div>';
+            }
+            if (a.url) {
+              html += '<a href="' + _esc(a.url) + '" target="_blank" rel="noopener noreferrer" '
+                + 'style="display:inline-block;font-size:13px;font-weight:600;color:var(--sc-gold-dk);text-decoration:none">'
+                + 'Submit your work \u2192</a>';
+            }
+            html += '</div>';
+          });
+          awardsEl.innerHTML = html;
+          awardsEl.style.display = 'block';
+        })
+        .catch(function() {
+          loading.style.display = 'none';
+          errorEl.style.display = 'block';
+        });
+
+      function _esc(s) {
+        if (!s) return '';
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+    })();
+    </script>
+    {% endif %}
+
+    {# ⑩ HOW YOU'RE DEVELOPING — per-dimension sparklines matching main scorecard #}
     {% if portfolio_data and portfolio_data.has_trends and portfolio_data.dimensions %}
     <div class="sc-dev-block">
       <div class="sc-card-hdr" style="margin-bottom:4px">
