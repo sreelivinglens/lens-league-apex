@@ -1,5 +1,4 @@
-{# image_detail_haiku.html — Production Score Card for Haiku free-try evaluations
-   Session 201 — audit fixes: opacity 0.38/0.30→0.55, line-height 1.3→1.7, canonical+noindex meta, breakpoint spacing. Session 200d: (1) Fixed conversion statement — dynamic based on evals_used. (2) Removed explore secondary CTA. (3) Added delete button. (4) Back link → try_gallery.
+{# image_detail_haiku.html — SL-VERSION: 1.1-main (Session 204, 2026-08-31 — Added upgrade teaser card above conversion section: 6-feature grid on warm pastel background showing what League evaluation adds beyond Haiku. Mobile collapses to 1 column. RETAINS Session 201 audit fixes.)
    Route: /try/result/<image_id>  →  try_result() in app-staging.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -252,6 +251,8 @@ main { padding:0 !important; background:#E8E5DF; }
   .sl-dim-right { gap:10px; }
   .sl-verdict { padding-top:40px; }
   .sl-conv-statement { font-size:18px; }
+  .sl-upgrade-grid { grid-template-columns:1fr !important; }
+  .sl-upgrade-wrap { padding:36px 20px 40px !important; }
 }
 </style>
 {% endblock %}
@@ -415,6 +416,42 @@ main { padding:0 !important; background:#E8E5DF; }
     {% endif %}
 
   </div>{# end .sl-content #}
+
+  {# ── UPGRADE TEASER — what a full League evaluation includes ── #}
+  <div class="sl-upgrade-wrap" style="background:#EDE8DF;padding:48px 48px 52px;border-top:1px solid rgba(26,39,68,0.10)">
+    <div style="max-width:760px;margin:0 auto">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8a6a30;margin-bottom:12px">In a full League evaluation, you also get</div>
+      <div style="font-size:22px;font-weight:600;color:#1A2744;margin-bottom:28px;line-height:1.7">This evaluation is honest. A League evaluation goes deeper.</div>
+      <div class="sl-upgrade-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px">
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Mentor narrative</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">A Grandmaster photographer explains exactly what they see in your image — the habit behind the frame, what to strengthen, what to leave behind.</div>
+        </div>
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Your next shot — bookmarked</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">A specific location, timing, and subject brief based on your camera, your city, and what your last image was reaching for.</div>
+        </div>
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Calibrated standing</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">Your position in the League of Photographers — calibrated by evaluation score, tracked across every image you submit.</div>
+        </div>
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Your evolving portrait</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">After 10 evaluations, the engine builds a cross-image read of what your eye consistently finds — and what it consistently misses.</div>
+        </div>
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Edit suggestions</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">Specific post-processing guidance — what to darken, what to crop, what tonal move would make this particular image stronger.</div>
+        </div>
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Annual Excellence Award</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">The first photography credential built on twelve months of calibrated evaluation — not a single submission, not a popularity vote.</div>
+        </div>
+      </div>
+      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#1A2744;color:#fff;font-size:16px;font-weight:600;padding:16px 28px;border-radius:2px;text-decoration:none;letter-spacing:.2px">Join the League of Photographers →</a>
+      <div style="font-size:14px;color:#8a8070;margin-top:12px">Camera League ₹4,000/year · Mobile League ₹2,000/year · No monthly plans</div>
+    </div>
+  </div>
 
   {# ── 9. NEXT DECISION ── #}
   <div class="sl-conversion">
