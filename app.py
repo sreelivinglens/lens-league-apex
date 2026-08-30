@@ -1,4 +1,4 @@
-# SL-VERSION: 181.73-staging (Session 201, 2026-08-28 — gallery query restored to original (no is_haiku_try filter). try_standing: @login_required removed (public page), is_public+is_haiku_try filters added to query, haiku_try source guard added. league_haiku: @login_required removed. Post-login redirect: Haiku→try_welcome, Paid→dashboard. RETAINS 181.72.)
+# SL-VERSION: 181.74-staging (Session 204, 2026-08-31 — two fixes from Session 203 handoff. (1) try_page render now passes evals_limit=FREE_IMAGE_LIMIT to upload.html — was missing, template fallback {{ evals_limit or 10 }} was masking the gap. (2) try_upload now reads asset_name from request.form.get('asset_name') before falling back to filename — fixes genre-mismatch modal bypass that saved filename as title. RETAINS 181.73.)
 
 import os
 import re
@@ -33812,6 +33812,7 @@ def try_page():
         'upload.html',           # reuse main upload template — is_trial=True gates differences
         is_trial      = True,
         evals_used    = evals_used,
+        evals_limit   = FREE_IMAGE_LIMIT,   # SL-203: was missing; template uses {{ evals_limit or 10 }}
         genres        = GENRE_IDS,
         genre_choices = GENRE_CHOICES,
         subgenre_map  = SUBGENRE_MAP,
@@ -34021,7 +34022,7 @@ def try_upload():
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
-            asset_name        = filename.rsplit('.', 1)[0][:120],
+            asset_name        = (request.form.get('asset_name') or '').strip()[:120] or filename.rsplit('.', 1)[0][:120],  # SL-203: read title from form, fall back to filename
             photographer_name = current_user.full_name or current_user.username,
             genre             = genre,
             width             = w,
