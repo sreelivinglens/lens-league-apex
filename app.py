@@ -1,18 +1,4 @@
-# SL-VERSION: 181.29-staging (Session 189, 2026-08-17 — HOTFIX: ghost thumb_url records. DB rows where thumb_url is non-null but the R2 file was deleted return 404. Fix: added Image.thumb_url.like('https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev%') to both carousel and recent_images queries — only confirmed R2-hosted thumbnails qualify. Applied to both queries so gallery tiles get same protection. RETAINS 181.28-staging.)
-# SL-VERSION: 181.28-staging (Session 189, 2026-08-17 — HOTFIX: _mentor_user_ids fetch was removed in 181.27 but still referenced at line 3482. This threw NameError at runtime, caught by except Exception, blanking carousel_images AND recent_images — no images showed on the homepage. Fix: restored the raw SQL fetch of _mentor_user_ids before the carousel query. Also removed two stale comment lines left over from the old block. RETAINS 181.27-staging.)
-# SL-VERSION: 181.27-staging (Session 189, 2026-08-17 — index() hero carousel query: changed tier filter to score>=8.5, added thumb_url!=None requirement, removed landscape filter and unchecked fallback. Aligns homepage hero with founder's "any image scoring 8.5 or above, with a real thumbnail." See Session 189 for rationale and risk discussion. RETAINS 181.26-staging.)
-# SL-VERSION: 181.26-staging (Session 187, 2026-08-17 — FIX: History opening varied — no longer a fixed verbatim template. Replaced MANDATORY OPENING SENTENCE (single fixed structure, reads as bot) with HISTORY OPENING INSTRUCTION giving Haiku the raw materials (photograph names, consistent strength, prior pattern) and instructing it to write in Sherpa voice with varied structure each time. Forbidden phrases: "consistent strength", "that thread runs through". Example registers provided. Retains 181.25-staging.)
-# SL-VERSION: 181.25-staging (Session 187, 2026-08-17 — ROOT CAUSE FIX: try_upload never set is_haiku_try=TRUE on the images row. ORM Image() constructor cannot set unmapped columns. Every Haiku image was saved with is_haiku_try=FALSE, making all world-separation filters (Recent Work, My Gallery, Standings) blind to them. Fixed: raw SQL UPDATE images SET is_haiku_try=TRUE WHERE id=:iid runs immediately after insert commit in try_upload. DB backfill required: UPDATE images SET is_haiku_try=TRUE WHERE audit_json::text LIKE '%haiku_try%' AND is_haiku_try IS NOT TRUE. Retains 181.24-staging.)
-# SL-VERSION: 181.24-staging (Session 187, 2026-08-17 — FIX: Haiku images excluded from Recent Work feed. Added AND i.is_haiku_try IS NOT TRUE to _base_q in recent_work route. Haiku images must never appear in the paid community feed. Retains 181.23-staging.)
-# SL-VERSION: 181.23-staging (Session 187, 2026-08-17 — TWO FIXES: (1) _get_haiku_history_context rebuilt — SQL now fetches asset_name. Pre-builds mandatory opening sentence in Python naming actual photographs ("The flamingo pan, the flower frame..."). Haiku instructed to use verbatim as first sentence of impression. Consistent strength computed as most common strongest dimension. Average weakness computed across all history. Pattern instruction moved to what_next. (2) Gate/display count fixed — was log-only (missed non-deleted images). Now combined: COUNT(live images is_haiku_try=TRUE) + COUNT(log is_haiku_try=TRUE). Dots counter now shows correct remaining. Retains 181.22-staging.)
-# SL-VERSION: 181.22-staging (Session 187, 2026-08-17 — Option B: free users (not subscribed, not admin) redirected from /dashboard to /try. Keeps free users in the Haiku world — /try, /try/result, /try/gallery. Paid subscribers and admins unaffected. One line at top of dashboard route. Retains 181.21-staging.)
-# SL-VERSION: 181.21-staging (Session 187, 2026-08-17 — ADD: /try/gallery route (try_gallery) + try_gallery.html template. Haiku free-tier My Gallery — shows only is_haiku_try=TRUE images, links each card to /try/result/<id>, shows eval counter and remaining. Back to My Gallery link on Haiku scorecard updated to url_for(try_gallery). Retains 181.20-staging.)
-# SL-VERSION: 181.20-staging (Session 187, 2026-08-17 — FIX: _get_haiku_history_context fallback for pre-181.15 images. strength_name/next_leap_name only exist post-181.15. For older images, derives strongest/weakest from raw dod/vd/dm/wf/aq scores. Pattern detection now works on all Haiku history regardless of when scored. Retains 181.19-staging.)
-# SL-VERSION: 181.19-staging (Session 187, 2026-08-17 — THREE CHANGES: (1) Wonder prompt — added 8.0-8.5 band for technique-as-revelation (ICM, long exposure, abstraction). Removes "unusual technique is NOT Wonder" which was blocking correct scores. (2) Emotion prompt — added 7.5-8.5 band for atmosphere/colour/technique without human presence. (3) delete_image: from=haiku redirects to /try_page. Target: Haiku within ±0.3 of Sonnet on same image. Retains 181.18-staging.)
-# SL-VERSION: 181.18-staging (Session 187, 2026-08-17 — FIVE CHANGES: (1) my_gallery excludes Haiku images from query, stats, and genres — Haiku world is separate, main gallery shows paid Sonnet images only. (2) poty/standings excludes Haiku images from hero, leaderboard, and photographer stats. (3) try_result splits display count (live images, decrements on delete) from gate count (log, permanent) — dots counter now shows correct remaining after delete. Retains 181.17-staging.)
-# SL-VERSION: 181.17-staging (Session 187, 2026-08-16 — FIX: Haiku quota now counted from upload_history_log not live images table. Deleting a Haiku image no longer restores an evaluation slot. is_haiku_try column added to upload_history_log. delete_image writes is_haiku_try=TRUE when deleting a Haiku image. All three /try gate counts switched to log table. Correct messaging on delete: Haiku delete shows remaining count and explains slot is used. Retains 181.16-staging.)
-# SL-VERSION: 181.16-staging (Session 187, 2026-08-16 — PROMPT FIX: Haiku underscore on technique-driven images. Added principle-based guidance to DOD (7.5-8.5 band for deliberate in-camera technique) and DM (7.0-8.0 band for execution window on technique-driven images). Surgical fix — covers all technique genres, not ICM-specific. Retains 181.15-staging.)
-# SL-VERSION: 181.15-staging (Session 187, 2026-08-16 — FOUR CHANGES: (1) image_detail redirects Haiku images to /try/result/<id> so paid scorecard and wrong download button never shown. (2) _TRY_HAIKU_PROMPT expanded to all 10 fields per Session 186 handoff spec: impression, strength_name, strength_obs, next_leap_name, next_leap_obs, what_next, master_name, master_why added. History context (last 2 Haiku evals) passed into prompt before scoring so opening paragraph is history-aware from eval 2 onwards. max_tokens raised 200→800. (3) _try_run_haiku stores all 10 fields in audit_json and passes user_id for history fetch. (4) try_result and try_result_download pass milestone_strength to template for eval 5-9 milestone copy. Retains 181.14n-staging.)
+# SL-VERSION: 181.73-staging (Session 201, 2026-08-28 — gallery query restored to original (no is_haiku_try filter). try_standing: @login_required removed (public page), is_public+is_haiku_try filters added to query, haiku_try source guard added. league_haiku: @login_required removed. Post-login redirect: Haiku→try_welcome, Paid→dashboard. RETAINS 181.72.)
 
 import os
 import re
@@ -2168,24 +2154,6 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'city_event_scan_log migration warning: {_cesl_mig}')
 
-            # SL-181.44 — city_login_activity (login-triggered city event scan)
-            # One row per city, upserted on every member login. The nightly
-            # city_event_scan cron reads this table instead of the images table —
-            # only cities with a login in the last 24h are scanned, so API cost
-            # scales with active cities, not total cities.
-            try:
-                db.session.execute(db.text("""
-                    CREATE TABLE IF NOT EXISTS city_login_activity (
-                        city          VARCHAR(80) PRIMARY KEY,
-                        last_login_at TIMESTAMP   NOT NULL DEFAULT NOW()
-                    )
-                """))
-                db.session.commit()
-                print('city_login_activity table OK.')
-            except Exception as _cla_mig:
-                db.session.rollback()
-                print(f'city_login_activity migration warning: {_cla_mig}')
-
             # cancellation_reasons table
             try:
                 db.session.execute(db.text(
@@ -2214,6 +2182,26 @@ def _run_startup_tasks():
             except Exception as _ss_mig:
                 db.session.rollback()
                 print(f'site_settings migration warning: {_ss_mig}')
+
+            # waitlist_international — Session 190
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS waitlist_international ("
+                    "  id         SERIAL PRIMARY KEY,"
+                    "  email      VARCHAR(254) NOT NULL,"
+                    "  country    VARCHAR(100),"
+                    "  created_at TIMESTAMP DEFAULT NOW()"
+                    ")"
+                ))
+                db.session.execute(db.text(
+                    "CREATE INDEX IF NOT EXISTS idx_waitlist_intl_email "
+                    "ON waitlist_international (email)"
+                ))
+                db.session.commit()
+                print('waitlist_international table OK.')
+            except Exception as _wl_mig:
+                db.session.rollback()
+                print(f'waitlist_international migration warning: {_wl_mig}')
 
             # S168 — backfill unsubscribe tokens for existing users
             try:
@@ -3475,40 +3463,71 @@ def run_reengagement_emailer():
 @app.route('/')
 def index():
     try:
-        # Recent public scored images for bottom strips — R2 domain required
-        _R2_DOMAIN = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev'
-        _recent_raw = (Image.query
-                         .filter(Image.status=='scored', Image.score!=None,
-                                 Image.is_public==True, Image.is_flagged==False,
-                                 Image.thumb_url!=None,
-                                 Image.thumb_url.like(f'{_R2_DOMAIN}%'))
-                         .order_by(Image.scored_at.desc())
-                         .limit(36).all())
-        # Deduplicate — max 1 image per photographer, max 6 total
-        _seen_users = set()
-        recent_images = []
-        for _ri in _recent_raw:
-            if _ri.user_id not in _seen_users:
-                _seen_users.add(_ri.user_id)
-                recent_images.append(_ri)
-                if len(recent_images) == 6:
+        # Recent + hero — raw SQL throughout (ORM thumb_url.like() silently fails;
+        # project rule: raw SQL only for unmapped columns)
+        _R2 = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev%'
+        _recent_rows = db.session.execute(db.text(
+            "SELECT id, user_id, thumb_url, tier, genre, score, scored_at, photographer_name "
+            "FROM images "
+            "WHERE status='scored' AND score IS NOT NULL "
+            "  AND is_public=true AND is_flagged=false "
+            "  AND thumb_url LIKE :r2 "
+            "  AND audit_json NOT LIKE '%\"source\":\"haiku_try\"%' "
+            "  AND audit_json NOT LIKE '%\"source\": \"haiku_try\"%' "
+            "ORDER BY scored_at DESC LIMIT 36"
+        ), {'r2': _R2}).fetchall()
+        # Convert raw SQL rows to simple objects so Jinja2 attribute access works
+        # reliably — SQLAlchemy Row objects support _mapping but Jinja2 .attr access
+        # may silently return None depending on SQLAlchemy version.
+        from types import SimpleNamespace
+        def _row_to_ns(row, fields):
+            obj = SimpleNamespace()
+            for i, f in enumerate(fields):
+                setattr(obj, f, row[i])
+            return obj
+
+        _recent_fields = ['id','user_id','thumb_url','tier','genre','score','scored_at','photographer_name']
+        recent_images_ns = []
+        _seen_users2 = set()
+        for _ri in _recent_rows:
+            if _ri[1] not in _seen_users2:
+                _seen_users2.add(_ri[1])
+                recent_images_ns.append(_row_to_ns(_ri, _recent_fields))
+                if len(recent_images_ns) == 6:
                     break
-        # Hero carousel — any image scoring 8.5 or above, with a real thumbnail
-        # thumb_url must start with the R2 CDN domain — rules out ghost records
-        # where the file was deleted from R2 but the DB column still has a value
-        _R2_DOMAIN = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev'
-        _mentor_user_ids = db.session.execute(
+        recent_images = recent_images_ns
+
+        _car_fields = ['id','user_id','thumb_url','tier','genre','score','photographer_name','width','height','exif_original_width','exif_original_height']
+        # Hero carousel — score >= 8.5, real R2 thumbnail, exclude mentors
+        _mentor_ids = db.session.execute(
             db.text("SELECT user_id FROM mentor_profiles WHERE user_id IS NOT NULL")
         ).scalars().all()
-        _carousel_q = Image.query.filter(
-            Image.status=='scored', Image.score!=None, Image.score>=8.5,
-            Image.is_public==True, Image.is_flagged==False,
-            Image.thumb_url!=None,
-            Image.thumb_url.like(f'{_R2_DOMAIN}%')
-        )
-        if _mentor_user_ids:
-            _carousel_q = _carousel_q.filter(~Image.user_id.in_(_mentor_user_ids))
-        carousel_images = _carousel_q.order_by(db.func.random()).limit(12).all()
+        if _mentor_ids:
+            _carousel_rows = db.session.execute(db.text(
+                "SELECT id, user_id, thumb_url, tier, genre, score, photographer_name, "
+                "       width, height, exif_original_width, exif_original_height "
+                "FROM images "
+                "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
+                "  AND is_public=true AND is_flagged=false "
+                "  AND thumb_url LIKE :r2 "
+                "  AND user_id != ALL(:mids) "
+                "  AND audit_json NOT LIKE '%\"source\":\"haiku_try\"%' "
+                "  AND audit_json NOT LIKE '%\"source\": \"haiku_try\"%' "
+                "ORDER BY RANDOM() LIMIT 12"
+            ), {'r2': _R2, 'mids': list(_mentor_ids)}).fetchall()
+        else:
+            _carousel_rows = db.session.execute(db.text(
+                "SELECT id, user_id, thumb_url, tier, genre, score, photographer_name, "
+                "       width, height, exif_original_width, exif_original_height "
+                "FROM images "
+                "WHERE status='scored' AND score IS NOT NULL AND score >= 8.5 "
+                "  AND is_public=true AND is_flagged=false "
+                "  AND thumb_url LIKE :r2 "
+                "  AND audit_json NOT LIKE '%\"source\":\"haiku_try\"%' "
+                "  AND audit_json NOT LIKE '%\"source\": \"haiku_try\"%' "
+                "ORDER BY RANDOM() LIMIT 12"
+            ), {'r2': _R2}).fetchall()
+        carousel_images = [_row_to_ns(r, _car_fields) for r in _carousel_rows]
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
@@ -3521,7 +3540,9 @@ def index():
                        .first())
             if top_sub:
                 challenge_thumb = top_sub.image.thumb_url
-    except Exception:
+    except Exception as _idx_err:
+        import logging
+        logging.error(f'[index] EXCEPTION: {_idx_err}', exc_info=True)
         recent_images = []
         carousel_images = []
         active_challenge = None
@@ -3761,13 +3782,6 @@ def verify_email(token):
     except Exception as _rve:
         app.logger.error(f'[referral] verify_email hook: {_rve}')
     login_user(user, remember=True)
-    # SL-181.44 — mark city for nightly event scan
-    try:
-        from engine.city_event_scan import mark_city_login
-        if getattr(user, 'city', None):
-            mark_city_login(db.session, user.city)
-    except Exception as _cla_err:
-        app.logger.warning(f'[verify_email] mark_city_login failed: {_cla_err}')
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
 
@@ -3838,13 +3852,6 @@ def auth_google_callback():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user, remember=True)
-        # SL-181.44 — mark city for nightly event scan
-        try:
-            from engine.city_event_scan import mark_city_login
-            if getattr(user, 'city', None):
-                mark_city_login(db.session, user.city)
-        except Exception as _cla_err:
-            app.logger.warning(f'[auth_google_callback] mark_city_login failed: {_cla_err}')
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
         # Check if this user is an approved judge -- send to jury dashboard
@@ -3860,7 +3867,10 @@ def auth_google_callback():
         post_next = session.pop('post_login_next', None)
         if post_next:
             return redirect(post_next)
-        return redirect(url_for('dashboard'))
+        # Haiku free users → try_welcome; paid/admin → dashboard
+        if getattr(user, 'is_subscribed', False) or getattr(user, 'role', '') == 'admin':
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('try_welcome'))
     else:
         # New user — check allowlist before creating account
         if not is_email_allowed(email):
@@ -3919,13 +3929,6 @@ def auth_google_callback():
         except Exception as _rgo:
             app.logger.error(f'[referral] auth_google_callback hook: {_rgo}')
         login_user(user, remember=True)
-        # SL-181.44 — mark city for nightly event scan
-        try:
-            from engine.city_event_scan import mark_city_login
-            if getattr(user, 'city', None):
-                mark_city_login(db.session, user.city)
-        except Exception as _cla_err:
-            app.logger.warning(f'[auth_google_callback_new] mark_city_login failed: {_cla_err}')
         return redirect(url_for('onboarding'))
 
 
@@ -4150,13 +4153,6 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user, remember=True)
-        # SL-181.44 — mark city for nightly event scan
-        try:
-            from engine.city_event_scan import mark_city_login
-            if getattr(user, 'city', None):
-                mark_city_login(db.session, user.city)
-        except Exception as _cla_err:
-            app.logger.warning(f'[login] mark_city_login failed: {_cla_err}')
 
         # SL-176 perf: warm dashboard caches on login so first dashboard
         # load is instant. Runs in background thread — non-blocking.
@@ -4186,7 +4182,10 @@ def login():
             return redirect(url_for('judge_dashboard'))
         if getattr(user, 'onboarding_complete', False) and not getattr(user, 'interests_complete', False):
             return redirect(url_for('onboarding_interests'))
-        return redirect(url_for('dashboard'))
+        # Haiku free users → try_welcome; paid/admin → dashboard
+        if getattr(user, 'is_subscribed', False):
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('try_welcome'))
 
     return render_template('login.html')
 
@@ -4573,7 +4572,7 @@ def dashboard():
     # A free user is defined as not subscribed and not admin.
     # Their world is /try → upload → /try/result → /try/gallery.
     if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
-        return redirect(url_for('try_page'))
+        return redirect(url_for('try_welcome'))
 
     # Approved judges should not see the photographer dashboard
     if current_user.role != 'admin':
@@ -5776,6 +5775,7 @@ def dashboard():
                            evolving_eye_data=_evolving_eye_data,
                            mentor_advice=_mentor_advice,
                            scored_count=_scored_count_val,
+                           gap_to_gm=round(max(0.0, 9.0 - float(stats.get('best_score') or 0)), 2),
                            quota_status=_get_quota_status(current_user))
 
 
@@ -7941,7 +7941,14 @@ def set_mission_genre():
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    images_used = Image.query.filter_by(user_id=current_user.id).count()
+    # Session 200e: Haiku users — gate = images + history_log (permanent, delete does not restore slot)
+    if not getattr(current_user, 'is_subscribed', False):
+        images_used = int(db.session.execute(
+            db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
+            {'uid': current_user.id}
+        ).scalar() or 0)
+    else:
+        images_used = Image.query.filter_by(user_id=current_user.id).count()
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -8517,8 +8524,8 @@ def _check_upload_quota(user):
     _is_sub = getattr(user, 'is_subscribed', False)
 
     if not _is_sub:
-        # Free tier — 3 lifetime assessments per user_id + referral bonus
-        # Uses total_uploads_ever — never decremented on delete.
+        # Free tier — 10 lifetime assessments per user_id + referral bonus
+        # Uses gate_count — never decremented on delete.
         # Deleting images does NOT restore free slots.
         _lifetime = getattr(user, 'total_uploads_ever', None)
         if _lifetime is None:
@@ -8577,8 +8584,8 @@ def _check_upload_quota(user):
             _account_clause = f' {" · ".join(_account_parts)}.' if _account_parts else ''
 
             return (f'You have used your {_limit_shown} free assessments.{_account_clause} '
-                    'Deleting images does not restore free slots — '
-                    'upgrade to Mobile or Camera League (₹200/mo) to keep uploading.')
+                    'You can delete an image to free up a slot and resubmit. '
+                    'Upgrade to Mobile or Camera League (₹200/mo) for unlimited evaluations.')
         return None
 
     if _track == 'dormant':
@@ -12797,6 +12804,163 @@ def image_detail(image_id):
                            now=_now)
 
 
+# ── Contest Launchpad API — Session 203 ──────────────────────────────────────
+# Triggered from image_detail.html via async JS fetch when image.score >= 8.5.
+# Returns 2-3 currently open photography awards matched to genre and tier.
+# Results are cached in audit_json['contest_suggestions'] with a 7-day TTL —
+# no re-fetch if fresh. Language: "photography awards" / "awards worth entering"
+# NOT "contests" (KYC). Route is login_required — scorecard is subscriber-only.
+#
+# Architecture (Session 202 handoff spec):
+#   image_detail.html → JS fetch → /api/contest-suggestions?image_id=<id>
+#     ├─ check audit_json['contest_suggestions'] freshness (< 7 days)  → return cached
+#     └─ Anthropic API call (claude-sonnet-4-6 + web_search_20250305)
+#          → parse JSON → cache in audit_json → return to frontend
+#
+# Language rules:
+#   "photography awards" not "contests" (KYC)
+#   "Submit your work" not "enter" (KYC)
+#   Below 8.5: motivational gap block (not this route — rendered in template only)
+
+@app.route('/api/contest-suggestions')
+@login_required
+def contest_suggestions():
+    import json as _csj
+    from datetime import datetime as _dt, timedelta as _td
+
+    image_id = request.args.get('image_id', type=int)
+    if not image_id:
+        return {'error': 'image_id required'}, 400
+
+    img = Image.query.get(image_id)
+    if not img:
+        return {'error': 'not found'}, 404
+
+    # Only the owner or admin may fetch suggestions for an image
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        return {'error': 'forbidden'}, 403
+
+    # Must be scored and at or above the threshold
+    if not img.score or float(img.score) < 8.5:
+        return {'eligible': False, 'reason': 'below_threshold'}, 200
+
+    # ── Cache check — return stored result if < 7 days old ───────────────────
+    try:
+        _audit = img.get_audit() or {}
+        _cached = _audit.get('contest_suggestions')
+        if _cached and isinstance(_cached, dict):
+            _cached_at_str = _cached.get('cached_at')
+            if _cached_at_str:
+                _cached_at = _dt.fromisoformat(_cached_at_str)
+                if (_dt.utcnow() - _cached_at) < _td(days=7):
+                    app.logger.info(f'[contest_suggestions] cache hit image={image_id}')
+                    return {'eligible': True, 'awards': _cached.get('awards', []), 'from_cache': True}
+    except Exception as _ce:
+        app.logger.warning(f'[contest_suggestions] cache read error image={image_id}: {_ce}')
+
+    # ── Live Anthropic call with web search ───────────────────────────────────
+    _genre  = img.genre or 'photography'
+    _score  = float(img.score)
+    _tier   = img.tier or ''
+    _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not _api_key:
+        return {'error': 'api_key_missing'}, 500
+
+    try:
+        import anthropic as _ant_cs
+        _cs_client = _ant_cs.Anthropic(api_key=_api_key)
+
+        _prompt = f"""Search for currently open photography awards accepting submissions right now (August 2026).
+
+Find 2-3 awards that are:
+- Currently open for submission (not closed, not announced but not open yet)
+- A good match for {_genre} photography
+- Appropriate for work evaluated at {_score}/10 ({_tier} tier) — serious amateur to emerging professional level
+- A mix of free and paid entry where possible
+
+For each award return ONLY a valid JSON array with this exact structure — no markdown, no explanation, just the array:
+[
+  {{
+    "name": "Award name",
+    "organiser": "Organisation name",
+    "url": "https://...",
+    "entry_fee": "Free" or "£X" or "$X",
+    "deadline": "DD Month YYYY or 'Rolling'",
+    "why_this_image": "One sentence on why {_genre} work at this level is a strong fit"
+  }}
+]
+
+Only include awards with known, verifiable deadlines. Do not invent or hallucinate award names."""
+
+        _cs_resp = _cs_client.messages.create(
+            model='claude-sonnet-4-6',
+            max_tokens=1000,
+            tools=[{'type': 'web_search_20250305', 'name': 'web_search'}],
+            messages=[{'role': 'user', 'content': _prompt}]
+        )
+
+        # Extract text block from response (web_search tool may produce multiple blocks)
+        _raw_text = ''
+        for _blk in _cs_resp.content:
+            if hasattr(_blk, 'type') and _blk.type == 'text' and _blk.text.strip():
+                _raw_text = _blk.text.strip()
+                break
+
+        if not _raw_text:
+            app.logger.warning(f'[contest_suggestions] empty response image={image_id}')
+            return {'eligible': True, 'awards': [], 'from_cache': False}
+
+        # Strip markdown fences if model wrapped the JSON
+        import re as _cs_re
+        _raw_text = _cs_re.sub(r'^```json\s*', '', _raw_text)
+        _raw_text = _cs_re.sub(r'^```\s*', '', _raw_text)
+        _raw_text = _cs_re.sub(r'```\s*$', '', _raw_text.strip())
+
+        # Extract JSON array from response (model may add preamble)
+        _arr_match = _cs_re.search(r'\[.*\]', _raw_text, _cs_re.DOTALL)
+        if not _arr_match:
+            app.logger.warning(f'[contest_suggestions] no JSON array in response image={image_id}: {_raw_text[:200]}')
+            return {'eligible': True, 'awards': [], 'from_cache': False}
+
+        _awards = _csj.loads(_arr_match.group(0))
+        if not isinstance(_awards, list):
+            _awards = []
+
+        # Sanitise — cap at 3, ensure required keys present
+        _clean = []
+        for _a in _awards[:3]:
+            if isinstance(_a, dict) and _a.get('name') and _a.get('url'):
+                _clean.append({
+                    'name':            str(_a.get('name', ''))[:120],
+                    'organiser':       str(_a.get('organiser', ''))[:120],
+                    'url':             str(_a.get('url', ''))[:300],
+                    'entry_fee':       str(_a.get('entry_fee', 'Check website'))[:40],
+                    'deadline':        str(_a.get('deadline', 'Check website'))[:60],
+                    'why_this_image':  str(_a.get('why_this_image', ''))[:300],
+                })
+
+        # ── Cache in audit_json ───────────────────────────────────────────────
+        try:
+            _audit_for_cache = img.get_audit() or {}
+            _audit_for_cache['contest_suggestions'] = {
+                'awards':    _clean,
+                'cached_at': _dt.utcnow().isoformat(),
+                'genre':     _genre,
+                'score':     _score,
+            }
+            img.set_audit(_audit_for_cache)
+            db.session.commit()
+            app.logger.info(f'[contest_suggestions] cached {len(_clean)} awards image={image_id}')
+        except Exception as _cache_err:
+            app.logger.warning(f'[contest_suggestions] cache write failed image={image_id}: {_cache_err}')
+            db.session.rollback()
+
+        return {'eligible': True, 'awards': _clean, 'from_cache': False}
+
+    except Exception as _api_err:
+        app.logger.error(f'[contest_suggestions] API error image={image_id}: {_api_err}')
+        return {'eligible': True, 'awards': [], 'error': 'search_failed', 'from_cache': False}, 200
+
 
 @app.route('/my-eye')
 @login_required
@@ -13276,6 +13440,108 @@ def recent_work():
         total         = total,
         filter_genres = _all_genres,
         filter_tiers  = _all_tiers,
+    )
+
+
+@app.route('/standings')
+def standings_public():
+    # Public standings page — no login required. Shows paid photographers only
+    # (is_subscribed=TRUE). Haiku images excluded (is_haiku_try IS NOT TRUE).
+    # Scorecard locked — leaderboard_public.html shows tier + thumbnail only.
+    # Raw SQL used for thumb_url (unmapped column). No @login_required.)
+    track = request.args.get('track', 'all')
+
+    track_filter = ""
+    if track == 'camera':
+        track_filter = "AND (u.subscription_track = 'camera' OR u.subscription_track IS NULL)"
+    elif track == 'mobile':
+        track_filter = "AND u.subscription_track = 'mobile'"
+
+    # Fetch paid photographers with their best image thumbnail and tier
+    # Only paid users (is_subscribed=TRUE), no Haiku images
+    rows = db.session.execute(db.text(f"""
+        SELECT
+            u.id AS user_id,
+            COALESCE(u.full_name, u.username) AS display_name,
+            u.subscription_track,
+            '' AS interest_area,
+            COUNT(i.id) AS eval_count,
+            MAX(i.score) AS best_score,
+            -- Best image: highest score with a real thumbnail
+            (
+                SELECT i2.thumb_url FROM images i2
+                WHERE i2.user_id = u.id
+                  AND i2.score IS NOT NULL
+                  AND i2.score > 0
+                  AND i2.is_public = TRUE
+                  AND i2.status = 'scored'
+                  AND (i2.is_flagged = FALSE OR i2.is_flagged IS NULL)
+                  AND (i2.needs_review = FALSE OR i2.needs_review IS NULL)
+                  AND i2.thumb_url IS NOT NULL
+                  AND i2.thumb_url LIKE 'https://pub-%'
+                  AND (i2.is_haiku_try IS NOT TRUE)
+                ORDER BY i2.score DESC LIMIT 1
+            ) AS best_thumb_url,
+            -- Tier from best image
+            (
+                SELECT i3.tier FROM images i3
+                WHERE i3.user_id = u.id
+                  AND i3.score IS NOT NULL
+                  AND i3.score > 0
+                  AND i3.is_public = TRUE
+                  AND i3.status = 'scored'
+                  AND (i3.is_flagged = FALSE OR i3.is_flagged IS NULL)
+                  AND (i3.needs_review = FALSE OR i3.needs_review IS NULL)
+                  AND (i3.is_haiku_try IS NOT TRUE)
+                ORDER BY i3.score DESC LIMIT 1
+            ) AS tier
+        FROM users u
+        JOIN images i ON i.user_id = u.id
+        WHERE u.is_subscribed = TRUE
+          AND i.is_public = TRUE
+          AND i.score IS NOT NULL
+          AND i.score > 0
+          AND i.status = 'scored'
+          AND (i.is_flagged = FALSE OR i.is_flagged IS NULL)
+          AND (i.needs_review = FALSE OR i.needs_review IS NULL)
+          AND (i.is_haiku_try IS NOT TRUE)
+          {track_filter}
+        GROUP BY u.id, u.full_name, u.username, u.subscription_track
+        ORDER BY MAX(i.score) DESC
+    """)).fetchall()
+
+    from types import SimpleNamespace
+    public_photographers = []
+    for r in rows:
+        public_photographers.append(SimpleNamespace(
+            user_id=r[0],
+            display_name=r[1],
+            subscription_track=r[2],
+            interest_area=r[3] or 'Photography',
+            eval_count=int(r[4]) if r[4] else 0,
+            best_score=float(r[5]) if r[5] else 0,
+            best_thumb_url=r[6],
+            tier=r[7] or 'Rookie',
+        ))
+
+    total_photographers = len(public_photographers)
+    try:
+        total_images = db.session.execute(db.text("""
+            SELECT COUNT(*) FROM images
+            WHERE is_public = TRUE AND score IS NOT NULL AND score > 0
+              AND status = 'scored'
+              AND (is_flagged = FALSE OR is_flagged IS NULL)
+              AND (needs_review = FALSE OR needs_review IS NULL)
+              AND (is_haiku_try IS NOT TRUE)
+        """)).scalar() or 0
+    except Exception:
+        total_images = 0
+
+    return render_template('homepage_standings.html',
+        public_photographers=public_photographers,
+        total_photographers=total_photographers,
+        total_images=total_images,
+        track=track,
     )
 
 
@@ -15552,6 +15818,73 @@ def admin_check_peer_queue():
     '''
 
 
+
+
+@app.route('/admin/international-waitlist')
+@login_required
+def admin_international_waitlist():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    rows = db.session.execute(
+        db.text(
+            "SELECT id, email, country, created_at "
+            "FROM waitlist_international "
+            "ORDER BY created_at DESC"
+        )
+    ).fetchall()
+    total = len(rows)
+    countries = {}
+    for r in rows:
+        c = r[2] or 'Unknown'
+        countries[c] = countries.get(c, 0) + 1
+    countries_sorted = sorted(countries.items(), key=lambda x: x[1], reverse=True)
+    html = """<!DOCTYPE html><html><head><title>International Waitlist</title>
+<style>body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a18;padding:32px;max-width:1000px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:4px}.meta{font-size:14px;color:#888;margin-bottom:24px}
+.actions{display:flex;gap:12px;margin-bottom:24px}.btn{padding:8px 16px;font-size:14px;font-weight:600;border-radius:6px;text-decoration:none}
+.btn-primary{background:#2C3E6B;color:#fff;border:none}.btn-secondary{background:#f0ede8;color:#333;border:1px solid #ddd}
+.ctag{background:#fff;border:1px solid #E0D8C8;border-radius:4px;padding:3px 10px;font-size:13px;margin:3px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;margin-top:16px}
+th{background:#f0ede8;padding:10px 14px;text-align:left;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888}
+td{padding:10px 14px;border-bottom:1px solid #f0ede8;font-size:14px}tr:last-child td{border-bottom:none}</style></head>
+<body><h1>International Waitlist</h1>
+<div class=meta>__TOTAL__ photographer__S__ registered</div>
+<div class=actions><a href=/admin/international-waitlist/export class="btn btn-primary">Export CSV</a>
+<a href=/admin class="btn btn-secondary">Back to Admin</a></div>"""
+    html += "<div style='margin-bottom:16px'>"
+    for c, n in countries_sorted:
+        html += f'<span class=ctag>{c} ({n})</span>'
+    html += "</div>"
+    html += """<table><thead><tr><th>#</th><th>Email</th><th>Country</th><th>Registered</th></tr></thead><tbody>"""
+    for r in rows:
+        dt = r[3].strftime('%d %b %Y %H:%M') if r[3] else '—'
+        html += f'<tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2] or "—"}</td><td>{dt}</td></tr>'
+    if not rows:
+        html += '<tr><td colspan=4 style="text-align:center;color:#aaa;padding:32px">No registrations yet.</td></tr>'
+    html += "</tbody></table></body></html>"
+    html = html.replace('__TOTAL__', str(total)).replace('__S__', 's' if total != 1 else '')
+    return html
+
+
+@app.route('/admin/international-waitlist/export')
+@login_required
+def admin_international_waitlist_export():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    import csv, io
+    rows = db.session.execute(
+        db.text("SELECT email, country, created_at FROM waitlist_international ORDER BY created_at DESC")
+    ).fetchall()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Email', 'Country', 'Registered At'])
+    for r in rows:
+        writer.writerow([r[0], r[1] or '', r[2].strftime('%Y-%m-%d %H:%M:%S') if r[2] else ''])
+    output.seek(0)
+    from flask import Response
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=international_waitlist.csv'})
+
 @app.route('/admin')
 @login_required
 @admin_required
@@ -15856,11 +16189,16 @@ def delete_image(image_id):
     # the real delete — if that fails and rolls back, this rolls back too.
     # 181.17: detect Haiku image before delete so we can log is_haiku_try
     # and show the correct message. Must read audit_json before DB delete.
+    # Gate count is permanent — deleting does NOT restore free slots.
+    # This prevents abuse (delete → resubmit → endless free evaluations).
     _is_haiku_delete = False
     try:
         import json as _dj
         _d_audit = _dj.loads(img._audit_json or '{}')
-        _is_haiku_delete = (_d_audit.get('source') == 'haiku_try')
+        _is_haiku_delete = (
+            bool(getattr(img, 'is_haiku_try', False)) or
+            _d_audit.get('source') == 'haiku_try'
+        )
     except Exception:
         pass
 
@@ -20432,6 +20770,9 @@ def _seed_mentors():
 
 @app.route('/mentors')
 def mentors():
+    # Haiku (free) users cannot book mentor reviews — redirect to pricing
+    if current_user.is_authenticated and not getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
+        return redirect(url_for('pricing'))
     try:
         men_hero = (Image.query
                     .filter(Image.status == 'scored',
@@ -20491,6 +20832,9 @@ def mentors():
 @app.route('/mentor-register/<slug>', methods=['GET', 'POST'])
 @login_required
 def mentor_register(slug):
+    # Haiku (free) users cannot book mentor reviews — hard gate
+    if not getattr(current_user, 'is_subscribed', False) and current_user.role != 'admin':
+        return redirect(url_for('pricing'))
     mentor = MENTORS.get(slug)
     if not mentor:
         flash('Mentor not found.', 'error')
@@ -20644,6 +20988,16 @@ def mentor_register(slug):
 
 @app.route('/pricing')
 def pricing():
+    # Paid subscribers → dashboard
+    if current_user.is_authenticated and getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('dashboard'))
+    # Free logged-in Haiku users → Haiku pricing world
+    if current_user.is_authenticated:
+        return render_template('pricing_haiku.html',
+                               current_user=current_user,
+                               open_contest_active=is_open_contest_active(),
+                               poty_hero=None)
+    # Anonymous visitors → Sonnet marketing pricing (base.html nav, consistent with homepage)
     try:
         poty_hero = (Image.query
                      .filter(Image.status == 'scored', Image.is_public == True,
@@ -20653,6 +21007,7 @@ def pricing():
     except Exception:
         poty_hero = None
     return render_template('pricing.html',
+                           current_user=current_user,
                            open_contest_active=is_open_contest_active(),
                            poty_hero=poty_hero)
 
@@ -20989,6 +21344,44 @@ def contest_enter_monthly(genre):
     )
 
 
+@app.route('/api/international-waitlist', methods=['POST'])
+def api_international_waitlist():
+    """
+    Collect email + country from photographers outside India.
+    Stored in waitlist_international table.
+    No auth required — anyone can register interest.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        email   = (data.get('email', '') or '').strip()[:254]
+        country = (data.get('country', '') or '').strip()[:100]
+        if not email or '@' not in email:
+            return jsonify({'error': 'Valid email required'}), 400
+        # Deduplicate — ignore if email already on waitlist
+        existing = db.session.execute(
+            db.text("SELECT id FROM waitlist_international WHERE email = :email"),
+            {'email': email}
+        ).fetchone()
+        if not existing:
+            db.session.execute(
+                db.text(
+                    "INSERT INTO waitlist_international (email, country, created_at) "
+                    "VALUES (:email, :country, NOW())"
+                ),
+                {'email': email, 'country': country}
+            )
+            db.session.commit()
+            app.logger.info(f'[intl_waitlist] new: {email} — {country}')
+        else:
+            app.logger.info(f'[intl_waitlist] duplicate ignored: {email}')
+        return jsonify({'ok': True})
+    except Exception as e:
+        app.logger.error(f'[intl_waitlist] failed: {e}')
+        db.session.rollback()
+        return jsonify({'ok': True})
+
+
+
 @app.route('/contest/my-entries')
 @login_required
 def my_contest_entries():
@@ -21147,35 +21540,43 @@ def _get_active_challenge(user_track: str = None):
 
 @app.route('/challenge')
 def weekly_challenge():
-    """Public challenge page  -  visible to all, submit requires login."""
+    """Public challenge page — visible to all, submit requires paid subscription."""
     challenge = _get_active_challenge()
     if not challenge:
         return render_template('challenge.html', challenge=None,
                                submissions=[], user_subs=[], slots_used=0,
-                               slot_limit=0, can_submit=False)
+                               slot_limit=0, can_submit=False, is_haiku_user=False)
 
-    # Top submissions for display  -  all submissions ranked by score
-    # is_subscriber flag controls whether they compete for prizes, not visibility
-    top_subs = (WeeklySubmission.query
-                .filter_by(challenge_id=challenge.id)
-                .join(Image, WeeklySubmission.image_id == Image.id)
-                .filter(Image.score != None)
-                .order_by(Image.score.desc())
-                .limit(20).all())
+    # Top submissions — Haiku images excluded per standing rule (never enter challenge pool)
+    # Raw SQL per Rule 10 — is_haiku_try is unmapped, ORM filter silently fails
+    _top_sub_rows = db.session.execute(db.text(
+        "SELECT ws.id FROM weekly_submissions ws "
+        "JOIN images i ON ws.image_id = i.id "
+        "WHERE ws.challenge_id = :cid "
+        "AND i.score IS NOT NULL "
+        "AND (i.is_haiku_try IS NOT TRUE) "
+        "ORDER BY i.score DESC LIMIT 20"
+    ), {'cid': challenge.id}).fetchall()
+    _top_sub_ids = [r[0] for r in _top_sub_rows]
+    top_subs = WeeklySubmission.query.filter(WeeklySubmission.id.in_(_top_sub_ids)).all() if _top_sub_ids else []
 
     user_subs = []
     slots_used = 0
     slot_limit = 0
     can_submit = False
+    is_haiku_user = False
 
     if current_user.is_authenticated:
-        user_subs  = WeeklySubmission.query.filter_by(
-            challenge_id=challenge.id, user_id=current_user.id).all()
-        slots_used = len(user_subs)
-        # Admin treated as subscribed for challenge slot purposes
         is_sub_or_admin = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
-        slot_limit = 3 if is_sub_or_admin else 1
-        can_submit = challenge.is_open and slots_used < slot_limit
+        is_haiku_user = not is_sub_or_admin
+        if not is_haiku_user:
+            # Paid users and admins only — fetch their submissions
+            user_subs  = WeeklySubmission.query.filter_by(
+                challenge_id=challenge.id, user_id=current_user.id).all()
+            slots_used = len(user_subs)
+            slot_limit = 3 if is_sub_or_admin else 0
+            can_submit = challenge.is_open and slots_used < slot_limit
+        # Haiku users: slot_limit=0, can_submit=False — read-only view
 
     return render_template('challenge.html',
         challenge=challenge,
@@ -21190,14 +21591,20 @@ def weekly_challenge():
 @app.route('/challenge/submit', methods=['GET', 'POST'])
 @login_required
 def challenge_submit():
-    """Submit an existing scored image to the current challenge."""
+    """Submit an existing scored image to the current challenge. Paid subscribers only."""
+    # Haiku users (free, not subscribed) cannot submit to the challenge.
+    # Rule: Haiku images never enter standings, AEA, calibration pool, challenge. Ever.
+    is_sub = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
+    if not is_sub:
+        flash('Weekly challenges are available to League members. Join to participate.', 'info')
+        return redirect(url_for('weekly_challenge'))
+
     challenge = _get_active_challenge()
     if not challenge or not challenge.is_open:
         flash('No active challenge at the moment. Check back Monday.', 'info')
         return redirect(url_for('weekly_challenge'))
 
-    is_sub     = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
-    slot_limit = 3 if is_sub else 1
+    slot_limit = 3 if is_sub else 0
     slots_used = WeeklySubmission.query.filter_by(
         challenge_id=challenge.id, user_id=current_user.id).count()
 
@@ -21216,6 +21623,15 @@ def challenge_submit():
             flash('Image not found or not yet scored.', 'error')
             return redirect(url_for('challenge_submit'))
 
+        # Extra guard: Haiku images cannot enter the challenge pool regardless of user type
+        _is_haiku_img = bool(db.session.execute(
+            db.text("SELECT is_haiku_try FROM images WHERE id=:iid"),
+            {'iid': image_id}
+        ).scalar())
+        if _is_haiku_img:
+            flash('Free evaluation images cannot be submitted to the challenge.', 'error')
+            return redirect(url_for('challenge_submit'))
+
         # Check not already submitted this image to this challenge
         exists = WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, image_id=image_id).first()
@@ -21232,7 +21648,7 @@ def challenge_submit():
         db.session.add(sub)
         db.session.commit()
 
-        # Sprint 2 — award challenge participation points (+10, subscribers only)
+        # Award challenge participation points (+10, subscribers only)
         try:
             if current_user.is_subscribed:
                 award_points(current_user, 10.0, 'challenge_entry')
@@ -21242,18 +21658,24 @@ def challenge_submit():
         flash(f'Image submitted to the challenge! {slot_limit - slots_used - 1} slot{"s" if slot_limit - slots_used - 1 != 1 else ""} remaining this week.', 'success')
         return redirect(url_for('weekly_challenge'))
 
-    # GET  -  show image picker
-    # Only scored images, owned by user, not already submitted this week
+    # GET — show image picker
+    # Paid images only — Haiku images excluded from picker
     already_submitted_ids = [
         s.image_id for s in WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, user_id=current_user.id).all()
     ]
-    eligible_images = (Image.query
-        .filter_by(user_id=current_user.id, status='scored')
-        .filter(Image.score != None, Image.is_flagged == False)
-        .filter(Image.id.notin_(already_submitted_ids) if already_submitted_ids else db.true())
-        .order_by(Image.score.desc())
-        .all())
+    # Raw SQL per Rule 10 — is_haiku_try is unmapped, ORM .isnot() silently fails
+    _excl = tuple(already_submitted_ids) if already_submitted_ids else (0,)
+    _elig_rows = db.session.execute(db.text(
+        "SELECT id FROM images "
+        "WHERE user_id = :uid AND status = 'scored' "
+        "AND score IS NOT NULL AND is_flagged = FALSE "
+        "AND (is_haiku_try IS NOT TRUE) "
+        "AND id NOT IN :excl "
+        "ORDER BY score DESC"
+    ), {'uid': current_user.id, 'excl': _excl}).fetchall()
+    _elig_ids = [r[0] for r in _elig_rows]
+    eligible_images = Image.query.filter(Image.id.in_(_elig_ids)).order_by(Image.score.desc()).all() if _elig_ids else []
 
     return render_template('challenge_submit.html',
         challenge=challenge,
@@ -21509,7 +21931,7 @@ def api_create_payment():
 
     if track not in ('camera', 'mobile'):
         return jsonify({'error': 'Invalid track'}), 400
-    if plan not in ('monthly', 'halfyearly', 'annual'):
+    if plan not in ('monthly', 'halfyearly', 'annual', 'play'):
         return jsonify({'error': 'Invalid plan'}), 400
 
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
@@ -21519,8 +21941,8 @@ def api_create_payment():
         return jsonify({'error': 'Payment system not available'}), 503
 
     display_prices = {
-        'camera': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'mobile': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'camera': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
+        'mobile': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
     }
     plan_ids = {
         'camera': {
@@ -21533,14 +21955,14 @@ def api_create_payment():
         },
     }
 
-    amount  = display_prices[track][plan]
-    plan_id = plan_ids[track].get(plan, '') if plan != 'monthly' else None
+    amount  = display_prices[track].get(plan, 100)
+    plan_id = plan_ids[track].get(plan, '') if plan not in ('monthly', 'play') else None
 
     try:
         import razorpay as _rzp
         client = _rzp.Client(auth=(razorpay_key, razorpay_secret))
 
-        if plan == 'monthly':
+        if plan in ('monthly', 'play'):
             _receipt = f'sl_{track[:3]}_{current_user.id}_{_uuid.uuid4().hex[:8]}'
             order = client.order.create({
                 'amount':   amount * 100,
@@ -21775,9 +22197,9 @@ def subscribe(track):
     # Monthly uses Orders API — no plan_id needed
     # Half-yearly and Annual use Subscriptions API — plan_id required
     display_prices = {
-        'mobile':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'camera':   {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
-        'learning': {'monthly': 200, 'halfyearly': 1100, 'annual': 2000},
+        'mobile':   {'monthly': 200, 'halfyearly': 2500, 'annual': 4000},
+        'camera':   {'monthly': 200, 'halfyearly': 2500, 'annual': 4000},
+        'learning': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000},
         'mentor':   {'monthly': 999, 'halfyearly': 5500, 'annual': 9999},
     }
 
@@ -31396,6 +31818,437 @@ def _try_calibration_line(genre):
     )
 
 
+def _generate_haiku_sherpa(user_id):
+    """
+    SL-181.48-staging — Cross-image Sherpa synthesis for Haiku users.
+
+    Fires after each new evaluation is scored (2+ images). Reads all
+    takeaways and dimension scores across the user's Haiku history, then
+    makes ONE Haiku API call to produce a personal cross-image observation
+    in Sherpa voice — stored in users.mentor_advice_json.
+
+    NOT templated. NOT a dimension summary. Reads the actual pattern across
+    real photographs using Peter Evans' Signals of Seeing framework:
+    focal point, exclusion, background, specificity, negative space.
+
+    Budget: one Haiku call per new evaluation. ~₹0.50. Stored — never
+    regenerated unless a new evaluation is scored.
+
+    Output JSON stored in mentor_advice_json (Session 200b expanded):
+    {
+      "observation": "<60w cross-image Sherpa opening>",
+      "nudge": "<25w before-next-session nudge>",
+      "signature_insight": "<50w strength + what it means>",
+      "gap_insight": "<50w gap + psychological reason>",
+      "next_session": "<60w specific session instruction>",
+      "aq_insight": "<60w emotional quality, warmth, spiritual>",
+      "tier_insight": "<40w what blocks next tier>",
+      "master_insight": "<40w master reference specific to this eye>",
+      "eval_count": N
+    }
+    Budget: ~₹0.85 per call (600 output tokens at Haiku 4.5 ₹0.42/K output).
+    Fires after each new eval. Stored — never regenerated unless data changes.
+    """
+    import json as _sj
+    import urllib.request as _sur
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return
+
+    try:
+        # Camera track — mobile vs camera/mirrorless — for camera-aware insights
+        _cam_row = db.session.execute(db.text(
+            "SELECT subscription_track FROM users WHERE id = :uid"
+        ), {'uid': user_id}).fetchone()
+        _camera_track = (_cam_row[0] or 'camera') if _cam_row else 'camera'
+        _is_mobile = (_camera_track == 'mobile')
+
+        # Fetch all scored Haiku images for this user — including EXIF
+        _rows = db.session.execute(db.text("""
+            SELECT i.id, i.score, i.tier, i.genre, i.asset_name,
+                   i.audit_json,
+                   i.dod_score, i.disruption_score, i.dm_score,
+                   i.wonder_score, i.aq_score,
+                   i.exif_make, i.exif_model, i.exif_lens,
+                   i.exif_focal_length_35mm,
+                   i.exif_aperture_raw, i.exif_shutter_raw, i.exif_iso_raw,
+                   i.exif_capture_datetime, i.exif_software,
+                   i.exif_has_gps, i.exif_device_tier
+            FROM images i
+            WHERE i.user_id = :uid
+              AND i.is_haiku_try IS TRUE
+              AND i.status = 'scored'
+              AND i.score IS NOT NULL
+            ORDER BY i.id ASC
+        """), {'uid': user_id}).fetchall()
+
+        if not _rows or len(_rows) < 2:
+            return
+
+        # Build image summaries for the prompt
+        # ── EXIF pattern analysis across all images ──────────────────────
+        _exif_patterns = {}
+        _apertures, _shutters, _isos, _focals, _hours = [], [], [], [], []
+        _lenses_used, _software_used = set(), set()
+        _gps_count = 0
+
+        for _r in _rows:
+            try:
+                # Aperture pattern
+                if _r[14]:  # exif_aperture_raw
+                    _apertures.append(float(_r[14]))
+                # Shutter pattern
+                if _r[15]:  # exif_shutter_raw
+                    _shutters.append(float(_r[15]))
+                # ISO pattern
+                if _r[16]:  # exif_iso_raw
+                    _isos.append(int(_r[16]))
+                # Focal length
+                if _r[13]:  # exif_focal_length_35mm
+                    _focals.append(float(_r[13]))
+                # Time of day from capture datetime
+                if _r[17]:  # exif_capture_datetime
+                    try:
+                        _dt = str(_r[17])
+                        # Format: YYYY:MM:DD HH:MM:SS or similar
+                        _hr = int(_dt.split(' ')[1].split(':')[0]) if ' ' in _dt else None
+                        if _hr is not None:
+                            _hours.append(_hr)
+                    except Exception:
+                        pass
+                # Lens
+                if _r[12]:  # exif_lens
+                    _lenses_used.add(str(_r[12]).strip())
+                # Software / post processing
+                if _r[18]:  # exif_software
+                    _sw = str(_r[18]).strip()
+                    if _sw and _sw.lower() not in ('', 'none'):
+                        _software_used.add(_sw[:40])
+                # GPS
+                if _r[19]:  # exif_has_gps
+                    _gps_count += 1
+            except Exception:
+                pass
+
+        # Build EXIF insight block
+        _exif_lines = []
+
+        if _apertures:
+            _avg_ap = sum(_apertures) / len(_apertures)
+            if _avg_ap <= 2.0:
+                _exif_lines.append(f"Aperture: shoots wide open (avg f/{_avg_ap:.1f}) — consistently separating subject from world, or seeking light")
+            elif _avg_ap >= 8.0:
+                _exif_lines.append(f"Aperture: shoots stopped down (avg f/{_avg_ap:.1f}) — seeking depth and sharpness across the frame")
+            else:
+                _exif_lines.append(f"Aperture: mid-range average (f/{_avg_ap:.1f}) — not yet making strong aperture decisions")
+
+        if _shutters:
+            _fast = sum(1 for s in _shutters if s >= 500)
+            _slow = sum(1 for s in _shutters if s <= 30)
+            _total_sh = len(_shutters)
+            if _fast > _total_sh * 0.6:
+                _exif_lines.append(f"Shutter: predominantly fast ({_fast}/{_total_sh} images >= 1/500) — freezing motion, avoiding blur")
+            elif _slow > _total_sh * 0.3:
+                _exif_lines.append(f"Shutter: uses slow shutter deliberately ({_slow}/{_total_sh} images <= 1/30) — comfortable with motion and blur")
+            else:
+                _exif_lines.append("Shutter: varied — no strong shutter preference emerging yet")
+
+        if _isos:
+            _avg_iso = int(sum(_isos) / len(_isos))
+            _high_iso = sum(1 for i in _isos if i >= 1600)
+            if _high_iso > len(_isos) * 0.4:
+                _exif_lines.append(f"ISO: frequently pushes high ({_high_iso}/{len(_isos)} images >= 1600, avg {_avg_iso}) — shooting in challenging light, accepting noise")
+            elif _avg_iso <= 400:
+                _exif_lines.append(f"ISO: shoots in good light (avg ISO {_avg_iso}) — tends toward controlled conditions")
+            else:
+                _exif_lines.append(f"ISO: moderate (avg {_avg_iso})")
+
+        if _focals:
+            _avg_focal = int(sum(_focals) / len(_focals))
+            _wide = sum(1 for f in _focals if f <= 35)
+            _tele = sum(1 for f in _focals if f >= 100)
+            if _wide > len(_focals) * 0.5:
+                _exif_lines.append(f"Focal length: wide-angle preference (avg {_avg_focal}mm equiv) — gets close, includes context, wide perspective")
+            elif _tele > len(_focals) * 0.4:
+                _exif_lines.append(f"Focal length: telephoto preference (avg {_avg_focal}mm equiv) — compresses, isolates, shoots from distance")
+            elif 45 <= _avg_focal <= 65:
+                _exif_lines.append(f"Focal length: natural perspective ({_avg_focal}mm equiv) — sees the way the eye does")
+            else:
+                _exif_lines.append(f"Focal length: varied (avg {_avg_focal}mm equiv)")
+
+        if _hours:
+            _avg_hour = int(sum(_hours) / len(_hours))
+            _golden = sum(1 for h in _hours if h <= 8 or h >= 17)
+            _midday = sum(1 for h in _hours if 11 <= h <= 14)
+            _night = sum(1 for h in _hours if h <= 5 or h >= 21)
+            if _night > len(_hours) * 0.25:
+                _exif_lines.append(f"Shooting time: shoots at night or very early morning ({_night}/{len(_hours)} images) — drawn to difficult light")
+            elif _golden > len(_hours) * 0.5:
+                _exif_lines.append(f"Shooting time: golden hour preference ({_golden}/{len(_hours)} images in early morning or late afternoon)")
+            elif _midday > len(_hours) * 0.4:
+                _exif_lines.append(f"Shooting time: shoots in midday light ({_midday}/{len(_hours)} images) — not yet chasing the difficult light hours")
+            if _avg_hour <= 7:
+                _exif_lines.append("Pattern: early riser — out before most photographers")
+            elif _avg_hour >= 19:
+                _exif_lines.append("Pattern: shoots late — evening and night light")
+
+        if _lenses_used and not _is_mobile:
+            _lens_list = ', '.join(list(_lenses_used)[:3])
+            _exif_lines.append(f"Lenses used: {_lens_list}")
+
+        if _gps_count > 0:
+            _exif_lines.append(f"Location data: {_gps_count}/{len(_rows)} images have GPS — explores varied locations")
+
+        if _software_used:
+            _sw_list = ', '.join(list(_software_used)[:2])
+            _exif_lines.append(f"Post-processing: {_sw_list}")
+
+        _exif_block = '\n'.join(_exif_lines) if _exif_lines else 'No EXIF data available for this photographer.'
+
+        # ── Build per-image summaries ─────────────────────────────────────
+        _summaries = []
+        for _r in _rows:
+            try:
+                _a = _sj.loads(_r[5] or '{}')
+                _name = (_r[4] or '').replace('_', ' ').strip() or 'Untitled'
+                _tk = (_a.get('takeaway') or '').strip()
+                _wn = (_a.get('what_next') or '').strip()
+                _summary = (
+                    f"Image: {_name} · {_r[3]} · {float(_r[1]):.2f} · {_r[2]}\n"
+                    f"Takeaway: {_tk}\n"
+                    f"Strongest: {_a.get('strength_name', '')} · Weakest: {_a.get('next_leap_name', '')}"
+                )
+                if _wn:
+                    _summary += f"\nNext action given: {_wn[:80]}"
+                _summaries.append(_summary)
+            except Exception:
+                pass
+
+        if not _summaries:
+            return
+
+        _n = len(_summaries)
+        _history_block = "\n\n".join(_summaries)
+
+        _prompt = f"""You are the Shutter League Sherpa — a senior photographer and mentor
+who has been watching this photographer across {_n} evaluated photographs.
+
+You are writing the soul of their personal dashboard. Every word will be read
+by a photographer who wants to grow. Make them feel seen. Make them want to
+go out and shoot.
+
+THE FIVE QUESTIONS EVERY SHUTTER LEAGUE EVALUATION ANSWERS:
+1. Depth of Difficulty — did you pursue this shot, or wait for it?
+2. Visual Disruption — does the image stop the eye, or confirm what was expected?
+3. The Decisive Moment — was there a reason for this frame, and not the one before or after?
+4. Wonder Factor — does something happen to the person who sees this?
+5. Affective Quotient — is there a story only this photographer could have seen?
+
+These are not technical scores. They are questions about how the photographer sees.
+Your insights must be rooted in these five questions — always.
+
+CAMERA CONTEXT — critical, read carefully:
+This photographer shoots on: {"a mobile phone" if _is_mobile else "a camera (DSLR or mirrorless)"}
+{"MOBILE RULES — non-negotiable:" if _is_mobile else "CAMERA RULES:"}
+{"- Never mention: changing lenses, telephoto, aperture ring, f-stops, full-frame sensor" if _is_mobile else "- Aperture, shutter speed, ISO are all available — use them specifically when relevant"}
+{"- Depth of field: achieved through PROXIMITY on mobile, not aperture — say move closer, not open up" if _is_mobile else "- Lens choice (wide, 50mm, telephoto) creates perspective — reference this when it fits"}
+{"- Shutter speed: reference Night mode, Pro mode, or burst — never shutter dial" if _is_mobile else "- Shutter speed is a creative decision — freeze or blur, both deliberate"}
+{"- Grain/noise: computational on mobile, different character to film grain — be honest" if _is_mobile else "- ISO grain on large sensors is filmic — can be used deliberately"}
+{"- Mobile's greatest tool: position — feet, angle, distance, light direction" if _is_mobile else "- Both position AND glass are available — reference whichever fits the pattern"}
+{"- Mobile's strengths: Portrait mode separation, Night mode, computational HDR, always-available" if _is_mobile else ""}
+
+WHAT YOU MUST PRODUCE — 8 fields, all from the pattern across ALL {_n} images:
+
+1. observation (60 words max)
+   What you have seen across all {_n} photographs as a body of work.
+   Name the consistent strength. Name the persistent gap. Be specific — this
+   must feel like it could only be written about THIS photographer.
+   Choose ONE invisible principle from this pool and weave it in naturally —
+   never name the principle, just use its truth:
+   DIMENSION LANGUAGE (use the question, never the name):
+   [Did they pursue this shot or wait for it? |
+    Does the image stop the eye or confirm what was expected? |
+    Was there a reason for this frame and not the one before or after? |
+    Does something happen to the person who sees this? |
+    Is there a story only this photographer could have seen?]
+   VISUAL: [Empty space gives subjects room to breathe and feel significant |
+    The frame must decide what is foreground before the viewer does |
+    The mind completes what it is given — leaving things out forces participation |
+    Repeating shapes with one broken element create wonder |
+    Elements close together are read as belonging together |
+    Placing opposing elements — light and dark, rough and smooth — adds depth |
+    Dark or large objects feel heavier — balance can be asymmetric and still resolved]
+   TECHNICAL (camera-aware — only suggest what this photographer's equipment can do):
+   FOR ALL CAMERAS: [Going into difficult light — low light, grain, noise — is a
+    decision most photographers walk away from |
+    Peak action timing is a seeing decision, not a camera decision]
+   FOR CAMERA/MIRRORLESS ONLY — skip if mobile: [Aperture separates subject from world —
+    depth of field is a compositional choice, not just an exposure one |
+    Shutter speed decides whether the world is frozen or flowing — both are deliberate]
+   FOR MOBILE ONLY — skip if camera: [Moving closer is the mobile photographer's
+    aperture — proximity creates the separation a lens would |
+    Portrait mode used deliberately is a compositional choice, not a shortcut]
+
+2. nudge (25 words max)
+   The single most useful thing before their next shutter press.
+   Concrete. Specific to the pattern. What a Sherpa who watched all {_n} images
+   would say before they walked out the door.
+
+3. signature_insight (50 words max)
+   Their consistent strength — what their eye does instinctively across all images.
+   What this means for their photography going forward.
+   Warm, affirming but honest. Choose ONE principle naturally:
+   [Colour and atmosphere as the subject itself, not decoration |
+    Emotional atmosphere created through purely visual means |
+    The feeling of transience — light, moments, things that pass |
+    Emphasis — the eye knows exactly where to go first in this frame |
+    Pattern and rhythm used with intention, not accident |
+    The aperture choice — background dissolving behind the subject]
+
+4. gap_insight (50 words max)
+   Their persistent gap — what keeps appearing in every evaluation.
+   The psychological reason it exists, not just what to fix.
+   Frank. Name the habit. Choose ONE principle naturally:
+   [The most vital decision is what NOT to include |
+    Safe frames show what was there — earned frames show what only you could find |
+    Asymmetry and irregularity require moving past the centred position |
+    Background and subject competing at the same plane — aperture as a decision |
+    The shutter speed is not matching the intention — motion neither frozen nor flowing |
+    Contrast between elements is being avoided — everything sits at the same weight |
+    The frame confirms what was expected — nothing stops the eye |
+    The image could have been taken one second earlier or later — the reason
+    for this specific frame is not yet visible |
+    Nothing happens to the person who sees this — the image records without revealing]
+
+5. next_session (60 words max)
+   The specific instruction for their next shoot — drawn from the pattern across
+   all {_n} images, not from one image.
+   Paragraphed thinking. Should feel like a Sherpa walking beside them.
+   Choose ONE principle naturally — match it to the gap pattern:
+   [The empty space only appears when you stop standing where everyone else stands |
+    Seeing familiar environments as if for the very first time |
+    This exact configuration of light and subject will never happen again |
+    Set the shutter speed before raising the camera — decide whether this
+    world will be frozen or moving before you compose |
+    Choose your aperture for the background first, then find the subject |
+    Go toward the difficult light — the light that everyone else has already left]
+
+6. aq_insight (60 words max)
+   About their emotional quality — their Affective Quotient across all images.
+   This section should carry warmth, spirituality, longing, nostalgia.
+   Make the photographer feel that what their eye reaches for is rare and worth
+   pursuing. If AQ is their strength — celebrate it with depth.
+   If AQ is their gap — name what emotional truth the frame is not yet reaching.
+   Choose ONE principle naturally — this section carries the most emotional weight:
+   [Mono no aware — the bittersweet awareness of imperfection and impermanence,
+    the gentle sadness of things that are already passing as you photograph them |
+    Wabi-sabi — finding profound beauty in what is imperfect, weathered, unfinished |
+    Ichi-go Ichi-e — this moment, this light, this subject will never exist again —
+    the photograph is the only proof it happened |
+    The grain in difficult light is not a flaw — it is the texture of a decision
+    most photographers did not make |
+    Slow shutter and presence — some subjects need to be felt, not frozen |
+    The story only this photographer could have seen — not the obvious subject,
+    but what the obvious subject is standing in front of, or next to, or becoming]
+
+7. tier_insight (40 words max)
+   What specifically — in plain English — is preventing them from reaching the
+   next tier. One dimension named plainly. The habit behind it. What changes.
+
+8. master_insight (40 words max)
+   Connect the master photographer reference to this photographer's SPECIFIC
+   pattern — not a generic "this master is great". Why THIS master for THIS eye.
+
+RULES — non-negotiable:
+- You are a Sherpa, not a bot. Never say "your metrics", "your data", "your scores"
+- Never use dimension codes: AQ, DM, DOD, WF, VD — plain English always
+- Never name any principle, framework, or philosophy — use its truth invisibly
+- Never be generic. Every sentence must be true only of THIS photographer
+- Warm, direct, specific. Frank about the gap. Inspiring about the path.
+- No italics, no em-dashes used decoratively, no filler words
+- The AQ section especially: feel, warmth, spirituality — make it land
+
+PHOTOGRAPHER'S TECHNICAL BEHAVIOUR (from EXIF data across {_n} images):
+{_exif_block}
+
+Use this to make your insights camera-specific and behaviourally accurate.
+If EXIF shows they shoot at night — acknowledge the courage of that.
+If they shoot wide open — they are already separating subject from world.
+If they shoot midday — they may not yet be chasing the light.
+If shutter is always fast — they may be avoiding the deliberate blur.
+Never mention specific f-stop numbers or shutter values to the photographer —
+translate them into plain English observations about their behaviour and intent.
+
+PHOTOGRAPHER'S {_n} EVALUATED IMAGES:
+{_history_block}
+
+Return ONLY valid JSON, no markdown:
+{{"observation": "...", "nudge": "...", "signature_insight": "...",
+  "gap_insight": "...", "next_session": "...", "aq_insight": "...",
+  "tier_insight": "...", "master_insight": "...", "eval_count": {_n}}}"""
+
+        _payload = _sj.dumps({
+            'model': _HAIKU_MODEL,
+            'max_tokens': 1200,
+            'temperature': 0.3,
+            'messages': [{'role': 'user', 'content': _prompt}]
+        }).encode()
+
+        _req = _sur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+            },
+            method='POST'
+        )
+
+        with _sur.urlopen(_req, timeout=45) as _resp:
+            _raw = _sj.loads(_resp.read().decode())
+
+        _text = ''.join(
+            b.get('text', '') for b in (_raw.get('content') or [])
+            if b.get('type') == 'text'
+        ).strip()
+
+        if _text.startswith('```'):
+            _parts = _text.split('```')
+            _text = _parts[1] if len(_parts) > 1 else _text
+            if _text.startswith('json'):
+                _text = _text[4:]
+            _text = _text.strip()
+
+        # Truncation guard — if output was cut mid-string, attempt repair
+        if _text and not _text.rstrip().endswith('}'):
+            # Find last complete key-value pair and close the JSON
+            _last_complete = max(_text.rfind('",\n'), _text.rfind('"}'))
+            if _last_complete > len(_text) * 0.5:
+                _text = _text[:_last_complete + 1] + '\n}'
+            else:
+                app.logger.warning(f'[haiku_sherpa] JSON too truncated to repair for user {user_id}')
+                return
+
+        _result = _sj.loads(_text)
+        if not _result.get('observation'):
+            return
+
+        db.session.execute(db.text(
+            "UPDATE users SET mentor_advice_json = :j WHERE id = :uid"
+        ), {'j': _sj.dumps(_result), 'uid': user_id})
+        db.session.commit()
+        app.logger.info(f'[haiku_sherpa] synthesis complete for user {user_id} ({_n} images)')
+
+    except Exception as _e:
+        app.logger.warning(f'[haiku_sherpa] non-fatal: {_e}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 def _get_haiku_history_context(user_id, exclude_image_id=None):
     """
     181.23 — History context for Haiku scoring prompt.
@@ -31881,6 +32734,18 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                 f'[try_haiku] scored image={image_id} score={final_score} '
                 f'tier={tier} user={img.user_id}'
             )
+            # SL-181.48: trigger cross-image Sherpa synthesis after scoring
+            # Fires in background thread — non-blocking, never crashes scoring
+            if user_id:
+                try:
+                    import threading as _sht
+                    _uid_for_sherpa = img.user_id
+                    def _run_sherpa():
+                        with app.app_context():
+                            _generate_haiku_sherpa(_uid_for_sherpa)
+                    _sht.Thread(target=_run_sherpa, daemon=True).start()
+                except Exception as _she:
+                    app.logger.warning(f'[haiku_sherpa] trigger failed (non-fatal): {_she}')
             return {
                 'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
                 'score': round(final_score, 2),
@@ -31906,6 +32771,495 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
             except Exception:
                 pass
             return None
+
+
+@app.route('/league/photographers')
+def league_haiku():
+    """
+    GET /league/photographers — Haiku world League of Photographers page.
+    Session 200: Haiku free-tier users see League (score>=8.0) and Masters (6.0-7.9).
+    Session 201: Removed @login_required — public page, anonymous users can browse.
+    Daily spotlight from 9.0+ pool. Paid users redirect to standings_public.
+    """
+    from flask_login import current_user
+    import json as _lhj
+    from datetime import date as _lhd
+
+    # Paid users see the full standings page
+    if getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('standings_public'))
+
+    # Safe defaults
+    _league = []
+    _masters = []
+    _spotlight = None
+
+    def _build_lh(rows, json_mod):
+        out = []
+        for r in rows:
+            try:
+                _a = json_mod.loads(r[7] or '{}')
+                _name = (r[0] or '').split()
+                _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (r[0] or '')
+                from types import SimpleNamespace as _LHSN2
+                out.append(_LHSN2(
+                    photographer=_short,
+                    track=r[1],
+                    score=float(r[2]),
+                    tier=r[3],
+                    genre=r[4],
+                    thumb_url=r[5],
+                    id=r[6],
+                    impression=_a.get('impression', '') or '',
+                ))
+            except Exception:
+                pass
+        return out
+
+    try:
+        # League tier: score >= 8.0 — top Sonnet public images
+        _league_rows = db.session.execute(db.text("""
+            SELECT u.full_name, u.subscription_track,
+                   i.score, i.tier, i.genre, i.thumb_url, i.id,
+                   i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 8.0
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+            LIMIT 24
+        """)).fetchall()
+
+        # Masters tier: score 6.0 - 7.99 — top Sonnet public images
+        _masters_rows = db.session.execute(db.text("""
+            SELECT u.full_name, u.subscription_track,
+                   i.score, i.tier, i.genre, i.thumb_url, i.id,
+                   i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 6.0 AND i.score < 8.0
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+            LIMIT 24
+        """)).fetchall()
+
+        # Daily spotlight: rotate through 9.0+ pool by day ordinal
+        _spotlight_rows = db.session.execute(db.text("""
+            SELECT u.full_name, i.score, i.tier, i.genre,
+                   i.thumb_url, i.id, i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 8.5
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+        """)).fetchall()
+
+        _spotlight = None
+        if _spotlight_rows:
+            _idx = _lhd.today().toordinal() % len(_spotlight_rows)
+            _sr = _spotlight_rows[_idx]
+            _sa = _lhj.loads(_sr[6] or '{}')
+            from types import SimpleNamespace as _SN
+            _spotlight = _SN(
+                photographer=(_sr[0] or '').split()[0] + ' ' + ((_sr[0] or '').split()[1][0] + '.') if len((_sr[0] or '').split()) >= 2 else (_sr[0] or ''),
+                score=float(_sr[1]),
+                tier=_sr[2],
+                genre=_sr[3],
+                thumb_url=_sr[4],
+                id=_sr[5],
+                impression=_sa.get('impression', '') or _sa.get('takeaway', '') or _sa.get('strength_obs', '') or '',
+            )
+
+        _league  = _build_lh(_league_rows, _lhj)
+        _masters = _build_lh(_masters_rows, _lhj)
+
+    except Exception as _lhe:
+        app.logger.error(f'[league_haiku] failed: {_lhe}')
+        _league = _masters = []
+        _spotlight = None
+
+    # Build JSON for JS tabs — template reads from script tags
+    import json as _lhjson
+    def _to_json(items):
+        try:
+            return _lhjson.dumps([{
+                'id': int(p.id) if p.id else None,
+                'thumb_url': str(p.thumb_url or ''),
+                'photographer': str(p.photographer or ''),
+                'score': float(p.score) if p.score else 0.0,
+                'tier': str(p.tier or ''),
+                'genre': str(p.genre or ''),
+                'impression': str(getattr(p, 'impression', '') or '')[:120],
+            } for p in items], ensure_ascii=False)
+        except Exception as _je:
+            app.logger.warning(f'[league_haiku] _to_json failed: {_je}')
+            return '[]' 
+
+    # Add aha_line to spotlight — impression already has 3-way fallback (impression/takeaway/strength_obs)
+    if _spotlight:
+        _imp = getattr(_spotlight, 'impression', '') or ''
+        _spotlight.aha_line = _imp[:120]
+
+    return render_template('league_haiku.html',
+        league_photographers=_league,
+        masters_photographers=_masters,
+        league_photographers_json=_to_json(_league),
+        masters_photographers_json=_to_json(_masters),
+        spotlight=_spotlight,
+        current_user=current_user,
+    )
+
+
+@app.route('/try/standing/<int:image_id>')
+def try_standing(image_id):
+    """
+    GET /try/standing/<image_id> — Read-only Sonnet scorecard for Haiku users.
+    Session 200: Haiku users can view public Sonnet-scored images.
+    Session 201: Removed @login_required — page shows public data only (is_public=TRUE).
+    Anonymous users can view as sample eval from pricing page.
+    Zero new AI cost — all data from stored audit_json.
+    Paid users redirect to image_detail.
+    """
+    from flask_login import current_user
+    import json as _tsj
+    from types import SimpleNamespace as _TSSN
+
+    # Paid users see their own scorecard
+    if getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    try:
+        # Single query — get everything needed
+        # Only public, scored, non-Haiku images
+        _row = db.session.execute(db.text("""
+            SELECT i.id, i.score, i.tier, i.genre, i.thumb_url,
+                   i.audit_json, i.asset_name,
+                   i.dod_score, i.disruption_score, i.dm_score,
+                   i.wonder_score, i.aq_score,
+                   u.full_name, u.subscription_track,
+                   i.scored_at, i.user_id
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.id = :iid
+              AND i.status = 'scored'
+              AND i.is_public = TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
+        """), {'iid': image_id}).fetchone()
+
+        if not _row:
+            app.logger.warning(f'[try_standing] image_id={image_id} not found, not scored, not public, or is haiku trial')
+            abort(404)
+
+        _audit = _tsj.loads(_row[5] or '{}')
+
+        # Guard: reject Haiku trial images — source field is ground truth
+        if _audit.get('source') == 'haiku_try':
+            app.logger.warning(f'[try_standing] image_id={image_id} is haiku_try source — rejecting')
+            abort(404)
+        _name  = (_row[12] or '').split()
+        _short = _name[0] + ' ' + (_name[1][0] + '.') if len(_name) >= 2 else (_row[12] or '')
+        _uid   = _row[15]
+
+        # ── Dimensions (sorted strongest → weakest) ───────────────────────────
+        _dim_data = [
+            {'name': 'Emotion',          'score': float(_row[11] or _audit.get('aq',  0) or 0)},
+            {'name': 'Visual Impact',    'score': float(_row[8]  or _audit.get('vd',  0) or 0)},
+            {'name': 'Timing',           'score': float(_row[9]  or _audit.get('dm',  0) or 0)},
+            {'name': 'Wonder Factor',    'score': float(_row[10] or _audit.get('wf',  0) or 0)},
+            {'name': 'Difficulty',       'score': float(_row[7]  or _audit.get('dod', 0) or 0)},
+        ]
+        _dim_sorted = sorted(_dim_data, key=lambda d: d['score'], reverse=True)
+        for _i, _d in enumerate(_dim_sorted):
+            _d['is_top']  = (_i == 0)
+            _d['is_leap'] = (_i == len(_dim_sorted) - 1)
+
+        _score_val = float(_row[1]) if _row[1] else 0.0
+        _tier_val  = _row[2] or ''
+        _camera    = 'Mobile' if (_row[13] == 'mobile') else 'Camera'
+
+        # tier_floor — lower bound of current tier band (progress bar)
+        _tier_floors = {
+            'Rookie': 0, 'Shooter': 3, 'Contender': 5, 'Craftsman': 6,
+            'Maverick': 7, 'Master': 8, 'Grandmaster': 9, 'Legend': 9.5,
+        }
+        _tier_floor = _tier_floors.get(_tier_val, 0)
+
+        _tier_descs = {
+            'Rookie':      'Starting the journey.',
+            'Shooter':     'Building the eye.',
+            'Contender':   'Developing consistently.',
+            'Craftsman':   'Reliable across dimensions.',
+            'Maverick':    'Distinctive. Forming a signature.',
+            'Master':      'Exceptional. Fewer than 1 in 10 reach this.',
+            'Grandmaster': 'Fewer than 1 in 100 reach 9.',
+            'Legend':      '9.5 and above. The work that will be remembered.',
+        }
+
+        _eval_date = ''
+        if _row[14]:
+            try:    _eval_date = _row[14].strftime('%d %b %Y')
+            except: _eval_date = str(_row[14])[:10]
+
+        # ── Eval count ────────────────────────────────────────────────────────
+        _eval_count = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id=:uid AND status='scored'"
+            " AND (is_haiku_try IS NOT TRUE)"
+        ), {'uid': _uid}).scalar() or 1
+
+        # ── Best this year ────────────────────────────────────────────────────
+        from datetime import datetime as _tsdt
+        _best_this_year = db.session.execute(db.text(
+            "SELECT MAX(score) FROM images WHERE user_id=:uid AND status='scored'"
+            " AND score IS NOT NULL AND (is_haiku_try IS NOT TRUE)"
+            " AND EXTRACT(year FROM scored_at) = :yr"
+        ), {'uid': _uid, 'yr': _tsdt.now().year}).scalar()
+        _best_this_year = float(_best_this_year) if _best_this_year else _score_val
+
+        # ── Audit JSON fields — Sonnet field names ────────────────────────────
+        _impression    = (_audit.get('impression',    '') or '').strip()
+        _strength_obs  = (_audit.get('strength_obs',  '') or '').strip()
+        _next_leap_obs = (_audit.get('next_leap_obs', '') or '').strip()
+        _master_name   = (_audit.get('master_name',  '') or '').strip()
+        _master_why    = (_audit.get('master_why',   '') or '').strip()
+
+        # Verdict box — impression is the opening evaluation paragraph
+        _verdict = _impression
+
+        import re as _re
+
+        def _split_bullets(text):
+            """Split on ■ or ▪ separator (with or without surrounding spaces)."""
+            if not text:
+                return []
+            parts = _re.split(r'\s*[■▪]\s*', text)
+            return [p.strip() for p in parts if p.strip()]
+
+        def _strip_md(text):
+            """Strip basic markdown — **bold** → plain text."""
+            if not text:
+                return text
+            return _re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+
+        # ── "What this evaluation means" ─────────────────────────────────────
+        # = background_check / byline_1 (the "why this image matters" analysis)
+        # + byline_2_body as additional bullets (secondary narrative)
+        _bgcheck  = (_audit.get('background_check', '') or (_audit.get('byline_1', '') or '')).strip()
+        _byline2  = (_audit.get('byline_2_body',    '') or (_audit.get('byline_2',  '') or '')).strip()
+        _what_it_means = []
+        for _raw in [_bgcheck, _byline2]:
+            _what_it_means.extend([_strip_md(b) for b in _split_bullets(_raw)])
+
+        # ── "Your one take-away" ──────────────────────────────────────────────
+        # = transferable_advice (c1 — the actionable photographer's advice)
+        _transferable = (_audit.get('transferable_advice', '') or '').strip()
+        _takeaway_items = [_strip_md(b) for b in _split_bullets(_transferable)]
+
+        # ── "What SL saw in your photograph" ─────────────────────────────────
+        _wso = ((_audit.get('what_stood_out', '') or '') or (_audit.get('hard_truth', '') or '')).strip()
+        _what_sl_saw = []
+        if _wso:           _what_sl_saw.append({'head': 'What stood out', 'body': _strip_md(_wso)})
+        if _strength_obs:  _what_sl_saw.append({'head': '',               'body': _strip_md(_strength_obs)})
+        if _next_leap_obs: _what_sl_saw.append({'head': '',               'body': _strip_md(_next_leap_obs)})
+
+        # ── "Your next shot — bookmarked" ─────────────────────────────────────
+        # mentor_location_1 is the full body paragraph.
+        # Title = the location name only (before " is nearby" / " is 30 minutes" / " —")
+        _ml1_full = (_audit.get('mentor_location_1', '') or '').strip()
+        _next_shot = None
+        if _ml1_full:
+            # Match "Location Name is ..." or "Location Name —"
+            _loc_match = _re.match(r'^([A-Z][A-Za-z\s]+?)(?=\s+is\b|\s+—)', _ml1_full)
+            if _loc_match:
+                _ml1_title = _loc_match.group(1).strip()
+            else:
+                # Fallback: everything before the first comma, max 50 chars
+                _ml1_title = _ml1_full.split(',')[0].strip()[:50]
+            _next_shot = _TSSN(title=_ml1_title, body=_ml1_full)
+
+        # Edit suggestions
+        _edit_base     = (_audit.get('edit_base',     '') or (_audit.get('edit_balanced', '') or '')).strip()
+        _edit_creative = (_audit.get('edit_creative', '') or '').strip()
+        _edit_suggestions = []
+        if _edit_base:
+            _edit_suggestions.append({'type': 'Balanced · Light editing', 'headline': '', 'body': _edit_base, 'bullets': []})
+        if _edit_creative:
+            _edit_suggestions.append({'type': 'Artistic · Heavy editing', 'headline': '', 'body': _edit_creative, 'bullets': []})
+
+        # ── Trend lines — dimension sparklines ───────────────────────────────
+        # Order by scored_at DESC, fall back to id DESC for rows where scored_at is NULL
+        _trend_rows = db.session.execute(db.text(
+            "SELECT aq_score, dm_score, dod_score FROM images"
+            " WHERE user_id=:uid AND status='scored'"
+            " AND (is_haiku_try IS NOT TRUE)"
+            " ORDER BY COALESCE(scored_at, created_at) DESC LIMIT 30"
+        ), {'uid': _uid}).fetchall()
+
+        _trend_image_count = len(_trend_rows)  # capture before reversing
+        _trend_lines = []
+        if _trend_rows and len(_trend_rows) >= 2:
+            _trend_rows = list(reversed(_trend_rows))  # oldest first
+
+            def _ts_trend_pill(vals):
+                if len(vals) < 3:
+                    return '— Steady — your next opportunity to grow'
+                first  = sum(vals[:len(vals)//2]) / (len(vals)//2)
+                second = sum(vals[len(vals)//2:]) / (len(vals) - len(vals)//2)
+                diff   = second - first
+                if diff > 0.3:  return '↑ Climbing — getting stronger'
+                if diff < -0.3: return '↓ Dipped recently'
+                return '— Steady — your next opportunity to grow'
+
+            for _ts_label, _ts_idx, _ts_own in [
+                ('Whether it made one feel something', 0, float(_row[11] or 0)),
+                ('Whether the timing was right',       1, float(_row[9]  or 0)),
+                ('How difficult it was',               2, float(_row[7]  or 0)),
+            ]:
+                _ts_vals = [float(r[_ts_idx]) for r in _trend_rows if r[_ts_idx] is not None]
+                if len(_ts_vals) >= 2:
+                    _trend_lines.append(_TSSN(
+                        label=_ts_label,
+                        current=_ts_own,  # this image's own dimension score
+                        values=_ts_vals,
+                        description=_ts_trend_pill(_ts_vals),
+                    ))
+
+        # Percentile — compute from actual score, not hardcoded
+        _percentile = 80  # safe fallback
+        try:
+            from engine.scoring import compute_percentile as _cp
+            _pct_data = _cp(
+                _score_val,
+                genre=_row[3],
+                camera_track=_row[13],
+            )
+            if _pct_data and _pct_data.get('top_pct') is not None:
+                # top_pct = "top X%" → percentile = 100 - top_pct
+                _percentile = max(1, 100 - int(_pct_data['top_pct']))
+        except Exception as _pe:
+            app.logger.warning(f'[try_standing] percentile failed: {_pe}')
+
+        _cal_count = 312  # blind calibration count — static display value
+
+    except Exception as _tse:
+        import traceback as _trtb
+        app.logger.error(f'[try_standing] image_id={image_id} unexpected error: {_tse}\n{_trtb.format_exc()}')
+        abort(500)
+
+    return render_template('try_standing.html',
+        score=_score_val,
+        tier=_tier_val,
+        genre=_row[3] or '',
+        thumb_url=_row[4] or '',
+        asset_name=_row[6] or '',
+        photographer_name=_short,
+        camera=_camera,
+        score_pct=round(min(_score_val/10*100,100),1),
+        tier_description=_tier_descs.get(_tier_val,''),
+        percentile=_percentile,
+        calibrated_count=_cal_count,
+        dimensions=_dim_sorted,
+        strength_dim=_dim_sorted[0]['name'],
+        strength_score=_dim_sorted[0]['score'],
+        leap_dim=_dim_sorted[-1]['name'],
+        leap_score=_dim_sorted[-1]['score'],
+        tier_floor=_tier_floor,
+        best_this_year=_best_this_year,
+        verdict=_verdict,
+        what_it_means=_what_it_means,
+        takeaway_items=_takeaway_items,
+        what_sl_saw=_what_sl_saw,
+        next_shot=_next_shot,
+        edit_suggestions=_edit_suggestions,
+        master_name=_master_name,
+        master_why=_master_why,
+        eval_date=_eval_date,
+        eval_count=_eval_count,
+        trend_lines=_trend_lines,
+        trend_count=_trend_image_count,
+        image_id=image_id,
+        current_user=current_user,
+    )
+
+
+@app.route('/try/sample')
+def try_sample():
+    """
+    GET /try/sample — Public sample Haiku evaluation for pricing page.
+    Session 201: Shows a real Haiku scorecard to anonymous visitors.
+    No login required. Pulls the highest-scoring public Haiku-try image.
+    Renders image_detail_haiku.html in read-only mode (no delete/share actions).
+    """
+    import json as _smj
+
+    try:
+        # Find best public Haiku-scored image — highest score, has audit_json
+        _sm_row = db.session.execute(db.text("""
+            SELECT id, score, tier, genre, thumb_url, audit_json,
+                   asset_name, original_filename
+            FROM images
+            WHERE is_haiku_try = TRUE
+              AND status = 'scored'
+              AND is_public = TRUE
+              AND is_flagged = FALSE
+              AND audit_json IS NOT NULL
+              AND thumb_url IS NOT NULL
+            ORDER BY score DESC NULLS LAST
+            LIMIT 1
+        """)).fetchone()
+
+        if not _sm_row:
+            return redirect(url_for('pricing'))
+
+        _sm_audit = _smj.loads(_sm_row[5] or '{}')
+        _sm_dims = {
+            'dod': _sm_audit.get('dod'),
+            'vd':  _sm_audit.get('vd'),
+            'dm':  _sm_audit.get('dm'),
+            'wf':  _sm_audit.get('wf'),
+            'aq':  _sm_audit.get('aq'),
+        }
+
+        return render_template(
+            'image_detail_haiku.html',
+            image_id           = _sm_row[0],
+            thumb_url          = _sm_row[4] or '',
+            asset_name         = _sm_row[6] or _sm_row[7] or '',
+            score              = _sm_row[1],
+            tier               = _sm_row[2] or '—',
+            genre              = _sm_row[3] or '—',
+            percentile         = {},
+            dod                = _sm_dims.get('dod'),
+            vd                 = _sm_dims.get('vd'),
+            dm                 = _sm_dims.get('dm'),
+            wf                 = _sm_dims.get('wf'),
+            aq                 = _sm_dims.get('aq'),
+            takeaway           = _sm_audit.get('takeaway', ''),
+            impression         = _sm_audit.get('impression', ''),
+            strength_name      = _sm_audit.get('strength_name', ''),
+            strength_obs       = _sm_audit.get('strength_obs', ''),
+            next_leap_name     = _sm_audit.get('next_leap_name', ''),
+            next_leap_obs      = _sm_audit.get('next_leap_obs', ''),
+            what_next          = _sm_audit.get('what_next', ''),
+            master_name        = _sm_audit.get('master_name', ''),
+            master_why         = _sm_audit.get('master_why', ''),
+            evals_used         = 1,
+            evals_remaining    = 9,
+            evals_limit        = FREE_IMAGE_LIMIT,
+            milestone_strength = '',
+            is_sample          = True,
+        )
+    except Exception as _sme:
+        app.logger.warning(f'[try_sample] failed: {_sme}')
+        return redirect(url_for('pricing'))
 
 
 @app.route('/try/gallery')
@@ -31956,6 +33310,473 @@ def try_gallery():
         remaining = _remaining,
         limit     = FREE_IMAGE_LIMIT + _bonus,
     )
+
+
+
+@app.route('/try/welcome')
+@login_required
+def try_welcome():
+    # Haiku free-tier dashboard. Variables passed: evals_remaining, images,
+    # milestone_strength, user_hero, league_hero, sherpa_obs, sherpa_nudge,
+    # haiku_percentile. Raw SQL throughout per Rule 10.
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+        return redirect(url_for('dashboard'))
+
+    _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    try:
+        _FIL = FREE_IMAGE_LIMIT
+    except Exception:
+        _FIL = 10
+
+    # Gate count — permanent, never decrements on delete (from log)
+    _gate_count = int(db.session.execute(
+        db.text(
+            "SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"
+        ),
+        {'uid': current_user.id}
+    ).scalar() or 0)
+
+    # Live scored images — for thumbnail strip, state detection
+    _rows = db.session.execute(
+        db.text(
+            "SELECT id, score, tier, genre, thumb_url "
+            "FROM images "
+            "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+            "ORDER BY id DESC"
+        ),
+        {'uid': current_user.id}
+    ).fetchall()
+    _images = [
+        {
+            'id':       _r[0],
+            'score':    float(_r[1]) if _r[1] else None,
+            'tier':     _r[2] or '',
+            'genre':    _r[3] or '',
+            'thumb_url': _r[4] or '',
+        }
+        for _r in _rows
+    ]
+    evals_used      = _gate_count
+    evals_remaining = max(0, (_FIL + _bonus) - _gate_count)
+
+    # milestone_strength — most common strength_name across history (evals 5+)
+    # Zero API cost — DB only. Same pattern as try_result().
+    _milestone_strength = ''
+    if evals_used >= 5:
+        try:
+            import json as _msj
+            from collections import Counter as _Ctr
+            _ms_rows = db.session.execute(
+                db.text(
+                    "SELECT audit_json FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id DESC LIMIT 10"
+                ),
+                {'uid': current_user.id}
+            ).fetchall()
+            _snames = []
+            for _mr in _ms_rows:
+                try:
+                    _sn = _msj.loads(_mr[0] or '{}').get('strength_name', '')
+                    if _sn:
+                        _snames.append(_sn)
+                except Exception:
+                    pass
+            if _snames:
+                _milestone_strength = _Ctr(_snames).most_common(1)[0][0]
+        except Exception as _mse:
+            app.logger.warning(f'[try_welcome] milestone_strength failed: {_mse}')
+
+    # Hero image — random Master/Grandmaster/Legend, score>=8.5, not haiku
+    # Fetches width+height so template can size container to match image aspect ratio.
+    # Raw SQL per Rule 10.
+    _hero = None
+    try:
+        _hero_row = db.session.execute(
+            db.text(
+                "SELECT thumb_url, score, tier, width, height FROM images "
+                "WHERE status = 'scored' AND score IS NOT NULL "
+                "AND is_public = TRUE AND is_flagged = FALSE "
+                "AND tier IN ('Legend','Grandmaster','Master') "
+                "AND score >= 8.5 AND thumb_url IS NOT NULL "
+                "AND (is_haiku_try IS NOT TRUE) "
+                "ORDER BY RANDOM() LIMIT 1"
+            )
+        ).fetchone()
+        if _hero_row:
+            from types import SimpleNamespace as _SN
+            _w = int(_hero_row[3]) if _hero_row[3] else 0
+            _h = int(_hero_row[4]) if _hero_row[4] else 0
+            _hero = _SN(
+                thumb_url   = _hero_row[0],
+                score       = float(_hero_row[1]),
+                tier        = _hero_row[2],
+                img_width   = _w,
+                img_height  = _h,
+                is_portrait = (_h > _w) if (_w and _h) else False,
+            )
+    except Exception as _he:
+        app.logger.warning(f'[try_welcome] hero_image failed: {_he}')
+
+    # ── dashboard_visit_count — increment on every visit (raw SQL, Rule 10)
+    _visit_count = 0
+    try:
+        db.session.execute(
+            db.text("UPDATE users SET dashboard_visit_count = COALESCE(dashboard_visit_count, 0) + 1 WHERE id = :uid"),
+            {'uid': current_user.id}
+        )
+        db.session.commit()
+        _visit_row = db.session.execute(
+            db.text("SELECT dashboard_visit_count FROM users WHERE id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        _visit_count = int(_visit_row[0]) if _visit_row and _visit_row[0] else 1
+    except Exception as _ve:
+        app.logger.warning(f'[try_welcome] visit_count failed: {_ve}')
+        db.session.rollback()
+
+    # ── next_leap_name + prev_score — for 1-upload and 2-upload states
+    _next_leap_name = ''
+    _prev_score     = None
+    _score_trend    = None  # 'up', 'down', 'same', None
+    if evals_used >= 1:
+        try:
+            import json as _nlj
+            _nl_rows = db.session.execute(
+                db.text(
+                    "SELECT audit_json, score FROM images "
+                    "WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored' "
+                    "ORDER BY id DESC LIMIT 2"
+                ),
+                {'uid': current_user.id}
+            ).fetchall()
+            if _nl_rows:
+                # Most recent audit_json → next_leap_name
+                try:
+                    _nld = _nlj.loads(_nl_rows[0][0] or '{}')
+                    _next_leap_name = _nld.get('next_leap_name', '')
+                except Exception:
+                    pass
+                # Trend: compare most recent vs previous score
+                if len(_nl_rows) >= 2:
+                    _cur_s  = float(_nl_rows[0][1]) if _nl_rows[0][1] else None
+                    _prev_s = float(_nl_rows[1][1]) if _nl_rows[1][1] else None
+                    if _cur_s and _prev_s:
+                        _prev_score = _prev_s
+                        _diff = _cur_s - _prev_s
+                        _score_trend = 'up' if _diff > 0.1 else ('down' if _diff < -0.1 else 'same')
+        except Exception as _nle:
+            app.logger.warning(f'[try_welcome] next_leap_name failed: {_nle}')
+
+    # ── gallery_images — 4 high-scoring non-Haiku images for visual strip
+    _gallery_images = []
+    try:
+        _gal_rows = db.session.execute(
+            db.text(
+                "SELECT thumb_url, score, tier FROM images "
+                "WHERE status = 'scored' AND score IS NOT NULL "
+                "AND is_public = TRUE AND is_flagged = FALSE "
+                "AND tier IN ('Legend','Grandmaster','Master','Craftsman') "
+                "AND score >= 7.5 AND thumb_url IS NOT NULL "
+                "AND (is_haiku_try IS NOT TRUE) "
+                "ORDER BY RANDOM() LIMIT 4"
+            )
+        ).fetchall()
+        from types import SimpleNamespace as _GSN
+        _gallery_images = [
+            _GSN(thumb_url=_gr[0], score=float(_gr[1]), tier=_gr[2])
+            for _gr in _gal_rows if _gr[0]
+        ]
+    except Exception as _ge:
+        app.logger.warning(f'[try_welcome] gallery_images failed: {_ge}')
+
+    # SL-181.48: fetch Sherpa cross-image observation from mentor_advice_json
+    # Session 200b: expanded to 8 fields
+    _sherpa_obs        = None
+    _sherpa_nudge      = None
+    _signature_insight = None
+    _gap_insight       = None
+    _next_session      = None
+    _aq_insight        = None
+    _tier_insight      = None
+    _master_insight    = None
+    try:
+        import json as _saj
+        _sadv_row = db.session.execute(
+            db.text("SELECT mentor_advice_json FROM users WHERE id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _sadv_row and _sadv_row[0]:
+            _sadv = _saj.loads(_sadv_row[0])
+            _sherpa_obs         = _sadv.get('observation', '').strip() or None
+            _sherpa_nudge       = _sadv.get('nudge', '').strip() or None
+            _signature_insight  = _sadv.get('signature_insight', '').strip() or None
+            _gap_insight        = _sadv.get('gap_insight', '').strip() or None
+            _next_session       = _sadv.get('next_session', '').strip() or None
+            _aq_insight         = _sadv.get('aq_insight', '').strip() or None
+            _tier_insight       = _sadv.get('tier_insight', '').strip() or None
+            _master_insight     = _sadv.get('master_insight', '').strip() or None
+    except Exception as _sae:
+        app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
+
+    # SL-181.54: Backfill — existing users have old 2-field synthesis.
+    # If they have evals but signature_insight is missing, fire fresh synthesis.
+    # Fires once per user on first dashboard load after 181.54 deploy.
+    try:
+        if evals_used > 0 and _signature_insight is None:
+            import threading as _bft
+            _bft_uid = current_user.id
+            def _run_backfill():
+                with app.app_context():
+                    _generate_haiku_sherpa(_bft_uid)
+            _bft.Thread(target=_run_backfill, daemon=True).start()
+            app.logger.info(f'[try_welcome] 181.54 backfill triggered uid={current_user.id}')
+    except Exception as _bfe:
+        app.logger.warning(f'[try_welcome] backfill failed: {_bfe}')
+
+    # SL-181.48: user's own best image as hero (highest score, has thumb)
+    # Falls back to League hero if no user images exist
+    _user_hero = None
+    try:
+        _uh_row = db.session.execute(db.text("""
+            SELECT id, thumb_url, score, tier, genre, width, height
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try IS TRUE
+              AND status = 'scored'
+              AND thumb_url IS NOT NULL
+              AND score IS NOT NULL
+            ORDER BY score DESC
+            LIMIT 1
+        """), {'uid': current_user.id}).fetchone()
+        if _uh_row:
+            from types import SimpleNamespace as _UHSN
+            _uw = int(_uh_row[5]) if _uh_row[5] else 0
+            _uh = int(_uh_row[6]) if _uh_row[6] else 0
+            _user_hero = _UHSN(
+                id        = _uh_row[0],
+                thumb_url = _uh_row[1],
+                score     = float(_uh_row[2]),
+                tier      = _uh_row[3],
+                genre     = _uh_row[4] or '',
+                img_width  = _uw,
+                img_height = _uh,
+                is_portrait = (_uh > _uw) if (_uw and _uh) else False,
+            )
+    except Exception as _uhe:
+        app.logger.warning(f'[try_welcome] user_hero failed: {_uhe}')
+
+    # League hero — Grandmaster/Legend only, for sidebar standard panel
+    _league_hero = None
+    try:
+        _lh_row = db.session.execute(db.text("""
+            SELECT i.thumb_url, i.score, i.tier, i.genre,
+                   u.full_name, i.id
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND i.score IS NOT NULL
+              AND i.is_public = TRUE
+              AND i.is_flagged = FALSE
+              AND i.tier IN ('Legend','Grandmaster','Master')
+              AND i.score >= 8.5
+              AND i.thumb_url IS NOT NULL
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.user_id != :uid
+            ORDER BY i.score DESC, RANDOM() LIMIT 1
+        """), {'uid': current_user.id}).fetchone()
+        if _lh_row:
+            from types import SimpleNamespace as _LHSN
+            _lh_full_name = (_lh_row[4] or '').strip()
+            if _lh_full_name:
+                _parts = _lh_full_name.split()
+                _lh_display = (_parts[0] + ' ' + _parts[-1][0] + '.') if len(_parts) > 1 else _parts[0]
+            else:
+                _lh_display = 'Shutter League'
+            _league_hero = _LHSN(
+                thumb_url    = _lh_row[0],
+                score        = float(_lh_row[1]),
+                tier         = _lh_row[2],
+                genre        = _lh_row[3] or '',
+                photographer = _lh_display,
+                id           = _lh_row[5],
+            )
+    except Exception as _lhe:
+        app.logger.warning(f'[try_welcome] league_hero failed: {_lhe}')
+
+    # ── haiku_percentile — how this user ranks among all Haiku try users by best score
+    # Uses same pattern as platform percentile in scored route (line ~6713).
+    # Pool: all users with at least 1 scored is_haiku_try image.
+    # Percentile = % of that pool this user scores better than (higher = better).
+    # Raw SQL per Rule 10. Falls back to None — template hides block if missing.
+    _haiku_percentile = None
+    try:
+        if _user_hero and _user_hero.score:
+            _pct_row = db.session.execute(db.text("""
+                SELECT COUNT(*) AS total,
+                       COUNT(CASE WHEN best_score < :my_score THEN 1 END) AS below
+                FROM (
+                    SELECT user_id, MAX(score) AS best_score
+                    FROM images
+                    WHERE is_haiku_try IS TRUE
+                      AND status = 'scored'
+                      AND score IS NOT NULL
+                    GROUP BY user_id
+                ) t
+            """), {'my_score': _user_hero.score}).fetchone()
+            if _pct_row and _pct_row[0] and _pct_row[0] > 1:
+                _haiku_percentile = max(1, round((_pct_row[1] / _pct_row[0]) * 100))
+    except Exception as _pce:
+        app.logger.warning(f'[try_welcome] haiku_percentile failed: {_pce}')
+
+    # ── Additional dashboard variables — computed from DB ────────────────
+    # score_history: list of floats chronological for sparkline
+    # days_since_last_eval: for "since last visit" bar
+    # signature_strength / persistent_gap: most common strength/gap names
+    # dimensions_avg: avg score per dim across all haiku evals
+    _score_history     = []
+    _days_since        = None
+    _signature_name    = _milestone_strength or ''
+    _persistent_gap    = _next_leap_name or ''
+    _dimensions_avg    = {}
+    _best_score_val    = 0.0
+    try:
+        import json as _dvj
+        from datetime import date as _dvd
+        _dv_rows = db.session.execute(db.text("""
+            SELECT score, audit_json, scored_at,
+                   dod_score, disruption_score, dm_score,
+                   wonder_score, aq_score
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try = TRUE
+              AND status = 'scored'
+              AND score IS NOT NULL
+            ORDER BY id ASC
+        """), {'uid': current_user.id}).fetchall()
+
+        if _dv_rows:
+            _score_history = [float(r[0]) for r in _dv_rows]
+            _best_score_val = max(_score_history)
+            # Days since last eval — handle datetime, date, and string types
+            _last_scored = _dv_rows[-1][2]
+            if _last_scored:
+                try:
+                    from datetime import datetime as _dtt, date as _dtd
+                    if isinstance(_last_scored, _dtt):
+                        _last_date = _last_scored.date()
+                    elif isinstance(_last_scored, _dtd):
+                        _last_date = _last_scored
+                    else:
+                        # String fallback — try parsing
+                        _last_date = _dtt.strptime(str(_last_scored)[:10], '%Y-%m-%d').date()
+                    _days_since = (_dvd.today() - _last_date).days
+                except Exception as _dse:
+                    app.logger.warning(f'[try_welcome] days_since parse failed: {_dse}')
+                    _days_since = None
+
+            # Dimension averages from dim score columns + audit_json fallback
+            _dod_l, _vd_l, _dm_l, _wf_l, _aq_l = [], [], [], [], []
+            for _dvr in _dv_rows:
+                _dva = _dvj.loads(_dvr[1] or '{}')
+                _dod_l.append(float(_dvr[3] or _dva.get('dod') or _score_history[0]))
+                _vd_l.append(float(_dvr[4] or _dva.get('vd') or _score_history[0]))
+                _dm_l.append(float(_dvr[5] or _dva.get('dm') or _score_history[0]))
+                _wf_l.append(float(_dvr[6] or _dva.get('wf') or _score_history[0]))
+                _aq_l.append(float(_dvr[7] or _dva.get('aq') or _score_history[0]))
+
+            def _avg(lst): return round(sum(lst)/len(lst), 1) if lst else 0.0
+            def _trend(lst):
+                if len(lst) < 2: return 'steady'
+                slope = lst[-1] - lst[0]
+                return 'up' if slope > 0.3 else ('down' if slope < -0.3 else 'steady')
+
+            _dimensions_avg = {
+                'dod': {'score': _avg(_dod_l), 'trend': _trend(_dod_l), 'vals': _dod_l, 'name': 'Depth of Difficulty'},
+                'vd':  {'score': _avg(_vd_l),  'trend': _trend(_vd_l),  'vals': _vd_l,  'name': 'Visual Disruption'},
+                'dm':  {'score': _avg(_dm_l),  'trend': _trend(_dm_l),  'vals': _dm_l,  'name': 'The Decisive Moment'},
+                'wf':  {'score': _avg(_wf_l),  'trend': _trend(_wf_l),  'vals': _wf_l,  'name': 'Wonder Factor'},
+                'aq':  {'score': _avg(_aq_l),  'trend': _trend(_aq_l),  'vals': _aq_l,  'name': 'Affective Quotient'},
+            }
+            # Sort by score desc for display
+            _dims_sorted = sorted(_dimensions_avg.values(), key=lambda d: d['score'], reverse=True)
+            _dims_sorted[0]['tag'] = 'strongest'
+            _dims_sorted[-1]['tag'] = 'leap'
+            for _d in _dims_sorted[1:-1]:
+                _d['tag'] = 'mid'
+
+    except Exception as _dve:
+        app.logger.warning(f'[try_welcome] dimension vars failed: {_dve}')
+
+    # Tier progression data
+    _TIER_BOUNDS = {
+        'Rookie': (0, 4), 'Shooter': (4, 5), 'Contender': (5, 6),
+        'Craftsman': (6, 7), 'Maverick': (7, 8), 'Master': (8, 9),
+        'Grandmaster': (9, 9.7), 'Legend': (9.7, 10)
+    }
+    _TIER_ORDER = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
+    _current_tier = (_user_hero.tier if _user_hero else 'Rookie') or 'Rookie'
+    _current_score = float(_user_hero.score if _user_hero else 0)
+    _current_tier_idx = _TIER_ORDER.index(_current_tier) if _current_tier in _TIER_ORDER else 0
+    _next_tier = _TIER_ORDER[_current_tier_idx + 1] if _current_tier_idx < len(_TIER_ORDER) - 1 else 'Legend'
+    _next_tier_floor = _TIER_BOUNDS.get(_next_tier, (10, 10))[0]
+    _gap_to_next = round(max(0, _next_tier_floor - _current_score), 2)
+    _prev_tier = _TIER_ORDER[_current_tier_idx - 1] if _current_tier_idx > 0 else None
+    _tier_display = {
+        'prev': _prev_tier,
+        'current': _current_tier,
+        'current_score': _current_score,
+        'current_range': f"{_TIER_BOUNDS.get(_current_tier, (0,0))[0]}–{_TIER_BOUNDS.get(_current_tier, (0,0))[1]}",
+        'next': _next_tier,
+        'next_floor': _next_tier_floor,
+        'gap': _gap_to_next,
+    }
+
+    # GM copy pool — rotates per league_hero.id so each image shows a different line
+    _gm_copy_pool = [
+        "At every festival, a thousand photographers press the shutter at the same moment. One image stands apart — because that photographer saw differently before they raised the camera.",
+        "The photograph that earns a Grandmaster standing is not the most expensive camera in the room. It is the most committed eye.",
+        "Difficulty is not what makes an image hard to take. It is what makes it impossible to ignore.",
+        "The standard does not ask for the perfect moment. It asks whether you were already moving toward it.",
+        "Every tier boundary is crossed the same way — one image that cost the photographer something real.",
+        "The eye that waits for the scene to arrange itself produces good photographs. The eye that moves into the scene produces great ones.",
+        "What separates an image at 7.0 from one at 9.0 is rarely the camera, the light, or the subject. It is the decision made three seconds before the shutter.",
+    ]
+
+    resp = make_response(render_template(
+        'dashboard_haiku.html',
+        evals_used         = evals_used,
+        evals_remaining    = evals_remaining,
+        limit              = _FIL + _bonus,
+        images             = _images,
+        milestone_strength = _milestone_strength,
+        hero_image         = _hero,
+        user_hero          = _user_hero,
+        league_hero        = _league_hero,
+        league_hero_copy   = _gm_copy_pool[(_league_hero.id if _league_hero and getattr(_league_hero, 'id', None) else 0) % len(_gm_copy_pool)],
+        sherpa_obs         = _sherpa_obs,
+        sherpa_nudge       = _sherpa_nudge,
+        signature_insight  = _signature_insight,
+        gap_insight        = _gap_insight,
+        next_session       = _next_session,
+        aq_insight         = _aq_insight,
+        tier_insight       = _tier_insight,
+        master_insight     = _master_insight,
+        visit_count        = _visit_count,
+        next_leap_name     = _next_leap_name,
+        prev_score         = _prev_score,
+        score_trend        = _score_trend,
+        gallery_images     = _gallery_images,
+        haiku_percentile   = _haiku_percentile,
+        score_history      = _score_history,
+        days_since         = _days_since,
+        dimensions_avg     = _dimensions_avg,
+        dims_sorted        = _dims_sorted if '_dims_sorted' in dir() else [],
+        tier_display       = _tier_display,
+        best_score_val     = _best_score_val,
+    ))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp
 
 
 @app.route('/try')
@@ -32329,7 +34150,7 @@ def try_result(image_id):
         db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE AND status = 'scored'"),
         {'uid': current_user.id}
     ).scalar() or 0)
-    evals_used      = _display_count
+    evals_used      = _gate_count
     evals_remaining = max(0, (FREE_IMAGE_LIMIT + _bonus) - _gate_count)
 
     # 181.15: milestone_strength — most common strength_name across history
@@ -32386,6 +34207,7 @@ def try_result(image_id):
         master_why         = audit.get('master_why', ''),
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
+        evals_limit        = FREE_IMAGE_LIMIT,
         milestone_strength = _milestone_strength,
     )
 
