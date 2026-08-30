@@ -34095,6 +34095,17 @@ def try_result(image_id):
         flash('Your evaluation is still being processed. Please wait a moment.', 'info')
         return redirect(url_for('try_page'))
 
+    # If this image was originally a Haiku try but has since been Sonnet-rescored,
+    # redirect to the full scorecard — the Haiku template can't display Sonnet fields.
+    # Detect by checking audit_json source: if not haiku_try, it has full Sonnet data.
+    try:
+        import json as _tr_j
+        _tr_audit = _tr_j.loads(img._audit_json or '{}')
+        if _tr_audit.get('source') != 'haiku_try' and _tr_audit.get('byline_1_body'):
+            return redirect(url_for('image_detail', image_id=image_id))
+    except Exception:
+        pass
+
     percentile_data = {}
     if img.score and img.status == 'scored':
         try:
