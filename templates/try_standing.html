@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.3-staging (Session 201) — bullet splitting fixed (▪ and ■), edit suggestions split per bullet, paragraph spacing, next_shot title extracted, trend query uses COALESCE(scored_at,created_at). #}
+{# SL-VERSION: 1.4-main (Session 204, 2026-08-31 — linkify_search filter applied to takeaway and what_sl_saw body content (Search: term. now links to Google Images). JS bold pass on ALL-CAPS LABEL: patterns at paragraph start. RETAINS 1.3.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -424,7 +424,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
   <div id="sl-ta">
     <div class="sl-takeaway">
       {% for item in takeaway_items %}
-      <div class="sl-ta-item"><div class="sl-body">{{ item | safe }}</div></div>
+      <div class="sl-ta-item"><div class="sl-body">{{ item | linkify_search | safe }}</div></div>
       {% endfor %}
     </div>
   </div>
@@ -440,7 +440,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     {% for item in what_sl_saw %}
     <div class="sl-saw-item">
       {% if item.head %}<div class="sl-saw-head">{{ item.head }}</div>{% endif %}
-      <div class="sl-body">{{ item.body | safe }}</div>
+      <div class="sl-body">{{ item.body | linkify_search | safe }}</div>
     </div>
     {% endfor %}
   </div>
@@ -667,6 +667,18 @@ document.addEventListener('click', function(e) {
     drawer.classList.remove('open');
   }
 });
+
+// Bold ALL-CAPS LABEL: patterns at start of paragraphs in scorecard body text
+// e.g. "YOUR NEXT BODY OF WORK SEQUENCE:" → <strong>YOUR NEXT BODY OF WORK SEQUENCE:</strong>
+(function() {
+  var bodyEls = document.querySelectorAll('.sl-body');
+  bodyEls.forEach(function(el) {
+    el.innerHTML = el.innerHTML.replace(
+      /^([A-Z][A-Z\s\d]{4,60}:)/gm,
+      '<strong>$1</strong>'
+    );
+  });
+})();
 </script>
 </body>
 </html>
