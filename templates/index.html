@@ -1,4 +1,4 @@
-{# SL-VERSION: 182.32-main (Session 204, 2026-08-31 — progress-verb gold hardcoded #C8A84B (was var(--gold) not resolving on dark bg), AEA strip stacked vertically with date below divider line (was side-by-side causing text wrap). RETAINS 182.31.) #}
+{# SL-VERSION: 182.33-main (Session 204, 2026-08-31 — gallery title: "Recently evaluated from the League." RETAINS 182.32.) #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -353,7 +353,7 @@ button{font:inherit;cursor:pointer}
 <!-- Band C: Gallery -->
 <div class="s2-band-c">
   <div class="gallery-kicker">League of Photographers</div>
-  <div class="gallery-h">Photographers building their record.</div>
+  <div class="gallery-h">Recently evaluated from the League.</div>
   <div class="gallery-sub">Every evaluation calibrated against the same standard. <a href="{{ url_for('league_haiku') }}">View the full League →</a></div>
   <div class="photos">
     {% set ns = namespace(count=0) %}
