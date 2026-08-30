@@ -1,4 +1,4 @@
-# SL-VERSION: 181.73-staging (Session 201, 2026-08-28 — gallery query restored to original (no is_haiku_try filter). try_standing: @login_required removed (public page), is_public+is_haiku_try filters added to query, haiku_try source guard added. league_haiku: @login_required removed. Post-login redirect: Haiku→try_welcome, Paid→dashboard. RETAINS 181.72.)
+# SL-VERSION: 181.74-staging (Session 204, 2026-08-31 — two fixes from Session 203 handoff. (1) try_page render now passes evals_limit=FREE_IMAGE_LIMIT to upload.html — was missing, template fallback {{ evals_limit or 10 }} was masking the gap. (2) try_upload now reads asset_name from request.form.get('asset_name') before falling back to filename — fixes genre-mismatch modal bypass that saved filename as title. RETAINS 181.73.)
 
 import os
 import re
@@ -33253,6 +33253,7 @@ def try_sample():
             master_why         = _sm_audit.get('master_why', ''),
             evals_used         = 1,
             evals_remaining    = 9,
+            evals_limit        = FREE_IMAGE_LIMIT,
             milestone_strength = '',
             is_sample          = True,
         )
@@ -33811,6 +33812,7 @@ def try_page():
         'upload.html',           # reuse main upload template — is_trial=True gates differences
         is_trial      = True,
         evals_used    = evals_used,
+        evals_limit   = FREE_IMAGE_LIMIT,   # SL-203: was missing; template uses {{ evals_limit or 10 }}
         genres        = GENRE_IDS,
         genre_choices = GENRE_CHOICES,
         subgenre_map  = SUBGENRE_MAP,
@@ -34020,7 +34022,7 @@ def try_upload():
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
-            asset_name        = filename.rsplit('.', 1)[0][:120],
+            asset_name        = (request.form.get('asset_name') or '').strip()[:120] or filename.rsplit('.', 1)[0][:120],  # SL-203: read title from form, fall back to filename
             photographer_name = current_user.full_name or current_user.username,
             genre             = genre,
             width             = w,
@@ -34093,6 +34095,17 @@ def try_result(image_id):
     if img.status == 'processing':
         flash('Your evaluation is still being processed. Please wait a moment.', 'info')
         return redirect(url_for('try_page'))
+
+    # If this image was originally a Haiku try but has since been Sonnet-rescored,
+    # redirect to the full scorecard — the Haiku template can't display Sonnet fields.
+    # Detect by checking audit_json source: if not haiku_try, it has full Sonnet data.
+    try:
+        import json as _tr_j
+        _tr_audit = _tr_j.loads(img._audit_json or '{}')
+        if _tr_audit.get('source') != 'haiku_try' and _tr_audit.get('byline_1_body'):
+            return redirect(url_for('image_detail', image_id=image_id))
+    except Exception:
+        pass
 
     percentile_data = {}
     if img.score and img.status == 'scored':
@@ -34206,6 +34219,7 @@ def try_result(image_id):
         master_why         = audit.get('master_why', ''),
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
+        evals_limit        = FREE_IMAGE_LIMIT,
         milestone_strength = _milestone_strength,
     )
 
