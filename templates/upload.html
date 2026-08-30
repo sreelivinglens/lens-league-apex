@@ -1,9 +1,4 @@
-{# SL-VERSION: 175.14 (Session 188, 2026-08-17 — FIX: browser Back from scorecard replayed scoring animation (bfcache restore). Added pageshow.persisted guard — redirects to /dashboard immediately on bfcache restore, never replays scoring overlay. RETAINS 175.13.) #}
-{# SL-VERSION: 175.13 (Session 188, 2026-08-17 — Advisory red line also added to location session pill (shown on 2nd+ uploads in same session). RETAINS 175.12.) #}
-{# SL-VERSION: 175.12 (Session 188, 2026-08-17 — Location field: label changed from "Current Location" to "Where was this photograph taken?"; helper text added clarifying scorecard-only use; red advisory line added directing users to Profile → Address for city advisory. RETAINS 175.11.) #}
-{# SL-VERSION: 175.11 (Session 186, 2026-08-15 — FIX: dispute form hardcoded colours replaced with CSS variables: disputeLink color:#7a0000 → var(--text-danger); disputeReason textarea border:#e53935 → var(--border-danger), font-size 14px → 16px, color:#1a1a18 → var(--text-primary), bg → var(--surface-2); disputeSubmitBtn bg:#e53935 → var(--bg-danger), color:#fff → var(--text-danger), border added, font-size 14px → 16px; JS borderColor:#e53935 → var(--border-danger). All dispute form elements now 16px, semantic variables, WCAG AA compliant. RETAINS 175.10.) #}
-{# SL-VERSION: 175.10 (Session 186, 2026-08-15 — Warning/error message colour fixes: (1) .file-size-warning: gold-on-amber → --text-warning on --bg-warning, 1.5px border, passes WCAG AA; (2) .file-error: #7a0000 on #fdecea → --text-danger on --bg-danger, 1.5px border; (3) RAW info box: gold-tinted → --text-primary on --surface-1, --border-strong; (4) disputeBox: same as file-error. All 16px+. 70yr/mobile/iPad/KYC compliant. RETAINS 175.9.) #}
-{# SL-VERSION: 175.9 (Session 184, 2026-08-14 — FIX: flagged status JS now uses r.message from score-status API instead of hardcoded generic text. Watermark, explicit, AI-generated each show correct specific message. My Gallery link retained. RETAINS 175.8.) Previous: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
+{# SL-VERSION: 175.8 (genre option 2: Evaluate as per my selected genre) (genre mismatch: 3 options — accept suggestion | keep selection | change genre) (flagged message: no AI accusation, says heavily edited + admin review) (403 quota handling added to JS) (flagged: no auto-redirect, persistent message + My Gallery link) (subgenre-map single-quoted + JSON.parse wrapped in try/catch + backToDashboardWrap hidden) #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
 
@@ -123,14 +118,14 @@
 
   /* size warning — soft, amber, not red */
   .file-size-warning {
-    display: none; margin-top: 10px; padding: 14px 16px;
-    background: var(--bg-warning); border: 1.5px solid var(--border-warning);
-    border-radius: var(--radius-sm); color: var(--text-warning); font-size: 16px; line-height: 1.6;
+    display: none; margin-top: 10px; padding: 12px 16px;
+    background: var(--amber-dim); border: 1px solid var(--amber);
+    border-radius: var(--radius-sm); color: #F5C518; font-size: 16px; line-height: 1.6;
   }
   .file-error {
-    display: none; margin-top: 10px; padding: 14px 16px;
-    background: var(--bg-danger); border: 1.5px solid var(--border-danger);
-    border-radius: var(--radius-sm); color: var(--text-danger); font-size: 16px; line-height: 1.6;
+    display: none; margin-top: 10px; padding: 12px 16px;
+    background: #fdecea; border: 1px solid #e53935;
+    border-radius: var(--radius-sm); color: #7a0000; font-size: 16px; line-height: 1.6;
   }
 
   /* ── PREFLIGHT MODAL ── similar-image warning + genre suggestion ── */
@@ -582,8 +577,8 @@
       </div>
 
       <!-- Soft size warning — amber, not a block -->
-      <div style="margin-top:10px; padding:14px 16px; background:var(--surface-1); border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); font-size:16px; color:var(--text-primary); line-height:1.6;">
-        📂 <strong>Keep your original RAW file.</strong>
+      <div style="margin-top:10px; padding:10px 14px; background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark); border-radius:var(--radius-sm); font-size:16px; color:var(--text-muted); line-height:1.6;">
+        📂 <strong style="color:var(--text-primary);">Keep your original RAW file.</strong>
         Highly evaluated images may be selected for RAW verification — you may need to submit the original file from your camera.
       </div>
       <div class="file-size-warning" id="fileSizeWarning">
@@ -594,11 +589,11 @@
       <div class="file-error" id="fileError"></div>
 
       <!-- NSFW reject dispute — only shown when the server returns a dispute_id -->
-      <div id="disputeBox" style="display:none; margin-top:8px; padding:14px 16px; background:var(--bg-danger); border:1.5px solid var(--border-danger); border-radius:var(--radius-sm); font-size:16px; color:var(--text-danger); line-height:1.6;">
-        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:var(--text-danger); text-decoration:underline; font-weight:700;">Tell us →</a>
+      <div id="disputeBox" style="display:none; margin-top:8px; padding:12px 16px; background:#fdecea; border:1px solid #e53935; border-radius:var(--radius-sm); font-size:15px; color:#7a0000; line-height:1.6;">
+        <span id="disputePrompt">Think this is a mistake? <a href="#" id="disputeLink" style="color:#7a0000; text-decoration:underline; font-weight:700;">Tell us →</a>
           <div id="disputeReasonWrap" style="display:none; margin-top:10px;">
-            <textarea id="disputeReason" placeholder="Tell us why you think this was flagged incorrectly (required)" maxlength="500" style="width:100%; min-height:80px; padding:10px 12px; border:1.5px solid var(--border-danger); border-radius:6px; font-size:16px; font-family:inherit; color:var(--text-primary); background:var(--surface-2); resize:vertical; box-sizing:border-box;"></textarea>
-            <button id="disputeSubmitBtn" style="margin-top:8px; padding:10px 18px; background:var(--bg-danger); color:var(--text-danger); border:1.5px solid var(--border-danger); border-radius:6px; font-size:16px; font-weight:700; cursor:pointer;">Submit dispute</button>
+            <textarea id="disputeReason" placeholder="Tell us why you think this was flagged incorrectly (required)" maxlength="500" style="width:100%; min-height:80px; padding:8px 10px; border:1px solid #e53935; border-radius:6px; font-size:14px; font-family:inherit; color:#1a1a18; resize:vertical; box-sizing:border-box;"></textarea>
+            <button id="disputeSubmitBtn" style="margin-top:8px; padding:8px 18px; background:#e53935; color:#fff; border:none; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer;">Submit dispute</button>
           </div>
         </span>
         <span id="disputeConfirm" style="display:none;">✓ Sent to our team — we'll review and follow up by email.</span>
@@ -664,15 +659,12 @@
 
 
       <div class="form-group" id="location-field-wrap">
-        <label for="location">Where was this photograph taken?</label>
+        <label for="location">Current Location</label>
         <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180" value="{{ last_location|default('') }}" required>
-        <div style="font-size:16px; color:var(--text-muted); margin-top:4px; line-height:1.6;">This records where this photograph was made — for your scorecard only.<br>
-        <span style="color:#c0392b;">To get your current city advisory, update your location in Profile → Address.</span></div>
       </div>
-      <div id="location-session-note" style="display:none; margin-bottom:16px; padding:10px 14px; background:var(--surface-2, #f5f5f3); border-radius:8px; font-size:16px; color:var(--text-secondary);">
+      <div id="location-session-note" style="display:none; margin-bottom:16px; padding:10px 14px; background:var(--surface-2, #f5f5f3); border-radius:8px; font-size:14px; color:var(--text-secondary);">
         📍 <span id="location-session-city"></span> &nbsp;·&nbsp; <a href="{{ url_for('profile') }}" style="color:var(--text-primary); text-decoration:underline; text-underline-offset:2px;">Change in Profile</a>
         <input type="hidden" id="location-hidden" name="location">
-        <div style="margin-top:6px; font-size:16px; color:#c0392b;">To get your current city advisory, update your location in Profile → Address.</div>
       </div>
 
       <div class="form-group">
@@ -951,7 +943,7 @@
     submitBtn.onclick = function() {
       var reason = reasonInput.value.trim();
       if (!reason) {
-        reasonInput.style.borderColor = 'var(--border-danger)';
+        reasonInput.style.borderColor = '#e53935';
         reasonInput.placeholder = 'Please tell us why before submitting';
         reasonInput.focus();
         return;
@@ -1548,8 +1540,8 @@
         if (r.status === 'flagged') {
           notifyComplete();
           document.getElementById('scoringOverlay').classList.remove('active');
-          /* Use server message — set specifically per rejection type in score-status endpoint */
-          var _flagMsg = r.message || 'Your image could not be accepted for evaluation. Please contact support@shutterleague.com if you believe this is an error.';
+          /* Override server message — never accuse photographer of using AI */
+          var _flagMsg = 'Your image has been flagged for admin review before it can be evaluated.\n\nThis can happen with heavily edited or stylised photographs. Our team will review it shortly.\n\nYou can view the status and raise a query in My Gallery.';
           showError(_flagMsg);
           /* Show My Gallery link below error — do NOT auto-redirect */
           var _galleryLink = document.createElement('a');
@@ -1870,18 +1862,6 @@
     }
   });
   obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
-
-  // ── SL-175.14: Back-button / bfcache guard ──────────────────────────────
-  // When a user presses Back from a scorecard (/image/<id>), the browser may
-  // restore this page from bfcache with the scoring overlay still active and
-  // the poll JS resuming. Detect bfcache restore via pageshow.persisted and
-  // redirect immediately to dashboard — never replay scoring animation.
-  window.addEventListener('pageshow', function(e) {
-    if (e.persisted) {
-      // Page restored from bfcache — scoring already done, redirect immediately
-      window.location.replace('/dashboard');
-    }
-  });
 
 })();
 
