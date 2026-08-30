@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.2-staging (Session 201 — audit fixes: line-height 1.12/1.15→1.5 on display elements. RETAINS 1.1.) — league_haiku: Haiku world League page. Two-column desktop. Left: declaration / spotlight. Right: league + masters grids. Mobile bottom nav. Standalone. #}
+{# SL-VERSION: 1.3-main (Session 204, 2026-08-31 — render() called on page load so all 24 images are available with pagination immediately, not just the first 8 from the Jinja slice. RETAINS 1.2.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -612,6 +612,10 @@ document.addEventListener('click', function(e) {
     drawer.classList.remove('open');
   }
 });
+
+// Initialise grid from JS data on load — replaces static Jinja [:8] slice
+// so all 24 images are available with pagination from the first render.
+render();
 </script>
 </body>
 </html>
