@@ -1,4 +1,9 @@
-{# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
+{# SL-VERSION: 181.57-staging (Session 201 — base.html: (1) "Making Images Matter" byline added under logo. (2) Haiku nav "League of Photographers" → league_haiku (was standings_public). Desktop + mobile menu. RETAINS 181.56.) (Session 200d, 2026-08-27 — SIDENAV GATE: _show_sidenav now requires is_subscribed. Haiku free users no longer see paid sidebar (Dashboard/My Gallery/Improve/etc) on profile and other pages. RETAINS 181.51.) #}
+{# SL-VERSION: 181.48-staging (Session 191, 2026-08-24 — NAV: Profile added to Haiku desktop nav and mobile hamburger menu. RETAINS 181.47.) #}
+{# SL-VERSION: 181.47-staging (Session 191, 2026-08-23 — NAV OVERHAUL: (1) Logo now auth-aware: Haiku→try_welcome, Paid→dashboard, Logged-out→index. (2) Haiku desktop nav reordered: Home / My evaluations / Upload / Pricing / League of Photographers / Log out. Removed: How it works, Science, Programmes, avatar. (3) Haiku mobile menu same order. RETAINS 181.46.) #}
+{# SL-VERSION: 181.46-staging (Session 191, 2026-08-23 — HAIKU NAV ACTIVE STATE: active link now white bold instead of gold for Haiku users. Gold reserved for scores/badges only. RETAINS 181.45.) #}
+{# SL-VERSION: 181.45-staging (Session 191, 2026-08-23 — HAIKU NAV COLOUR: nav background changed to #1A2744 (dark navy) for Haiku users via nav-haiku class. Matches dashboard_haiku.html nav colour. Paid users and logged-out retain existing rgba(26,24,20,0.94) dark brown. RETAINS 181.4.) #}
+{# SL-VERSION: 181.4 (Session 190, 2026-08-19 — AUTH-AWARE NAV: (1) Authenticated non-paid (Haiku) users now see discovery nav: How it works / Science / Programmes / Pricing / League of Photographers / My evaluations / Log out — instead of paid nav with Dashboard/Improve/etc. (2) Logged-out nav: Programmes link added, AEA label cleaned up. (3) Mobile nav: same Haiku branch added. RETAINS 181.3.) Previous: {# SL-VERSION: 181.3 (back-to-top button was bottom:28px z-index:999, overlapping the bottom nav's More control on phones and iPad portrait — now lifted above the nav at <=899px; iPad landscape and desktop unchanged since the nav is hidden >=900px. Cookie banner raised to z-index 1000 so the two do not contest the same corner.) Previous: 181.2 (cookie banner was fixed bottom:0 z-index:900 under the bottom nav (z-index:998, 62px tall) with flex-wrap:wrap — Accept and the close button wrapped onto a row hidden behind the nav, so the banner could not be dismissed on any phone. Now lifted above the nav, nowrap, 44px targets.) Previous: 181.1 (Session 181, 2026-08-13 — bottom-nav More drawer was position:fixed/top:68px with no mobile override, so on a phone it opened at the top of the screen while the button sat at the bottom; now anchored above the button on <=899px. touch-action:manipulation added to nav controls — it did not appear anywhere in this file. .sl-bottom-nav top:auto !important untouched.) Previous: 175.10 (sl-bottom-nav padding-top 10→12px — labels fully visible; session 175, 2026-08-07) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -572,6 +577,19 @@ nav {
   position: sticky;
   top: 0;
   z-index: 200;
+}
+/* SL-181.45 — Haiku nav: dark navy to match dashboard_haiku.html */
+nav.nav-haiku {
+  background: #1A2744;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Haiku active nav link — white bold, not gold (gold reserved for scores/badges) */
+nav.nav-haiku .nav-links a.nav-active {
+  color: #ffffff !important;
+  background: rgba(255,255,255,0.12);
+  border-bottom: 2px solid rgba(255,255,255,0.6);
 }
 .nav-brand {
   font-family: var(--font-mono);
@@ -1280,10 +1298,13 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 /* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
+/* SL-194: footer colours updated to approved design system — cream page, muted navy text.
+   Replaces green #0F2A22 which was not in the approved five-room design. */
 footer {
-  background: #0F2A22;
+  background: #0F1F3D;
   padding: 3rem var(--page-pad) 1.75rem;
   font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border-top: 0.5px solid rgba(255,255,255,0.08);
 }
 .footer-top {
   display: grid;
@@ -1294,40 +1315,40 @@ footer {
 .footer-brand-col {}
 .footer-brand-name {
   font-size: 13px; font-weight: 700;
-  color: #F6F2E9; letter-spacing: 1.5px;
+  color: #ffffff; letter-spacing: 1.5px;
   margin-bottom: 6px; text-transform: uppercase;
 }
 .footer-brand-tag {
-  font-size: 12px; color: #6A9A7A;
+  font-size: 12px; color: rgba(255,255,255,0.45);
   line-height: 1.6; max-width: 180px;
 }
 .footer-col {}
 .footer-col-title {
   font-size: 10px; font-weight: 700;
-  color: #D6A428; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); text-transform: uppercase;
   letter-spacing: 2px; margin-bottom: 14px;
 }
 .footer-col-link {
   display: block; font-size: 13px;
-  color: #6A9A7A; text-decoration: none;
+  color: rgba(255,255,255,0.55); text-decoration: none;
   margin-bottom: 8px; transition: color 0.2s;
 }
-.footer-col-link:hover { color: #F6F2E9; }
-.footer-col-link.kyc { color: #9ABAA0; }
-.footer-col-link.kyc:hover { color: #F6F2E9; }
+.footer-col-link:hover { color: #ffffff; }
+.footer-col-link.kyc { color: rgba(255,255,255,0.35); }
+.footer-col-link.kyc:hover { color: #ffffff; }
 /* Keep .footer-links for any legacy references */
-.footer-links a { color: #6A9A7A; text-decoration: none; font-size: 13px; }
+.footer-links a { color: rgba(255,255,255,0.45); text-decoration: none; font-size: 13px; }
 .footer-bottom {
-  border-top: 1px solid #1E3A2A;
+  border-top: 0.5px solid rgba(255,255,255,0.08);
   padding-top: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.footer-copy { font-size: 12px; color: #3A6A4A; }
+.footer-copy { font-size: 12px; color: rgba(255,255,255,0.30); }
 .footer-social { display: flex; gap: 20px; }
-.footer-social a { font-size: 12px; color: #3A6A4A; text-decoration: none; }
-.footer-social a:hover { color: #D6A428; }
+.footer-social a { font-size: 12px; color: rgba(255,255,255,0.40); text-decoration: none; }
+.footer-social a:hover { color: #C8A84B; }
 /* legacy — keep for mobile override */
 .footer-bottom-legacy {
   padding: 14px var(--page-pad);
@@ -1369,6 +1390,8 @@ footer {
 @media (max-width: 900px) {
   .nav-links { display: none; }
   .nav-toggle { display: flex; }
+  /* SL-194: Haiku users use bottom nav on mobile — hamburger not needed */
+  nav.nav-haiku .nav-toggle { display: none; }
 
   main { padding: 24px var(--page-pad); }
 
@@ -1667,13 +1690,16 @@ img {
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
-<nav class="sl-top-nav">
-  <a href="{{ url_for('index') }}" class="nav-brand" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;">
+<nav class="sl-top-nav{% if current_user.is_authenticated and not current_user.is_subscribed and current_user.role != 'admin' %} nav-haiku{% endif %}">
+  <a href="{% if current_user.is_authenticated %}{% if current_user.is_subscribed or current_user.role == 'admin' %}{{ url_for('dashboard') }}{% else %}{{ url_for('try_welcome') }}{% endif %}{% else %}{{ url_for('index') }}{% endif %}" class="nav-brand" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-decoration:none;">
     <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
          alt="Shutter League"
-         style="height:34px; width:auto; display:block;"
+         style="height:34px; width:auto; display:block; flex-shrink:0;"
          onerror="this.style.display='none'">
-    <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.85);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">SHUTTER LEAGUE</span>
+      <span style="font-size:11px;letter-spacing:1.5px;color:rgba(255,255,255,0.40);text-transform:uppercase;font-family:'Inter',sans-serif;line-height:1;">Making Images Matter</span>
+    </div>
   </a>
 
   <!-- Desktop nav -->
@@ -1686,26 +1712,35 @@ img {
         <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% else %}
-        {# SL 175 — Approved photographer nav: Dashboard · Upload · Journey · Learn · Explore · Profile #}
+        {% if current_user.is_subscribed %}
+        {# Paid subscriber nav #}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('my_gallery') }}" class="{% if request.endpoint == 'my_gallery' %}nav-active{% endif %}">My Gallery</a>
         <a href="{{ url_for('mission') }}" class="{% if request.endpoint == 'mission' %}nav-active{% endif %}">Improve</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
-        {# SL 175.4: Haiku users → /haiku/community once built #}
-        <a href="{% if current_user.is_subscribed %}{{ url_for('recent_work') }}{% else %}/haiku/community{% endif %}" class="{% if request.endpoint in ['recent_work','leaderboard','haiku_community'] %}nav-active{% endif %}">Explore</a>
+        <a href="{{ url_for('recent_work') }}" class="{% if request.endpoint in ['recent_work','leaderboard'] %}nav-active{% endif %}">Explore</a>
         <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% else %}
+        {# Haiku (free) user nav — task-oriented #}
+        <a href="{{ url_for('try_welcome') }}" class="{% if request.endpoint == 'try_welcome' %}nav-active{% endif %}">Home</a>
+        <a href="{{ url_for('try_gallery') }}" class="{% if request.endpoint == 'try_gallery' %}nav-active{% endif %}">My evaluations</a>
+        <a href="{{ url_for('try_page') }}" class="{% if request.endpoint == 'try_page' %}nav-active{% endif %}">Upload</a>
+        <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+        <a href="{{ url_for('league_haiku') }}" class="{% if request.endpoint == 'league_haiku' %}nav-active{% endif %}">League of Photographers</a>
+        <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% endif %}
       {% endif %}
     {% else %}
       <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How it works</a>
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
-      <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
-      <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
-      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Annual Excellence</a>
+      <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'programmes' %}nav-active{% endif %}">Programmes</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+      <a href="{{ url_for('standings_public') }}" class="{% if request.endpoint == 'standings_public' %}nav-active{% endif %}">League of Photographers</a>
       <a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}nav-active{% endif %}">Log in</a>
-      <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="nav-lj-btn" style="text-decoration:none; background:#D6A428; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">&#8593; Upload</a>
+      <a href="{{ url_for('register') }}" class="nav-lj-btn" style="text-decoration:none; background:#D6A428; color:#111; padding:8px 18px; border-radius:8px; font-weight:700;">Join the League →</a>
     {% endif %}
   </div>
 
@@ -1733,14 +1768,14 @@ img {
       <a href="{{ url_for('judge_history') }}" onclick="toggleNav()">Evaluation History</a>
       <a href="/contact" onclick="toggleNav()">Help &amp; Support</a>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
-    {% else %}
-      {# SL 175 — Approved photographer mobile menu with collapsible More #}
+    {% elif current_user.is_subscribed %}
+      {# Paid subscriber mobile menu #}
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
       <a href="{{ url_for('my_gallery') }}" onclick="toggleNav()">My Gallery</a>
       <a href="{{ url_for('mission') }}" onclick="toggleNav()">Improve</a>
       <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
-      <a href="{% if current_user.is_subscribed %}{{ url_for('recent_work') }}{% else %}/haiku/community{% endif %}" onclick="toggleNav()">Explore</a>
+      <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Explore</a>
       <a href="{{ url_for('profile') }}" onclick="toggleNav()">Profile</a>
       <button id="slHamMore" onclick="var m=document.getElementById('slHamMoreList');var open=m.style.display==='block';m.style.display=open?'none':'block';this.textContent=open?'More ▸':'More ▾';" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;text-align:left;width:100%;min-height:44px;">More ▸</button>
       <div id="slHamMoreList" style="display:none">
@@ -1751,20 +1786,24 @@ img {
         <a href="/contact" onclick="toggleNav()">Help &amp; Support</a>
       </div>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
+    {% else %}
+      {# Haiku (free) user mobile menu — task-oriented #}
+      <a href="{{ url_for('try_welcome') }}" onclick="toggleNav()">Home</a>
+      <a href="{{ url_for('try_gallery') }}" onclick="toggleNav()">My evaluations</a>
+      <a href="{{ url_for('try_page') }}" onclick="toggleNav()">Upload</a>
+      <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
+      <a href="{{ url_for('league_haiku') }}" onclick="toggleNav()">League of Photographers</a>
+      <a href="{{ url_for('profile') }}" onclick="toggleNav()">Profile</a>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:var(--gold); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
     {% endif %}
   {% else %}
-    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How it works</a>
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
-    <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning</a>
-    <a href="/mentors" onclick="toggleNav()">Mentors</a>
-    <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()">Weekly Assignment</a>
-    <a href="{{ url_for('recent_work') }}" onclick="toggleNav()">Recent Work</a>
-    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Programme Gallery</a>
-    <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
-    <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
+    <a href="{{ url_for('contests') }}" onclick="toggleNav()">Programmes</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
-    <a href="{{ url_for('login') }}" onclick="toggleNav()">Log In</a>
-    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Get My First Evaluation</a>
+    <a href="{{ url_for('standings_public') }}" onclick="toggleNav()">League of Photographers</a>
+    <a href="{{ url_for('login') }}" onclick="toggleNav()">Log in</a>
+    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Join the League →</a>
   {% endif %}
 </div>
 <!-- Flash messages -->
@@ -1782,7 +1821,7 @@ img {
 {% endwith %}
 
 
-{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'register', 'login', 'upload', 'upload_preflight'] %}
+{% set _show_sidenav = current_user.is_authenticated and current_user.role == 'member' and current_user.is_subscribed and request.endpoint not in ['dashboard', 'index', 'home', 'pricing', 'how_it_works', 'science', 'about', 'try_page', 'try_result', 'try_gallery', 'try_welcome', 'register', 'login', 'upload', 'upload_preflight'] %}
 {% if _show_sidenav %}<div class="sl-page-wrap"><div class="sl-global-sidenav"><a class="sl-si {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a><a class="sl-si {% if request.endpoint == 'upload' %}active{% endif %}" href="{{ url_for('upload') }}">Upload</a><a class="sl-si {% if request.endpoint == 'my_gallery' %}active{% endif %}" href="{{ url_for('my_gallery') }}">My Gallery</a><a class="sl-si {% if request.endpoint == 'mission' %}active{% endif %}" href="{{ url_for('mission') }}">Improve</a><a class="sl-si {% if request.endpoint == 'learning' %}active{% endif %}" href="{{ url_for('learning') }}">Learn</a><a class="sl-si {% if request.endpoint in ['recent_work','leaderboard'] %}active{% endif %}" href="{{ url_for('recent_work') }}">Explore</a><a class="sl-si {% if request.endpoint == 'portfolio_manager' %}active{% endif %}" href="{{ url_for('portfolio_manager') }}">Portfolio</a><div class="sl-si-more">More</div><a class="sl-si {% if request.endpoint == 'mentors' %}active{% endif %}" href="{{ url_for('mentors') }}">Mentor Review</a><a class="sl-si {% if request.endpoint == 'weekly_challenge' %}active{% endif %}" href="{{ url_for('weekly_challenge') }}">Weekly Challenge</a><a class="sl-si {% if request.endpoint == 'poty' %}active{% endif %}" href="{{ url_for('poty') }}">Annual Excellence</a><a class="sl-si {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Settings</a><a class="sl-si" href="/contact">Help &amp; Support</a></div><main class="sl-main-content">{% else %}<main>{% endif %}
 {% block content %}{% endblock %}
 </main>{% if _show_sidenav %}</div>{% endif %}
@@ -1791,6 +1830,8 @@ img {
 {# ── Mobile tab nav — fixed to top on mobile ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
+    {% if current_user.is_subscribed or current_user.role == 'admin' %}
+    {# ── PAID / ADMIN bottom nav ── #}
     {# SL 175.6 — Bottom nav: Dashboard · Upload · My Gallery · Improve · More #}
     {# Active state driven by request.endpoint — sticky, correct on every page #}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
@@ -1831,6 +1872,45 @@ img {
         </div>
       </div>
     </div>
+    {% else %}
+    {# ── HAIKU (free) bottom nav — SL-194 ── #}
+    {# Mirrors top hamburger Haiku links. Top hamburger hidden on mobile (nav-toggle
+       suppressed for Haiku on ≤900px) so this is the sole mobile navigation. #}
+    <a href="{{ url_for('try_welcome') }}" class="sl-nav-item {% if request.endpoint == 'try_welcome' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="{{ url_for('try_page') }}" class="sl-nav-item {% if request.endpoint == 'try_page' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
+    </a>
+    <a href="{{ url_for('try_gallery') }}" class="sl-nav-item {% if request.endpoint in ['try_gallery','try_result'] %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>My Evals</span>
+    </a>
+    <a href="{{ url_for('pricing') }}" class="sl-nav-item {% if request.endpoint == 'pricing' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <span>Pricing</span>
+    </a>
+    {# Haiku More drawer — League, Profile, Log out #}
+    <div class="sl-nav-more-wrap" id="slNavMoreWrapHaiku">
+      <button class="sl-nav-item sl-nav-more-btn {% if request.endpoint in ['league_haiku','profile'] %}active{% endif %}"
+              onclick="toggleBottomMoreHaiku(event)" aria-label="More"
+              style="background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <span>More</span>
+      </button>
+      <div class="sl-bottom-more-menu" id="slBottomMoreMenuHaiku">
+        <div class="sl-bottom-more-menu__list">
+          <a href="{{ url_for('league_haiku') }}" onclick="closeBottomMoreHaiku()" class="{% if request.endpoint == 'league_haiku' %}active{% endif %}">League of Photographers</a>
+          <a href="{{ url_for('profile') }}" onclick="closeBottomMoreHaiku()" class="{% if request.endpoint == 'profile' %}active{% endif %}">Profile</a>
+          <a href="/contact" onclick="closeBottomMoreHaiku()">Help &amp; Support</a>
+          <a href="{{ url_for('logout') }}" onclick="closeBottomMoreHaiku()" style="color:var(--gold);">Log out</a>
+          <div class="sl-bottom-more-menu__fade"></div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   {% else %}
     {# Non-authenticated bottom nav — minimal #}
     <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
@@ -1872,14 +1952,12 @@ img {
       <a href="{{ url_for('poty') }}" class="footer-col-link">Annual Excellence Award</a>
       <a href="/programme-rules" class="footer-col-link">Programme Rules</a>
       <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Weekly Challenge</a>
-      <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Guidelines</a>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Learn</div>
       <a href="{{ url_for('science') }}" class="footer-col-link">Science</a>
       <a href="{{ url_for('learning') }}" class="footer-col-link">Lessons</a>
       <a href="{{ url_for('mentors') }}" class="footer-col-link">Mentor Review</a>
-      <a href="{{ url_for('weekly_challenge') }}" class="footer-col-link">Assignments</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -1913,6 +1991,16 @@ function closeBottomMore() {
   var menu = document.getElementById('slBottomMoreMenu');
   if (menu) menu.classList.remove('open');
 }
+/* SL-194: Haiku bottom More drawer */
+function toggleBottomMoreHaiku(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('slBottomMoreMenuHaiku');
+  if (menu) menu.classList.toggle('open');
+}
+function closeBottomMoreHaiku() {
+  var menu = document.getElementById('slBottomMoreMenuHaiku');
+  if (menu) menu.classList.remove('open');
+}
 document.addEventListener('click', function(e) {
   var nm = document.getElementById('navMore');
   if (nm && nm.classList.contains('open') && !nm.contains(e.target)) {
@@ -1926,6 +2014,11 @@ document.addEventListener('click', function(e) {
   var wrap = document.getElementById('slNavMoreWrap');
   if (bm && bm.classList.contains('open') && wrap && !wrap.contains(e.target)) {
     bm.classList.remove('open');
+  }
+  var bmh = document.getElementById('slBottomMoreMenuHaiku');
+  var wraph = document.getElementById('slNavMoreWrapHaiku');
+  if (bmh && bmh.classList.contains('open') && wraph && !wraph.contains(e.target)) {
+    bmh.classList.remove('open');
   }
   var nav = document.getElementById('navMobile');
   var toggle = document.querySelector('.nav-toggle');

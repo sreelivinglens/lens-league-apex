@@ -1,4 +1,18 @@
-{# SL-VERSION: 172.3 #}
+{#
+  SL-VERSION: my_gallery-181.2-staging
+  Session 192 · 2026-08-24
+  UPLOAD ROUTE FIX: Header upload button and empty state CTA are now subscription-aware — Haiku users route to try_page, paid users route to upload. mg-empty__sub 15→16px. Gold tokens unified. Card name 13→15px. Stat label 14→16px. RETAINS my_gallery-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · @login_required ✅ · Upload CTA subscription-aware: Haiku→try_page, paid→upload ✅ · gallery shows only current user's images ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · Grid responsive ✅ · 44px tap targets on cards ✅
+  iPad    : 2-col grid at ≤900px ✅
+  70yr    : Page title 20px+ ✅ · Card name 15px ✅ · Stat value 20px ✅ · Stat label 16px ✅ · Score/tier overlays 13px (compact metadata) ✅
+  Version : my_gallery-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {% block title %}My Photographs — {{ platform_name }}{% endblock %}
 {% block meta_description %}Your complete photograph history on Shutter League — all uploads and evaluations.{% endblock %}
@@ -9,7 +23,7 @@
 
 {% block extra_css %}
 <style>
-  body { font-family: 'Inter', sans-serif !important; }
+  body {  }
   /* audit stubs: min-height: 480px min-height: 360px rgba(13,13,11,0.45)
      grid-template-columns: 1fr 1fr text-align: left text-align: left */
   .hero-sub { display: none; }
@@ -27,8 +41,8 @@
 }
 
 :root {
-  --mg-yellow:      #F4C20D;
-  --mg-yellow-dark: #D9A900;
+  --mg-yellow:      #F5C518;
+  --mg-yellow-dark: #D4A800;
   --mg-bg:          #F8F7F3;
   --mg-card:        #FFFFFF;
   --mg-text:        #151515;
@@ -40,13 +54,13 @@
 }
 
 .mg-page, .mg-page * {
-  font-family: Inter, sans-serif !important;
+  
 }
 .mg-page {
   background: var(--mg-bg);
   min-height: 100vh;
   min-height: 100dvh;
-  font-family: Inter, sans-serif;
+  
   color: var(--mg-text);
   -webkit-font-smoothing: antialiased;
   padding-bottom: 60px;
@@ -66,7 +80,7 @@
 }
 .mg-header__title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--mg-text);
   line-height: 1.5;
 }
@@ -98,12 +112,12 @@
 }
 .mg-stat__val {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--mg-text);
   line-height: 1;
 }
 .mg-stat__label {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--mg-text-light);
   margin-top: 2px;
   text-align: left;
@@ -134,7 +148,7 @@
   border-radius: 10px;
   padding: 0 12px;
   font-size: 14px;
-  font-family: Inter, sans-serif;
+  
   background: var(--mg-bg);
   color: var(--mg-text);
 }
@@ -144,7 +158,7 @@
   border-radius: 10px;
   padding: 0 10px;
   font-size: 14px;
-  font-family: Inter, sans-serif;
+  
   background: var(--mg-bg);
   color: var(--mg-text);
   cursor: pointer;
@@ -158,7 +172,7 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
-  font-family: Inter, sans-serif;
+  
   cursor: pointer;
   min-height: 40px;
 }
@@ -170,7 +184,7 @@
   border-radius: 10px;
   font-size: 14px;
   color: var(--mg-text-light);
-  font-family: Inter, sans-serif;
+  
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
@@ -245,7 +259,7 @@
 }
 .mg-img-card__score {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: #1a1a18;
   line-height: 1;
   display: inline;
@@ -260,7 +274,7 @@
   margin-left: 5px;
 }
 .mg-img-card__name {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--mg-text);
   display: block;
@@ -301,7 +315,7 @@
 }
 .mg-empty__icon { font-size: 48px; margin-bottom: 16px; }
 .mg-empty__title { font-size: 20px; font-weight: 700; color: var(--mg-text); margin-bottom: 8px; }
-.mg-empty__sub { font-size: 15px; color: var(--mg-text-light); line-height: 1.6; margin-bottom: 24px; }
+.mg-empty__sub { font-size: 16px; color: var(--mg-text-light); line-height: 1.6; margin-bottom: 24px; }
 .mg-empty__cta {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--mg-yellow); color: var(--mg-text);
@@ -342,7 +356,7 @@
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  font-family: Inter, sans-serif;
+  
   color: var(--mg-text-light);
   background: var(--mg-bg);
   text-decoration: none;
@@ -360,7 +374,7 @@
 }
 .mg-track-pill.active-camera {
   background: #FFF8E6;
-  border-color: #D9A900;
+  border-color: #D4A800;
   color: #7A5500;
 }
 .mg-track-pill.active-all {
@@ -417,7 +431,11 @@
       <div>
         <div class="mg-header__title">My Photographs</div>
       </div>
-      <a href="{{ url_for('upload') }}" class="mg-header__upload">▲ Upload</a>
+      {% if current_user.is_subscribed %}
+        <a href="{{ url_for('upload') }}" class="mg-header__upload">▲ Upload</a>
+      {% else %}
+        <a href="{{ url_for('try_page') }}" class="mg-header__upload">▲ Upload</a>
+      {% endif %}
     </div>
     <div class="mg-stats">
       <div class="mg-stat">
@@ -580,7 +598,11 @@
       {% else %}
       <div class="mg-empty__title">No photographs yet</div>
       <div class="mg-empty__sub">Upload your first photograph and get an honest evaluation across 5 dimensions.</div>
-      <a href="{{ url_for('upload') }}" class="mg-empty__cta">Upload your first photograph →</a>
+      {% if current_user.is_subscribed %}
+        <a href="{{ url_for('upload') }}" class="mg-empty__cta">Upload your first photograph →</a>
+      {% else %}
+        <a href="{{ url_for('try_page') }}" class="mg-empty__cta">Upload your first photograph →</a>
+      {% endif %}
       {% endif %}
     </div>
     {% endif %}

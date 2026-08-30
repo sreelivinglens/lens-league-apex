@@ -1,4 +1,5 @@
 {# SL-VERSION: 139.0 — tier pagination fix (tier_has_more, tier_page, prev/next) #}
+{# SL-VERSION: leaderboard-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% extends "base.html" %}
 {% from "glossary_links.html" import glink %}
 {% block title %}Programme Gallery — {{ platform_name }}{% endblock %}
@@ -16,8 +17,8 @@
    TOKENS
 ════════════════════════════════════════ */
 :root {
-  --gold:        #F5C518 !important;
-  --gold-dark:   #F5C518 !important;
+  --gold:        #D6A428 !important;
+  --gold-dark:   #D6A428 !important;
   --gold-subtle: rgba(245,197,24,0.12) !important;
   --text-secondary: var(--text-primary) !important;
   --text-muted:     var(--text-primary) !important;
@@ -30,7 +31,7 @@
    card info line
 ════════════════════════════════════════ */
 .tp-legend      { background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; }
-.tp-grandmaster { background:#FDF3CC; color:#B45309; border:1px solid #F5C518; }
+.tp-grandmaster { background:#FDF3CC; color:#B45309; border:1px solid #D6A428; }
 .tp-master      { background:#EDEDEB; color:#2D2D2D; border:1px solid #C4C4C0; }
 .tp-maverick    { background:#EDE9FE; color:#5B21B6; border:1px solid #C4B5FD; }
 .tp-craftsman   { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
@@ -44,7 +45,7 @@
 .lb-wrap {
   max-width: 1280px;
   font-size: 16px; line-height: 1.6;
-  font-family: 'Inter', sans-serif !important;
+  
 }
 
 /* ════════════════════════════════════════
@@ -118,7 +119,7 @@
 .lb-pill.interest-active { background: #166534; color: #FFFFFF; border-color: #166534; font-weight: 700; }
 /* TIER pills: inactive = tier-coloured border+text, active = tier fill */
 .lb-pill.tier-pill-legend      { color:#92400E; border-color:#F59E0B; background:#FFFFFF; }
-.lb-pill.tier-pill-grandmaster { color:#B45309; border-color:#F5C518; background:#FFFFFF; }
+.lb-pill.tier-pill-grandmaster { color:#B45309; border-color:#D6A428; background:#FFFFFF; }
 .lb-pill.tier-pill-master      { color:#374151; border-color:#9CA3AF; background:#FFFFFF; }
 .lb-pill.tier-pill-maverick    { color:#5B21B6; border-color:#C4B5FD; background:#FFFFFF; }
 .lb-pill.tier-pill-craftsman   { color:#1E40AF; border-color:#93C5FD; background:#FFFFFF; }
@@ -126,7 +127,7 @@
 .lb-pill.tier-pill-shooter     { color:#374151; border-color:#D1D5DB; background:#FFFFFF; }
 .lb-pill.tier-pill-rookie      { color:#6B7280; border-color:#E5E7EB; background:#FFFFFF; }
 .lb-pill.tp-active-legend      { background:#FEF3C7; color:#92400E; border-color:#F59E0B; font-weight:700; }
-.lb-pill.tp-active-grandmaster { background:#FDF3CC; color:#B45309; border-color:#F5C518; font-weight:700; }
+.lb-pill.tp-active-grandmaster { background:#FDF3CC; color:#B45309; border-color:#D6A428; font-weight:700; }
 .lb-pill.tp-active-master      { background:#4B5563; color:#FFFFFF;  border-color:#4B5563; font-weight:700; }
 .lb-pill.tp-active-maverick    { background:#EDE9FE; color:#5B21B6; border-color:#C4B5FD; font-weight:700; }
 .lb-pill.tp-active-craftsman   { background:#DBEAFE; color:#1E40AF; border-color:#93C5FD; font-weight:700; }
@@ -229,12 +230,12 @@
   display: flex; align-items: center; justify-content: center;
 }
 .tile-track-icon.camera { background: rgba(245,245,240,0.90); color: #4A4840; }
-.tile-track-icon.mobile { background: rgba(13,13,11,0.78); color: #F5C518; }
+.tile-track-icon.mobile { background: rgba(13,13,11,0.78); color: #D6A428; }
 
 /* Winner badge */
 .tile-winner {
   position: absolute; top: 8px; left: 8px; z-index: 4;
-  background: #F5C518; color: #1a1a18;
+  background: #D6A428; color: #1a1a18;
   padding: 3px 8px; border-radius: 4px;
   font-size: 14px; font-weight: 700;
   font-family: var(--font-mono); letter-spacing: 0.4px; pointer-events: none;
@@ -250,19 +251,19 @@
 .lb-tile:hover .tile-analysis { transform: translateY(0); }
 .tile-analysis-label {
   font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-  letter-spacing: 1.2px; text-transform: uppercase; color: #F5C518; margin-bottom: 4px; line-height: 1.5; font-size: 14px;
+  letter-spacing: 1.2px; text-transform: uppercase; color: #D6A428; margin-bottom: 4px; line-height: 1.5; font-size: 14px;
 }
 .tile-analysis-text {
   font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.5;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.tile-analysis-cta { font-family: var(--font-mono); font-size: 14px; color: #F5C518; margin-top: 5px; line-height: 1.5; }
+.tile-analysis-cta { font-family: var(--font-mono); font-size: 14px; color: #D6A428; margin-top: 5px; line-height: 1.5; }
 
 /* Tile info — matches My Gallery exactly */
 .tile-info { padding: 8px 10px 10px; background: #FFFFFF; }
 .tile-info-top { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
 .tile-score {
-  font-size: 14px; font-weight: 800; color: #1a1a18;
+  font-size: 14px; font-weight: 700; color: #1a1a18;
   line-height: 1.5; white-space: nowrap;
 }
 .tile-tier-label {
@@ -314,7 +315,7 @@
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono); font-size: 16px; font-weight: 700;
 }
-.pg-rank-badge.gold   { background: #F5C518; color: #3a2a00; }
+.pg-rank-badge.gold   { background: #D6A428; color: #3a2a00; }
 .pg-rank-badge.silver { background: #8a8a8a; color: #fff; }
 .pg-rank-badge.bronze { background: #8B5E3C; color: #fff; }
 .pg-rank-badge.other  { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
@@ -446,7 +447,7 @@ body { overflow-x: hidden; }
     </a>
     <a href="?tab={{ tab }}&track=mobile"
        style="font-size:14px;font-weight:700;padding:8px 20px;border-radius:6px;text-decoration:none;font-family:var(--font-mono);letter-spacing:0.04em;
-              {% if track == 'mobile' %}background:#1A1A18;color:#F5C518;border:1.5px solid #1A1A18;{% else %}background:transparent;color:var(--text-muted);border:0.5px solid var(--border);{% endif %}">
+              {% if track == 'mobile' %}background:#1A1A18;color:#D6A428;border:1.5px solid #1A1A18;{% else %}background:transparent;color:var(--text-muted);border:0.5px solid var(--border);{% endif %}">
       Mobile League
     </a>
     <a href="?tab={{ tab }}&track=all"
@@ -496,9 +497,9 @@ body { overflow-x: hidden; }
   {% for image in _page_images %}
   {%- set _rank = _img_start + loop.index -%}
   {%- set _rc = 'g' if _rank==1 else ('s' if _rank==2 else ('b' if _rank==3 else 'o')) -%}
-  {%- set _rk_bg = '#F5C518' if _rank==1 else ('#c0c0c0' if _rank==2 else ('#cd7f32' if _rank==3 else 'rgba(0,0,0,0.55)')) -%}
+  {%- set _rk_bg = '#D6A428' if _rank==1 else ('#c0c0c0' if _rank==2 else ('#cd7f32' if _rank==3 else 'rgba(0,0,0,0.55)')) -%}
   {%- set _rk_col = '#3a2a00' if _rank==1 else ('#2a2a2a' if _rank<=3 else '#fff') -%}
-  {%- set _tier_border = '#F5C518' if image.score >= 9.0 else ('#aaaaaa' if image.score >= 8.0 else ('#5a7a5a' if image.score >= 7.0 else 'var(--border)')) -%}
+  {%- set _tier_border = '#D6A428' if image.score >= 9.0 else ('#aaaaaa' if image.score >= 8.0 else ('#5a7a5a' if image.score >= 7.0 else 'var(--border)')) -%}
   {%- set _tier_color = '#7A5800' if image.score >= 9.0 else ('#555' if image.score >= 8.0 else ('#3a5a3a' if image.score >= 7.0 else 'var(--text-muted)')) -%}
   {%- set _tier_label = 'Legend' if image.score >= 9.7 else ('Grandmaster' if image.score >= 9.0 else ('Master' if image.score >= 8.0 else ('Maverick' if image.score >= 7.0 else ('Craftsman' if image.score >= 6.0 else ('Contender' if image.score >= 5.0 else 'Rookie'))))) -%}
   <a href="{{ url_for('image_detail', image_id=image.id) }}?from=gallery"
@@ -560,18 +561,18 @@ body { overflow-x: hidden; }
 <div style="border-radius:10px;overflow:hidden;border:1px solid #A9CCE3;position:sticky;top:80px;">
   <div style="background:#1B4F72;padding:10px 12px;">
     <div style="margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;font-family:var(--font-mono);color:#D6EAF8;line-height:1.5;">Annual Excellence Award Qualifiers</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:var(--font-mono);color:#D6EAF8;line-height:1.5;">Annual Excellence Award Qualifiers</div>
       <div style="font-size:13px;color:#A9CCE3;line-height:1.6;margin-top:4px;">3 months of consistent uploads · 6 images minimum · top 6 image average</div>
     </div>
     <div style="display:flex;gap:4px;">
       <a href="?tab=images&track=camera"
          style="font-size:13px;font-weight:700;padding:6px 0;border-radius:4px;font-family:var(--font-mono);flex:1;text-align:center;text-decoration:none;
-                {% if track == 'camera' or track == 'all' %}background:#F5C518;color:#0F1F3D;{% else %}background:transparent;color:#A9CCE3;border:0.5px solid #7aabca;{% endif %}">
+                {% if track == 'camera' or track == 'all' %}background:#D6A428;color:#0F1F3D;{% else %}background:transparent;color:#A9CCE3;border:0.5px solid #7aabca;{% endif %}">
         Camera
       </a>
       <a href="?tab=images&track=mobile"
          style="font-size:13px;font-weight:700;padding:6px 0;border-radius:4px;font-family:var(--font-mono);flex:1;text-align:center;text-decoration:none;
-                {% if track == 'mobile' %}background:#F5C518;color:#0F1F3D;{% else %}background:transparent;color:#A9CCE3;border:0.5px solid #7aabca;{% endif %}">
+                {% if track == 'mobile' %}background:#D6A428;color:#0F1F3D;{% else %}background:transparent;color:#A9CCE3;border:0.5px solid #7aabca;{% endif %}">
         Mobile
       </a>
     </div>
@@ -580,7 +581,7 @@ body { overflow-x: hidden; }
     {% if aea_contenders %}
       {% for c in aea_contenders %}
       <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;{% if not loop.last %}border-bottom:0.5px solid #A9CCE3;{% endif %}">
-        <div style="font-size:13px;font-weight:800;color:#1B4F72;width:18px;flex-shrink:0;font-family:var(--font-mono);">{{ loop.index }}</div>
+        <div style="font-size:13px;font-weight:700;color:#1B4F72;width:18px;flex-shrink:0;font-family:var(--font-mono);">{{ loop.index }}</div>
         <div style="font-size:14px;font-weight:500;color:#0a1628;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.display_name }}</div>
       </div>
       {% endfor %}

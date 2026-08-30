@@ -1,7 +1,7 @@
 """
 engine/city_event_scan.py
 ==========================
-SL-181.44 — Login-triggered live event scanner.
+SL-181.44-staging — Login-triggered live event scanner.
 
 Discovers time-bound photography-relevant events (exhibitions, festivals,
 sporting events, cultural gatherings) for cities where members have logged
@@ -31,6 +31,12 @@ At 100 cities: only cities with logins today get scanned.
 30 cities active → 30 × 3 web search calls = 90 calls, once at night.
 70 cities idle → 0 calls.
 Scales with active cities, not with number of logins.
+
+STAGING NOTE
+────────────
+SL_DISABLE_AI_JOBS is set on staging — the nightly cron is NOT registered.
+mark_city_login() still runs on every login (cheap DB write only).
+Manual scan via /admin/run-city-event-scan ignores SL_DISABLE_AI_JOBS.
 
 DB DEPENDENCY
 ─────────────

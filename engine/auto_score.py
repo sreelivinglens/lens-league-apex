@@ -1,6 +1,6 @@
-# SL-VERSION: 171.10-main (Session 186, 2026-08-15 — FIX Ashok Kochhar genre: (1) SCORE_PROMPT Platform Mentor rule tightened — Ashok referenced ONLY for Street, Fashion, Conceptual. Removed blanket triggers for Nature, overthinking, cross-genre. (2) masters_pool_block label updated with explicit do-not-reference list. RETAINS 171.9.)
-# SL-VERSION: 171.9-main (Session 184, 2026-08-14 — Prompt caching: VISION_SYSTEM cache_control removed (165 tokens, below 1024 minimum). SYSTEM_BRIEF cache TTL set to 1hr on Calls 2/3/4 — 5min TTL was expiring between infrequent scoring calls so cache was written but never read. RETAINS 171.7.)
-# SL-VERSION: 171.7 (Session 171, 2026-08-03 — Version bump to force deploy. No logic change.)
+# SL-VERSION: 171.10-staging (Session 186, 2026-08-15 — FIX Ashok Kochhar genre: Platform Mentor rule tightened — ONLY Street/Fashion/Conceptual. Removed Nature, overthinking, cross-genre blanket triggers. RETAINS 171.9-staging.)
+# SL-VERSION: 171.9-staging (Session 184, 2026-08-14 — Prompt caching fix: switched SYSTEM_BRIEF cache TTL from 5min to 1hr on Calls 2/3/4. 5min TTL was expiring between infrequent scoring calls so cache was written but never read. 1hr TTL matches SL scoring cadence. VISION_SYSTEM cache_control removed — 165 tokens is below Sonnet 4.6 minimum of 1024, was silently skipped every call. RETAINS 171.8-staging.)
+# SL-VERSION: 171.8-staging (Session 184, 2026-08-14 — Prompt caching enabled on all 4 API calls. Retains 171.7.)
 """
 Apex DDI Auto-Scoring Engine
 Apex DDI Engine — AI scoring for uploaded images
@@ -3332,7 +3332,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
             headers={
                 "x-api-key":         ANTHROPIC_API_KEY,
                 "anthropic-version": "2023-06-01",
-                    "anthropic-beta":    "prompt-caching-2024-07-31",
+                "anthropic-beta":    "prompt-caching-2024-07-31",
                 "content-type":      "application/json",
             },
             json=payload,
@@ -3614,7 +3614,6 @@ def species_research(species_id: str) -> dict:
             headers={
                 "x-api-key":         ANTHROPIC_API_KEY,
                 "anthropic-version": "2023-06-01",
-                    "anthropic-beta":    "prompt-caching-2024-07-31",
                 "content-type":      "application/json",
             },
             json=distil_payload,

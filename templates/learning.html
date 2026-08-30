@@ -1,3 +1,18 @@
+{#
+  SL-VERSION: learning-181.2-staging
+  Session 192 · 2026-08-24
+  MENTOR GATE: All 3 mentor CTAs (hero, per-card, end) now subscription-aware. Haiku users see "Join the League →" → pricing. Logged-out users see "Join free". Paid users see existing mentor booking. Gold #D6A428 → #F5C518. RETAINS learning-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Public page ✅ · Mentor CTAs subscription-gated: Haiku→pricing, paid→mentor booking, anon→register ✅ · Learning content visible to all ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · Lesson hero responsive ✅ · 44px tap targets ✅
+  iPad    : Hero collapses at ≤900px ✅ · Step grid 1-col ✅
+  70yr    : Body text 16px+ ✅ · Lesson title clamp ✅ · Section labels 13px mono (not body copy) ✅
+  Version : learning-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {% block title %}Learn &amp; Grow — Shutter League{% endblock %}
 
@@ -18,7 +33,7 @@
    LEARNING PAGE
    Inter only · #F7F5F2 light · #EDEAE4 warm
    #1A1A18 text · #F5C518 gold (dark bg only)
-   #0D0D0B hero/CTA bg
+   #0F2A22 hero/CTA bg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-learn),
 body.page-learn { padding-top: 0 !important; }
@@ -26,7 +41,7 @@ body:has(.sl-learn) main,
 body.page-learn main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
 .sl-learn, .sl-learn * {
-  font-family: 'Inter', sans-serif !important;
+  
 }
 
 /* ━━ HERO — verbatim from how-it-works.html ━━ */
@@ -34,7 +49,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   position: relative;
   width: 100%;
   max-
-  background: #0D0D0B;
+  background: #0F2A22;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -117,8 +132,8 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 .sl-learn-hero-cta {
   display: inline-block;
   background: #F5C518;
-  color: #0D0D0B;
-  font-family: 'Inter', sans-serif !important;
+  color: #0F2A22;
+  
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -380,7 +395,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   width: 100%;
   padding: 11px 16px;
   border-radius: 6px;
-  font-family: 'Inter', sans-serif !important;
+  
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -440,7 +455,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
-  color: #1A2744;
+  color: #13254B;
 }
 .sl-learn-hiw-step-icon svg {
   width: 24px;
@@ -536,7 +551,7 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 
 /* ━━ CTA STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-learn-cta-strip {
-  background: #0D0D0B;
+  background: #0F2A22;
   padding: 40px 64px;
   display: flex;
   align-items: center;
@@ -587,8 +602,8 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
 .sl-learn-cta-btn {
   display: inline-block;
   background: #F5C518;
-  color: #0D0D0B;
-  font-family: 'Inter', sans-serif !important;
+  color: #0F2A22;
+  
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -837,7 +852,14 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
         </div>
       </div>
       <p class="sl-learn-hero-arc" style="font-size:15px; color:rgba(255,255,255,0.80); line-height:1.6; margin-bottom:18px; font-weight:400;">A platform that remembers every image — and guides what you make next.</p>
-      <a href="{{ url_for('mentors') }}" class="sl-learn-hero-cta">SUBMIT FOR MENTOR REVIEW</a>
+      {% if current_user.is_authenticated and current_user.is_subscribed %}
+        <a href="{{ url_for('mentors') }}" class="sl-learn-hero-cta">SUBMIT FOR MENTOR REVIEW</a>
+      {% elif current_user.is_authenticated and not current_user.is_subscribed %}
+        {# Haiku user — mentor review is a paid feature #}
+        <a href="{{ url_for('pricing') }}" class="sl-learn-hero-cta">JOIN THE LEAGUE TO ACCESS MENTOR REVIEW →</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="sl-learn-hero-cta">JOIN FREE TO START →</a>
+      {% endif %}
       <div class="sl-learn-hero-timing">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Usually under 72 hours
@@ -947,7 +969,14 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
                 <div class="sl-learn-mentor-genres">{{ m.genres }}</div>
                 <div class="sl-learn-mentor-rule"></div>
                 <div class="sl-learn-mentor-bio">{{ m.bio }}</div>
-                <a href="{{ url_for('mentor_register', slug=slug) }}" class="sl-learn-mentor-btn sl-learn-btn-{{ css_cls }}">&#8377;{{ m.price }} <span>&#8594;</span></a>
+                {% if current_user.is_authenticated and current_user.is_subscribed %}
+                  <a href="{{ url_for('mentor_register', slug=slug) }}" class="sl-learn-mentor-btn sl-learn-btn-{{ css_cls }}">&#8377;{{ m.price }} <span>&#8594;</span></a>
+                {% elif current_user.is_authenticated %}
+                  {# Haiku user — show pricing link instead #}
+                  <a href="{{ url_for('pricing') }}" class="sl-learn-mentor-btn" style="background:#1A2744;color:#fff;opacity:0.85;">Join the League →</a>
+                {% else %}
+                  <a href="{{ url_for('register') }}" class="sl-learn-mentor-btn" style="background:#1A2744;color:#fff;opacity:0.85;">Join free →</a>
+                {% endif %}
               </div>
             </div>
             {% endfor %}
@@ -1060,7 +1089,13 @@ body.page-learn main { padding: 0 !important; max-width: none !important; margin
         </div>
       </div>
     </div>
-    <a href="{{ url_for('mentors') }}" class="sl-learn-cta-btn">SUBMIT FOR MENTOR REVIEW</a>
+    {% if current_user.is_authenticated and current_user.is_subscribed %}
+      <a href="{{ url_for('mentors') }}" class="sl-learn-cta-btn">SUBMIT FOR MENTOR REVIEW</a>
+    {% elif current_user.is_authenticated %}
+      <a href="{{ url_for('pricing') }}" class="sl-learn-cta-btn">JOIN THE LEAGUE TO ACCESS MENTOR REVIEW →</a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="sl-learn-cta-btn">JOIN FREE TO START →</a>
+    {% endif %}
   </div>
 
 </div><!-- /sl-learn -->

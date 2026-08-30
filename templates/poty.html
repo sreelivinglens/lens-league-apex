@@ -1,3 +1,18 @@
+{#
+  SL-VERSION: poty-181.2-staging
+  Session 192 · 2026-08-24
+  CTA FIX: Register Participation now 3-way: paid→AEA registration, Haiku→"Join the League of Photographers"→pricing, anon→register. Gold #D6A428 → #F5C518. RETAINS poty-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Public page ✅ · CTA 3-way: paid→AEA, Haiku→pricing, anon→register ✅ · Haiku images excluded from pool (app.py) ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · Hero responsive ✅ · 44px CTAs ✅
+  iPad    : Hero 1-col at ≤900px ✅ · Category grid collapses ✅
+  70yr    : Hero h1 clamp ✅ · Body text 16px+ ✅ · Labels 13px mono (not body copy) ✅ · CTA button 16px+ ✅
+  Version : poty-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {% block title %}Annual Excellence Award — Shutter League{% endblock %}
 
@@ -19,7 +34,7 @@
    Session 16 · Inter only
    #F7F5F2 light bg · #EDEAE4 warm bg
    #1A1A18 text · #F5C518 gold (dark bg only)
-   #0D0D0B hero/footer bg · #1A2744 navy
+   #0F2A22 hero/footer bg · #13254B navy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-poty),
 body.page-aea { padding-top: 0 !important; }
@@ -27,7 +42,7 @@ body:has(.sl-poty) main,
 body.page-aea main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
 .sl-poty, .sl-poty * {
-  font-family: 'Inter', sans-serif !important;
+  
 }
 
 /* ━━ HERO — exact match to how-it-works.html ━━━━━━━━━━━━ */
@@ -35,7 +50,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   position: relative;
   width: 100%;
   max-
-  background: #0D0D0B;
+  background: #0F2A22;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -330,14 +345,14 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   object-fit: cover;
   object-position: center;
   display: block;
-  background: #0D0D0B;
+  background: #0F2A22;
 }
 .sl-poty-lb-photo[src=""],
 .sl-poty-lb-photo:not([src]) {
   display: none;
 }
 .sl-poty-lb-photo-wrap {
-  background: #0D0D0B;
+  background: #0F2A22;
   aspect-ratio: 3 / 4;
   overflow: hidden;
 }
@@ -382,7 +397,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   height: 28px;
   border-radius: 50%;
   background: #1A1A18;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 13px; color: #F5C518; letter-spacing: 0.05em;
   display: inline-flex;
   align-items: center;
@@ -563,7 +578,7 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
 
 /* ━━ CTA STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-poty-cta {
-  background: #0D0D0B;
+  background: #0F2A22;
   padding: 60px 64px;
 }
 .sl-poty-cta-inner {
@@ -609,10 +624,10 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
   align-items: center;
   gap: 4px;
   background: #F5C518;
-  color: #0D0D0B;
+  color: #0F2A22;
   padding: 16px 36px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   text-decoration: none;
@@ -1256,12 +1271,20 @@ body.page-aea main { padding: 0 !important; max-width: none !important; margin: 
           <p class="sl-poty-cta-body">Keep creating. Keep growing. The Annual Excellence Award is your recognition.</p>
         </div>
       </div>
-      {% if current_user.is_authenticated %}
+      {% if current_user.is_authenticated and current_user.is_subscribed %}
+        {# Paid subscriber — can register for AEA #}
         <a href="{{ url_for('aea') }}" class="sl-poty-cta-btn">
           Register Participation
           <span class="sl-poty-cta-micro">View your eligibility →</span>
         </a>
+      {% elif current_user.is_authenticated %}
+        {# Haiku user — AEA is a paid feature, send to pricing #}
+        <a href="{{ url_for('pricing') }}" class="sl-poty-cta-btn">
+          Join the League of Photographers
+          <span class="sl-poty-cta-micro">Annual Excellence Award eligibility →</span>
+        </a>
       {% else %}
+        {# Logged out — send to register #}
         <a href="{{ url_for('register') }}" class="sl-poty-cta-btn">
           Start Your Journey
         </a>

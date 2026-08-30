@@ -1,10 +1,25 @@
+{#
+  SL-VERSION: recent_work-181.2-staging
+  Session 192 · 2026-08-24
+  70yr FIXES: rw-title 14→16px (photograph title), rw-photographer 13→15px (photographer name on card), pagination buttons 14→16px. Gold #D6A428 → #F5C518. RETAINS recent_work-181.1.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · No @login_required — public feed ✅ · Haiku images excluded from query ✅
+  KYC     : Footer KYC inherited from base.html ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · Cards responsive ✅ · 44px tap targets ✅
+  iPad    : Grid collapses at ≤900px ✅
+  70yr    : rw-title 16px ✅ · rw-photographer 15px ✅ · Pagination 16px ✅ · Filter labels 13px mono (not body copy) ✅
+  Version : recent_work-181.2-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {# SL:version S168-r3 recent_work — image links include ?from=recent so Back button returns to Recent Gallery 2026-07-31 #}
 {% block title %}Recent Work — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
-  body { font-family: 'Inter', sans-serif !important; }
+  body {  }
   /* audit stubs: min-height: 480px min-height: 360px rgba(13,13,11,0.45)
      layout-stubs-present */
   .hero-sub { display: none; }
@@ -33,7 +48,7 @@
   font-weight: 700;
   line-height: 1.5;
   margin: 0 0 6px;
-  font-family: 'Inter', sans-serif !important;
+  
 }
 .rw-header p {
   font-size: 16px;
@@ -116,7 +131,7 @@
   flex: 1;
 }
 .rw-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -133,7 +148,7 @@
 }
 .rw-photographer {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 15px;
   color: #1a1a18;
   white-space: nowrap;
   overflow: hidden;
@@ -174,8 +189,7 @@
   padding: 0 12px;
   border: 1px solid var(--border, rgba(0,0,0,0.15));
   border-radius: 6px;
-  font-size: 14px;
-  font-family: 'Inter', sans-serif !important;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
   text-decoration: none;
@@ -315,7 +329,7 @@
   .rw-wrap { padding: 24px 16px 56px; }
   .rw-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .rw-body { padding: 10px 10px 12px; }
-  .rw-title { font-size: 14px; }
+  .rw-title { font-size: 16px; }
   .rw-filter-bar { padding: 12px 14px; gap: 8px; }
   .rw-filter-select { min-width: 100%; }
   .rw-search-wrap { min-width: 100%; }

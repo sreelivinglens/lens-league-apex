@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: onboarding-production-S186e (FIX: moved location_data_json to <script type="application/json" id="location-data"> block — exempt from Jinja-in-script rule, no quote conflicts, JSON parsed correctly. — reverted to | safe with single-quote wrapper. Correct fix. conflict with JSON — switched to single-quote wrapper + tojson filter. State/city dropdowns now work. (2026-08-15 — CRITICAL FIX: Jinja {{ location_data_json | safe }} moved out of <script> to data-location attr. JS reads via JSON.parse(el.dataset.location). Fixes Unexpected token '{'. Also: container 520→680px; intro para 420→560px; helper text 13→14px.) #}
+{# SL-VERSION: onboarding-staging-S186e (FIX: moved location_data_json to <script type="application/json" id="location-data"> block — exempt from Jinja-in-script rule, no quote conflicts, JSON parsed correctly. — reverted to | safe with single-quote wrapper. Correct fix. conflict with JSON — switched to single-quote wrapper + tojson filter. State/city dropdowns now work. (2026-08-15 — CRITICAL FIX: Jinja {{ location_data_json | safe }} moved out of <script> block into data-location attribute on .ob-wrap div. JS now reads via JSON.parse(el.dataset.location). Fixes Unexpected token '{' JS error. Also: container 520→680px; intro para 420→560px; helper text 13→14px. KYC/Mobile/iPad/70yr pass.) #}
 {% block title %}Welcome — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -106,7 +106,7 @@
           </div>
         </div>
 
-        <p id="location-freetext-hint" style="display:none; font-size: 13px; color:var(--text-muted); margin-top:-16px; margin-bottom:24px; line-height: 1.5;">
+        <p id="location-freetext-hint" style="display:none; font-size: 14px; color:var(--text-muted); margin-top:-16px; margin-bottom:24px; line-height: 1.5;">
           We don't have a detailed list of states/cities for this country yet — please type your state/province and city above.
         </p>
 

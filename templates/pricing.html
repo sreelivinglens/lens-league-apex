@@ -1,797 +1,456 @@
+{# SL-VERSION: pricing-v3.5-staging (Session 201 — removed locked forever language. RETAINS 3.4.) (Session 201 — CSS aligned with pricing_haiku: navy #1A2744, text-shadow:none on h1, Inter font on CTA. All plan structure/JS/Razorpay unchanged. RETAINS 3.3.) (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Two ways to build your photographic record. Annual membership, 6-month membership, or 100 honest evaluations. One standard. Making Images Matter.">
+{% endblock %}
+
 {% block content %}
 <style>
-/* ── Pricing Page — v2 redesign, Session 133 ─────────────────────────── */
+/* ── Token override — align with dashboard_haiku design system ── */
 :root {
-  --camera-blue:        #2C5AA0;
-  --camera-blue-dark:   #1E3A5F;
-  --camera-blue-tint:   #EAF2FB;
-  --camera-blue-circle: #4A7FC1;
-  --camera-blue-border: #C9DCF0;
-
-  --mobile-green:        #5A7A3A;
-  --mobile-green-dark:   #4A6B2A;
-  --mobile-green-tint:   #EEF5E7;
-  --mobile-green-circle: #85A362;
-  --mobile-green-border: #CFE0BE;
+  --gold:           #C8A84B;
+  --gold-light:     #C8A84B;
+  --gold-dark:      #A8883B;
+  --gold-subtle:    rgba(200,168,75,0.12);
+  --gold-glow:      rgba(200,168,75,0.22);
+  --text-primary:   #1A2744;
+  --text-secondary: #1A2744;
+  --text-muted:     rgba(26,39,68,0.55);
+  --navy:           #1A2744;
+  --blue-dark:      #1A2744;
+  --surface-1:      #F5F3EF;
+  --surface-2:      #EDE9E1;
+  --surface-3:      #E2DDD4;
+  --border:         rgba(26,39,68,0.12);
+  --border-subtle:  rgba(26,39,68,0.08);
+  --border-strong:  rgba(26,39,68,0.20);
 }
 
-.pricing-hero {
+/* ── Pricing Page — v3 redesign, Session 190 ─────────────────────── */
+
+/* ── Hero ── */
+.pr-hero {
   text-align: center;
-  padding: 56px var(--page-pad) 8px;
-  max-width: 720px;
+  padding: 56px var(--page-pad) 28px;
+  max-width: 700px;
   margin: 0 auto;
 }
-.pricing-hero h1 {
-  font-family: var(--font-body);
-  font-size: clamp(30px, 5vw, 44px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  margin: 0 0 10px;
+.pr-hero-eye {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 16px;
 }
-.pricing-hero p {
-  font-size: 17px;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.6;
+.pr-hero h1 {
+  font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+  color: var(--text-primary); line-height: 1.5;
+  letter-spacing: -0.02em; margin-bottom: 16px; text-shadow: none;
 }
+.pr-hero-built {
+  font-size: 17px; color: var(--text-secondary);
+  line-height: 1.65; margin-bottom: 16px;
+}
+.pr-hero-200 {
+  font-size: 18px; font-weight: 600;
+  color: var(--text-primary); line-height: 1.65;
+  max-width: 560px; margin: 0 auto 8px;
+}
+.pr-hero-std {
+  font-size: 15px; font-style: italic;
+  color: var(--text-muted); margin-top: 8px;
+}
+.pr-proof {
+  max-width: 620px; margin: 28px auto 0;
+  border-left: 3px solid var(--gold);
+  padding: 16px 22px; background: var(--surface-2);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.pr-proof-q {
+  font-size: 17px; font-style: italic;
+  color: var(--text-primary); line-height: 1.7; margin-bottom: 8px;
+}
+.pr-proof-a { font-size: 14px; color: var(--text-muted); }
+.pr-proof-a strong { color: var(--text-primary); }
 
-/* ── Free trial banner ────────────────────────────────────────────── */
-.trial-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  justify-content: center;
-  max-width: 560px;
-  margin: 32px auto 40px;
-  padding: 0 var(--page-pad);
-  text-align: left;
-}
-.trial-banner-icon {
-  flex-shrink: 0;
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  background: #F5E9D0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-}
-.trial-banner-text strong { display: block; font-size: 15px; color: var(--text-primary); margin-bottom: 2px; }
-.trial-banner-text span { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-
-/* ── Billing period cards ─────────────────────────────────────────── */
-.period-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  max-width: 900px;
-  margin: 0 auto 48px;
-  padding: 0 var(--page-pad);
-}
-.period-card {
-  position: relative;
-  background: var(--surface-1);
-  border: 1.5px solid var(--surface-4);
-  border-radius: 14px;
-  padding: 22px 20px 18px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color .18s, box-shadow .18s, background .18s;
-}
-.period-card:hover { border-color: var(--border-strong); }
-.period-card.active {
-  border-color: var(--gold);
-  background: #FFF8E8;
-  box-shadow: 0 0 0 1px var(--gold);
-}
-.period-label {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-.period-price {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.5;
-}
-.period-price .unit { font-size: 14px; font-weight: 500; color: var(--text-muted); }
-.period-evaluate {
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-.period-evaluate strong {
-  display: block;
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--camera-blue);
-}
-.period-caption {
-  margin-top: 10px;
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-.period-save-pill {
-  position: absolute; top: -10px; right: 14px;
-  background: var(--gold);
-  color: #1A1A18;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  padding: 3px 9px;
-  border-radius: 20px;
-}
-.period-popular-pill {
-  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
-  background: #1A1A18;
-  color: var(--gold);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  padding: 4px 12px;
-  border-radius: 20px;
-  white-space: nowrap;
-  display: flex; align-items: center; gap: 4px;
-}
-.period-equiv-bar {
-  margin: 14px -20px -18px;
-  padding: 8px 20px;
-  background: rgba(245,197,24,0.20);
-  border-radius: 0 0 12px 12px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: #8a6400;
-}
-
-/* ── League cards ──────────────────────────────────────────────────── */
-.league-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  max-width: 900px;
-  margin: 0 auto 32px;
-  padding: 0 var(--page-pad);
-}
-.league-card {
-  border-radius: 16px;
-  padding: 32px 28px;
-  border: 1.5px solid;
-}
-.league-card.camera { background: var(--camera-blue-tint); border-color: var(--camera-blue-border); }
-.league-card.mobile { background: var(--mobile-green-tint); border-color: var(--mobile-green-border); }
-
-.league-icon-circle {
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  margin-bottom: 14px;
-}
-.league-card.camera .league-icon-circle { background: var(--camera-blue-circle); }
-.league-card.mobile .league-icon-circle { background: var(--mobile-green-circle); }
-
-.league-label {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.league-card.camera .league-label { color: var(--camera-blue); }
-.league-card.mobile .league-label { color: var(--mobile-green); }
-
-.league-name { font-size: 26px; font-weight: 800; color: var(--text-primary); margin: 0 0 8px; }
-.league-tagline { font-size: 14px; color: var(--text-muted); line-height: 1.55; margin-bottom: 20px; }
-
-.league-divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 0 0 20px; }
-
-.league-price-block { margin-bottom: 22px; }
-.league-price-from {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-.league-price-amount { font-size: 34px; font-weight: 800; color: var(--text-primary); line-height: 1.5; }
-.league-price-amount sup { font-size: 18px; }
-.league-price-note { font-size: 13px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
-.league-price-alt { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
-
-.league-receive-box {
-  background: rgba(255,255,255,0.55);
-  border-radius: 12px;
-  padding: 16px 12px;
-  margin-bottom: 22px;
-}
-.league-receive-title {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  text-align: center;
-  margin-bottom: 12px;
-}
-.league-card.camera .league-receive-title { color: var(--camera-blue); }
-.league-card.mobile .league-receive-title { color: var(--mobile-green); }
-.league-receive-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  text-align: center;
-}
-.league-receive-item svg { display: block; margin: 0 auto 6px; }
-.league-card.camera .league-receive-item svg { color: var(--camera-blue); }
-.league-card.mobile .league-receive-item svg { color: var(--mobile-green); }
-.league-receive-item span { font-size: 13px; color: var(--text-secondary); line-height: 1.5; display: block; }
-
-.league-features { list-style: none; padding: 0; margin: 0 0 26px; }
-.league-features li {
-  font-size: 13.5px;
-  color: var(--text-secondary);
-  padding: 5px 0;
-  display: flex; align-items: flex-start; gap: 8px;
-  line-height: 1.5;
-}
-.league-features li::before {
-  content: '✓';
-  font-weight: 700;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.league-card.camera .league-features li::before { color: var(--camera-blue); }
-.league-card.mobile .league-features li::before { color: var(--mobile-green); }
-
-.league-cta {
-  display: block;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 14px 24px;
-  min-height: 44px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background .18s, color .18s, transform .15s;
-}
-.league-cta:active { transform: scale(0.98); }
-.league-cta.camera { background: var(--camera-blue-dark); color: #FFFFFF; }
-.league-cta.camera:hover { background: #14283F; }
-.league-cta.mobile { background: var(--mobile-green-dark); color: #FFFFFF; border: none; }
-.league-cta.mobile:hover { background: #3d5c28; }
-
-/* ── Secondary cards row: Not ready / Founding member ────────────────── */
-.secondary-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  max-width: 900px;
-  margin: 0 auto 56px;
-  padding: 0 var(--page-pad);
-}
-.secondary-card {
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 22px 24px;
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-.secondary-icon {
-  flex-shrink: 0;
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: #F5E9D0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 19px;
-}
-.secondary-body strong { display: block; font-size: 15px; color: var(--text-primary); margin-bottom: 4px; }
-.secondary-body p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0 0 12px; }
-.secondary-body .btn-register {
-  display: inline-block;
-  background: #1A1A18; color: #FFFFFF;
-  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-  letter-spacing: .06em; text-transform: uppercase;
-  padding: 10px 18px; border-radius: 7px; text-decoration: none;
-}
-.secondary-body .lock-pill {
-  display: inline-block;
-  background: var(--gold); color: #1A1A18;
-  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-  letter-spacing: .04em; padding: 3px 9px; border-radius: 20px;
-  margin-bottom: 8px;
-}
-.secondary-footnote { font-size: 13px; color: var(--text-disabled); margin-top: 8px; line-height: 1.5; }
-
-/* ── Compare table ─────────────────────────────────────────────────── */
-.compare-section {
-  max-width: 900px;
-  margin: 0 auto 64px;
-  padding: 0 var(--page-pad);
-}
-.compare-section h2 {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-align: center;
-  margin: 0 0 24px;
-}
-.compare-table-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-.compare-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
-.compare-table th {
-  font-family: var(--font-mono);
-  font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--text-muted); text-align: left; padding: 10px 12px;
-  border-bottom: 1.5px solid var(--surface-4);
-}
-.compare-table th:not(:first-child) { text-align: center; }
-.compare-table th.highlight { background: #FFF8E8; border-radius: 8px 8px 0 0; color: #8a6400; }
-.compare-table td {
-  padding: 11px 12px; border-bottom: 1px solid var(--surface-3);
-  color: var(--text-primary); vertical-align: middle;
-}
-.compare-table td:not(:first-child) { text-align: center; }
-.compare-table td.highlight { background: #FFFBF0; }
-.compare-table tr:last-child td.highlight { border-radius: 0 0 8px 8px; }
-.compare-table .check { color: var(--camera-blue); font-size: 15px; }
-.compare-table .dash { color: var(--surface-4); }
-
-/* ── Why subscribe strip ──────────────────────────────────────────── */
-.why-strip {
+/* ── Plans grid ── */
+.pr-plans {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  max-width: 900px;
-  margin: 0 auto 64px;
-  padding: 20px var(--page-pad);
-  border-top: 1px solid var(--surface-4);
-  border-bottom: 1px solid var(--surface-4);
+  max-width: 1080px;
+  margin: 44px auto 0;
+  padding: 0 var(--page-pad);
 }
-.why-item { display: flex; align-items: flex-start; gap: 10px; }
-.why-item svg { flex-shrink: 0; margin-top: 2px; color: var(--text-muted); }
-.why-item strong { display: block; font-size: 13.5px; color: var(--text-primary); margin-bottom: 2px; }
-.why-item span { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.pr-plan {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.pr-plan.featured {
+  background: var(--surface-2);
+  border: 2px solid var(--gold);
+}
+.pr-plan-pill {
+  position: absolute; top: -13px;
+  left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: #1a1200;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 16px; border-radius: 20px;
+  white-space: nowrap;
+}
+.pr-plan-label {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 10px;
+}
+.pr-plan-price {
+  font-size: 38px; font-weight: 700;
+  color: var(--text-primary); line-height: 1;
+  margin-bottom: 6px;
+}
+.pr-plan-price sup { font-size: 18px; vertical-align: super; }
+.pr-plan-period {
+  font-size: 14px; color: var(--text-muted); margin-bottom: 18px;
+}
+.pr-plan-tagline {
+  font-size: 16px; color: var(--text-secondary);
+  line-height: 1.7; margin-bottom: 18px;
+  min-height: 140px;
+}
+.pr-divider {
+  height: 1px; background: var(--border); margin-bottom: 18px;
+}
+.pr-features { list-style: none; flex: 1; }
+.pr-features li {
+  font-size: 15px; color: var(--text-secondary);
+  line-height: 1.6; padding: 7px 0 7px 26px;
+  position: relative;
+  border-bottom: 1px solid var(--surface-3);
+}
+.pr-features li:last-child { border-bottom: none; }
+.pr-features li::before {
+  content: '✓'; position: absolute; left: 0;
+  color: var(--text-primary); font-weight: 700;
+}
+.pr-features li.dim { color: var(--text-muted); }
+.pr-features li.dim::before { content: '—'; color: var(--border-strong); }
+.pr-sample {
+  font-size: 14px; color: var(--text-primary);
+  font-weight: 600; text-decoration: underline;
+  margin-top: 16px; display: block;
+  text-align: center; cursor: pointer;
+}
+.pr-cta {
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 14px; padding: 14px;
+  font-size: 16px; font-weight: 700;
+  border-radius: 8px; cursor: pointer;
+  min-height: 52px; text-decoration: none;
+  border: none; width: 100%; text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+.pr-cta-gold { background: var(--gold); color: #1a1200; }
+.pr-cta-outline {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1.5px solid var(--gold);
+}
+.pr-cta-navy {
+  background: var(--navy, #1A2744);
+  color: #fff;
+}
 
-/* ── Responsive ────────────────────────────────────────────────────── */
-@media (max-width: 860px) {
-  .period-grid { grid-template-columns: 1fr; max-width: 420px; gap: 20px; }
-  .league-grid { grid-template-columns: 1fr; max-width: 480px; }
-  .secondary-grid { grid-template-columns: 1fr; max-width: 480px; }
-  .why-strip { grid-template-columns: 1fr; max-width: 480px; }
+
+/* ── International waitlist ── */
+.pr-intl {
+  max-width: 1080px; margin: 20px auto 0;
+  padding: 0 var(--page-pad);
 }
+.pr-intl-inner {
+  background: var(--surface-1);
+  border-left: 3px solid var(--text-primary);
+  border-radius: 0 8px 8px 0;
+  padding: 18px 22px;
+}
+.pr-intl-inner p {
+  font-size: 15px; color: var(--text-primary);
+  line-height: 1.65; margin-bottom: 10px;
+}
+.pr-intl-inner p.muted {
+  color: var(--text-secondary); margin-bottom: 12px;
+}
+.pr-intl-form {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.pr-intl-form input {
+  flex: 1; min-width: 160px; padding: 10px 14px;
+  font-size: 15px; border: 1px solid var(--border-strong);
+  border-radius: 6px; background: var(--surface-2);
+  color: var(--text-primary);
+}
+.pr-intl-form button {
+  padding: 10px 20px; font-size: 15px; font-weight: 700;
+  background: var(--text-primary); color: var(--surface-2);
+  border: none; border-radius: 6px; cursor: pointer;
+  min-height: 44px;
+}
+.pr-intl-note {
+  font-size: 13px; color: var(--text-muted); margin-top: 8px;
+}
+
+/* ── Comparison table ── */
+.pr-compare {
+  max-width: 1080px; margin: 44px auto 0;
+  padding: 0 var(--page-pad);
+}
+.pr-compare h2 {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 20px;
+}
+.pr-table-wrap { overflow-x: auto; }
+.pr-table {
+  width: 100%; border-collapse: collapse; font-size: 15px;
+}
+.pr-table th {
+  text-align: left; padding: 10px 14px;
+  border-bottom: 2px solid var(--border-strong);
+  color: var(--text-muted); font-weight: 700;
+  font-size: 13px; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.pr-table th.hl { color: var(--text-primary); }
+.pr-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary); vertical-align: middle;
+  line-height: 1.5;
+}
+.pr-table tr:last-child td { border-bottom: none; }
+.pr-table .check { color: var(--text-primary); font-weight: 700; }
+.pr-table .dash { color: var(--border-strong); }
+.pr-table .row-key { font-weight: 500; color: var(--text-primary); }
+
+/* ── Why three blocks ── */
+.pr-why {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; max-width: 1080px;
+  margin: 36px auto 0; padding: 0 var(--page-pad);
+}
+.pr-why-item {
+  background: var(--surface-1); border-radius: 10px;
+  padding: 24px 22px;
+}
+.pr-why-h {
+  font-size: 17px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 10px; line-height: 1.5;
+}
+.pr-why-b {
+  font-size: 15px; color: var(--text-secondary); line-height: 1.75;
+}
+
+/* ── Sign-off ── */
+.pr-signoff {
+  text-align: center; padding: 44px var(--page-pad) 56px;
+  border-top: 1px solid var(--border); margin-top: 44px;
+}
+.pr-signoff-h {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 6px;
+}
+.pr-signoff-sub { font-size: 15px; color: var(--text-muted); }
+
+/* ── Mobile ── */
+@media (max-width: 900px) {
+  .pr-plans { grid-template-columns: 1fr; max-width: 480px; }
+  .pr-plan-tagline { min-height: unset; }
+  .pr-why { grid-template-columns: 1fr; }
+    }
 @media (max-width: 600px) {
-  .pricing-hero { padding: 40px var(--page-pad) 4px; }
-  .pricing-hero h1 { font-size: 28px; }
-  .trial-banner { flex-direction: column; text-align: center; align-items: center; }
-  .trial-banner-text { text-align: center; }
-  .league-card { padding: 24px 20px; }
-  .league-receive-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-  .league-receive-item span { font-size: 14px; }
-  .compare-table { font-size: 14px; }
-  .compare-table th, .compare-table td { padding: 9px 6px; }
+  .pr-hero h1 { font-size: clamp(24px, 7vw, 32px); }
+  .pr-hero-200 { font-size: 16px; }
+  .pr-plan-tagline { font-size: 15px; }
+  .pr-features li { font-size: 14px; }
+  .pr-table { font-size: 14px; }
+  .pr-table th, .pr-table td { padding: 8px 10px; }
 }
-
-  /* Make non-active period cards visually recede — active card drives the CTA */
-  .period-card:not(.active) {
-    opacity: 0.55;
-    transform: scale(0.97);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-  .period-card:not(.active):hover {
-    opacity: 0.85;
-    transform: scale(0.99);
-    cursor: pointer;
-  }
-  .period-card.active {
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-  /* Arrow pointing from active period card down to CTA */
-  .period-selects-cta-note {
-    text-align: center;
-    font-size: 13px;
-    color: #8a8070;
-    margin: 12px 0 20px;
-    letter-spacing: 0.03em;
-  }
-
 </style>
 
 {# ── Hero ── #}
-<div class="pricing-hero">
-  <h1>Choose your league.</h1>
-  <p>One membership. Years of photographic growth.</p>
-</div>
-
-{# ── Free trial banner ── #}
-<div class="trial-banner">
-  <div class="trial-banner-icon">🎁</div>
-  <div class="trial-banner-text">
-    <strong>Try your first 3 complimentary evaluations.</strong>
-    <span>See exactly how Shutter League evaluates your photography. No card required.</span>
+<div class="pr-hero">
+  <div class="pr-hero-eye">Photography evaluation platform</div>
+  <h1>You've seen what the platform sees.<br>Now build the record.</h1>
+  <p class="pr-hero-built">Built by award-winning photographers, for photographers who want to get better.</p>
+  <p class="pr-hero-200">Chess has Elo. Cricket has ICC standings.<br>In 200 years of photography — nobody built one. Until now.</p>
+  <p class="pr-hero-std">The standard is the same whether you are in Bengaluru or Berlin.</p>
+  <div class="pr-proof">
+    <p class="pr-proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
+    <p class="pr-proof-a"><strong>Vaibhav Parakh</strong> · Mobile photographer · Shutter League</p>
   </div>
 </div>
 
-{# ── India-only payment notice ── #}
-<div style="margin:0 auto 24px;max-width:680px;background:#F5F0E8;border-left:3px solid #2C3E6B;border-radius:4px;padding:14px 20px;font-family:Inter,Arial,sans-serif;">
-  <p style="margin:0;font-size:15px;color:#2a2a28;line-height:1.6;">
-    <strong style="color:#2C3E6B;">India payments only.</strong>
-    Membership payments are accepted through Indian bank accounts, UPI, and Indian debit or credit cards only.
-    International cards and accounts outside India are not supported at this time.
-  </p>
-</div>
+{# ── Plans ── #}
+<div class="pr-plans">
 
-{# ── Billing period cards ── #}
-<div class="period-grid" role="group" aria-label="Billing period">
-
-  <div class="period-card" id="period-monthly" onclick="setPlan('monthly')">
-    <div class="period-label">Monthly</div>
-    <div class="period-price"><sup class="unit">₹</sup>200<span class="unit"> / month</span></div>
-    <div class="period-evaluate">Evaluate up to<strong>4 photographs</strong></div>
-    <div class="period-caption">Perfect for getting started.</div>
-  </div>
-
-  <div class="period-card" id="period-half_yearly" onclick="setPlan('half_yearly')">
-    <span class="period-save-pill">SAVE 8%</span>
-    <div class="period-label">6 Months</div>
-    <div class="period-price"><sup class="unit">₹</sup>1,100</div>
-    <div class="period-evaluate">Evaluate up to<strong>24 photographs</strong></div>
-    <div class="period-caption">Build consistency. See progress.</div>
-  </div>
-
-  <div class="period-card active" id="period-annual" onclick="setPlan('annual')">
-    <span class="period-popular-pill">★ Most Popular</span>
-    <span class="period-save-pill">SAVE 17%</span>
-    <div class="period-label">Annual – Best Value</div>
-    <div class="period-price"><sup class="unit">₹</sup>2,000<span class="unit"> / year</span></div>
-    <div class="period-evaluate">Evaluate up to<strong>48 photographs</strong></div>
-    <div class="period-caption">The complete photographic journey.</div>
-    <div class="period-equiv-bar">Equivalent to just ₹167 / month</div>
-  </div>
-
-</div>
-
-{# ── League cards ── #}
-<p class="period-selects-cta-note">↑ Select a billing period above — your choice sets the price below</p>
-
-<div class="league-grid">
-
-  {# Camera League #}
-  <div class="league-card camera">
-    <div class="league-icon-circle">📷</div>
-    <div class="league-label">Camera League</div>
-    <div class="league-name">Camera</div>
-    <div class="league-tagline">For photographers who carry glass. DSLR, mirrorless, medium format.</div>
-    <hr class="league-divider">
-
-    <div class="league-price-block">
-      <div class="league-price-from">From</div>
-      <div class="league-price-amount"><sup>₹</sup><span id="camera-price">167</span></div>
-      <div class="league-price-note" id="camera-price-note">per month (billed annually)</div>
-      <div class="league-price-alt" id="camera-price-alt">or ₹200 billed monthly</div>
-    </div>
-
-    <div class="league-receive-box">
-      <div class="league-receive-title">Every month you'll receive</div>
-      <div class="league-receive-grid">
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>4 fresh evaluations</span>
-        </div>
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-          <span>Daily coaching brief</span>
-        </div>
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span>League standing</span>
-        </div>
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
-          <span>Progress history</span>
-        </div>
-      </div>
-    </div>
-
-    <ul class="league-features">
-      <li>5-dimension evaluation card per image</li>
-      <li>RAW file eligible</li>
-      <li>Camera League standing &amp; DDI index</li>
-      <li>Location &amp; season-aware practice</li>
+  {# Annual #}
+  <div class="pr-plan featured">
+    <div class="pr-plan-pill">★ Build the record</div>
+    <div class="pr-plan-label">Annual</div>
+    <div class="pr-plan-price"><sup>₹</sup>4,000<span style="font-size:16px;font-weight:400;color:var(--text-muted);white-space:nowrap"> / year</span></div>
+    <div class="pr-plan-period">₹333 per month · 48 Full Evaluations</div>
+    <p class="pr-plan-tagline">The complete record begins here. Every photograph remembered. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>48 Full Evaluations per year</li>
+      <li>Mentor narrative on every photograph</li>
       <li>Annual Excellence Award eligibility</li>
-      <li>Body of Work</li>
-      <li>Peer evaluation</li>
-    </ul>
-
-    <div id="cta-camera-plan-label" style="font-size:13px;color:#8a8070;text-align:center;margin-bottom:8px;letter-spacing:0.04em;">Annual plan selected</div>
-    <button class="league-cta camera" id="cta-camera" onclick="startDirectPayment('camera')">
-      <span id="cta-camera-text">Pay ₹2,000 — Activate</span>
-    </button>
+      <li>Calibrated standing — Camera or Mobile League</li>
+      <li>Your evolving portrait — begins at 10 evaluations</li>
+      <li>Missions and weekly challenges</li>
+      <li>Next Shot advisory after every evaluation</li>
+      <li>Memory-aware re-evaluation</li>
+      <li>Location advisory — where to shoot next</li>
+          </ul>
+    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
 
-  {# Mobile League #}
-  <div class="league-card mobile">
-    <div class="league-icon-circle">📱</div>
-    <div class="league-label">Mobile League</div>
-    <div class="league-name">Mobile</div>
-    <div class="league-tagline">For photographers who shoot on a phone. Evaluated on its own terms.</div>
-    <hr class="league-divider">
-
-    <div class="league-price-block">
-      <div class="league-price-from">From</div>
-      <div class="league-price-amount"><sup>₹</sup><span id="mobile-price">167</span></div>
-      <div class="league-price-note" id="mobile-price-note">per month (billed annually)</div>
-      <div class="league-price-alt" id="mobile-price-alt">or ₹200 billed monthly</div>
-    </div>
-
-    <div class="league-receive-box">
-      <div class="league-receive-title">Every month you'll receive</div>
-      <div class="league-receive-grid">
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>4 fresh evaluations</span>
-        </div>
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-          <span>Daily coaching brief</span>
-        </div>
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span>League standing</span>
-        </div>
-        <div class="league-receive-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
-          <span>Progress history</span>
-        </div>
-      </div>
-    </div>
-
-    <ul class="league-features">
-      <li>5-dimension evaluation card — mobile-calibrated</li>
-      <li>Mobile League standing &amp; DDI index</li>
-      <li>Location &amp; season-aware practice</li>
+  {# 6 Months #}
+  <div class="pr-plan">
+    <div class="pr-plan-label">6 Months</div>
+    <div class="pr-plan-price"><sup>₹</sup>2,500</div>
+    <div class="pr-plan-period">₹417 per month · 24 Full Evaluations</div>
+    <p class="pr-plan-tagline">Six months of the full record. The Mentor narrative, the calibrated standing, the Annual Excellence Award — all of it starts from your first evaluation. When you are ready to extend, the annual record is waiting.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>24 Full Evaluations over 6 months</li>
+      <li>Mentor narrative on every photograph</li>
       <li>Annual Excellence Award eligibility</li>
-      <li>Body of Work</li>
-      <li>Peer evaluation</li>
+      <li>Calibrated standing — Camera or Mobile League</li>
+      <li>Your evolving portrait — begins at 10 evaluations</li>
+      <li>Missions and weekly challenges</li>
+      <li>Next Shot advisory</li>
+      <li>Memory-aware re-evaluation</li>
+      <li>Location advisory</li>
+          </ul>
+    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
+  </div>
+
+  {# 100 for 100 #}
+  <div class="pr-plan">
+    <div class="pr-plan-label">100 for 100</div>
+    <div class="pr-plan-price"><sup>₹</sup>100</div>
+    <div class="pr-plan-period">One-time · 100 Basic Evaluations</div>
+    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League of Photographers is here.</p>
+    <div class="pr-divider"></div>
+    <ul class="pr-features">
+      <li>100 Basic Evaluations</li>
+      <li>Five-dimension feedback on every photograph</li>
+      <li>Your pattern across 100 photographs</li>
+      <li>See how your eye develops over time</li>
+      <li>One-time purchase — no subscription</li>
     </ul>
-
-    <div id="cta-mobile-plan-label" style="font-size:13px;color:#8a8070;text-align:center;margin-bottom:8px;letter-spacing:0.04em;">Annual plan selected</div>
-    <button class="league-cta mobile" id="cta-mobile" onclick="startDirectPayment('mobile')">
-      <span id="cta-mobile-text">Pay ₹2,000 — Activate</span>
-    </button>
+    <a href="{{ url_for('try_standing', image_id=28) }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
   </div>
 
 </div>
 
-{# ── Secondary cards: Not ready / Founding Member ── #}
-<div class="secondary-grid">
-
-  <div class="secondary-card">
-    <div class="secondary-icon">🎁</div>
-    <div class="secondary-body">
-      <strong>Not ready yet?</strong>
-      <p>Start with 3 complimentary evaluations. See exactly how Shutter League evaluates your photography before deciding to join.</p>
-      <a href="{{ url_for('register') }}" class="btn-register">Register Free</a>
-      <div class="secondary-footnote">No card required.</div>
+{# ── Track selection modal (hidden) ── #}
+<div id="pr-track-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+  <div style="background:var(--surface-2);border-radius:14px;padding:32px;max-width:440px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">Annual — ₹4,000</div>
+    <p style="font-size:15px;color:var(--text-secondary);margin-bottom:24px;line-height:1.6">Camera League for DSLR, mirrorless, and medium format. Mobile League for smartphone photographers — evaluated on its own terms.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <button onclick="startDirectPayment('camera')" style="padding:16px;font-size:15px;font-weight:700;background:var(--gold);color:#1a1200;border:none;border-radius:8px;cursor:pointer;min-height:52px">Camera League →</button>
+      <button onclick="startDirectPayment('mobile')" style="padding:16px;font-size:15px;font-weight:700;background:var(--surface-1);color:var(--text-primary);border:1.5px solid var(--border-strong);border-radius:8px;cursor:pointer;min-height:52px">Mobile League →</button>
     </div>
+    <button onclick="document.getElementById('pr-track-modal').style.display='none'" style="width:100%;padding:10px;font-size:14px;color:var(--text-muted);background:none;border:none;cursor:pointer">Cancel</button>
   </div>
-
-  <div class="secondary-card">
-    <div class="secondary-icon">🛡️</div>
-    <div class="secondary-body">
-      <span class="lock-pill">Lock ₹200/month forever</span>
-      <strong>Founding Member — Join before January 2027</strong>
-      <p>Your membership price never increases while you remain subscribed.</p>
-      <div class="secondary-footnote">Standard pricing increases after January 2027.</div>
-    </div>
-  </div>
-
 </div>
 
-{# ── Compare table ── #}
-<div class="compare-section">
-  <h2>What's included</h2>
-  <div class="compare-table-scroll">
-  <table class="compare-table">
+{# ── India only + International waitlist ── #}
+<div class="pr-intl">
+  <div class="pr-intl-inner">
+    <p><strong>India payments only.</strong> Membership payments are currently accepted through Indian bank accounts, UPI, and Indian debit or credit cards only. International payments are not yet supported.</p>
+    <p class="muted">Photographer outside India? Leave your email and we will notify you when international payments open.</p>
+    <form class="pr-intl-form" onsubmit="submitIntlWaitlist(event)">
+      <input type="email" name="email" placeholder="your@email.com" required>
+      <input type="text" name="country" placeholder="Country" style="max-width:150px" required>
+      <button type="submit">Notify me</button>
+    </form>
+    <div class="pr-intl-note">Your details are stored securely. We will only contact you when international payments are available.</div>
+  </div>
+</div>
+
+{# ── Comparison table ── #}
+<div class="pr-compare">
+  <h2>What you get</h2>
+  <div class="pr-table-wrap">
+  <table class="pr-table">
     <thead>
       <tr>
-        <th>Feature</th>
-        <th>Free</th>
-        <th>Monthly<br>₹200/month</th>
-        <th>6 Months<br>₹1,100 (Save 8%)</th>
-        <th class="highlight">Annual<br>₹2,000 (Save 17%)</th>
+        <th style="width:36%"> </th>
+        <th class="hl">Annual ₹4,000</th>
+        <th>6 Months ₹2,500</th>
+        <th>100 for 100 ₹100</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>DDI evaluations</td>
-        <td>3 complimentary</td>
-        <td>4 photographs</td>
-        <td>24 photographs</td>
-        <td class="highlight">48 photographs</td>
-      </tr>
-      <tr>
-        <td>5-dimension evaluation card</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>DDI standing &amp; league</td>
-        <td>Shadow only</td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>RAW file eligible</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>Mobile-calibrated scoring</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>Personalised daily brief</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>Location &amp; season-aware practice</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>Annual Excellence Award</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>Body of Work</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-      <tr>
-        <td>Peer evaluation</td>
-        <td><span class="dash">—</span></td>
-        <td><span class="check">✓</span></td>
-        <td><span class="check">✓</span></td>
-        <td class="highlight"><span class="check">✓</span></td>
-      </tr>
-    </tbody>
+      <tr><td class="row-key">Evaluations</td><td class="check">48 Full / year</td><td class="check">24 Full / 6 months</td><td class="check">100 Basic</td></tr>
+      <tr><td class="row-key">Evaluation type</td><td class="check">Full — Mentor + five dimensions</td><td class="check">Full — Mentor + five dimensions</td><td style="color:var(--text-secondary)">Basic — five dimensions</td></tr>
+      <tr><td class="row-key">Mentor narrative</td><td class="check">✓ every photograph</td><td class="check">✓ every photograph</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Annual Excellence Award</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Calibrated standing</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Your evolving portrait</td><td class="check">✓ begins at 10</td><td class="check">✓ begins at 10</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Missions and challenges</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Next Shot advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+          </tbody>
   </table>
   </div>
 </div>
 
-{# ── Why subscribe strip ── #}
-<div class="why-strip">
-  <div class="why-item">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-    <div>
-      <strong>Why photographers subscribe</strong>
-      <span>Instagram measures popularity. We measure growth.</span>
+{# ── Why three blocks ── #}
+<div class="pr-why">
+  <div class="pr-why-item">
+    <div class="pr-why-h">Honest, not algorithmic</div>
+    <p class="pr-why-b">When this platform says your photograph is Grandmaster level, that tier was calibrated by photographers evaluating real images blind — not an algorithm rating itself.</p>
+    <div class="pr-proof" style="margin-top:16px;padding:12px 16px">
+      <p class="pr-proof-q" style="font-size:15px">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</p>
+      <p class="pr-proof-a" style="font-size:13px"><strong>Mahesh Iyer</strong> · Grandmaster · Standing 105 of 20,000 globally, PhotoCrowd · 37 evaluations</p>
     </div>
   </div>
-  <div class="why-item">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-    <div>
-      <strong>Others measure</strong>
-      <span>one photograph. We measure your journey.</span>
-    </div>
+  <div class="pr-why-item">
+    <div class="pr-why-h">The record is permanent</div>
+    <p class="pr-why-b">One year from now — or three — every photograph you uploaded is still here. The record of how your eye changed is permanent. Nothing is lost. Nothing resets.</p>
   </div>
-  <div class="why-item">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    <div>
-      <strong>Shutter League measures</strong>
-      <span>how your seeing evolves. Every photograph. Over time.</span>
-    </div>
+  <div class="pr-why-item">
+    <div class="pr-why-h">The credential compounds</div>
+    <p class="pr-why-b">The Annual Excellence Award is decided by consistency across twelve months. The longer you are on the platform, the more it has seen of your eye. The credential you earn in year three means more than year one — because it was harder to earn.</p>
   </div>
 </div>
 
-<script>
-  let currentPlan = 'annual';
+{# ── Sign-off ── #}
+<div class="pr-signoff">
+  <div class="pr-signoff-h">Shutter League · Making Images Matter</div>
+  <div class="pr-signoff-sub">Bengaluru, India · UDYAM-KR-03-0697280</div>
+</div>
 
-  const planData = {
-    monthly:     { camera: '200', mobile: '200', note: 'per month', alt: null,           charge: '200',  label: 'Pay ₹200 — Activate',  rzpPlan: 'monthly'    },
-    half_yearly: { camera: '183', mobile: '183', note: 'per month (billed ₹1,100 every 6 months)', alt: 'or ₹200 billed monthly', charge: '1,100', label: 'Pay ₹1,100 — Activate', rzpPlan: 'halfyearly' },
-    annual:      { camera: '167', mobile: '167', note: 'per month (billed annually)', alt: 'or ₹200 billed monthly', charge: '2,000', label: 'Pay ₹2,000 — Activate', rzpPlan: 'annual'     },
-  };
-
-  const planLabels = {
-    monthly:     'Monthly plan selected',
-    half_yearly: '6-month plan selected',
-    annual:      'Annual plan selected',
-  };
-
-  function setPlan(plan) {
-    currentPlan = plan;
-
-    ['monthly', 'half_yearly', 'annual'].forEach(p => {
-      const card = document.getElementById('period-' + p);
-      if (card) card.classList.toggle('active', p === plan);
-    });
-
-    // Update plan label above CTAs
-    const label = planLabels[plan] || '';
-    ['cta-camera-plan-label', 'cta-mobile-plan-label'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = label;
-    });
-
-    const data = planData[plan];
-    ['camera', 'mobile'].forEach(track => {
-      document.getElementById(track + '-price').textContent = data[track];
-      document.getElementById(track + '-price-note').textContent = data.note;
-      const altEl = document.getElementById(track + '-price-alt');
-      if (data.alt) {
-        altEl.textContent = data.alt;
-        altEl.style.display = 'block';
-      } else {
-        altEl.style.display = 'none';
-      }
-    });
-
-    ['camera', 'mobile'].forEach(track => {
-      const textEl = document.getElementById('cta-' + track + '-text');
-      if (textEl) textEl.textContent = data.label;
-      const cta = document.getElementById('cta-' + track);
-      if (cta && cta.href) {
-        const base = cta.href.split('?')[0];
-        cta.href = base + '?plan=' + data.rzpPlan;
-      }
-    });
-  }
-
-  // Initialise on load
-  setPlan('annual');
-</script>
-
-{# ── Direct payment — Razorpay opens without intermediate page ── #}
+{# ── Razorpay ── #}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-{# Hidden confirm form — submitted after successful Razorpay payment #}
+{# Hidden confirm form #}
 <form id="confirm-form" method="POST" action="{{ url_for('subscribe_confirm') }}" style="display:none;">
   <input type="hidden" name="razorpay_payment_id"      id="cf_payment_id">
   <input type="hidden" name="razorpay_subscription_id" id="cf_subscription_id">
@@ -801,88 +460,90 @@
   <input type="hidden" name="plan"                      id="cf_plan">
 </form>
 
+<div id="pr-data"
+     data-loggedin="{{ 'true' if current_user.is_authenticated else 'false' }}"
+     data-loginurl="{{ url_for('login') }}?next={{ url_for('pricing') }}"
+     data-payurl="{{ url_for('api_create_payment') }}"
+     aria-hidden="true" style="display:none;"></div>
 <script>
-var _isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
-var _loginUrl   = '{{ url_for("login") }}?next={{ url_for("pricing") }}';
+var _isLoggedIn = document.getElementById('pr-data').dataset.loggedin === 'true';
+var _loginUrl   = document.getElementById('pr-data').dataset.loginurl;
+var _currentPlan = 'annual';
+var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 for 100 — ₹100'];
+var _planKeys    = ['annual','half_yearly','play'];
+var _planRzp     = ['annual','halfyearly','play'];
+var _planCharges = [4000, 2500, 100];
+
+function _getPlanData(plan) {
+  var idx = _planKeys.indexOf(plan);
+  if (idx < 0) return null;
+  return {label: _planLabels[idx], charge: _planCharges[idx], rzpPlan: _planRzp[idx]};
+}
+
+function startPricing(plan) {
+  if (!_isLoggedIn) { window.location.href = _loginUrl; return; }
+  _currentPlan = plan;
+  if (plan === 'play') { startDirectPayment('camera'); return; }
+  var modal = document.getElementById('pr-track-modal');
+  var d = _getPlanData(plan);
+  document.getElementById('pr-modal-plan-label').textContent = d ? d.label : '';
+  modal.style.display = 'flex';
+}
 
 function startDirectPayment(track) {
-  // If not logged in — go to login first
-  if (!_isLoggedIn) {
-    window.location.href = _loginUrl;
-    return;
-  }
-
-  var plan = currentPlan.replace('half_yearly', 'halfyearly');
-  var btn  = document.getElementById('cta-' + track);
-  var txt  = document.getElementById('cta-' + track + '-text');
-
-  btn.disabled   = true;
-  txt.textContent = 'Opening payment…';
-
-  // Create order/subscription server-side
-  fetch('{{ url_for("api_create_payment") }}', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ track: track, plan: plan }),
-  })
+  document.getElementById('pr-track-modal').style.display = 'none';
+  var d = _getPlanData(_currentPlan);
+  if (!d) return;
+  var payload = JSON.stringify({'track': track, 'plan': d.rzpPlan});
+  fetch(document.getElementById('pr-data').dataset.payurl, {method:'POST', headers:{'Content-Type':'application/json'}, body:payload})
   .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.error) {
-      alert(data.error);
-      btn.disabled   = false;
-      txt.textContent = planData[currentPlan].label;
-      return;
-    }
-
-    var options = {
-      key:   data.key,
-      name:  'Shutter League',
-      image: '/static/logo.png',
-      prefill: { email: data.email, name: data.name },
-      theme:   { color: '#F5C518' },
-      modal: {
-        ondismiss: function() {
-          btn.disabled   = false;
-          txt.textContent = planData[currentPlan].label;
-        }
-      }
-    };
-
-    if (data.type === 'order') {
-      options.order_id    = data.order_id;
-      options.amount      = data.amount;
-      options.currency    = 'INR';
-      options.description = (track === 'camera' ? 'Camera League' : 'Mobile League') + ' — Monthly';
-      options.handler = function(response) {
-        document.getElementById('cf_payment_id').value      = response.razorpay_payment_id;
-        document.getElementById('cf_order_id').value        = response.razorpay_order_id;
-        document.getElementById('cf_signature').value       = response.razorpay_signature;
-        document.getElementById('cf_track').value           = track;
-        document.getElementById('cf_plan').value            = plan;
+  .then(function(res) {
+    if (res.error) { alert(res.error); return; }
+    var opts = {key: res.key, name: 'Shutter League', image: '/static/img/shutterleague-logo-cropped.png'};
+    opts.prefill = {email: res.email, name: res.name};
+    opts.theme = {color: '#D4A428'};
+    opts.modal = {ondismiss: function() {}};
+    var desc = (track === 'camera' ? 'Camera' : 'Mobile') + ' — ' + d.label;
+    if (res.type === 'order') {
+      opts.order_id = res.order_id; opts.amount = res.amount; opts.currency = 'INR'; opts.description = desc;
+      opts.handler = function(resp) {
+        document.getElementById('cf_payment_id').value = resp.razorpay_payment_id;
+        document.getElementById('cf_order_id').value = resp.razorpay_order_id;
+        document.getElementById('cf_signature').value = resp.razorpay_signature;
+        document.getElementById('cf_track').value = track;
+        document.getElementById('cf_plan').value = d.rzpPlan;
         document.getElementById('confirm-form').submit();
       };
     } else {
-      options.subscription_id = data.subscription_id;
-      options.description     = (track === 'camera' ? 'Camera League' : 'Mobile League') + ' — ' + (plan === 'halfyearly' ? '6 Months' : 'Annual');
-      options.handler = function(response) {
-        document.getElementById('cf_payment_id').value      = response.razorpay_payment_id;
-        document.getElementById('cf_subscription_id').value = response.razorpay_subscription_id;
-        document.getElementById('cf_signature').value       = response.razorpay_signature;
-        document.getElementById('cf_track').value           = track;
-        document.getElementById('cf_plan').value            = plan;
+      opts.subscription_id = res.subscription_id; opts.description = desc;
+      opts.handler = function(resp) {
+        document.getElementById('cf_payment_id').value = resp.razorpay_payment_id;
+        document.getElementById('cf_subscription_id').value = resp.razorpay_subscription_id;
+        document.getElementById('cf_signature').value = resp.razorpay_signature;
+        document.getElementById('cf_track').value = track;
+        document.getElementById('cf_plan').value = d.rzpPlan;
         document.getElementById('confirm-form').submit();
       };
     }
-
-    var rzp = new Razorpay(options);
-    rzp.open();
+    new Razorpay(opts).open();
   })
-  .catch(function(err) {
-    console.error(err);
-    alert('Could not initialise payment. Please try again.');
-    btn.disabled   = false;
-    txt.textContent = planData[currentPlan].label;
+  .catch(function() { alert('Could not initialise payment. Please try again.'); });
+}
+
+function submitIntlWaitlist(e) {
+  e.preventDefault();
+  var payload = JSON.stringify({'email': e.target.email.value, 'country': e.target.country.value});
+  fetch('/api/international-waitlist', {method:'POST', headers:{'Content-Type':'application/json'}, body:payload})
+  .then(function() {
+    e.target.innerHTML = '<p style="font-size:15px;font-weight:600">Thank you. We will notify you when international payments open.</p>';
+  }).catch(function() {
+    e.target.innerHTML = '<p style="font-size:15px;font-weight:600">Thank you. We will be in touch.</p>';
   });
 }
+
+document.getElementById('pr-track-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
 </script>
+
 {% endblock %}

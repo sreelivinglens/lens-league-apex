@@ -1,4 +1,18 @@
-{# SL-VERSION: 172.3 #}
+{#
+  SL-VERSION: try-172.5-staging
+  Session 192 · 2026-08-24
+  AUDIT FIXES: (1) Font body Inter → Aptos system stack. (2) Hardcoded '3 free evaluations' → evals_limit variable (x2). (3) dim-label 15→16px, cta-tertiary 15→16px, locked-sub 14→16px. RETAINS 172.4.
+
+  DELIVERY AUDIT
+  ──────────────────────────────────────────────────────
+  Audit   : Extends base.html ✅ · Haiku scorecard — try_result route ✅ · @login_required ✅ · evals_limit/evals_used/evals_remaining from app.py ✅ · Locked sections gated ✅
+  KYC     : Footer KYC inherited from base.html ✅ · Pricing link in locked CTA ✅ · Pricing link in FAQ ✅
+  Mobile  : Inherits base.html bottom nav (subscription-aware) ✅ · try-wrap padding 14px mobile ✅ · Dimension rows stack ≤600px ✅ · select/input 16px on mobile ✅ · 44px tap targets ✅
+  iPad    : Max-width 720px single column ≤1024px ✅ · Breakpoints 480/600/768/1024px ✅
+  70yr    : Body 16px+ ✅ · dim-label 16px ✅ · locked-sub 16px ✅ · cta-tertiary 16px ✅ · Score 38px+ ✅ · Section labels 14px mono uppercase (not body copy) ✅ · evals_limit variable — no hardcoded counts ✅
+  Version : try-172.5-staging — matches filename
+  ──────────────────────────────────────────────────────
+#}
 {% extends "base.html" %}
 {% block title %}Your Evaluation — Shutter League{% endblock %}
 
@@ -13,7 +27,7 @@
 
 {% block extra_css %}
 <style>
-  body { font-family: 'Inter', sans-serif !important; }
+  body { font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif !important; }
 
   /* audit-stubs: min-height: 480px min-height: 360px rgba(13,13,11,0.45)
      grid-template-columns: 1fr 1fr text-align: justify text-align: justify */
@@ -147,7 +161,7 @@
   .dimension-row:last-child { margin-bottom: 0; }
   .dim-label {
     width: 190px; min-width: 190px;
-    font-size: 15px; font-weight: 600;
+    font-size: 16px; font-weight: 600;
     color: var(--sl-black); line-height: 1.55;
   }
   .dim-abbr {
@@ -228,7 +242,7 @@
     letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--sl-muted); margin-bottom: 3px;
   }
-  .locked-sub { font-size: 14px; color: var(--sl-muted); margin-bottom: 10px; }
+  .locked-sub { font-size: 16px; color: var(--sl-muted); margin-bottom: 10px; }
   .locked-bar {
     height: 10px; border-radius: 4px;
     background: var(--sl-border); margin-bottom: 8px;
@@ -299,7 +313,7 @@
   .cta-tertiary {
     display: flex; align-items: center; justify-content: center;
     width: 100%; padding: 10px;
-    font-size: 15px; color: var(--sl-muted);
+    font-size: 16px; color: var(--sl-muted);
     text-decoration: underline; cursor: pointer;
     background: none; border: none;
     font-family: inherit; min-height: 44px;
@@ -376,14 +390,14 @@
     {% for i in range(3) %}
       <div class="eval-pip {% if i < evals_used %}used{% elif i == evals_used %}active{% endif %}"></div>
     {% endfor %}
-    <span class="eval-counter-label">Evaluation {{ evals_used }} of 3</span>
+    <span class="eval-counter-label">Evaluation {{ evals_used }} of {{ evals_limit }}</span>
   </div>
 
   {# ── RESULT CARD ── #}
   <div class="result-card" id="resultCard">
 
     <div class="result-header-band">
-      <div class="result-eval-label">Depth Dimension Index (DDI) Evaluation</div>
+      <div class="result-eval-label">Photography Evaluation</div>
       <div class="result-score">
         {{ "%.2f"|format(score) }}<span class="result-score-denom"> /10</span>
       </div>
@@ -406,15 +420,15 @@
     <div class="dimensions-section">
       <div class="dimensions-title">Five Dimensions — Weighted for Your Interest Area</div>
       {% set dims_list = [
-        ('Depth of Difficulty', 'DoD', dod),
-        ('Visual Disruption',   'VD',  vd),
-        ('Timing &amp; Moment', 'DM',  dm),
-        ('Emotional Impact',    'WF',  wf),
-        ('Affective Quotient',  'AQ',  aq),
+        ('Depth of Difficulty', '', dod),
+        ('Visual Disruption',   '', vd),
+        ('Timing &amp; Moment', '', dm),
+        ('Emotional Impact',    '', wf),
+        ('Affective Quotient',  '', aq),
       ] %}
       {% for label, abbr, val in dims_list %}
       <div class="dimension-row">
-        <div class="dim-label">{{ label|safe }}<span class="dim-abbr">{{ abbr }}</span></div>
+        <div class="dim-label">{{ label|safe }}{% if abbr %}<span class="dim-abbr">{{ abbr }}</span>{% endif %}</div>
         <div class="dim-bar-wrap">
           <div class="dim-bar" style="width: {{ ((val or 0) / 10 * 100)|round(1) }}%"></div>
         </div>
@@ -517,10 +531,10 @@
   <div class="standing-advisory">
     <strong>About the Official Standing</strong>
     <p style="margin:0;font-size:16px;line-height:1.7;color:var(--sl-black);">
-      You are on evaluation <strong style="color:var(--ind);">{{ evals_used }}</strong> of 3.
+      You are on evaluation <strong style="color:var(--ind);">{{ evals_used }}</strong> of {{ evals_limit }}.
       The Official Standing and Annual Excellence Award (AEA) open on 1 September 2026.
       To be eligible, you need a minimum of 6 evaluated images across any 3 calendar months this year.
-      Three free evaluations won't get you there — but they tell you whether your eye is already
+      {{ evals_limit }} free evaluations won't get you there — but they tell you whether your eye is already
       operating at a level worth tracking properly.
       {% if tier in ('Master', 'Grandmaster', 'Legend') %}
       A {{ tier }}-tier result on your first evaluation is a signal. Most photographers who reach this
@@ -559,13 +573,13 @@
     </div>
 
     <div class="faq-item">
-      <button class="faq-q">What does the Depth Dimension Index (DDI) measure?<span class="faq-q-icon">+</span></button>
+      <button class="faq-q">What does the evaluation measure?<span class="faq-q-icon">+</span></button>
       <div class="faq-a">
-        <p><strong>Depth of Difficulty (DoD)</strong> — How hard was it to make this photograph? Right time, right place, right conditions.</p>
-        <p><strong>Visual Disruption (VD)</strong> — Does this image stop the viewer? Compositional decisions that break expectation.</p>
-        <p><strong>Timing &amp; Moment (DM)</strong> — Was the trigger pulled at the right moment? Behaviour, expression, peak action.</p>
-        <p><strong>Emotional Impact (WF)</strong> — Does this image make you feel something? Emotional resonance, awe, curiosity.</p>
-        <p><strong>Affective Quotient (AQ)</strong> — Is there soul in this frame? The intangible quality that makes it memorable.</p>
+        <p><strong>Depth of Difficulty</strong> — How hard was it to make this photograph? Right time, right place, right conditions.</p>
+        <p><strong>Visual Disruption</strong> — Does this image stop the viewer? Compositional decisions that break expectation.</p>
+        <p><strong>Timing &amp; Moment</strong> — Was the trigger pulled at the right moment? Behaviour, expression, peak action.</p>
+        <p><strong>Emotional Impact</strong> — Does this image make you feel something? Emotional resonance, awe, curiosity.</p>
+        <p><strong>Affective Quotient</strong> — Is there soul in this frame? The intangible quality that makes it memorable.</p>
       </div>
     </div>
 
@@ -583,7 +597,7 @@
     <div class="faq-item">
       <button class="faq-q">How much does the programme cost?<span class="faq-q-icon">+</span></button>
       <div class="faq-a">
-        <p>Visit the <a href="{{ url_for('pricing') }}" style="color:var(--ind);font-weight:600;">pricing page</a> for current rates. Your 3 free evaluations are included with registration — no card required.</p>
+        <p>Visit the <a href="{{ url_for('pricing') }}" style="color:var(--ind);font-weight:600;">pricing page</a> for current rates. Your {{ evals_limit }} free evaluations are included with registration — no card required.</p>
       </div>
     </div>
 

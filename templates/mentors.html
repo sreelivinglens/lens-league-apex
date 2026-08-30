@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: mentors-175.1 (design consistency: fw800->700, gold token aligned, dark token aligned, font aligned to dashboard, navy token aligned; session 175, 2026-08-07) #}
 {% block title %}Mentors — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -17,8 +18,8 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MENTORS — Session 19
    Inter only · #F7F5F2 light · #EDEAE4 warm
-   #1A1A18 text · #F5C518 gold (dark bg only)
-   #0D0D0B hero bg
+   #1A1A18 text · #D6A428 gold (dark bg only)
+   #0F2A22 hero bg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-men),
 body.page-mentors { padding-top: 0 !important; }
@@ -26,7 +27,7 @@ body:has(.sl-men) main,
 body.page-mentors main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
 .sl-men, .sl-men * {
-  font-family: 'Inter', sans-serif !important;
+  
 }
 
 /* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -34,7 +35,7 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   position: relative;
   width: 100%;
   max-
-  background: #0D0D0B;
+  background: #0F2A22;
   display: flex;
   align-items: flex-end-end;
   overflow: hidden;
@@ -72,13 +73,13 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #F5C518;
+  color: #D6A428;
   margin-bottom: 8px;
 }
 .sl-men-gold-rule {
   width: 32px;
   height: 2px;
-  background: #F5C518;
+  background: #D6A428;
   margin-bottom: 22px;
 }
 .sl-men-hero-h1 {
@@ -116,7 +117,7 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 .sl-men-sec-rule {
   width: 32px;
   height: 2px;
-  background: #F5C518;
+  background: #D6A428;
   margin-bottom: 26px;
 }
 .sl-men-h2 {
@@ -233,14 +234,14 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 .sl-men-card-badge.legend { background: #5b2d8a; }
 .sl-men-card-badge.grandmaster { background: #1a5f7a; }
 .sl-men-card-badge.master { background: #C8A84B; }
-.sl-men-card-badge.founder { background: #1A2744; }
+.sl-men-card-badge.founder { background: #13254B; }
 .sl-men-card-founder-tag {
   position: absolute;
   top: 12px;
   right: 12px;
   background: rgba(245,197,24,0.15);
   border: 1px solid rgba(245,197,24,0.50);
-  color: #F5C518;
+  color: #D6A428;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.10em;
@@ -304,9 +305,9 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   letter-spacing: 0.02em;
 }
 .sl-men-card-btn:hover {
-  background: #1A2744;
+  background: #13254B;
   color: #FFFFFF;
-  border-color: #1A2744;
+  border-color: #13254B;
 }
 /* Social links */
 .sl-men-card-social {
@@ -324,7 +325,7 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   text-decoration: none;
 }
 .sl-men-card-social a:hover {
-  color: #1A2744;
+  color: #13254B;
 }
 /* Portfolio strip — two small sample shots */
 .sl-men-card-portfolio {
@@ -343,7 +344,7 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
   text-align: center;
   font-size: 15px;
   font-weight: 600;
-  color: #F5C518;
+  color: #D6A428;
   text-decoration: none;
   display: inline-block;
   width: 100%;
@@ -410,7 +411,7 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 
 /* ━━ CTA BOTTOM ━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-men-cta {
-  background: #0D0D0B;
+  background: #0F2A22;
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 320px;
@@ -448,8 +449,8 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
 }
 .sl-men-cta-btn {
   display: inline-block;
-  background: #F5C518;
-  color: #0D0D0B;
+  background: #D6A428;
+  color: #0F2A22;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -794,7 +795,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
             </div>
             {% endif %}
             <p class="sl-men-card-price">₹{{ m.get('price', 200) }} <span>per session</span></p>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="sl-men-card-btn" style="background:var(--gold-dark);color:#1A1A18;">Join the League →</a>
+            {% else %}
             <a href="{{ url_for('mentor_register', slug='ashok') }}" class="sl-men-card-btn">Review My Image</a>
+            {% endif %}
           </div>
         </div>
         {% endif %}{# /ashok #}
@@ -829,7 +834,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
             </div>
             {% endif %}
             <p class="sl-men-card-price">₹{{ m.get('price', 150) }} <span>per session</span></p>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="sl-men-card-btn" style="background:var(--gold-dark);color:#1A1A18;">Join the League →</a>
+            {% else %}
             <a href="{{ url_for('mentor_register', slug='gopal') }}" class="sl-men-card-btn">Review My Image</a>
+            {% endif %}
           </div>
         </div>
         {% endif %}{# /gopal #}
@@ -865,7 +874,11 @@ body.page-mentors main { padding: 0 !important; max-width: none !important; marg
             </div>
             {% endif %}
             <p class="sl-men-card-price">₹{{ m.get('price', 100) }} <span>per session</span></p>
+            {% if current_user.is_authenticated and not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="sl-men-card-btn" style="background:var(--gold-dark);color:#1A1A18;">Join the League →</a>
+            {% else %}
             <a href="{{ url_for('mentor_register', slug='sreekumar') }}" class="sl-men-card-btn">Review My Image</a>
+            {% endif %}
           </div>
         </div>
         {% endif %}{# /sreekumar #}

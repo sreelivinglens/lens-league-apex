@@ -14,6 +14,27 @@ Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
 Session 168 (31 Jul 2026): Added check 0b — Jinja {{ }} inside <script> blocks.
+Session 201 (28 Aug 2026):
+  NAV CONSISTENCY — Haiku standalone pages checked for:
+    · Cream topbar background (not dark navy #1A2744)
+    · Logo image (shutterleague-logo-cropped.png) in brand
+    · "Making Images Matter" brand sub (not "Photography Institution")
+    · Correct Haiku route items (try_welcome/try_page/league_haiku)
+    · Mobile bottom nav present with Dashboard/Evaluate/League items
+    · Active colour #C8A84B not #F4C20D
+  META/OG — Smart noindex + canonical rules per page type:
+    · Public pages (league_haiku, pricing_haiku): noindex must be ABSENT
+    · Private pages (dashboard_haiku, try_gallery, image_detail_haiku): noindex required
+    · try_standing now PUBLIC (Session 201) — should be indexed (photographer name SEO)
+  PUBLIC ROUTES — league_haiku and try_standing must NOT have @login_required
+  POST-LOGIN — auth_google_callback must redirect Haiku users to try_welcome not dashboard
+    · Standalone pages (not extending base.html): canonical required
+  EXEMPTIONS — Added to _is_detail_page and _is_mobile_app_page:
+    · try_standing.html, pricing_haiku.html, league_haiku.html
+    · try_gallery, image_detail_haiku, upload-staging
+  OG PREFIX — Every standalone page OG description must start with:
+    "Photography Assessment & Evolution Platform. Making Images Matter."
+    followed by page-specific copy. Flagged as FAIL if missing on standalone pages.
   Any {{ expr }} inside a <script> tag is a FAIL. Dynamic values must be passed
   via data- attributes on HTML elements and read in JS via el.dataset.myval.
   Introduced after dashboard.html and rate.html caused "Unexpected token '{'" errors.
@@ -35,17 +56,18 @@ KYC_TERMS = [
       "endpoint == 'contest'", "in ['contests',",
       "contests_redirect", "'contest'"]),
     ('No KYC: prize',       ' prize',        []),
-    ('No KYC: winner',      ' winner',       []),
-    ('No KYC: winners',     ' winners',      []),
+    ('No KYC: winner',      ' winner',       ['Annual Excellence', 'B&W Spider', 'IPPAWARDS', 'Global Winner', 'award winner', 'Award winner']),
+    ('No KYC: winners',     ' winners',      ['Annual Excellence', 'award winners']),
     ('No KYC: compete',     ' compete',      []),
     ('No KYC: ranking',     'ranking',       ['url_for', 'ranking_season', 'ranking_public',
                                               'ranking_last_active', 'poty_used_year',
-                                              'path_to_rank', 'rp-card', 'rp_card']),
+                                              'path_to_rank', 'rp-card', 'rp_card',
+                                              'ICC rankings', 'ICC ranking', 'FIDE', 'PhotoCrowd']),
     ('No KYC: leaderboard', 'leaderboard',   ["url_for('leaderboard')", 'url_for("leaderboard")',
                                               "endpoint == 'leaderboard'", "endpoint == \"leaderboard\""]),
     ('No KYC: reward',      ' reward',       []),
     ('No KYC: deadline',    'deadline',      []),
-    ('No KYC: submission',  'submission',    ['url_for', 'poty_entry', 'form']),
+    ('No KYC: submission',  'submission',    ['url_for', 'poty_entry', 'form', 'not a single submission', 'single submission']),
     ('No KYC: entry (copy)',
      ' entry',
      ["url_for('contest_enter')", "url_for('my_entries')", "url_for('programme_enter')",
@@ -320,7 +342,7 @@ def _banner():
     print()
     print('=' * 60)
     print('  SHUTTER LEAGUE — PRE-DEPLOY AUDIT')
-    print('  sl_audit.py  .  Unified  .  June 2026')
+    print('  sl_audit.py  .  Unified  .  Session 201  .  Aug 2026')
     print('  Rule 9: No push without explicit founder approval')
     print('=' * 60)
 
@@ -540,7 +562,7 @@ def audit_html(filepath):
         'faq.html', 'pricing.html', 'programmes.html', 'redeem.html', 'aea.html', 'aea_standings.html',
         'challenge.html',
         'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
-        'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
+        'contest_rules.html', 'terms.html', 'terms-prod.html', 'privacy.html', 'refund.html',
         'cancel_subscription.html', 'challenge_submit.html', 'change_password.html',
         'calibration_notes.html', 'example-score.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
@@ -561,6 +583,12 @@ def audit_html(filepath):
         'admin_registrations.html',
         'journey.html',                  # SL 175: full-page journey view, card layout, no hero
         'dashboard_haiku.html',          # SL 175: free user dashboard, card layout, own nav
+        'try_standing.html',             # SL 200: Haiku standalone scorecard, own nav
+        'pricing_haiku.html',            # SL 201: Haiku standalone pricing, own nav
+        'league_haiku.html',             # SL 200: Haiku standalone league, own nav
+        'try_gallery',                   # SL 181: Haiku gallery, extends base
+        'image_detail_haiku',            # SL 176: Haiku scorecard, extends base
+        'upload-staging',                # Haiku upload page, extends base
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -575,6 +603,12 @@ def audit_html(filepath):
         'my_gallery.html',
         'leaderboard.html',
         'dashboard_haiku.html',          # SL 175: free user card-layout dashboard
+        'try_standing.html',             # SL 200: Haiku standalone scorecard
+        'pricing_haiku.html',            # SL 201: Haiku standalone pricing
+        'league_haiku.html',             # SL 200: Haiku standalone league
+        'try_gallery',                   # SL 181: Haiku gallery
+        'image_detail_haiku',            # SL 176: Haiku scorecard
+        'upload-staging',                # Haiku upload
     ])
     # ── APPROVED FONT SIZE EXCEPTIONS (Session 175, approved by Sree) ──────────
     # dashboard.html body-text: 14px (deliberate 70yr improvement, Session 175)
@@ -593,7 +627,7 @@ def audit_html(filepath):
     # Legal document pages: deadline/submission/entry/genre are approved legal terms
     # confirmed Session 142 handoff.
     _is_legal_doc = any(x in fname for x in [
-        'contest_rules', 'terms.html', 'privacy.html', 'refund'
+        'contest_rules', 'terms.html', 'terms-prod', 'privacy.html', 'refund'
     ])
     # Snippet/render-only files — never served standalone as a browser page.
     # Meta tags and CSI checks are not applicable. Session 143.
@@ -625,17 +659,24 @@ def audit_html(filepath):
             if result: _ok(label)
             else: _fail(label); fails += 1
 
-    # ── Fonts ─────────────────────────────────────────────────────────────────
+    # -- Fonts
+    # Approved SL font: Aptos (188M design language, Session 189+). Updated Session 190.
     _section('Fonts')
     if _is_detail_page:
-        _note('Font override checks skipped — detail page uses base.html font stack')
+        _note('Font override checks skipped -- detail page uses base.html font stack')
     else:
-        checks = [
-            ('Inter font only -- !important override', "font-family: 'Inter', sans-serif !important" in content),
-            ('No Georgia in page CSS',                'Georgia' not in content.split('{% block content %}')[0]),
-            ('No JetBrains Mono in page CSS',         'JetBrains' not in content.split('{% block content %}')[0]),
-        ]
-        for label, result in checks:
+        _has_aptos = 'Aptos' in content
+        _has_inter = "font-family: 'Inter', sans-serif !important" in content or ("font-family: 'Inter'" in content and not _has_aptos)
+        if _has_inter:
+            _fail('Inter font found -- replace with Aptos per 188M design language'); fails += 1
+        elif _has_aptos:
+            _ok('Aptos font confirmed -- approved 188M design language')
+        else:
+            _note('No explicit font-family -- verify Aptos via base.html or CSS var')
+        for label, result in [
+            ('No Georgia in page CSS',        'Georgia' not in content),
+            ('No JetBrains Mono in page CSS', 'JetBrains' not in content),
+        ]:
             if result: _ok(label)
             else: _fail(label); fails += 1
 
@@ -1688,6 +1729,81 @@ def audit_apppy(filepath):
     else:
         _ok('No KYC terms in flash messages or render_template context strings')
 
+    # -- Haiku isolation checks (Session 190, Rule 10)
+    _section('Haiku isolation (Rule 10 - raw SQL only for unmapped columns)')
+    _orm_haiku = [l.strip()[:80] for l in lines if 'is_haiku_try' in l and '.filter(' in l and 'db.text' not in l and not l.strip().startswith('#')]
+    if _orm_haiku:
+        _fail('ORM filter on is_haiku_try (' + str(len(_orm_haiku)) + ' hit(s)) - use raw SQL Rule 10: ' + _orm_haiku[0]); fails += 1
+    else:
+        _ok('is_haiku_try: raw SQL only (Rule 10 clean)')
+    _orm_thumb = [l.strip()[:80] for l in lines if 'thumb_url' in l and '.like(' in l and not l.strip().startswith('#')]
+    if _orm_thumb:
+        _fail('ORM .like() on thumb_url - use raw SQL Rule 10: ' + _orm_thumb[0]); fails += 1
+    else:
+        _ok('thumb_url: no ORM .like() (Rule 10 clean)')
+
+    # -- Public Haiku routes — must NOT have @login_required (Session 201)
+    _section('Public Haiku routes — no @login_required (Session 201)')
+    for _pub_route in ['league_haiku', 'try_standing']:
+        _ri = next((i for i,l in enumerate(lines) if f'def {_pub_route}(' in l), None)
+        if _ri is not None:
+            # Check the 3 lines before the def for @login_required
+            _before = ''.join(lines[max(0,_ri-3):_ri])
+            if '@login_required' in _before:
+                _fail(f'{_pub_route}() has @login_required — this is a PUBLIC page, remove the decorator')
+                fails += 1
+            else:
+                _ok(f'{_pub_route}() correctly has no @login_required (public page)')
+        else:
+            _note(f'{_pub_route}() not found in this file')
+
+    # -- Post-login redirect — Haiku users must land on try_welcome (Session 201)
+    _section('Post-login redirect — Haiku users → try_welcome (Session 201)')
+    _google_cb = next((i for i,l in enumerate(lines) if 'def auth_google_callback' in l), None)
+    if _google_cb is not None:
+        _cb_end = next((i for i in range(_google_cb+1, min(_google_cb+200, len(lines))) if lines[i].startswith('@app')), _google_cb+200)
+        _cb_src = ''.join(lines[_google_cb:_cb_end])
+        if 'try_welcome' in _cb_src:
+            _ok('auth_google_callback() redirects Haiku users to try_welcome')
+        else:
+            _fail('auth_google_callback() redirects to dashboard — Haiku users will get double redirect. Should redirect to try_welcome for free users.')
+            fails += 1
+    else:
+        _note('auth_google_callback() not found')
+
+
+    _section('try_welcome() route integrity (Session 190)')
+    _tw_i = next((i for i,l in enumerate(lines) if 'def try_welcome' in l), None)
+    if _tw_i is not None:
+        _tw_end = next((i for i in range(_tw_i+1, len(lines)) if lines[i].startswith('@app') or (lines[i].startswith('def ') and 'try_welcome' not in lines[i])), len(lines))
+        _tw_src = ''.join(lines[_tw_i:_tw_end])
+        for _v in ['evals_remaining', 'images', 'milestone_strength', 'hero_image']:
+            if _v in _tw_src: _ok('try_welcome() passes ' + _v)
+            else: _fail('try_welcome() missing variable: ' + _v); fails += 1
+        if 'Cache-Control' in _tw_src or 'no-store' in _tw_src:
+            _ok('try_welcome() sets Cache-Control: no-store')
+        else:
+            _fail('try_welcome() missing Cache-Control: no-store - hero may be cached'); fails += 1
+    else:
+        _note('try_welcome() not found - verify route exists')
+
+    # -- Challenge gate (Session 190)
+    _section('Challenge gate (Session 190 - Haiku users blocked from submit)')
+    _cs_i = next((i for i,l in enumerate(lines) if 'def challenge_submit' in l), None)
+    if _cs_i is not None:
+        _cs_end = next((i for i in range(_cs_i+1, len(lines)) if lines[i].startswith('@app') or (lines[i].startswith('def ') and 'challenge_submit' not in lines[i])), len(lines))
+        _cs_src = ''.join(lines[_cs_i:_cs_end])
+        if 'is_subscribed' in _cs_src and ('redirect' in _cs_src or 'flash' in _cs_src):
+            _ok('challenge_submit() gates unsubscribed (Haiku) users')
+        else:
+            _fail('challenge_submit() does not gate Haiku users'); fails += 1
+        if 'is_haiku_try' in _cs_src:
+            _ok('challenge_submit() excludes is_haiku_try images')
+        else:
+            _fail('challenge_submit() Haiku images not excluded from eligible picker'); fails += 1
+    else:
+        _note('challenge_submit() not found in this file')
+
     # ── MIM integrity checks (S167) ───────────────────────────────────────────
     # These 7 checks run only on mim-app.py. They fire as a gate before every
     # MIM delivery. Check 1 was a standing reminder (session lock not built);
@@ -2179,48 +2295,104 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     if is_snippet_file:
         _note('Meta tag checks skipped — snippet/render-only file, not a standalone browser page (Session 143)')
     else:
-        # base.html provides site-wide og:*/twitter:* defaults via Jinja blocks
-        # (og_title, og_description, og_image, twitter_title, twitter_description,
-        # twitter_image). Every page extending base.html inherits these even if
-        # it doesn't override them — so a literal <meta property="og:..."> tag
-        # is NOT required in this file. Only flag MISSING if the page neither
-        # has the literal tag NOR overrides the corresponding block NOR extends
-        # base.html (which would mean no inheritance at all).
         _extends_base = 'extends "base.html"' in content or "extends 'base.html'" in content
         _block_map = {
             'og:title': 'og_title', 'og:description': 'og_description', 'og:image': 'og_image',
             'twitter:image': 'twitter_image',
         }
+
+        # Session 201 — page indexing rules
+        # Public standalone pages (should be indexed by Google)
+        # try_standing: public scorecard — good for SEO (photographer name searches)
+        # league_haiku: public league — good for SEO
+        # pricing_haiku: public pricing — good for SEO
+        _should_index = any(x in fname for x in ['league_haiku', 'pricing_haiku', 'try_standing', 'index.html'])
+        # Private standalone pages (must NOT be indexed)
+        _must_noindex = any(x in fname for x in [
+            'dashboard_haiku', 'image_detail_haiku',
+            'try_gallery', 'try_result', 'profile',
+        ])
+        # Standalone pages need explicit canonical (base.html pages inherit it via route)
+        _needs_canonical = not _extends_base and not is_snippet_file
+
         meta_checks = [
-            ('og:title',         'Open Graph title (required for sharing)'),
-            ('og:description',   'Open Graph description'),
-            ('og:image',         'Open Graph image (photograph shows when shared)'),
-            ('twitter:card',     'Twitter/X card'),
-            ('twitter:image',    'Twitter/X image'),
-            ('canonical',        'Canonical URL (prevents duplicate content)'),
-            ('noindex',          'noindex (correct — private scored images should not be indexed)'),
+            ('og:title',       'Open Graph title (required for sharing)'),
+            ('og:description', 'Open Graph description'),
+            ('og:image',       'Open Graph image (photograph shows when shared)'),
+            ('twitter:card',   'Twitter/X card'),
+            ('twitter:image',  'Twitter/X image'),
+            ('canonical',      'Canonical URL (prevents duplicate content)'),
+            ('noindex',        'noindex robots directive'),
         ]
         meta_fails = 0
         for tag, desc in meta_checks:
-            _block = _block_map.get(tag)
+            _block  = _block_map.get(tag)
             _has_block_override = _block and ('{% block ' + _block in content)
-            if tag in content or _has_block_override:
-                _ok(f'[meta] {desc}')
-            elif tag == 'twitter:card' and _extends_base:
-                _ok(f'[meta] {desc} (inherited from base.html)')
-            elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
-                _ok(f'[meta] {desc} (inherited default from base.html)')
+            _present = tag in content or _has_block_override
+
+            if tag == 'canonical':
+                if _present:
+                    _ok(f'[meta] {desc}')
+                elif _needs_canonical:
+                    _fail(f'[meta] {desc} — MISSING on standalone page (required for SEO)')
+                    fails += 1; meta_fails += 1
+                elif _extends_base:
+                    _ok(f'[meta] {desc} (handled by base.html or route)')
+                else:
+                    _note(f'[meta] {desc} — not present (verify if needed)')
+
+            elif tag == 'noindex':
+                if _must_noindex:
+                    if _present:
+                        _ok(f'[meta] noindex present — correct (private page, must not be indexed)')
+                    else:
+                        _fail(f'[meta] noindex MISSING — private page must have robots noindex,nofollow')
+                        fails += 1; meta_fails += 1
+                elif _should_index:
+                    if _present:
+                        _fail(f'[meta] noindex present on PUBLIC page — remove so Google can index this page')
+                        fails += 1; meta_fails += 1
+                    else:
+                        _ok(f'[meta] noindex absent — correct (public page, indexable)')
+                else:
+                    if _present:
+                        _note(f'[meta] noindex present — verify this page should not be indexed')
+                    else:
+                        _note(f'[meta] noindex — not present (verify if needed)')
+
             else:
-                if tag in ('noindex', 'canonical') and 'image_detail' not in filepath.lower():
-                    _note(f'[meta] {desc} — not present (verify if needed for this template)')
+                if _present:
+                    _ok(f'[meta] {desc}')
+                elif tag == 'twitter:card' and _extends_base:
+                    _ok(f'[meta] {desc} (inherited from base.html)')
+                elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
+                    _ok(f'[meta] {desc} (inherited default from base.html)')
                 else:
                     _fail(f'[meta] {desc} — MISSING')
-                    fails += 1
-                    meta_fails += 1
-        if meta_fails == 0:
-            _ok('All meta tags present')
+                    fails += 1; meta_fails += 1
 
-    # ── Summary ───────────────────────────────────────────────────────────────
+        if meta_fails == 0:
+            _ok('All meta tags present and correct')
+
+        # ── OG description brand prefix check (Session 201) ───────────────────
+        # Every page OG description must start with the brand signature:
+        # "Photography Assessment & Evolution Platform. Making Images Matter. "
+        # followed by page-specific copy.
+        _OG_PREFIX = 'Photography Assessment & Evolution Platform. Making Images Matter.'
+        _og_desc_match = re.search(r'og:description[^>]*content="([^"]+)"', content)
+        if _og_desc_match:
+            _og_desc_val = _og_desc_match.group(1)
+            if _og_desc_val.startswith(_OG_PREFIX):
+                _ok(f'[meta] OG description starts with brand signature')
+            elif _extends_base:
+                _note(f'[meta] OG description brand prefix — extends base.html, verify block override has prefix')
+            else:
+                _fail(f'[meta] OG description missing brand prefix — must start with: "{_OG_PREFIX}"')
+                fails += 1
+        elif not _extends_base:
+            _note(f'[meta] OG description not found inline — cannot verify brand prefix')
+
+
     _section('DELIVERY STANDARD — CSI note cards (image_detail.html only)')
     if is_snippet_file:
         _note('CSI checks skipped — snippet/render-only file (Session 143)')
@@ -2248,7 +2420,150 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     else:
         _note('CSI card checks skipped — not a detail/scorecard page')
 
-    _section('DELIVERY STANDARD — CSI exports in admin.html (admin page only)')
+    # ── Known bad route names (Session 201) ──────────────────────────────────
+    # 'programmes' is not a route — the function is 'contests', URL is /programmes
+    _bad_routes = [
+        ("url_for('programmes')", "url_for('contests')  # /programmes URL is served by contests()"),
+    ]
+    for _bad, _fix in _bad_routes:
+        if _bad in content:
+            _fail(f'Bad route name: {_bad} — use {_fix}')
+            fails += 1
+        else:
+            _ok(f'Route name OK — no {_bad}')
+
+
+    # Standalone Haiku pages must use the cream topbar nav matching dashboard_haiku.
+    # Pages that extend base.html inherit Sonnet nav — flagged as a known gap.
+    _section('DELIVERY STANDARD — Haiku nav consistency (Session 201)')
+
+    _HAIKU_STANDALONE = any(x in fname for x in [
+        'try_standing', 'pricing_haiku', 'league_haiku', 'dashboard_haiku',
+    ])
+    _HAIKU_BASE_EXTEND = any(x in fname for x in [
+        'try_gallery', 'image_detail_haiku', 'upload-staging', 'try-staging',
+    ])
+
+    if _HAIKU_STANDALONE:
+        # Must have dark navy topbar (#1A2744) — matching /try/gallery standard
+        import re as _re_nav
+        _is_dashboard_haiku_nav = 'dashboard_haiku' in fname
+        _topbar_block = _re_nav.search(r'\.sl-topbar\s*\{([^}]+)\}', content)
+        _topbar_css = _topbar_block.group(1) if _topbar_block else ''
+        _has_dark_topbar = 'background:#1A2744' in _topbar_css.replace(' ', '')
+        if _topbar_css and not _has_dark_topbar:
+            _fail('Haiku standalone nav — topbar background is NOT dark navy #1A2744 (must match /try/gallery standard)')
+            fails += 1
+        else:
+            _ok('Haiku standalone nav — dark navy topbar correct (#1A2744)')
+
+        # Must have logo image in nav brand
+        _has_logo = (
+            'shutterleague-logo-cropped.png' in content and
+            ('sl-brand' in content or 'nav-brand' in content)
+        )
+        if _has_logo:
+            _ok('Haiku nav — logo image (shutterleague-logo-cropped.png) present in brand')
+        else:
+            _fail('Haiku nav — logo image missing from brand (add shutterleague-logo-cropped.png)')
+            fails += 1
+
+        # Must have correct brand sub "Making Images Matter"
+        # Exception: dashboard_haiku uses dark nav by design (approved Session 175)
+        _is_dashboard_haiku = 'dashboard_haiku' in fname
+        if _is_dashboard_haiku:
+            _note('Haiku nav — dashboard_haiku uses dark nav by design (approved Session 175), brand sub exempted')
+        elif 'Making Images Matter' in content:
+            _ok('Haiku nav — brand sub "Making Images Matter" present')
+        elif 'Photography Institution' in content and ('sl-brand-sub' in content or 'nav-brand-sub' in content):
+            _fail('Haiku nav — brand sub shows "Photography Institution" (should be "Making Images Matter")')
+            fails += 1
+        else:
+            _note('Haiku nav — brand sub text not verified')
+
+        # Must have Haiku nav items (Dashboard/Evaluate/League) not Sonnet items
+        _has_sonnet_nav = (
+            "url_for('my_gallery')" in content or
+            "url_for('dashboard')" in content and 'Evaluate' not in content
+        )
+        _has_haiku_nav = (
+            "url_for('try_welcome')" in content or
+            "url_for('try_page')" in content or
+            "url_for('league_haiku')" in content
+        )
+        if _has_sonnet_nav and not _has_haiku_nav:
+            _fail('Haiku standalone nav — Sonnet nav items present (My Gallery/dashboard) without Haiku items')
+            fails += 1
+        elif _has_haiku_nav:
+            _ok('Haiku nav — correct Haiku route items present (try_welcome/try_page/league_haiku)')
+        else:
+            _note('Haiku nav — route items not verified')
+
+        # Nav items must match the standard exactly (Session 201 — dashboard_haiku is source of truth)
+        # Standard: Home · My evaluations · Upload · Pricing · League of Photographers · Profile
+        _required_nav_items = [
+            ("url_for('try_welcome')", 'Home'),
+            ("url_for('try_gallery')", 'My evaluations'),
+            ("url_for('try_page')",    'Upload'),
+            ("url_for('pricing')",     'Pricing'),
+            ("url_for('league_haiku')", 'League of Photographers'),
+            ("url_for('profile')",     'Profile'),
+        ]
+        _nav_failures = []
+        for _route, _label in _required_nav_items:
+            if _route not in content:
+                _nav_failures.append(f'{_label} ({_route})')
+        if _nav_failures:
+            _fail(f'Haiku nav — missing standard items: {", ".join(_nav_failures)}')
+            fails += 1
+        else:
+            _ok('Haiku nav — all standard items present (Home/My evaluations/Upload/Pricing/League of Photographers/Profile)')
+
+        # Logo must be row layout (img left, text right) — not column
+        if 'sl-brand' in content:
+            _brand_css = content[content.find('.sl-brand'):content.find('.sl-brand')+100]
+            if 'flex-direction:column' in _brand_css or 'flex-direction: column' in _brand_css:
+                _fail('Haiku nav — logo brand uses column layout (should be row: img left, text right)')
+                fails += 1
+            else:
+                _ok('Haiku nav — logo brand uses row layout (img left, text right)')
+
+        # Must have mobile bottom nav (sl-mob-nav, mob-nav, or sl-bottom-nav)
+        if 'sl-mob-nav' in content or 'class="mob-nav"' in content or 'sl-bottom-nav' in content:
+            _ok('Haiku nav — mobile bottom nav present')
+        else:
+            _fail('Haiku standalone nav — mobile bottom nav (sl-mob-nav) missing')
+            fails += 1
+
+        # Mobile bottom nav must have correct items
+        _mob_has_dashboard = "url_for('try_welcome')" in content
+        _mob_has_evaluate  = "url_for('try_page')" in content
+        _mob_has_league    = "url_for('league_haiku')" in content
+        if _mob_has_dashboard and _mob_has_evaluate and _mob_has_league:
+            _ok('Haiku nav — mobile bottom nav has Dashboard/Evaluate/League items')
+        else:
+            missing = []
+            if not _mob_has_dashboard: missing.append('Dashboard')
+            if not _mob_has_evaluate:  missing.append('Evaluate')
+            if not _mob_has_league:    missing.append('League')
+            _fail(f'Haiku mobile nav — missing items: {", ".join(missing)}')
+            fails += 1
+
+        # Active colour must be gold #C8A84B not Haiku yellow #F4C20D
+        if '#F4C20D' in content and 'mob-nav-item.active' in content:
+            _fail('Haiku mobile nav — active colour is #F4C20D (should be #C8A84B to match desktop)')
+            fails += 1
+        else:
+            _ok('Haiku mobile nav — active colour correct (#C8A84B or not overridden)')
+
+    elif _HAIKU_BASE_EXTEND:
+        # Pages extending base.html — Sonnet nav is inherited, flag as known gap
+        _note('Haiku page extends base.html — inherits Sonnet nav (known gap, Session 202 cleanup)')
+        _note('Verify: Haiku user on this page sees correct content, no Sonnet route leaks')
+    else:
+        _note('Haiku nav check — not a Haiku page, skipped')
+
+
     # Exact filename match only -- the previous 'admin' in fname and 'admin_user'
     # not in fname substring check was written when admin.html was the only
     # non-admin_user admin page. It silently matched every NEW admin page added

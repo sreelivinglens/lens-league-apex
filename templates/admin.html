@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version S175-r1 admin — adminPost follows redirect URL so flash messages show correctly #}
+{# SL:version 180.4 admin — International Waitlist nav button added. Session 190, 2026-08-19. Previous: {# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -10,6 +10,8 @@
   /* Kill body top padding on this page — desktop gap fix */
   body { padding-top: 0 !important; }
   .admin-wrap { max-width: 1100px; margin: 0 auto; }
+  /* Nav groups */
+  .admin-nav { margin-bottom: 0; }
 
   /* ── Top nav buttons ── */
   .admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
@@ -269,36 +271,56 @@
   </div>
 
   {# ── Top nav ── #}
-  <div class="admin-nav">
-    <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
-    <a href="{{ url_for("admin_engagement") }}" class="admin-nav-btn">📈 Engagement</a>
-    <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
-    <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
-    <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
-      ⚑ Reports
-      {% if open_reports_count %}
-        <span class="badge-count">{{ open_reports_count }}</span>
-      {% endif %}
-    </a>
-    <a href="{{ url_for("admin_judges") }}" class="admin-nav-btn">⚖️ Jury</a>
-    <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
-    <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
-    <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
-    <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn gold">
-      👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
-    </a>
-    <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
-    <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">&#127979; Mentors</a>
-    <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn brown">⬆ Bulk Upload</a>
-    <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
-      ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
-    </a>
-    <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
-    <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
-    <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
-    <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
-    <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
-    <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
+  {# ── Admin nav — grouped by function ── #}
+  <div style="margin-bottom:24px;">
+
+    {# GROUP 1: Daily checks — things with live counts that need attention #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Daily</div>
+    <div class="admin-nav" style="margin-bottom:14px;">
+      <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
+        ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
+        ⚑ Reports{% if open_reports_count %} <span class="badge-count">{{ open_reports_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn gold">
+        👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
+      <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
+      <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
+      <a href="{{ url_for("admin_engagement") }}" class="admin-nav-btn">📈 Engagement</a>
+    </div>
+
+    {# GROUP 2: Content & platform — programme, content, judging #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Content & Platform</div>
+    <div class="admin-nav" style="margin-bottom:14px;">
+      <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
+      <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
+      <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
+      <a href="{{ url_for("admin_judges") }}" class="admin-nav-btn">⚖️ Jury</a>
+      <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">🏫 Mentors</a>
+      <a href="{{ url_for("admin_site_settings") }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
+      <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn brown">⬆ Bulk Upload</a>
+    </div>
+
+    {# GROUP 3: Tools & data — occasional, not daily #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Tools & Data</div>
+    <div class="admin-nav" style="margin-bottom:14px;">
+      <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
+      <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
+      <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
+      <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
+      <a href="/admin/international-waitlist" class="admin-nav-btn slate">🌍 Intl Waitlist</a>
+    </div>
+
+    {# GROUP 4: Security — flagged, bots, blocks #}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Security</div>
+    <div class="admin-nav">
+      <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
+      <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
+    </div>
+
   </div>
 
   {# ── Action Required Banner ── #}
@@ -383,7 +405,7 @@
          Both show Force Rescore button. Collapsed by default if empty. #}
       {% if bot_count and bot_count > 0 %}
       <div style="background:#fff8f8;border:1px solid #e57373;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
           🤖 Suspected Bot Accounts
           <span style="font-family:monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:12px;background:#C62828;color:#fff;margin-left:6px;">{{ bot_count }}</span>
         </div>
@@ -392,7 +414,7 @@
       </div>
       {% endif %}
       <div style="background:#f3e5f5;border:1px solid #9C27B0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
           🚫 IP Block List
         </div>
         <div style="font-size:14px;color:#555;margin-bottom:10px;line-height:1.6;">Block bot-source IPs from registering or accessing the site. Takes effect immediately — no deploy needed.</div>
@@ -503,8 +525,9 @@
             <input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Select All
           </label>
           <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);" id="selectedCount">0 selected</span>
-          <button type="button" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;" onclick="adminBulkDelete()">🗑 Delete Selected</button>
+          <button type="button" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;" data-url="{{ url_for('admin_bulk_delete') }}" onclick="adminBulkDelete()">🗑 Delete Selected</button>
           <button type="button" id="bulkRawBtn" disabled
+                  data-url="{{ url_for('admin_bulk_request_raw') }}"
                   style="opacity:0.4; font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
                   onclick="bulkRequestRaw()">📂 Request RAW</button>
         </div>
@@ -1224,6 +1247,25 @@
         </div>
       </div>
 
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Live Event Data</div>
+
+      {# SL-180.3 — manual single-city event scan.
+         The scheduled city_event_scan cron is switched off on staging via
+         SL_DISABLE_AI_JOBS so unattended runs cost nothing. This control is the
+         deliberate counterpart and works on both staging and production.
+         Cost per run: 3 web searches + 1 extraction call, one city. #}
+      <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:20px;">
+        <div class="tool-label" style="margin-bottom:6px;">Run a Live Event Scan</div>
+        <div class="tool-desc" style="margin-bottom:12px;">Scans one city for photography events and writes them to the seasonal calendar, so the dashboard live event advisory has data to show. Takes up to a minute. On staging the scheduled scan is switched off, so use this when you need real event data for testing.</div>
+        <form method="POST" action="{{ url_for('admin_run_city_event_scan') }}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:160px;">
+            <label for="scan-city" style="display:block; font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">City</label>
+            <input type="text" id="scan-city" name="city" placeholder="Bengaluru" required autocomplete="off" class="tool-input">
+          </div>
+          <button type="submit" class="btn btn-solid" style="padding:9px 18px; font-size:13px;">Run scan &rarr;</button>
+        </form>
+      </div>
+
       <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Photographer &amp; Image Management</div>
 
       <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;">
@@ -1687,6 +1729,84 @@
         <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl({{ url_for("admin_reset_rating_credits") | tojson }}, 'Reset ALL peer rating credits and data to zero? This cannot be undone.')">Reset All</button>
       </div>
 
+      {# ── HAIKU RESCORE — SL-181.52 ── #}
+      <div class="danger-row" style="border-color:#1A2744;">
+        <div>
+          <div class="danger-title" style="color:#1A2744">Haiku Rescore — Single Image</div>
+          <div class="danger-desc">
+            Re-runs the Haiku evaluation engine on one specific Haiku image (<code>is_haiku_try = TRUE</code>) using the improved prompt with REPETITION BLOCKED constraint. Updates score, tier, and all text fields (impression, strength, next leap, what next, master reference).<br><br>
+            <strong>When to run:</strong> Use this to test that the REPETITION BLOCKED fix is working before running bulk. Score one image, check the scorecard — impression should be distinctly different from previous scorecards for the same user. Also use this if a specific scorecard was generated before the 181.52 prompt fix and needs updating.<br><br>
+            <strong>Enter the image ID below.</strong> Find it in the image tile above (shown as #ID) or from the URL /try/result/&lt;id&gt;.
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <input type="number" id="haikuRescoreImageId" placeholder="Image ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
+            <button type="button" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff !important;border:2px solid rgba(255,255,255,.3);border-radius:4px;cursor:pointer;min-height:44px;" onclick="
+              var iid = document.getElementById('haikuRescoreImageId').value;
+              if (!iid) { alert('Enter an image ID first.'); return; }
+              if (!confirm('Re-run Haiku engine on image ' + iid + '? Score and text fields will be overwritten.')) return;
+              fetch('/admin/haiku-rescore/' + iid, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+                .then(r=>r.json()).then(d=>{
+                  if(d.status==='done') alert('Haiku rescore complete for image ' + iid + '. Refresh the scorecard to verify.');
+                  else alert('Rescore failed — check Railway logs.');
+                }).catch(()=>alert('Network error.'));
+            ">Run Single Rescore</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="danger-row" style="border-color:#1A2744;">
+        <div>
+          <div class="danger-title" style="color:#1A2744">Haiku Rescore — All Images for User</div>
+          <div class="danger-desc">
+            Re-runs the Haiku engine on <strong>all</strong> Haiku images for one user, oldest-first. This is critical — oldest-first ensures REPETITION BLOCKED accumulates correctly: image 2 sees image 1's new impression, image 3 sees 1+2, and so on. Each rescore is spaced 1 second apart to avoid API rate limits. Runs in the background — check Railway logs for progress (<code>[haiku_rescore_user] user=X complete — N/N rescored</code>).<br><br>
+            <strong>When to run:</strong>
+            <ul style="margin:6px 0 0 16px;font-size:13px;color:var(--text-muted);line-height:1.7">
+              <li><strong>Before production merge</strong> — any beta user who did evaluations before Session 192 (2026-08-24) has scorecards generated without REPETITION BLOCKED. Run this for each beta user to clean their history before launch.</li>
+              <li><strong>After a prompt fix</strong> — any time the Haiku prompt is updated and existing scorecards need to reflect the new quality.</li>
+              <li><strong>On user complaint</strong> — if a user notices repetitive feedback across their scorecards, run bulk rescore for their user ID.</li>
+            </ul>
+            <strong>Do not run</strong> for users who are mid-evaluation (currently uploading) — wait until they are done.
+          </div>
+          {# Username lookup — find user ID without leaving the page #}
+          <div style="margin-top:12px;margin-bottom:14px;padding:12px 16px;background:#F8F4EC;border:1px solid #DDD5C0;border-radius:6px;">
+            <div style="font-size:13px;font-weight:600;color:#5A4A30;margin-bottom:8px;">🔍 Find User ID by username</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="haikuUsernameLookup" placeholder="e.g. natures_raaga" style="padding:8px 12px;border:1px solid #DDD5C0;border-radius:4px;font-size:14px;width:200px;min-height:40px;">
+              <button type="button" style="padding:8px 16px;font-size:14px;font-weight:600;background:#5A4A30;color:#fff;border:none;border-radius:4px;cursor:pointer;min-height:40px;" onclick="
+                var uname = document.getElementById('haikuUsernameLookup').value.trim();
+                if (!uname) { alert('Enter a username.'); return; }
+                fetch('/admin/api/user-id-by-username?username=' + encodeURIComponent(uname), {headers:{'X-Requested-With':'XMLHttpRequest'}})
+                  .then(r=>r.json()).then(d=>{
+                    if (d.user_id) {
+                      document.getElementById('haikuRescoreUserId').value = d.user_id;
+                      document.getElementById('haikuLookupResult').textContent = 'User ID ' + d.user_id + ' — ' + d.full_name + ' (' + d.email + ') · ' + d.evals + ' Haiku evals';
+                      document.getElementById('haikuLookupResult').style.color = '#2E7D52';
+                    } else {
+                      document.getElementById('haikuLookupResult').textContent = 'User not found: ' + uname;
+                      document.getElementById('haikuLookupResult').style.color = '#c0392b';
+                    }
+                  }).catch(()=>{ document.getElementById('haikuLookupResult').textContent = 'Lookup failed — check logs.'; });
+              ">Look up</button>
+            </div>
+            <div id="haikuLookupResult" style="font-size:13px;margin-top:6px;color:#5A4A30;min-height:18px;"></div>
+          </div>
+
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <input type="number" id="haikuRescoreUserId" placeholder="User ID" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-size:15px;width:140px;min-height:44px;">
+            <button type="button" style="padding:10px 22px;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap;background:#1A2744;color:#fff !important;border:2px solid rgba(255,255,255,.3);border-radius:4px;cursor:pointer;min-height:44px;" onclick="
+              var uid = document.getElementById('haikuRescoreUserId').value;
+              if (!uid) { alert('Enter a user ID first.'); return; }
+              if (!confirm('Re-run Haiku engine on ALL Haiku images for user ' + uid + ', oldest-first? Runs in background. Check Railway logs for progress.')) return;
+              fetch('/admin/haiku-rescore-user/' + uid, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+                .then(r=>r.json()).then(d=>{
+                  if(d.status==='started') alert('Bulk Haiku rescore started for user ' + uid + '. Watch Railway logs: [haiku_rescore_user] user=' + uid + ' complete.');
+                  else alert('Could not start — check Railway logs.');
+                }).catch(()=>alert('Network error.'));
+            ">Run Bulk Rescore</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1724,7 +1844,10 @@ function bulkRequestRaw() {
   if (!confirm('Request RAW verification from ' + ids.length + ' photographer(s)?')) return;
   const body = new URLSearchParams();
   ids.forEach(id => body.append('image_ids', id));
-  fetch('{{ url_for("admin_bulk_request_raw") | tojson }}', {
+  /* SL-180.3: URL read from the button's data-url attribute. Was inline Jinja
+     inside <script>, which trips the audit and, with | tojson inside single
+     quotes, produced a URL wrapped in literal double quotes. */
+  fetch(document.getElementById('bulkRawBtn').dataset.url, {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
@@ -1737,7 +1860,8 @@ function adminBulkDelete() {
   if (!confirm('Delete ' + ids.length + ' selected image(s)? This cannot be undone.')) return;
   const body = new URLSearchParams();
   ids.forEach(id => body.append('image_ids', id));
-  fetch('{{ url_for("admin_bulk_delete") }}', {
+  /* SL-180.3: URL read from the button's data-url attribute — no Jinja in JS. */
+  fetch(document.getElementById('bulkDeleteBtn').dataset.url, {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
@@ -1761,7 +1885,7 @@ function adminPost(formId, confirmMsg) {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
-  }).then(r => { if (r.ok || r.redirected) { window.location.href = r.url && r.url !== window.location.href ? r.url : window.location.href; } else { alert('Action failed (' + r.status + ')'); } })
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
 }
 
@@ -1839,7 +1963,7 @@ function adminPostUrl(url, confirmMsg) {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: ''
-  }).then(r => { if (r.ok || r.redirected) { window.location.href = r.url && r.url !== window.location.href ? r.url : window.location.href; } else { alert('Action failed (' + r.status + ')'); } })
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
 }
 
@@ -1851,7 +1975,7 @@ function adminPostFields(url, fields, confirmMsg) {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
-  }).then(r => { if (r.ok || r.redirected) { window.location.href = r.url && r.url !== window.location.href ? r.url : window.location.href; } else { alert('Action failed (' + r.status + ')'); } })
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
 }
 /* ── End v34 fetch helpers ─────────────────────────────────────────────────── */

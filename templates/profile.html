@@ -1,9 +1,14 @@
+{# SL-VERSION: profile-181.71-staging (Session 200e, 2026-08-27 — grid layout restored, bottom logout removed, email prefs full-width, evals count fixed.) #}
 {% extends "base.html" %}
 {# SL:version S168-r4 profile — city_other free-text input: Other city → type sanctuary/town (Nalsarovar, Rann of Kutch etc) 2026-07-31 #}
 {% block title %}My Account — Shutter League{% endblock %}
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
+<script type="application/json" id="acc-loc-location">{{ location_data_json | safe }}</script>
+<script type="application/json" id="acc-loc-country">{{ (current_user.country or '') | tojson }}</script>
+<script type="application/json" id="acc-loc-state">{{ (current_user.state or '') | tojson }}</script>
+<script type="application/json" id="acc-loc-city">{{ (current_user.city or '') | tojson }}</script>
 {% endblock %}
 
 {% block extra_css %}
@@ -28,10 +33,10 @@
   body { background: var(--acc-cream); }
 
   .acc-wrap {
-    max-width: 1060px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: clamp(32px,5vw,56px) var(--page-pad,24px) 80px;
-    font-family: Inter, Arial, sans-serif;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif;
     overflow-x: hidden;
   }
 
@@ -48,7 +53,7 @@
   .acc-page-sub   { font-size: 16px; color: var(--acc-muted); margin: 4px 0 0; }
   .acc-logout-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    font-family: Inter, Arial, sans-serif; font-size: 15px; font-weight: 600;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 15px; font-weight: 600;
     color: var(--acc-dark); background: transparent;
     border: 1px solid var(--acc-border); border-radius: 6px;
     padding: 9px 16px; text-decoration: none; min-height: 44px;
@@ -59,8 +64,8 @@
   /* ── Layout: sidebar + content ── */
   .acc-layout {
     display: grid;
-    grid-template-columns: 200px 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 220px 1fr 1.2fr;
+    gap: 28px;
     align-items: start;
   }
   .acc-sidebar {
@@ -128,6 +133,9 @@
     padding: 28px 32px;
     margin-bottom: 20px;
     scroll-margin-top: 100px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
   .acc-section-header {
     display: flex; align-items: center; gap: 12px;
@@ -180,14 +188,14 @@
   .acc-cancel-form label { font-size: 15px; font-weight: 600; color: var(--acc-dark); display: block; margin-bottom: 8px; }
   .acc-cancel-form select,
   .acc-cancel-form textarea {
-    width: 100%; font-family: Inter, Arial, sans-serif; font-size: 16px;
+    width: 100%; font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 16px;
     padding: 10px 14px; border: 1px solid var(--acc-border); border-radius: 6px;
     background: #fff; color: var(--acc-dark); margin-bottom: 12px;
     box-sizing: border-box;
   }
   .acc-cancel-form textarea { min-height: 80px; resize: vertical; }
   .acc-cancel-submit {
-    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 14px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     padding: 11px 24px; min-height: 44px;
     background: transparent; color: var(--acc-red);
@@ -253,7 +261,7 @@
   .acc-league-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--acc-slate); }
   .acc-league-name   { font-size: 20px; font-weight: 700; color: var(--acc-dark); }
   .acc-switch-btn {
-    font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 13px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     padding: 8px 16px; min-height: 44px;
     background: transparent; color: var(--acc-slate);
@@ -295,7 +303,7 @@
   }
   .acc-view-history {
     display: block; width: 100%; padding: 13px;
-    font-family: Inter, Arial, sans-serif; font-size: 15px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 15px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     text-align: center; text-decoration: none;
     color: var(--acc-slate); background: transparent;
@@ -318,7 +326,7 @@
   .acc-points-actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
   .acc-points-btn {
     flex: 1; min-width: 120px; padding: 12px 20px; min-height: 44px;
-    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 14px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase; border-radius: 6px;
     text-align: center; text-decoration: none; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -345,7 +353,7 @@
   .acc-ref-url  { font-size: 14px; color: var(--acc-muted); margin-bottom: 14px; word-break: break-all; }
   .acc-ref-share { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
   .acc-ref-share-btn {
-    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 14px; font-weight: 700;
     padding: 10px 18px; min-height: 44px; border: none; border-radius: 6px;
     cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
     text-decoration: none; color: #fff;
@@ -363,12 +371,12 @@
   .acc-form-group { margin-bottom: 18px; }
   .acc-form-group label { display: block; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--acc-slate); margin-bottom: 8px; }
   .acc-form-group input,
-  .acc-form-group select { width: 100%; font-family: Inter, Arial, sans-serif; font-size: 16px; padding: 11px 14px; border: 1px solid var(--acc-border); border-radius: 6px; background: #fff; color: var(--acc-dark); box-sizing: border-box; }
+  .acc-form-group select { width: 100%; font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 16px; padding: 11px 14px; border: 1px solid var(--acc-border); border-radius: 6px; background: #fff; color: var(--acc-dark); box-sizing: border-box; }
   .acc-form-group input:focus,
   .acc-form-group select:focus { outline: none; border-color: var(--acc-slate); }
   .acc-form-group input:disabled { opacity: .5; cursor: not-allowed; background: var(--acc-footer); }
   .acc-save-btn {
-    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 14px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     padding: 12px 28px; min-height: 44px;
     background: var(--acc-gold); color: var(--acc-dark); border: none;
@@ -390,7 +398,7 @@
   .acc-upgrade-btns { display: flex; gap: 12px; flex-wrap: wrap; }
   .acc-upgrade-btn {
     padding: 12px 20px; min-height: 44px; border-radius: 6px;
-    font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 14px; font-weight: 700;
     text-decoration: none; display: inline-flex; align-items: center;
   }
   .acc-upgrade-btn.primary { background: var(--acc-dark); color: var(--acc-gold); }
@@ -398,7 +406,7 @@
 
   /* ── Copy button ── */
   .acc-copy-btn {
-    font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 700;
+    font-family: 'Aptos', 'Segoe UI', system-ui, Arial, sans-serif; font-size: 13px; font-weight: 700;
     padding: 8px 16px; min-height: 44px; border-radius: 6px;
     background: var(--acc-gold); color: var(--acc-dark); border: none; cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
@@ -409,7 +417,7 @@
     grid-column: 2 / 4;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
     align-items: start;
     margin-bottom: 0;
   }
@@ -417,37 +425,92 @@
     grid-column: 2 / 4;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
     align-items: start;
     margin-bottom: 20px;
   }
 
+  /* ── iPad / narrow desktop — sidebar collapses to top, content full width ── */
+  @media (max-width: 900px) {
+    .acc-layout {
+      grid-template-columns: 1fr;
+    }
+    .acc-layout > main {
+      grid-column: 1;
+    }
+    .acc-sidebar {
+      grid-row: 1;
+      grid-column: 1;
+      position: static;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
+      background: var(--acc-cream);
+      border: 1px solid var(--acc-border);
+      border-radius: var(--acc-radius);
+      padding: 16px 20px;
+      margin-bottom: 4px;
+    }
+    .acc-identity {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+    }
+    .acc-avatar { margin: 0; flex-shrink: 0; }
+    .acc-nav-border { display: none; }
+    .acc-grid-top,
+    .acc-grid-bottom {
+      grid-column: 1;
+    }
+  }
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .acc-layout { display: flex; flex-direction: column; }
     .acc-grid-top,
-    .acc-grid-bottom { grid-template-columns: 1fr; }
-    .acc-sidebar { position: static; }
-    .acc-identity { text-align: center; padding: 16px 12px; display: block; }
-    .acc-avatar { margin: 0 auto 10px; width: 56px; height: 56px; font-size: 22px; display: flex; }
-    .acc-name  { display: block; text-align: center; }
-    .acc-email { display: block; text-align: center; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .acc-handle { display: block; text-align: center; }
+    .acc-grid-bottom { grid-template-columns: 1fr 1fr; }
+    .acc-sidebar {
+      position: static;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+    }
+    .acc-identity { text-align: left; padding: 0; display: flex; align-items: center; gap: 12px; flex: 1; }
+    .acc-avatar { margin: 0; width: 44px; height: 44px; font-size: 18px; display: flex; flex-shrink: 0; }
+    .acc-name  { display: block; text-align: left; font-size: 15px; }
+    .acc-email {
+      display: block; font-size: 14px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 200px;
+    }
+    .acc-handle { display: block; text-align: left; }
     .acc-nav-border { display: none; }
-    .acc-section { padding: 16px; width: 100%; box-sizing: border-box; overflow: hidden; }
+    .acc-section { padding: 16px; width: 100%; box-sizing: border-box; overflow: visible; }
     .acc-detail-row { flex-wrap: wrap; }
-    .acc-detail-body { min-width: 0; flex: 1 1 0; }
+    .acc-detail-body { min-width: 0; flex: 1 1 0; word-break: break-word; }
     .acc-points-actions { flex-direction: column; }
     .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
     .acc-ref-share { flex-wrap: wrap; }
     .acc-plan-row { flex-direction: column; gap: 8px; }
     .acc-quota-inner { flex-direction: column; align-items: flex-start; }
     .acc-league-badge { flex-direction: column; align-items: flex-start; }
-    .acc-wrap { padding: 56px 12px 60px; }
+    .acc-wrap { padding: 24px 16px 60px; }
+  }
+  @media (max-width: 600px) {
+    .acc-grid-top,
+    .acc-grid-bottom { grid-template-columns: 1fr; }
+    .acc-email { max-width: 160px; font-size: 13px; }
+    .acc-ref-stats { grid-template-columns: repeat(3,1fr); }
+    .acc-wrap { padding: 20px 12px 60px; }
   }
   @media (max-width: 480px) {
     .acc-ref-stats { grid-template-columns: 1fr; }
+    .acc-grid-top,
+    .acc-grid-bottom { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
@@ -491,12 +554,14 @@
           <li><a href="#account-state">
             <span class="nav-icon">📊</span> Account State
           </a></li>
+          {% if current_user.is_subscribed %}
           <li><a href="#points-balance">
             <span class="nav-icon">⭐</span> Points Balance
           </a></li>
           <li><a href="#referral-code">
             <span class="nav-icon">👥</span> Referral Code
           </a></li>
+          {% endif %}
           <li><a href="/contact">
             <span class="nav-icon" style="font-style:normal;">?</span> Help &amp; Support
           </a></li>
@@ -505,7 +570,7 @@
     </aside>
 
     {# ── Main content — 2×2 grid ── #}
-    <main>
+    <main style="grid-column:2/4;min-width:0;">
       <div class="acc-grid-top" style="margin-top:0;">
 
       {# ══ Section 1 — Account Details ══ #}
@@ -624,7 +689,7 @@
                 maxlength="60"
                 autocomplete="off"
                 placeholder="e.g. Nalsarovar, Rann of Kutch, Hesaraghatta"
-                style="width:100%;box-sizing:border-box;font-size:16px;padding:12px 14px;border:1.5px solid var(--acc-border);border-radius:8px;background:var(--acc-cream);color:var(--acc-dark);font-family:Inter,Arial,sans-serif;-webkit-text-size-adjust:100%;"
+                style="width:100%;box-sizing:border-box;font-size:16px;padding:12px 14px;border:1.5px solid var(--acc-border);border-radius:8px;background:var(--acc-cream);color:var(--acc-dark);font-family:'Aptos','Segoe UI',system-ui,Arial,sans-serif;-webkit-text-size-adjust:100%;"
               >
               <p style="font-size:14px;color:var(--acc-muted);margin:6px 0 0;line-height:1.5;">
                 Letters, spaces and hyphens only. The advisory will learn your area within one session.
@@ -687,7 +752,7 @@
               <div class="acc-league-icon">{{ '📷' if current_user.subscription_track == 'camera' else '📱' }}</div>
               <div>
                 <div class="acc-league-eyebrow">Active League</div>
-                <div class="acc-league-name">{{ {'camera':'Camera League','mobile':'Mobile League'}.get(current_user.subscription_track, '') }}</div>
+                <div class="acc-league-name">{% if current_user.subscription_track == 'camera' %}Camera League{% elif current_user.subscription_track == 'mobile' %}Mobile League{% else %}{{ current_user.subscription_track }}{% endif %}</div>
               </div>
             </div>
             <a href="{{ url_for('pricing') }}" class="acc-switch-btn">Switch League</a>
@@ -697,8 +762,8 @@
           <div class="acc-plan-row">
             <div class="acc-plan-left">
               <div class="acc-plan-name">
-                {{ {'camera':'Camera League','mobile':'Mobile League'}.get(current_user.subscription_track,'') }}
-                · {{ {'monthly':'Monthly','halfyearly':'Six-Month','annual':'Annual'}.get(current_user.subscription_plan,'') }}
+                {% if current_user.subscription_track == 'camera' %}Camera League{% elif current_user.subscription_track == 'mobile' %}Mobile League{% endif %}
+                · {% if current_user.subscription_plan == 'monthly' %}Monthly{% elif current_user.subscription_plan == 'halfyearly' %}Six-Month{% elif current_user.subscription_plan == 'annual' %}Annual{% endif %}
                 <span class="acc-plan-status">Active</span>
               </div>
               <div class="acc-plan-date">
@@ -712,8 +777,8 @@
               </div>
             </div>
             <div class="acc-plan-right">
-              ₹{{ {'monthly':'200','halfyearly':'1,100','annual':'2,000'}.get(current_user.subscription_plan,'—') }}
-              <span>/ {{ {'monthly':'month','halfyearly':'6 months','annual':'year'}.get(current_user.subscription_plan,'') }}</span>
+              ₹{% if current_user.subscription_plan == 'monthly' %}200{% elif current_user.subscription_plan == 'halfyearly' %}2,500{% elif current_user.subscription_plan == 'annual' %}4,000{% else %}—{% endif %}
+              <span>/ {% if current_user.subscription_plan == 'monthly' %}month{% elif current_user.subscription_plan == 'halfyearly' %}6 months{% elif current_user.subscription_plan == 'annual' %}year{% endif %}</span>
             </div>
           </div>
 
@@ -783,10 +848,10 @@
           {# Free tier — upgrade CTA #}
           <div class="acc-upgrade-cta">
             <h3>You are on the free plan.</h3>
-            <p>You have used <strong>{{ images_used }}</strong> of 3 complimentary evaluations. Subscribe to get 4 evaluations every month, league standing, and Annual Excellence Award eligibility.</p>
+            <p>You have used <strong>{{ images_used }}</strong> of {{ evals_limit | default(10) }} free evaluations. Subscribe for unlimited evaluations every month, league standing, and Annual Excellence Award eligibility.</p>
             <div class="acc-upgrade-btns">
-              <a href="{{ url_for('subscribe', track='camera') }}" class="acc-upgrade-btn primary">📷 Camera League · ₹200/mo</a>
-              <a href="{{ url_for('subscribe', track='mobile') }}" class="acc-upgrade-btn secondary">📱 Mobile League · ₹200/mo</a>
+              <a href="{{ url_for('pricing') }}" class="acc-upgrade-btn primary">📷 Camera League · ₹4,000/yr</a>
+              <a href="{{ url_for('pricing') }}" class="acc-upgrade-btn secondary">📱 Mobile League · ₹4,000/yr</a>
             </div>
           </div>
         {% endif %}
@@ -796,7 +861,8 @@
       </div>{# /acc-grid-top #}
 
       <div class="acc-grid-bottom">
-      {# ══ Section 3 — Points Balance ══ #}
+      {# ══ Section 3 — Points Balance — paid subscribers only ══ #}
+      {% if current_user.is_subscribed %}
       <div class="acc-section" id="points-balance" style="border-top:3px solid #2E7D52;">
         <div class="acc-section-header" style="background:rgba(46,125,82,0.05);border-radius:6px;padding:12px 16px;margin-bottom:20px;">
           <div class="acc-section-num">3</div>
@@ -843,8 +909,10 @@
       </div>
       {# end section 3 #}
 
-      {# ══ Section 4 — Referral Code ══ #}
-      {% if referral_code %}
+      {% endif %}{# end points balance — paid only #}
+
+      {# ══ Section 4 — Referral Code — paid subscribers only ══ #}
+      {% if current_user.is_subscribed and referral_code %}
       <div class="acc-section" id="referral-code" style="border-top:3px solid #E09940;">
         <div class="acc-section-header" style="background:rgba(224,153,64,0.06);border-radius:6px;padding:12px 16px;margin-bottom:20px;">
           <div class="acc-section-num">4</div>
@@ -904,7 +972,7 @@
       </div>{# /acc-grid-bottom #}
 
       {# ══ Section 5 — Email Preferences ══ #}
-      <div class="acc-section" id="email-preferences" style="border-top:3px solid #4A4840;">
+      <div class="acc-section" id="email-preferences" style="border-top:3px solid #4A4840;grid-column:1/-1;">
         <div class="acc-section-header" style="background:rgba(74,72,64,0.05);border-radius:6px;padding:12px 16px;margin-bottom:20px;">
           <div class="acc-section-num">5</div>
           <div>
@@ -979,12 +1047,12 @@
 
           <div style="margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
             <button type="submit"
-              style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;min-height:44px;background:#0F1F3D;color:#C8A84B;border:none;border-radius:6px;cursor:pointer;">
+              style="font-family:'Aptos','Segoe UI',system-ui,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;min-height:44px;background:#0F1F3D;color:#C8A84B;border:none;border-radius:6px;cursor:pointer;">
               Save preferences
             </button>
             {% if email_eval_on or email_platform_on or email_nudge_on %}
             <button type="submit" name="unsubscribe_all" value="1"
-              style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0.5px;padding:12px 20px;min-height:44px;background:transparent;color:var(--acc-muted);border:1px solid var(--acc-border);border-radius:6px;cursor:pointer;">
+              style="font-family:'Aptos','Segoe UI',system-ui,Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;padding:12px 20px;min-height:44px;background:transparent;color:var(--acc-muted);border:1px solid var(--acc-border);border-radius:6px;cursor:pointer;">
               Unsubscribe from all emails
             </button>
             {% else %}
@@ -1003,24 +1071,19 @@
         <div style="font-size:15px;font-weight:700;color:var(--acc-red);margin-bottom:6px;">Delete Account</div>
         <p style="font-size:15px;color:var(--acc-muted);margin:0 0 14px;line-height:1.6;">Permanently delete your account and all associated data — images, evaluations, standings. This cannot be undone.</p>
         <a href="{{ url_for('account_delete') }}"
-           style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;min-height:44px;display:inline-flex;align-items:center;color:var(--acc-red);border:1.5px solid var(--acc-red);border-radius:6px;text-decoration:none;">
+           style="font-family:'Aptos','Segoe UI',system-ui,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;min-height:44px;display:inline-flex;align-items:center;color:var(--acc-red);border:1.5px solid var(--acc-red);border-radius:6px;text-decoration:none;">
           Delete My Account
         </a>
       </div>
 
-      {# Bottom logout #}
-      <div style="margin-top:24px;text-align:center;">
-        <a href="{{ url_for('logout') }}"
-           style="font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 24px;min-height:44px;display:inline-flex;align-items:center;gap:8px;color:var(--acc-muted);border:1px solid var(--acc-border);border-radius:6px;text-decoration:none;">
-          ⎋ Log out of Shutter League
-        </a>
-      </div>
+      {# Bottom logout removed — logout icon in nav is sufficient #}
 
     </main>
   </div>
 </div>
 {% endblock %}
 
+{# Location data passed via data-attributes — avoids Jinja-in-script SyntaxError #}
 {% block extra_js %}
 <script>
 // ── Toggle inline sections ──────────────────────────────────────
@@ -1091,10 +1154,15 @@ function validatePasswords() {
 
 // ── Location dropdowns ──────────────────────────────────────────
 (function () {
-  var LOCATION_DATA   = {{ location_data_json | safe }};
-  var CURRENT_COUNTRY = {{ (current_user.country or '') | tojson }};
-  var CURRENT_STATE   = {{ (current_user.state or '')   | tojson }};
-  var CURRENT_CITY    = {{ (current_user.city or '')    | tojson }};
+  function _json(id){
+    var el = document.getElementById(id);
+    if (!el) return null;
+    try { return JSON.parse(el.textContent.trim()); } catch(e) { return null; }
+  }
+  var LOCATION_DATA   = _json('acc-loc-location') || {};
+  var CURRENT_COUNTRY = _json('acc-loc-country') || '';
+  var CURRENT_STATE   = _json('acc-loc-state')   || '';
+  var CURRENT_CITY    = _json('acc-loc-city')    || '';
 
   var countrySel = document.getElementById('loc_country');
   var stateSel   = document.getElementById('loc_state');
