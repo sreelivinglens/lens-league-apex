@@ -1,4 +1,4 @@
-# SL-VERSION: 181.74-staging (Session 204, 2026-08-31 — two fixes from Session 203 handoff. (1) try_page render now passes evals_limit=FREE_IMAGE_LIMIT to upload.html — was missing, template fallback {{ evals_limit or 10 }} was masking the gap. (2) try_upload now reads asset_name from request.form.get('asset_name') before falling back to filename — fixes genre-mismatch modal bypass that saved filename as title. RETAINS 181.73.)
+# SL-VERSION: 181.75-main (Session 204, 2026-08-31 — CRITICAL: Sherpa synthesis now guarded by evals_used > 0. Users with 0 uploads were seeing stale synthesis from mentor_advice_json written during testing. RETAINS 181.74.)
 
 import os
 import re
@@ -33506,7 +33506,7 @@ def try_welcome():
             db.text("SELECT mentor_advice_json FROM users WHERE id = :uid"),
             {'uid': current_user.id}
         ).fetchone()
-        if _sadv_row and _sadv_row[0]:
+        if _sadv_row and _sadv_row[0] and evals_used > 0:  # SL-204: never show Sherpa for users with 0 uploads
             _sadv = _saj.loads(_sadv_row[0])
             _sherpa_obs         = _sadv.get('observation', '').strip() or None
             _sherpa_nudge       = _sadv.get('nudge', '').strip() or None
@@ -33812,7 +33812,7 @@ def try_page():
         'upload.html',           # reuse main upload template — is_trial=True gates differences
         is_trial      = True,
         evals_used    = evals_used,
-        evals_limit   = FREE_IMAGE_LIMIT,   # SL-203: was missing; template uses {{ evals_limit or 10 }}
+        evals_limit   = FREE_IMAGE_LIMIT,   # SL-204: was missing; template uses {{ evals_limit or 10 }}
         genres        = GENRE_IDS,
         genre_choices = GENRE_CHOICES,
         subgenre_map  = SUBGENRE_MAP,
@@ -34022,7 +34022,7 @@ def try_upload():
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
-            asset_name        = (request.form.get('asset_name') or '').strip()[:120] or filename.rsplit('.', 1)[0][:120],  # SL-203: read title from form, fall back to filename
+            asset_name        = (request.form.get('asset_name') or '').strip()[:120] or filename.rsplit('.', 1)[0][:120],  # SL-204: read title from form, fall back to filename
             photographer_name = current_user.full_name or current_user.username,
             genre             = genre,
             width             = w,
