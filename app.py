@@ -12804,6 +12804,163 @@ def image_detail(image_id):
                            now=_now)
 
 
+# ── Contest Launchpad API — Session 203 ──────────────────────────────────────
+# Triggered from image_detail.html via async JS fetch when image.score >= 8.5.
+# Returns 2-3 currently open photography awards matched to genre and tier.
+# Results are cached in audit_json['contest_suggestions'] with a 7-day TTL —
+# no re-fetch if fresh. Language: "photography awards" / "awards worth entering"
+# NOT "contests" (KYC). Route is login_required — scorecard is subscriber-only.
+#
+# Architecture (Session 202 handoff spec):
+#   image_detail.html → JS fetch → /api/contest-suggestions?image_id=<id>
+#     ├─ check audit_json['contest_suggestions'] freshness (< 7 days)  → return cached
+#     └─ Anthropic API call (claude-sonnet-4-6 + web_search_20250305)
+#          → parse JSON → cache in audit_json → return to frontend
+#
+# Language rules:
+#   "photography awards" not "contests" (KYC)
+#   "Submit your work" not "enter" (KYC)
+#   Below 8.5: motivational gap block (not this route — rendered in template only)
+
+@app.route('/api/contest-suggestions')
+@login_required
+def contest_suggestions():
+    import json as _csj
+    from datetime import datetime as _dt, timedelta as _td
+
+    image_id = request.args.get('image_id', type=int)
+    if not image_id:
+        return {'error': 'image_id required'}, 400
+
+    img = Image.query.get(image_id)
+    if not img:
+        return {'error': 'not found'}, 404
+
+    # Only the owner or admin may fetch suggestions for an image
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        return {'error': 'forbidden'}, 403
+
+    # Must be scored and at or above the threshold
+    if not img.score or float(img.score) < 8.5:
+        return {'eligible': False, 'reason': 'below_threshold'}, 200
+
+    # ── Cache check — return stored result if < 7 days old ───────────────────
+    try:
+        _audit = img.get_audit() or {}
+        _cached = _audit.get('contest_suggestions')
+        if _cached and isinstance(_cached, dict):
+            _cached_at_str = _cached.get('cached_at')
+            if _cached_at_str:
+                _cached_at = _dt.fromisoformat(_cached_at_str)
+                if (_dt.utcnow() - _cached_at) < _td(days=7):
+                    app.logger.info(f'[contest_suggestions] cache hit image={image_id}')
+                    return {'eligible': True, 'awards': _cached.get('awards', []), 'from_cache': True}
+    except Exception as _ce:
+        app.logger.warning(f'[contest_suggestions] cache read error image={image_id}: {_ce}')
+
+    # ── Live Anthropic call with web search ───────────────────────────────────
+    _genre  = img.genre or 'photography'
+    _score  = float(img.score)
+    _tier   = img.tier or ''
+    _api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not _api_key:
+        return {'error': 'api_key_missing'}, 500
+
+    try:
+        import anthropic as _ant_cs
+        _cs_client = _ant_cs.Anthropic(api_key=_api_key)
+
+        _prompt = f"""Search for currently open photography awards accepting submissions right now (August 2026).
+
+Find 2-3 awards that are:
+- Currently open for submission (not closed, not announced but not open yet)
+- A good match for {_genre} photography
+- Appropriate for work evaluated at {_score}/10 ({_tier} tier) — serious amateur to emerging professional level
+- A mix of free and paid entry where possible
+
+For each award return ONLY a valid JSON array with this exact structure — no markdown, no explanation, just the array:
+[
+  {{
+    "name": "Award name",
+    "organiser": "Organisation name",
+    "url": "https://...",
+    "entry_fee": "Free" or "£X" or "$X",
+    "deadline": "DD Month YYYY or 'Rolling'",
+    "why_this_image": "One sentence on why {_genre} work at this level is a strong fit"
+  }}
+]
+
+Only include awards with known, verifiable deadlines. Do not invent or hallucinate award names."""
+
+        _cs_resp = _cs_client.messages.create(
+            model='claude-sonnet-4-6',
+            max_tokens=1000,
+            tools=[{'type': 'web_search_20250305', 'name': 'web_search'}],
+            messages=[{'role': 'user', 'content': _prompt}]
+        )
+
+        # Extract text block from response (web_search tool may produce multiple blocks)
+        _raw_text = ''
+        for _blk in _cs_resp.content:
+            if hasattr(_blk, 'type') and _blk.type == 'text' and _blk.text.strip():
+                _raw_text = _blk.text.strip()
+                break
+
+        if not _raw_text:
+            app.logger.warning(f'[contest_suggestions] empty response image={image_id}')
+            return {'eligible': True, 'awards': [], 'from_cache': False}
+
+        # Strip markdown fences if model wrapped the JSON
+        import re as _cs_re
+        _raw_text = _cs_re.sub(r'^```json\s*', '', _raw_text)
+        _raw_text = _cs_re.sub(r'^```\s*', '', _raw_text)
+        _raw_text = _cs_re.sub(r'```\s*$', '', _raw_text.strip())
+
+        # Extract JSON array from response (model may add preamble)
+        _arr_match = _cs_re.search(r'\[.*\]', _raw_text, _cs_re.DOTALL)
+        if not _arr_match:
+            app.logger.warning(f'[contest_suggestions] no JSON array in response image={image_id}: {_raw_text[:200]}')
+            return {'eligible': True, 'awards': [], 'from_cache': False}
+
+        _awards = _csj.loads(_arr_match.group(0))
+        if not isinstance(_awards, list):
+            _awards = []
+
+        # Sanitise — cap at 3, ensure required keys present
+        _clean = []
+        for _a in _awards[:3]:
+            if isinstance(_a, dict) and _a.get('name') and _a.get('url'):
+                _clean.append({
+                    'name':            str(_a.get('name', ''))[:120],
+                    'organiser':       str(_a.get('organiser', ''))[:120],
+                    'url':             str(_a.get('url', ''))[:300],
+                    'entry_fee':       str(_a.get('entry_fee', 'Check website'))[:40],
+                    'deadline':        str(_a.get('deadline', 'Check website'))[:60],
+                    'why_this_image':  str(_a.get('why_this_image', ''))[:300],
+                })
+
+        # ── Cache in audit_json ───────────────────────────────────────────────
+        try:
+            _audit_for_cache = img.get_audit() or {}
+            _audit_for_cache['contest_suggestions'] = {
+                'awards':    _clean,
+                'cached_at': _dt.utcnow().isoformat(),
+                'genre':     _genre,
+                'score':     _score,
+            }
+            img.set_audit(_audit_for_cache)
+            db.session.commit()
+            app.logger.info(f'[contest_suggestions] cached {len(_clean)} awards image={image_id}')
+        except Exception as _cache_err:
+            app.logger.warning(f'[contest_suggestions] cache write failed image={image_id}: {_cache_err}')
+            db.session.rollback()
+
+        return {'eligible': True, 'awards': _clean, 'from_cache': False}
+
+    except Exception as _api_err:
+        app.logger.error(f'[contest_suggestions] API error image={image_id}: {_api_err}')
+        return {'eligible': True, 'awards': [], 'error': 'search_failed', 'from_cache': False}, 200
+
 
 @app.route('/my-eye')
 @login_required
