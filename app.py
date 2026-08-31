@@ -32810,7 +32810,12 @@ def league_haiku():
                     genre=r[4],
                     thumb_url=r[5],
                     id=r[6],
-                    impression=_a.get('impression', '') or '',
+                    impression=(
+                        _a.get('impression', '') or
+                        _a.get('takeaway', '') or
+                        _a.get('background_check', '') or
+                        _a.get('byline_1', '') or ''
+                    ),
                 ))
             except Exception:
                 pass
@@ -32876,7 +32881,12 @@ def league_haiku():
                 genre=_sr[3],
                 thumb_url=_sr[4],
                 id=_sr[5],
-                impression=_sa.get('impression', '') or _sa.get('takeaway', '') or _sa.get('strength_obs', '') or '',
+                impression=(
+                    _sa.get('impression', '') or
+                    _sa.get('takeaway', '') or
+                    _sa.get('background_check', '') or
+                    _sa.get('byline_1', '') or ''
+                ),
             )
 
         _league  = _build_lh(_league_rows, _lhj)
