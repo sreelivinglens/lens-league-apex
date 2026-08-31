@@ -5259,23 +5259,29 @@ def dashboard():
             app.logger.warning(f'[curriculum_lesson] {_le}')
         # SL-176.1d: Weather — session-cached 1h to eliminate external API calls
         try:
-            _wx_city = getattr(current_user, 'city', '') or ''
-            if _wx_city:
-                _wx_cache_key = f'wx_{_wx_city}'
-                _wx_ts_key    = f'wx_ts_{_wx_city}'
-                _wx_ttl       = 3600  # 1 hour
-                import time as _wxt
+            _wx_city  = getattr(current_user, 'city',  '') or ''
+            _wx_state = getattr(current_user, 'state', '') or ''
+            # Try city first, fall back to state if city returns no condition
+            # (handles non-standard city names like sanctuaries, rural areas)
+            import time as _wxt
+            _wx_ttl = 3600  # 1 hour
+            for _wx_loc in [l for l in [_wx_city, _wx_state] if l]:
+                _wx_cache_key = f'wx_{_wx_loc}'
+                _wx_ts_key    = f'wx_ts_{_wx_loc}'
                 if (session.get(_wx_ts_key) and
                         _wxt.time() - session[_wx_ts_key] < _wx_ttl and
                         session.get(_wx_cache_key)):
                     _weather = session[_wx_cache_key]
                 else:
-                    _weather = _get_weather(_wx_city)
+                    _weather = _get_weather(_wx_loc)
                     try:
                         session[_wx_cache_key] = _weather
                         session[_wx_ts_key]    = _wxt.time()
                     except Exception:
                         pass
+                # If we got a real condition, stop — don't try fallback
+                if _weather and _weather.get('condition'):
+                    break
         except Exception as _we:
             app.logger.warning(f'[weather] {_we}')
         # Mission due — open mission upload within last 7 days still pending/processing
