@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.58 (Session 205 — 2026-08-31 — Mobile fixes: bottom nav active state dynamic; tier strip stacks vertically at 480px; dim-header sparkline hidden at 480px; mob-nav tap highlight + transition. RETAINS 181.57: — 2026-08-31 — Hero photo now shows latest upload (latest_image); identity bar still shows best score (user_hero). RETAINS 181.56: "Where to focus next" smart fallback. Session 200b: full dashboard redesign. Standalone — does not extend base.html.) #}
+{# SL-VERSION: 181.59 (Session 205 — 2026-08-31 — Bottom nav: cream→navy #1A2744, icon colour light, label 11px to prevent cutoff. RETAINS 181.58: — 2026-08-31 — Mobile fixes: bottom nav active state dynamic; tier strip stacks vertically at 480px; dim-header sparkline hidden at 480px; mob-nav tap highlight + transition. RETAINS 181.57: — 2026-08-31 — Hero photo now shows latest upload (latest_image); identity bar still shows best score (user_hero). RETAINS 181.56: "Where to focus next" smart fallback. Session 200b: full dashboard redesign. Standalone — does not extend base.html.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -173,9 +173,9 @@ canvas.spark{flex:1;height:48px;display:block}
 .cta-secondary{display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(26,39,68,0.52);text-decoration:none;letter-spacing:0.03em}
 
 /* ── MOBILE BOTTOM NAV ── */
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#F5F3EF;border-top:0.5px solid rgba(26,39,68,0.12);z-index:200}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#1A2744;border-top:0.5px solid rgba(255,255,255,0.10);z-index:200}
 .mob-nav-items{display:flex;height:56px}
-.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:rgba(26,39,68,0.42);text-decoration:none;background:none;border:none;font-family:'Inter',sans-serif;min-height:44px;padding:4px 2px;-webkit-tap-highlight-color:rgba(200,168,75,0.15);transition:color .1s,opacity .1s}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;letter-spacing:0.02em;text-transform:uppercase;color:rgba(255,255,255,0.45);text-decoration:none;background:none;border:none;font-family:'Inter',sans-serif;min-height:44px;padding:4px 2px;-webkit-tap-highlight-color:rgba(200,168,75,0.20);transition:color .1s,opacity .1s}
 .mob-nav-item.active{color:#C8A84B}
 .mob-nav-item:active{color:#C8A84B;opacity:.75}
 .mob-nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
