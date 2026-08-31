@@ -1608,9 +1608,9 @@ function scRenderText() {
     /* **bold** → <strong> (short spans only) */
     raw = raw.replace(/\*\*([^*]{1,60})\*\*/g, '<strong>$1</strong>');
     /* Bold Frame N: labels in BOW sequences */
-    raw = raw.replace(/(Frame\s+\d+:)/g, '<strong>$1</strong>');
-    /* Highlight "To reach 9" sentences with pink colour */
-    raw = raw.replace(/(To reach 9[^<.]*\.)/g, '<span style="color:#A0304A;font-weight:600">$1</span>');
+    /* Bold BOW sequence header and break frames onto new lines */
+    raw = raw.replace(/(YOUR NEXT BODY OF WORK SEQUENCE:)/g, '<strong>$1</strong>');
+    raw = raw.replace(/\s*(Frame\s+(\d+):)/g, '<br><br><strong>Frame $2:</strong>');
     /* Search: X. → Google Images link */
     raw = raw.replace(/Search:\s*([^.<]{5,60})\./g, function(m, term) {
       var q = encodeURIComponent(term.trim() + ' photography');
@@ -1621,6 +1621,8 @@ function scRenderText() {
       var q = encodeURIComponent(term.trim());
       return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
     });
+    /* Highlight "To reach 9+" — runs last so Search links are already converted */
+    raw = raw.replace(/(To reach 9\+[^<]*?)\.(<\/span>|<\/li>|<\/p>)/g, '<span style="color:#A0304A;font-weight:600">$1.</span>$2');
     el.innerHTML = raw;
   });
 }
