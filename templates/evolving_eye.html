@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: evolving_eye-176.10 (2026-08-10 — topbar cream not black, trajectory pastel blue+paras, insight gold block paras, footer dark kept) #}
+{# SL-VERSION: evolving_eye-176.11 (Session 205, 2026-08-31 — On-demand generation: visiting /my-eye triggers advisory if none exists. Honest waiting state with email notice. No polling JS. RETAINS 176.10: topbar cream, trajectory pastel blue, insight gold block.) #}
 {% block title %}My Evolving Eye — So Far · Shutter League{% endblock %}
 {% block body_class %}page-evolving-eye{% endblock %}
 
@@ -313,50 +313,32 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
       <div class="no-adv-num">{{ scored_count }}</div>
       <div class="no-adv-title">
         {% if scored_count == 0 %}Your eye is waiting to be read
-        {% elif scored_count < 10 %}{{ images_to_next }} image{{ 's' if images_to_next != 1 }} away from your first advisory
-        {% else %}Your advisory is being generated
+        {% elif scored_count < 10 %}{{ images_to_next }} image{{ 's' if images_to_next != 1 else '' }} away from your first advisory
+        {% elif generating %}Your {{ last_milestone }}-image advisory is being prepared
+        {% else %}Your advisory will be ready at {{ next_milestone }} images
         {% endif %}
       </div>
       <div class="no-adv-body">
         {% if scored_count == 0 %}
         Upload your first photograph. Shutter League will evaluate it across five dimensions no other platform measures — and begin watching how your eye develops over time.
         {% elif scored_count < 10 %}
-        Your first <em>My Evolving Eye</em> advisory unlocks at 10 images. It will tell you what your photographs say about how you see — patterns, strengths, the one thing to work on, and which contests your images are ready for.
+        Your first <em>My Evolving Eye</em> advisory unlocks at 10 images. It will tell you what your photographs say about how you see — patterns, strengths, the one thing to work on, and which awards your images are ready for.
         <br><br>
         At {{ next_milestone }} images, Shutter League will have enough to read your eye. Keep shooting.
+        {% elif generating %}
+        Shutter League is reading your {{ last_milestone }} images and building your personal advisory. This takes a few minutes.<br><br>
+        <strong>You will receive it on {{ current_user.email }} when it is ready.</strong> You do not need to wait on this page — come back at any time.
+        <br><br>
+        Your next advisory after this will be ready at <strong>{{ next_milestone }} images</strong> — {{ images_to_next }} image{{ 's' if images_to_next != 1 else '' }} away.
         {% else %}
-        Shutter League is reading your {{ scored_count }} images and preparing your advisory. It will be ready shortly.
+        Your advisory is prepared at every 10-image milestone. You are at {{ scored_count }} images — your next advisory will be ready at <strong>{{ next_milestone }} images</strong>, {{ images_to_next }} image{{ 's' if images_to_next != 1 else '' }} away.
         {% endif %}
       </div>
-      <a href="{{ url_for('upload') }}" style="display:inline-block;background:var(--gold);color:var(--dark);font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;text-decoration:none">
+      <a href="{{ url_for('upload') }}" style="display:inline-block;background:var(--gold);color:var(--dark);font-size:15px;font-weight:700;padding:12px 24px;border-radius:8px;text-decoration:none;min-height:44px;line-height:20px;padding-top:12px">
         {% if scored_count == 0 %}Upload your first photograph →
         {% else %}Upload next image →
         {% endif %}
       </a>
-      {% if scored_count >= 10 %}
-      {# Auto-refresh while generating — polls every 5 seconds, reloads when ready #}
-      <div id="ey-gen-status" style="margin-top:16px;font-size:14px;color:var(--muted)">Checking status<span id="ey-dots">...</span></div>
-      <script>
-      (function(){
-        var dots = document.getElementById('ey-dots');
-        var d = 0;
-        setInterval(function(){ dots.textContent = ['.','..','...'][d++ % 3]; }, 600);
-        function checkReady() {
-          fetch(window.location.href, {credentials:'include', headers:{'X-Check-Ready':'1'}})
-            .then(function(r){ if(r.ok) return r.text(); })
-            .then(function(html){
-              if (html && html.indexOf('ey-body') > -1) {
-                window.location.reload();
-              } else {
-                setTimeout(checkReady, 5000);
-              }
-            })
-            .catch(function(){ setTimeout(checkReady, 8000); });
-        }
-        setTimeout(checkReady, 5000);
-      })();
-      </script>
-      {% endif %}
     </div>
   </div>
 </div>
