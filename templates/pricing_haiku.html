@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing_haiku-1.3 (Session 205 — 2026-08-31 — Mobile bottom nav: dynamic active state via request.endpoint; tap highlight + transition added. RETAINS 1.2: — 2026-08-31 — Full eval sample → try_sample_sonnet (Sonnet/League eval); Basic eval sample → try_sample (Haiku eval). Session 201: standalone Haiku pricing page, no base.html, Haiku nav.) #}
+{# SL-VERSION: pricing_haiku-1.4 (Session 205 — 2026-08-31 — Nav label 11px, padding tightened to prevent PRICING cutoff. RETAINS 1.3: — 2026-08-31 — Mobile bottom nav: dynamic active state via request.endpoint; tap highlight + transition added. RETAINS 1.2: — 2026-08-31 — Full eval sample → try_sample_sonnet (Sonnet/League eval); Basic eval sample → try_sample (Haiku eval). Session 201: standalone Haiku pricing page, no base.html, Haiku nav.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,7 +147,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 /* ── MOBILE BOTTOM NAV ── */
 .sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); padding:6px 0 8px; z-index:200; }
 .sl-mob-nav-items { display:flex; justify-content:space-around; align-items:flex-end; }
-.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; -webkit-tap-highlight-color:rgba(200,168,75,0.20); transition:color .1s,opacity .1s; }
+.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:13px; letter-spacing:0.02em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 4px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; -webkit-tap-highlight-color:rgba(200,168,75,0.20); transition:color .1s,opacity .1s; }
 .sl-mob-nav-item.active { color:#C8A84B; }
 .sl-mob-nav-item:active { color:#C8A84B; opacity:.75; }
 .sl-mob-nav-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
