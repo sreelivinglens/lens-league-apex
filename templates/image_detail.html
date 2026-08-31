@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.14-staging (Session 190, 2026-08-19 — HOTFIX: image_id undefined — url_for calls now use image.id. RETAINS 181.13.)
+{# SL-VERSION: image_detail-181.17 (Session 205, 2026-08-31 — Contest cards: ≥8.5 green #E8F5E2 with live awards; <8.5 amber #FFF8EC gap advisory. No dark backgrounds. RETAINS 181.16: four named cards, path-to-9 pink, BOW frames, CSI, font fixes.)
 {# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
@@ -613,6 +613,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _edit_base = (_audit.get('edit_base') or '') | trim %}
 {% set _edit_creative = (_audit.get('edit_creative') or '') | trim %}
 
+{# Four named cards — written by Sonnet scoring engine (Session 205) #}
+{% set _card1 = (_audit.get('card_1_photographers_advice') or _audit.get('transferable_advice') or _tech_val or '') | trim %}
+{% set _card2 = (_audit.get('card_2_what_you_controlled') or _mom_val or '') | trim %}
+{% set _card3 = (_audit.get('card_3_what_to_watch') or _audit.get('what_next') or _next_val or '') | trim %}
+{% set _card4 = (_audit.get('card_4_keep_in_mind') or _audit.get('note_on_eye') or '') | trim %}
+
 {# Next shot from mentor_location fields #}
 {% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
 {% set _mentor_2 = (_audit.get('mentor_location_2') or '') | trim %}
@@ -961,6 +967,71 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
+    {# ── FOUR NAMED CARDS — card_1 through card_4 ── #}
+    {# Card 1: The Photographer's Advice #}
+    {% if _card1 %}
+    <div class="sc-acc-block">
+      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">The photographer's advice</div></div>
+      <div class="sc-acc-row open">
+        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
+          <div class="sc-acc-icon" style="background:#fff8e6">🎯</div>
+          <div class="sc-acc-col">
+            <div class="sc-acc-title">What this image taught</div>
+            <div class="sc-acc-teaser">{{ _card1 | replace('■','') | replace('▪','') | replace('•','') | trim | truncate(90) }}</div>
+          </div>
+          <span class="sc-acc-chev">⌄</span>
+        </div>
+        <div class="sc-acc-body sc-render-text">{{ _card1 | safe }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Card 2: What you controlled #}
+    {% if _card2 %}
+    <div class="sc-acc-block">
+      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What you controlled</div></div>
+      <div class="sc-acc-row">
+        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
+          <div class="sc-acc-icon" style="background:#e8f5e2">🔍</div>
+          <div class="sc-acc-col">
+            <div class="sc-acc-title">Decisions that shaped this frame</div>
+            <div class="sc-acc-teaser">{{ _card2 | replace('■','') | replace('▪','') | replace('•','') | trim | truncate(90) }}</div>
+          </div>
+          <span class="sc-acc-chev">⌄</span>
+        </div>
+        <div class="sc-acc-body sc-render-text">{{ _card2 | safe }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Card 3: What to watch next — STANDOUT pink section, contains the 9+ version #}
+    {% if _card3 %}
+    <div style="background:#FFF0F5;border-radius:12px;border:1px solid #F5C0D0;margin-bottom:10px;padding:18px 20px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A0304A;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+        🎯 What to watch next — your path to 9
+      </div>
+      <div class="sc-render-text" style="font-size:16px;color:#3a1020;line-height:1.85">{{ _card3 | safe }}</div>
+    </div>
+    {% endif %}
+
+    {# Card 4: Keep this in mind #}
+    {% if _card4 %}
+    <div class="sc-acc-block">
+      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">Keep this in mind</div></div>
+      <div class="sc-acc-row">
+        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
+          <div class="sc-acc-icon" style="background:#f0f0ff">📌</div>
+          <div class="sc-acc-col">
+            <div class="sc-acc-title">For your next session</div>
+            <div class="sc-acc-teaser">{{ _card4 | replace('■','') | replace('▪','') | replace('•','') | trim | truncate(90) }}</div>
+          </div>
+          <span class="sc-acc-chev">⌄</span>
+        </div>
+        <div class="sc-acc-body sc-render-text">{{ _card4 | safe }}</div>
+      </div>
+    </div>
+    {% endif %}
+
     {# ⑥ WHAT SL SAW IN YOUR PHOTOGRAPH — all accordions CLOSED by default #}
     {% if _what_stood_out or _what_you_did or _what_eye %}
     <div class="sc-acc-block">
@@ -1044,7 +1115,28 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% if _body_of_work %}
     <div class="sc-bow-card">
       <div class="sc-bow-hdr">Your next body of work</div>
-      <div class="sc-bow-frames">{{ _body_of_work | safe }}</div>
+      <div class="sc-bow-frames">
+        {%- set _bow_text = _body_of_work | replace('\r\n', '\n') | replace('\r', '\n') -%}
+        {%- if 'Frame 1' in _bow_text or 'Frame 2' in _bow_text -%}
+          {%- set _bow_parts = _bow_text | replace('Frame 1:', '|||1|||') | replace('Frame 2:', '|||2|||') | replace('Frame 3:', '|||3|||') | replace('Frame 4:', '|||4|||') | replace('Frame 5:', '|||5|||') -%}
+          {%- for _part in _bow_parts.split('|||') -%}
+            {%- set _part = _part | trim -%}
+            {%- if _part and _part[0] in '12345' and _part[1:2] == '|||' -%}
+              {# skip — separator artifact #}
+            {%- elif _part and _part | length > 2 and _part[0] in '12345' -%}
+              <div class="sc-bow-frame">
+                <div class="sc-bow-num">{{ _part[0] }}</div>
+                <div class="sc-bow-text">{{ _part[1:] | trim | safe }}</div>
+              </div>
+            {%- elif _part and not (_part | length == 1 and _part in '12345') -%}
+              <div class="sc-bow-intro">{{ _part | safe }}</div>
+            {%- endif -%}
+          {%- endfor -%}
+        {%- else -%}
+          {# No Frame labels — render as bullet list via scRenderText #}
+          <div class="sc-bow-frames sc-render-text">{{ _bow_text | safe }}</div>
+        {%- endif -%}
+      </div>
     </div>
     {% endif %}
 
@@ -1135,23 +1227,21 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
       {% set _lp_score = image.score | float %}
       {% if _lp_score >= 8.5 %}
-      {# Above threshold — async card, fills in from API #}
-      <div class="sc-card" id="sl-lp-card" style="display:none">
-        <div class="sc-card-body">
-          <div class="sc-card-hdr" style="margin-bottom:14px">
-            <span class="sc-card-title">Photography awards worth entering</span>
-            <span id="sl-lp-badge" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#2A7A3A;padding:3px 8px;border-radius:4px">{{ '%.2f'|format(image.score) }}</span>
-          </div>
-          <div id="sl-lp-loading" style="padding:12px 0;color:var(--sc-muted);font-size:15px;line-height:1.6">
-            Finding open awards for your work…
-          </div>
-          <div id="sl-lp-awards" style="display:none"></div>
-          <div id="sl-lp-empty" style="display:none;font-size:15px;color:var(--sc-muted);line-height:1.7">
-            No awards found right now — check back in a few days as new calls open regularly.
-          </div>
-          <div id="sl-lp-error" style="display:none;font-size:14px;color:var(--sc-muted)">
-            Could not load award suggestions. Try again later.
-          </div>
+      {# Above threshold — async card, fills in from API — deep blue premium card #}
+      <div id="sl-lp-card" style="display:none;background:#E8F5E2;border-radius:12px;border:1px solid #C5E0BB;margin-bottom:10px;padding:18px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2A7A3A">Photography awards worth entering</span>
+          <span id="sl-lp-badge" style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#2A7A3A;padding:3px 10px;border-radius:20px">{{ '%.2f'|format(image.score) }}</span>
+        </div>
+        <div id="sl-lp-loading" style="padding:12px 0;color:#2A7A3A;font-size:15px;line-height:1.6">
+          Finding open awards for your work…
+        </div>
+        <div id="sl-lp-awards" style="display:none"></div>
+        <div id="sl-lp-empty" style="display:none;font-size:15px;color:#1a3a1a;line-height:1.7">
+          No awards found right now — check back in a few days as new calls open regularly.
+        </div>
+        <div id="sl-lp-error" style="display:none;font-size:14px;color:#1a3a1a">
+          Could not load award suggestions. Try again later.
         </div>
       </div>
 
@@ -1163,18 +1253,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% set _dims_map = [('Whether it made you feel something', image.aq_score), ('Whether the timing was right', image.dm_score), ('How difficult it was', image.dod_score)] %}
         {% set _weakest_dim = (_dims_map | sort(attribute=1) | first)[0] %}
       {% endif %}
-      <div class="sc-card">
-        <div class="sc-card-body">
-          <div class="sc-card-hdr" style="margin-bottom:10px">
-            <span class="sc-card-title">Photography awards</span>
-          </div>
-          <p style="font-size:15px;color:var(--sc-text);line-height:1.75;margin:0 0 8px">
-            An 8.5 is where Shutter League points you to specific photography awards your work is ready for.
-          </p>
-          <p style="font-size:15px;color:var(--sc-text);line-height:1.75;margin:0 0 8px">
-            Your evaluation of <strong>{{ '%.2f'|format(image.score) }}</strong> is <strong>{{ _lp_gap }}</strong> point{{ 's' if _lp_gap != 1.0 else '' }} away.{% if _weakest_dim %} Your weakest dimension right now is <em>{{ _weakest_dim }}</em> — focus there.{% endif %}
-          </p>
-        </div>
+      <div style="background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px">
+        <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A37B2C;margin-bottom:12px">Photography awards</div>
+        <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0 0 10px">
+          An 8.5 is where Shutter League begins pointing you to specific photography awards your work is ready for.
+        </p>
+        <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0">
+          Your evaluation of <strong>{{ '%.2f'|format(image.score) }}</strong> is <strong style="color:#A37B2C">{{ _lp_gap }} point{{ 's' if _lp_gap != 1.0 else '' }} away</strong>.{% if _weakest_dim %} Focus on <em>{{ _weakest_dim }}</em> — that is your ceiling right now.{% endif %}
+        </p>
       </div>
       {% endif %}
 
@@ -1210,14 +1296,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           data.awards.forEach(function(a, i) {
             var isFree = (a.entry_fee || '').toLowerCase() === 'free';
             var feeBadge = isFree
-              ? '<span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2A7A3A;background:#E8F5E2;border:0.5px solid #C5E0BB;padding:2px 7px;border-radius:4px">Free</span>'
-              : '<span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7A5E00;background:#FDF6E3;border:0.5px solid #D6A42840;padding:2px 7px;border-radius:4px">' + (a.entry_fee || 'Paid') + '</span>';
+              ? '<span style="font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2A7A3A;background:#E8F5E2;border:0.5px solid #C5E0BB;padding:2px 7px;border-radius:4px">Free</span>'
+              : '<span style="font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7A5E00;background:#FDF6E3;border:0.5px solid #D6A42840;padding:2px 7px;border-radius:4px">' + (a.entry_fee || 'Paid') + '</span>';
             var border = i < data.awards.length - 1
               ? 'border-bottom:0.5px solid var(--sc-border);margin-bottom:16px;padding-bottom:16px'
               : '';
             html += '<div style="' + border + '">';
             html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">';
-            html += '<div style="font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.4">' + _esc(a.name) + '</div>';
+            html += '<div style="font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.7">' + _esc(a.name) + '</div>';
             html += feeBadge;
             html += '</div>';
             if (a.organiser) {
@@ -1301,6 +1387,22 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       {% endif %}
       {% endfor %}
 
+    </div>
+    {% endif %}
+
+    {# ── CSI CARD A — duplicate image notification ── #}
+    {% if csi_own_duplicate %}
+    <div style="background:#2D1F00;border-left:3px solid #F5C518;border-radius:0 4px 4px 0;padding:20px 24px;margin:0 0 10px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#F5C518;margin-bottom:8px">Image already in your record</div>
+      <div style="font-size:15px;line-height:1.75;color:rgba(245,197,24,0.80)">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
+    </div>
+    {% endif %}
+
+    {# ── CSI CARD B — Shutter League pool match notification ── #}
+    {% if csi_threshold_hit %}
+    <div style="background:#1A1A2E;border-left:3px solid #4A6FA8;border-radius:0 4px 4px 0;padding:20px 24px;margin:0 0 10px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A9FD4;margin-bottom:8px">Seen in the Shutter League pool</div>
+      <div style="font-size:15px;line-height:1.75;color:rgba(122,159,212,0.80)">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same 312 blind evaluations as every other photograph.</div>
     </div>
     {% endif %}
 
