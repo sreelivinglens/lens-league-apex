@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.18 (Session 205, 2026-09-01 — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
+{# SL-VERSION: image_detail-181.19 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
@@ -1049,11 +1049,17 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% elif location_links %}
     {% for loc in location_links[:1] %}
+    {% set _loc_name = loc.get('name') or loc.get('title') or '' %}
+    {% set _loc_body = loc.get('description') or loc.get('body') or loc.get('advisory') or '' %}
+    {% set _loc_url  = loc.get('maps_url') or loc.get('url') or '' %}
+    {% if _loc_name or _loc_body %}
     <div class="sc-location-card">
       <div class="sc-location-eyebrow">📍 Your next shot — bookmarked</div>
-      <div class="sc-location-title">{{ loc.get('name') or loc.get('title') or 'Nearby location' }}</div>
-      <a href="{{ loc.get('maps_url') or loc.get('url') or '#' }}" target="_blank" class="sc-location-cta">Go shoot →</a>
+      {% if _loc_name %}<div class="sc-location-title">{{ _loc_name }}</div>{% endif %}
+      {% if _loc_body %}<div class="sc-location-body">{{ _loc_body }}</div>{% endif %}
+      {% if _loc_url %}<a href="{{ _loc_url }}" target="_blank" class="sc-location-cta">Go shoot →</a>{% endif %}
     </div>
+    {% endif %}
     {% endfor %}
     {% endif %}
 
@@ -1601,6 +1607,10 @@ function scRenderText() {
 
     /* **bold** → <strong> (short spans only) */
     raw = raw.replace(/\*\*([^*]{1,60})\*\*/g, '<strong>$1</strong>');
+    /* Bold Frame N: labels in BOW sequences */
+    raw = raw.replace(/(Frame\s+\d+:)/g, '<strong>$1</strong>');
+    /* Highlight "To reach 9" sentences with pink colour */
+    raw = raw.replace(/(To reach 9[^<.]*\.)/g, '<span style="color:#A0304A;font-weight:600">$1</span>');
     /* Search: X. → Google Images link */
     raw = raw.replace(/Search:\s*([^.<]{5,60})\./g, function(m, term) {
       var q = encodeURIComponent(term.trim() + ' photography');
