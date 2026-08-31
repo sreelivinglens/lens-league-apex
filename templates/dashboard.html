@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 178.3 (Session 205, 2026-08-31 — 1) toggleSpan duplicate IDs fixed (grm-a/grm-b per branch). 2) location_data_json injected (was hardcoded {}). 3) Dropdown JS added (dlocCountryChange/State/City — were called but never defined). 4) Change location arrow toggles ↓/↑. 5) Weather unavailable hidden. RETAINS 178.2: Session 182, 2026-08-14 — MOBILE "MORE" DRAWER restyled as a compact popup anchored right, matching production. NOTE FOR WHOEVER IS NEXT: the dashboard carries its OWN More drawer (#slMoreDrawer, .mob-more-*) which is SEPARATE from the one in base.html (#slBottomMoreMenu). base's has 8 items starting "Explore"; this one has 9 starting "Recent Work". Two different More menus on the same site — base 180.9 fixed base's and had no effect here, which is why the drawer still filled the screen. This was left:0;right:0;translateY(110%) — a full-bleed sheet from the bottom bar upward. Now right:8px, 208px min-width, rounded, gold hairline border, above the bar. THE GREEN #0F2A22 IS UNCHANGED — founder's instruction; only geometry moved. Grab handle hidden (it signals a draggable full-width sheet). Overlay kept for outside-tap close but made transparent, as production shows no dim. max-height 58dvh so the last item clears the bar and home indicator; items keep a 44px tap target. CSS only — no markup, no JS, no Jinja changed. slMoreOpen/slMoreClose verified working. RETAINS 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
+{# SL-VERSION: 178.4 (Session 205 — 2026-09-01 — Audit fixes: 12px→13px, Jinja in script fixed, KYC copy. RETAINS 178.3:, 2026-08-31 — 1) toggleSpan duplicate IDs fixed (grm-a/grm-b per branch). 2) location_data_json injected (was hardcoded {}). 3) Dropdown JS added (dlocCountryChange/State/City — were called but never defined). 4) Change location arrow toggles ↓/↑. 5) Weather unavailable hidden. RETAINS 178.2: Session 182, 2026-08-14 — MOBILE "MORE" DRAWER restyled as a compact popup anchored right, matching production. NOTE FOR WHOEVER IS NEXT: the dashboard carries its OWN More drawer (#slMoreDrawer, .mob-more-*) which is SEPARATE from the one in base.html (#slBottomMoreMenu). base's has 8 items starting "Explore"; this one has 9 starting "Recent Work". Two different More menus on the same site — base 180.9 fixed base's and had no effect here, which is why the drawer still filled the screen. This was left:0;right:0;translateY(110%) — a full-bleed sheet from the bottom bar upward. Now right:8px, 208px min-width, rounded, gold hairline border, above the bar. THE GREEN #0F2A22 IS UNCHANGED — founder's instruction; only geometry moved. Grab handle hidden (it signals a draggable full-width sheet). Overlay kept for outside-tap close but made transparent, as production shows no dim. max-height 58dvh so the last item clears the bar and home indicator; items keep a 44px tap target. CSS only — no markup, no JS, no Jinja changed. slMoreOpen/slMoreClose verified working. RETAINS 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -225,7 +225,7 @@ body.page-dashboard #backToTop         { display:none !important }
 .mob-card{background:#fff;border-radius:14px;border:0.5px solid var(--border);padding:18px;margin-bottom:10px}
 .mob-card-cream{background:var(--cream);border-radius:14px;border:0.5px solid var(--border);padding:18px;margin-bottom:10px}
 .mob-section{padding:12px 14px;padding-bottom:0}
-.mob-score-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.mob-eval-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .mob-score-big{font-size:36px;font-weight:700;color:var(--dark);line-height:1}
 .mob-tier-badge{font-size:13px;font-weight:700;color:var(--green);letter-spacing:0.3px}
 .mob-upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--dark);font-size:15px;font-weight:700;padding:14px 20px;border-radius:11px;text-decoration:none;width:100%;margin-bottom:10px;min-height:52px;touch-action:manipulation} /* SL-178.1 */
@@ -318,7 +318,7 @@ body.page-dashboard #backToTop         { display:none !important }
 {# ── EVOLVING EYE TOP BANNER — dismissible, shown when advisory ready ── #}
 {% if evolving_eye_data %}
 {% set _eye = evolving_eye_data %}
-<div id="slEyeBanner" style="background:#FEF3C7;border-bottom:2px solid #D6A428;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+<div id="slEyeBanner" data-milestone="{{ _eye.milestone }}" style="background:#FEF3C7;border-bottom:2px solid #D6A428;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:12px;flex:1">
     <span style="font-size:20px;flex-shrink:0">📈</span>
     <div>
@@ -327,11 +327,11 @@ body.page-dashboard #backToTop         { display:none !important }
     </div>
   </div>
   <a href="{{ url_for('evolving_eye') }}" style="flex-shrink:0;background:#D6A428;color:#1A1814;font-size:14px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;min-height:44px;display:flex;align-items:center;margin-right:8px;">Read it →</a>
-  <button onclick="document.getElementById('slEyeBanner').style.display='none';try{localStorage.setItem('sl_eye_banner_dismissed_{{ _eye.milestone }}','1')}catch(e){}" style="background:none;border:none;color:#A37B2C;font-size:22px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;min-width:32px;">×</button>
+  <button onclick="document.getElementById('slEyeBanner').style.display='none';try{localStorage.setItem('sl_eye_banner_' + document.getElementById('slEyeBanner').getAttribute('data-milestone'),'1')}catch(e){}" style="background:none;border:none;color:#A37B2C;font-size:22px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;min-width:32px;">×</button>
 </div>
 <script>
 (function(){
-  try{if(localStorage.getItem('sl_eye_banner_dismissed_{{ _eye.milestone }}')){document.getElementById('slEyeBanner').style.display='none';}}catch(e){}
+  try{if(localStorage.getItem('sl_eye_banner_' + document.getElementById('slEyeBanner').getAttribute('data-milestone'))){document.getElementById('slEyeBanner').style.display='none';}}catch(e){}
 })();
 </script>
 {% endif %}
@@ -415,7 +415,7 @@ body.page-dashboard #backToTop         { display:none !important }
           <span style="font-size:18px;">📷</span>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--dark);line-height:1.2;">{{ stats.total }}</div>
-            <div style="font-size:12px;color:var(--muted);line-height:1.2;">View all →</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.2;">View all →</div>
           </div>
         </a>
         {% endif %}
@@ -442,7 +442,7 @@ body.page-dashboard #backToTop         { display:none !important }
       {% elif progress_data and progress_data.count > 0 and progress_data.strongest %}
         {% set _dim_human = {'dod':'technical precision','dm':'sense of timing','aq':'visual impact','wonder':'ability to find wonder','disruption':'disruptive composition'} %}
         {% set _dim_gap   = {'dod':'the difficulty of the scenes you choose','dm':'your sense of timing','aq':'your visual impact','wonder':'finding the unexpected moment','disruption':'disrupting the expected frame'} %}
-        <div class="insight-line1">Across your {{ progress_data.count }} images, your {{ _dim_human.get(progress_data.strongest,'eye') }} scores consistently above your other dimensions.</div>
+        <div class="insight-line1">Across your {{ progress_data.count }} images, your {{ _dim_human.get(progress_data.strongest,'eye') }} is consistently your strongest dimension.</div>
         <div class="insight-line2">The gap your evaluations point to is {{ _dim_gap.get(progress_data.weakest,'the scenes you choose') }} — your personalised brief is being built from your actual images.</div>
         <div class="insight-line3">Your eye is ready. Go out and find the difficult shot while others wait.</div>
       {% elif stats and stats.total == 0 %}
@@ -539,9 +539,9 @@ body.page-dashboard #backToTop         { display:none !important }
       'aq':         'Before you press the shutter: name the feeling this frame creates. If you cannot name it, find the frame that creates a specific one.'
     } %}
     <div class="card" style="background:#F0F7EC;border:1.5px solid #C5E0BB;border-radius:13px;padding:18px 20px;border-left:4px solid #2A7A3A;">
-      <div style="font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#2A7A3A;margin-bottom:10px">Today's Challenge · based on your past images</div>
+      <div style="font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#2A7A3A;margin-bottom:10px">Today's Challenge · based on your past images</div>
       <div style="font-size:19px;font-weight:700;color:var(--dark);line-height:1.35;margin-bottom:10px">{{ _mission_dim_titles.get(progress_data.weakest, 'Work on Your Eye') }}</div>
-      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Focus</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Focus</div>
       <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:14px">{{ progress_data.weakest | replace('dod','Depth of Difficulty') | replace('disruption','Disruption') | replace('dm','Decisive Moment') | replace('wonder','WOW Factor') | replace('aq','Aesthetic Quality') }}</div>
       <div style="font-size:15px;color:var(--text);line-height:1.75;margin-bottom:16px">{{ _mission_dim_desc.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -581,7 +581,7 @@ body.page-dashboard #backToTop         { display:none !important }
         {# Template fallback — until mentor_advice_json is populated by next evaluation #}
         {% set _dim_field = {'dod':'How Difficult It Was','disruption':'Visual Disruption','dm':'The Moment Chosen','wonder':'WOW Factor','aq':'The Emotion It Creates'} %}
         {% set _dim_action = {'dod':'Choose harder scenes. Move closer. Change your angle until the shot costs you something.','disruption':'Before pressing the shutter — ask: what breaks the expected geometry here? Find it. Shoot that.','dm':'Wait longer than feels comfortable. The frame worth making is usually one second after you\'d have shot.','wonder':'Look for the thing that doesn\'t belong. The unexpected detail is almost always there.','aq':'Ask what feeling this image creates. If you can\'t name it, the viewer won\'t feel it either.'} %}
-        {% set _dim_detail = {'dod':'The photographers who score highest in Difficulty are those who put themselves in physically or socially demanding positions — closer, lower, inside the action, at the edge of the crowd. Your next shoot: find one moment that made you slightly uncomfortable to photograph. That discomfort is the score.','disruption':'The unexpected angle is almost always available — most photographers just do not look for it. Before every frame: walk past the obvious position. Stand lower, higher, behind a foreground element, or wait for an element to move into the geometry. The disruption is there.','dm':'The decisive moment is rarely where you first think it is. The approach, the gesture before the peak, the face one second after the action — these are the frames that carry emotional weight. Stay on the subject longer than feels necessary.','wonder':'The WOW Factor comes from surprise — the detail that does not belong, the relationship between two elements the viewer did not expect. Train yourself to ask: what in this frame will stop someone mid-scroll?','aq':'Aesthetic Quality is the invisible dimension — it measures whether the image creates a specific emotional response. Before uploading your next image, ask: what does this make someone feel? If the answer is nothing specific, look for the frame that creates a named feeling.'} %}
+        {% set _dim_detail = {'dod':'The photographers who evaluate highest in Difficulty are those who put themselves in physically or socially demanding positions — closer, lower, inside the action, at the edge of the crowd. Your next shoot: find one moment that made you slightly uncomfortable to photograph. That discomfort is what lifts the evaluation.','disruption':'The unexpected angle is almost always available — most photographers just do not look for it. Before every frame: walk past the obvious position. Stand lower, higher, behind a foreground element, or wait for an element to move into the geometry. The disruption is there.','dm':'The decisive moment is rarely where you first think it is. The approach, the gesture before the peak, the face one second after the action — these are the frames that carry emotional weight. Stay on the subject longer than feels necessary.','wonder':'The WOW Factor comes from surprise — the detail that does not belong, the relationship between two elements the viewer did not expect. Train yourself to ask: what in this frame will stop someone mid-scroll?','aq':'Aesthetic Quality is the invisible dimension — it measures whether the image creates a specific emotional response. Before uploading your next image, ask: what does this make someone feel? If the answer is nothing specific, look for the frame that creates a named feeling.'} %}
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
         <div style="font-size:15px;color:var(--text);line-height:1.75;margin-bottom:8px;color:#1A1814">{{ _dim_action.get(progress_data.weakest, 'Focus on this dimension in your next shoot.') }}</div>
         <span class="rm" id="wot-rm" onclick="toggleSpan('wot-exp','wot-rm')" style="font-size:14px;color:var(--gold-dk)">What this means →</span>
@@ -1235,13 +1235,13 @@ body.page-dashboard #backToTop         { display:none !important }
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <img src="{{ url_for('static', filename='img/aea_badge.png') }}" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));" alt="AEA" onerror="this.style.display='none'">
           <div>
-            <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:2px;">Annual Excellence Award</div>
+            <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:2px;">Annual Excellence Award</div>
             <div style="font-size:13px;font-weight:700;color:#FFFFFF;">Qualified · {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>
           </div>
         </div>
         <div style="display:flex;align-items:baseline;gap:6px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.12);margin-bottom:6px;">
           <div style="font-size:30px;font-weight:700;color:#F5C518;line-height:1;white-space:nowrap;">{{ '%.2f'|format(aea_dash.top6_avg) }}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;">AEA average<br>top 6 images</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5;">AEA average<br>top 6 images</div>
         </div>
         {% if aea_dash.league_rank %}<div style="font-size:13px;color:#7DCEA0;font-weight:600;">#{{ aea_dash.league_rank }} in {{ 'Camera' if aea_dash.track == 'camera' else 'Mobile' }} League</div>{% endif %}
         {% if aea_dash.percentile %}<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">Top {{ aea_dash.percentile }}% · {{ _aea_qual_m }} months active</div>{% endif %}
@@ -1253,14 +1253,14 @@ body.page-dashboard #backToTop         { display:none !important }
           </a>
           {% endfor %}
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:5px;">Your top 6 images — tap to view</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:5px;">Your top 6 images — tap to view</div>
         {% endif %}
       </div>
 
       {% elif _aea_qual_m >= _aea_req_m and _aea_total < _aea_req_i %}
       {# State 2: Months met, images short #}
       <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
         <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
         <div style="font-size:14px;color:#0B7A78;font-weight:500;line-height:1.6;">{{ _aea_i_needed }} more image{{ 's' if _aea_i_needed != 1 else '' }} needed to qualify.</div>
         {% if aea_dash.top6_avg %}<div style="font-size:13px;color:#1B4F72;margin-top:5px;">Current average: {{ '%.2f'|format(aea_dash.top6_avg) }}</div>{% endif %}
@@ -1269,7 +1269,7 @@ body.page-dashboard #backToTop         { display:none !important }
       {% elif _aea_total >= _aea_req_i and _aea_qual_m < _aea_req_m %}
       {# State 3: Images met, months short #}
       <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
         <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
         <div style="display:flex;gap:4px;margin-bottom:8px;">
           {% for m in range(_aea_req_m) %}
@@ -1283,7 +1283,7 @@ body.page-dashboard #backToTop         { display:none !important }
       {% else %}
       {# State 4: Both short #}
       <div style="background:#D6EAF8;border:1px solid #A9CCE3;border-radius:13px;padding:14px;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1B4F72;margin-bottom:4px;">Annual Excellence Award</div>
         <div style="font-size:13px;font-weight:700;color:#0a1628;margin-bottom:8px;">Not yet qualified</div>
         <div style="display:flex;gap:4px;margin-bottom:8px;">
           {% for m in range(_aea_req_m) %}
@@ -1303,7 +1303,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {% else %}
     {# No AEA data — static fallback #}
     <div style="background:#13254B;border-radius:13px;padding:14px;">
-      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:4px;">Annual Excellence Award</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(245,197,24,0.85);margin-bottom:4px;">Annual Excellence Award</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:10px;">Upload consistently and build your standing for the Annual Excellence Award.</div>
       <a href="{{ url_for('poty') }}" style="font-size:14px;color:var(--gold);font-weight:600;text-decoration:none;">Learn more →</a>
     </div>
@@ -1376,7 +1376,7 @@ body.page-dashboard #backToTop         { display:none !important }
 
       {# Score row #}
       {% if _last and _last.score %}
-      <div class="mob-score-row">
+      <div class="mob-eval-row">
         <span class="mob-score-big">{{ '%.1f'|format(_last.score) }}</span>
         {% if _last.tier %}<span class="mob-tier-badge">{{ _last.tier }}</span>{% endif %}
         {% if progress_data and progress_data.trend and progress_data.trend|length >= 2 %}
