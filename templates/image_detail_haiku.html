@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 1.1-main (Session 204, 2026-08-31 — Added upgrade teaser card above conversion section: 6-feature grid on warm pastel background showing what League evaluation adds beyond Haiku. Mobile collapses to 1 column. RETAINS Session 201 audit fixes.)
+{# image_detail_haiku.html — SL-VERSION: 1.2 (Session 205 — 2026-08-31 — CSI Card A + B added; title KYC fix. RETAINS 1.1-main: (Session 204, 2026-08-31 — Added upgrade teaser card above conversion section: 6-feature grid on warm pastel background showing what League evaluation adds beyond Haiku. Mobile collapses to 1 column. RETAINS Session 201 audit fixes.)
    Route: /try/result/<image_id>  →  try_result() in app-staging.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -7,7 +7,7 @@
 #}
 {% extends "base.html" %}
 
-{% block title %}Evaluation Score Card — Shutter League{% endblock %}
+{% block title %}Evaluation Card — Shutter League{% endblock %}
 
 {% block extra_head %}
 <link rel="canonical" href="{{ request.url }}">
@@ -452,6 +452,22 @@ main { padding:0 !important; background:#E8E5DF; }
       <div style="font-size:14px;color:#8a8070;margin-top:12px">Camera League ₹4,000/year · Mobile League ₹2,000/year · No monthly plans</div>
     </div>
   </div>
+
+  {# ── CSI CARD A — duplicate image notification ── #}
+  {% if csi_own_duplicate %}
+  <div style="background:#2D1F00;border-left:3px solid #F5C518;border-radius:0 4px 4px 0;padding:20px 24px;margin:0 0 2px">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#F5C518;margin-bottom:8px">Image already in your record</div>
+    <div style="font-size:15px;line-height:1.75;color:rgba(245,197,24,0.80)">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
+  </div>
+  {% endif %}
+
+  {# ── CSI CARD B — Shutter League pool match notification ── #}
+  {% if csi_threshold_hit %}
+  <div style="background:#1A1A2E;border-left:3px solid #4A6FA8;border-radius:0 4px 4px 0;padding:20px 24px;margin:0 0 2px">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A9FD4;margin-bottom:8px">Seen in the Shutter League pool</div>
+    <div style="font-size:15px;line-height:1.75;color:rgba(122,159,212,0.80)">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same 312 blind evaluations as every other photograph.</div>
+  </div>
+  {% endif %}
 
   {# ── 9. NEXT DECISION ── #}
   <div class="sl-conversion">
