@@ -33034,10 +33034,25 @@ def try_standing(image_id):
         ), {'uid': _uid, 'yr': _tsdt.now().year}).scalar()
         _best_this_year = float(_best_this_year) if _best_this_year else _score_val
 
-        # ── Audit JSON fields — Sonnet field names ────────────────────────────
-        _impression    = (_audit.get('impression',    '') or '').strip()
-        _strength_obs  = (_audit.get('strength_obs',  '') or '').strip()
-        _next_leap_obs = (_audit.get('next_leap_obs', '') or '').strip()
+        # ── Audit JSON fields — with fallback chain for older Sonnet evaluations ──
+        # Newer Sonnet fields        → Older Sonnet equivalents
+        # impression                 → background_check / byline_1
+        # strength_obs               → byline_2_body / byline_2 (secondary narrative)
+        # next_leap_obs              → hard_truth (gap observation in older schema)
+        _impression    = (
+            (_audit.get('impression',       '') or '').strip()
+            or (_audit.get('background_check', '') or '').strip()
+            or (_audit.get('byline_1',         '') or '').strip()
+        )
+        _strength_obs  = (
+            (_audit.get('strength_obs',  '') or '').strip()
+            or (_audit.get('byline_2_body', '') or '').strip()
+            or (_audit.get('byline_2',     '') or '').strip()
+        )
+        _next_leap_obs = (
+            (_audit.get('next_leap_obs', '') or '').strip()
+            or (_audit.get('hard_truth', '') or '').strip()
+        )
         _master_name   = (_audit.get('master_name',  '') or '').strip()
         _master_why    = (_audit.get('master_why',   '') or '').strip()
 
@@ -33061,16 +33076,26 @@ def try_standing(image_id):
 
         # ── "What this evaluation means" ─────────────────────────────────────
         # = background_check / byline_1 (the "why this image matters" analysis)
-        # + byline_2_body as additional bullets (secondary narrative)
+        # + byline_2_body only when background_check/byline_1 is also present
+        #   (avoids showing byline_2_body twice — it also backs up strength_obs)
         _bgcheck  = (_audit.get('background_check', '') or (_audit.get('byline_1', '') or '')).strip()
         _byline2  = (_audit.get('byline_2_body',    '') or (_audit.get('byline_2',  '') or '')).strip()
         _what_it_means = []
-        for _raw in [_bgcheck, _byline2]:
-            _what_it_means.extend([_strip_md(b) for b in _split_bullets(_raw)])
+        _what_it_means.extend([_strip_md(b) for b in _split_bullets(_bgcheck)])
+        if _bgcheck and _byline2:  # only add byline2 when bgcheck is also present (not a fallback)
+            _what_it_means.extend([_strip_md(b) for b in _split_bullets(_byline2)])
 
         # ── "Your one take-away" ──────────────────────────────────────────────
-        # = transferable_advice (c1 — the actionable photographer's advice)
-        _transferable = (_audit.get('transferable_advice', '') or '').strip()
+        # = transferable_advice (current Sonnet field)
+        # Fallback chain for older evaluations that predate transferable_advice:
+        #   byline_2_body / byline_2 — older Sonnet narrative field
+        #   what_next — Haiku field (similar actionable intent)
+        _transferable = (
+            (_audit.get('transferable_advice', '') or '').strip()
+            or (_audit.get('byline_2_body', '') or '').strip()
+            or (_audit.get('byline_2', '') or '').strip()
+            or (_audit.get('what_next', '') or '').strip()
+        )
         _takeaway_items = [_strip_md(b) for b in _split_bullets(_transferable)]
 
         # ── "What SL saw in your photograph" ─────────────────────────────────
