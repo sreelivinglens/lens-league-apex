@@ -33604,6 +33604,35 @@ def try_welcome():
     except Exception as _uhe:
         app.logger.warning(f'[try_welcome] user_hero failed: {_uhe}')
 
+    # Latest image — most recent upload, used as hero photo on dashboard
+    # Separate from user_hero (best score) — hero photo should feel current
+    _latest_image = None
+    try:
+        _li_row = db.session.execute(db.text("""
+            SELECT id, thumb_url, score, tier, genre, width, height
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try IS TRUE
+              AND status = 'scored'
+              AND thumb_url IS NOT NULL
+              AND score IS NOT NULL
+            ORDER BY scored_at DESC NULLS LAST
+            LIMIT 1
+        """), {'uid': current_user.id}).fetchone()
+        if _li_row:
+            from types import SimpleNamespace as _LISN
+            _liw = int(_li_row[5]) if _li_row[5] else 0
+            _lih = int(_li_row[6]) if _li_row[6] else 0
+            _latest_image = _LISN(
+                id        = _li_row[0],
+                thumb_url = _li_row[1],
+                score     = float(_li_row[2]),
+                tier      = _li_row[3],
+                genre     = _li_row[4] or '',
+            )
+    except Exception as _lie:
+        app.logger.warning(f'[try_welcome] latest_image failed: {_lie}')
+
     # League hero — Grandmaster/Legend only, for sidebar standard panel
     _league_hero = None
     try:
@@ -33789,6 +33818,7 @@ def try_welcome():
         images             = _images,
         milestone_strength = _milestone_strength,
         hero_image         = _hero,
+        latest_image       = _latest_image,
         user_hero          = _user_hero,
         league_hero        = _league_hero,
         league_hero_copy   = _gm_copy_pool[(_league_hero.id if _league_hero and getattr(_league_hero, 'id', None) else 0) % len(_gm_copy_pool)],
