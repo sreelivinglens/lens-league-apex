@@ -33300,6 +33300,51 @@ def try_sample():
         return redirect(url_for('pricing'))
 
 
+@app.route('/try/sample/sonnet')
+def try_sample_sonnet():
+    """
+    GET /try/sample/sonnet — Public sample Sonnet (League) evaluation for pricing page.
+    Session 205: Shows a real Sonnet scorecard to anonymous/Haiku visitors.
+    No login required. Pulls best public non-Haiku image. Renders try_standing.html.
+    """
+    # Redirect paid users to their own dashboard
+    from flask_login import current_user as _tss_cu
+    if getattr(_tss_cu, 'is_subscribed', False):
+        return redirect(url_for('standings_public'))
+
+    try:
+        import json as _tssj, re as _tssre
+        from types import SimpleNamespace as _TSSSN
+
+        _tss_row = db.session.execute(db.text("""
+            SELECT i.id, i.score, i.tier, i.genre, i.thumb_url,
+                   i.audit_json, i.asset_name,
+                   i.dod_score, i.disruption_score, i.dm_score,
+                   i.wonder_score, i.aq_score, u.full_name,
+                   u.subscription_track, i.scored_at, i.user_id
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 8.5
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.status = 'scored'
+              AND i.is_public = TRUE
+              AND i.thumb_url IS NOT NULL
+              AND i.audit_json IS NOT NULL
+            ORDER BY i.score DESC
+            LIMIT 1
+        """)).fetchone()
+
+        if not _tss_row:
+            return redirect(url_for('pricing'))
+
+        # Redirect to the real try_standing page for this image
+        return redirect(url_for('try_standing', image_id=_tss_row[0]))
+
+    except Exception as _tsse:
+        app.logger.warning(f'[try_sample_sonnet] failed: {_tsse}')
+        return redirect(url_for('pricing'))
+
+
 @app.route('/try/gallery')
 @login_required
 def try_gallery():
