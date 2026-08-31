@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: 178.2 (Session 182, 2026-08-14 — MOBILE "MORE" DRAWER restyled as a compact popup anchored right, matching production. NOTE FOR WHOEVER IS NEXT: the dashboard carries its OWN More drawer (#slMoreDrawer, .mob-more-*) which is SEPARATE from the one in base.html (#slBottomMoreMenu). base's has 8 items starting "Explore"; this one has 9 starting "Recent Work". Two different More menus on the same site — base 180.9 fixed base's and had no effect here, which is why the drawer still filled the screen. This was left:0;right:0;translateY(110%) — a full-bleed sheet from the bottom bar upward. Now right:8px, 208px min-width, rounded, gold hairline border, above the bar. THE GREEN #0F2A22 IS UNCHANGED — founder's instruction; only geometry moved. Grab handle hidden (it signals a draggable full-width sheet). Overlay kept for outside-tap close but made transparent, as production shows no dim. max-height 58dvh so the last item clears the bar and home indicator; items keep a 44px tap target. CSS only — no markup, no JS, no Jinja changed. slMoreOpen/slMoreClose verified working. RETAINS 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
+{# SL-VERSION: 178.3 (Session 205, 2026-08-31 — 1) toggleSpan duplicate IDs fixed (grm-a/grm-b per branch). 2) location_data_json injected (was hardcoded {}). 3) Dropdown JS added (dlocCountryChange/State/City — were called but never defined). 4) Change location arrow toggles ↓/↑. 5) Weather unavailable hidden. RETAINS 178.2: Session 182, 2026-08-14 — MOBILE "MORE" DRAWER restyled as a compact popup anchored right, matching production. NOTE FOR WHOEVER IS NEXT: the dashboard carries its OWN More drawer (#slMoreDrawer, .mob-more-*) which is SEPARATE from the one in base.html (#slBottomMoreMenu). base's has 8 items starting "Explore"; this one has 9 starting "Recent Work". Two different More menus on the same site — base 180.9 fixed base's and had no effect here, which is why the drawer still filled the screen. This was left:0;right:0;translateY(110%) — a full-bleed sheet from the bottom bar upward. Now right:8px, 208px min-width, rounded, gold hairline border, above the bar. THE GREEN #0F2A22 IS UNCHANGED — founder's instruction; only geometry moved. Grab handle hidden (it signals a draggable full-width sheet). Overlay kept for outside-tap close but made transparent, as production shows no dim. max-height 58dvh so the last item clears the bar and home indicator; items keep a 44px tap target. CSS only — no markup, no JS, no Jinja changed. slMoreOpen/slMoreClose verified working. RETAINS 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 
@@ -472,21 +472,22 @@ body.page-dashboard #backToTop         { display:none !important }
       {% endif %}
 
       {# READ MORE — strict mutual exclusion — only one block ever renders #}
+      {# IDs are unique per branch to avoid getElementById returning wrong element #}
       {% if dash_greeting and dash_greeting.get('expanded') %}
-      <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
-      <div class="expanded" id="gexp">
+      <span class="rm" id="grm-a" onclick="toggleSpan('gexp-a','grm-a')">Read more →</span>
+      <div class="expanded" id="gexp-a">
         <div class="body-text">
           {% set _exp_sentences = dash_greeting.expanded.split('. ') %}
           {% for i in range(0, _exp_sentences|length, 2) %}
           <p>{{ _exp_sentences[i:i+2]|join('. ') }}{% if not _exp_sentences[i:i+2][-1].endswith('.') %}.{% endif %}</p>
           {% endfor %}
         </div>
-        <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
+        <span class="rm" onclick="toggleSpan('gexp-a','grm-a')">Read less →</span>
       </div>
       {% elif not dash_greeting and progress_data and progress_data.strongest and progress_data.weakest %}
       {% set _dim_labels = {'dod':'Depth of Difficulty','dm':'Decisive Moment','aq':'Affective Quotient','wonder':'WOW Factor','disruption':'Disruption'} %}
-      <span class="rm" id="grm" onclick="toggleSpan('gexp','grm')">Read more →</span>
-      <div class="expanded" id="gexp">
+      <span class="rm" id="grm-b" onclick="toggleSpan('gexp-b','grm-b')">Read more →</span>
+      <div class="expanded" id="gexp-b">
         <div class="body-text">
           Across your last {{ progress_data.count }} images, your
           <span style="color:var(--gold-dk);font-weight:600">{{ _dim_labels.get(progress_data.strongest, progress_data.strongest|title) }}</span>
@@ -494,7 +495,7 @@ body.page-dashboard #backToTop         { display:none !important }
           Your <span style="font-weight:600;color:var(--dark)">{{ _dim_labels.get(progress_data.weakest, progress_data.weakest|title) }}</span>
           is the one area holding your evaluations back.
         </div>
-        <span class="rm" onclick="toggleSpan('gexp','grm')">Read less →</span>
+        <span class="rm" onclick="toggleSpan('gexp-b','grm-b')">Read less →</span>
       </div>
       {% endif %}
     </div>
@@ -648,7 +649,7 @@ body.page-dashboard #backToTop         { display:none !important }
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
               <div style="width:48px;height:48px;border-radius:10px;background:rgba(214,164,40,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;">📍</div>
               <a href="{{ dash_live_event.url }}" target="_blank" style="font-size:14px;font-weight:700;color:#A37B2C;text-decoration:none;white-space:nowrap;border:1px solid #D6A428;padding:8px 14px;border-radius:8px;min-height:44px;display:flex;align-items:center;">Get directions →</a>
-              <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'});}" style="font-size:14px;color:#A37B2C;text-decoration:underline;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;white-space:nowrap;">Change location →</button>
+              <button onclick="var w=document.getElementById('dash-loc-wrap');var open=w.style.display==='block';w.style.display=open?'none':'block';this.textContent=open?'Change location ↓':'Change location ↑';if(!open){w.scrollIntoView({behavior:'smooth',block:'nearest'});}" style="font-size:14px;color:#A37B2C;text-decoration:underline;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;white-space:nowrap;">Change location ↓</button>
             </div>
           </div>
           <div style="padding:10px 18px 14px;border-top:1px solid #E8C84A;">
@@ -690,13 +691,13 @@ body.page-dashboard #backToTop         { display:none !important }
               <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
                 {% if dash_advisory.get('best_light_time') %}<span style="font-size:14px;color:#2A7A3A;font-weight:600;">⏱ {{ dash_advisory.best_light_time }}</span>{% endif %}
                 {% if dash_advisory.get('distance_hours') %}<span style="font-size:14px;color:var(--muted);">🚗 {{ dash_advisory.distance_hours }}h away</span>{% endif %}
-                {% if weather and weather.condition %}<span style="font-size:14px;color:var(--muted);">☁ {{ weather.condition }}</span>{% endif %}
+                {% if weather and weather.condition and weather.condition != "Weather unavailable" %}<span style="font-size:14px;color:var(--muted);">☁ {{ weather.condition }}</span>{% endif %}
               </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
               <div style="width:52px;height:52px;border-radius:10px;background:rgba(42,122,58,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>
               <a href="https://maps.google.com/?q={{ dash_advisory.location_name|urlencode }}" target="_blank" style="font-size:14px;font-weight:700;color:#2A7A3A;text-decoration:none;white-space:nowrap;border:1px solid #2A7A3A;padding:8px 14px;border-radius:8px;min-height:44px;display:flex;align-items:center;">Get directions →</a>
-              <button onclick="var w=document.getElementById('dash-loc-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){w.scrollIntoView({behavior:'smooth',block:'nearest'});}" style="font-size:14px;color:#2A7A3A;text-decoration:underline;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;white-space:nowrap;">Change location →</button>
+              <button onclick="var w=document.getElementById('dash-loc-wrap');var open=w.style.display==='block';w.style.display=open?'none':'block';this.textContent=open?'Change location ↓':'Change location ↑';if(!open){w.scrollIntoView({behavior:'smooth',block:'nearest'});}" style="font-size:14px;color:#2A7A3A;text-decoration:underline;font-weight:600;background:none;border:none;cursor:pointer;padding:0;min-height:44px;white-space:nowrap;">Change location ↓</button>
             </div>
           </div>
         </div>
@@ -740,7 +741,7 @@ body.page-dashboard #backToTop         { display:none !important }
     {% endif %}
 
     {# ── INLINE LOCATION WIDGET (hidden by default, shown on Change location click) ── #}
-    <script type="application/json" id="dash-loc-data">{}</script>
+    <script type="application/json" id="dash-loc-data">{{ location_data_json | safe }}</script>
     <div id="dash-loc-wrap" style="display:none;background:#fff;border:1px solid var(--border);border-radius:13px;padding:16px 18px;">
       <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Change your location</div>
       <form method="POST" action="{{ url_for('profile') }}" id="dashLocForm">
@@ -748,7 +749,7 @@ body.page-dashboard #backToTop         { display:none !important }
         <input type="hidden" name="next" value="dashboard">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
           <div style="flex:1;min-width:120px;"><label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Country</label><select id="dloc_country" name="country" required onchange="dlocCountryChange()" style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--cream);color:var(--dark);"><option value="">Select</option>{% for c in countries %}<option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
-          <div style="flex:1;min-width:120px;"><label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">State</label><select id="dloc_state" name="state" required onchange="dlocStateChange()" style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--cream);color:var(--dark);"><option value="">Select</option></select><input type="text" id="dloc_state_txt" maxlength="60" placeholder="State / Province" style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-top:4px;box-sizing:border-box;"></div>
+          <div style="flex:1;min-width:120px;"><label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">State</label><select id="dloc_state" name="state" required onchange="dlocStateChange()" data-saved="{{ current_user.state or '' }}" style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--cream);color:var(--dark);"><option value="">Select</option></select><input type="text" id="dloc_state_txt" maxlength="60" placeholder="State / Province" style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-top:4px;box-sizing:border-box;"></div>
           <div style="flex:1;min-width:140px;"><label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">City</label><select id="dloc_city" name="city" required onchange="dlocCityChange()" style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--cream);color:var(--dark);"><option value="">Select</option></select><input type="text" id="dloc_city_txt" maxlength="60" placeholder="City" style="display:none;width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-top:4px;box-sizing:border-box;"></div>
         </div>
         <div id="dloc_other_wrap" style="display:none;margin-bottom:8px;"><label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Type your city, town or sanctuary</label><input type="text" id="dloc_city_other" name="city_other" maxlength="60" placeholder="e.g. Nalsarovar, Rann of Kutch" style="width:100%;font-size:16px;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;box-sizing:border-box;"></div>
@@ -2004,7 +2005,90 @@ document.addEventListener('DOMContentLoaded', function(){
       el.textContent = prefix + ' more →';
     }
   });
+  // Populate state dropdown if country already selected
+  if (document.getElementById('dloc_country') && document.getElementById('dloc_country').value) {
+    dlocCountryChange();
+  }
 });
+
+/* Location cascade dropdowns — Session 205 fix: functions were called but never defined */
+function dlocCountryChange() {
+  var country = document.getElementById('dloc_country').value;
+  var stateEl = document.getElementById('dloc_state');
+  var cityEl  = document.getElementById('dloc_city');
+  var stateTxt = document.getElementById('dloc_state_txt');
+  stateEl.innerHTML = '<option value="">Select</option>';
+  cityEl.innerHTML  = '<option value="">Select</option>';
+  if (!country) return;
+  try {
+    var data = JSON.parse(document.getElementById('dash-loc-data').textContent || '{}');
+    var states = (data[country] && Object.keys(data[country])) || [];
+    if (states.length === 0) {
+      stateEl.style.display = 'none';
+      stateTxt.style.display = 'block';
+      return;
+    }
+    stateEl.style.display = 'block';
+    stateTxt.style.display = 'none';
+    states.sort().forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      stateEl.appendChild(opt);
+    });
+    // Pre-select user's saved state if available
+    var savedState = stateEl.getAttribute('data-saved') || '';
+    if (savedState && states.indexOf(savedState) > -1) {
+      stateEl.value = savedState;
+      dlocStateChange();
+    }
+  } catch(e) {
+    stateEl.style.display = 'none';
+    stateTxt.style.display = 'block';
+  }
+}
+
+function dlocStateChange() {
+  var country = document.getElementById('dloc_country').value;
+  var state   = document.getElementById('dloc_state').value;
+  var cityEl  = document.getElementById('dloc_city');
+  var cityTxt = document.getElementById('dloc_city_txt');
+  var otherWrap = document.getElementById('dloc_other_wrap');
+  cityEl.innerHTML = '<option value="">Select</option>';
+  if (!state) return;
+  try {
+    var data = JSON.parse(document.getElementById('dash-loc-data').textContent || '{}');
+    var cities = (data[country] && data[country][state]) || [];
+    if (cities.length === 0) {
+      cityEl.style.display = 'none';
+      cityTxt.style.display = 'block';
+      return;
+    }
+    cityEl.style.display = 'block';
+    cityTxt.style.display = 'none';
+    // Add "Other / not listed" option
+    cities.sort().forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      cityEl.appendChild(opt);
+    });
+    var otherOpt = document.createElement('option');
+    otherOpt.value = '__other__'; otherOpt.textContent = 'Other / not listed';
+    cityEl.appendChild(otherOpt);
+  } catch(e) {
+    cityEl.style.display = 'none';
+    cityTxt.style.display = 'block';
+  }
+}
+
+function dlocCityChange() {
+  var cityEl = document.getElementById('dloc_city');
+  var otherWrap = document.getElementById('dloc_other_wrap');
+  if (cityEl.value === '__other__') {
+    otherWrap.style.display = 'block';
+  } else {
+    otherWrap.style.display = 'none';
+  }
+}
 
 /* Scroll to top */
 (function(){
