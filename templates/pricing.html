@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing-v3.6 (Session 201 — removed locked forever language. RETAINS 3.4.) (Session 201 — CSS aligned with pricing_haiku: navy #1A2744, text-shadow:none on h1, Inter font on CTA. All plan structure/JS/Razorpay unchanged. RETAINS 3.3.) (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
+{# SL-VERSION: pricing-v3.7 (Session 205 — 2026-08-31 — Comparison table: min-width:560px forces horizontal scroll on mobile; row-key white-space:nowrap prevents vertical letter wrapping. (Session 201 — removed locked forever language. RETAINS 3.4.) (Session 201 — CSS aligned with pricing_haiku: navy #1A2744, text-shadow:none on h1, Inter font on CTA. All plan structure/JS/Razorpay unchanged. RETAINS 3.3.) (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
@@ -216,7 +216,7 @@
 }
 .pr-table-wrap { overflow-x: auto; }
 .pr-table {
-  width: 100%; border-collapse: collapse; font-size: 15px;
+  width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15px;
 }
 .pr-table th {
   text-align: left; padding: 10px 14px;
@@ -230,12 +230,13 @@
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary); vertical-align: middle;
-  line-height: 1.5;
+  line-height: 1.5; white-space: nowrap;
 }
+.pr-table .row-key { white-space: nowrap; }
 .pr-table tr:last-child td { border-bottom: none; }
 .pr-table .check { color: var(--text-primary); font-weight: 700; }
 .pr-table .dash { color: var(--border-strong); }
-.pr-table .row-key { font-weight: 500; color: var(--text-primary); }
+.pr-table .row-key { font-weight: 500; color: var(--text-primary); white-space: nowrap; }
 
 /* ── Why three blocks ── */
 .pr-why {
