@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.17 (Session 205, 2026-08-31 — Contest cards: ≥8.5 green #E8F5E2 with live awards; <8.5 amber #FFF8EC gap advisory. No dark backgrounds. RETAINS 181.16: four named cards, path-to-9 pink, BOW frames, CSI, font fixes.)
+{# SL-VERSION: image_detail-181.18 (Session 205, 2026-09-01 — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
@@ -584,8 +584,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   {% endif %}
 {% endfor %}
 
-{# What stood out section — transferable_advice field #}
-{% set _what_stood_out = (_audit.get('transferable_advice') or _tech_val or '') | trim %}
+{# What stood out — what_stood_out field (the revelation/opening observation)
+   NOT transferable_advice — that is the photographer's advice, shown separately #}
+{% set _what_stood_out = (_audit.get('what_stood_out') or _audit.get('hard_truth') or _tech_val or '') | trim %}
 
 {# What you did that others didn't — tech+moment rows #}
 {% set _what_you_did = (_tech_val if (_audit.get('transferable_advice') or '') else _mom_val) | trim %}
@@ -613,11 +614,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _edit_base = (_audit.get('edit_base') or '') | trim %}
 {% set _edit_creative = (_audit.get('edit_creative') or '') | trim %}
 
-{# Four named cards — written by Sonnet scoring engine (Session 205) #}
-{% set _card1 = (_audit.get('card_1_photographers_advice') or _audit.get('transferable_advice') or _tech_val or '') | trim %}
-{% set _card2 = (_audit.get('card_2_what_you_controlled') or _mom_val or '') | trim %}
-{% set _card3 = (_audit.get('card_3_what_to_watch') or _audit.get('what_next') or _next_val or '') | trim %}
-{% set _card4 = (_audit.get('card_4_keep_in_mind') or _audit.get('note_on_eye') or '') | trim %}
+{# Session 205 fix: card_1/2/3/4 do not exist in audit_json.
+   Scoring engine writes: transferable_advice, background_check/byline_1,
+   byline_2/byline_2_body, body_of_work, what_next, note_on_eye.
+   Use these real fields directly. #}
+{% set _what_next = (_audit.get('what_next') or '') | trim %}
 
 {# Next shot from mentor_location fields #}
 {% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
@@ -967,68 +968,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ── FOUR NAMED CARDS — card_1 through card_4 ── #}
-    {# Card 1: The Photographer's Advice #}
-    {% if _card1 %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">The photographer's advice</div></div>
-      <div class="sc-acc-row open">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#fff8e6">🎯</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What this image taught</div>
-            <div class="sc-acc-teaser">{{ _card1 | replace('■','') | replace('▪','') | replace('•','') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _card1 | safe }}</div>
-      </div>
-    </div>
-    {% endif %}
-
-    {# Card 2: What you controlled #}
-    {% if _card2 %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What you controlled</div></div>
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#e8f5e2">🔍</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">Decisions that shaped this frame</div>
-            <div class="sc-acc-teaser">{{ _card2 | replace('■','') | replace('▪','') | replace('•','') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _card2 | safe }}</div>
-      </div>
-    </div>
-    {% endif %}
-
-    {# Card 3: What to watch next — STANDOUT pink section, contains the 9+ version #}
-    {% if _card3 %}
+    {# ── WHAT NEXT — from what_next field (session instruction) ── #}
+    {% if _what_next %}
     <div style="background:#FFF0F5;border-radius:12px;border:1px solid #F5C0D0;margin-bottom:10px;padding:18px 20px">
-      <div style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A0304A;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-        🎯 What to watch next — your path to 9
+      <div style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A0304A;margin-bottom:12px">
+        Your path to 9
       </div>
-      <div class="sc-render-text" style="font-size:16px;color:#3a1020;line-height:1.85">{{ _card3 | safe }}</div>
-    </div>
-    {% endif %}
-
-    {# Card 4: Keep this in mind #}
-    {% if _card4 %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">Keep this in mind</div></div>
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#f0f0ff">📌</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">For your next session</div>
-            <div class="sc-acc-teaser">{{ _card4 | replace('■','') | replace('▪','') | replace('•','') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _card4 | safe }}</div>
-      </div>
+      <div class="sc-render-text" style="font-size:16px;color:#3a1020;line-height:1.85">{{ _what_next | safe }}</div>
     </div>
     {% endif %}
 
