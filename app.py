@@ -1,4 +1,4 @@
-# SL-VERSION: 181.75-main (Session 204, 2026-08-31 — CRITICAL: Sherpa synthesis now guarded by evals_used > 0. Users with 0 uploads were seeing stale synthesis from mentor_advice_json written during testing. RETAINS 181.74.)
+# SL-VERSION: 181.76 (Session 205, 2026-08-31 — 1) Spotlight fallback: background_check/byline_1 for older Sonnet evals. 2) try_standing abort(404) no longer swallowed as 500. 3) transferable_advice fallback chain. 4) impression/strength_obs/next_leap_obs fallback chains + byline_2 dedup. 5) latest_image query for dashboard hero. 6) try_sample_sonnet route. RETAINS 181.75.)
 
 import os
 import re
@@ -12967,9 +12967,10 @@ Only include awards with known, verifiable deadlines. Do not invent or hallucina
 def evolving_eye():
     """
     SL-176: My Evolving Eye — So Far.
-    Renders the personal photographic advisory page.
-    Advisory is pre-generated at milestones — this just displays it.
-    If no advisory exists yet, shows a motivational prompt to keep shooting.
+    Session 205: On-demand generation — if no advisory exists and user has >= 10
+    scored images, trigger generation for the last completed 10x milestone in a
+    background thread. Show honest waiting state. No polling. Email on completion.
+    Will not re-trigger until user reaches the next 10-image milestone.
     """
     import json as _ej
     _eye_json = db.session.execute(
@@ -12992,15 +12993,50 @@ def evolving_eye():
         {'uid': current_user.id}
     ).scalar() or 0
 
-    _next_milestone = ((_scored_count // 10) + 1) * 10 if _scored_count < 10 else (((_scored_count // 10) + 1) * 10)
+    _last_milestone = (_scored_count // 10) * 10  # e.g. 48 images → milestone 40
+    _next_milestone = _last_milestone + 10         # e.g. 50
     _images_to_next = _next_milestone - _scored_count
+
+    _generating = False
+
+    # On-demand trigger: if no advisory exists and user has completed at least one
+    # 10-image milestone, fire generation for the last completed milestone.
+    # Guard: only trigger if evolving_eye_milestone in DB does not match _last_milestone
+    # (prevents re-triggering on refresh while generation is in flight).
+    if not _advisory and _scored_count >= 10:
+        _db_milestone = _eye_json[1] if _eye_json else None
+        if _db_milestone != _last_milestone:
+            # Mark milestone in DB immediately to prevent duplicate triggers on refresh
+            try:
+                db.session.execute(
+                    db.text('UPDATE users SET evolving_eye_milestone = :m WHERE id = :uid'),
+                    {'m': _last_milestone, 'uid': current_user.id}
+                )
+                db.session.commit()
+            except Exception as _mark_err:
+                app.logger.warning(f'[evolving_eye] milestone mark failed: {_mark_err}')
+            # Fire generation in background thread
+            try:
+                import threading as _eet
+                _t = _eet.Thread(
+                    target=_generate_evolving_eye,
+                    args=(current_user.id, _last_milestone),
+                    daemon=True
+                )
+                _t.start()
+                app.logger.info(f'[evolving_eye] on-demand triggered uid={current_user.id} milestone={_last_milestone}')
+            except Exception as _trig_err:
+                app.logger.warning(f'[evolving_eye] on-demand trigger failed: {_trig_err}')
+        _generating = True  # show waiting state regardless (either just triggered or in flight)
 
     return render_template('evolving_eye.html',
         advisory=_advisory,
         milestone=_milestone,
         scored_count=_scored_count,
+        last_milestone=_last_milestone,
         next_milestone=_next_milestone,
         images_to_next=_images_to_next,
+        generating=_generating,
         now=datetime.utcnow()
     )
 
