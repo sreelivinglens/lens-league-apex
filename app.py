@@ -33160,6 +33160,9 @@ def try_standing(image_id):
         _cal_count = 312  # blind calibration count — static display value
 
     except Exception as _tse:
+        from werkzeug.exceptions import HTTPException as _WKHE
+        if isinstance(_tse, _WKHE):
+            raise  # let 404/403 pass through cleanly — don't swallow as 500
         import traceback as _trtb
         app.logger.error(f'[try_standing] image_id={image_id} unexpected error: {_tse}\n{_trtb.format_exc()}')
         abort(500)
