@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing-v3.5-staging (Session 201 — removed locked forever language. RETAINS 3.4.) (Session 201 — CSS aligned with pricing_haiku: navy #1A2744, text-shadow:none on h1, Inter font on CTA. All plan structure/JS/Razorpay unchanged. RETAINS 3.3.) (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
+{# SL-VERSION: pricing-v3.6 (Session 201 — removed locked forever language. RETAINS 3.4.) (Session 201 — CSS aligned with pricing_haiku: navy #1A2744, text-shadow:none on h1, Inter font on CTA. All plan structure/JS/Razorpay unchanged. RETAINS 3.3.) (Session 201 — sample eval links fixed: Full → try_standing/31, Basic → try_standing/28. No more Sonnet image_detail or try_result leaks.) #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
@@ -317,7 +317,7 @@
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory — where to shoot next</li>
           </ul>
-    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
 
@@ -339,7 +339,7 @@
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory</li>
           </ul>
-    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
 
@@ -357,7 +357,7 @@
       <li>See how your eye develops over time</li>
       <li>One-time purchase — no subscription</li>
     </ul>
-    <a href="{{ url_for('try_standing', image_id=28) }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
+    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
     <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
   </div>
 
