@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing_haiku-1.1 (Session 205 — 2026-08-31 — Sample eval links: Full → try_sample (was try_standing/31, not in DB). Both sample links now use try_sample. Session 201: standalone Haiku pricing page, no base.html, Haiku nav.) #}
+{# SL-VERSION: pricing_haiku-1.2 (Session 205 — 2026-08-31 — Full eval sample → try_sample_sonnet (Sonnet/League eval); Basic eval sample → try_sample (Haiku eval). Session 201: standalone Haiku pricing page, no base.html, Haiku nav.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -248,7 +248,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory — where to shoot next</li>
           </ul>
-    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_sample_sonnet') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
 
@@ -270,7 +270,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory</li>
           </ul>
-    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_sample_sonnet') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
 
