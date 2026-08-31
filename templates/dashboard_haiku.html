@@ -449,7 +449,15 @@ canvas.spark{flex:1;height:48px;display:block}
         {% elif dim.tag == 'leap' %}
         <div class="dim-signal">
           <span class="signal-label">Where to focus next</span>
-          {{ tier_insight if tier_insight else 'This dimension is what your next tier is waiting for.' }}
+          {% if tier_insight %}
+            {{ tier_insight }}
+          {% elif next_leap_name and tier_display %}
+            {{ next_leap_name }} is the distance between where you are and {{ tier_display.next }}. Every image you make has a ceiling — right now, this dimension is it. Your next session needs one photograph where you push further here than you have before.
+          {% elif next_leap_name %}
+            {{ next_leap_name }} is what your next tier is waiting on. One image where you push this dimension is all it takes to shift the record.
+          {% else %}
+            This is your lowest-scoring dimension. One session focused here — not on subject, not on light, but on this — is what moves the record.
+          {% endif %}
         </div>
         {% endif %}
       </div>
