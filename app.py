@@ -26191,28 +26191,8 @@ def _send_scorecard_email(img, user):
     except Exception:
         pass
 
-    # UAT notice
+    # UAT notice — removed Session 205. Block was stale, all UAT users treated as regular users.
     _uat_html = ''
-    if _is_uat:
-        _uat_html = (
-            '<tr><td style="padding:0 0 14px;">'
-            '<div style="border-radius:6px;overflow:hidden;border:1.5px solid #E6B800;">'
-            '<div style="background:#E6B800;padding:9px 16px;">'
-            '<span style="font-size:11px;letter-spacing:2px;color:#2a1800;'
-            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
-            'UAT access \u2014 closing 15 August 2026</span></div>'
-            '<div style="background:#FEF6E4;padding:14px 16px;">'
-            '<p style="margin:0 0 12px;font-size:14px;color:#4A4840;line-height:1.8;">'
-            'Your UAT access closes on 15 August. Your photographs, evaluations and '
-            'standing remain on record permanently \u2014 nothing is lost. '
-            'To continue uploading after 15 August, subscribe before that date.</p>'
-            f'<a href="{_site}/pricing" style="display:inline-block;background:#0F1F3D;'
-            'color:#C8A84B;font-family:monospace;font-size:12px;font-weight:700;'
-            'letter-spacing:1.5px;text-transform:uppercase;padding:12px 20px;'
-            'text-decoration:none;border-radius:4px;">'
-            'Subscribe \u2014 \u20b92,000/year \u2192</a>'
-            '</div></div></td></tr>'
-        )
 
     # Location
     _loc_html = ''
