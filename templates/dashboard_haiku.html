@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.56 (Session 205 — 2026-08-31 — "Where to focus next" smart fallback: uses next_leap_name + tier_display for 1-image users instead of hardcoded copy. RETAINS 181.55: audit fixes, single column stack at 480px, gp-row single col. Session 200b: full dashboard redesign, 8 Haiku synthesis fields, tier progression, mobile bottom nav. Standalone — does not extend base.html.) #}
+{# SL-VERSION: 181.57 (Session 205 — 2026-08-31 — Hero photo now shows latest upload (latest_image); identity bar still shows best score (user_hero). RETAINS 181.56: "Where to focus next" smart fallback. Session 200b: full dashboard redesign. Standalone — does not extend base.html.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -299,9 +299,10 @@ canvas.spark{flex:1;height:48px;display:block}
 <div class="page">
 
   <!-- HERO IMAGE -->
-  {% if user_hero and user_hero.thumb_url %}
+  {% set _hero_display = latest_image if latest_image else user_hero %}
+  {% if _hero_display and _hero_display.thumb_url %}
   <div class="hero-wrap">
-    <img src="{{ user_hero.thumb_url }}" alt="Your best photograph so far" class="hero-img" onerror="this.style.display='none'">
+    <img src="{{ _hero_display.thumb_url }}" alt="Your most recent photograph" class="hero-img" onerror="this.style.display='none'">
   </div>
   {% endif %}
 
