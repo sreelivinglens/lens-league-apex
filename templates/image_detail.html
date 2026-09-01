@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {# SL-VERSION: image_detail-181.22 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
-{# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
+{# SL-VERSION: image_detail-181.23-main (Session 207, 2026-09-02 — NAV: sc-topnav (#111214 near-black) removed entirely. sl-top-nav from base.html now renders — correct navy colour, standard paid links. RETAINS 181.22.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
    1. Body copy up 1pt: 15px->16px across em-para, takeaway, accordion body, location, bow
@@ -180,8 +180,6 @@
 ===================================================== */
 
 /* ── SUPPRESS BASE CHROME ── */
-body.page-scorecard .sl-top-nav,
-body.page-scorecard nav.sl-top-nav       { display:none !important }
 body.page-scorecard .sl-bottom-nav       { display:none !important }
 body.page-scorecard footer               { display:none !important }
 body.page-scorecard .nav-mobile          { display:none !important }
@@ -204,12 +202,7 @@ body.page-scorecard                      { padding-top:0 !important; background:
 body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 /* ── TOPNAV ── */
-.sc-topnav{background:#111214;display:flex;align-items:center;padding:0 20px;height:54px;gap:8px}
-.sc-logo-area{display:flex;align-items:center;gap:8px}
-.sc-logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
-.sc-nl{padding:5px 10px;font-size:13px;color:rgba(255,255,255,.45);border-radius:5px;text-decoration:none}
-.sc-nl:hover{color:#fff}
-.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sc-dark)}
+
 
 /* ── LAYOUT: 2-column, no sidenav ── */
 .sc-wrap{max-width:1200px;margin:0 auto;background:var(--sc-cream)}
@@ -536,9 +529,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
   .sc-shell{display:block}
   .sc-rpanel{display:none}
-  .sc-logo-text{display:none}
-  .sc-nav-links-wrap{display:none}
-  .sc-topnav{display:none!important}
+
   .sc-centre{padding:11px 11px 80px}
   .sc-photo-hero img{height:220px;object-fit:contain;background:var(--sc-dark)}
   .sc-ddi-strip-desktop{display:none}
@@ -684,29 +675,6 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 <div class="sc-wrap">
 
 {# ── TOPNAV ── #}
-<nav class="sc-topnav">
-  <div class="sc-logo-area">
-    <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none">
-      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-           alt="Shutter League" style="height:30px;width:auto;display:block"
-           onerror="this.style.display='none'">
-      <span class="sc-logo-text">SHUTTER LEAGUE</span>
-    </a>
-  </div>
-  <div class="sc-nav-links-wrap" style="display:flex;align-items:center;gap:2px;margin-left:auto">
-    {# No active highlight — scorecard accessed from image click not nav #}
-    <a class="sc-nl" href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a class="sc-nl" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sc-nl" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="sc-nl" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-nl" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
-  </div>
-  {% if current_user.is_authenticated %}
-  <a href="{{ url_for('profile') }}" class="sc-av" style="margin-left:10px;text-decoration:none">
-    {{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}
-  </a>
-  {% endif %}
-</nav>
 
 <div class="sc-shell">
 
