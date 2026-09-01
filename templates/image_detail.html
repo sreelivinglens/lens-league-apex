@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.21 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
+{# SL-VERSION: image_detail-181.22 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
@@ -1171,7 +1171,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
          Dynamic values are passed via data- attributes on the container div;
          the inline JS reads them via getAttribute — no Jinja in executable JS.
     #}
-    {% if current_user.is_authenticated and image.user_id == current_user.id and image.status == 'scored' and image.score %}
+    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and image.score %}
     <div id="sl-launchpad"
          data-image-id="{{ image.id }}"
          data-score="{{ '%.2f'|format(image.score) }}"
@@ -1359,7 +1359,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {# SL-181.20: BODY OF WORK SEED — if user has 6+ images in the same Interest all ≥ 8.0,
        surface a quiet signal. No collection naming yet — that is the Collections system.
        This is the detector: it plants the idea before the photographer has named it. #}
-    {% if current_user.is_authenticated and image.user_id == current_user.id and stats and stats.bow_seed_count is defined and stats.bow_seed_count >= 6 %}
+    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and stats and stats.bow_seed_count is defined and stats.bow_seed_count >= 6 %}
     <div style="background:#F0F4FF;border-radius:12px;border:0.5px solid #C0CCEE;border-left:3px solid #1A2744;padding:18px 20px;margin-bottom:16px">
       <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1A2744;margin-bottom:10px">A body of work is forming</div>
       <div style="font-size:15px;color:#1A2744;line-height:1.8">You have {{ stats.bow_seed_count }} {{ image.genre or '' }} images evaluating at 8.0 or above. That is not a streak — that is the beginning of a coherent body of work. A photographer with 6 strong images sharing a visual theme has the foundation for an exhibition conversation.</div>
