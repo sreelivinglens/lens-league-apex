@@ -1002,7 +1002,7 @@
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--acc-border);">
               <div style="flex:1;">
                 <div style="font-size:16px;font-weight:700;color:var(--acc-dark);margin-bottom:4px;">Evaluation summaries</div>
-                <div style="font-size:15px;color:var(--acc-muted);line-height:1.7;">Rich scorecard email sent immediately after your photograph is evaluated — score, dimension breakdown, next assignment, location advisory.</div>
+                <div style="font-size:15px;color:var(--acc-muted);line-height:1.7;">Rich scorecard email sent immediately after your photograph is evaluated — score, dimension breakdown, next assignment{% if has_active_sub %}, location advisory{% endif %}.</div>
               </div>
               <div style="flex-shrink:0;padding-top:2px;">
                 <label class="acc-toggle" aria-label="Toggle evaluation summary emails">
