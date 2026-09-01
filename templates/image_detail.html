@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.19 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
+{# SL-VERSION: image_detail-181.20 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
@@ -271,7 +271,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-ddi-col.sc-leap{background:#f5f3ff}
 .sc-ddi-col.active{background:var(--sc-cream);box-shadow:inset 0 -2px 0 var(--sc-gold)}
 .sc-ddi-em{font-size:15px;margin-bottom:4px}
-.sc-ddi-nm{font-size:8.5px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.6;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
+.sc-ddi-nm{font-size:13px;color:var(--sc-muted);font-weight:700;text-transform:uppercase;letter-spacing:.01em;line-height:1.5;margin-bottom:4px;height:32px;display:flex;align-items:center;justify-content:center;text-align:center}
 .sc-ddi-sr{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;min-height:26px}
 .sc-ddi-num{font-size:20px;font-weight:700;color:var(--sc-dark)}
 .sc-ddi-ar{font-size:13px;margin-left:1px}
@@ -284,17 +284,17 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-dt-good{background:#f1f5f9;color:#475569}
 .sc-dt-str{background:#dcfce7;color:#166534}
 .sc-dt-exc{background:#dbeafe;color:#1e40af}
-.sc-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--sc-cream);border-radius:8px;font-size:13px;color:var(--sc-text);line-height:1.65}
+.sc-ddi-detail{display:none;margin-top:10px;padding:14px 16px;background:var(--sc-cream);border-radius:8px;font-size:15px;color:var(--sc-text);line-height:1.75}
 .sc-ddi-hint{font-size:13px;color:var(--sc-muted);text-align:center;margin-top:7px}
 
 /* ── WHAT THIS EVALUATION MEANS — premium gold corners ── */
-.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;overflow:hidden;position:relative}
+.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:16px;overflow:hidden;position:relative}
 .sc-eval-means::before{content:'';position:absolute;top:0;left:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:12px 0 0 0;pointer-events:none;z-index:1}
 .sc-eval-means::after{content:'';position:absolute;top:0;right:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 12px 0 0;pointer-events:none;z-index:1}
 .sc-em-bl{position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:0 0 0 12px;pointer-events:none;z-index:1}
 .sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
 .sc-em-inner{padding:17px 20px}
-.sc-em-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
+.sc-em-title{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
 .sc-em-preview.clamped,.sc-ta-preview.clamped{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .sc-em-para{font-size:16px;color:var(--sc-text);line-height:1.85;margin-bottom:20px;padding-bottom:20px;border-bottom:0.5px solid var(--sc-border)}
 .sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
@@ -303,7 +303,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-rm{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;margin-top:10px;display:inline-block}
 
 /* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
-.sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
+.sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:16px;padding:20px 22px}
 .sc-ta-eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:16px;color:var(--sc-dark);line-height:1.85}
 
@@ -315,7 +315,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ── ACCORDION ── */
 .sc-acc-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);overflow:hidden;margin-bottom:10px}
 .sc-acc-sec-hdr{padding:13px 18px 11px;border-bottom:0.5px solid var(--sc-border)}
-.sc-acc-sec-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
+.sc-acc-sec-title{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 .sc-acc-row{border-bottom:0.5px solid var(--sc-border)}
 .sc-acc-row:last-child{border-bottom:none}
 .sc-acc-head{display:flex;align-items:flex-start;gap:10px;padding:13px 17px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s}
@@ -368,7 +368,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)}
 .sc-rr:last-child{border-bottom:none}
 .sc-rk{font-size:13px;color:var(--sc-muted)}
-.sc-rv{font-size:13px;font-weight:600;color:var(--sc-text)}
+.sc-rv{font-size:15px;font-weight:700;color:var(--sc-text)}
 .sc-rv.gd{color:var(--sc-gold-dk)}.sc-rv.gn{color:var(--sc-green)}
 
 /* ── EVALUATED BY SL BADGE ── */
@@ -588,8 +588,10 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
    NOT transferable_advice — that is the photographer's advice, shown separately #}
 {% set _what_stood_out = (_audit.get('what_stood_out') or _audit.get('hard_truth') or _tech_val or '') | trim %}
 
-{# What you did that others didn't — tech+moment rows #}
-{% set _what_you_did = (_tech_val if (_audit.get('transferable_advice') or '') else _mom_val) | trim %}
+{# What you did that others didn't — SL-181.20: reads transferable_advice directly.
+   Old rows[] format (Depth of Difficulty / Decisive Moment) is always empty on
+   modern audit_json. transferable_advice is written by the engine for every image. #}
+{% set _what_you_did = (_audit.get('transferable_advice') or _tech_val or _mom_val) | trim %}
 
 {# What your eye read — affective_state #}
 {% set _what_eye = (_audit.get('affective_state') or '') | trim %}
@@ -919,19 +921,43 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% endif %}
 
     {# ③ WHAT THIS EVALUATION MEANS — gold corners, before take-away #}
+    {# SL-181.20: 9+ sentence extraction via Jinja2. Finds the sentence containing
+       "9+" in eval_means text and renders it as a pink inset card — no JS regex,
+       no fragile text matching on the client side. Falls back gracefully if absent. #}
     {% if _eval_means or _eval_means_2 %}
+    {% set _em_full = (_eval_means + (' ■ ' + _eval_means_2 if (_eval_means_2 and _eval_means_2 != _takeaway) else '')) %}
+    {# Extract 9+ sentence — look for bullet marker ■ or ▪ followed by text containing "9+" #}
+    {% set _nine_plus_text = '' %}
+    {% set _nine_plus_rest = _em_full %}
+    {% if '9+' in _em_full %}
+      {# Split on bullet markers to find the 9+ bullet #}
+      {% for _bullet_marker in ['■', '▪', '▸', '•'] %}
+        {% if _nine_plus_text == '' and _bullet_marker in _em_full %}
+          {% set _parts = _em_full.split(_bullet_marker) %}
+          {% for _part in _parts %}
+            {% if _nine_plus_text == '' and '9+' in _part %}
+              {% set _nine_plus_text = _part | trim %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
     <div class="sc-eval-means">
       <div class="sc-em-bl"></div><div class="sc-em-br"></div>
       <div class="sc-em-inner">
-        {# Header row with chevron — taps to collapse/expand #}
       <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="scToggleEvalMeans(this)">
         <span class="sc-em-title" style="margin-bottom:0">What this evaluation means</span>
         <span style="font-size:20px;color:var(--sc-muted);transition:transform .2s;display:inline-block" id="sc-em-chev">⌄</span>
       </div>
-      {# All content rendered via sc-render-text, CSS clamp shows 3 lines, JS expands #}
       <div class="sc-em-para sc-render-text sc-em-preview" id="sc-em-preview-block">
-        {{ (_eval_means + (' ■ ' + _eval_means_2 if (_eval_means_2 and _eval_means_2 != _takeaway) else '')) | safe }}
+        {{ _em_full | safe }}
       </div>
+      {% if _nine_plus_text %}
+      <div style="background:#FFF0F5;border-radius:10px;border-left:3px solid #A0304A;padding:14px 16px;margin-top:16px">
+        <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A0304A;margin-bottom:8px">The 9+ version of this frame</div>
+        <div style="font-size:16px;color:#3a1020;line-height:1.85">{{ _nine_plus_text | safe }}</div>
+      </div>
+      {% endif %}
       </div>
     </div>
     {% endif %}
@@ -956,15 +982,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ⑤ YOUR ONE TAKE-AWAY — warm fill, NOT dark, stands out through colour not bold #}
+    {# ⑤ YOUR ONE TAKE-AWAY — open by default (SL-181.20: most actionable sentence,
+       photographer must not have to discover it by tapping) #}
     {% if _takeaway %}
     <div class="sc-takeaway">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px" onclick="scToggleTakeaway(this)">
-        <div class="sc-ta-eyebrow" style="margin-bottom:0">⭐ Your one take-away</div>
-        <span style="font-size:20px;color:var(--sc-gold-dk);transition:transform .2s;display:inline-block" id="sc-ta-chev">⌄</span>
-      </div>
-      {# All content rendered, CSS clamp shows 3 lines, JS expands #}
-      <div class="sc-ta-body sc-render-text sc-ta-preview" id="sc-ta-preview-block">{{ _takeaway | safe }}</div>
+      <div class="sc-ta-eyebrow">⭐ Your one take-away</div>
+      <div class="sc-ta-body sc-render-text">{{ _takeaway | safe }}</div>
     </div>
     {% endif %}
 
@@ -1198,21 +1221,46 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
 
       {% else %}
-      {# Below threshold — static motivational gap block #}
+      {# Below threshold — motivational gap block. SL-181.20: progress bar,
+         best-year reference, correct dimension names, forward link. #}
       {% set _lp_gap = (8.5 - _lp_score) | round(1) %}
+      {% set _lp_pct = [(_lp_score / 8.5 * 100) | round | int, 99] | min %}
+      {# Weakest dim from all 5 available scores — correct names #}
       {% set _weakest_dim = '' %}
-      {% if image.aq_score and image.dm_score and image.dod_score %}
-        {% set _dims_map = [('Whether it made you feel something', image.aq_score), ('Whether the timing was right', image.dm_score), ('How difficult it was', image.dod_score)] %}
-        {% set _weakest_dim = (_dims_map | sort(attribute=1) | first)[0] %}
-      {% endif %}
-      <div style="background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px">
-        <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A37B2C;margin-bottom:12px">Photography awards</div>
+      {% set _weakest_val = 10.0 %}
+      {% for _dk, _dn in [('dod_score','Difficulty'),('wonder_score','Visual Impact'),('dm_score','Timing'),('disruption_score','Disruption'),('aq_score','Emotion')] %}
+        {% set _dv = image[_dk] if image[_dk] is defined else none %}
+        {% if _dv is not none and _dv | float < _weakest_val %}
+          {% set _weakest_val = _dv | float %}
+          {% set _weakest_dim = _dn %}
+        {% endif %}
+      {% endfor %}
+      <div style="background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:16px;padding:20px 22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A37B2C">Photography awards</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;background:#A37B2C;padding:2px 10px;border-radius:20px">{{ '%.2f'|format(image.score) }} · {{ _lp_gap }} to go</div>
+        </div>
+        {# Progress bar #}
+        <div style="height:5px;background:#EDD89A;border-radius:3px;margin-bottom:14px;overflow:hidden">
+          <div style="height:5px;width:{{ _lp_pct }}%;background:#A37B2C;border-radius:3px"></div>
+        </div>
         <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0 0 10px">
           An 8.5 is where Shutter League begins pointing you to specific photography awards your work is ready for.
+          {% if stats and stats.best_this_year and stats.best_this_year >= 8.5 %}
+          You scored <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> this year — you have already made a frame that qualifies.
+          {% elif stats and stats.best_this_year %}
+          Your best this year is <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> — you are closer than you think.
+          {% endif %}
         </p>
-        <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0">
-          Your evaluation of <strong>{{ '%.2f'|format(image.score) }}</strong> is <strong style="color:#A37B2C">{{ _lp_gap }} point{{ 's' if _lp_gap != 1.0 else '' }} away</strong>.{% if _weakest_dim %} Focus on <em>{{ _weakest_dim }}</em> — that is your ceiling right now.{% endif %}
+        {% if _weakest_dim %}
+        <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0 0 12px">
+          <strong>{{ _weakest_dim }}</strong> is your lowest dimension right now. Fix that one ceiling and the rest of your evaluation follows.
         </p>
+        {% endif %}
+        <a href="{{ url_for('league_haiku') }}?score_min=8.5{% if image.genre %}&genre={{ image.genre | urlencode }}{% endif %}"
+           style="font-size:13px;font-weight:600;color:#A37B2C;text-decoration:none">
+          See what 8.5 images look like →
+        </a>
       </div>
       {% endif %}
 
@@ -1292,6 +1340,52 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       }
     })();
     </script>
+    {% endif %}
+
+    {# SL-181.20: REPEAT MISTAKE DETECTOR — computed from portfolio_data.dimensions.
+       If the same dimension has the lowest current score across last N images,
+       and its pill is "Dipped recently" or "Steady", surface the pattern explicitly.
+       Only shows if portfolio_data exists and user has sufficient history (≥6 images).
+       No AI call. No new query. Pure Jinja2 over existing data. #}
+    {% if portfolio_data and portfolio_data.has_trends and portfolio_data.dimensions and portfolio_data.plotted_count >= 6 %}
+      {# Find which dimension has the lowest current value #}
+      {% set _rmd_ns = namespace(weakest_label='', weakest_val=10.0, weakest_pill='') %}
+      {% for _d in portfolio_data.dimensions %}
+        {% if _d.current < _rmd_ns.weakest_val %}
+          {% set _rmd_ns.weakest_val = _d.current %}
+          {% set _rmd_ns.weakest_label = _d.label %}
+          {% set _rmd_ns.weakest_pill = _d.pill or '' %}
+        {% endif %}
+      {% endfor %}
+      {# Show only if the weakest dim is dipping or volatile (not climbing) #}
+      {% if _rmd_ns.weakest_label and ('Dipped' in _rmd_ns.weakest_pill or 'Steady' in _rmd_ns.weakest_pill) %}
+      {# Generate varied, non-bot language based on dimension name #}
+      {% set _rmd_msgs = {
+        'Whether it made one feel something': ['Your Emotion has been under pressure across your last several images. This is not a bad day — it is a pattern worth examining. The frames that move people share one thing: the photographer cared about what was in the frame, not just how it looked.', 'Emotional resonance is your most consistent gap right now. Your images are getting technically stronger — but the feeling is not coming through. Shoot something that matters to you personally and watch what happens to this evaluation.'],
+        'Whether the timing was right': ['Timing has been your most persistent challenge across recent images. The moment you are capturing is close to the peak — but consistently arriving a fraction early or late. Start staying with subjects longer than feels comfortable. The frame you want comes after the obvious one.', 'Your Timing has been flat or declining. This is fixable — it is a waiting problem, not a seeing problem. You already know what to look for. The practice is standing still longer.'],
+        'How difficult it was': ['You have been shooting within your comfort zone recently. The difficulty readings suggest you are working with familiar subjects in familiar light. The next level of your work probably requires deliberately harder conditions.', 'Difficulty has been your quietest dimension lately. That often means you are in a productive groove — but grooves become ruts. One session deliberately outside your usual parameters would change this.'],
+        'Visual Impact': ['Visual Impact has been steady but not climbing. Your frames are clear and well-composed — but not yet magnetic. The gap is usually in the light. Wait for one more improbable quality of light before pressing the shutter.', 'Your Visual Impact has plateaued. The composition is working. The subject is right. The missing element is almost always the light quality — and that means being in the right place before the light arrives, not reacting to it after.'],
+        'Disruption': ['Your frames have been consistent but predictable lately. Nothing wrong with that — but the Disruption reading suggests you are still working within conventions familiar to photographers who shoot similar subjects. What would you do with this scene if you had never seen another photograph of it?', 'Disruption has been your most stubborn dimension. Your technical execution is outpacing your originality right now. Spend one session deliberately making the frame you would normally reject as too strange.']
+      } %}
+      {% set _rmd_label_clean = _rmd_ns.weakest_label | replace('Whether it made one feel something','Whether it made one feel something') %}
+      {% set _rmd_options = _rmd_msgs.get(_rmd_ns.weakest_label, ['This dimension has been your most consistent gap. Patterns matter more than any single image. A deliberate session focused here will move it faster than hoping the next frame fixes it.','Your evaluations here have been under quiet but consistent pressure. Worth addressing directly rather than waiting for it to resolve itself.']) %}
+      {% set _rmd_text = _rmd_options[image.id % 2] %}
+      <div style="background:var(--sc-cream);border-radius:12px;border:0.5px solid var(--sc-border);border-left:3px solid #A37B2C;padding:18px 20px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#A37B2C;margin-bottom:10px">A pattern in your work</div>
+        <div style="font-size:15px;color:var(--sc-text);line-height:1.8">{{ _rmd_text }}</div>
+      </div>
+      {% endif %}
+    {% endif %}
+
+    {# SL-181.20: BODY OF WORK SEED — if user has 6+ images in the same Interest all ≥ 8.0,
+       surface a quiet signal. No collection naming yet — that is the Collections system.
+       This is the detector: it plants the idea before the photographer has named it. #}
+    {% if current_user.is_authenticated and image.user_id == current_user.id and stats and stats.bow_seed_count is defined and stats.bow_seed_count >= 6 %}
+    <div style="background:#F0F4FF;border-radius:12px;border:0.5px solid #C0CCEE;border-left:3px solid #1A2744;padding:18px 20px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1A2744;margin-bottom:10px">A body of work is forming</div>
+      <div style="font-size:15px;color:#1A2744;line-height:1.8">You have {{ stats.bow_seed_count }} {{ image.genre or '' }} images scoring 8.0 or above. That is not a streak — that is the beginning of a coherent body of work. A photographer with 6 strong images in one genre has the foundation for an exhibition conversation.</div>
+      <div style="margin-top:10px;font-size:13px;color:#3A4A6B">We will track this as you upload more. When it grows, we will help you name it.</div>
+    </div>
     {% endif %}
 
     {# ⑩ HOW YOU'RE DEVELOPING — per-dimension sparklines matching main scorecard #}
@@ -1406,7 +1500,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% if _beat_pct is not none %}<div class="sc-rr"><span class="sc-rk">Percentile</span><span class="sc-rv{% if _beat_pct >= 50 %} gn{% endif %}">{{ _beat_pct }}{{ _pct_ord }}</span></div>{% endif %}
         {% if portfolio_data and portfolio_data.count %}<div class="sc-rr"><span class="sc-rk">Evaluations</span><span class="sc-rv">{{ portfolio_data.count }}</span></div>{% endif %}
         {% if stats and stats.best_this_year %}<div class="sc-rr"><span class="sc-rk">Best this year</span><span class="sc-rv gn">{{ '%.2f'|format(stats.best_this_year) }}</span></div>{% endif %}
-        {% if image.genre %}<div class="sc-rr"><span class="sc-rk">Genre</span><span class="sc-rv">{{ image.genre }}</span></div>{% endif %}
+        {% if image.genre %}<div class="sc-rr"><span class="sc-rk">Interest</span><span class="sc-rv">{{ image.genre }}</span></div>{% endif %}
       </div>
     </div>
     {% if _beat_pct is not none %}
@@ -1468,14 +1562,52 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 </div>{# /sc-wrap #}
 
-{# DDI data island — Jinja2 renders, browser reads as JSON #}
+{# DDI data island — Jinja2 renders, browser reads as JSON.
+   SL-181.20: evaluation-derived fallbacks replace generic boilerplate.
+   If the engine wrote a reasoning field, that wins. If absent, the fallback
+   is computed from the actual evaluation — specific to this image, never a generic sentence. #}
+{% if image.dod_score %}
+  {% set _dod_s = image.dod_score | float %}
+  {% if _dod_s >= 8.5 %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — this is technically demanding work. The conditions, timing, and execution required here are not reproducible on demand. That rarity is part of what holds the evaluation.' %}
+  {% elif _dod_s >= 7.0 %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — solid technical execution. The frame required genuine skill to achieve, though the conditions stopped short of the controlled chaos that pushes evaluations above 8.5.' %}
+  {% elif _dod_s >= 5.5 %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — the technical challenge here was moderate. The frame was achievable with patience and standard technique. Raising this evaluation means deliberately seeking harder conditions: tighter windows, less forgiving light, subjects that do not hold still.' %}
+  {% else %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — the technical demand was low on this frame. That is not a failing — simplicity can be deliberate. But if this matters to you, seek the technically harder version of the same subject.' %}{% endif %}
+{% endif %}
+{% if image.wonder_score %}
+  {% set _won_s = image.wonder_score | float %}
+  {% if _won_s >= 8.5 %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — this frame stops the scroll. The light, colour, and geometry combine into something that demands a second look. That is rarer than most photographers realise.' %}
+  {% elif _won_s >= 7.0 %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — the frame has real presence. It holds attention longer than most, but the element that makes a viewer stop mid-scroll and return is not yet fully resolved.' %}
+  {% elif _won_s >= 5.5 %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — the photograph reads clearly but does not yet command the eye. The gap between clear and magnetic is usually one decision: the light quality, the single dominant colour, or the geometric tension that was almost but not quite there.' %}
+  {% else %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — the frame needs a stronger visual anchor. The eye moves through it without finding a place to rest. One dominant element — a colour, a shape, a shaft of light — would change this entirely.' %}{% endif %}
+{% endif %}
+{% if image.dm_score %}
+  {% set _dm_s = image.dm_score | float %}
+  {% if _dm_s >= 8.5 %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — the shutter fired at the right instant. The peak of the action, the resolution of the geometry, the unrepeatable expression — this frame has it. That is the result of reading the scene, not reacting to it.' %}
+  {% elif _dm_s >= 7.0 %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — you were close to the peak moment. The capture is strong, but there was a fraction of a second — just before or just after — where the geometry was tighter, the expression more resolved, the elements more unified.' %}
+  {% elif _dm_s >= 5.5 %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — the moment is present but not at its peak. The action was captured, but the instant where all elements resolve into a single unified event had not yet arrived — or had just passed.' %}
+  {% else %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — the timing needs work. The photograph shows what was there, not the moment when it became most itself. Staying longer with the subject — past the obvious frame — is where this changes.' %}{% endif %}
+{% endif %}
+{% if image.disruption_score %}
+  {% set _dis_s = image.disruption_score | float %}
+  {% if _dis_s >= 8.5 %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — this frame does something unexpected. The point of view, the subject choice, or the visual grammar breaks from what photographers typically do with this material. That originality is what makes it memorable.' %}
+  {% elif _dis_s >= 7.0 %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — there is a distinct perspective here, though the frame still operates within familiar photographic conventions for this subject. The next version of this image asks: what would it look like if the most expected decision were replaced?' %}
+  {% elif _dis_s >= 5.5 %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — the approach is competent but not yet distinctive. This subject has been photographed this way before. The question worth asking: what does only you see in this scene that no one else has shown?' %}
+  {% else %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — the frame follows a well-worn path. Nothing wrong with that — but nothing separates it from the thousands of similar frames made of similar subjects. One unexpected decision — in framing, light, or moment — would begin to change that.' %}{% endif %}
+{% endif %}
+{% if image.aq_score %}
+  {% set _aq_s = image.aq_score | float %}
+  {% if _aq_s >= 8.5 %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — this photograph makes you feel something before you understand why. That is the hardest thing to achieve and the first thing a viewer trusts. It is your strongest dimension on this frame.' %}
+  {% elif _aq_s >= 7.0 %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — the frame carries genuine emotional weight. There is something at stake in the image, and the viewer senses it. The gap to 8.5 is closing the distance between "I feel something" and "I cannot look away."' %}
+  {% elif _aq_s >= 5.5 %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — the image is competent but emotionally neutral. It shows something without making the viewer feel something about it. The subject has emotional potential — the frame has not yet unlocked it.' %}
+  {% else %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — the photograph does not yet move the viewer. Technical quality is present but emotional resonance is absent. This changes when the photographer is invested in the subject — when something genuinely matters in the frame.' %}{% endif %}
+{% endif %}
 <script type="application/json" id="sc-ddi-data">
 [
-  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or 'How technically demanding this photograph was to make.') | tojson }}},{% endif %}
-  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or 'The visual impact, mood and drama of your photograph.') | tojson }}},{% endif %}
-  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or 'How well you timed the capture of the peak moment.') | tojson }}},{% endif %}
-  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or 'How unexpected and original this frame is.') | tojson }}},{% endif %}
-  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or 'The emotional resonance this photograph creates.') | tojson }}},{% endif %}
+  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or _dod_fb or '') | tojson }}},{% endif %}
+  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or _won_fb or '') | tojson }}},{% endif %}
+  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or _dm_fb or '') | tojson }}},{% endif %}
+  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or _dis_fb or '') | tojson }}},{% endif %}
+  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or _aq_fb or '') | tojson }}},{% endif %}
   null
 ]
 </script>
