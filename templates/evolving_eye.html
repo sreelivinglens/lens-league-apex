@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: evolving_eye-176.12 (Session 205, 2026-09-01 — Audit fixes: .eb colour, KYC copy, 12px→13px, mobile breakpoint. RETAINS 176.11: — On-demand generation: visiting /my-eye triggers advisory if none exists. Honest waiting state with email notice. No polling JS. RETAINS 176.10: topbar cream, trajectory pastel blue, insight gold block.) #}
+{# SL-VERSION: evolving_eye-176.13-main (Session 207, 2026-09-02 — Topbar: #fff cream→rgba(26,24,20,0.98) dark navy. Text/button colours updated for dark bg. sl-top-nav stays suppressed — /my-eye is a report, not a nav destination. RETAINS 176.12.) #}
 {% block title %}My Evolving Eye — So Far · Shutter League{% endblock %}
 {% block body_class %}page-evolving-eye{% endblock %}
 
@@ -17,10 +17,10 @@ body.page-evolving-eye{padding-top:0 !important;background:#F6F2E9 !important}
 :root{--gold:#D6A428;--gold-dk:#A37B2C;--dark:#1A1814;--cream:#F6F2E9;--border:#E8E4DA;--muted:#6B6B6B;--green:#2A7A3A;--text:#1A1A18}
 body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
 .ey-wrap{max-width:800px;margin:0 auto;background:var(--cream)}
-.ey-topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.ey-tb-title{font-size:16px;font-weight:700;color:var(--dark);letter-spacing:.02em}
-.ey-tb-sub{font-size:14px;color:#4A4A48;margin-top:2px}
-.ey-pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--cream);border:1px solid var(--border);border-radius:6px;font-size:14px;color:var(--dark);text-decoration:none;min-height:44px;font-weight:600}
+.ey-topbar{background:rgba(26,24,20,0.98);border-bottom:1px solid rgba(245,197,24,0.15);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ey-tb-title{font-size:16px;font-weight:700;color:rgba(255,255,255,0.90);letter-spacing:.02em}
+.ey-tb-sub{font-size:14px;color:rgba(255,255,255,0.45);margin-top:2px}
+.ey-pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(245,197,24,0.30);border-radius:6px;font-size:14px;color:rgba(255,255,255,0.80);text-decoration:none;min-height:44px;font-weight:600}
 .ey-body{padding:16px}
 .ey-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .ey-stat{background:#fff;border-radius:10px;border:0.5px solid var(--border);padding:11px 13px}
