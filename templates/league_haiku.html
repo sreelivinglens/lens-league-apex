@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.5-main (Session 204, 2026-08-31 — spotlight image: 20px horizontal margin + border-radius so image breathes from panel edges, object-fit:contain. RETAINS 1.4.) #}
+{# SL-VERSION: 1.6-main (Session 207, 2026-09-02 — Bottom nav: cream #F5F3EF→navy #1A2744, icon colour light rgba(255,255,255,0.45), tap-highlight + transition added. RETAINS 1.5.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,11 +145,10 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-mob-nav {
   display:none;
   position:fixed; bottom:0; left:0; right:0;
-  background:#F5F3EF;
-  border-top:0.5px solid rgba(26,39,68,0.12);
+  background:#1A2744;
+  border-top:0.5px solid rgba(255,255,255,0.10);
   padding:0;
   z-index:200;
-  -webkit-backdrop-filter:blur(10px);
 }
 .sl-mob-nav-items {
   display:flex;
@@ -167,7 +166,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   font-size:13px;
   letter-spacing:0.04em;
   text-transform:uppercase;
-  color:rgba(26,39,68,0.42);
+  color:rgba(255,255,255,0.45);
   cursor:pointer;
   text-decoration:none;
   background:none;
@@ -175,8 +174,11 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   font-family:'Inter',sans-serif;
   min-height:44px;
   padding:4px 2px 2px;
+  -webkit-tap-highlight-color:rgba(200,168,75,0.20);
+  transition:color .1s,opacity .1s;
 }
 .sl-mob-nav-item.active { color:#C8A84B; }
+.sl-mob-nav-item:active { color:#C8A84B; opacity:.75; }
 .sl-mob-nav-item svg {
   width:22px; height:22px;
   stroke:currentColor; fill:none;
