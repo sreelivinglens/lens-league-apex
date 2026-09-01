@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.20 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
+{# SL-VERSION: image_detail-181.21 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
@@ -21,7 +21,7 @@
    2. SCORE BLOCK — tier name above, score large (7.48/10 two decimal places), percentile
       below. Cleaner, more legible at 70yr. Score now reads as the conclusion of the trust
       marks, not the opening statement.
-   3. SUMMARY BOX — new section immediately below score: Strength pill + one line,
+   3. SUMMARY BOX — new section immediately below the evaluation: Strength pill + one line,
       Next Leap pill + one line. The two most important findings above the fold,
       visible without scrolling or tapping.
    4. DIMENSIONS — on mobile, all 5 now shown as colour-coded bars. Green = strongest,
@@ -397,7 +397,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-eval-pct{font-size:13px;color:var(--sc-muted);margin-top:5px}
 .sc-eval-pct strong{color:var(--sc-green)}
 .sc-eval-right{text-align:right;flex-shrink:0}
-.sc-genre-pill{display:inline-block;font-size:13px;color:var(--sc-muted);background:var(--sc-cream);border:0.5px solid var(--sc-border);padding:3px 9px;border-radius:12px;margin-bottom:6px}
+.sc-interest-pill{display:inline-block;font-size:13px;color:var(--sc-muted);background:var(--sc-cream);border:0.5px solid var(--sc-border);padding:3px 9px;border-radius:12px;margin-bottom:6px}
 
 /* ── SL-181.11 SUMMARY BOX ── */
 .sc-summary-box{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
@@ -766,7 +766,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
     </div>
 
-    {# ── SL-181.11 TRUST MARKS — immediately below photo, before score ── #}
+    {# ── SL-181.11 TRUST MARKS — immediately below photo, before evaluation ── #}
     <div class="sc-trust-row">
       <span class="sc-trust-badge sc-trust-ai">✓ AI verified</span>
       <span class="sc-trust-badge sc-trust-cal">◉ Calibrated · 312 images</span>
@@ -793,7 +793,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           {% endif %}
         </div>
         <div class="sc-eval-right">
-          {% if image.genre %}<div class="sc-genre-pill">{{ image.genre }}</div>{% endif %}
+          {% if image.genre %}<div class="sc-interest-pill">{{ image.genre }}</div>{% endif %}
           {% if image.tier == 'Grandmaster' %}<div style="font-size:28px">👑</div>
           {% elif image.tier == 'Master' %}<div style="font-size:28px">🏅</div>
           {% elif image.tier == 'Maverick' %}<div style="font-size:28px">⚡</div>
@@ -920,28 +920,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ③ WHAT THIS EVALUATION MEANS — gold corners, before take-away #}
-    {# SL-181.20: 9+ sentence extraction via Jinja2. Finds the sentence containing
-       "9+" in eval_means text and renders it as a pink inset card — no JS regex,
-       no fragile text matching on the client side. Falls back gracefully if absent. #}
+    {# ③ WHAT THIS EVALUATION MEANS — gold corners #}
+    {# SL-181.21: 9+ pink card is handled by JS post-render (DOMContentLoaded).
+       Jinja2 strings have no .split() method so the Jinja approach failed silently.
+       JS finds the <li> containing "9+" after scRenderText() runs and promotes it
+       to a pink inset card. Nothing to do here in Jinja. #}
     {% if _eval_means or _eval_means_2 %}
     {% set _em_full = (_eval_means + (' ■ ' + _eval_means_2 if (_eval_means_2 and _eval_means_2 != _takeaway) else '')) %}
-    {# Extract 9+ sentence — look for bullet marker ■ or ▪ followed by text containing "9+" #}
-    {% set _nine_plus_text = '' %}
-    {% set _nine_plus_rest = _em_full %}
-    {% if '9+' in _em_full %}
-      {# Split on bullet markers to find the 9+ bullet #}
-      {% for _bullet_marker in ['■', '▪', '▸', '•'] %}
-        {% if _nine_plus_text == '' and _bullet_marker in _em_full %}
-          {% set _parts = _em_full.split(_bullet_marker) %}
-          {% for _part in _parts %}
-            {% if _nine_plus_text == '' and '9+' in _part %}
-              {% set _nine_plus_text = _part | trim %}
-            {% endif %}
-          {% endfor %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
     <div class="sc-eval-means">
       <div class="sc-em-bl"></div><div class="sc-em-br"></div>
       <div class="sc-em-inner">
@@ -952,12 +937,6 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <div class="sc-em-para sc-render-text sc-em-preview" id="sc-em-preview-block">
         {{ _em_full | safe }}
       </div>
-      {% if _nine_plus_text %}
-      <div style="background:#FFF0F5;border-radius:10px;border-left:3px solid #A0304A;padding:14px 16px;margin-top:16px">
-        <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A0304A;margin-bottom:8px">The 9+ version of this frame</div>
-        <div style="font-size:16px;color:#3a1020;line-height:1.85">{{ _nine_plus_text | safe }}</div>
-      </div>
-      {% endif %}
       </div>
     </div>
     {% endif %}
@@ -1247,7 +1226,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0 0 10px">
           An 8.5 is where Shutter League begins pointing you to specific photography awards your work is ready for.
           {% if stats and stats.best_this_year and stats.best_this_year >= 8.5 %}
-          You scored <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> this year — you have already made a frame that qualifies.
+          Your best this year reached <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> — you have already made a frame that qualifies.
           {% elif stats and stats.best_this_year %}
           Your best this year is <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> — you are closer than you think.
           {% endif %}
@@ -1343,7 +1322,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% endif %}
 
     {# SL-181.20: REPEAT MISTAKE DETECTOR — computed from portfolio_data.dimensions.
-       If the same dimension has the lowest current score across last N images,
+       If the same dimension has the lowest current evaluation across last N images,
        and its pill is "Dipped recently" or "Steady", surface the pattern explicitly.
        Only shows if portfolio_data exists and user has sufficient history (≥6 images).
        No AI call. No new query. Pure Jinja2 over existing data. #}
@@ -1360,15 +1339,15 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       {# Show only if the weakest dim is dipping or volatile (not climbing) #}
       {% if _rmd_ns.weakest_label and ('Dipped' in _rmd_ns.weakest_pill or 'Steady' in _rmd_ns.weakest_pill) %}
       {# Generate varied, non-bot language based on dimension name #}
+      {# _rmd_msgs keys match single-word labels set in app.py _dims loop — SL-181.21 #}
       {% set _rmd_msgs = {
-        'Whether it made one feel something': ['Your Emotion has been under pressure across your last several images. This is not a bad day — it is a pattern worth examining. The frames that move people share one thing: the photographer cared about what was in the frame, not just how it looked.', 'Emotional resonance is your most consistent gap right now. Your images are getting technically stronger — but the feeling is not coming through. Shoot something that matters to you personally and watch what happens to this evaluation.'],
-        'Whether the timing was right': ['Timing has been your most persistent challenge across recent images. The moment you are capturing is close to the peak — but consistently arriving a fraction early or late. Start staying with subjects longer than feels comfortable. The frame you want comes after the obvious one.', 'Your Timing has been flat or declining. This is fixable — it is a waiting problem, not a seeing problem. You already know what to look for. The practice is standing still longer.'],
-        'How difficult it was': ['You have been shooting within your comfort zone recently. The difficulty readings suggest you are working with familiar subjects in familiar light. The next level of your work probably requires deliberately harder conditions.', 'Difficulty has been your quietest dimension lately. That often means you are in a productive groove — but grooves become ruts. One session deliberately outside your usual parameters would change this.'],
+        'Emotion': ['Your Emotion has been under pressure across recent images. This is not a bad day — it is a pattern worth examining. The frames that move people share one thing: the photographer cared about what was in the frame, not just how it looked.', 'Emotional resonance is your most consistent gap right now. Your images are getting technically stronger — but the feeling is not coming through. Shoot something that matters to you personally and see what changes.'],
+        'Timing': ['Timing has been your most persistent challenge. The moment you are capturing is close to the peak — but consistently arriving a fraction early or late. Start staying with subjects longer than feels comfortable. The frame you want comes after the obvious one.', 'Your Timing has been flat or declining. This is fixable — it is a waiting problem, not a seeing problem. You already know what to look for. The practice is standing still longer.'],
+        'Difficulty': ['You have been shooting within your comfort zone recently. The difficulty readings suggest familiar subjects in familiar light. The next level of your work probably requires deliberately harder conditions.', 'Difficulty has been your quietest dimension lately. That often means you are in a productive groove — but grooves become ruts. One session deliberately outside your usual parameters would change this.'],
         'Visual Impact': ['Visual Impact has been steady but not climbing. Your frames are clear and well-composed — but not yet magnetic. The gap is usually in the light. Wait for one more improbable quality of light before pressing the shutter.', 'Your Visual Impact has plateaued. The composition is working. The subject is right. The missing element is almost always the light quality — and that means being in the right place before the light arrives, not reacting to it after.'],
-        'Disruption': ['Your frames have been consistent but predictable lately. Nothing wrong with that — but the Disruption reading suggests you are still working within conventions familiar to photographers who shoot similar subjects. What would you do with this scene if you had never seen another photograph of it?', 'Disruption has been your most stubborn dimension. Your technical execution is outpacing your originality right now. Spend one session deliberately making the frame you would normally reject as too strange.']
+        'Disruption': ['Your frames have been consistent but predictable lately. The Disruption reading suggests you are still working within conventions familiar to photographers of similar subjects. What would you do with this scene if you had never seen another photograph of it?', 'Disruption has been your most stubborn dimension. Your technical execution is outpacing your originality right now. Spend one session deliberately making the frame you would normally reject as too strange.']
       } %}
-      {% set _rmd_label_clean = _rmd_ns.weakest_label | replace('Whether it made one feel something','Whether it made one feel something') %}
-      {% set _rmd_options = _rmd_msgs.get(_rmd_ns.weakest_label, ['This dimension has been your most consistent gap. Patterns matter more than any single image. A deliberate session focused here will move it faster than hoping the next frame fixes it.','Your evaluations here have been under quiet but consistent pressure. Worth addressing directly rather than waiting for it to resolve itself.']) %}
+      {% set _rmd_options = _rmd_msgs.get(_rmd_ns.weakest_label, ['This dimension has been your most consistent gap. Patterns matter more than any single image. A deliberate session focused here will move it faster than hoping the next frame fixes it.', 'Your evaluations here have been under quiet but consistent pressure. Worth addressing directly rather than waiting for it to resolve itself.']) %}
       {% set _rmd_text = _rmd_options[image.id % 2] %}
       <div style="background:var(--sc-cream);border-radius:12px;border:0.5px solid var(--sc-border);border-left:3px solid #A37B2C;padding:18px 20px;margin-bottom:16px">
         <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#A37B2C;margin-bottom:10px">A pattern in your work</div>
@@ -1383,7 +1362,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% if current_user.is_authenticated and image.user_id == current_user.id and stats and stats.bow_seed_count is defined and stats.bow_seed_count >= 6 %}
     <div style="background:#F0F4FF;border-radius:12px;border:0.5px solid #C0CCEE;border-left:3px solid #1A2744;padding:18px 20px;margin-bottom:16px">
       <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1A2744;margin-bottom:10px">A body of work is forming</div>
-      <div style="font-size:15px;color:#1A2744;line-height:1.8">You have {{ stats.bow_seed_count }} {{ image.genre or '' }} images scoring 8.0 or above. That is not a streak — that is the beginning of a coherent body of work. A photographer with 6 strong images in one genre has the foundation for an exhibition conversation.</div>
+      <div style="font-size:15px;color:#1A2744;line-height:1.8">You have {{ stats.bow_seed_count }} {{ image.genre or '' }} images evaluating at 8.0 or above. That is not a streak — that is the beginning of a coherent body of work. A photographer with 6 strong images sharing a visual theme has the foundation for an exhibition conversation.</div>
       <div style="margin-top:10px;font-size:13px;color:#3A4A6B">We will track this as you upload more. When it grows, we will help you name it.</div>
     </div>
     {% endif %}
@@ -1753,14 +1732,44 @@ function scRenderText() {
       var q = encodeURIComponent(term.trim());
       return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
     });
-    /* Highlight "To reach 9+" — runs last so Search links are already converted */
-    raw = raw.replace(/(To reach 9\+[^<]*?)\.(<\/span>|<\/li>|<\/p>)/g, '<span style="color:#A0304A;font-weight:600">$1.</span>$2');
+    /* Highlight "To reach 9+" — kept for older images, broadened to match both phrasings */
+    raw = raw.replace(/((?:To reach|The)\s+9\+[^<]*?)\.(<\/span>|<\/li>|<\/p>)/g, '<span style="color:#A0304A;font-weight:600">$1.</span>$2');
     el.innerHTML = raw;
   });
 }
 /* Run immediately + on DOMContentLoaded for any late-rendered elements */
 scRenderText();
 document.addEventListener('DOMContentLoaded', scRenderText);
+
+/* ── 9+ PINK CARD — SL-181.21 ─────────────────────────────────────────────
+   After scRenderText() builds the <li> list, find the <li> containing "9+"
+   and promote it to a prominent pink inset card pulled out of the bullet list.
+   Matches current engine: "The 9+ version of this frame:"
+   Matches older images:   "To reach 9+"
+────────────────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  var em = document.getElementById('sc-em-preview-block');
+  if (!em) return;
+  var items = em.querySelectorAll('li');
+  for (var i = 0; i < items.length; i++) {
+    var li = items[i];
+    if (/9\+/.test(li.textContent)) {
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#FFF0F5;border-radius:10px;border-left:3px solid #A0304A;padding:16px 18px;margin-top:16px';
+      var eyebrow = document.createElement('div');
+      eyebrow.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A0304A;margin-bottom:10px';
+      eyebrow.textContent = 'The 9+ version of this frame';
+      var body = document.createElement('div');
+      body.style.cssText = 'font-size:16px;color:#3a1020;line-height:1.85';
+      body.innerHTML = li.innerHTML.replace(/^(The\s+9\+\s+version\s+of\s+this\s+frame\s*:|To\s+reach\s+9\+\s*[—-]?\s*)/i, '').trim();
+      card.appendChild(eyebrow);
+      card.appendChild(body);
+      li.parentNode.removeChild(li);
+      em.appendChild(card);
+      break;
+    }
+  }
+});
 </script>
 
 
