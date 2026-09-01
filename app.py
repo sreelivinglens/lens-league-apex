@@ -12343,12 +12343,12 @@ def public_card(token):
                     return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
                              'value': round(vals[i], 1)} for i in idxs]
 
-                # SL-181.21: all 5 dimensions — public_card uses attribute access (ORM objects)
-                _feeling    = [r.aq_score          for r in _recent if r.aq_score          is not None]
-                _timing     = [r.dm_score          for r in _recent if r.dm_score          is not None]
-                _difficulty = [r.dod_score         for r in _recent if r.dod_score         is not None]
-                _impact     = [r.wonder_score      for r in _recent if r.wonder_score      is not None]
-                _disruption = [r.disruption_score  for r in _recent if r.disruption_score  is not None]
+                # SL-181.21: all 5 dimensions, single-word labels matching image_detail.html
+                _feeling    = [r.aq_score         for r in _recent if r.aq_score         is not None]
+                _timing     = [r.dm_score         for r in _recent if r.dm_score         is not None]
+                _difficulty = [r.dod_score        for r in _recent if r.dod_score        is not None]
+                _impact     = [r.wonder_score     for r in _recent if r.wonder_score     is not None]
+                _disruption = [r.disruption_score for r in _recent if r.disruption_score is not None]
 
                 _dims = []
                 for _lbl, _vals, _color, _flat_color in [
@@ -12666,8 +12666,8 @@ def image_detail(image_id):
                         return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
                                  'value': round(vals[i], 1)} for i in idxs]
 
-                    # SL-181.21: extract all 5 dimension series from _recent tuples
-                    # _recent cols: aq_score, dm_score, dod_score, wonder_score, disruption_score, score
+                    # SL-181.21: all 5 dimensions, index access matches _recent tuple order:
+                    # aq[0], dm[1], dod[2], wonder[3], disruption[4], score[5]
                     _feeling    = [r[0] for r in _recent if r[0] is not None]
                     _timing     = [r[1] for r in _recent if r[1] is not None]
                     _difficulty = [r[2] for r in _recent if r[2] is not None]
@@ -12676,11 +12676,11 @@ def image_detail(image_id):
 
                     _dims = []
                     for _label, _vals, _color, _flat_color in [
-                        ('Emotion',        _feeling,    '#F5C518', '#BA7517'),
-                        ('Timing',         _timing,     '#2C3E6B', '#2C3E6B'),
-                        ('Difficulty',     _difficulty, '#BA7517', '#BA7517'),
-                        ('Visual Impact',  _impact,     '#5A7A3A', '#3A5A2A'),
-                        ('Disruption',     _disruption, '#6A4A9A', '#4A3A7A'),
+                        ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
+                        ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
+                        ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
+                        ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
+                        ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
                     ]:
                         if len(_vals) >= 2:
                             _sp, _pts = _spark(_vals)
@@ -12735,8 +12735,7 @@ def image_detail(image_id):
                 Image.scored_at >= _month_start,
             ).count()
 
-            # SL-181.21: BOW seed — count images in same genre scoring ≥ 8.0
-            # Used by image_detail.html to surface "a body of work is forming" signal
+            # SL-181.21: BOW seed count — images in same genre scoring ≥ 8.0
             _bow_seed_count = 0
             if img.genre:
                 try:
@@ -16163,10 +16162,62 @@ def admin_dashboard():
     except Exception as _ee:
         app.logger.warning(f'[admin_dashboard] engagement snapshot failed: {_ee}')
 
+    # ── SL-181.22: Paid subscribers panel — admin sees what user sees ────────
+    # Builds a quick-view list of all paid users with their latest + best image,
+    # contest cache age, and a cache bust action.
+    _paid_users = []
+    try:
+        import json as _puj
+        from datetime import datetime as _pudt
+        _sub_users = User.query.filter_by(is_subscribed=True).order_by(User.full_name).all()
+        for _pu in _sub_users:
+            # Latest scored image
+            _latest = db.session.query(Image).filter(
+                Image.user_id == _pu.id,
+                Image.status == 'scored',
+            ).order_by(Image.scored_at.desc()).first()
+            # Best scored image this year
+            _best = db.session.query(Image).filter(
+                Image.user_id == _pu.id,
+                Image.status == 'scored',
+                Image.score != None,
+            ).order_by(Image.score.desc()).first()
+            # Contest cache age
+            _cache_age = 'empty'
+            if _latest:
+                try:
+                    _la = _puj.loads(_latest._audit_json or '{}')
+                    _cs = _la.get('contest_suggestions')
+                    if _cs and isinstance(_cs, dict):
+                        _cat = _cs.get('cached_at')
+                        if _cat:
+                            _cdt = _pudt.fromisoformat(_cat)
+                            _days = (_pudt.utcnow() - _cdt).days
+                            _cache_age = f'{_days}d ago'
+                except Exception:
+                    pass
+            # Last upload date
+            _last_up = _latest.scored_at.strftime('%-d %b') if _latest and _latest.scored_at else None
+            _paid_users.append({
+                'id':              _pu.id,
+                'full_name':       _pu.full_name or _pu.username,
+                'email':           _pu.email,
+                'tier':            _latest.tier if _latest else None,
+                'image_count':     Image.query.filter_by(user_id=_pu.id, status='scored').count(),
+                'latest_image_id': _latest.id if _latest else None,
+                'best_image_id':   _best.id if _best else None,
+                'best_score':      _best.score if _best else None,
+                'last_upload_date': _last_up,
+                'contest_cache_age': _cache_age,
+            })
+    except Exception as _pue:
+        app.logger.warning(f'[admin_dashboard] paid_users build failed: {_pue}')
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track,
                            recent_users=recent_users,
+                           paid_users=_paid_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
                            all_users=all_users, open_reports_count=open_reports_count,
                            suspended_users=suspended_users, mismatch_users=mismatch_users,
@@ -16207,6 +16258,36 @@ def admin_clear_suspension(user_id):
     user.camera_mismatch_count   = 0
     db.session.commit()
     flash(f'League suspension cleared for {user.full_name or user.username}.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/bust-contest-cache/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_bust_contest_cache(user_id):
+    """SL-181.22: Clear contest_suggestions cache for all scored images owned by user.
+    Forces fresh award recommendations on their next scorecard visit.
+    Used when award deadlines change (e.g. Sanctuary extension) or stale data suspected."""
+    import json as _bcj
+    _user = User.query.get_or_404(user_id)
+    _images = Image.query.filter_by(user_id=user_id, status='scored').all()
+    _cleared = 0
+    for _img in _images:
+        try:
+            _audit = _bcj.loads(_img._audit_json or '{}')
+            if 'contest_suggestions' in _audit:
+                del _audit['contest_suggestions']
+                _img._audit_json = _bcj.dumps(_audit)
+                _cleared += 1
+        except Exception:
+            continue
+    db.session.commit()
+    flash(
+        f'Contest cache cleared for {_user.full_name or _user.username} '
+        f'({_cleared} image{"s" if _cleared != 1 else ""} updated). '
+        f'Fresh award recommendations will load on their next scorecard visit.',
+        'success'
+    )
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
