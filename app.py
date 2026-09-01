@@ -12297,7 +12297,8 @@ def public_card(token):
 
         if _scored_count >= 5:
             _recent = db.session.query(
-                Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+                Image.aq_score, Image.dm_score, Image.dod_score,
+                Image.wonder_score, Image.disruption_score, Image.score
             ).filter(
                 Image.user_id == _owner_id,
                 Image.status  == 'scored',
@@ -12342,15 +12343,20 @@ def public_card(token):
                     return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
                              'value': round(vals[i], 1)} for i in idxs]
 
-                _feeling    = [r.aq_score  for r in _recent if r.aq_score  is not None]
-                _timing     = [r.dm_score  for r in _recent if r.dm_score  is not None]
-                _difficulty = [r.dod_score for r in _recent if r.dod_score is not None]
+                # SL-181.21: all 5 dimensions — public_card uses attribute access (ORM objects)
+                _feeling    = [r.aq_score          for r in _recent if r.aq_score          is not None]
+                _timing     = [r.dm_score          for r in _recent if r.dm_score          is not None]
+                _difficulty = [r.dod_score         for r in _recent if r.dod_score         is not None]
+                _impact     = [r.wonder_score      for r in _recent if r.wonder_score      is not None]
+                _disruption = [r.disruption_score  for r in _recent if r.disruption_score  is not None]
 
                 _dims = []
                 for _lbl, _vals, _color, _flat_color in [
-                    ('Whether it made one feel something', _feeling,    '#F5C518', '#BA7517'),
-                    ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
-                    ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
+                    ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
+                    ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
+                    ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
+                    ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
+                    ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
                 ]:
                     if len(_vals) >= 2:
                         _sp, _pts  = _spark(_vals)
@@ -12598,7 +12604,8 @@ def image_detail(image_id):
                 # actually tracks "where am I going" rather than just the
                 # last handful of uploads.
                 _recent = db.session.query(
-                    Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+                    Image.aq_score, Image.dm_score, Image.dod_score,
+                    Image.wonder_score, Image.disruption_score, Image.score
                 ).filter(
                     Image.user_id == _owner_id,
                     Image.status  == 'scored',
@@ -12659,11 +12666,21 @@ def image_detail(image_id):
                         return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
                                  'value': round(vals[i], 1)} for i in idxs]
 
+                    # SL-181.21: extract all 5 dimension series from _recent tuples
+                    # _recent cols: aq_score, dm_score, dod_score, wonder_score, disruption_score, score
+                    _feeling    = [r[0] for r in _recent if r[0] is not None]
+                    _timing     = [r[1] for r in _recent if r[1] is not None]
+                    _difficulty = [r[2] for r in _recent if r[2] is not None]
+                    _impact     = [r[3] for r in _recent if r[3] is not None]
+                    _disruption = [r[4] for r in _recent if r[4] is not None]
+
                     _dims = []
                     for _label, _vals, _color, _flat_color in [
-                        ('Whether it made one feel something', _feeling,    '#F5C518', '#BA7517'),
-                        ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
-                        ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
+                        ('Emotion',        _feeling,    '#F5C518', '#BA7517'),
+                        ('Timing',         _timing,     '#2C3E6B', '#2C3E6B'),
+                        ('Difficulty',     _difficulty, '#BA7517', '#BA7517'),
+                        ('Visual Impact',  _impact,     '#5A7A3A', '#3A5A2A'),
+                        ('Disruption',     _disruption, '#6A4A9A', '#4A3A7A'),
                     ]:
                         if len(_vals) >= 2:
                             _sp, _pts = _spark(_vals)
@@ -12718,11 +12735,26 @@ def image_detail(image_id):
                 Image.scored_at >= _month_start,
             ).count()
 
+            # SL-181.21: BOW seed — count images in same genre scoring ≥ 8.0
+            # Used by image_detail.html to surface "a body of work is forming" signal
+            _bow_seed_count = 0
+            if img.genre:
+                try:
+                    _bow_seed_count = db.session.query(Image).filter(
+                        Image.user_id == _owner_id,
+                        Image.status  == 'scored',
+                        Image.genre   == img.genre,
+                        Image.score   >= 8.0,
+                    ).count()
+                except Exception:
+                    _bow_seed_count = 0
+
             _stats = {
-                'best_this_year':  _best_row.score     if _best_row else None,
+                'best_this_year':  _best_row.score      if _best_row else None,
                 'best_title':      _best_row.asset_name if _best_row else None,
-                'best_genre':      _best_row.genre      if _best_row else None,
+                'best_genre':      _best_row.genre       if _best_row else None,
                 'this_month_count': _month_count,
+                'bow_seed_count':  _bow_seed_count,
             }
         except Exception as _se:
             app.logger.warning(f'[image_detail] stats: {_se}')
