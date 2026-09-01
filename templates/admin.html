@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 180.5 admin — Paid subscribers panel + contest cache bust added. Session 206, 2026-09-01. Admin sees what subscriber sees on scorecards (image_detail 181.22). Previous: {# SL:version 180.4 admin — International Waitlist nav button added. Session 190, 2026-08-19. Previous: {# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
+{# SL:version 180.6 admin — Session 207, 2026-09-02. FREE badge (top-left, blue) on Haiku image tiles — is_haiku_try=TRUE. Previous: 180.5 admin — Paid subscribers panel + contest cache bust added. Session 206, 2026-09-01. #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -126,6 +126,7 @@
   .admin-tile-review { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold); }
   .admin-tile-ai     { position: absolute; bottom: 8px; right: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 3px; background: rgba(0,0,0,0.90); color: var(--gold); letter-spacing: 0.5px; }
   .admin-tile-hidden { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; }
+  .admin-tile-haiku  { position: absolute; top: 8px; left: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; background: rgba(15,60,90,0.85); border: 1px solid rgba(80,160,220,0.55); color: rgba(140,200,240,0.95); }
 
   .admin-tile-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
   .admin-tile-title { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
@@ -589,6 +590,9 @@
               <div class="admin-tile-placeholder">🖼️</div>
               {% endif %}
               <span class="admin-tile-status {{ img.status }}">{{ img.status.upper() }}</span>
+              {% if img.is_haiku_try %}
+              <span class="admin-tile-haiku">FREE</span>
+              {% endif %}
               {% if img.is_flagged %}
                 <span class="admin-tile-flag">🚫 AI</span>
               {% elif img.needs_review %}
