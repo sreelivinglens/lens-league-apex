@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 180.4 admin — International Waitlist nav button added. Session 190, 2026-08-19. Previous: {# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
+{# SL:version 180.5 admin — Paid subscribers panel + contest cache bust added. Session 206, 2026-09-01. Admin sees what subscriber sees on scorecards (image_detail 181.22). Previous: {# SL:version 180.4 admin — International Waitlist nav button added. Session 190, 2026-08-19. Previous: {# SL:version 180.3 admin — Live Event Data group added to Tools: manual single-city event scan (POST /admin/run-city-event-scan). Scheduled city_event_scan is disabled on staging via SL_DISABLE_AI_JOBS; this is the deliberate manual counterpart. Session 180, 2026-08-12. Previous: S169-r1 Blocked IPs nav button + dashboard card, 2026-08-03 #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -879,6 +879,59 @@
 
     </div>
   </div>
+
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION — PAID SUBSCRIBERS (SL-181.22 — admin sees what user sees)
+     Quick-view panel: each paid user, their latest image, scorecard link,
+     contest cache bust. Always open — these are the users that matter.
+  ══════════════════════════════════════════════════════════════════ #}
+  {% if paid_users %}
+  <div class="admin-section urgent" id="section-paid">
+    <div class="admin-section-header" onclick="toggleSection('paid')">
+      <div class="admin-section-title">
+        ⭐ Paid Subscribers
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(245,197,24,0.15);color:var(--gold);border:1px solid var(--gold-dark);">{{ paid_users|length }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="admin-section-meta">Full scorecard view — same as subscriber</span>
+        <span class="admin-chevron open" id="chev-paid">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body" id="body-paid">
+      <div style="display:grid;gap:12px;">
+        {% for u in paid_users %}
+        <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text-primary);">{{ u.full_name or u.username }}</div>
+              <div style="font-size:13px;color:var(--text-muted);">{{ u.email }} · {{ u.tier or '—' }} · {{ u.image_count or 0 }} images</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <a href="{{ url_for('my_gallery') }}?user_id={{ u.id }}" style="font-size:13px;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid var(--border);color:var(--text-primary);text-decoration:none;background:var(--surface-1);">Gallery</a>
+              {% if u.latest_image_id %}
+              <a href="{{ url_for('image_detail', image_id=u.latest_image_id) }}" style="font-size:13px;font-weight:700;padding:5px 12px;border-radius:6px;background:var(--gold);color:#1a1a18;text-decoration:none;">Latest Scorecard →</a>
+              {% endif %}
+              {% if u.best_image_id %}
+              <a href="{{ url_for('image_detail', image_id=u.best_image_id) }}" style="font-size:13px;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid var(--gold-dark);color:var(--gold-dark);text-decoration:none;background:transparent;">Best ({{ '%.2f'|format(u.best_score) if u.best_score else '—' }}) →</a>
+              {% endif %}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:16px;">
+              <div><span style="font-size:13px;color:var(--text-muted);">Last upload</span><br><span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ u.last_upload_date or '—' }}</span></div>
+              <div><span style="font-size:13px;color:var(--text-muted);">Best this year</span><br><span style="font-size:13px;font-weight:700;color:var(--gold-dark);">{{ '%.2f'|format(u.best_score) if u.best_score else '—' }}</span></div>
+              <div><span style="font-size:13px;color:var(--text-muted);">Contest cache</span><br><span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ u.contest_cache_age or 'empty' }}</span></div>
+            </div>
+            <form method="POST" action="/admin/bust-contest-cache/{{ u.id }}" style="margin:0;" onsubmit="return confirm('Clear contest suggestions cache for {{ u.full_name or u.username }}? They will get fresh award recommendations on next visit.');">
+              <button type="submit" class="act-btn act-ref" style="font-size:13px;padding:5px 12px;">↺ Bust Contest Cache</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   {# ══════════════════════════════════════════════════════════════════
      SECTION — NEW SIGNUPS
