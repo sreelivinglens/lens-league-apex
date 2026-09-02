@@ -1357,67 +1357,12 @@
       </div>
     </div>
     <div class="admin-section-body collapsed" id="body-haiku-members">
-      {% if recent_admin_actions is defined %}
-      {# Haiku users pulled from stats.free_users #}
-      {% if recent_admin_actions is defined %}{# free_users is a count not a list - Haiku member rows come from haiku_users query (Session 209) #}{% if false %}
-      <table class="sl-hm-table">
-        <thead>
-          <tr>
-            <th style="width:30%">Member</th>
-            <th style="width:22%">Used / limit</th>
-            <th style="width:18%">Last active</th>
-            <th style="width:16%">Status</th>
-            <th style="width:14%;text-align:right"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for fu in [] %}
-          <tr>
-            <td>
-              <div style="font-weight:500">{{ fu.full_name or fu.username or 'User ' + fu.id|string }}</div>
-              <div style="font-size:13px;color:var(--text-muted)">user {{ fu.id }}{% if fu.city %} · {{ fu.city }}{% endif %}</div>
-            </td>
-            <td>
-              <div class="sl-hm-dots">
-                {% set _used = fu.haiku_used or 0 %}
-                {% set _limit = fu.haiku_limit or 10 %}
-                {% for i in range([_limit, 10]|min) %}<div class="sl-hm-dot {% if i < _used %}u{% endif %}"></div>{% endfor %}
-                <span class="sl-hm-dot-count">{{ _used }}/{{ _limit }}</span>
-              </div>
-            </td>
-            <td style="color:var(--text-muted);font-size:13px">{{ fu.last_active.strftime('%d %b') if fu.last_active else '—' }}</td>
-            <td>
-              {% if fu.haiku_used == 0 %}
-              <span class="sl-hm-status sl-hm-none">No uploads</span>
-              {% elif not fu.onboarding_complete %}
-              <span class="sl-hm-status sl-hm-warn">Onboarding</span>
-              {% elif fu.last_active and (now() - fu.last_active).days < 3 %}
-              <span class="sl-hm-status sl-hm-new">New</span>
-              {% else %}
-              <span class="sl-hm-status sl-hm-active">Active</span>
-              {% endif %}
-            </td>
-            <td style="text-align:right">
-              <a href="/try/gallery?user={{ fu.id }}" class="sl-hm-btn" style="margin-right:4px">Gallery</a>
-              <a href="mailto:{{ fu.email }}" class="sl-hm-btn">Email</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <div class="sl-hm-footer">
-        <span class="sl-hm-footer-note">{{ stats.free_users or 0 }} Haiku members · free tier</span>
+      <div style="padding:14px 0;">
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">{{ stats.free_users or 0 }} Haiku free-tier member{{ 's' if (stats.free_users or 0) != 1 else '' }}. Full member table with usage dots and status — Session 209 build.</p>
         <a href="{{ url_for('admin_dashboard', engine='haiku') }}" class="admin-nav-btn" style="font-size:13px;padding:6px 12px;min-height:36px;">View Haiku image grid →</a>
       </div>
-      {% else %}
-      <div style="padding:20px;color:var(--text-muted);font-size:14px">No Haiku free users yet.</div>
-      {% endif %}
-      {% else %}
-      <div style="padding:20px;color:var(--text-muted);font-size:14px">Haiku member data loading — refresh the page if this persists.</div>
-      {% endif %}
     </div>
-  </div>
-
+  
   {# ══════════════════════════════════════════════════════════════════
      SESSION 208 — AUDIT & LEGAL LOG FEED
   ══════════════════════════════════════════════════════════════════ #}
