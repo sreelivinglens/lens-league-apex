@@ -438,7 +438,7 @@
   <div class="sl-stat-bar">
     <div class="sl-stat-cell"><div class="sl-stat-label">Total members</div><div class="sl-stat-num">{{ (stats.subscribers or 0) + (stats.free_users|length if stats.free_users is iterable else 0) }}</div><div class="sl-stat-delta up">↑ {{ new_signups_7days }} this week</div></div>
     <div class="sl-stat-cell"><div class="sl-stat-label">Paid</div><div class="sl-stat-num ok">{{ stats.subscribers or 0 }}</div><div class="sl-stat-delta">Camera {{ stats.camera_subs or 0 }} · Mobile {{ stats.mobile_subs or 0 }}</div></div>
-    <div class="sl-stat-cell"><div class="sl-stat-label">Haiku free</div><div class="sl-stat-num">{{ stats.free_users|length if stats.free_users is iterable else 0 }}</div><div class="sl-stat-delta up">↑ {{ new_signups_7days }} this week</div></div>
+    <div class="sl-stat-cell"><div class="sl-stat-label">Haiku free</div><div class="sl-stat-num">{{ stats.free_users or 0 }}</div><div class="sl-stat-delta up">↑ {{ new_signups_7days }} this week</div></div>
     <div class="sl-stat-cell"><div class="sl-stat-label">Images today</div><div class="sl-stat-num">{{ new_signups_today or 0 }}</div><div class="sl-stat-delta">{{ scored or 0 }} total scored</div></div>
     <div class="sl-stat-cell"><div class="sl-stat-label">Evals pending</div><div class="sl-stat-num {% if pending > 0 %}warn{% else %}ok{% endif %}">{{ pending or 0 }}</div><div class="sl-stat-delta">{{ stuck_images|length if stuck_images else 0 }} stuck</div></div>
     <div class="sl-stat-cell"><div class="sl-stat-label">Open flags</div><div class="sl-stat-num {% if open_reports_count > 0 %}warn{% else %}ok{% endif %}">{{ open_reports_count or 0 }}</div><div class="sl-stat-delta">{{ csi_unreviewed_count or 0 }} CSI unreviewed</div></div>
@@ -463,7 +463,7 @@
       <div class="sl-eval-row"><span>Open flags</span><span class="sl-eval-val {% if open_reports_count > 0 %}warn{% else %}ok{% endif %}">{{ open_reports_count or 0 }}</span></div>
       <div class="sl-eval-highlight">
         <span style="font-size:13px;color:var(--text-muted)">Avg evaluation (all genres)</span>
-        <span style="font-size:18px;font-weight:500">{% if platform_cal %}{{ '%.2f'|format(platform_cal['avg_score'] if platform_cal is mapping else platform_cal.avg_score) }} / 10{% else %}—{% endif %}</span>
+        <span style="font-size:18px;font-weight:500">{% if platform_cal %}{{ '%.2f'|format(platform_cal['average'] if platform_cal is mapping else platform_cal.average) }} / 10{% else %}—{% endif %}</span>
       </div>
     </div>
     <div class="sl-dash-card">
@@ -471,7 +471,7 @@
       <div class="sl-guide ok" style="margin-bottom:8px;font-size:13px"><strong>Note:</strong> Haiku = free tier, no revenue. Only Camera + Mobile are paid.</div>
       <div class="sl-mix-row"><span class="sl-mix-dot" style="background:#1A2744"></span><span style="flex:1">Camera track</span><strong>{{ stats.camera_subs or 0 }}</strong></div>
       <div class="sl-mix-row"><span class="sl-mix-dot" style="background:#4A6FA5"></span><span style="flex:1">Mobile track</span><strong>{{ stats.mobile_subs or 0 }}</strong></div>
-      <div class="sl-mix-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="sl-mix-dot" style="background:var(--gold)"></span><span style="flex:1">Haiku free</span><strong>{{ stats.free_users|length if stats.free_users is iterable else 0 }}</strong></div>
+      <div class="sl-mix-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="sl-mix-dot" style="background:var(--gold)"></span><span style="flex:1">Haiku free</span><strong>{{ stats.free_users or 0 }}</strong></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted)">Total paid subscribers: <strong style="color:var(--text-primary)">{{ stats.subscribers or 0 }}</strong></div>
     </div>
   </div>
@@ -1349,7 +1349,7 @@
     <div class="admin-section-header" onclick="toggleSection('haiku-members')">
       <div class="admin-section-title">
         👥 Haiku Members
-        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;padding:2px 8px;border-radius:99px;background:#F3E8FF;color:#6B21A8;border:1px solid #D8B4FE;margin-left:6px;">{{ stats.free_users|length if stats.free_users is iterable else 0 }}</span>
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;padding:2px 8px;border-radius:99px;background:#F3E8FF;color:#6B21A8;border:1px solid #D8B4FE;margin-left:6px;">{{ stats.free_users or 0 }}</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">Free tier · 10 evals lifetime</span>
@@ -1359,7 +1359,7 @@
     <div class="admin-section-body collapsed" id="body-haiku-members">
       {% if recent_admin_actions is defined %}
       {# Haiku users pulled from stats.free_users #}
-      {% if stats.free_users %}
+      {% if recent_admin_actions is defined %}{# free_users is a count not a list - Haiku member rows come from haiku_users query (Session 209) #}{% if false %}
       <table class="sl-hm-table">
         <thead>
           <tr>
@@ -1371,7 +1371,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for fu in stats.free_users %}
+          {% for fu in [] %}
           <tr>
             <td>
               <div style="font-weight:500">{{ fu.full_name or fu.username or 'User ' + fu.id|string }}</div>
@@ -1406,7 +1406,7 @@
         </tbody>
       </table>
       <div class="sl-hm-footer">
-        <span class="sl-hm-footer-note">{{ stats.free_users|length }} Haiku members · free tier</span>
+        <span class="sl-hm-footer-note">{{ stats.free_users or 0 }} Haiku members · free tier</span>
         <a href="{{ url_for('admin_dashboard', engine='haiku') }}" class="admin-nav-btn" style="font-size:13px;padding:6px 12px;min-height:36px;">View Haiku image grid →</a>
       </div>
       {% else %}
@@ -2011,7 +2011,7 @@
     <div class="admin-section-header" onclick="toggleSection('exports')">
       <div class="admin-section-title" style="color:var(--text-muted);">📊 Exports &amp; Reports</div>
       <div style="display:flex; align-items:center; gap:12px;">
-        <span class="admin-section-meta">{{ stats.subscribers }} subscribers · {{ stats.free_users|length if stats.free_users is iterable else stats.free_users }} free</span>
+        <span class="admin-section-meta">{{ stats.subscribers }} subscribers · {{ stats.free_users or 0 }} free</span>
         <span class="admin-chevron" id="chev-exports">▼</span>
       </div>
     </div>
