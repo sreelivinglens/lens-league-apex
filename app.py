@@ -1,4 +1,4 @@
-# SL-VERSION: 181.83 (Session 208, 2026-09-02 — admin_dashboard() sonnet_new_today + haiku_new_today counts (24h window) for engine tab badges. RETAINS 181.82.)
+# SL-VERSION: 181.84 (Session 208, 2026-09-02 — calibration_logs: ADD COLUMN image_id INTEGER (engine query was failing with column does not exist). RETAINS 181.83.)
 
 import os
 import re
@@ -2258,6 +2258,17 @@ def _run_startup_tasks():
             except Exception as _aal_mig:
                 db.session.rollback()
                 print(f'admin_action_log migration warning: {_aal_mig}')
+
+            # Session 208 — calibration_logs missing image_id column (engine query fails)
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS image_id INTEGER"
+                ))
+                db.session.commit()
+                print('calibration_logs image_id column OK.')
+            except Exception as _cl_mig:
+                db.session.rollback()
+                print(f'calibration_logs image_id migration warning: {_cl_mig}')
 
             print('Columns migrated OK.')
 
