@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 180.6 admin — Session 207, 2026-09-02. FREE badge (top-left, blue) on Haiku image tiles — is_haiku_try=TRUE. Previous: 180.5 admin — Paid subscribers panel + contest cache bust added. Session 206, 2026-09-01. #}
+{# SL:version 181.81 admin — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -257,6 +257,168 @@
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
   }
+
+  /* ── Session 208 additions ─────────────────────────────────── */
+
+  /* Stat bar */
+  .sl-stat-bar { display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:20px; }
+  .sl-stat-cell { background:var(--surface-1); padding:13px 14px; }
+  .sl-stat-label { font-size:13px; color:var(--text-muted); margin-bottom:4px; letter-spacing:.02em; }
+  .sl-stat-num { font-size:22px; font-weight:500; color:var(--text-primary); line-height:1; }
+  .sl-stat-num.ok { color:#2E7D32; }
+  .sl-stat-num.warn { color:#B45309; }
+  .sl-stat-delta { font-size:13px; color:var(--text-muted); margin-top:3px; }
+  .sl-stat-delta.up { color:#2E7D32; }
+
+  /* Guide notes */
+  .sl-guide { background:#FFFBEB; border:1px solid #FDE68A; border-left:4px solid var(--gold); border-radius:0 8px 8px 0; padding:10px 14px; margin-bottom:10px; font-size:14px; color:var(--text-primary); line-height:1.6; }
+  .sl-guide strong { font-weight:600; color:#92400E; }
+  .sl-guide ul { margin:5px 0 0 16px; }
+  .sl-guide ul li { margin-bottom:3px; }
+  .sl-guide.urgent { background:#FEF2F2; border-color:#FECACA; border-left-color:#B91C1C; }
+  .sl-guide.urgent strong { color:#B91C1C; }
+  .sl-guide.info { background:#EFF6FF; border-color:#BFDBFE; border-left-color:#1A2744; }
+  .sl-guide.info strong { color:#1A2744; }
+  .sl-guide.ok { background:#F0FDF4; border-color:#BBF7D0; border-left-color:#2E7D32; }
+  .sl-guide.ok strong { color:#2E7D32; }
+
+  /* Dashboard cards grid */
+  .sl-dash-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .sl-dash-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+  .sl-dash-card { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:15px 16px; }
+  .sl-dash-card-title { font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
+
+  /* Funnel */
+  .sl-funnel-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); }
+  .sl-funnel-row:last-child { border-bottom:none; }
+  .sl-funnel-label { font-size:13px; color:var(--text-primary); width:140px; flex-shrink:0; }
+  .sl-funnel-bar-wrap { flex:1; height:14px; background:var(--surface-2); border-radius:3px; overflow:hidden; }
+  .sl-funnel-bar { height:100%; border-radius:3px; }
+  .sl-funnel-n { font-size:13px; font-weight:500; color:var(--text-primary); width:28px; text-align:right; flex-shrink:0; }
+  .sl-funnel-pct { font-size:13px; color:var(--text-muted); width:36px; text-align:right; flex-shrink:0; }
+  .sl-funnel-total { font-size:13px; padding-top:8px; margin-top:4px; border-top:1px solid var(--border); color:var(--text-primary); }
+
+  /* Eval summary */
+  .sl-eval-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); font-size:14px; color:var(--text-primary); }
+  .sl-eval-row:last-child { border-bottom:none; }
+  .sl-eval-val.warn { color:#B45309; font-weight:500; }
+  .sl-eval-val.ok { color:#2E7D32; font-weight:500; }
+  .sl-eval-highlight { background:#FFF8E8; border-radius:6px; padding:9px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center; }
+
+  /* City bars */
+  .sl-city-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); }
+  .sl-city-row:last-child { border-bottom:none; }
+  .sl-city-name { font-size:13px; color:var(--text-primary); width:80px; flex-shrink:0; }
+  .sl-city-bar-wrap { flex:1; height:9px; background:var(--surface-2); border-radius:99px; overflow:hidden; }
+  .sl-city-bar { height:100%; background:var(--gold); border-radius:99px; }
+  .sl-city-n { font-size:13px; color:var(--text-muted); width:54px; text-align:right; flex-shrink:0; }
+
+  /* Activity feed */
+  .sl-act-row { display:flex; align-items:flex-start; gap:9px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .sl-act-row:last-child { border-bottom:none; }
+  .sl-act-icon { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; }
+  .sl-act-icon.join { background:#E8F5E9; }
+  .sl-act-icon.eval { background:#E8EEF8; }
+  .sl-act-icon.flag { background:#FEF2F2; }
+  .sl-act-main { flex:1; min-width:0; }
+  .sl-act-text { font-size:14px; color:var(--text-primary); }
+  .sl-act-meta { font-size:13px; color:var(--text-muted); margin-top:1px; }
+  .sl-act-time { font-size:13px; color:var(--text-muted); flex-shrink:0; margin-top:2px; white-space:nowrap; }
+
+  /* Mix */
+  .sl-mix-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); font-size:14px; color:var(--text-primary); }
+  .sl-mix-row:last-child { border-bottom:none; }
+  .sl-mix-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+  /* Alert rows */
+  .sl-alert-row { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .sl-alert-row:last-child { border-bottom:none; }
+  .sl-alert-icon { font-size:17px; flex-shrink:0; margin-top:1px; }
+  .sl-alert-title { font-size:14px; font-weight:500; color:var(--text-primary); }
+  .sl-alert-sub { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .sl-alert-link { font-size:13px; color:var(--gold); text-decoration:none; white-space:nowrap; flex-shrink:0; padding:4px 10px; border:1px solid var(--gold); border-radius:4px; min-height:32px; display:inline-flex; align-items:center; }
+
+  /* Quick actions */
+  .sl-qa-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .sl-qa-btn { display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; font-size:13px; color:var(--text-primary); cursor:pointer; font-family:inherit; min-height:44px; text-align:left; width:100%; text-decoration:none; }
+  .sl-qa-btn:hover { border-color:var(--gold); background:var(--gold-subtle); }
+
+  /* Unified search */
+  .sl-search-block { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:14px; }
+  .sl-search-row { display:flex; gap:8px; margin-bottom:10px; }
+  .sl-search-input { flex:1; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:16px; background:var(--surface-2); color:var(--text-primary); font-family:inherit; outline:none; min-height:44px; }
+  .sl-search-input:focus { border-color:var(--gold); }
+  .sl-search-btn { padding:9px 18px; border-radius:6px; border:1.5px solid var(--gold); background:var(--gold); color:#1A1A18; font-size:15px; cursor:pointer; font-family:var(--font-mono); font-weight:700; min-height:44px; }
+  .sl-search-btn:hover { background:var(--gold-dark); }
+  .sl-search-pills { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+  .sl-search-pill-label { font-size:13px; color:var(--text-muted); }
+  .sl-pill { padding:4px 12px; border-radius:99px; border:1px solid var(--border); font-size:13px; cursor:pointer; background:var(--surface-2); color:var(--text-secondary); min-height:32px; display:inline-flex; align-items:center; }
+  .sl-pill:hover { border-color:var(--gold); }
+  .sl-pill.active { background:var(--text-primary); border-color:var(--text-primary); color:var(--surface-1); }
+  .sl-search-results { margin-top:12px; border-top:1px solid var(--border); padding-top:10px; display:none; }
+  .sl-res-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); }
+  .sl-res-row:last-child { border-bottom:none; }
+  .sl-res-av { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+  .sl-res-main { flex:1; min-width:0; }
+  .sl-res-name { font-size:14px; font-weight:500; color:var(--text-primary); }
+  .sl-res-meta { font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sl-res-badge { font-size:13px; padding:2px 7px; border-radius:99px; font-weight:700; flex-shrink:0; }
+  .sl-rb-paid { background:#E8F5E9; color:#2E7D32; }
+  .sl-rb-haiku { background:#E8EEF8; color:#1A2744; }
+  .sl-rb-img { background:#FFF8E1; color:#B45309; }
+  .sl-res-action { font-size:13px; color:var(--gold); text-decoration:none; white-space:nowrap; flex-shrink:0; padding:4px 10px; border:1px solid var(--gold); border-radius:4px; }
+
+  /* Haiku image engine tabs */
+  .sl-engine-tabs { display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-bottom:12px; width:fit-content; }
+  .sl-engine-tab { font-size:13px; padding:8px 16px; background:var(--surface-2); color:var(--text-secondary); cursor:pointer; border:none; font-family:var(--font-mono); font-weight:600; min-height:40px; border-right:1px solid var(--border); letter-spacing:.5px; }
+  .sl-engine-tab:last-child { border-right:none; }
+  .sl-engine-tab.active-sonnet { background:#1A2744; color:#fff; }
+  .sl-engine-tab.active-haiku { background:#6B21A8; color:#fff; }
+
+  /* Haiku members panel */
+  .sl-hm-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:14px; }
+  .sl-hm-table th { font-size:13px; color:var(--text-muted); font-weight:600; text-align:left; padding:0 8px 8px 0; border-bottom:1px solid var(--border); letter-spacing:.04em; text-transform:uppercase; }
+  .sl-hm-table td { padding:10px 8px 10px 0; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text-primary); }
+  .sl-hm-table tr:last-child td { border-bottom:none; }
+  .sl-hm-dots { display:flex; gap:3px; align-items:center; flex-wrap:wrap; }
+  .sl-hm-dot { width:7px; height:7px; border-radius:50%; background:var(--border); flex-shrink:0; }
+  .sl-hm-dot.u { background:var(--gold); }
+  .sl-hm-dot-count { font-size:13px; color:var(--text-muted); margin-left:3px; }
+  .sl-hm-status { font-size:13px; padding:3px 8px; border-radius:99px; white-space:nowrap; font-weight:600; display:inline-block; }
+  .sl-hm-active { background:#E8F5E9; color:#2E7D32; }
+  .sl-hm-warn { background:#FFF3CD; color:#92400E; }
+  .sl-hm-new { background:#F3E8FF; color:#6B21A8; }
+  .sl-hm-none { background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border); }
+  .sl-hm-btn { font-size:13px; padding:5px 9px; border-radius:5px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-primary); cursor:pointer; min-height:32px; display:inline-flex; align-items:center; font-family:inherit; }
+  .sl-hm-btn:hover { border-color:var(--gold); }
+  .sl-hm-footer { margin-top:12px; padding-top:12px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  .sl-hm-footer-note { font-size:13px; color:var(--text-muted); }
+
+  /* Audit log feed */
+  .sl-audit-row { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .sl-audit-row:last-child { border-bottom:none; }
+  .sl-audit-badge { font-size:13px; font-weight:700; padding:2px 7px; border-radius:4px; white-space:nowrap; flex-shrink:0; margin-top:2px; letter-spacing:.03em; }
+  .sl-ab-rescore { background:#E8EEF8; color:#1A2744; }
+  .sl-ab-delete { background:#FEF2F2; color:#B91C1C; }
+  .sl-ab-flag { background:#FFF3CD; color:#92400E; }
+  .sl-ab-vis { background:#F3E8FF; color:#6B21A8; }
+  .sl-ab-sub { background:#E8F5E9; color:#2E7D32; }
+  .sl-ab-recalib { background:#FFF8E1; color:#B45309; }
+  .sl-audit-detail { flex:1; min-width:0; color:var(--text-primary); line-height:1.5; }
+  .sl-audit-sub { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .sl-audit-ts { font-size:13px; color:var(--text-muted); white-space:nowrap; flex-shrink:0; margin-top:2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sl-stat-bar { grid-template-columns:repeat(3,1fr); }
+    .sl-dash-grid2, .sl-dash-grid3 { grid-template-columns:1fr; }
+    .sl-qa-grid { grid-template-columns:1fr; }
+    .sl-hm-table th:nth-child(3), .sl-hm-table td:nth-child(3) { display:none; }
+  }
+  @media (max-width: 600px) {
+    .sl-stat-bar { grid-template-columns:repeat(2,1fr); }
+    .sl-hm-table th:nth-child(5), .sl-hm-table td:nth-child(5) { display:none; }
+  }
 </style>
 {% endblock %}
 
@@ -271,12 +433,104 @@
     </div>
   </div>
 
+  {# ── Session 208: Stat bar ── #}
+  <div class="sl-guide info" style="margin-bottom:10px"><strong>Daily routine:</strong> Check stat bar first. Amber numbers need investigation. Red needs immediate action. Then check Alerts and Needs Attention before anything else.</div>
+  <div class="sl-stat-bar">
+    <div class="sl-stat-cell"><div class="sl-stat-label">Total members</div><div class="sl-stat-num">{{ (stats.subscribers or 0) + (stats.free_users|length if stats.free_users is iterable else 0) }}</div><div class="sl-stat-delta up">↑ {{ new_signups_7days }} this week</div></div>
+    <div class="sl-stat-cell"><div class="sl-stat-label">Paid</div><div class="sl-stat-num ok">{{ stats.subscribers or 0 }}</div><div class="sl-stat-delta">Camera {{ stats.camera_subs or 0 }} · Mobile {{ stats.mobile_subs or 0 }}</div></div>
+    <div class="sl-stat-cell"><div class="sl-stat-label">Haiku free</div><div class="sl-stat-num">{{ stats.free_users|length if stats.free_users is iterable else 0 }}</div><div class="sl-stat-delta up">↑ {{ new_signups_7days }} this week</div></div>
+    <div class="sl-stat-cell"><div class="sl-stat-label">Images today</div><div class="sl-stat-num">{{ new_signups_today or 0 }}</div><div class="sl-stat-delta">{{ scored or 0 }} total scored</div></div>
+    <div class="sl-stat-cell"><div class="sl-stat-label">Evals pending</div><div class="sl-stat-num {% if pending > 0 %}warn{% else %}ok{% endif %}">{{ pending or 0 }}</div><div class="sl-stat-delta">{{ stuck_images|length if stuck_images else 0 }} stuck</div></div>
+    <div class="sl-stat-cell"><div class="sl-stat-label">Open flags</div><div class="sl-stat-num {% if open_reports_count > 0 %}warn{% else %}ok{% endif %}">{{ open_reports_count or 0 }}</div><div class="sl-stat-delta">{{ csi_unreviewed_count or 0 }} CSI unreviewed</div></div>
+  </div>
+
+  {# ── Session 208: Dashboard cards ── #}
+  <div class="sl-dash-grid3">
+    <div class="sl-dash-card">
+      <div class="sl-dash-card-title">Member funnel</div>
+      <div class="sl-guide ok" style="margin-bottom:8px;font-size:13px"><strong>Watch:</strong> If Subscribed drops below 30% of Eval delivered — conversion needs attention.</div>
+      {% set _total_reg = total_users or 1 %}
+      <div class="sl-funnel-row"><span class="sl-funnel-label">Registered</span><div class="sl-funnel-bar-wrap"><div class="sl-funnel-bar" style="width:100%;background:#E8EEF8"></div></div><span class="sl-funnel-n">{{ total_users }}</span><span class="sl-funnel-pct">100%</span></div>
+      <div class="sl-funnel-row"><span class="sl-funnel-label">Subscribed</span><div class="sl-funnel-bar-wrap"><div class="sl-funnel-bar" style="width:{{ ((stats.subscribers or 0) / _total_reg * 100)|int }}%;background:var(--gold)"></div></div><span class="sl-funnel-n">{{ stats.subscribers or 0 }}</span><span class="sl-funnel-pct">{{ ((stats.subscribers or 0) / _total_reg * 100)|int }}%</span></div>
+      <div class="sl-funnel-total">Overall conversion: <strong>{{ ((stats.subscribers or 0) / _total_reg * 100)|int }}%</strong></div>
+    </div>
+    <div class="sl-dash-card">
+      <div class="sl-dash-card-title">Evaluations summary</div>
+      <div class="sl-guide ok" style="margin-bottom:8px;font-size:13px"><strong>Action:</strong> If In progress is amber for more than 30 min — check Railway logs for <code>[score]</code> errors.</div>
+      <div class="sl-eval-row"><span>Total scored</span><span>{{ scored or 0 }}</span></div>
+      <div class="sl-eval-row"><span>Pending</span><span class="sl-eval-val {% if (pending or 0) > 0 %}warn{% else %}ok{% endif %}">{{ pending or 0 }}</span></div>
+      <div class="sl-eval-row"><span>Stuck (&gt;30 min)</span><span class="sl-eval-val {% if stuck_images|length > 0 %}warn{% else %}ok{% endif %}">{{ stuck_images|length if stuck_images else 0 }}</span></div>
+      <div class="sl-eval-row"><span>Open flags</span><span class="sl-eval-val {% if open_reports_count > 0 %}warn{% else %}ok{% endif %}">{{ open_reports_count or 0 }}</span></div>
+      <div class="sl-eval-highlight">
+        <span style="font-size:13px;color:var(--text-muted)">Avg evaluation (all genres)</span>
+        <span style="font-size:18px;font-weight:500">{% if platform_cal %}{{ '%.2f'|format(platform_cal.avg_score) }} / 10{% else %}—{% endif %}</span>
+      </div>
+    </div>
+    <div class="sl-dash-card">
+      <div class="sl-dash-card-title">Subscription mix</div>
+      <div class="sl-guide ok" style="margin-bottom:8px;font-size:13px"><strong>Note:</strong> Haiku = free tier, no revenue. Only Camera + Mobile are paid.</div>
+      <div class="sl-mix-row"><span class="sl-mix-dot" style="background:#1A2744"></span><span style="flex:1">Camera track</span><strong>{{ stats.camera_subs or 0 }}</strong></div>
+      <div class="sl-mix-row"><span class="sl-mix-dot" style="background:#4A6FA5"></span><span style="flex:1">Mobile track</span><strong>{{ stats.mobile_subs or 0 }}</strong></div>
+      <div class="sl-mix-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="sl-mix-dot" style="background:var(--gold)"></span><span style="flex:1">Haiku free</span><strong>{{ stats.free_users|length if stats.free_users is iterable else 0 }}</strong></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted)">Total paid subscribers: <strong style="color:var(--text-primary)">{{ stats.subscribers or 0 }}</strong></div>
+    </div>
+  </div>
+
+  <div class="sl-dash-grid2">
+    <div class="sl-dash-card">
+      <div class="sl-dash-card-title">Alerts</div>
+      <div class="sl-guide" style="margin-bottom:8px;font-size:13px"><strong>These need action today.</strong> Orange = investigate. Red = act now.</div>
+      {% if stuck_images %}
+      {% for img in stuck_images[:2] %}
+      <div class="sl-alert-row"><span class="sl-alert-icon">⚠️</span><div style="flex:1"><div class="sl-alert-title">Image stuck — {{ img.asset_name or 'Untitled' }}</div><div class="sl-alert-sub">user {{ img.user_id }} · check Railway logs for [score] {{ img.id }}</div></div><a href="/image/{{ img.id }}" class="sl-alert-link" target="_blank">View</a></div>
+      {% endfor %}
+      {% else %}
+      <div class="sl-alert-row"><span class="sl-alert-icon">✅</span><div style="flex:1"><div class="sl-alert-title">No stuck images</div><div class="sl-alert-sub">All processing queues clear</div></div></div>
+      {% endif %}
+      {% if drift_alerts %}
+      {% for da in drift_alerts[:2] %}
+      <div class="sl-alert-row"><span class="sl-alert-icon">⚠️</span><div style="flex:1"><div class="sl-alert-title">Calibration drift — {{ da.genre }}</div><div class="sl-alert-sub">{{ da.msg }}</div></div><a href="{{ url_for('admin_calibration_notes') }}" class="sl-alert-link">Calibrate</a></div>
+      {% endfor %}
+      {% else %}
+      <div class="sl-alert-row"><span class="sl-alert-icon">✅</span><div style="flex:1"><div class="sl-alert-title">No calibration drift</div><div class="sl-alert-sub">All genres within normal range</div></div></div>
+      {% endif %}
+    </div>
+    <div class="sl-dash-card">
+      <div class="sl-dash-card-title">Quick actions</div>
+      <div class="sl-guide" style="margin-bottom:8px;font-size:13px"><strong>One tap</strong> for most common tasks.</div>
+      <div class="sl-qa-grid">
+        <a href="{{ url_for('admin_emailer') }}" class="sl-qa-btn">✉ Send newsletter</a>
+        <a href="{{ url_for('admin_contact_inbox') }}" class="sl-qa-btn">📬 View inbox</a>
+        <a href="{{ url_for('admin_contests') }}" class="sl-qa-btn">🏆 Programmes</a>
+        <a href="{{ url_for('admin_weekly_challenge') }}" class="sl-qa-btn">📅 Weekly assignment</a>
+        <a href="{{ url_for('admin_mentors') }}" class="sl-qa-btn">🏫 Mentors</a>
+        <a href="{{ url_for('admin_audit_log') }}" class="sl-qa-btn">🛡 Full audit log</a>
+      </div>
+    </div>
+  </div>
+
+  {# ── Session 208: Unified search ── #}
+  <div class="sl-guide info"><strong>Search tip:</strong> Use "Image ID" pill to find image #1405 directly → links to scorecard. Use "Members" pill and type email to find any user and see all their images.</div>
+  <div class="sl-search-block">
+    <div class="sl-search-row">
+      <input class="sl-search-input" id="slAdminSearch" name="q" value="{{ admin_q or '' }}" placeholder="Name, email, image title, image ID, location…" autocomplete="off" onkeydown="if(event.key==='Enter')slAdminDoSearch()">
+      <button class="sl-search-btn" onclick="slAdminDoSearch()">Search</button>
+    </div>
+    <div class="sl-search-pills">
+      <span class="sl-search-pill-label">Search in</span>
+      <span class="sl-pill active" onclick="slSetPill(this,'all')">All</span>
+      <span class="sl-pill" onclick="slSetPill(this,'members')">Members</span>
+      <span class="sl-pill" onclick="slSetPill(this,'images')">Images</span>
+      <span class="sl-pill" onclick="slSetPill(this,'image_id')">Image ID</span>
+    </div>
+  </div>
+
   {# ── Top nav ── #}
   {# ── Admin nav — grouped by function ── #}
   <div style="margin-bottom:24px;">
 
     {# GROUP 1: Daily checks — things with live counts that need attention #}
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Daily</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Daily</div>
     <div class="admin-nav" style="margin-bottom:14px;">
       <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
         ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
@@ -291,10 +545,12 @@
       <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
       <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
       <a href="{{ url_for("admin_engagement") }}" class="admin-nav-btn">📈 Engagement</a>
+      <a href="{{ url_for("admin_emailer") }}" class="admin-nav-btn slate">✉ Newsletter</a>
+      <a href="{{ url_for("admin_audit_log") }}" class="admin-nav-btn">🛡 Audit Log</a>
     </div>
 
     {# GROUP 2: Content & platform — programme, content, judging #}
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Content & Platform</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Content & Platform</div>
     <div class="admin-nav" style="margin-bottom:14px;">
       <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
       <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
@@ -306,7 +562,7 @@
     </div>
 
     {# GROUP 3: Tools & data — occasional, not daily #}
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Tools & Data</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Tools & Data</div>
     <div class="admin-nav" style="margin-bottom:14px;">
       <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
       <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
@@ -316,7 +572,7 @@
     </div>
 
     {# GROUP 4: Security — flagged, bots, blocks #}
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Security</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Security</div>
     <div class="admin-nav">
       <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
       <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
@@ -490,6 +746,13 @@
         <a href="{{ url_for("admin_dashboard") }}" class="act-btn" style="padding:8px 14px; text-decoration:none;">✕ Clear</a>
         {% endif %}
       </form>
+
+      {# Session 208: Sonnet / Haiku engine tab + guide #}
+      <div class="sl-guide info" style="margin-bottom:10px;font-size:13px"><strong>Sonnet tab</strong> = paid images. Use RAW for verification. Use Rescore only after a calibration/prompt fix. &nbsp;|&nbsp; <strong>Haiku free tab</strong> = free tier images. No RAW gate. Rescore if engine misidentified something (e.g. wrong species).</div>
+      <div class="sl-engine-tabs" style="margin-bottom:12px;">
+        <button class="sl-engine-tab {% if not request.args.get('engine') or request.args.get('engine') == 'sonnet' %}active-sonnet{% endif %}" onclick="slSwitchEngine('sonnet',this)">📷 Sonnet (paid)</button>
+        <button class="sl-engine-tab {% if request.args.get('engine') == 'haiku' %}active-haiku{% endif %}" onclick="slSwitchEngine('haiku',this)">📷 Haiku free</button>
+      </div>
 
       {# Session 132 — Mobile DDI: track filter #}
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
@@ -1077,6 +1340,121 @@
     </div>
   </div>
   {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════
+     SESSION 208 — HAIKU MEMBERS PANEL
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="sl-guide info"><strong>Haiku members:</strong> Onboarding = registered but incomplete. No uploads = zero images uploaded. Send a nudge email from the Email button. When someone hits 10/10 evals — send conversion email to paid.</div>
+  <div class="admin-section" id="section-haiku-members">
+    <div class="admin-section-header" onclick="toggleSection('haiku-members')">
+      <div class="admin-section-title">
+        👥 Haiku Members
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;padding:2px 8px;border-radius:99px;background:#F3E8FF;color:#6B21A8;border:1px solid #D8B4FE;margin-left:6px;">{{ stats.free_users|length if stats.free_users is iterable else 0 }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">Free tier · 10 evals lifetime</span>
+        <span class="admin-chevron" id="chev-haiku-members">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body collapsed" id="body-haiku-members">
+      {% if recent_admin_actions is defined %}
+      {# Haiku users pulled from stats.free_users #}
+      {% if stats.free_users %}
+      <table class="sl-hm-table">
+        <thead>
+          <tr>
+            <th style="width:30%">Member</th>
+            <th style="width:22%">Used / limit</th>
+            <th style="width:18%">Last active</th>
+            <th style="width:16%">Status</th>
+            <th style="width:14%;text-align:right"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fu in stats.free_users %}
+          <tr>
+            <td>
+              <div style="font-weight:500">{{ fu.full_name or fu.username or 'User ' + fu.id|string }}</div>
+              <div style="font-size:13px;color:var(--text-muted)">user {{ fu.id }}{% if fu.city %} · {{ fu.city }}{% endif %}</div>
+            </td>
+            <td>
+              <div class="sl-hm-dots">
+                {% set _used = fu.haiku_used or 0 %}
+                {% set _limit = fu.haiku_limit or 10 %}
+                {% for i in range([_limit, 10]|min) %}<div class="sl-hm-dot {% if i < _used %}u{% endif %}"></div>{% endfor %}
+                <span class="sl-hm-dot-count">{{ _used }}/{{ _limit }}</span>
+              </div>
+            </td>
+            <td style="color:var(--text-muted);font-size:13px">{{ fu.last_active.strftime('%d %b') if fu.last_active else '—' }}</td>
+            <td>
+              {% if fu.haiku_used == 0 %}
+              <span class="sl-hm-status sl-hm-none">No uploads</span>
+              {% elif not fu.onboarding_complete %}
+              <span class="sl-hm-status sl-hm-warn">Onboarding</span>
+              {% elif fu.last_active and (now() - fu.last_active).days < 3 %}
+              <span class="sl-hm-status sl-hm-new">New</span>
+              {% else %}
+              <span class="sl-hm-status sl-hm-active">Active</span>
+              {% endif %}
+            </td>
+            <td style="text-align:right">
+              <a href="/try/gallery?user={{ fu.id }}" class="sl-hm-btn" style="margin-right:4px">Gallery</a>
+              <a href="mailto:{{ fu.email }}" class="sl-hm-btn">Email</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="sl-hm-footer">
+        <span class="sl-hm-footer-note">{{ stats.free_users|length }} Haiku members · free tier</span>
+        <a href="{{ url_for('admin_dashboard', engine='haiku') }}" class="admin-nav-btn" style="font-size:13px;padding:6px 12px;min-height:36px;">View Haiku image grid →</a>
+      </div>
+      {% else %}
+      <div style="padding:20px;color:var(--text-muted);font-size:14px">No Haiku free users yet.</div>
+      {% endif %}
+      {% else %}
+      <div style="padding:20px;color:var(--text-muted);font-size:14px">Haiku member data loading — refresh the page if this persists.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
+     SESSION 208 — AUDIT & LEGAL LOG FEED
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="sl-guide urgent"><strong>Audit &amp; Legal:</strong> Every rescore, deletion, flag, subscription change and recalibration is logged here permanently. If a member disputes any action — click Full audit log, filter by their email, and pull the timestamped evidence.</div>
+  <div class="admin-section" id="section-audit-log">
+    <div class="admin-section-header" onclick="toggleSection('audit-log')">
+      <div class="admin-section-title">🛡 Recent Admin Actions</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">Last 20 · append-only · <a href="{{ url_for('admin_audit_log') }}" style="color:var(--gold);">Full log with search →</a></span>
+        <span class="admin-chevron" id="chev-audit-log">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body collapsed" id="body-audit-log">
+      {% if recent_admin_actions %}
+      {% for a in recent_admin_actions %}
+      <div class="sl-audit-row">
+        <span class="sl-audit-badge {% if a.action == 'force_rescore' %}sl-ab-rescore{% elif a.action == 'delete_image' %}sl-ab-delete{% elif a.action == 'flag_image' %}sl-ab-flag{% elif a.action == 'toggle_visibility' %}sl-ab-vis{% elif a.action == 'toggle_subscription' %}sl-ab-sub{% else %}sl-ab-recalib{% endif %}">{{ a.action }}</span>
+        <div class="sl-audit-detail">
+          {{ a.target_type|capitalize }} #{{ a.target_id }}
+          {% if a.detail.get('asset_name') %} · {{ a.detail.get('asset_name') }}{% endif %}
+          {% if a.detail.get('email') %} · {{ a.detail.get('email') }}{% endif %}
+          {% if a.action == 'delete_image' %}<span style="color:#B91C1C;font-weight:600"> · Permanently deleted</span>{% endif %}
+          {% if a.action == 'toggle_subscription' %} · {{ 'Activated' if a.detail.get('is_subscribed_after') else 'Deactivated' }} · {{ a.detail.get('track', '—') }}{% endif %}
+          {% if a.action == 'flag_image' %} · {{ a.detail.get('reason', '—')[:60] }}{% endif %}
+          <div class="sl-audit-sub">Admin: {{ a.admin_name }}</div>
+        </div>
+        <div class="sl-audit-ts">{{ a.created_at.strftime('%d %b %H:%M') if a.created_at else '—' }}</div>
+      </div>
+      {% endfor %}
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <a href="{{ url_for('admin_audit_log') }}" style="font-size:13px;color:var(--gold);text-decoration:none;font-weight:600;">View full audit log → filter by email, action, date range</a>
+      </div>
+      {% else %}
+      <div style="padding:20px;color:var(--text-muted);font-size:14px">No admin actions logged yet. Actions appear here after first rescore, flag, or subscription change.</div>
+      {% endif %}
+    </div>
+  </div>
 
   {# ══════════════════════════════════════════════════════════════════
      SECTION 2 — PLATFORM STATS & CALIBRATION (collapsed)
@@ -1872,6 +2250,31 @@
 
 {% block extra_js %}
 <script>
+/* Session 208 — unified search, engine tab, pill filter */
+function slSetPill(el, type) {
+  document.querySelectorAll('.sl-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  el.dataset.type = type;
+}
+function slAdminDoSearch() {
+  const q = document.getElementById('slAdminSearch').value.trim();
+  const activePill = document.querySelector('.sl-pill.active');
+  const type = activePill ? activePill.dataset.type || 'all' : 'all';
+  const url = new URL(window.location.href);
+  url.searchParams.set('q', q);
+  if (type && type !== 'all') url.searchParams.set('search_type', type);
+  window.location.href = url.toString();
+}
+function slSwitchEngine(eng, btn) {
+  document.querySelectorAll('.sl-engine-tab').forEach(t => {
+    t.classList.remove('active-sonnet', 'active-haiku');
+  });
+  btn.classList.add(eng === 'sonnet' ? 'active-sonnet' : 'active-haiku');
+  const url = new URL(window.location.href);
+  url.searchParams.set('engine', eng);
+  window.location.href = url.toString();
+}
+
 function toggleSection(name) {
   const body = document.getElementById('body-' + name);
   const chev = document.getElementById('chev-' + name);
