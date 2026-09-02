@@ -1,4 +1,4 @@
-# SL-VERSION: 181.78 (Session 208, 2026-09-02 — league_haiku() reverted to Sonnet feed — Community Gallery deferred, insufficient Haiku images. leaderboard() haiku guard retained. RETAINS 181.77.)
+# SL-VERSION: 181.79 (Session 208, 2026-09-02 — Audit & Legal: admin_action_log table added (startup migration). _log_admin_action() helper added. 6 admin routes now log to DB: force_rescore, delete_image, toggle_visibility, toggle_subscription, flag_image, recalibrate. RETAINS 181.78.)
 
 import os
 import re
@@ -2236,6 +2236,28 @@ def _run_startup_tasks():
             except Exception as _bip_mig:
                 db.session.rollback()
                 print(f'blocked_ips migration warning: {_bip_mig}')
+
+            # Session 208 — Audit & Legal: admin_action_log
+            # Permanent record of every destructive or consequential admin action.
+            # Used for dispute resolution, subscription audit, and legal evidence trail.
+            # Never deleted — append-only. detail column stores JSON snapshot.
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS admin_action_log ("
+                    "  id          SERIAL PRIMARY KEY,"
+                    "  admin_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,"
+                    "  action      VARCHAR(60)  NOT NULL,"
+                    "  target_type VARCHAR(20)  NOT NULL,"
+                    "  target_id   INTEGER      NOT NULL,"
+                    "  detail      TEXT,"
+                    "  created_at  TIMESTAMP DEFAULT NOW()"
+                    ")"
+                ))
+                db.session.commit()
+                print('admin_action_log table OK.')
+            except Exception as _aal_mig:
+                db.session.rollback()
+                print(f'admin_action_log migration warning: {_aal_mig}')
 
             print('Columns migrated OK.')
 
@@ -11108,6 +11130,31 @@ def score_status(image_id):
     })
 
 
+# ── AUDIT & LEGAL HELPER — Session 208 ─────────────────────────────────────
+# Append-only log of every consequential admin action.
+# Called from admin routes — never raises, never blocks the action.
+# detail: JSON string with before/after state relevant to the action.
+def _log_admin_action(action, target_type, target_id, detail=None):
+    """Insert one row into admin_action_log. Silent on failure."""
+    try:
+        import json as _laj
+        db.session.execute(db.text(
+            "INSERT INTO admin_action_log (admin_id, action, target_type, target_id, detail) "
+            "VALUES (:aid, :action, :ttype, :tid, :detail)"
+        ), {
+            'aid':    getattr(current_user, 'id', None),
+            'action': action,
+            'ttype':  target_type,
+            'tid':    target_id,
+            'detail': _laj.dumps(detail) if detail else None,
+        })
+        db.session.commit()
+    except Exception as _lae:
+        db.session.rollback()
+        app.logger.warning(f'[admin_action_log] Failed to log {action} on {target_type} {target_id}: {_lae}')
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 @app.route('/admin/image/<int:image_id>/force-rescore', methods=['POST'])
 @login_required
 @admin_required
@@ -11131,6 +11178,11 @@ def admin_force_rescore(image_id):
     famous-event calibration gate).
     """
     img = Image.query.get_or_404(image_id)
+
+    _log_admin_action('force_rescore', 'image', image_id, {
+        'asset_name': img.asset_name, 'score_before': float(img.score or 0),
+        'tier_before': img.tier, 'user_id': img.user_id
+    })
 
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
@@ -13195,6 +13247,12 @@ def score_image(image_id):
         byline_1=request.form.get('byline_1','')
         byline_2=request.form.get('byline_2','')
         iucn_tag=request.form.get('iucn_tag','')
+        _log_admin_action('recalibrate', 'image', image_id, {
+            'asset_name': img.asset_name, 'score_before': float(img.score or 0),
+            'tier_before': img.tier, 'user_id': img.user_id,
+            'dod': dod, 'disruption': disruption, 'dm': dm, 'wonder': wonder, 'aq': aq,
+            'reason': reason, 'caveat': caveat
+        })
         final_score, tier, soul_bonus, checks = calculate_score(img.genre, dod, disruption, dm, wonder, aq)
         img.dod_score=dod; img.disruption_score=disruption; img.dm_score=dm
         img.wonder_score=wonder; img.aq_score=aq; img.score=final_score
@@ -16460,6 +16518,11 @@ def delete_image(image_id):
 @admin_required
 def admin_delete_image(image_id):
     img = Image.query.get_or_404(image_id)
+    _log_admin_action('delete_image', 'image', image_id, {
+        'asset_name': img.asset_name, 'score': float(img.score or 0),
+        'tier': img.tier, 'user_id': img.user_id,
+        'genre': img.genre, 'thumb_url': img.thumb_url
+    })
     if img.thumb_url:
         try:
             key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
@@ -17418,6 +17481,9 @@ def admin_toggle_visibility(image_id):
     img.is_public = not img.is_public
     db.session.commit()
     state = 'public' if img.is_public else 'hidden'
+    _log_admin_action('toggle_visibility', 'image', image_id, {
+        'asset_name': img.asset_name, 'is_public_after': img.is_public, 'user_id': img.user_id
+    })
     flash(f'Image "{img.asset_name or "Untitled"}" is now {state}.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
@@ -17441,7 +17507,8 @@ def owner_toggle_visibility(image_id):
 @admin_required
 def admin_toggle_subscription(user_id):
     user = User.query.get_or_404(user_id)
-    user.is_subscribed = not getattr(user, 'is_subscribed', False)
+    _sub_before = getattr(user, 'is_subscribed', False)
+    user.is_subscribed = not _sub_before
     if user.is_subscribed:
         user.subscription_track = request.form.get('track', 'camera')
         user.subscription_plan  = request.form.get('plan', 'uat')  # UAT default — unlimited uploads
@@ -17450,6 +17517,11 @@ def admin_toggle_subscription(user_id):
         user.subscription_track = None
         user.subscription_plan  = None
     db.session.commit()
+    _log_admin_action('toggle_subscription', 'user', user_id, {
+        'email': user.email, 'full_name': user.full_name,
+        'is_subscribed_before': _sub_before, 'is_subscribed_after': user.is_subscribed,
+        'track': user.subscription_track, 'plan': user.subscription_plan
+    })
     status = 'activated' if user.is_subscribed else 'deactivated'
     flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
     return redirect(url_for('admin_users'))
@@ -18450,6 +18522,9 @@ def admin_flag_image(image_id):
     img.score          = 0.0
     img.tier           = 'Rookie'
     db.session.commit()
+    _log_admin_action('flag_image', 'image', image_id, {
+        'asset_name': img.asset_name, 'reason': reason, 'user_id': img.user_id
+    })
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
