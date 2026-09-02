@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 181.84 admin — Session 208, 2026-09-02. Sticky nav strip (row 2): all nav buttons as horizontally scrollable strip, grouped Daily/Content/Tools/Security. Works on mobile/iPad. Old multi-row nav block removed. RETAINS 181.83. — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
+{# SL:version 181.85 admin — Session 208, 2026-09-02. Image grid moved to first content position after sticky bar. Nav strip row 2 removed. Duplicate search removed. Images now immediately visible on load. RETAINS 181.84. — Session 208, 2026-09-02. Sticky nav strip (row 2): all nav buttons as horizontally scrollable strip, grouped Daily/Content/Tools/Security. Works on mobile/iPad. Old multi-row nav block removed. RETAINS 181.83. — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -581,229 +581,12 @@
     </div>
   </div>
 
-  {# ── Session 208: Unified search ── #}
-  <div class="sl-guide info"><strong>Search tip:</strong> Use "Image ID" pill to find image #1405 directly → links to scorecard. Use "Members" pill and type email to find any user and see all their images.</div>
-  <div class="sl-search-block">
-    <div class="sl-search-row">
-      <input class="sl-search-input" id="slAdminSearch" name="q" value="{{ admin_q or '' }}" placeholder="Name, email, image title, image ID, location…" autocomplete="off" onkeydown="if(event.key==='Enter')slAdminDoSearch()">
-      <button class="sl-search-btn" onclick="slAdminDoSearch()">Search</button>
-    </div>
-    <div class="sl-search-pills">
-      <span class="sl-search-pill-label">Search in</span>
-      <span class="sl-pill active" onclick="slSetPill(this,'all')">All</span>
-      <span class="sl-pill" onclick="slSetPill(this,'members')">Members</span>
-      <span class="sl-pill" onclick="slSetPill(this,'images')">Images</span>
-      <span class="sl-pill" onclick="slSetPill(this,'image_id')">Image ID</span>
-    </div>
-  </div>
-
   </div>{# end sl-overview-body #}
   </div>{# end sl-overview-panel #}
 
-  {# ── Session 208: Sticky nav strip — row 2 ── #}
-  <div class="sl-navstrip">
-    {# GROUP 1: Daily #}
-    <div class="sl-navstrip-group">
-      <span class="sl-navstrip-label">Daily</span>
-      <a href="{{ url_for("admin_contact_inbox") }}" class="sl-nav-pill {% if unread_contact_count > 0 %}urgent{% endif %}">
-        ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
-      </a>
-      <a href="{{ url_for("admin_reports") }}" class="sl-nav-pill red">
-        ⚑ Reports{% if open_reports_count %} <span class="badge-count">{{ open_reports_count }}</span>{% endif %}
-      </a>
-      <a href="{{ url_for("admin_csi_page") }}" class="sl-nav-pill {% if csi_unreviewed_count > 0 %}gold{% endif %}">
-        👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
-      </a>
-      <a href="{{ url_for("admin_raw_verification") }}" class="sl-nav-pill">📁 RAW</a>
-      <a href="{{ url_for("admin_subscriptions") }}" class="sl-nav-pill">💳 Subscriptions</a>
-      <a href="{{ url_for("admin_users") }}" class="sl-nav-pill">👥 Users</a>
-      <a href="{{ url_for("admin_engagement") }}" class="sl-nav-pill">📈 Engagement</a>
-      <a href="{{ url_for("admin_emailer") }}" class="sl-nav-pill">✉ Newsletter</a>
-      <a href="{{ url_for("admin_audit_log") }}" class="sl-nav-pill">🛡 Audit</a>
-    </div>
-    {# GROUP 2: Content & Platform #}
-    <div class="sl-navstrip-group">
-      <span class="sl-navstrip-label">Content</span>
-      <a href="{{ url_for("admin_curation") }}" class="sl-nav-pill">🎯 Curator</a>
-      <a href="{{ url_for("admin_contests") }}" class="sl-nav-pill">🏆 Programmes</a>
-      <a href="{{ url_for("admin_weekly_challenge") }}" class="sl-nav-pill">📅 Weekly</a>
-      <a href="{{ url_for("admin_judges") }}" class="sl-nav-pill">⚖️ Jury</a>
-      <a href="{{ url_for("admin_mentors") }}" class="sl-nav-pill">🏫 Mentors</a>
-      <a href="{{ url_for("admin_site_settings") }}" class="sl-nav-pill">📣 Fresh from SL</a>
-      <a href="{{ url_for("bulk_upload") }}" class="sl-nav-pill">⬆ Bulk Upload</a>
-    </div>
-    {# GROUP 3: Tools & Data #}
-    <div class="sl-navstrip-group">
-      <span class="sl-navstrip-label">Tools</span>
-      <a href="{{ url_for("admin_calibration_notes") }}" class="sl-nav-pill">🔧 Calibration</a>
-      <button type="button" class="sl-nav-pill" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
-      <a href="{{ url_for('admin_mim_export') }}" class="sl-nav-pill">📊 MIM Export</a>
-      <a href="{{ url_for('admin_mim_users') }}" class="sl-nav-pill">👥 MIM Users</a>
-      <a href="/admin/international-waitlist" class="sl-nav-pill">🌍 Intl Waitlist</a>
-    </div>
-    {# GROUP 4: Security #}
-    <div class="sl-navstrip-group">
-      <span class="sl-navstrip-label">Security</span>
-      <a href="/admin/bot-review" class="sl-nav-pill red">🤖 Bot Review</a>
-      <a href="/admin/blocked-ips" class="sl-nav-pill red">🚫 Blocked IPs</a>
-    </div>
-  </div>
-
-  {# ── Action Required Banner ── #}
-  {% set needs_action = recent | selectattr('needs_review') | rejectattr('is_flagged') | list %}
-  {% set flagged_items = recent | selectattr('is_flagged') | list %}
-  {% if needs_action or flagged_items or open_reports_count %}
-  <div class="action-banner">
-    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-      <span style="font-size:22px;">⚠️</span>
-      <div>
-        <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Action Required</div>
-        <div class="action-banner-text">
-          {% if needs_action %}
-            <span style="color:var(--gold); font-weight:700;">{{ needs_action|length }}</span>
-            image{{ 's' if needs_action|length != 1 else '' }} pending review
-            {% set gm_count = [] %}
-            {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% if gm_count.append(i) %}{% endif %}{% endif %}{% endfor %}
-            {% if gm_count %}&nbsp;·&nbsp;<span style="color:var(--gold); font-weight:700;">{{ gm_count|length }}</span> require RAW verification{% endif %}
-          {% endif %}
-          {% if flagged_items %}
-            {% if needs_action %}&nbsp;·&nbsp;{% endif %}
-            <span style="color:#f08080; font-weight:700;">{{ flagged_items|length }}</span>
-            flagged image{{ 's' if flagged_items|length != 1 else '' }}
-          {% endif %}
-          {% if open_reports_count %}
-            {% if needs_action or flagged_items %}&nbsp;·&nbsp;{% endif %}
-            <span style="color:#f08080; font-weight:700;">{{ open_reports_count }}</span>
-            user report{{ 's' if open_reports_count != 1 else '' }} filed
-            &nbsp;<a href="{{ url_for("admin_reports") }}" style="color:var(--red); font-weight:700; text-decoration:underline;">View Reports →</a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    <a href="#section-review" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
-      Review Now ↓
-    </a>
-  </div>
-  {% endif %}
-
-  {# ── Active contest banners — quick visibility for admin ── #}
-  {% if active_contest_banners %}
-  <div style="margin-bottom:16px;">
-    {% for ann in active_contest_banners %}
-    <div style="display:flex; align-items:center; gap:12px; background:rgba(245,197,24,0.07); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:10px 16px; margin-bottom:8px; flex-wrap:wrap;">
-      <span style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; white-space:nowrap;">● Live Banner</span>
-      <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">{{ ann.contest_type }}</span>
-      <span style="font-size:14px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ann.title }}</span>
-      <span style="font-size:13px; color:var(--text-muted); white-space:nowrap;">{{ ann.audience }}</span>
-      <a href="{{ url_for("admin_contests") }}" style="font-family:var(--font-mono); font-size:13px; color:var(--gold); text-decoration:none; white-space:nowrap; border:1px solid var(--gold); padding:4px 10px; border-radius:4px;">Manage →</a>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  {# ══════════════════════════════════════════════════════════════════
-     SECTION 1 — NEEDS ATTENTION (always open)
-  ══════════════════════════════════════════════════════════════════ #}
-  <div class="admin-section urgent" id="section-review">
-    <div class="admin-section-header" onclick="toggleSection('review')">
-      <div class="admin-section-title">
-        ⚠ Needs Attention
-        {% set _total_attention = ((needs_action|length) if needs_action else 0) + ((flagged_items|length) if flagged_items else 0) + ((error_images|length) if error_images else 0) + ((stuck_images|length) if stuck_images else 0) + (bot_count if bot_count else 0) %}
-        {% if _total_attention > 0 %}
-        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
-          {{ _total_attention }}
-        </span>
-        {% endif %}
-      </div>
-      <div style="display:flex; align-items:center; gap:16px;">
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="act-btn act-ref" style="font-size:13px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("backfill_hashes") | tojson }}, 'Backfill hashes now?')">🔍 Backfill Hashes</button>
-          <button type="button" class="act-btn act-del" style="font-size:13px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("admin_cleanup") | tojson }}, 'Delete all images with no thumbnail? Cannot be undone.')">🗑 Delete Broken</button>
-        </div>
-        <span class="admin-chevron open" id="chev-review">▼</span>
-      </div>
-    </div>
-    <div class="admin-section-body" id="body-review">
-
-      {# S162.3 — Error & stuck images block.
-         error_images: status='error' — scoring failed on both attempts.
-         stuck_images: status='processing' >10 minutes — thread died silently.
-         Both show Force Rescore button. Collapsed by default if empty. #}
-      {% if bot_count and bot_count > 0 %}
-      <div style="background:#fff8f8;border:1px solid #e57373;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
-          🤖 Suspected Bot Accounts
-          <span style="font-family:monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:12px;background:#C62828;color:#fff;margin-left:6px;">{{ bot_count }}</span>
-        </div>
-        <div style="font-size:13px;color:#666;margin-bottom:10px;">Unverified accounts with random usernames and zero images registered in the last 7 days.</div>
-        <a href="/admin/bot-review" style="display:inline-block;padding:8px 16px;background:#C62828;color:#fff;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;">Review &amp; Delete →</a>
-      </div>
-      {% endif %}
-      <div style="background:#f3e5f5;border:1px solid #9C27B0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
-          🚫 IP Block List
-        </div>
-        <div style="font-size:14px;color:#555;margin-bottom:10px;line-height:1.6;">Block bot-source IPs from registering or accessing the site. Takes effect immediately — no deploy needed.</div>
-        <a href="/admin/blocked-ips" style="display:inline-block;padding:10px 18px;background:#7B1FA2;color:#fff;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none;min-height:44px;line-height:24px;">Manage Blocked IPs →</a>
-      </div>
-      {% if error_images or stuck_images %}
-      <div style="margin-bottom:24px; border:1px solid #c0392b; border-radius:6px; overflow:hidden;">
-        <div style="background:#fdf2f2; padding:10px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #c0392b;">
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#c0392b;">⚠ Scoring Failures</span>
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:1px 8px; border-radius:99px; background:rgba(192,57,43,0.12); color:#c0392b; border:1px solid #c0392b;">
-            {{ (error_images|length) + (stuck_images|length) }}
-          </span>
-          <span style="font-size:13px; color:#666; margin-left:4px;">These images did not score. Force Rescore each one or contact the user to re-upload.</span>
-        </div>
-        <div style="padding:12px 16px; background:#fff8f8;">
-          {% for img in error_images + stuck_images %}
-          {%- set att_user = attention_users.get(img.user_id) -%}
-          <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f5dada; flex-wrap:wrap;">
-            {# Thumbnail #}
-            {% if img.thumb_url %}
-            <a href="{{ url_for('image_detail', image_id=img.id) }}" target="_blank">
-              <img src="{{ img.thumb_url }}" style="width:56px; height:44px; object-fit:cover; border-radius:4px; flex-shrink:0;">
-            </a>
-            {% else %}
-            <div style="width:56px; height:44px; background:#eee; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#999; flex-shrink:0;">No thumb</div>
-            {% endif %}
-            {# Image info #}
-            <div style="flex:1; min-width:160px;">
-              <div style="font-size:14px; font-weight:600; color:var(--text-primary); line-height:1.6;">
-                <a href="{{ url_for('image_detail', image_id=img.id) }}" target="_blank" style="color:inherit; text-decoration:none;">
-                  {{ img.asset_name or img.original_filename or 'Untitled' }}
-                </a>
-              </div>
-              <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">
-                {{ img.genre or '—' }} · {{ img.created_at.strftime('%-d %b %Y %H:%M') if img.created_at else '—' }} UTC
-              </div>
-              {% if att_user %}
-              <div style="font-size:13px; color:var(--text-muted);">
-                @{{ att_user.username }} · {{ att_user.email }}
-              </div>
-              {% endif %}
-            </div>
-            {# Status badge #}
-            <div style="flex-shrink:0;">
-              {% if img.status == 'error' %}
-              <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(192,57,43,0.12); color:#c0392b; border:1px solid #c0392b; text-transform:uppercase; letter-spacing:1px;">Failed</span>
-              {% else %}
-              <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(52,152,219,0.12); color:#2471a3; border:1px solid #2471a3; text-transform:uppercase; letter-spacing:1px;">Stuck</span>
-              {% endif %}
-            </div>
-            {# Force Rescore button #}
-            <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="flex-shrink:0;">
-              <button type="submit" class="act-btn act-ref" style="font-size:13px; padding:6px 14px;"
-                      onclick="return confirm('Force rescore image {{ img.id }} — {{ (img.asset_name or img.original_filename or 'Untitled')|replace("'", '') }}?')">
-                ↺ Force Rescore
-              </button>
-            </form>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
+  {# ── IMAGE GRID — first visible content ── #}
+  <div class="admin-section" id="section-images" style="margin-bottom:12px;">
+    <div class="admin-section-body" id="body-images" style="padding:12px 16px;">
       {# Search bar #}
       <form method="GET" action="{{ url_for("admin_dashboard") }}" style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" name="q" value="{{ admin_q or '' }}"
@@ -1094,6 +877,166 @@
 
     </div>
   </div>
+    </div>
+  </div>
+
+
+  {# ── Action Required Banner ── #}
+  {% set needs_action = recent | selectattr('needs_review') | rejectattr('is_flagged') | list %}
+  {% set flagged_items = recent | selectattr('is_flagged') | list %}
+  {% if needs_action or flagged_items or open_reports_count %}
+  <div class="action-banner">
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span style="font-size:22px;">⚠️</span>
+      <div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Action Required</div>
+        <div class="action-banner-text">
+          {% if needs_action %}
+            <span style="color:var(--gold); font-weight:700;">{{ needs_action|length }}</span>
+            image{{ 's' if needs_action|length != 1 else '' }} pending review
+            {% set gm_count = [] %}
+            {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% if gm_count.append(i) %}{% endif %}{% endif %}{% endfor %}
+            {% if gm_count %}&nbsp;·&nbsp;<span style="color:var(--gold); font-weight:700;">{{ gm_count|length }}</span> require RAW verification{% endif %}
+          {% endif %}
+          {% if flagged_items %}
+            {% if needs_action %}&nbsp;·&nbsp;{% endif %}
+            <span style="color:#f08080; font-weight:700;">{{ flagged_items|length }}</span>
+            flagged image{{ 's' if flagged_items|length != 1 else '' }}
+          {% endif %}
+          {% if open_reports_count %}
+            {% if needs_action or flagged_items %}&nbsp;·&nbsp;{% endif %}
+            <span style="color:#f08080; font-weight:700;">{{ open_reports_count }}</span>
+            user report{{ 's' if open_reports_count != 1 else '' }} filed
+            &nbsp;<a href="{{ url_for("admin_reports") }}" style="color:var(--red); font-weight:700; text-decoration:underline;">View Reports →</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <a href="#section-review" style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
+      Review Now ↓
+    </a>
+  </div>
+  {% endif %}
+
+  {# ── Active contest banners — quick visibility for admin ── #}
+  {% if active_contest_banners %}
+  <div style="margin-bottom:16px;">
+    {% for ann in active_contest_banners %}
+    <div style="display:flex; align-items:center; gap:12px; background:rgba(245,197,24,0.07); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:10px 16px; margin-bottom:8px; flex-wrap:wrap;">
+      <span style="font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; white-space:nowrap;">● Live Banner</span>
+      <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">{{ ann.contest_type }}</span>
+      <span style="font-size:14px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ann.title }}</span>
+      <span style="font-size:13px; color:var(--text-muted); white-space:nowrap;">{{ ann.audience }}</span>
+      <a href="{{ url_for("admin_contests") }}" style="font-family:var(--font-mono); font-size:13px; color:var(--gold); text-decoration:none; white-space:nowrap; border:1px solid var(--gold); padding:4px 10px; border-radius:4px;">Manage →</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION 1 — NEEDS ATTENTION (always open)
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section urgent" id="section-review">
+    <div class="admin-section-header" onclick="toggleSection('review')">
+      <div class="admin-section-title">
+        ⚠ Needs Attention
+        {% set _total_attention = ((needs_action|length) if needs_action else 0) + ((flagged_items|length) if flagged_items else 0) + ((error_images|length) if error_images else 0) + ((stuck_images|length) if stuck_images else 0) + (bot_count if bot_count else 0) %}
+        {% if _total_attention > 0 %}
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
+          {{ _total_attention }}
+        </span>
+        {% endif %}
+      </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="act-btn act-ref" style="font-size:13px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("backfill_hashes") | tojson }}, 'Backfill hashes now?')">🔍 Backfill Hashes</button>
+          <button type="button" class="act-btn act-del" style="font-size:13px; padding:4px 10px;" onclick="event.stopPropagation();adminPostUrl({{ url_for("admin_cleanup") | tojson }}, 'Delete all images with no thumbnail? Cannot be undone.')">🗑 Delete Broken</button>
+        </div>
+        <span class="admin-chevron open" id="chev-review">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body" id="body-review">
+
+      {# S162.3 — Error & stuck images block.
+         error_images: status='error' — scoring failed on both attempts.
+         stuck_images: status='processing' >10 minutes — thread died silently.
+         Both show Force Rescore button. Collapsed by default if empty. #}
+      {% if bot_count and bot_count > 0 %}
+      <div style="background:#fff8f8;border:1px solid #e57373;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C62828;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
+          🤖 Suspected Bot Accounts
+          <span style="font-family:monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:12px;background:#C62828;color:#fff;margin-left:6px;">{{ bot_count }}</span>
+        </div>
+        <div style="font-size:13px;color:#666;margin-bottom:10px;">Unverified accounts with random usernames and zero images registered in the last 7 days.</div>
+        <a href="/admin/bot-review" style="display:inline-block;padding:8px 16px;background:#C62828;color:#fff;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;">Review &amp; Delete →</a>
+      </div>
+      {% endif %}
+      <div style="background:#f3e5f5;border:1px solid #9C27B0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#7B1FA2;font-weight:700;margin-bottom:6px;"> {# SL-180.3: 11px→13px, 70yr readability rule #}
+          🚫 IP Block List
+        </div>
+        <div style="font-size:14px;color:#555;margin-bottom:10px;line-height:1.6;">Block bot-source IPs from registering or accessing the site. Takes effect immediately — no deploy needed.</div>
+        <a href="/admin/blocked-ips" style="display:inline-block;padding:10px 18px;background:#7B1FA2;color:#fff;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none;min-height:44px;line-height:24px;">Manage Blocked IPs →</a>
+      </div>
+      {% if error_images or stuck_images %}
+      <div style="margin-bottom:24px; border:1px solid #c0392b; border-radius:6px; overflow:hidden;">
+        <div style="background:#fdf2f2; padding:10px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #c0392b;">
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#c0392b;">⚠ Scoring Failures</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:1px 8px; border-radius:99px; background:rgba(192,57,43,0.12); color:#c0392b; border:1px solid #c0392b;">
+            {{ (error_images|length) + (stuck_images|length) }}
+          </span>
+          <span style="font-size:13px; color:#666; margin-left:4px;">These images did not score. Force Rescore each one or contact the user to re-upload.</span>
+        </div>
+        <div style="padding:12px 16px; background:#fff8f8;">
+          {% for img in error_images + stuck_images %}
+          {%- set att_user = attention_users.get(img.user_id) -%}
+          <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f5dada; flex-wrap:wrap;">
+            {# Thumbnail #}
+            {% if img.thumb_url %}
+            <a href="{{ url_for('image_detail', image_id=img.id) }}" target="_blank">
+              <img src="{{ img.thumb_url }}" style="width:56px; height:44px; object-fit:cover; border-radius:4px; flex-shrink:0;">
+            </a>
+            {% else %}
+            <div style="width:56px; height:44px; background:#eee; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#999; flex-shrink:0;">No thumb</div>
+            {% endif %}
+            {# Image info #}
+            <div style="flex:1; min-width:160px;">
+              <div style="font-size:14px; font-weight:600; color:var(--text-primary); line-height:1.6;">
+                <a href="{{ url_for('image_detail', image_id=img.id) }}" target="_blank" style="color:inherit; text-decoration:none;">
+                  {{ img.asset_name or img.original_filename or 'Untitled' }}
+                </a>
+              </div>
+              <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">
+                {{ img.genre or '—' }} · {{ img.created_at.strftime('%-d %b %Y %H:%M') if img.created_at else '—' }} UTC
+              </div>
+              {% if att_user %}
+              <div style="font-size:13px; color:var(--text-muted);">
+                @{{ att_user.username }} · {{ att_user.email }}
+              </div>
+              {% endif %}
+            </div>
+            {# Status badge #}
+            <div style="flex-shrink:0;">
+              {% if img.status == 'error' %}
+              <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(192,57,43,0.12); color:#c0392b; border:1px solid #c0392b; text-transform:uppercase; letter-spacing:1px;">Failed</span>
+              {% else %}
+              <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(52,152,219,0.12); color:#2471a3; border:1px solid #2471a3; text-transform:uppercase; letter-spacing:1px;">Stuck</span>
+              {% endif %}
+            </div>
+            {# Force Rescore button #}
+            <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="flex-shrink:0;">
+              <button type="submit" class="act-btn act-ref" style="font-size:13px; padding:6px 14px;"
+                      onclick="return confirm('Force rescore image {{ img.id }} — {{ (img.asset_name or img.original_filename or 'Untitled')|replace("'", '') }}?')">
+                ↺ Force Rescore
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+
 
   {# ══════════════════════════════════════════════════════════════════
      SECTION — FLAGGED EVAL COMMENTS
