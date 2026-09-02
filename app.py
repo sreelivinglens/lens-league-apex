@@ -1,4 +1,4 @@
-# SL-VERSION: 181.81 (Session 208, 2026-09-02 — 1) admin_emailer route: audience-targeted newsletter (Sonnet/Haiku/Both/Custom), preview mode, logs to admin_sent_emails. 2) _build_newsletter_html() helper. 3) newsletter_send logged to admin_action_log. RETAINS 181.80.)
+# SL-VERSION: 181.82 (Session 208, 2026-09-02 — admin_dashboard() engine filter: engine=haiku shows is_haiku_try=TRUE images only, engine=sonnet (default) shows paid images. Rule 8 raw SQL. admin_engine passed to template. RETAINS 181.81.)
 
 import os
 import re
@@ -16032,8 +16032,18 @@ def admin_dashboard():
     admin_track = request.args.get('track', 'all').strip().lower()
     if admin_track not in ('mobile', 'camera', 'all'):
         admin_track = 'all'
+    # Session 208 — engine filter: sonnet (default) or haiku
+    admin_engine = request.args.get('engine', 'sonnet').strip().lower()
+    if admin_engine not in ('sonnet', 'haiku'):
+        admin_engine = 'sonnet'
     admin_page  = request.args.get('page', 1, type=int)
     img_query   = Image.query.order_by(Image.created_at.desc())
+    # Session 208 — filter by engine: Haiku free vs Sonnet paid
+    # Rule 8 — is_haiku_try is not an ORM column, must use raw SQL filter
+    if admin_engine == 'haiku':
+        img_query = img_query.filter(db.text('(is_haiku_try IS TRUE)'))
+    else:
+        img_query = img_query.filter(db.text('(is_haiku_try IS NOT TRUE)'))
     if admin_q:
         img_query = img_query.join(User, User.id == Image.user_id).filter(
             db.or_(
@@ -16306,7 +16316,7 @@ def admin_dashboard():
 
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
-                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track,
+                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track, admin_engine=admin_engine,
                            recent_users=recent_users,
                            paid_users=_paid_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
