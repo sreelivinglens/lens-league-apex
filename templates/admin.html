@@ -463,7 +463,7 @@
       <div class="sl-eval-row"><span>Open flags</span><span class="sl-eval-val {% if open_reports_count > 0 %}warn{% else %}ok{% endif %}">{{ open_reports_count or 0 }}</span></div>
       <div class="sl-eval-highlight">
         <span style="font-size:13px;color:var(--text-muted)">Avg evaluation (all genres)</span>
-        <span style="font-size:18px;font-weight:500">{% if platform_cal %}{{ '%.2f'|format(platform_cal.avg_score) }} / 10{% else %}—{% endif %}</span>
+        <span style="font-size:18px;font-weight:500">{% if platform_cal %}{{ '%.2f'|format(platform_cal['avg_score'] if platform_cal is mapping else platform_cal.avg_score) }} / 10{% else %}—{% endif %}</span>
       </div>
     </div>
     <div class="sl-dash-card">
@@ -2011,7 +2011,7 @@
     <div class="admin-section-header" onclick="toggleSection('exports')">
       <div class="admin-section-title" style="color:var(--text-muted);">📊 Exports &amp; Reports</div>
       <div style="display:flex; align-items:center; gap:12px;">
-        <span class="admin-section-meta">{{ stats.subscribers }} subscribers · {{ stats.free_users }} free</span>
+        <span class="admin-section-meta">{{ stats.subscribers }} subscribers · {{ stats.free_users|length if stats.free_users is iterable else stats.free_users }} free</span>
         <span class="admin-chevron" id="chev-exports">▼</span>
       </div>
     </div>
