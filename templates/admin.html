@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 181.81 admin — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
+{# SL:version 181.83 admin — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -260,6 +260,31 @@
 
   /* ── Session 208 additions ─────────────────────────────────── */
 
+  /* Sticky top bar */
+  .sl-topbar { position:sticky; top:0; z-index:100; background:var(--surface-1); border-bottom:1px solid var(--border); padding:8px 24px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 -24px 16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .sl-topbar-engine { display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; flex-shrink:0; }
+  .sl-topbar-tab { font-size:13px; padding:7px 14px; background:var(--surface-2); color:var(--text-secondary); text-decoration:none; font-family:var(--font-mono); font-weight:600; min-height:44px; display:inline-flex; align-items:center; gap:6px; border-right:1px solid var(--border); letter-spacing:.3px; }
+  .sl-topbar-tab:last-child { border-right:none; }
+  .sl-topbar-tab.active-sonnet { background:#1A2744; color:#fff; }
+  .sl-topbar-tab.active-haiku { background:#6B21A8; color:#fff; }
+  .sl-new-badge { background:#B91C1C; color:#fff; font-size:13px; font-weight:700; padding:1px 5px; border-radius:99px; min-width:16px; text-align:center; line-height:1.6; }
+  .sl-topbar-search { flex:1; min-width:160px; display:flex; gap:6px; }
+  .sl-topbar-input { flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:16px; background:var(--surface-2); color:var(--text-primary); font-family:inherit; outline:none; min-height:44px; }
+  .sl-topbar-input:focus { border-color:var(--gold); }
+  .sl-topbar-searchbtn { padding:6px 14px; border-radius:6px; border:1px solid var(--gold); background:var(--gold); color:#1A1A18; font-size:13px; cursor:pointer; font-family:var(--font-mono); font-weight:700; min-height:44px; white-space:nowrap; }
+  .sl-topbar-links { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+  .sl-topbar-link { font-size:13px; padding:4px 10px; border:1px solid var(--border); border-radius:4px; color:var(--text-secondary); text-decoration:none; min-height:36px; display:inline-flex; align-items:center; white-space:nowrap; }
+  .sl-topbar-link:hover { border-color:var(--gold); color:var(--text-primary); }
+  .sl-topbar-link.warn { border-color:var(--gold-dark); color:#92400E; background:rgba(200,168,75,0.08); }
+  .sl-topbar-link.danger { border-color:#B91C1C; color:#B91C1C; background:#FEF2F2; }
+  .sl-overview-panel { border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:14px; }
+  .sl-overview-panel.has-alert { border-color:var(--gold-dark); }
+  .sl-overview-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; cursor:pointer; background:var(--surface-2); user-select:none; }
+  .sl-overview-header:hover { background:var(--surface-1); }
+  .sl-overview-title { font-size:13px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:8px; font-family:var(--font-mono); letter-spacing:.5px; text-transform:uppercase; }
+  .sl-overview-body { display:none; padding:14px; border-top:1px solid var(--border); }
+  .sl-overview-body.open { display:block; }
+
   /* Stat bar */
   .sl-stat-bar { display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:20px; }
   .sl-stat-cell { background:var(--surface-1); padding:13px 14px; }
@@ -425,16 +450,51 @@
 {% block content %}
 <div class="admin-wrap">
 
-  {# ── Page title ── #}
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-    <div class="page-header" style="margin-bottom:0;">
-      <h1>Admin Dashboard</h1>
-      <p>Platform control centre</p>
+  {# ── Session 208: Sticky top bar — engine toggle + search ── #}
+  {% set _has_alert = (stuck_images and stuck_images|length > 0) or (open_reports_count and open_reports_count > 0) or (csi_unreviewed_count and csi_unreviewed_count > 0) %}
+  <div class="sl-topbar">
+    {# Engine toggle #}
+    <div class="sl-topbar-engine">
+      <a href="{{ url_for('admin_dashboard', engine='sonnet', track=admin_track, q=admin_q) }}" class="sl-topbar-tab {% if admin_engine == 'sonnet' %}active-sonnet{% endif %}">
+        📷 Sonnet
+        {% if sonnet_new_today > 0 %}<span class="sl-new-badge">{{ sonnet_new_today }} new</span>{% endif %}
+      </a>
+      <a href="{{ url_for('admin_dashboard', engine='haiku', track=admin_track, q=admin_q) }}" class="sl-topbar-tab {% if admin_engine == 'haiku' %}active-haiku{% endif %}">
+        📷 Haiku
+        {% if haiku_new_today > 0 %}<span class="sl-new-badge">{{ haiku_new_today }} new</span>{% endif %}
+      </a>
+    </div>
+    {# Inline search #}
+    <div class="sl-topbar-search">
+      <input class="sl-topbar-input" id="slTopSearch" value="{{ admin_q or '' }}" placeholder="Search name, email, image ID…" autocomplete="off" onkeydown="if(event.key==='Enter')slTopDoSearch()">
+      <button class="sl-topbar-searchbtn" onclick="slTopDoSearch()">Search</button>
+    </div>
+    {# Quick alert links #}
+    <div class="sl-topbar-links">
+      {% if _has_alert %}
+      <a href="#section-review" class="sl-topbar-link warn" onclick="document.getElementById('body-review').classList.remove('collapsed');document.getElementById('chev-review').classList.add('open');">
+        ⚠ {% if stuck_images %}{{ stuck_images|length }} stuck{% endif %}{% if open_reports_count %} · {{ open_reports_count }} flags{% endif %}
+      </a>
+      {% endif %}
+      {% if unread_contact_count > 0 %}
+      <a href="{{ url_for('admin_contact_inbox') }}" class="sl-topbar-link warn">✉ {{ unread_contact_count }}</a>
+      {% endif %}
+      <a href="{{ url_for('admin_emailer') }}" class="sl-topbar-link">Newsletter</a>
+      <a href="{{ url_for('admin_audit_log') }}" class="sl-topbar-link">Audit</a>
     </div>
   </div>
 
-  {# ── Session 208: Stat bar ── #}
-  <div class="sl-guide info" style="margin-bottom:10px"><strong>Daily routine:</strong> Check stat bar first. Amber numbers need investigation. Red needs immediate action. Then check Alerts and Needs Attention before anything else.</div>
+  {# ── Session 208: Overview panel — collapsed unless alert ── #}
+  <div class="sl-overview-panel {% if _has_alert %}has-alert{% endif %}" id="sl-overview-panel">
+    <div class="sl-overview-header" onclick="slToggleOverview()">
+      <div class="sl-overview-title">
+        {% if _has_alert %}⚠{% else %}📊{% endif %}
+        Overview
+        {% if _has_alert %}<span style="font-size:13px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(200,168,75,0.15);color:var(--gold);border:1px solid var(--gold-dark);">Alert</span>{% endif %}
+      </div>
+      <span id="sl-overview-chev" style="font-size:13px;color:var(--text-muted);">{% if _has_alert %}▼{% else %}▶{% endif %}</span>
+    </div>
+    <div class="sl-overview-body {% if _has_alert %}open{% endif %}" id="sl-overview-body">
   <div class="sl-stat-bar">
     <div class="sl-stat-cell"><div class="sl-stat-label">Total members</div><div class="sl-stat-num">{{ (stats.subscribers or 0) + (stats.free_users|length if stats.free_users is iterable else 0) }}</div><div class="sl-stat-delta up">↑ {{ new_signups_7days }} this week</div></div>
     <div class="sl-stat-cell"><div class="sl-stat-label">Paid</div><div class="sl-stat-num ok">{{ stats.subscribers or 0 }}</div><div class="sl-stat-delta">Camera {{ stats.camera_subs or 0 }} · Mobile {{ stats.mobile_subs or 0 }}</div></div>
@@ -524,6 +584,9 @@
       <span class="sl-pill" onclick="slSetPill(this,'image_id')">Image ID</span>
     </div>
   </div>
+
+  </div>{# end sl-overview-body #}
+  </div>{# end sl-overview-panel #}
 
   {# ── Top nav ── #}
   {# ── Admin nav — grouped by function ── #}
@@ -2195,7 +2258,20 @@
 
 {% block extra_js %}
 <script>
-/* Session 208 — unified search, engine tab, pill filter */
+/* Session 208 — unified search, engine tab, pill filter, topbar */
+function slTopDoSearch() {
+  var q = document.getElementById('slTopSearch').value.trim();
+  var url = new URL(window.location.href);
+  url.searchParams.set('q', q);
+  window.location.href = url.toString();
+}
+function slToggleOverview() {
+  var body = document.getElementById('sl-overview-body');
+  var chev = document.getElementById('sl-overview-chev');
+  var open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.textContent = open ? '\u25B6' : '\u25BC';
+}
 function slSetPill(el, type) {
   document.querySelectorAll('.sl-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
