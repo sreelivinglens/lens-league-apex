@@ -1,0 +1,265 @@
+{# SL-VERSION: audit_log-1.0-main (Session 208, 2026-09-02 — Audit & Legal: full admin action log with search by email, action type, target type, date range. Pagination 50/page. Extends base.html. Admin-only.) #}
+{% extends "base.html" %}
+{% block title %}Audit Log — Shutter League Admin{% endblock %}
+{% block meta_description %}Admin audit and legal evidence trail — Shutter League.{% endblock %}
+{% block extra_head %}
+<meta name="robots" content="noindex,nofollow">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.al-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+
+/* ── Header ── */
+.al-header { margin-bottom: 24px; }
+.al-title  { font-size: 24px; font-weight: 500; color: #1A1A18; margin-bottom: 4px; }
+.al-sub    { font-size: 15px; color: #6B6B68; }
+
+/* ── Filter bar ── */
+.al-filters { background: #FFFFFF; border: 1px solid #E0DDD6; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; }
+.al-filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.al-field { display: flex; flex-direction: column; gap: 5px; }
+.al-label { font-size: 13px; color: #6B6B68; font-weight: 500; }
+.al-input { padding: 9px 12px; border: 1px solid #C8C5BE; border-radius: 8px; font-size: 15px; color: #1A1A18; background: #FAFAF6; font-family: inherit; min-height: 44px; outline: none; min-width: 160px; }
+.al-input:focus { border-color: #1A2744; }
+.al-select { padding: 9px 12px; border: 1px solid #C8C5BE; border-radius: 8px; font-size: 15px; color: #1A1A18; background: #FAFAF6; font-family: inherit; min-height: 44px; min-width: 160px; }
+.al-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid #C8A84B; background: #C8A84B; color: #1A1A18; font-size: 15px; cursor: pointer; font-family: inherit; font-weight: 600; min-height: 44px; }
+.al-btn:hover { background: #A88830; color: #fff; }
+.al-btn-clear { background: #FAFAF6; border-color: #E0DDD6; color: #6B6B68; }
+.al-btn-clear:hover { background: #F0EDE6; color: #1A1A18; }
+
+/* ── Stats row ── */
+.al-stats { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+.al-stat { font-size: 14px; color: #6B6B68; }
+.al-stat strong { color: #1A1A18; font-weight: 500; }
+
+/* ── Table ── */
+.al-table-wrap { background: #fff; border: 1px solid #E0DDD6; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.al-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.al-table th { font-size: 13px; color: #8A8A86; font-weight: 600; text-align: left; padding: 12px 16px; border-bottom: 1px solid #E0DDD6; background: #FAFAF6; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.al-table td { padding: 12px 16px; border-bottom: 1px solid #F5F3EF; vertical-align: top; }
+.al-table tr:last-child td { border-bottom: none; }
+.al-table tr:hover td { background: #FAFAF6; }
+
+/* ── Action badge ── */
+.al-action { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: .04em; white-space: nowrap; }
+.al-action-rescore    { background: #E8EEF8; color: #1A2744; }
+.al-action-delete     { background: #FEF2F2; color: #B91C1C; }
+.al-action-flag       { background: #FFF3CD; color: #92400E; }
+.al-action-visibility { background: #F3E8FF; color: #6B21A8; }
+.al-action-sub        { background: #E8F5E9; color: #2E7D32; }
+.al-action-recalib    { background: #FFF8E1; color: #B45309; }
+
+/* ── Detail cell ── */
+.al-detail { font-size: 13px; color: #6B6B68; line-height: 1.6; }
+.al-detail strong { color: #1A1A18; font-weight: 500; }
+
+/* ── Timestamp ── */
+.al-ts { font-size: 13px; color: #8A8A86; white-space: nowrap; }
+
+/* ── Target ── */
+.al-target { font-size: 13px; color: #1A1A18; }
+.al-target-sub { font-size: 13px; color: #8A8A86; }
+
+/* ── Pagination ── */
+.al-pages { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.al-page-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #E0DDD6; background: #FAFAF6; color: #1A1A18; font-size: 14px; cursor: pointer; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.al-page-btn:hover { border-color: #1A2744; }
+.al-page-btn.active { background: #1A2744; border-color: #1A2744; color: #fff; }
+.al-page-info { font-size: 14px; color: #8A8A86; padding: 0 8px; }
+
+/* ── Empty state ── */
+.al-empty { text-align: center; padding: 60px 20px; color: #8A8A86; font-size: 16px; }
+
+/* ── Back link ── */
+.al-back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #1A2744; text-decoration: none; margin-bottom: 20px; }
+.al-back:hover { text-decoration: underline; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .al-wrap { padding: 56px 12px 80px; }
+  .al-filter-row { flex-direction: column; }
+  .al-input, .al-select { min-width: 100%; }
+  .al-table th:nth-child(4), .al-table td:nth-child(4) { display: none; }
+  .al-title { font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .al-table th:nth-child(3), .al-table td:nth-child(3) { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="al-wrap">
+
+  <a href="{{ url_for('admin_dashboard') }}" class="al-back">← Back to admin</a>
+
+  <div class="al-header">
+    <div class="al-title">Audit &amp; Legal Log</div>
+    <div class="al-sub">Every consequential admin action — permanent, append-only. For dispute resolution and legal evidence.</div>
+  </div>
+
+  {# ── FILTER BAR ── #}
+  <div class="al-filters">
+    <form method="GET" action="{{ url_for('admin_audit_log') }}">
+      <div class="al-filter-row">
+        <div class="al-field">
+          <label class="al-label" for="email">User email</label>
+          <input class="al-input" id="email" name="email" type="text" value="{{ q_email }}" placeholder="user@email.com" autocomplete="off">
+        </div>
+        <div class="al-field">
+          <label class="al-label" for="action">Action type</label>
+          <select class="al-select" id="action" name="action">
+            <option value="">All actions</option>
+            {% for at in action_types %}
+            <option value="{{ at }}" {% if q_action == at %}selected{% endif %}>{{ at }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="al-field">
+          <label class="al-label" for="target">Target type</label>
+          <select class="al-select" id="target" name="target">
+            <option value="">All targets</option>
+            <option value="image" {% if q_target == 'image' %}selected{% endif %}>Image</option>
+            <option value="user"  {% if q_target == 'user'  %}selected{% endif %}>User</option>
+          </select>
+        </div>
+        <div class="al-field">
+          <label class="al-label" for="date_from">From date</label>
+          <input class="al-input" id="date_from" name="date_from" type="date" value="{{ q_from }}" style="min-width:140px">
+        </div>
+        <div class="al-field">
+          <label class="al-label" for="date_to">To date</label>
+          <input class="al-input" id="date_to" name="date_to" type="date" value="{{ q_to }}" style="min-width:140px">
+        </div>
+        <div class="al-field" style="justify-content:flex-end">
+          <button class="al-btn" type="submit">Search</button>
+        </div>
+        {% if q_email or q_action or q_target or q_from or q_to %}
+        <div class="al-field" style="justify-content:flex-end">
+          <a class="al-btn al-btn-clear" href="{{ url_for('admin_audit_log') }}">Clear</a>
+        </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  {# ── STATS ── #}
+  <div class="al-stats">
+    <div class="al-stat"><strong>{{ total }}</strong> action{{ 's' if total != 1 else '' }} found</div>
+    {% if q_email or q_action or q_target or q_from or q_to %}
+    <div class="al-stat">Filtered — <a href="{{ url_for('admin_audit_log') }}" style="color:#1A2744">show all</a></div>
+    {% endif %}
+    <div class="al-stat">Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong></div>
+  </div>
+
+  {# ── TABLE ── #}
+  {% if actions %}
+  <div class="al-table-wrap">
+    <table class="al-table">
+      <thead>
+        <tr>
+          <th style="width:14%">When</th>
+          <th style="width:16%">Action</th>
+          <th style="width:14%">Target</th>
+          <th style="width:14%">Admin</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in actions %}
+        <tr>
+          <td>
+            <div class="al-ts">{{ a.created_at.strftime('%d %b %Y') if a.created_at else '—' }}</div>
+            <div class="al-ts">{{ a.created_at.strftime('%H:%M UTC') if a.created_at else '' }}</div>
+          </td>
+          <td>
+            {% set badge_cls = {
+              'force_rescore':      'al-action-rescore',
+              'delete_image':       'al-action-delete',
+              'flag_image':         'al-action-flag',
+              'toggle_visibility':  'al-action-visibility',
+              'toggle_subscription':'al-action-sub',
+              'recalibrate':        'al-action-recalib',
+            }.get(a.action, 'al-action-rescore') %}
+            <span class="al-action {{ badge_cls }}">{{ a.action }}</span>
+          </td>
+          <td>
+            <div class="al-target">{{ a.target_type | capitalize }} #{{ a.target_id }}</div>
+            {% if a.detail.get('asset_name') %}
+            <div class="al-target-sub">{{ a.detail.asset_name }}</div>
+            {% elif a.detail.get('email') %}
+            <div class="al-target-sub">{{ a.detail.email }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <div class="al-target">{{ a.admin_name }}</div>
+            <div class="al-target-sub">{{ a.admin_email }}</div>
+          </td>
+          <td class="al-detail">
+            {# Render relevant detail fields by action type #}
+            {% if a.action == 'force_rescore' %}
+              Evaluation before: <strong>{{ '%.2f'|format(a.detail.get('score_before', 0)) }}</strong>
+              · Tier: <strong>{{ a.detail.get('tier_before', '—') }}</strong>
+              · User: <strong>{{ a.detail.get('user_id', '—') }}</strong>
+            {% elif a.action == 'delete_image' %}
+              <span style="color:#B91C1C;font-weight:500">Deleted permanently</span>
+              · Category: {{ a.detail.get('genre', '—') }}
+              · Evaluation: {{ '%.2f'|format(a.detail.get('score', 0)) }}
+              · User: {{ a.detail.get('user_id', '—') }}
+            {% elif a.action == 'flag_image' %}
+              Reason: <strong>{{ a.detail.get('reason', '—') }}</strong>
+              · User: {{ a.detail.get('user_id', '—') }}
+            {% elif a.action == 'toggle_visibility' %}
+              Visibility → <strong>{{ 'Public' if a.detail.get('is_public_after') else 'Hidden' }}</strong>
+              · User: {{ a.detail.get('user_id', '—') }}
+            {% elif a.action == 'toggle_subscription' %}
+              Subscription: <strong>{{ 'Activated' if a.detail.get('is_subscribed_after') else 'Deactivated' }}</strong>
+              · Track: {{ a.detail.get('track', '—') }}
+              · Plan: {{ a.detail.get('plan', '—') }}
+            {% elif a.action == 'recalibrate' %}
+              Evaluation before: <strong>{{ '%.2f'|format(a.detail.get('score_before', 0)) }}</strong>
+              → new dimensions DoD {{ a.detail.get('dod', '—') }}
+              / Dis {{ a.detail.get('disruption', '—') }}
+              / DM {{ a.detail.get('dm', '—') }}
+              / VI {{ a.detail.get('wonder', '—') }}
+              / Em {{ a.detail.get('aq', '—') }}
+              {% if a.detail.get('reason') %}<br>Reason: {{ a.detail.get('reason') }}{% endif %}
+            {% else %}
+              {{ a.detail | tojson if a.detail else '—' }}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# ── PAGINATION ── #}
+  {% if total_pages > 1 %}
+  <div class="al-pages">
+    {% if page > 1 %}
+    <a class="al-page-btn" href="{{ url_for('admin_audit_log', page=page-1, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">← Previous</a>
+    {% endif %}
+    {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
+    <a class="al-page-btn {% if p == page %}active{% endif %}" href="{{ url_for('admin_audit_log', page=p, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">{{ p }}</a>
+    {% endfor %}
+    {% if page < total_pages %}
+    <a class="al-page-btn" href="{{ url_for('admin_audit_log', page=page+1, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">Next →</a>
+    {% endif %}
+    <span class="al-page-info">{{ per_page * (page-1) + 1 }}–{{ [per_page * page, total]|min }} of {{ total }}</span>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="al-empty">
+    {% if q_email or q_action or q_target or q_from or q_to %}
+    No actions found for these filters. <a href="{{ url_for('admin_audit_log') }}" style="color:#1A2744">Clear filters</a>
+    {% else %}
+    No admin actions logged yet. Actions will appear here as they are taken.
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
