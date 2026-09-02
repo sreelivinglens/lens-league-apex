@@ -1,4 +1,4 @@
-# SL-VERSION: 181.82 (Session 208, 2026-09-02 — admin_dashboard() engine filter: engine=haiku shows is_haiku_try=TRUE images only, engine=sonnet (default) shows paid images. Rule 8 raw SQL. admin_engine passed to template. RETAINS 181.81.)
+# SL-VERSION: 181.83 (Session 208, 2026-09-02 — admin_dashboard() sonnet_new_today + haiku_new_today counts (24h window) for engine tab badges. RETAINS 181.82.)
 
 import os
 import re
@@ -16028,6 +16028,22 @@ def admin_dashboard():
     scored       = Image.query.filter_by(status='scored').count()
     pending      = Image.query.filter_by(status='pending').count()
 
+    # Session 208 — new images in last 24h (for badge on engine tabs)
+    try:
+        from datetime import timedelta as _atd
+        _since_24h = datetime.utcnow() - _atd(hours=24)
+        sonnet_new_today = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE status='scored' "
+            "AND (is_haiku_try IS NOT TRUE) AND created_at >= :since"
+        ), {'since': _since_24h}).scalar() or 0
+        haiku_new_today = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE status='scored' "
+            "AND is_haiku_try IS TRUE AND created_at >= :since"
+        ), {'since': _since_24h}).scalar() or 0
+    except Exception as _ntd_e:
+        app.logger.warning(f'[admin] new_today counts failed: {_ntd_e}')
+        sonnet_new_today = haiku_new_today = 0
+
     admin_q     = request.args.get('q', '').strip()
     admin_track = request.args.get('track', 'all').strip().lower()
     if admin_track not in ('mobile', 'camera', 'all'):
@@ -16316,7 +16332,7 @@ def admin_dashboard():
 
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
-                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track, admin_engine=admin_engine,
+                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track, admin_engine=admin_engine, sonnet_new_today=sonnet_new_today, haiku_new_today=haiku_new_today,
                            recent_users=recent_users,
                            paid_users=_paid_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
