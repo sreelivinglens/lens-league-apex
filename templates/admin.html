@@ -750,8 +750,8 @@
       {# Session 208: Sonnet / Haiku engine tab + guide #}
       <div class="sl-guide info" style="margin-bottom:10px;font-size:13px"><strong>Sonnet tab</strong> = paid images. Use RAW for verification. Use Rescore only after a calibration/prompt fix. &nbsp;|&nbsp; <strong>Haiku free tab</strong> = free tier images. No RAW gate. Rescore if engine misidentified something (e.g. wrong species).</div>
       <div class="sl-engine-tabs" style="margin-bottom:12px;">
-        <button class="sl-engine-tab {% if not request.args.get('engine') or request.args.get('engine') == 'sonnet' %}active-sonnet{% endif %}" onclick="slSwitchEngine('sonnet',this)">📷 Sonnet (paid)</button>
-        <button class="sl-engine-tab {% if request.args.get('engine') == 'haiku' %}active-haiku{% endif %}" onclick="slSwitchEngine('haiku',this)">📷 Haiku free</button>
+        <a href="{{ url_for('admin_dashboard', engine='sonnet', track=admin_track, q=admin_q) }}" class="sl-engine-tab {% if admin_engine == 'sonnet' %}active-sonnet{% endif %}" style="text-decoration:none;">📷 Sonnet (paid)</a>
+        <a href="{{ url_for('admin_dashboard', engine='haiku', track=admin_track, q=admin_q) }}" class="sl-engine-tab {% if admin_engine == 'haiku' %}active-haiku{% endif %}" style="text-decoration:none;">📷 Haiku free</a>
       </div>
 
       {# Session 132 — Mobile DDI: track filter #}
