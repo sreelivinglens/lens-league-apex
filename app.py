@@ -1,4 +1,4 @@
-# SL-VERSION: 181.80 (Session 208, 2026-09-02 — Audit & Legal complete: 1) admin_action_log table. 2) _log_admin_action() helper. 3) 6 routes log to DB. 4) recent_admin_actions feed on dashboard (last 20). 5) /admin/audit-log full search route with email/action/date filters. RETAINS 181.79.)
+# SL-VERSION: 181.81 (Session 208, 2026-09-02 — 1) admin_emailer route: audience-targeted newsletter (Sonnet/Haiku/Both/Custom), preview mode, logs to admin_sent_emails. 2) _build_newsletter_html() helper. 3) newsletter_send logged to admin_action_log. RETAINS 181.80.)
 
 import os
 import re
@@ -30524,6 +30524,170 @@ def admin_release_weekly_results(week_ref):
 # Admin — Subscription Invitation Broadcast
 # Sends to all free users (is_subscribed=FALSE) when triggered manually
 # ---------------------------------------------------------------------------
+
+
+# ── Session 208 — Newsletter Emailer Dashboard ──────────────────────────────
+@app.route('/admin/emailer', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_emailer():
+    """
+    GET  /admin/emailer — audience-targeted newsletter composer.
+    POST /admin/emailer — send newsletter to selected audience.
+    Audiences: sonnet (paid only), haiku (free only), both, custom (manual emails).
+    Logs every send to admin_sent_emails with send_type='newsletter'.
+    Session 208.
+    """
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+
+    # Audience counts for display
+    _sonnet_count = User.query.filter_by(is_subscribed=True, is_active=True).count()
+    _haiku_count = db.session.execute(db.text(
+        "SELECT COUNT(DISTINCT user_id) FROM images WHERE is_haiku_try IS TRUE"
+    )).scalar() or 0
+
+    if request.method == 'GET':
+        # Last 10 newsletters sent
+        _recent = db.session.execute(db.text(
+            "SELECT subject, send_type, sent_at, "
+            "COUNT(*) as recipient_count, "
+            "SUM(CASE WHEN success THEN 1 ELSE 0 END) as success_count "
+            "FROM admin_sent_emails "
+            "WHERE send_type = 'newsletter' "
+            "GROUP BY subject, send_type, sent_at "
+            "ORDER BY sent_at DESC LIMIT 10"
+        )).fetchall()
+        return render_template('admin_emailer.html',
+            sonnet_count=_sonnet_count,
+            haiku_count=_haiku_count,
+            recent_sends=_recent,
+        )
+
+    # POST — send the newsletter
+    _audience  = request.form.get('audience', 'sonnet')
+    _subject   = request.form.get('subject', '').strip()
+    _body_text = request.form.get('body', '').strip()
+    _custom_emails = [e.strip() for e in request.form.get('custom_emails', '').split(',') if e.strip()]
+    _preview   = request.form.get('preview') == '1'
+
+    if not _subject or not _body_text:
+        flash('Subject and body are required.', 'error')
+        return redirect(url_for('admin_emailer'))
+
+    # Build recipient list
+    _recipients = []
+    if _audience == 'sonnet':
+        _rows = User.query.filter_by(is_subscribed=True, is_active=True).all()
+        _recipients = [(u.id, u.email, u.full_name or u.username or 'Photographer') for u in _rows]
+    elif _audience == 'haiku':
+        _rows = db.session.execute(db.text(
+            "SELECT DISTINCT u.id, u.email, u.full_name, u.username "
+            "FROM users u JOIN images i ON i.user_id = u.id "
+            "WHERE i.is_haiku_try IS TRUE AND u.is_active = TRUE"
+        )).fetchall()
+        _recipients = [(r.id, r.email, r.full_name or r.username or 'Photographer') for r in _rows]
+    elif _audience == 'both':
+        _rows = db.session.execute(db.text(
+            "SELECT DISTINCT u.id, u.email, u.full_name, u.username "
+            "FROM users u "
+            "WHERE u.is_active = TRUE "
+            "AND (u.is_subscribed = TRUE OR EXISTS "
+            "  (SELECT 1 FROM images i WHERE i.user_id = u.id AND i.is_haiku_try IS TRUE))"
+        )).fetchall()
+        _recipients = [(r.id, r.email, r.full_name or r.username or 'Photographer') for r in _rows]
+    elif _audience == 'custom':
+        _recipients = [(None, e, e.split('@')[0]) for e in _custom_emails]
+
+    if not _recipients:
+        flash('No recipients found for this audience.', 'warning')
+        return redirect(url_for('admin_emailer'))
+
+    if _preview:
+        # Return preview — show first recipient's email
+        _name = _recipients[0][2]
+        _html = _build_newsletter_html(_name, _subject, _body_text, _site)
+        return render_template('admin_emailer.html',
+            sonnet_count=_sonnet_count,
+            haiku_count=_haiku_count,
+            recent_sends=[],
+            preview_html=_html,
+            preview_recipient=_recipients[0][1],
+            recipient_count=len(_recipients),
+            subject=_subject,
+            body=_body_text,
+            audience=_audience,
+        )
+
+    # Send to all recipients
+    _sent = 0; _failed = 0
+    import json as _nej
+    for _uid, _email, _name in _recipients:
+        _html = _build_newsletter_html(_name, _subject, _body_text, _site)
+        _text = 'Hi ' + _name + ',\n\n' + _body_text + '\n\n—\nShutter League · support@shutterleague.com'
+        _ok = send_email(_email, _subject, _html, _text)
+        if _ok:
+            _sent += 1
+        else:
+            _failed += 1
+        try:
+            db.session.execute(db.text(
+                "INSERT INTO admin_sent_emails "
+                "(admin_id, recipient_user_id, recipient_email, subject, body, send_type, success) "
+                "VALUES (:aid, :uid, :email, :subject, :body, 'newsletter', :ok)"
+            ), {
+                'aid': current_user.id,
+                'uid': _uid,
+                'email': _email,
+                'subject': _subject,
+                'body': _body_text[:2000],
+                'ok': _ok,
+            })
+            db.session.commit()
+        except Exception as _le:
+            db.session.rollback()
+            app.logger.warning(f'[admin_emailer] log insert failed: {_le}')
+
+    _log_admin_action('newsletter_send', 'broadcast', 0, {
+        'audience': _audience,
+        'subject': _subject,
+        'sent': _sent,
+        'failed': _failed,
+        'recipient_count': len(_recipients),
+    })
+
+    flash(f'Newsletter sent — {_sent} delivered, {_failed} failed.', 'success' if _failed == 0 else 'warning')
+    return redirect(url_for('admin_emailer'))
+
+
+def _build_newsletter_html(name, subject, body_text, site):
+    """Build the Shutter League newsletter HTML wrapper around plain body text."""
+    # Convert newlines to <p> tags
+    _paras = ''.join(
+        f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">{p.strip()}</p>'
+        for p in body_text.split('\n') if p.strip()
+    )
+    return (
+        '<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F5F0E8;">'
+        '<div style="background:#1A2744;padding:20px 32px;">'
+        '<p style="color:#C8A84B;font-family:Courier New,monospace;font-weight:700;font-size:15px;letter-spacing:3px;margin:0;text-transform:uppercase;">SHUTTER LEAGUE</p>'
+        '<p style="color:rgba(200,168,75,0.6);font-size:12px;margin:4px 0 0;letter-spacing:1px;">Making Images Matter</p>'
+        '</div>'
+        '<div style="padding:32px;">'
+        f'<h2 style="font-size:20px;font-weight:600;color:#1A1A18;margin:0 0 20px;line-height:1.3;">{subject}</h2>'
+        f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {name},</p>'
+        f'{_paras}'
+        f'<p style="font-size:16px;color:#1A1A18;margin:24px 0 0;line-height:1.7;">Warm regards,<br><strong>Shutter League</strong></p>'
+        '</div>'
+        '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+        '<p style="color:#888;font-size:13px;margin:0;">Shutter League · support@shutterleague.com · '
+        f'<a href="{site}" style="color:#888;">shutterleague.com</a></p>'
+        '<p style="color:#aaa;font-size:12px;margin:6px 0 0;">You are receiving this as a Shutter League member. '
+        f'<a href="{site}/unsubscribe" style="color:#aaa;">Manage email preferences</a></p>'
+        '</div>'
+        '</div>'
+    )
+# ──────────────────────────────────────────────────────────────────────────────
+
 
 @app.route('/admin/broadcast/subscription-invite', methods=['GET', 'POST'])
 @login_required
