@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 181.86 admin — Session 208, 2026-09-02. Jump nav added above image grid: one-tap links to every section below (Attention, Flags, Members, Haiku, Audit, Stats, Tools, Exports, Danger). No scrolling through images to reach sections. RETAINS 181.85. — Session 208, 2026-09-02. Image grid moved to first content position after sticky bar. Nav strip row 2 removed. Duplicate search removed. Images now immediately visible on load. RETAINS 181.84. — Session 208, 2026-09-02. Sticky nav strip (row 2): all nav buttons as horizontally scrollable strip, grouped Daily/Content/Tools/Security. Works on mobile/iPad. Old multi-row nav block removed. RETAINS 181.83. — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
+{# SL:version 181.87 admin — Session 208, 2026-09-02. Jump row now sticky (position:sticky top:62px) — always visible while scrolling through images. Links: Attention/Flags/Members/New/Haiku/Audit/Stats/Tools/Danger. RETAINS 181.86. — Session 208, 2026-09-02. Jump nav added above image grid: one-tap links to every section below (Attention, Flags, Members, Haiku, Audit, Stats, Tools, Exports, Danger). No scrolling through images to reach sections. RETAINS 181.85. — Session 208, 2026-09-02. Image grid moved to first content position after sticky bar. Nav strip row 2 removed. Duplicate search removed. Images now immediately visible on load. RETAINS 181.84. — Session 208, 2026-09-02. Sticky nav strip (row 2): all nav buttons as horizontally scrollable strip, grouped Daily/Content/Tools/Security. Works on mobile/iPad. Old multi-row nav block removed. RETAINS 181.83. — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -585,21 +585,6 @@
   </div>{# end sl-overview-panel #}
 
   {# ── IMAGE GRID — first visible content ── #}
-  {# ── Jump nav — section shortcuts ── #}
-  <div class="sl-jumpnav">
-    <span class="sl-jumpnav-label">Go to</span>
-    {% set _attn = ((needs_action|length) if needs_action else 0) + ((flagged_items|length) if flagged_items else 0) + ((error_images|length) if error_images else 0) + ((stuck_images|length) if stuck_images else 0) + (bot_count if bot_count else 0) %}
-    <a class="sl-jump {% if _attn > 0 %}warn{% endif %}" href="#section-review">⚠ Attention{% if _attn > 0 %} ({{ _attn }}){% endif %}</a>
-    <a class="sl-jump {% if open_reports_count > 0 %}warn{% endif %}" href="#section-evalflags">🚩 Flags{% if open_reports_count > 0 %} ({{ open_reports_count }}){% endif %}</a>
-    <a class="sl-jump" href="#section-paid">⭐ Members</a>
-    <a class="sl-jump" href="#section-signups">👤 New signups</a>
-    <a class="sl-jump" href="#section-haiku-members">🆓 Haiku</a>
-    <a class="sl-jump" href="#section-audit-log">🛡 Audit</a>
-    <a class="sl-jump" href="#section-stats">📊 Stats</a>
-    <a class="sl-jump" href="#section-tools">🔧 Tools</a>
-    <a class="sl-jump" href="#section-exports">📥 Exports</a>
-    <a class="sl-jump red" href="#section-danger">☠ Danger</a>
-  </div>
 
   <div class="admin-section" id="section-images" style="margin-bottom:12px;">
     <div class="admin-section-body" id="body-images" style="padding:12px 16px;">
