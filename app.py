@@ -1,4 +1,4 @@
-# SL-VERSION: 181.77 (Session 208, 2026-09-02 — 1) league_haiku() Community Gallery: feed flipped to is_haiku_try=TRUE images, spotlight suppressed. 2) leaderboard() apply_filters: is_haiku_try IS NOT TRUE guard added — Haiku images blocked from paid leaderboard. RETAINS 181.76.)
+# SL-VERSION: 181.78 (Session 208, 2026-09-02 — league_haiku() reverted to Sonnet feed — Community Gallery deferred, insufficient Haiku images. leaderboard() haiku guard retained. RETAINS 181.77.)
 
 import os
 import re
@@ -32914,13 +32914,10 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
 @app.route('/league/photographers')
 def league_haiku():
     """
-    GET /league/photographers — Haiku Community Gallery.
-    Session 208: Feed now shows Haiku-scored images only (is_haiku_try=TRUE).
-    Previously showed Sonnet paid images — incorrect audience. Free users now see
-    peer community work, not paid members' images. LOP brand not used here.
+    GET /league/photographers — Haiku world League of Photographers page.
+    Session 200: Haiku free-tier users see League (score>=8.0) and Masters (6.0-7.9).
     Session 201: Removed @login_required — public page, anonymous users can browse.
-    Spotlight suppressed — try_standing rejects Haiku images (Session 209 pending).
-    Paid users redirect to standings_public.
+    Daily spotlight from 9.0+ pool. Paid users redirect to standings_public.
     """
     from flask_login import current_user
     import json as _lhj
@@ -32963,7 +32960,7 @@ def league_haiku():
         return out
 
     try:
-        # Community Gallery top tier: score >= 8.0 — Haiku free-tier images only
+        # League tier: score >= 8.0 — top Sonnet public images
         _league_rows = db.session.execute(db.text("""
             SELECT u.full_name, u.subscription_track,
                    i.score, i.tier, i.genre, i.thumb_url, i.id,
@@ -32971,7 +32968,7 @@ def league_haiku():
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.score >= 8.0
-              AND i.is_haiku_try IS TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
@@ -32979,7 +32976,7 @@ def league_haiku():
             LIMIT 24
         """)).fetchall()
 
-        # Community Gallery building tier: score 6.0 - 7.99 — Haiku free-tier images only
+        # Masters tier: score 6.0 - 7.99 — top Sonnet public images
         _masters_rows = db.session.execute(db.text("""
             SELECT u.full_name, u.subscription_track,
                    i.score, i.tier, i.genre, i.thumb_url, i.id,
@@ -32987,7 +32984,7 @@ def league_haiku():
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.score >= 6.0 AND i.score < 8.0
-              AND i.is_haiku_try IS TRUE
+              AND (i.is_haiku_try IS NOT TRUE)
               AND i.status = 'scored'
               AND i.thumb_url IS NOT NULL
               AND i.is_public IS TRUE
@@ -32995,8 +32992,40 @@ def league_haiku():
             LIMIT 24
         """)).fetchall()
 
-        # Spotlight suppressed — try_standing rejects is_haiku_try images (Session 209).
+        # Daily spotlight: rotate through 9.0+ pool by day ordinal
+        _spotlight_rows = db.session.execute(db.text("""
+            SELECT u.full_name, i.score, i.tier, i.genre,
+                   i.thumb_url, i.id, i.audit_json
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 8.5
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.status = 'scored'
+              AND i.thumb_url IS NOT NULL
+              AND i.is_public IS TRUE
+            ORDER BY i.score DESC
+        """)).fetchall()
+
         _spotlight = None
+        if _spotlight_rows:
+            _idx = _lhd.today().toordinal() % len(_spotlight_rows)
+            _sr = _spotlight_rows[_idx]
+            _sa = _lhj.loads(_sr[6] or '{}')
+            from types import SimpleNamespace as _SN
+            _spotlight = _SN(
+                photographer=(_sr[0] or '').split()[0] + ' ' + ((_sr[0] or '').split()[1][0] + '.') if len((_sr[0] or '').split()) >= 2 else (_sr[0] or ''),
+                score=float(_sr[1]),
+                tier=_sr[2],
+                genre=_sr[3],
+                thumb_url=_sr[4],
+                id=_sr[5],
+                impression=(
+                    _sa.get('impression', '') or
+                    _sa.get('takeaway', '') or
+                    _sa.get('background_check', '') or
+                    _sa.get('byline_1', '') or ''
+                ),
+            )
 
         _league  = _build_lh(_league_rows, _lhj)
         _masters = _build_lh(_masters_rows, _lhj)
@@ -33023,7 +33052,10 @@ def league_haiku():
             app.logger.warning(f'[league_haiku] _to_json failed: {_je}')
             return '[]' 
 
-    # Spotlight suppressed (Session 208) — aha_line not needed
+    # Add aha_line to spotlight — impression already has 3-way fallback (impression/takeaway/strength_obs)
+    if _spotlight:
+        _imp = getattr(_spotlight, 'impression', '') or ''
+        _spotlight.aha_line = _imp[:120]
 
     return render_template('league_haiku.html',
         league_photographers=_league,
