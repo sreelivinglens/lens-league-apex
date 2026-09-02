@@ -1,13 +1,13 @@
-{# SL-VERSION: 1.6-main (Session 207, 2026-09-02 — Bottom nav: cream #F5F3EF→navy #1A2744, icon colour light rgba(255,255,255,0.45), tap-highlight + transition added. RETAINS 1.5.) #}
+{# SL-VERSION: 1.7-main (Session 208, 2026-09-02 — Community Gallery: league_haiku feed now shows Haiku-scored images only (is_haiku_try=TRUE). Page title/heading/nav label renamed to "Community Gallery". Cards display-only (no link) — Haiku public standing route pending Session 209. RETAINS 1.6.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="canonical" href="{{ request.url }}">
-<title>League of Photographers — Shutter League</title>
-<meta property="og:title" content="League of Photographers — Shutter League">
-<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. The standing earned by photographers who see differently. Honest evaluation. The work determines everything.">
+<title>Community Gallery — Shutter League</title>
+<meta property="og:title" content="Community Gallery — Shutter League">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. Free evaluations from the Shutter League community. Honest evaluations. Real photographs.">
 <meta property="og:image" content="{{ url_for('static', filename='img/og-league.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{{ url_for('static', filename='img/og-league.jpg') }}">
@@ -263,7 +263,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     <a href="{{ url_for('try_gallery') }}">My evaluations</a>
     <a href="{{ url_for('try_page') }}">Upload</a>
     <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">Community Gallery</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -273,7 +273,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     <a href="{{ url_for('science') }}">Science</a>
     <a href="{{ url_for('contests') }}">Programmes</a>
     <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">Community Gallery</a>
     <a href="{{ url_for('login') }}">Login</a>
     <a href="{{ url_for('register') }}" style="background:#1A2744;color:#fff;padding:8px 18px;border-radius:4px;font-weight:600;font-size:13px;">Register</a>
     {% endif %}
@@ -288,34 +288,34 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 
     <!-- DECLARATION — Visit 1 -->
     <div class="sl-decl" id="sl-state-decl">
-      <div class="sl-decl-eyebrow">The League of Photographers</div>
-      <div class="sl-decl-headline">Earned.<br>Not purchased.</div>
+      <div class="sl-decl-eyebrow">Community Gallery</div>
+      <div class="sl-decl-headline">Real photographs.<br>Honest evaluations.</div>
       <div class="sl-decl-beats">
         <div class="sl-beat-group">
           <div class="sl-gold-rule"></div>
-          <div class="sl-beat">Fewer than one in a hundred reaches <strong>9.</strong><br>Crossing <strong>9.5</strong> — Legend — is rarer still.</div>
+          <div class="sl-beat">Every image here was evaluated by the <strong>Shutter League engine</strong> — the same five dimensions, the same bar.</div>
         </div>
         <div class="sl-beat-group">
           <div class="sl-gold-rule"></div>
-          <div class="sl-beat">They didn't arrive here with better equipment.<br>They learned <strong>to see differently</strong> — to stop a stranger cold.<br>To create something the world hasn't seen before.</div>
+          <div class="sl-beat">These are free-tier evaluations from photographers <strong>building their eye</strong> — one image at a time.</div>
         </div>
         <div class="sl-beat-group">
           <div class="sl-gold-rule"></div>
-          <div class="sl-beat">Every image. The same five dimensions.<br>The same bar. No exceptions.</div>
-          <div class="sl-final-line">Honest. Unbiased. The work determines everything.</div>
+          <div class="sl-beat">No exceptions. No shortcuts.<br>The work determines everything.</div>
+          <div class="sl-final-line">Your next photograph could be here.</div>
         </div>
       </div>
       <div class="sl-tmap">
-        <div class="sl-tmap-label">The path</div>
-        <div class="sl-tmap-row"><div class="sl-tdot" style="background:#C8A84B"></div><span>The League of Photographers</span><span class="sl-trange">8.0 +</span></div>
-        <div class="sl-tmap-row"><div class="sl-tdot" style="background:#7A9BBF"></div><span>Masters in the Making</span><span class="sl-trange">6.0 – 7.9</span></div>
-        <div class="sl-tmap-row"><div class="sl-tdot" style="background:rgba(26,39,68,0.20)"></div><span>Emerging Photographers</span><span class="sl-trange">below 6.0</span></div>
-        <div class="sl-tnote">Emerging photographers build their record privately.<br>Every photograph moves you forward.</div>
+        <div class="sl-tmap-label">Evaluation tiers</div>
+        <div class="sl-tmap-row"><div class="sl-tdot" style="background:#C8A84B"></div><span>Top of the community</span><span class="sl-trange">8.0 +</span></div>
+        <div class="sl-tmap-row"><div class="sl-tdot" style="background:#7A9BBF"></div><span>Building their eye</span><span class="sl-trange">6.0 – 7.9</span></div>
+        <div class="sl-tmap-row"><div class="sl-tdot" style="background:rgba(26,39,68,0.20)"></div><span>Early work</span><span class="sl-trange">below 6.0</span></div>
+        <div class="sl-tnote">Free evaluations. The same standard.<br>Every photograph moves you forward.</div>
       </div>
     </div>
 
     <!-- SPOTLIGHT — Visit 2+ -->
-    {% if spotlight %}<span id="sl-has-spotlight" style="display:none"></span>{% endif %}
+    {# Spotlight suppressed — try_standing route rejects is_haiku_try images. Pending Session 209 public Haiku standing route. #}
     <div class="sl-spot" id="sl-state-spot">
       <div class="sl-spot-date" id="sl-spot-date"></div>
       {% if spotlight %}
@@ -349,8 +349,8 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   <!-- RIGHT -->
   <div class="sl-right">
     <div class="sl-tabs">
-      <button class="sl-tab active" onclick="switchTab('league',this)" type="button">The League of Photographers</button>
-      <button class="sl-tab" onclick="switchTab('masters',this)" type="button">Masters in the Making</button>
+      <button class="sl-tab active" onclick="switchTab('league',this)" type="button">Top of the Community</button>
+      <button class="sl-tab" onclick="switchTab('masters',this)" type="button">Building Their Eye</button>
     </div>
     <div class="sl-filters" id="sl-filters">
       <select id="sl-f-tier" onchange="applyFilters()">
@@ -369,19 +369,19 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <input id="sl-f-search" placeholder="Search photographer or image…" oninput="applyFilters()" type="search">
       <div class="sl-f-count" id="sl-f-count"></div>
     </div>
-    <div class="sl-masters-note" id="sl-masters-note">Building their record. Evaluated against the same standard. 6.0 – 7.9.</div>
+    <div class="sl-masters-note" id="sl-masters-note">Building their eye. Evaluated against the same standard. 6.0 – 7.9.</div>
     <div class="sl-grid-area" id="sl-grid-area">
       <div class="sl-grid sl-grid-league" id="sl-grid">
         {% for p in league_photographers[:8] %}
-        <a href="{{ url_for('try_standing', image_id=p.id) }}" class="sl-card">
+        <div class="sl-card">
           <img src="{{ p.thumb_url }}" alt="{{ p.photographer }}" class="sl-card-thumb" onerror="this.style.display='none'">
           <div class="sl-card-meta">
             <div class="sl-card-name">{{ p.photographer }}</div>
-            <div class="sl-card-genre">{{ p.genre }}{% if p.camera %} · {{ p.camera }}{% endif %}</div>
+            <div class="sl-card-genre">{{ p.genre }}</div>
             <div class="sl-card-score">{{ "%.2f"|format(p.score) }}</div>
             <div class="sl-card-tier-gold">{{ p.tier }}</div>
           </div>
-        </a>
+        </div>
         {% endfor %}
       </div>
     </div>
@@ -398,7 +398,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 
 <!-- KYC -->
 <div class="sl-kyc">
-  League standing is determined by calibrated evaluation against the Shutter League standard.
+  Community Gallery shows free-tier evaluations from the Shutter League engine, applied against the same standard used for all photographers.
   &nbsp;<a href="{{ url_for('terms') }}">Terms &amp; Conditions</a> &nbsp;·&nbsp;
   <a href="{{ url_for('privacy') }}">Privacy Policy</a> &nbsp;·&nbsp;
   <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
@@ -466,7 +466,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     </a>
     <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item active">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-      League
+      Community
     </a>
     <button class="sl-mob-nav-item" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -483,7 +483,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     </a>
     <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item active">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-      League
+      Community
     </a>
     <a href="{{ url_for('login') }}" class="sl-mob-nav-item">
       <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
@@ -569,11 +569,11 @@ function render() {
   var tierCls = currentTab === 'league' ? 'sl-card-tier-gold' : 'sl-card-tier-blue';
 
   if (currentTab === 'league') {
-    fc.textContent = data.length + ' photographers with standing';
-    asp.innerHTML = '<div class="sl-asp1">We are looking for photographers who see differently.</div><div class="sl-asp2">If that is you — your place is waiting.</div>';
+    fc.textContent = data.length + ' photographs in the community';
+    asp.innerHTML = '<div class="sl-asp1">Want your work evaluated against the same standard?</div><div class="sl-asp2">Upload your first photograph — it\'s free.</div>';
   } else {
     fc.textContent = '';
-    asp.innerHTML = '<div class="sl-asp1">Building their record. Every photograph moves them forward.</div>';
+    asp.innerHTML = '<div class="sl-asp1">Building their eye. Every photograph moves them forward.</div>';
   }
 
   var pages = Math.ceil(data.length / PER);
@@ -581,14 +581,14 @@ function render() {
 
   var html = '<div class="' + gridCls + '">';
   slice.forEach(function(p) {
-    html += '<a href="/try/standing/' + p.id + '" class="sl-card">';
+    html += '<div class="sl-card">';
     html += '<img src="' + p.thumb_url + '" alt="' + p.photographer + '" class="sl-card-thumb" onerror="this.style.display=\u0027none\u0027">';
     html += '<div class="sl-card-meta">';
     html += '<div class="sl-card-name">' + p.photographer + '</div>';
-    html += '<div class="sl-card-genre">' + p.genre + (p.camera ? ' \u00b7 ' + p.camera : '') + '</div>';
+    html += '<div class="sl-card-genre">' + p.genre + '</div>';
     html += '<div class="' + scoreCls + '">' + p.score.toFixed(2) + '</div>';
     html += '<div class="' + tierCls + '">' + p.tier + '</div>';
-    html += '</div></a>';
+    html += '</div></div>';
   });
   html += '</div>';
   ga.innerHTML = html;
