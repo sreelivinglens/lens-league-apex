@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{# SL-VERSION: admin_emailer-1.0-main (Session 208, 2026-09-02 — Newsletter emailer dashboard. Audience: Sonnet/Haiku/Both/Custom. Preview mode. Logs to admin_sent_emails. Extends base.html. Admin-only.) #}
+{% block title %}Newsletter — Shutter League Admin{% endblock %}
+{% block meta_description %}Send newsletters to Shutter League members.{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex,nofollow">{% endblock %}
+{% block extra_css %}
+<style>
+.em-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+.em-back { display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--text-secondary); text-decoration:none; margin-bottom:20px; }
+.em-back:hover { color:var(--text-primary); }
+.em-title { font-size:22px; font-weight:500; color:var(--text-primary); margin-bottom:4px; }
+.em-sub { font-size:15px; color:var(--text-muted); margin-bottom:24px; }
+
+/* Guide */
+.em-guide { background:#FFFBEB; border:1px solid #FDE68A; border-left:4px solid var(--gold); border-radius:0 8px 8px 0; padding:10px 14px; margin-bottom:20px; font-size:14px; color:var(--text-primary); line-height:1.6; }
+.em-guide strong { font-weight:600; color:#92400E; }
+.em-guide ul { margin:5px 0 0 16px; }
+.em-guide ul li { margin-bottom:3px; }
+
+/* Audience cards */
+.em-audiences { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+.em-aud-card { border:2px solid var(--border); border-radius:10px; padding:14px; cursor:pointer; transition:all .15s; background:var(--surface-1); }
+.em-aud-card:hover { border-color:var(--border-strong); background:var(--surface-2); color:var(--text-primary); }
+.em-aud-card.selected { border-color:var(--border-strong); background:var(--surface-2); }
+.em-aud-card input[type=radio] { display:none; }
+.em-aud-label { font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:3px; }
+.em-aud-count { font-size:13px; color:var(--text-muted); }
+.em-aud-desc { font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.6; }
+
+/* Composer */
+.em-composer { background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:20px; }
+.em-field { margin-bottom:16px; }
+.em-label { font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:6px; display:block; }
+.em-label-sub { font-size:12px; color:var(--text-muted); font-weight:400; margin-left:8px; }
+.em-input { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:16px; color:var(--text-primary); background:var(--surface-2); font-family:inherit; outline:none; min-height:44px; }
+.em-input:focus { border-color:var(--border-strong); }
+.em-textarea { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:15px; color:var(--text-primary); background:var(--surface-2); font-family:inherit; outline:none; resize:vertical; min-height:220px; line-height:1.7; }
+.em-textarea:focus { border-color:var(--border-strong); }
+.em-textarea-hint { font-size:13px; color:var(--text-muted); margin-top:5px; line-height:1.5; }
+.em-custom-emails { display:none; }
+.em-custom-emails.visible { display:block; }
+
+/* Action row */
+.em-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.em-btn-preview { padding:12px 22px; border-radius:8px; border:1.5px solid var(--gold); background:transparent; color:var(--text-primary); font-size:15px; cursor:pointer; font-family:var(--font-mono); font-weight:700; min-height:48px; letter-spacing:.5px; }
+.em-btn-preview:hover { background:var(--gold-subtle); }
+.em-btn-send { padding:12px 28px; border-radius:8px; border:1.5px solid #2E7D32; background:#2E7D32; color:#fff; font-size:15px; cursor:pointer; font-family:var(--font-mono); font-weight:700; min-height:48px; letter-spacing:.5px; }
+.em-btn-send:hover { background:#1B5E20; }
+.em-recipient-count { font-size:14px; color:var(--text-muted); }
+.em-recipient-count strong { color:var(--text-primary); }
+
+/* Preview panel */
+.em-preview { background:var(--surface-1); border:1.5px solid var(--gold); border-radius:12px; padding:20px; margin-bottom:20px; }
+.em-preview-label { font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-primary); margin-bottom:14px; }
+.em-preview-meta { font-size:13px; color:var(--text-muted); margin-bottom:14px; }
+.em-preview-frame { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+
+/* Recent sends */
+.em-history { background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.em-history-title { font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:14px; }
+.em-history-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; }
+.em-history-row:last-child { border-bottom:none; }
+.em-history-subject { flex:1; color:var(--text-primary); font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.em-history-type { font-size:13px; padding:2px 8px; border-radius:99px; background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border); white-space:nowrap; }
+.em-history-date { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.em-empty { font-size:14px; color:var(--text-muted); text-align:center; padding:24px; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .em-wrap { padding:56px 12px 80px; }
+  .em-audiences { grid-template-columns:1fr 1fr; }
+  .em-actions { flex-direction:column; align-items:stretch; }
+  .em-btn-preview, .em-btn-send { width:100%; text-align:center; justify-content:center; }
+  .em-title { font-size:20px; }
+}
+@media (max-width: 480px) {
+  .em-audiences { grid-template-columns:1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="em-wrap">
+
+  <a href="{{ url_for('admin_dashboard') }}" class="em-back">← Back to admin</a>
+
+  <div class="em-title">Newsletter</div>
+  <div class="em-sub">Send updates to your members — Sonnet, Haiku, or both.</div>
+
+  <div class="em-guide">
+    <strong>How to use this.</strong>
+    <ul>
+      <li>Pick an audience — Sonnet (paid) gets feature updates, Haiku (free) gets nudges toward conversion.</li>
+      <li>Write plainly — one topic per email. Members read on mobile. Short paragraphs, no jargon.</li>
+      <li>Use Preview first — always check how it looks before sending.</li>
+      <li>Every email is logged in Admin Sent Emails and the Audit Log.</li>
+    </ul>
+  </div>
+
+  {% if preview_html %}
+  {# ── PREVIEW MODE ── #}
+  <div class="em-preview">
+    <div class="em-preview-label">Preview — not yet sent</div>
+    <div class="em-preview-meta">
+      To: <strong>{{ preview_recipient }}</strong> (and {{ recipient_count - 1 }} others)
+      &nbsp;·&nbsp; Subject: <strong>{{ subject }}</strong>
+    </div>
+    <div class="em-preview-frame">{{ preview_html|safe }}</div>
+  </div>
+  <form method="POST" action="{{ url_for('admin_emailer') }}">
+    <input type="hidden" name="audience" value="{{ audience }}">
+    <input type="hidden" name="subject" value="{{ subject }}">
+    <input type="hidden" name="body" value="{{ body }}">
+    <div class="em-actions" style="margin-bottom:24px;">
+      <a href="{{ url_for('admin_emailer') }}" class="em-btn-preview" style="text-decoration:none;display:inline-flex;align-items:center;">← Edit</a>
+      <button type="submit" class="em-btn-send">Send to {{ recipient_count }} member{{ 's' if recipient_count != 1 else '' }} →</button>
+      <span class="em-recipient-count">Audience: <strong>{{ audience }}</strong></span>
+    </div>
+  </form>
+  {% endif %}
+
+  {# ── COMPOSER ── #}
+  <form method="POST" action="{{ url_for('admin_emailer') }}" id="emailerForm">
+
+    {# Audience #}
+    <div class="em-guide info" style="background:#EFF6FF;border-color:#BFDBFE;border-left-color:#1A2744;margin-bottom:12px;font-size:13px">
+      <strong>Audience guide:</strong> Sonnet = paid subscribers only. Haiku = free trial users only. Both = everyone. Custom = specific email addresses (comma-separated).
+    </div>
+    <div class="em-audiences">
+      <label class="em-aud-card {% if not audience or audience == 'sonnet' %}selected{% endif %}" onclick="selectAud(this,'sonnet')">
+        <input type="radio" name="audience" value="sonnet" {% if not audience or audience == 'sonnet' %}checked{% endif %}>
+        <div class="em-aud-label">Sonnet (paid)</div>
+        <div class="em-aud-count">{{ sonnet_count }} members</div>
+        <div class="em-aud-desc">Paid subscribers. Feature updates, Evolving Eye, new mentors, programme announcements.</div>
+      </label>
+      <label class="em-aud-card {% if audience == 'haiku' %}selected{% endif %}" onclick="selectAud(this,'haiku')">
+        <input type="radio" name="audience" value="haiku" {% if audience == 'haiku' %}checked{% endif %}>
+        <div class="em-aud-label">Haiku (free)</div>
+        <div class="em-aud-count">{{ haiku_count }} users</div>
+        <div class="em-aud-desc">Free trial users. Conversion nudges, community updates, upload encouragement.</div>
+      </label>
+      <label class="em-aud-card {% if audience == 'both' %}selected{% endif %}" onclick="selectAud(this,'both')">
+        <input type="radio" name="audience" value="both" {% if audience == 'both' %}checked{% endif %}>
+        <div class="em-aud-label">Both</div>
+        <div class="em-aud-count">{{ sonnet_count + haiku_count }} members</div>
+        <div class="em-aud-desc">Everyone. Platform-wide announcements. Use sparingly.</div>
+      </label>
+      <label class="em-aud-card {% if audience == 'custom' %}selected{% endif %}" onclick="selectAud(this,'custom')">
+        <input type="radio" name="audience" value="custom" {% if audience == 'custom' %}checked{% endif %}>
+        <div class="em-aud-label">Custom</div>
+        <div class="em-aud-count">Manual list</div>
+        <div class="em-aud-desc">Specific email addresses. For partner offers, test sends, or individual outreach.</div>
+      </label>
+    </div>
+
+    <div class="em-custom-emails {% if audience == 'custom' %}visible{% endif %}" id="customEmailsField">
+      <div class="em-field">
+        <label class="em-label" for="custom_emails">Email addresses <span class="em-label-sub">comma-separated</span></label>
+        <input class="em-input" id="custom_emails" name="custom_emails" type="text" value="{{ request.form.get('custom_emails', '') }}" placeholder="hello@example.com, another@example.com">
+      </div>
+    </div>
+
+    {# Composer #}
+    <div class="em-composer">
+      <div class="em-field">
+        <label class="em-label" for="subject">Subject line</label>
+        <input class="em-input" id="subject" name="subject" type="text" value="{{ subject or request.form.get('subject', '') }}" placeholder="Shutter League — Your Evolving Eye is ready" required>
+      </div>
+      <div class="em-field">
+        <label class="em-label" for="body">
+          Body
+          <span class="em-label-sub">Plain text. Use blank lines between paragraphs. No HTML needed.</span>
+        </label>
+        <textarea class="em-textarea" id="body" name="body" required>{{ body or request.form.get('body', '') }}</textarea>
+        <div class="em-textarea-hint">
+          The email will be wrapped in the Shutter League template automatically. Write naturally — one paragraph at a time.
+          &nbsp;·&nbsp; The greeting "Hi [Name]," is added automatically.
+          &nbsp;·&nbsp; "Warm regards, Shutter League" is added at the end.
+        </div>
+      </div>
+    </div>
+
+    {# Actions #}
+    <div class="em-actions">
+      <button type="submit" name="preview" value="1" class="em-btn-preview">Preview →</button>
+      <button type="submit" class="em-btn-send" onclick="return confirmSend()">Send newsletter</button>
+      <span class="em-recipient-count" id="recipientLabel">
+        Will send to <strong id="recipientCount">{{ sonnet_count }}</strong> member{{ 's' if sonnet_count != 1 else '' }}
+      </span>
+    </div>
+
+  </form>
+
+  {# ── RECENT SENDS ── #}
+  {% if recent_sends %}
+  <div class="em-history" style="margin-top:28px">
+    <div class="em-history-title">Recent newsletters</div>
+    {% for r in recent_sends %}
+    <div class="em-history-row">
+      <span class="em-history-subject">{{ r.subject }}</span>
+      <span class="em-history-type">{{ r.send_type }}</span>
+      <span class="em-history-date">{{ r.sent_at.strftime('%d %b %Y') if r.sent_at else '—' }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var _counts = {
+  sonnet: {{ sonnet_count }},
+  haiku: {{ haiku_count }},
+  both: {{ sonnet_count + haiku_count }},
+  custom: 0
+};
+
+function selectAud(card, val) {
+  document.querySelectorAll('.em-aud-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  card.querySelector('input').checked = true;
+  document.getElementById('customEmailsField').classList.toggle('visible', val === 'custom');
+  var n = _counts[val] || 0;
+  document.getElementById('recipientCount').textContent = n;
+  document.getElementById('recipientLabel').querySelector('strong').textContent = n;
+}
+
+function confirmSend() {
+  var aud = document.querySelector('input[name=audience]:checked');
+  if (!aud) return false;
+  var n = _counts[aud.value] || 0;
+  if (aud.value === 'custom') {
+    var emails = document.getElementById('custom_emails').value.split(',').filter(e => e.trim());
+    n = emails.length;
+  }
+  if (n === 0) { alert('No recipients — check your audience or custom emails.'); return false; }
+  return confirm('Send newsletter to ' + n + ' member' + (n !== 1 ? 's' : '') + '? This cannot be undone.');
+}
+</script>
+{% endblock %}
