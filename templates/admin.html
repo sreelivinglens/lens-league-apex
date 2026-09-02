@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL:version 181.83 admin — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
+{# SL:version 181.84 admin — Session 208, 2026-09-02. Sticky nav strip (row 2): all nav buttons as horizontally scrollable strip, grouped Daily/Content/Tools/Security. Works on mobile/iPad. Old multi-row nav block removed. RETAINS 181.83. — Session 208, 2026-09-02. Sticky top bar: engine toggle (Sonnet/Haiku) + new-image badge + inline search + alert links. Overview panel (stat bar + dashboard cards) collapsed by default, opens automatically when alert present. RETAINS 181.81. — Session 208, 2026-09-02. Added: stat bar, dashboard cards (funnel/evals/mix/alerts/quick-actions), unified search, Sonnet/Haiku engine tab on image grid, Haiku members panel, audit log feed, Newsletter + Audit Log nav buttons. Guide notes on every section. RETAINS 180.6. #}
 {% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_head %}
@@ -284,6 +284,18 @@
   .sl-overview-title { font-size:13px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:8px; font-family:var(--font-mono); letter-spacing:.5px; text-transform:uppercase; }
   .sl-overview-body { display:none; padding:14px; border-top:1px solid var(--border); }
   .sl-overview-body.open { display:block; }
+
+  /* Sticky nav strip — row 2 */
+  .sl-navstrip { position:sticky; top:62px; z-index:99; background:var(--surface-2); border-bottom:1px solid var(--border); overflow-x:auto; white-space:nowrap; display:flex; align-items:center; gap:0; margin:0 -24px 16px; padding:0; -webkit-overflow-scrolling:touch; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+  .sl-navstrip-group { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-right:1px solid var(--border); flex-shrink:0; }
+  .sl-navstrip-group:last-child { border-right:none; }
+  .sl-navstrip-label { font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-right:4px; flex-shrink:0; }
+  .sl-nav-pill { font-size:13px; padding:4px 9px; border:1px solid var(--border); border-radius:4px; background:var(--surface-1); color:var(--text-secondary); text-decoration:none; white-space:nowrap; min-height:30px; display:inline-flex; align-items:center; gap:3px; cursor:pointer; font-family:inherit; }
+  .sl-nav-pill:hover { border-color:var(--gold); color:var(--text-primary); }
+  .sl-nav-pill.gold { border-color:var(--gold-dark); color:#92400E; background:#FFF8E1; }
+  .sl-nav-pill.red { border-color:#B91C1C; color:#B91C1C; background:#FEF2F2; }
+  .sl-nav-pill.urgent { background:#F5C518; border-color:#C8A84B; color:#1A1A18; font-weight:700; }
+  @media(max-width:600px) { .sl-navstrip { top:58px; } }
 
   /* Stat bar */
   .sl-stat-bar { display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:20px; }
@@ -588,59 +600,53 @@
   </div>{# end sl-overview-body #}
   </div>{# end sl-overview-panel #}
 
-  {# ── Top nav ── #}
-  {# ── Admin nav — grouped by function ── #}
-  <div style="margin-bottom:24px;">
-
-    {# GROUP 1: Daily checks — things with live counts that need attention #}
-    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Daily</div>
-    <div class="admin-nav" style="margin-bottom:14px;">
-      <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
+  {# ── Session 208: Sticky nav strip — row 2 ── #}
+  <div class="sl-navstrip">
+    {# GROUP 1: Daily #}
+    <div class="sl-navstrip-group">
+      <span class="sl-navstrip-label">Daily</span>
+      <a href="{{ url_for("admin_contact_inbox") }}" class="sl-nav-pill {% if unread_contact_count > 0 %}urgent{% endif %}">
         ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
       </a>
-      <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
+      <a href="{{ url_for("admin_reports") }}" class="sl-nav-pill red">
         ⚑ Reports{% if open_reports_count %} <span class="badge-count">{{ open_reports_count }}</span>{% endif %}
       </a>
-      <a href="{{ url_for("admin_csi_page") }}" class="admin-nav-btn gold">
+      <a href="{{ url_for("admin_csi_page") }}" class="sl-nav-pill {% if csi_unreviewed_count > 0 %}gold{% endif %}">
         👁 CSI{% if csi_unreviewed_count > 0 %} <span class="badge-count">{{ csi_unreviewed_count }}</span>{% endif %}
       </a>
-      <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn">📁 RAW Verification</a>
-      <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
-      <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
-      <a href="{{ url_for("admin_engagement") }}" class="admin-nav-btn">📈 Engagement</a>
-      <a href="{{ url_for("admin_emailer") }}" class="admin-nav-btn slate">✉ Newsletter</a>
-      <a href="{{ url_for("admin_audit_log") }}" class="admin-nav-btn">🛡 Audit Log</a>
+      <a href="{{ url_for("admin_raw_verification") }}" class="sl-nav-pill">📁 RAW</a>
+      <a href="{{ url_for("admin_subscriptions") }}" class="sl-nav-pill">💳 Subscriptions</a>
+      <a href="{{ url_for("admin_users") }}" class="sl-nav-pill">👥 Users</a>
+      <a href="{{ url_for("admin_engagement") }}" class="sl-nav-pill">📈 Engagement</a>
+      <a href="{{ url_for("admin_emailer") }}" class="sl-nav-pill">✉ Newsletter</a>
+      <a href="{{ url_for("admin_audit_log") }}" class="sl-nav-pill">🛡 Audit</a>
     </div>
-
-    {# GROUP 2: Content & platform — programme, content, judging #}
-    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Content & Platform</div>
-    <div class="admin-nav" style="margin-bottom:14px;">
-      <a href="{{ url_for("admin_curation") }}" class="admin-nav-btn slate">🎯 Curator's Bench</a>
-      <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn">🏆 Programmes</a>
-      <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn">📅 Weekly Assignment</a>
-      <a href="{{ url_for("admin_judges") }}" class="admin-nav-btn">⚖️ Jury</a>
-      <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn">🏫 Mentors</a>
-      <a href="{{ url_for("admin_site_settings") }}" class="admin-nav-btn slate">📣 Fresh from SL</a>
-      <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn brown">⬆ Bulk Upload</a>
+    {# GROUP 2: Content & Platform #}
+    <div class="sl-navstrip-group">
+      <span class="sl-navstrip-label">Content</span>
+      <a href="{{ url_for("admin_curation") }}" class="sl-nav-pill">🎯 Curator</a>
+      <a href="{{ url_for("admin_contests") }}" class="sl-nav-pill">🏆 Programmes</a>
+      <a href="{{ url_for("admin_weekly_challenge") }}" class="sl-nav-pill">📅 Weekly</a>
+      <a href="{{ url_for("admin_judges") }}" class="sl-nav-pill">⚖️ Jury</a>
+      <a href="{{ url_for("admin_mentors") }}" class="sl-nav-pill">🏫 Mentors</a>
+      <a href="{{ url_for("admin_site_settings") }}" class="sl-nav-pill">📣 Fresh from SL</a>
+      <a href="{{ url_for("bulk_upload") }}" class="sl-nav-pill">⬆ Bulk Upload</a>
     </div>
-
-    {# GROUP 3: Tools & data — occasional, not daily #}
-    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Tools & Data</div>
-    <div class="admin-nav" style="margin-bottom:14px;">
-      <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn">🔧 Calibration Notes</a>
-      <button type="button" class="admin-nav-btn" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
-      <a href="{{ url_for('admin_mim_export') }}" class="admin-nav-btn slate">📊 MIM Export</a>
-      <a href="{{ url_for('admin_mim_users') }}" class="admin-nav-btn slate">👥 MIM Users</a>
-      <a href="/admin/international-waitlist" class="admin-nav-btn slate">🌍 Intl Waitlist</a>
+    {# GROUP 3: Tools & Data #}
+    <div class="sl-navstrip-group">
+      <span class="sl-navstrip-label">Tools</span>
+      <a href="{{ url_for("admin_calibration_notes") }}" class="sl-nav-pill">🔧 Calibration</a>
+      <button type="button" class="sl-nav-pill" onclick="adminPostUrl('/admin/rebuild-cards', 'Rebuild all card JPGs from existing audit data? Runs in background — watch logs.')">🖼 Rebuild Cards</button>
+      <a href="{{ url_for('admin_mim_export') }}" class="sl-nav-pill">📊 MIM Export</a>
+      <a href="{{ url_for('admin_mim_users') }}" class="sl-nav-pill">👥 MIM Users</a>
+      <a href="/admin/international-waitlist" class="sl-nav-pill">🌍 Intl Waitlist</a>
     </div>
-
-    {# GROUP 4: Security — flagged, bots, blocks #}
-    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Security</div>
-    <div class="admin-nav">
-      <a href="/admin/bot-review" class="admin-nav-btn" style="background:#C62828;border-color:#a31515;color:#fff;">🤖 Bot Review</a>
-      <a href="/admin/blocked-ips" class="admin-nav-btn" style="background:#7B1FA2;border-color:#4A0072;color:#fff;">🚫 Blocked IPs</a>
+    {# GROUP 4: Security #}
+    <div class="sl-navstrip-group">
+      <span class="sl-navstrip-label">Security</span>
+      <a href="/admin/bot-review" class="sl-nav-pill red">🤖 Bot Review</a>
+      <a href="/admin/blocked-ips" class="sl-nav-pill red">🚫 Blocked IPs</a>
     </div>
-
   </div>
 
   {# ── Action Required Banner ── #}
