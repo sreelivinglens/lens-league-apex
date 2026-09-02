@@ -14,6 +14,18 @@ Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
 Session 168 (31 Jul 2026): Added check 0b — Jinja {{ }} inside <script> blocks.
+Session 208 (02 Sep 2026):
+  TWO-WORLDS SEPARATION — New check on all HTML templates:
+    · Haiku standalone pages must not reference Sonnet routes (dashboard, my_gallery,
+      leaderboard, image_detail, upload, recent_work, standings_public, evolving_eye)
+    · Haiku standalone must not extend base.html
+    · Haiku standalone topbar/nav must not use cream #F5F3EF (must be #1A2744 navy)
+    · LOP brand language (League of Photographers, Masters in the Making) must not
+      appear outside league_haiku.html
+    · Sonnet pages (extending base.html) must not reference Haiku routes
+      (try_welcome, try_page, try_gallery, try_result, try_standing, league_haiku)
+  NOTE: is_haiku_try ORM check already existed (Rule 10/Rule 8) — retained as-is.
+
 Session 201 (28 Aug 2026):
   NAV CONSISTENCY — Haiku standalone pages checked for:
     · Cream topbar background (not dark navy #1A2744)
@@ -2563,6 +2575,83 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     else:
         _note('Haiku nav check — not a Haiku page, skipped')
 
+
+    # ── TWO-WORLDS SEPARATION — Session 208 ──────────────────────────────────
+    # Constitution: "Never mix. Never let a Haiku user see Sonnet pages or vice versa."
+    # Haiku standalone templates must not reference Sonnet routes.
+    # Sonnet templates (extending base.html) must not reference Haiku routes.
+    _section('DELIVERY STANDARD — Two-worlds separation (Session 208)')
+
+    _SONNET_ROUTES = [
+        "url_for('dashboard')",
+        "url_for('my_gallery')",
+        "url_for('leaderboard')",
+        "url_for('image_detail')",
+        "url_for('upload')",
+        "url_for('recent_work')",
+        "url_for('standings_public')",
+        "url_for('evolving_eye')",
+    ]
+    _HAIKU_ROUTES = [
+        "url_for('try_welcome')",
+        "url_for('try_page')",
+        "url_for('try_gallery')",
+        "url_for('try_result')",
+        "url_for('try_standing')",
+        "url_for('league_haiku')",
+    ]
+
+    if _HAIKU_STANDALONE:
+        # Haiku standalone must not reference Sonnet routes
+        _sonnet_leaks = [r for r in _SONNET_ROUTES if r in content]
+        if _sonnet_leaks:
+            _fail(f'Haiku standalone references Sonnet routes: {", ".join(_sonnet_leaks)}')
+            fails += 1
+        else:
+            _ok('Haiku standalone — no Sonnet route leaks found')
+
+        # Haiku standalone must not extend base.html
+        if '{% extends' in content and 'base.html' in content:
+            _fail('Haiku standalone extends base.html — must be fully standalone (constitution Rule 10)')
+            fails += 1
+        else:
+            _ok('Haiku standalone — does not extend base.html')
+
+        # Haiku standalone must not use cream topbar #F5F3EF on nav/topbar
+        _cream_nav = re.search(r'(?:sl-topbar|mob-nav|sl-top-nav|topbar)[^}]*#F5F3EF', content)
+        if _cream_nav:
+            _fail('Haiku standalone — cream #F5F3EF found on nav/topbar (must be #1A2744 navy)')
+            fails += 1
+        else:
+            _ok('Haiku standalone — topbar/nav colour correct (no cream #F5F3EF)')
+
+        # LOP brand language must not appear outside league_haiku.html
+        if fname.lower() not in ('league_haiku.html',):
+            _lop_terms = ['League of Photographers', 'Masters in the Making', 'Earned.\nNot purchased']
+            _lop_found = [t for t in _lop_terms if t in content]
+            if _lop_found:
+                _fail(f'Haiku standalone — LOP brand language found outside league_haiku.html: {", ".join(_lop_found)}')
+                fails += 1
+            else:
+                _ok('Haiku standalone — no LOP brand language leak')
+
+    elif _HAIKU_BASE_EXTEND or (not _HAIKU_STANDALONE and '{% extends' in content and 'base.html' in content):
+        # Sonnet pages extending base.html must not reference Haiku routes
+        # EXEMPT: try_gallery.html and image_detail_haiku.html are Haiku pages that
+        # extend base.html — known gap (constitution Session 207, line 61).
+        # They legitimately reference Haiku routes. Skip check for these.
+        _TWO_WORLDS_EXEMPT = ('try_gallery.html', 'image_detail_haiku.html')
+        if fname.lower() in _TWO_WORLDS_EXEMPT:
+            _note(f'Two-worlds Sonnet check — {fname} exempt (Haiku page extending base.html, known gap)')
+        else:
+            _haiku_leaks = [r for r in _HAIKU_ROUTES if r in content]
+            if _haiku_leaks:
+                _fail(f'Sonnet page references Haiku routes: {", ".join(_haiku_leaks)}')
+                fails += 1
+            else:
+                _ok('Sonnet page — no Haiku route leaks found')
+    else:
+        _note('Two-worlds separation — not a Haiku or Sonnet template, skipped')
 
     # Exact filename match only -- the previous 'admin' in fname and 'admin_user'
     # not in fname substring check was written when admin.html was the only
