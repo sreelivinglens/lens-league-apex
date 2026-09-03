@@ -395,7 +395,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <i class="ti ti-bell"></i> Alerts
       {% if open_reports_count > 0 %}<span class="sb-badge warn">{{ open_reports_count }}</span>{% endif %}
     </a>
-    <a class="sb-item" href="{{ url_for('contact_admin') }}" style="text-decoration:none">
+    <a class="sb-item" href="{{ url_for('admin_contact_inbox') }}" style="text-decoration:none">
       <i class="ti ti-mail"></i> Inbox
       {% if unread_contact_count > 0 %}<span class="sb-badge warn">{{ unread_contact_count }}</span>{% endif %}
     </a>
@@ -430,7 +430,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <i class="ti ti-eye"></i> CSI review
       {% if csi_unreviewed_count > 0 %}<span class="sb-badge warn">{{ csi_unreviewed_count }}</span>{% endif %}
     </a>
-    <a class="sb-item" href="{{ url_for('admin_export_mim') }}" style="text-decoration:none"><i class="ti ti-download"></i> MIM Export</a>
+    <a class="sb-item" href="{{ url_for('admin_mim_export') }}" style="text-decoration:none"><i class="ti ti-download"></i> MIM Export</a>
     <a class="sb-item" href="{{ url_for('admin_mim_users') }}" style="text-decoration:none"><i class="ti ti-users"></i> MIM Users</a>
     <a class="sb-item" href="{{ url_for('admin_international_waitlist') }}" style="text-decoration:none"><i class="ti ti-world"></i> Intl Waitlist</a>
     <a class="sb-item" href="{{ url_for('admin_emailer') }}" style="text-decoration:none"><i class="ti ti-speakerphone"></i> Newsletter</a>
@@ -607,8 +607,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div class="guide" style="margin-bottom:10px;font-size:13px"><strong>One tap</strong> for the most common admin tasks. No scrolling needed.</div>
       <div class="qa-grid">
         <a class="qa-btn" href="{{ url_for('admin_emailer') }}"><i class="ti ti-speakerphone"></i> Create announcement</a>
-        <a class="qa-btn" href="{{ url_for('contact_admin') }}"><i class="ti ti-message"></i> Member feedback</a>
-        <a class="qa-btn" href="{{ url_for('admin_export_mim') }}"><i class="ti ti-download"></i> Export data</a>
+        <a class="qa-btn" href="{{ url_for('admin_contact_inbox') }}"><i class="ti ti-message"></i> Member feedback</a>
+        <a class="qa-btn" href="{{ url_for('admin_mim_export') }}"><i class="ti ti-download"></i> Export data</a>
         <a class="qa-btn" href="{{ url_for('admin_mim_users') }}"><i class="ti ti-users"></i> Manage mentors</a>
         <a class="qa-btn" href="{{ url_for('admin_emailer') }}"><i class="ti ti-mail"></i> Send email</a>
         <a class="qa-btn" href="{{ url_for('admin_audit_log') }}"><i class="ti ti-file-search"></i> Full audit log →</a>
@@ -643,7 +643,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           <div class="res-meta">{{ u.email }} · user {{ u.id }} · {{ u.city or '—' }}</div>
         </div>
         <span class="res-badge {% if u.is_subscribed %}rb-p{% else %}rb-h{% endif %}">{% if u.is_subscribed %}Paid{% else %}Haiku{% endif %}</span>
-        <a class="res-action" href="{{ url_for('admin_user_detail', user_id=u.id) if 'admin_user_detail' in get_flashed_messages.__module__ else '#' }}">View →</a>
+        <a class="res-action" href="{{ url_for('admin_user_detail', user_id=u.id) }}">View →</a>
       </div>
       {% else %}
       {% if not admin_q %}{% endif %}
@@ -1067,8 +1067,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       {% endfor %}
       {% endif %}
       <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-        <a class="ig-link" href="{{ url_for('admin_recalibrate') if 'admin_recalibrate' in '' else url_for('admin_dashboard') }}">Run calibration</a>
-        <a class="ig-link" href="{{ url_for('admin_export_mim') }}">MIM Export</a>
+        <a class="ig-link" href="{{ url_for('admin_dashboard') }}">Run calibration</a>
+        <a class="ig-link" href="{{ url_for('admin_mim_export') }}">MIM Export</a>
         <a class="ig-link" href="{{ url_for('admin_mim_users') }}">MIM Users</a>
         <a class="ig-link" href="{{ url_for('admin_international_waitlist') }}">Intl Waitlist</a>
         <a class="ig-link" href="{{ url_for('admin_csi_page') }}">CSI review ({{ csi_unreviewed_count }} unreviewed)</a>
@@ -1077,9 +1077,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid #EEE">
         <div style="font-size:13px;font-weight:600;color:#8A8A86;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px">Cultural Saturation Index (CSI) exports</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a class="ig-link" href="{{ url_for('admin_export_csi') }}" id="admin_export_csi">CSI full export</a>
+          <a class="ig-link" href="{{ url_for('admin_export_csi_full') }}" id="admin_export_csi">CSI full audit</a>
           <a class="ig-link" href="{{ url_for('admin_export_csi_matches') }}" id="csi-matches">CSI match log</a>
-          <a class="ig-link" href="{{ url_for('admin_export_csi_full') }}" id="csi-full">CSI full audit</a>
         </div>
       </div>
     </div>
