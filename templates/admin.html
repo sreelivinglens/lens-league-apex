@@ -1002,25 +1002,39 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Last 30 days</span><span class="chev closed" id="cNS">▼</span></div>
     </div>
     <div id="b-ns-body" class="sec-body" style="display:none">
-      <div class="guide ok" style="margin-bottom:10px;font-size:13px"><strong>Send E1 onboarding email</strong> to anyone who signed up more than 48 hours ago and hasn't uploaded yet.</div>
+      <div class="guide ok" style="margin-bottom:10px;font-size:13px"><strong>Send welcome nudge</strong> to anyone with 0 uploads who signed up more than 48 hours ago.</div>
       {% if recent_signups %}
       <table class="signup-table">
-        <thead><tr><th>Member</th><th>Signed up</th><th>Track</th><th>Status</th><th style="text-align:right">Action</th></tr></thead>
+        <thead><tr><th>Member</th><th>Signed up</th><th>Track</th><th>Uploads</th><th>Status</th><th style="text-align:right">Action</th></tr></thead>
         <tbody>
           {% for u in recent_signups %}
+          {% set ns_hu = namespace(used=0) %}
+          {% for hu in haiku_users if hu.id == u.id %}{% set ns_hu.used = hu.haiku_used or 0 %}{% endfor %}
+          {% set haiku_used = ns_hu.used %}
           <tr>
             <td>
               <div style="font-weight:500;font-size:14px">{{ u.full_name or u.username }}</div>
               <div style="font-size:11px;color:#8A8A86">{{ u.email }}</div>
             </td>
             <td style="font-size:13px;color:#8A8A86;white-space:nowrap">{{ u.created_at.strftime('%-d %b %Y') if u.created_at else '—' }}</td>
-            <td style="font-size:13px">{% if u.is_subscribed %}Paid{% else %}Haiku{% endif %}</td>
+            <td style="font-size:13px">{% if u.is_subscribed and u.subscription_plan not in ('play', None) %}Sonnet{% else %}Haiku{% endif %}</td>
+            <td style="font-size:13px;font-weight:500;color:{% if haiku_used == 0 %}#B45309{% else %}#2E7D32{% endif %}">
+              {{ haiku_used }}
+            </td>
             <td>
-              {% if not u.email_verified %}<span class="status-badge sb-unverified">Unverified</span>
+              {% if not u.is_active %}<span class="status-badge sb-unverified">Unverified</span>
               {% elif not u.onboarding_complete %}<span class="status-badge sb-onboard">Onboarding</span>
               {% else %}<span class="status-badge sb-verified">Active</span>{% endif %}
             </td>
-            <td style="text-align:right"><a class="ra" href="{{ url_for('admin_emailer') }}?to={{ u.email }}">Email</a></td>
+            <td style="text-align:right">
+              {% if haiku_used == 0 %}
+              <button class="ra" onclick="openNudge({{ u.id }}, 'welcome')" style="background:#EFF6FF;border-color:#C8D4E8;color:#1A2744">Welcome nudge</button>
+              {% elif u.is_subscribed and u.subscription_plan not in ('play', None) %}
+              <span style="font-size:12px;color:#8A8A86">Sonnet member</span>
+              {% else %}
+              <button class="ra" onclick="openNudge({{ u.id }}, 'engage')" style="background:#F0FDF4;border-color:#BBF7D0;color:#166534">Re-engage</button>
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>
