@@ -552,9 +552,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="card">
       <div class="card-title"><i class="ti ti-activity"></i> Engagement</div>
       {% if engagement_summary %}
-      <div class="eval-row"><span>Uploaders (7d)</span><span class="eval-val ok">{{ engagement_summary.uploaders_7d }}</span></div>
-      <div class="eval-row"><span>Active (30d)</span><span>{{ engagement_summary.active_30d }}</span></div>
-      <div class="eval-row"><span>Dormant (30d+)</span><span class="eval-val {% if engagement_summary.dormant_count > 0 %}warn{% endif %}">{{ engagement_summary.dormant_count }}</span></div>
+      <div class="eval-row"><span>Active uploaders</span><span class="eval-val ok">{{ engagement_summary.active }}</span></div>
+      <div class="eval-row"><span>Cooling (slowing down)</span><span class="eval-val {% if engagement_summary.cooling > 0 %}warn{% endif %}">{{ engagement_summary.cooling }}</span></div>
+      <div class="eval-row"><span>Dormant (stopped)</span><span class="eval-val {% if engagement_summary.dormant > 0 %}warn{% endif %}">{{ engagement_summary.dormant }}</span></div>
+      <div class="eval-row"><span>Never uploaded</span><span class="eval-val {% if engagement_summary.never > 0 %}warn{% endif %}">{{ engagement_summary.never }}</span></div>
       {% else %}
       <div style="font-size:14px;color:#8A8A86;padding:10px 0">Engagement data unavailable.</div>
       {% endif %}
@@ -1021,9 +1022,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div id="b-en-body" class="sec-body" style="display:none">
       <div class="guide ok" style="margin-bottom:10px;font-size:13px"><strong>Use this</strong> to identify members who haven't uploaded in 30+ days — they may need a re-engagement email or a personal message.</div>
       {% if engagement_summary %}
-      <div class="eval-row"><span>Uploaders this week</span><span class="eval-val ok">{{ engagement_summary.uploaders_7d }}</span></div>
-      <div class="eval-row"><span>Active last 30 days</span><span>{{ engagement_summary.active_30d }}</span></div>
-      <div class="eval-row"><span>Dormant (30+ days)</span><span class="eval-val {% if engagement_summary.dormant_count > 0 %}warn{% endif %}">{{ engagement_summary.dormant_count }}</span></div>
+      <div class="eval-row"><span>Active</span><span class="eval-val ok">{{ engagement_summary.active }}</span></div>
+      <div class="eval-row"><span>Cooling (slowing down)</span><span class="eval-val {% if engagement_summary.cooling > 0 %}warn{% endif %}">{{ engagement_summary.cooling }}</span></div>
+      <div class="eval-row"><span>Dormant (stopped)</span><span class="eval-val {% if engagement_summary.dormant > 0 %}warn{% endif %}">{{ engagement_summary.dormant }}</span></div>
+      <div class="eval-row"><span>Never uploaded</span><span>{{ engagement_summary.never }}</span></div>
       <div style="margin-top:10px"><a href="{{ url_for('admin_engagement') }}" style="font-size:13px;color:#1A2744;text-decoration:none">Full engagement report with per-user breakdown →</a></div>
       {% else %}
       <div style="font-size:14px;color:#8A8A86;padding:10px 0">Engagement data unavailable.</div>
