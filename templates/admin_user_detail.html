@@ -94,7 +94,7 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
   <div class="sl-aud-header">
     <div>
       <div class="sl-aud-name">{{ user.full_name or user.username }}</div>
-      <div class="sl-aud-meta">@{{ user.username }} &nbsp;·&nbsp; {{ user.email }}</div>
+      <div class="sl-aud-meta">user #{{ user.id }} &nbsp;·&nbsp; @{{ user.username }} &nbsp;·&nbsp; {{ user.email }}</div>
       <div class="sl-aud-badges">
         {% if user.is_active %}
           <span class="sl-aud-badge active">Active</span>
@@ -139,6 +139,10 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
     <!-- CONTACT & IDENTITY -->
     <div class="sl-aud-card">
       <div class="sl-aud-card-title">Contact &amp; Identity</div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">User ID</span>
+        <span class="sl-aud-val" style="font-family:monospace;color:#1A2744">#{{ user.id }}</span>
+      </div>
       <div class="sl-aud-row">
         <span class="sl-aud-key">Full name</span>
         <span class="sl-aud-val">{{ user.full_name or '—' }}</span>
