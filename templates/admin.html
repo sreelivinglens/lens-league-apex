@@ -357,7 +357,35 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </head>
 <body>
 
-{# ── MOBILE TOP NAV ── #}
+{# ── HAIKU NUDGE MODAL ── #}
+<div id="nudge-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:min(560px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:#1A1A18" id="nudge-title">Nudge member</div>
+        <div style="font-size:13px;color:#8A8A86;margin-top:2px" id="nudge-to"></div>
+      </div>
+      <button onclick="closeNudge()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#8A8A86;padding:4px 8px">×</button>
+    </div>
+    <div id="nudge-status" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:14px"></div>
+    <form id="nudge-form">
+      <input type="hidden" id="nudge-user-id" name="user_id">
+      <input type="hidden" id="nudge-type" name="nudge_type">
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:#6B6B68;font-weight:500;display:block;margin-bottom:5px">Subject</label>
+        <input id="nudge-subject" name="subject" style="width:100%;padding:10px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:15px;font-family:inherit;background:#FAFAF6;outline:none" type="text">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;color:#6B6B68;font-weight:500;display:block;margin-bottom:5px">Message <span style="color:#AEAEA8;font-weight:400">(edit freely before sending)</span></label>
+        <textarea id="nudge-body" name="body" rows="14" style="width:100%;padding:10px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;font-family:inherit;line-height:1.7;background:#FAFAF6;outline:none;resize:vertical"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" onclick="closeNudge()" style="padding:10px 20px;border-radius:8px;border:1px solid #E0DDD6;background:#FAFAF6;color:#6B6B68;font-size:15px;cursor:pointer;font-family:inherit">Cancel</button>
+        <button type="button" onclick="sendNudge()" id="nudge-send-btn" style="padding:10px 24px;border-radius:8px;border:1px solid #1A2744;background:#1A2744;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Send email</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div class="mob-nav">
   <a class="mob-nav-item active" onclick="goTo('stat-bar')"><i class="ti ti-layout-dashboard"></i> Overview</a>
   <a class="mob-nav-item" onclick="goTo('search-block')"><i class="ti ti-search"></i> Search</a>
@@ -900,7 +928,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             <td>
               <div class="row-actions">
                 <a class="ra" href="{{ url_for('try_gallery') }}?user_id={{ u.id }}">Gallery</a>
-                <a class="ra" href="{{ url_for('admin_emailer') }}?to={{ u.email }}">Email</a>
+                {% if (u.haiku_used or 0) == 0 %}
+                <button class="ra" onclick="openNudge({{ u.id }}, 'welcome')" style="background:#EFF6FF;border-color:#C8D4E8;color:#1A2744">Welcome nudge</button>
+                {% elif (u.haiku_used or 0) >= 10 %}
+                <button class="ra" onclick="openNudge({{ u.id }}, 'convert')" style="background:#FFF8E8;border-color:#C8A84B;color:#92400E">Conversion nudge</button>
+                {% else %}
+                <button class="ra" onclick="openNudge({{ u.id }}, 'engage')" style="background:#F0FDF4;border-color:#BBF7D0;color:#166534">Re-engage nudge</button>
+                {% endif %}
+                <a class="ra" href="{{ url_for('admin_emailer') }}">Email all</a>
               </div>
             </td>
           </tr>
@@ -1219,7 +1254,73 @@ document.getElementById('q').addEventListener('keydown',function(e){
   if(e.key==='Escape'){ this.value=''; doSearch(''); }
 });
 
-// ── Mobile nav active state on scroll ──
+// ── Haiku nudge modal ──
+function openNudge(userId, nudgeType){
+  var modal = document.getElementById('nudge-modal');
+  var status = document.getElementById('nudge-status');
+  status.style.display = 'none';
+  document.getElementById('nudge-user-id').value = userId;
+  document.getElementById('nudge-type').value = nudgeType;
+  document.getElementById('nudge-subject').value = 'Loading…';
+  document.getElementById('nudge-body').value = 'Loading…';
+  document.getElementById('nudge-to').textContent = '';
+  var labels = {welcome:'Welcome nudge',engage:'Re-engagement nudge',convert:'Conversion nudge'};
+  document.getElementById('nudge-title').textContent = labels[nudgeType] || 'Nudge member';
+  modal.style.display = 'flex';
+  fetch('/admin/haiku/nudge-draft?user_id=' + userId + '&type=' + nudgeType)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('nudge-subject').value = d.subject || '';
+      document.getElementById('nudge-body').value = d.body || '';
+      document.getElementById('nudge-to').textContent = 'To: ' + d.name + ' (' + d.email + ')';
+    })
+    .catch(function(){ document.getElementById('nudge-subject').value = ''; document.getElementById('nudge-body').value = ''; });
+}
+function closeNudge(){
+  document.getElementById('nudge-modal').style.display = 'none';
+}
+function sendNudge(){
+  var btn = document.getElementById('nudge-send-btn');
+  var status = document.getElementById('nudge-status');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  status.style.display = 'none';
+  var form = document.getElementById('nudge-form');
+  var data = new FormData(form);
+  fetch('/admin/haiku/nudge', {method:'POST', body:data})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      status.style.display = 'block';
+      if(d.ok){
+        status.style.background = '#F0FDF4';
+        status.style.color = '#166534';
+        status.style.border = '1px solid #BBF7D0';
+        status.textContent = '✓ ' + d.message;
+        btn.textContent = 'Sent';
+        setTimeout(closeNudge, 1800);
+      } else {
+        status.style.background = '#FEF2F2';
+        status.style.color = '#B91C1C';
+        status.style.border = '1px solid #FECACA';
+        status.textContent = '✗ ' + d.message;
+        btn.disabled = false;
+        btn.textContent = 'Send email';
+      }
+    })
+    .catch(function(){
+      status.style.display = 'block';
+      status.style.background = '#FEF2F2';
+      status.style.color = '#B91C1C';
+      status.style.border = '1px solid #FECACA';
+      status.textContent = 'Network error — please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Send email';
+    });
+}
+// Close modal on backdrop click
+document.getElementById('nudge-modal').addEventListener('click', function(e){
+  if(e.target === this) closeNudge();
+});
 (function(){
   var sections=['stat-bar','search-block','needs-attention','images','paid-subs','haiku-members','audit-log','danger'];
   var items=document.querySelectorAll('.mob-nav-item');
