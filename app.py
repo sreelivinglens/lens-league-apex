@@ -512,6 +512,7 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
 
 
 FREE_IMAGE_LIMIT = 10  # Staging only: 10 free Haiku evaluations. Production stays 3 until free tier launches officially.
+HAIKU_LAUNCH_DATE = '2026-08-31'  # Date Haiku free tier opened to public. Anyone registered before this is Sonnet/UAT.
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 # ── Email allowlist — UAT/beta phase ─────────────────────────────────────────
@@ -3900,8 +3901,8 @@ def auth_google_callback():
         post_next = session.pop('post_login_next', None)
         if post_next:
             return redirect(post_next)
-        # Haiku free users → try_welcome; paid/admin → dashboard
-        if getattr(user, 'is_subscribed', False) or getattr(user, 'role', '') == 'admin':
+        # Haiku free users and play plan → try_welcome; Sonnet/admin → dashboard
+        if _is_sonnet_user(user) or getattr(user, 'role', '') == 'admin':
             return redirect(url_for('dashboard'))
         return redirect(url_for('try_welcome'))
     else:
@@ -4215,8 +4216,8 @@ def login():
             return redirect(url_for('judge_dashboard'))
         if getattr(user, 'onboarding_complete', False) and not getattr(user, 'interests_complete', False):
             return redirect(url_for('onboarding_interests'))
-        # Haiku free users → try_welcome; paid/admin → dashboard
-        if getattr(user, 'is_subscribed', False):
+        # Haiku free users and play plan → try_welcome; Sonnet/admin → dashboard
+        if _is_sonnet_user(user):
             return redirect(url_for('dashboard'))
         return redirect(url_for('try_welcome'))
 
@@ -4602,9 +4603,8 @@ def first_login_welcome():
 @login_required
 def dashboard():
     # 181.22: Free Haiku users have no paid dashboard — redirect to /try world.
-    # A free user is defined as not subscribed and not admin.
-    # Their world is /try → upload → /try/result → /try/gallery.
-    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+    # play plan (₹100/100 evals) is also Haiku-world — redirect them too.
+    if current_user.role != 'admin' and not _is_sonnet_user(current_user):
         return redirect(url_for('try_welcome'))
 
     # Approved judges should not see the photographer dashboard
@@ -7981,7 +7981,8 @@ def set_mission_genre():
 @login_required
 def profile():
     # Session 200e: Haiku users — gate = images + history_log (permanent, delete does not restore slot)
-    if not getattr(current_user, 'is_subscribed', False):
+    # play plan (₹100) is Haiku-world — also uses haiku image count
+    if not _is_sonnet_user(current_user):
         images_used = int(db.session.execute(
             db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
             {'uid': current_user.id}
@@ -8537,6 +8538,25 @@ def account_deleted():
 
 
 
+def _is_sonnet_user(user):
+    """
+    Returns True only for genuine Sonnet paid subscribers.
+    The 'play' plan (₹100 / 100 evaluations) is Haiku-world — it must NOT
+    pass Sonnet gates even though is_subscribed=True.
+    Sonnet plans: monthly, halfyearly, annual, uat, beta, learning.
+    Haiku plans:  play (and NULL / unsubscribed).
+    Admin always returns True.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    if getattr(user, 'role', '') == 'admin':
+        return True
+    if not getattr(user, 'is_subscribed', False):
+        return False
+    _plan = getattr(user, 'subscription_plan', None) or ''
+    return _plan != 'play'
+
+
 def _check_upload_quota(user):
     """
     Returns a user-facing message string if `user` is currently blocked from
@@ -8560,7 +8580,7 @@ def _check_upload_quota(user):
     from datetime import date as _date
     today   = _date.today()
     _track  = getattr(user, 'subscription_track', None) or ''
-    _is_sub = getattr(user, 'is_subscribed', False)
+    _is_sub = _is_sonnet_user(user)  # play plan is Haiku — treated as free tier
 
     if not _is_sub:
         # Free tier — 10 lifetime assessments per user_id + referral bonus
@@ -9082,14 +9102,10 @@ def upload():
         return redirect(url_for('onboarding_interests'))
 
     # ── SL 172.2: Free user redirect to /try ─────────────────────────────────
-    # Free users (is_subscribed=False, not admin/beta/uat) use /try for Haiku
-    # evaluations. Clicking "Upload" in the nav sends them to /try, not here.
-    # Subscribed users, admin, beta, and uat plans proceed to the full upload.
-    _plan_check = getattr(current_user, 'subscription_plan', None) or ''
+    # play plan (₹100/100 evals) is Haiku-world — redirect to /try/upload.
     _is_free_user = (
-        not getattr(current_user, 'is_subscribed', False) and
-        current_user.role != 'admin' and
-        _plan_check not in ('beta', 'uat')
+        not _is_sonnet_user(current_user) and
+        current_user.role != 'admin'
     )
     if _is_free_user and request.method == 'GET':
         return redirect(url_for('try_page'))
@@ -15039,6 +15055,141 @@ def admin_bot_review():
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
+# ── HAIKU MEMBER NUDGE — /admin/haiku/nudge ───────────────────────────────────
+# Session 209: Pre-populated Sherpa-tone nudge emails for Haiku members.
+# GET  /admin/haiku/nudge-draft?user_id=X&type=welcome|engage|convert
+#      → returns {subject, body, name, email} JSON for modal pre-population
+# POST /admin/haiku/nudge
+#      → sends the (possibly edited) email, logs to admin_sent_emails
+
+_SHERPA_NUDGES = {
+    'welcome': {
+        'subject': 'Your first photograph is waiting',
+        'body': """{name},
+
+You registered for Shutter League a few days ago — but your first photograph hasn't arrived yet.
+
+That is the only thing standing between you and your first evaluation.
+
+The Sherpa does not grade on promise or potential. It reads what is actually in the frame — light, geometry, the decision behind the shutter. One photograph tells you more about your eye than a month of thinking about photography.
+
+Upload anything. A frame from this morning. Something you have been sitting on. It does not have to be your best work — it just has to be your next step.
+
+Your evaluation will be ready within minutes.
+
+— The Shutter League Sherpa""",
+    },
+    'engage': {
+        'subject': 'Your eye is developing — the record shows it',
+        'body': """{name},
+
+You have put {used} photographs through the Shutter League evaluation. That is {used} data points about how your eye sees.
+
+The pattern is beginning to form. But patterns need more data to become reliable.
+
+The photographers who develop fastest are the ones who keep uploading consistently — not because volume guarantees improvement, but because every evaluation is a conversation between what you intended and what the frame actually captured.
+
+Your next evaluation is waiting. Upload when you are ready.
+
+— The Shutter League Sherpa""",
+    },
+    'convert': {
+        'subject': 'You have reached the edge of the free tier',
+        'body': """{name},
+
+You have used all {used} of your free Shutter League evaluations.
+
+That is not a wall — it is a threshold.
+
+The photographers who join the full League at this point already know what the Sherpa sees in their work. They have a baseline. They know which genres their eye is strongest in, and where the work needs to happen.
+
+You are at that point now.
+
+The Camera League gives you 48 evaluations a year, a calibrated standing in the League of Photographers, and the Mentor narrative on every frame — the full record of how your photography is evolving.
+
+When you are ready: shutterleague.com/pricing
+
+— The Shutter League Sherpa""",
+    },
+}
+
+@app.route('/admin/haiku/nudge-draft')
+@login_required
+@admin_required
+def admin_haiku_nudge_draft():
+    """Return pre-populated nudge draft as JSON for the admin modal."""
+    _uid  = request.args.get('user_id', type=int)
+    _type = request.args.get('type', 'welcome')
+    if not _uid or _type not in _SHERPA_NUDGES:
+        return jsonify({'error': 'Invalid params'}), 400
+    _user = User.query.get(_uid)
+    if not _user:
+        return jsonify({'error': 'User not found'}), 404
+    _name = _user.full_name or _user.username or 'Photographer'
+    _used = 0
+    try:
+        _used = int(db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try IS TRUE"
+        ), {'uid': _uid}).scalar() or 0)
+    except Exception:
+        pass
+    _tpl = _SHERPA_NUDGES[_type]
+    return jsonify({
+        'name':    _name,
+        'email':   _user.email,
+        'subject': _tpl['subject'],
+        'body':    _tpl['body'].format(name=_name, used=_used),
+        'nudge_type': _type,
+    })
+
+
+@app.route('/admin/haiku/nudge', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_nudge():
+    """Send a (possibly edited) nudge email to a single Haiku member."""
+    _uid     = request.form.get('user_id', type=int)
+    _subject = request.form.get('subject', '').strip()
+    _body    = request.form.get('body', '').strip()
+    _type    = request.form.get('nudge_type', 'welcome')
+    if not _uid or not _subject or not _body:
+        return jsonify({'error': 'Missing fields'}), 400
+    _user = User.query.get(_uid)
+    if not _user:
+        return jsonify({'error': 'User not found'}), 404
+    _name = _user.full_name or _user.username or 'Photographer'
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _html = _build_newsletter_html(_name, _subject, _body, _site)
+    _text = f'Hi {_name},\n\n{_body}\n\n—\nShutter League · support@shutterleague.com'
+    _ok   = send_email(_user.email, _subject, _html, _text)
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO admin_sent_emails "
+            "(admin_id, recipient_user_id, recipient_email, subject, body, send_type, success) "
+            "VALUES (:aid, :uid, :email, :subject, :body, 'haiku_nudge', :ok)"
+        ), {
+            'aid':     current_user.id,
+            'uid':     _uid,
+            'email':   _user.email,
+            'subject': _subject,
+            'body':    _body[:2000],
+            'ok':      _ok,
+        })
+        db.session.commit()
+    except Exception as _le:
+        db.session.rollback()
+        app.logger.warning(f'[admin_haiku_nudge] log failed: {_le}')
+    _log_admin_action('haiku_nudge', 'user', _uid, {
+        'nudge_type': _type,
+        'subject':    _subject,
+        'email':      _user.email,
+        'success':    _ok,
+    })
+    if _ok:
+        return jsonify({'ok': True, 'message': f'Sent to {_user.email}'})
+    return jsonify({'ok': False, 'message': f'Send failed for {_user.email}'}), 500
+
+
 # ── IP BLOCK MANAGEMENT — /admin/blocked-ips ─────────────────────────────────
 # S169.1 — View, add, and remove IP addresses from the blocked_ips table.
 # Blocks affect all routes including registration and login.
@@ -16204,15 +16355,16 @@ def admin_dashboard():
 
     # Subscription stats for export panel
     stats_sub = {
-        'subscribers':  User.query.filter_by(is_subscribed=True).count(),
-        'camera_subs':  User.query.filter_by(is_subscribed=True, subscription_track='camera').count(),
-        'mobile_subs':  User.query.filter_by(is_subscribed=True, subscription_track='mobile').count(),
+        'subscribers':  User.query.filter(User.is_subscribed==True, User.subscription_plan!='play').count(),
+        'camera_subs':  User.query.filter(User.is_subscribed==True, User.subscription_track=='camera', User.subscription_plan!='play').count(),
+        'mobile_subs':  User.query.filter(User.is_subscribed==True, User.subscription_track=='mobile', User.subscription_plan!='play').count(),
         'free_users':   db.session.execute(db.text(
-                            "SELECT COUNT(DISTINCT u.id) FROM users u "
-                            "JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
+                            "SELECT COUNT(*) FROM users u "
                             "WHERE u.role != 'admin' "
-                            "AND (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL)"
-                        )).scalar() or 0,
+                            "AND u.created_at >= :haiku_launch "
+                            "AND (u.subscription_plan IS NULL "
+                            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','learning'))"
+                        ), {'haiku_launch': HAIKU_LAUNCH_DATE}).scalar() or 0,
     }
 
     # Active contest banners — shown in admin dashboard for visibility
@@ -16269,7 +16421,7 @@ def admin_dashboard():
     try:
         import json as _puj
         from datetime import datetime as _pudt
-        _sub_users = User.query.filter_by(is_subscribed=True).order_by(User.full_name).all()
+        _sub_users = User.query.filter(User.is_subscribed==True, User.subscription_plan!='play').order_by(User.full_name).all()
         for _pu in _sub_users:
             # Latest scored image
             _latest = db.session.query(Image).filter(
@@ -16326,14 +16478,17 @@ def admin_dashboard():
             "COUNT(i.id) AS haiku_used, "
             "MAX(i.created_at) AS last_image_at "
             "FROM users u "
-            "JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
+            "LEFT JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
             "WHERE u.role != 'admin' "
-            "AND (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
+            "AND u.created_at >= :haiku_launch "
+            "AND (u.subscription_plan IS NULL "
+            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','learning')) "
             "GROUP BY u.id ORDER BY u.created_at DESC LIMIT 50"
-        )).fetchall()
+        ), {'haiku_launch': HAIKU_LAUNCH_DATE}).fetchall()
         haiku_users = _hu_rows
     except Exception as _hue:
         app.logger.warning(f'[admin_dashboard] haiku_users query failed: {_hue}')
+
 
     # ── OPTION 1: Recent admin actions feed (last 20) — Session 208 ────────
     # Surfaces on admin dashboard as live audit card.
@@ -22562,7 +22717,7 @@ def subscribe_confirm():
 
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
 
-    if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual'):
+    if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual', 'play'):
         flash('Invalid payment details.', 'error')
         return redirect(url_for('pricing'))
 
@@ -22585,6 +22740,29 @@ def subscribe_confirm():
             db.text('UPDATE users SET referred_discount = FALSE WHERE id = :uid'),
             {'uid': current_user.id}
         )
+
+        # play plan — give 100 more evaluations from current position.
+        # Images are preserved — user keeps their history.
+        # We extend the gate by setting referral_bonus_uploads so that:
+        #   FREE_IMAGE_LIMIT + referral_bonus_uploads = current_haiku_used + 100
+        if plan == 'play':
+            try:
+                _current_used = int(db.session.execute(
+                    db.text(
+                        "SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try IS TRUE) "
+                        "+ (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try IS TRUE)"
+                    ),
+                    {'uid': current_user.id}
+                ).scalar() or 0)
+                _new_bonus = max(0, _current_used + 100 - FREE_IMAGE_LIMIT)
+                db.session.execute(
+                    db.text("UPDATE users SET referral_bonus_uploads = :bonus WHERE id = :uid"),
+                    {'bonus': _new_bonus, 'uid': current_user.id}
+                )
+                app.logger.info(f'[subscribe_confirm] play plan: user {current_user.id} used={_current_used} new_bonus={_new_bonus} new_limit={FREE_IMAGE_LIMIT + _new_bonus}')
+            except Exception as _play_e:
+                app.logger.warning(f'[subscribe_confirm] play bonus set failed: {_play_e}')
+
         db.session.commit()
 
         # Referral conversion points
@@ -22608,6 +22786,9 @@ def subscribe_confirm():
         _track_labels = {'camera': 'Camera League', 'mobile': 'Mobile League'}
         _send_subscription_confirmation(current_user, track, plan)
         session['just_subscribed'] = track
+        if plan == 'play':
+            flash('Your 100 evaluations are ready. Fresh start — upload your first photograph.', 'success')
+            return redirect(url_for('try_welcome'))
         flash(f'Welcome to {_track_labels.get(track, track.title())}. Your membership is active.', 'success')
         return redirect(url_for('dashboard'))
 
@@ -34000,10 +34181,14 @@ def try_welcome():
     # Haiku free-tier dashboard. Variables passed: evals_remaining, images,
     # milestone_strength, user_hero, league_hero, sherpa_obs, sherpa_nudge,
     # haiku_percentile. Raw SQL throughout per Rule 10.
-    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+    # play plan (₹100) stays in Haiku world — only true Sonnet users go to dashboard
+    if current_user.role != 'admin' and _is_sonnet_user(current_user):
         return redirect(url_for('dashboard'))
 
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    # Effective limit = FREE_IMAGE_LIMIT + _bonus.
+    # play plan sets referral_bonus_uploads at purchase so limit = used_at_purchase + 100.
+    _plan = getattr(current_user, 'subscription_plan', None) or ''
     try:
         _FIL = FREE_IMAGE_LIMIT
     except Exception:
@@ -34458,6 +34643,8 @@ def try_welcome():
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
         limit              = _FIL + _bonus,
+        play_plan          = (_plan == 'play'),
+        play_exhausted     = (_plan == 'play' and evals_used >= (FREE_IMAGE_LIMIT + _bonus)),
         images             = _images,
         milestone_strength = _milestone_strength,
         hero_image         = _hero,
@@ -34510,6 +34697,17 @@ def try_page():
     ).scalar()
     evals_used = int(_haiku_row or 0)
 
+    # play plan exhausted — redirect to dashboard which shows upgrade prompt
+    _plan_try = getattr(current_user, 'subscription_plan', None) or ''
+    _bonus_try = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    _effective_limit_try = FREE_IMAGE_LIMIT + _bonus_try
+    if evals_used >= _effective_limit_try and current_user.role != 'admin':
+        if _plan_try == 'play':
+            flash('You have used all your evaluations. Upgrade to Sonnet or purchase another 100 to continue.', 'info')
+        else:
+            flash(f'You have used all {FREE_IMAGE_LIMIT} free evaluations.', 'info')
+        return redirect(url_for('try_welcome'))
+
     import json as _json
     from engine.scoring import SUBGENRE_MAP, GENRE_IDS
     _last_image = Image.query.filter(
@@ -34523,7 +34721,7 @@ def try_page():
         'upload.html',           # reuse main upload template — is_trial=True gates differences
         is_trial      = True,
         evals_used    = evals_used,
-        evals_limit   = FREE_IMAGE_LIMIT,   # SL-204: was missing; template uses {{ evals_limit or 10 }}
+        evals_limit   = 100 if (getattr(current_user, 'subscription_plan', None) == 'play') else FREE_IMAGE_LIMIT,
         genres        = GENRE_IDS,
         genre_choices = GENRE_CHOICES,
         subgenre_map  = SUBGENRE_MAP,
@@ -34550,22 +34748,24 @@ def try_upload():
     import io as _io
 
     _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-    # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
-    # total_uploads_ever includes paid Sonnet evaluations and incorrectly
-    # blocked paid subscribers from using their free Haiku quota.
+    # play plan gets 100 more from point of purchase via referral_bonus_uploads.
+    # FREE_IMAGE_LIMIT + _bonus = effective limit for this user.
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _haiku_row = db.session.execute(
         db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
         {'uid': current_user.id}
     ).scalar()
     _lifetime = int(_haiku_row or 0)
+    _effective_limit = FREE_IMAGE_LIMIT + _bonus
 
-    if _lifetime >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
+    if _lifetime >= _effective_limit and current_user.role != 'admin':
+        _plan_ul = getattr(current_user, 'subscription_plan', None) or ''
         return jsonify({
             'error':   True,
             'message': (
-                f'You have used all {FREE_IMAGE_LIMIT} free evaluations. '
-                'Subscribe now to continue.'
+                f'You have used all {_effective_limit} evaluations. '
+                + ('Upgrade to Sonnet or purchase another 100 to continue.' if _plan_ul == 'play'
+                   else 'Subscribe now to continue.')
             )
         }), 403
 
