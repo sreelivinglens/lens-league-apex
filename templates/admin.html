@@ -927,7 +927,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             </td>
             <td>
               <div class="row-actions">
-                <a class="ra" href="{{ url_for('try_gallery') }}?user_id={{ u.id }}">Gallery</a>
+                <a class="ra" href="{{ url_for('admin_user_detail', user_id=u.id) }}">Profile</a>
                 {% if (u.haiku_used or 0) == 0 %}
                 <button class="ra" onclick="openNudge({{ u.id }}, 'welcome')" style="background:#EFF6FF;border-color:#C8D4E8;color:#1A2744">Welcome nudge</button>
                 {% elif (u.haiku_used or 0) >= 10 %}
