@@ -16311,6 +16311,26 @@ def admin_dashboard():
     except Exception as _pue:
         app.logger.warning(f'[admin_dashboard] paid_users build failed: {_pue}')
 
+    # ── Session 209: Haiku members list for admin dashboard panel ───────────
+    # stats.free_users is a count only — this query gives per-user rows with
+    # eval usage (haiku_used = COUNT of is_haiku_try images) for the dot display.
+    haiku_users = []
+    try:
+        _hu_rows = db.session.execute(db.text(
+            "SELECT u.id, u.full_name, u.username, u.email, u.city, "
+            "u.created_at, u.onboarding_complete, u.is_active, "
+            "COUNT(i.id) AS haiku_used, "
+            "MAX(i.created_at) AS last_image_at "
+            "FROM users u "
+            "LEFT JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
+            "WHERE (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
+            "AND u.role != 'admin' "
+            "GROUP BY u.id ORDER BY u.created_at DESC LIMIT 50"
+        )).fetchall()
+        haiku_users = _hu_rows
+    except Exception as _hue:
+        app.logger.warning(f'[admin_dashboard] haiku_users query failed: {_hue}')
+
     # ── OPTION 1: Recent admin actions feed (last 20) — Session 208 ────────
     # Surfaces on admin dashboard as live audit card.
     recent_admin_actions = []
@@ -16372,7 +16392,8 @@ def admin_dashboard():
                            bot_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM users WHERE is_active=FALSE "                               "AND created_at >= NOW() - INTERVAL '7 days' "                               "AND username ~ '^[a-z]{8,16}$' "                               "AND NOT EXISTS (SELECT 1 FROM images WHERE user_id=users.id)"
                            )).scalar() or 0,
-                           recent_admin_actions=recent_admin_actions)
+                           recent_admin_actions=recent_admin_actions,
+                           haiku_users=haiku_users)
 
 
 # ── OPTION 2: Audit Log full search page — Session 208 ─────────────────────────────
