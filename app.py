@@ -16208,14 +16208,10 @@ def admin_dashboard():
         'camera_subs':  User.query.filter_by(is_subscribed=True, subscription_track='camera').count(),
         'mobile_subs':  User.query.filter_by(is_subscribed=True, subscription_track='mobile').count(),
         'free_users':   db.session.execute(db.text(
-                            "SELECT COUNT(*) FROM users u "
+                            "SELECT COUNT(DISTINCT u.id) FROM users u "
+                            "JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
                             "WHERE u.role != 'admin' "
-                            "AND (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
-                            "AND u.subscribed_at IS NULL "
-                            "AND NOT EXISTS ("
-                            "  SELECT 1 FROM images si "
-                            "  WHERE si.user_id = u.id AND (si.is_haiku_try IS NOT TRUE)"
-                            ")"
+                            "AND (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL)"
                         )).scalar() or 0,
     }
 
@@ -16330,14 +16326,9 @@ def admin_dashboard():
             "COUNT(i.id) AS haiku_used, "
             "MAX(i.created_at) AS last_image_at "
             "FROM users u "
-            "LEFT JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
-            "WHERE (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
-            "AND u.role != 'admin' "
-            "AND (u.subscribed_at IS NULL) "   # never been a paid subscriber (subscribed_at set on activation)
-            "AND NOT EXISTS ("                  # no Sonnet images (catches early members with NULL subscribed_at)
-            "  SELECT 1 FROM images si "
-            "  WHERE si.user_id = u.id AND (si.is_haiku_try IS NOT TRUE)"
-            ") "
+            "JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
+            "WHERE u.role != 'admin' "
+            "AND (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
             "GROUP BY u.id ORDER BY u.created_at DESC LIMIT 50"
         )).fetchall()
         haiku_users = _hu_rows
