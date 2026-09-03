@@ -16207,11 +16207,16 @@ def admin_dashboard():
         'subscribers':  User.query.filter_by(is_subscribed=True).count(),
         'camera_subs':  User.query.filter_by(is_subscribed=True, subscription_track='camera').count(),
         'mobile_subs':  User.query.filter_by(is_subscribed=True, subscription_track='mobile').count(),
-        'free_users':   User.query.filter(
-                            User.role != 'admin',
-                            db.or_(User.is_subscribed == False, User.is_subscribed == None),
-                            User.subscribed_at == None,  # never been paid — true Haiku users only
-                        ).count(),
+        'free_users':   db.session.execute(db.text(
+                            "SELECT COUNT(*) FROM users u "
+                            "WHERE u.role != 'admin' "
+                            "AND (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
+                            "AND u.subscribed_at IS NULL "
+                            "AND NOT EXISTS ("
+                            "  SELECT 1 FROM images si "
+                            "  WHERE si.user_id = u.id AND (si.is_haiku_try IS NOT TRUE)"
+                            ")"
+                        )).scalar() or 0,
     }
 
     # Active contest banners — shown in admin dashboard for visibility
@@ -16328,7 +16333,11 @@ def admin_dashboard():
             "LEFT JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
             "WHERE (u.is_subscribed IS NOT TRUE OR u.is_subscribed IS NULL) "
             "AND u.role != 'admin' "
-            "AND u.subscribed_at IS NULL "   # never been a paid subscriber
+            "AND (u.subscribed_at IS NULL) "   # never been a paid subscriber (subscribed_at set on activation)
+            "AND NOT EXISTS ("                  # no Sonnet images (catches early members with NULL subscribed_at)
+            "  SELECT 1 FROM images si "
+            "  WHERE si.user_id = u.id AND (si.is_haiku_try IS NOT TRUE)"
+            ") "
             "GROUP BY u.id ORDER BY u.created_at DESC LIMIT 50"
         )).fetchall()
         haiku_users = _hu_rows
