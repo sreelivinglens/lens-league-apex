@@ -512,7 +512,7 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
 
 
 FREE_IMAGE_LIMIT = 10  # Staging only: 10 free Haiku evaluations. Production stays 3 until free tier launches officially.
-HAIKU_LAUNCH_DATE = '2026-08-31'  # Date Haiku free tier opened to public. Anyone registered before this is Sonnet/UAT.
+HAIKU_LAUNCH_DATE = '2026-08-30'  # Date Haiku free tier opened to public. Anyone registered before this is Sonnet/UAT.
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 # ── Email allowlist — UAT/beta phase ─────────────────────────────────────────
