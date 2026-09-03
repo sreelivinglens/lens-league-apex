@@ -16307,6 +16307,8 @@ def admin_dashboard():
                 'best_score':      _best.score if _best else None,
                 'last_upload_date': _last_up,
                 'contest_cache_age': _cache_age,
+                'subscription_plan':  _pu.subscription_plan or '—',
+                'subscription_track': _pu.subscription_track or '—',
             })
     except Exception as _pue:
         app.logger.warning(f'[admin_dashboard] paid_users build failed: {_pue}')
