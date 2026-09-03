@@ -104,8 +104,12 @@
     <form method="GET" action="{{ url_for('admin_audit_log') }}">
       <div class="al-filter-row">
         <div class="al-field">
-          <label class="al-label" for="email">User email</label>
-          <input class="al-input" id="email" name="email" type="text" value="{{ q_email }}" placeholder="user@email.com" autocomplete="off">
+          <label class="al-label" for="user">Member (name, username or user ID)</label>
+          <input class="al-input" id="user" name="user" type="text" value="{{ q_user }}" placeholder="Sri, @sreeks, or 3" autocomplete="off" style="min-width:200px">
+        </div>
+        <div class="al-field">
+          <label class="al-label" for="email">Admin email (who acted)</label>
+          <input class="al-input" id="email" name="email" type="text" value="{{ q_email }}" placeholder="admin@email.com" autocomplete="off">
         </div>
         <div class="al-field">
           <label class="al-label" for="action">Action type</label>
@@ -135,7 +139,7 @@
         <div class="al-field" style="justify-content:flex-end">
           <button class="al-btn" type="submit">Search</button>
         </div>
-        {% if q_email or q_action or q_target or q_from or q_to %}
+        {% if q_email or q_user or q_action or q_target or q_from or q_to %}
         <div class="al-field" style="justify-content:flex-end">
           <a class="al-btn al-btn-clear" href="{{ url_for('admin_audit_log') }}">Clear</a>
         </div>
@@ -147,7 +151,7 @@
   {# ── STATS ── #}
   <div class="al-stats">
     <div class="al-stat"><strong>{{ total }}</strong> action{{ 's' if total != 1 else '' }} found</div>
-    {% if q_email or q_action or q_target or q_from or q_to %}
+    {% if q_email or q_user or q_action or q_target or q_from or q_to %}
     <div class="al-stat">Filtered — <a href="{{ url_for('admin_audit_log') }}" style="color:#1A2744">show all</a></div>
     {% endif %}
     <div class="al-stat">Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong></div>
@@ -186,7 +190,11 @@
           </td>
           <td>
             <div class="al-target">{{ a.target_type | capitalize }} #{{ a.target_id }}</div>
-            {% if a.detail.get('asset_name') %}
+            {% if a.target_name %}
+            <div class="al-target-sub">{{ a.target_name }}{% if a.target_username %} (@{{ a.target_username }}){% endif %}</div>
+            {% elif a.target_email %}
+            <div class="al-target-sub">{{ a.target_email }}</div>
+            {% elif a.detail.get('asset_name') %}
             <div class="al-target-sub">{{ a.detail.asset_name }}</div>
             {% elif a.detail.get('email') %}
             <div class="al-target-sub">{{ a.detail.email }}</div>
@@ -239,13 +247,13 @@
   {% if total_pages > 1 %}
   <div class="al-pages">
     {% if page > 1 %}
-    <a class="al-page-btn" href="{{ url_for('admin_audit_log', page=page-1, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">← Previous</a>
+    <a class="al-page-btn" href="{{ url_for('admin_audit_log', page=page-1, user=q_user, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">← Previous</a>
     {% endif %}
     {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
-    <a class="al-page-btn {% if p == page %}active{% endif %}" href="{{ url_for('admin_audit_log', page=p, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">{{ p }}</a>
+    <a class="al-page-btn {% if p == page %}active{% endif %}" href="{{ url_for('admin_audit_log', page=p, user=q_user, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">{{ p }}</a>
     {% endfor %}
     {% if page < total_pages %}
-    <a class="al-page-btn" href="{{ url_for('admin_audit_log', page=page+1, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">Next →</a>
+    <a class="al-page-btn" href="{{ url_for('admin_audit_log', page=page+1, user=q_user, email=q_email, action=q_action, target=q_target, date_from=q_from, date_to=q_to) }}">Next →</a>
     {% endif %}
     <span class="al-page-info">{{ per_page * (page-1) + 1 }}–{{ [per_page * page, total]|min }} of {{ total }}</span>
   </div>
@@ -253,7 +261,7 @@
 
   {% else %}
   <div class="al-empty">
-    {% if q_email or q_action or q_target or q_from or q_to %}
+    {% if q_email or q_user or q_action or q_target or q_from or q_to %}
     No actions found for these filters. <a href="{{ url_for('admin_audit_log') }}" style="color:#1A2744">Clear filters</a>
     {% else %}
     No admin actions logged yet. Actions will appear here as they are taken.
