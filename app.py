@@ -16408,10 +16408,12 @@ def admin_audit_log():
     """
     GET /admin/audit-log — Full admin action log with search/filter.
     Session 208: Audit & Legal — dispute resolution and subscription evidence trail.
-    Filters: user email, action type, target type, date from/to.
+    Session 209: Added username, name, user ID search via target user join.
+    Filters: user email/username/name/ID, action type, target type, date from/to.
     """
     import json as _alj
     q_email   = request.args.get('email', '').strip()
+    q_user    = request.args.get('user', '').strip()   # Session 209: name/username/user ID
     q_action  = request.args.get('action', '').strip()
     q_target  = request.args.get('target', '').strip()
     q_from    = request.args.get('date_from', '').strip()
@@ -16425,6 +16427,14 @@ def admin_audit_log():
     if q_email:
         _where.append('u.email ILIKE :email')
         _params['email'] = f'%{q_email}%'
+    if q_user:
+        # Search by target user: name, username, or numeric ID
+        if q_user.isdigit():
+            _where.append('aal.target_id = :target_user_id')
+            _params['target_user_id'] = int(q_user)
+        else:
+            _where.append('(tu.full_name ILIKE :uname OR tu.username ILIKE :uname OR tu.email ILIKE :uname)')
+            _params['uname'] = f'%{q_user}%'
     if q_action:
         _where.append('aal.action = :action')
         _params['action'] = q_action
@@ -16439,17 +16449,23 @@ def admin_audit_log():
         _params['date_to'] = q_to + ' 23:59:59'
 
     _where_sql = ' AND '.join(_where)
-    _base_sql = (
-        'SELECT aal.id, aal.action, aal.target_type, aal.target_id,'
-        ' aal.detail, aal.created_at, u.full_name AS admin_name, u.email AS admin_email'
+    # Session 209: LEFT JOIN target user (tu) for name/username/ID search
+    _joins = (
         ' FROM admin_action_log aal'
         ' LEFT JOIN users u ON u.id = aal.admin_id'
-        f' WHERE {_where_sql}'
+        ' LEFT JOIN users tu ON tu.id = aal.target_id'
+    )
+    _base_sql = (
+        'SELECT aal.id, aal.action, aal.target_type, aal.target_id,'
+        ' aal.detail, aal.created_at, u.full_name AS admin_name, u.email AS admin_email,'
+        ' tu.full_name AS target_name, tu.username AS target_username, tu.email AS target_email'
+        + _joins
+        + f' WHERE {_where_sql}'
     )
 
     try:
         _total = db.session.execute(
-            db.text(f'SELECT COUNT(*) FROM admin_action_log aal LEFT JOIN users u ON u.id = aal.admin_id WHERE {_where_sql}'),
+            db.text(f'SELECT COUNT(*){_joins} WHERE {_where_sql}'),
             _params
         ).scalar() or 0
         _rows = db.session.execute(
@@ -16464,14 +16480,17 @@ def admin_audit_log():
             except Exception:
                 pass
             _actions.append({
-                'id':          _r.id,
-                'action':      _r.action,
-                'target_type': _r.target_type,
-                'target_id':   _r.target_id,
-                'detail':      _det,
-                'created_at':  _r.created_at,
-                'admin_name':  _r.admin_name or 'Admin',
-                'admin_email': _r.admin_email or '',
+                'id':            _r.id,
+                'action':        _r.action,
+                'target_type':   _r.target_type,
+                'target_id':     _r.target_id,
+                'detail':        _det,
+                'created_at':    _r.created_at,
+                'admin_name':    _r.admin_name or 'Admin',
+                'admin_email':   _r.admin_email or '',
+                'target_name':   _r.target_name or '',
+                'target_username': _r.target_username or '',
+                'target_email':  _r.target_email or '',
             })
     except Exception as _ale:
         app.logger.error(f'[admin_audit_log] query failed: {_ale}')
@@ -16498,6 +16517,7 @@ def admin_audit_log():
         total_pages=_total_pages,
         per_page=PER_PAGE,
         q_email=q_email,
+        q_user=q_user,
         q_action=q_action,
         q_target=q_target,
         q_from=q_from,
