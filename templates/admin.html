@@ -361,12 +361,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <div class="mob-nav">
   <a class="mob-nav-item active" onclick="goTo('stat-bar')"><i class="ti ti-layout-dashboard"></i> Overview</a>
   <a class="mob-nav-item" onclick="goTo('search-block')"><i class="ti ti-search"></i> Search</a>
-  <a class="mob-nav-item" onclick="goTo('needs-attention')"><i class="ti ti-alert-circle"></i> Attention</a>
-  <a class="mob-nav-item" onclick="goTo('images')"><i class="ti ti-camera"></i> Images</a>
-  <a class="mob-nav-item" onclick="goTo('paid-subs')"><i class="ti ti-star"></i> Paid</a>
-  <a class="mob-nav-item" onclick="goTo('haiku-members')"><i class="ti ti-users"></i> Haiku</a>
-  <a class="mob-nav-item" onclick="goTo('audit-log')"><i class="ti ti-shield"></i> Audit</a>
-  <a class="mob-nav-item" onclick="goTo('danger')" style="color:#B91C1C"><i class="ti ti-skull"></i> Danger</a>
+  <a class="mob-nav-item" onclick="navTo('needs-attention','b-na','cNA')"><i class="ti ti-alert-circle"></i> Attention</a>
+  <a class="mob-nav-item" onclick="navTo('images','b-images-body','cIM')"><i class="ti ti-camera"></i> Images</a>
+  <a class="mob-nav-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid</a>
+  <a class="mob-nav-item" onclick="navTo('haiku-members','b-haiku-body','cHM')"><i class="ti ti-users"></i> Haiku</a>
+  <a class="mob-nav-item" onclick="navTo('audit-log','b-audit-body','cAL')"><i class="ti ti-shield"></i> Audit</a>
+  <a class="mob-nav-item" onclick="navTo('danger','b-dz-body','cDZ')" style="color:#B91C1C"><i class="ti ti-skull"></i> Danger</a>
 </div>
 
 <div class="layout">
@@ -386,12 +386,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sb-group-label">Daily</div>
     <a class="sb-item active" onclick="goTo('stat-bar')"><i class="ti ti-layout-dashboard"></i> Overview</a>
     <a class="sb-item" onclick="goTo('search-block')"><i class="ti ti-search"></i> Search members &amp; images</a>
-    <a class="sb-item" onclick="goTo('needs-attention')">
+    <a class="sb-item" onclick="navTo('needs-attention','b-na','cNA')">
       <i class="ti ti-alert-circle" style="color:#B45309"></i> Needs attention
       {% set att_count = (error_images|length) + (stuck_images|length) %}
       {% if att_count > 0 %}<span class="sb-badge warn">{{ att_count }}</span>{% endif %}
     </a>
-    <a class="sb-item" onclick="goTo('alerts-sec')">
+    <a class="sb-item" onclick="navTo('alerts-sec',null,null)">
       <i class="ti ti-bell"></i> Alerts
       {% if open_reports_count > 0 %}<span class="sb-badge warn">{{ open_reports_count }}</span>{% endif %}
     </a>
@@ -403,29 +403,29 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   <div class="sb-group">
     <div class="sb-group-label">Images</div>
-    <a class="sb-item" onclick="goTo('images')"><i class="ti ti-layout-grid"></i> Image grid</a>
+    <a class="sb-item" onclick="navTo('images','b-images-body','cIM')"><i class="ti ti-layout-grid"></i> Image grid</a>
   </div>
 
   <div class="sb-group">
     <div class="sb-group-label">Members</div>
-    <a class="sb-item" onclick="goTo('paid-subs')"><i class="ti ti-star"></i> Paid subscribers</a>
-    <a class="sb-item" onclick="goTo('haiku-members')">
+    <a class="sb-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid subscribers</a>
+    <a class="sb-item" onclick="navTo('haiku-members','b-haiku-body','cHM')">
       <i class="ti ti-users"></i> Haiku members
       {% if stats.free_users > 0 %}<span class="sb-badge haiku">{{ stats.free_users }}</span>{% endif %}
     </a>
-    <a class="sb-item" onclick="goTo('new-signups')"><i class="ti ti-user-plus"></i> New signups</a>
-    <a class="sb-item" onclick="goTo('engagement')"><i class="ti ti-chart-line"></i> Engagement</a>
+    <a class="sb-item" onclick="navTo('new-signups','b-ns-body','cNS')"><i class="ti ti-user-plus"></i> New signups</a>
+    <a class="sb-item" onclick="navTo('engagement','b-en-body','cEN')"><i class="ti ti-chart-line"></i> Engagement</a>
   </div>
 
   <div class="sb-group">
     <div class="sb-group-label">Audit &amp; Legal</div>
-    <a class="sb-item" onclick="goTo('audit-log')"><i class="ti ti-shield"></i> Recent actions</a>
+    <a class="sb-item" onclick="navTo('audit-log','b-audit-body','cAL')"><i class="ti ti-shield"></i> Recent actions</a>
     <a class="sb-item" href="{{ url_for('admin_audit_log') }}" style="text-decoration:none"><i class="ti ti-file-search"></i> Full audit log →</a>
   </div>
 
   <div class="sb-group">
     <div class="sb-group-label">Platform</div>
-    <a class="sb-item" onclick="goTo('stats')"><i class="ti ti-chart-bar"></i> Stats &amp; calibration</a>
+    <a class="sb-item" onclick="navTo('stats','b-st-body','cST')"><i class="ti ti-chart-bar"></i> Stats &amp; calibration</a>
     <a class="sb-item" href="{{ url_for('admin_csi_page') }}" style="text-decoration:none">
       <i class="ti ti-eye"></i> CSI review
       {% if csi_unreviewed_count > 0 %}<span class="sb-badge warn">{{ csi_unreviewed_count }}</span>{% endif %}
@@ -446,7 +446,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   <div class="sb-group" style="padding-bottom:8px">
     <div class="sb-group-label">Danger</div>
-    <a class="sb-item danger-item" onclick="goTo('danger')"><i class="ti ti-skull"></i> Danger zone</a>
+    <a class="sb-item danger-item" onclick="navTo('danger','b-dz-body','cDZ')"><i class="ti ti-skull"></i> Danger zone</a>
   </div>
 
   <div class="sb-logout">
@@ -619,39 +619,21 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   {# ── SEARCH ── #}
   <div class="guide info">
-    <strong>Search tip:</strong> To find image #1405 — select "Image ID" pill, type 1405, press Enter. To find all images by a user — select "Members", type their name or email, click View to see their profile and all images.
+    <strong>Search tip:</strong> Type a name, email, username or user ID — results appear instantly. Click "View →" to open their profile and all images. For image search, use the Image grid filter below.
   </div>
   <div id="search-block" class="search-block">
-    <form method="GET" action="{{ url_for('admin_dashboard') }}" id="admin-search-form">
-      <div class="search-row">
-        <input class="search-input" id="q" name="q" value="{{ admin_q }}" placeholder="Name, email, image title, image ID, location…" autocomplete="off">
-        <button class="search-btn" type="submit">Search</button>
-      </div>
-    </form>
-    <div class="pills">
-      <span class="pill-label">Filter</span>
-      <a class="pill {% if admin_track == 'all' %}active{% endif %}" href="{{ url_for('admin_dashboard', q=admin_q, track='all') }}">All</a>
-      <a class="pill {% if admin_track == 'mobile' %}active{% endif %}" href="{{ url_for('admin_dashboard', q=admin_q, track='mobile') }}">Mobile</a>
-      <a class="pill {% if admin_track == 'camera' %}active{% endif %}" href="{{ url_for('admin_dashboard', q=admin_q, track='camera') }}">Camera</a>
+    <div class="search-row">
+      <input class="search-input" id="q" placeholder="Name, email, username, user ID…" autocomplete="off" oninput="doSearch(this.value)">
+      <button class="search-btn" type="button" onclick="doSearch(document.getElementById('q').value)">Search</button>
     </div>
-    {% if admin_q %}
-    <div class="search-results" style="display:block">
-      {% for u in all_users if admin_q and (u.full_name and admin_q|lower in u.full_name|lower or u.email and admin_q|lower in u.email|lower or u.username and admin_q|lower in u.username|lower) %}
-      <div class="res-row">
-        <div class="res-av {% if u.is_subscribed %}av-p{% else %}av-h{% endif %}">{{ (u.full_name or u.username or 'U')[:2]|upper }}</div>
-        <div class="res-main">
-          <div class="res-name">{{ u.full_name or u.username }}</div>
-          <div class="res-meta">{{ u.email }} · user {{ u.id }} · {{ u.city or '—' }}</div>
-        </div>
-        <span class="res-badge {% if u.is_subscribed %}rb-p{% else %}rb-h{% endif %}">{% if u.is_subscribed %}Paid{% else %}Haiku{% endif %}</span>
-        <a class="res-action" href="{{ url_for('admin_user_detail', user_id=u.id) }}">View →</a>
-      </div>
-      {% else %}
-      {% if not admin_q %}{% endif %}
-      {% endfor %}
-    </div>
-    {% endif %}
+    <div id="search-results" class="search-results" style="display:none"></div>
   </div>
+
+  {# Embed user data as JSON for instant search — no page reload needed #}
+  <script type="application/json" id="sl-user-data">{{ all_users | map(attribute='id') | list | tojson }}</script>
+  <script type="application/json" id="sl-user-map">
+  [{% for u in all_users %}{"id":{{ u.id }},"name":{{ (u.full_name or '') | tojson }},"username":{{ (u.username or '') | tojson }},"email":{{ (u.email or '') | tojson }},"city":{{ (u.city or '') | tojson }},"paid":{{ 'true' if u.is_subscribed else 'false' }}}{% if not loop.last %},{% endif %}{% endfor %}]
+  </script>
 
   {# ── NEEDS ATTENTION ── #}
   {% set att_count = (error_images|length) + (stuck_images|length) %}
@@ -713,97 +695,77 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sec-hdr" onclick="tog('images-body','cIM')">
       <div class="sec-title"><i class="ti ti-layout-grid"></i> Images <span class="sec-badge">{{ total_images }}</span></div>
       <div style="display:flex;align-items:center;gap:10px">
-        <span class="sec-meta">Sonnet {{ scored - (recent | selectattr('audit_json') | list | length) if false else scored }} · Haiku free {{ stats.free_users }}</span>
+        <span class="sec-meta">Sonnet {{ scored }} · Haiku free {{ stats.free_users }}</span>
         <span class="chev open" id="cIM">▼</span>
       </div>
     </div>
     <div id="b-images-body" class="sec-body">
       <div class="img-top">
         <div class="engine-tabs">
-          <a class="engine-tab {% if admin_engine == 'sonnet' %}active sonnet{% endif %}" href="{{ url_for('admin_dashboard', engine='sonnet', track=admin_track, q=admin_q) }}"><i class="ti ti-camera" style="margin-right:5px;font-size:15px"></i> Sonnet <span style="opacity:.6;font-size:12px;margin-left:3px">{{ sonnet_new_today }} new</span></a>
-          <a class="engine-tab {% if admin_engine == 'haiku' %}active haiku{% endif %}" href="{{ url_for('admin_dashboard', engine='haiku', track=admin_track, q=admin_q) }}"><i class="ti ti-camera" style="margin-right:5px;font-size:15px"></i> Haiku free <span style="opacity:.6;font-size:12px;margin-left:3px">{{ haiku_new_today }} new</span></a>
+          <a class="engine-tab {% if admin_engine == 'sonnet' %}active sonnet{% endif %}" href="{{ url_for('admin_dashboard', engine='sonnet', track=admin_track, q=admin_q) }}#images">
+            <i class="ti ti-camera" style="margin-right:5px;font-size:15px"></i> Sonnet
+            {% if sonnet_new_today > 0 %}<span style="background:#B91C1C;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:5px">{{ sonnet_new_today }} new</span>{% endif %}
+          </a>
+          <a class="engine-tab {% if admin_engine == 'haiku' %}active haiku{% endif %}" href="{{ url_for('admin_dashboard', engine='haiku', track=admin_track, q=admin_q) }}#images">
+            <i class="ti ti-camera" style="margin-right:5px;font-size:15px"></i> Haiku free
+            {% if haiku_new_today > 0 %}<span style="background:#B91C1C;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:5px">{{ haiku_new_today }} new</span>{% endif %}
+          </a>
         </div>
         <div class="track-filter">
-          <a class="track-btn {% if admin_track == 'all' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track='all', q=admin_q) }}">All</a>
-          <a class="track-btn {% if admin_track == 'mobile' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track='mobile', q=admin_q) }}"><i class="ti ti-device-mobile"></i> Mobile</a>
-          <a class="track-btn {% if admin_track == 'camera' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track='camera', q=admin_q) }}"><i class="ti ti-camera"></i> Camera</a>
+          <a class="track-btn {% if admin_track == 'all' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track='all', q=admin_q) }}#images">All</a>
+          <a class="track-btn {% if admin_track == 'mobile' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track='mobile', q=admin_q) }}#images"><i class="ti ti-device-mobile"></i> Mobile</a>
+          <a class="track-btn {% if admin_track == 'camera' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track='camera', q=admin_q) }}#images"><i class="ti ti-camera"></i> Camera</a>
         </div>
       </div>
       <div class="img-filter-row">
-        <a class="img-filter active" href="{{ url_for('admin_dashboard', track=admin_track) }}">All</a>
-        <a class="img-filter" href="{{ url_for('admin_dashboard', track=admin_track, q='flagged') }}">Flagged</a>
-        <a class="img-filter" href="{{ url_for('admin_dashboard', track=admin_track, q='pending') }}">Pending</a>
-        <a class="img-filter" href="{{ url_for('admin_dashboard', track=admin_track, q='error') }}">Failures</a>
+        <a class="img-filter active" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track) }}#images">All</a>
+        <a class="img-filter" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='flagged') }}#images">Flagged</a>
+        <a class="img-filter" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='pending') }}#images">Pending</a>
+        <a class="img-filter" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='error') }}#images">Failures</a>
       </div>
 
-      {# Grid shows the engine selected via URL param — no JS toggle needed #}
-      <div id="grid-sonnet" class="image-grid" {% if admin_engine == 'haiku' %}style="display:none"{% endif %}>
-        {% set ns = namespace(sonnet_shown=0) %}
-        {% for img in recent %}
-        {% set aj = img.audit_json if img.audit_json else {} %}
-        {% set is_haiku = img.asset_name and '_haiku_' in img.asset_name or (img.audit_json and '"source":"haiku_try"' in img.audit_json) %}
-        {% if not is_haiku %}
-        {% set ns.sonnet_shown = ns.sonnet_shown + 1 %}
-        <div class="img-tile">
-          {% if img.thumb_url %}
-          <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre }}" onerror="this.style.display='none'">
-          {% else %}
-          <div class="img-thumb-ph">📷</div>
-          {% endif %}
-          <span class="tile-badge {% if img.status == 'scored' %}badge-scored{% elif img.status == 'error' %}badge-error{% else %}badge-pending{% endif %}">{{ img.status|upper }}</span>
-          <div class="tile-body">
-            <span class="tile-score">{% if img.score %}{{ '%.2f'|format(img.score) }}{% else %}—{% endif %}</span>
-            {% if img.tier %}<span class="tile-tier">{{ img.tier }}</span>{% endif %}
-            <div class="tile-user">{{ recent_users.get(img.user_id, 'User ' ~ img.user_id) }}</div>
-            <div class="tile-genre">{{ img.genre or '—' }}</div>
-            <div class="tile-actions">
-              <a class="ta" href="{{ url_for('image_detail', image_id=img.id) }}">View</a>
-              <a class="ta flag-btn" href="{{ url_for('admin_flag_image', image_id=img.id) if 'admin_flag_image' in '' else '#' }}" onclick="return confirm('Flag image #{{ img.id }}?')">Flag</a>
-              {% if img.status == 'scored' %}
-              <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+      {# The route already filters recent by engine (is_haiku_try IS TRUE/NOT TRUE).
+         So recent contains ONLY the images for the active engine tab.
+         We show them all — no sub-filtering needed. #}
+      <div class="image-grid">
+        {% if recent %}
+          {% for img in recent %}
+          {% set detail_url = url_for('try_result', image_id=img.id) if admin_engine == 'haiku' else url_for('image_detail', image_id=img.id) %}
+          <div class="img-tile">
+            <a href="{{ detail_url }}" style="display:block;text-decoration:none">
+              {% if img.thumb_url %}
+              <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
+              {% else %}
+              <div class="img-thumb-ph">📷</div>
               {% endif %}
-              <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
+              <span class="tile-badge {% if admin_engine == 'haiku' %}badge-free{% elif img.status == 'scored' %}badge-scored{% elif img.status == 'error' %}badge-error{% else %}badge-pending{% endif %}">
+                {% if admin_engine == 'haiku' %}FREE{% else %}{{ img.status|upper }}{% endif %}
+              </span>
+            </a>
+            <div class="tile-body">
+              <a href="{{ detail_url }}" style="text-decoration:none;color:inherit">
+                <span class="tile-score">{% if img.score %}{{ '%.2f'|format(img.score) }}{% else %}—{% endif %}</span>
+                {% if img.tier %}<span class="tile-tier">{{ img.tier }}</span>{% endif %}
+                <div class="tile-user">{{ recent_users.get(img.user_id, 'User ' ~ img.user_id) }}</div>
+                <div class="tile-genre">{{ img.genre or '—' }}</div>
+              </a>
+              <div class="tile-actions">
+                <a class="ta" href="{{ detail_url }}">View</a>
+                <a class="ta flag-btn" href="{{ url_for('admin_flag_image', image_id=img.id) }}" onclick="return confirm('Flag image #{{ img.id }}?')">Flag</a>
+                {% if img.status == 'scored' %}
+                <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+                {% endif %}
+                {% if admin_engine == 'sonnet' %}
+                <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
+                {% endif %}
+              </div>
             </div>
           </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-        {% if ns.sonnet_shown == 0 %}
-        <div class="img-grid-empty" style="grid-column:1/-1">No Sonnet images found{% if admin_q %} matching "{{ admin_q }}"{% endif %}.</div>
-        {% endif %}
-      </div>
-
-      <div id="grid-haiku" class="image-grid" {% if admin_engine != 'haiku' %}style="display:none"{% endif %}>
-        {% set ns2 = namespace(haiku_shown=0) %}
-        {% for img in recent %}
-        {% set is_haiku = img.asset_name and '_haiku_' in img.asset_name or (img.audit_json and '"source":"haiku_try"' in img.audit_json) %}
-        {% if is_haiku %}
-        {% set ns2.haiku_shown = ns2.haiku_shown + 1 %}
-        <div class="img-tile">
-          {% if img.thumb_url %}
-          <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre }}" onerror="this.style.display='none'">
-          {% else %}
-          <div class="img-thumb-ph">📷</div>
-          {% endif %}
-          <span class="tile-badge badge-free">FREE</span>
-          <div class="tile-body">
-            <span class="tile-score">{% if img.score %}{{ '%.2f'|format(img.score) }}{% else %}—{% endif %}</span>
-            {% if img.tier %}<span class="tile-tier">{{ img.tier }}</span>{% endif %}
-            <div class="tile-user">{{ recent_users.get(img.user_id, 'User ' ~ img.user_id) }}</div>
-            <div class="tile-genre">{{ img.genre or '—' }}</div>
-            <div class="tile-actions">
-              <a class="ta" href="{{ url_for('try_result', image_id=img.id) }}">View</a>
-              <a class="ta flag-btn" href="#">Flag</a>
-              {% if img.status == 'scored' %}
-              <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
-              {% endif %}
-            </div>
+          {% endfor %}
+        {% else %}
+          <div class="img-grid-empty" style="grid-column:1/-1">
+            No {{ 'Haiku' if admin_engine == 'haiku' else 'Sonnet' }} images found{% if admin_q %} matching "{{ admin_q }}"{% endif %}.
           </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-        {% if ns2.haiku_shown == 0 %}
-        <div class="img-grid-empty" style="grid-column:1/-1">No Haiku images found{% if admin_q %} matching "{{ admin_q }}"{% endif %}.</div>
         {% endif %}
       </div>
 
@@ -1118,7 +1080,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div>{# /layout #}
 
 <script>
-// ── Section toggle ──
+// ── Section open/close ──
 function tog(id,chevId){
   var b=document.getElementById('b-'+id);
   var c=document.getElementById(chevId);
@@ -1127,18 +1089,46 @@ function tog(id,chevId){
   b.style.display=open?'none':'block';
   if(c){c.classList.toggle('open',!open);c.classList.toggle('closed',open);}
 }
-function openSec(id,chevId){
-  var b=document.getElementById(id);
+function openSec(bodyId,chevId){
+  var b=document.getElementById(bodyId);
   var c=document.getElementById(chevId);
   if(!b)return;
   b.style.display='block';
   if(c){c.classList.add('open');c.classList.remove('closed');}
 }
 
-// ── Scroll to section ──
+// ── navTo: open the section if collapsed, then scroll it to top of viewport ──
+// sectionId = the outer wrapper div id
+// bodyId    = the inner sec-body id (to open if hidden)
+// chevId    = the chevron span id
+function navTo(sectionId, bodyId, chevId){
+  // Open if collapsed
+  if(bodyId){
+    var b=document.getElementById(bodyId);
+    if(b && b.style.display==='none') openSec(bodyId, chevId);
+  }
+  // Scroll
+  var el=document.getElementById(sectionId);
+  if(el){
+    setTimeout(function(){
+      var top=el.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo({top:top, behavior:'smooth'});
+    }, bodyId ? 50 : 0); // brief delay if we just opened the section
+  }
+  // Update sidebar active state
+  document.querySelectorAll('.sb-item').forEach(function(i){i.classList.remove('active');});
+  event.currentTarget.classList.add('active');
+}
+
+// ── Scroll to section (for non-collapsible targets like stat-bar, search-block) ──
 function goTo(id){
   var el=document.getElementById(id);
-  if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
+  if(el){
+    var top=el.getBoundingClientRect().top + window.scrollY - 12;
+    window.scrollTo({top:top, behavior:'smooth'});
+  }
+  document.querySelectorAll('.sb-item').forEach(function(i){i.classList.remove('active');});
+  if(event && event.currentTarget) event.currentTarget.classList.add('active');
 }
 
 // ── Engine tab toggle (Sonnet / Haiku) ──
@@ -1166,13 +1156,47 @@ function updateClock(){
 updateClock();
 setInterval(updateClock,30000);
 
-// ── Search on Enter ──
-var qEl=document.getElementById('q');
-if(qEl){
-  qEl.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){document.getElementById('admin-search-form').submit();}
-  });
+// ── Instant search — reads embedded JSON, no page reload ──
+var _slUsers = null;
+function _loadUsers(){
+  if(_slUsers) return _slUsers;
+  try{ _slUsers = JSON.parse(document.getElementById('sl-user-map').textContent.trim()); }
+  catch(e){ _slUsers = []; }
+  return _slUsers;
 }
+function doSearch(q){
+  var res = document.getElementById('search-results');
+  q = (q||'').trim().toLowerCase();
+  if(!q){ res.style.display='none'; res.innerHTML=''; return; }
+  var users = _loadUsers();
+  var matches = users.filter(function(u){
+    return (u.name && u.name.toLowerCase().indexOf(q)>=0) ||
+           (u.username && u.username.toLowerCase().indexOf(q)>=0) ||
+           (u.email && u.email.toLowerCase().indexOf(q)>=0) ||
+           String(u.id) === q;
+  }).slice(0,10);
+  if(!matches.length){
+    res.innerHTML='<div style="padding:12px 0;font-size:14px;color:#8A8A86">No members found for "'+q.replace(/</g,'&lt;')+'".</div>';
+  } else {
+    res.innerHTML = matches.map(function(u){
+      var initials = ((u.name||u.username||'U').substring(0,2)).toUpperCase();
+      var badge = u.paid ? '<span class="res-badge rb-p">Paid</span>' : '<span class="res-badge rb-h">Haiku</span>';
+      var avCls = u.paid ? 'av-p' : 'av-h';
+      var meta = [u.email, 'user '+u.id, u.city].filter(Boolean).join(' · ');
+      return '<div class="res-row">'
+        +'<div class="res-av '+avCls+'">'+initials+'</div>'
+        +'<div class="res-main"><div class="res-name">'+(u.name||u.username)+'</div>'
+        +'<div class="res-meta">'+meta+'</div></div>'
+        +badge
+        +'<a class="res-action" href="/admin/user/'+u.id+'">View →</a>'
+        +'</div>';
+    }).join('');
+  }
+  res.style.display='block';
+}
+document.getElementById('q').addEventListener('keydown',function(e){
+  if(e.key==='Escape'){ this.value=''; doSearch(''); }
+});
 
 // ── Mobile nav active state on scroll ──
 (function(){
