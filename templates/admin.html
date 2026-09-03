@@ -760,9 +760,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <a class="ta" href="{{ url_for('image_detail', image_id=img.id) }}">View</a>
               <a class="ta flag-btn" href="{{ url_for('admin_flag_image', image_id=img.id) if 'admin_flag_image' in '' else '#' }}" onclick="return confirm('Flag image #{{ img.id }}?')">Flag</a>
               {% if img.status == 'scored' %}
-              <form method="POST" action="{{ url_for('force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+              <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
               {% endif %}
-              <form method="POST" action="{{ url_for('toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
+              <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
             </div>
           </div>
         </div>
@@ -795,7 +795,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <a class="ta" href="{{ url_for('try_result', image_id=img.id) }}">View</a>
               <a class="ta flag-btn" href="#">Flag</a>
               {% if img.status == 'scored' %}
-              <form method="POST" action="{{ url_for('force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+              <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
               {% endif %}
             </div>
           </div>
@@ -849,7 +849,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 {% if pu.latest_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.latest_image_id) }}">Latest</a>{% endif %}
                 {% if pu.best_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.best_image_id) }}">Best</a>{% endif %}
                 <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=pu.id) }}" style="display:inline"><button class="psa" type="submit" title="Clear contest cache">Bust cache</button></form>
-                <form method="POST" action="{{ url_for('toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Toggle subscription for {{ pu.full_name }}?')"><button class="psa" type="submit" style="color:#B91C1C">Deactivate</button></form>
+                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Toggle subscription for {{ pu.full_name }}?')"><button class="psa" type="submit" style="color:#B91C1C">Deactivate</button></form>
               </div>
             </td>
           </tr>
@@ -1103,7 +1103,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     </div>
     <div id="b-dz-body" class="sec-body" style="display:none">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-        <form method="POST" action="{{ url_for('admin_delete_broken') if 'admin_delete_broken' in '' else '#' }}" onsubmit="return confirm('Delete all broken images with no thumbnail? This is irreversible.')">
+        <form method="POST" action="{{ url_for('admin_dashboard') if 'admin_delete_broken' in '' else '#' }}" onsubmit="return confirm('Delete all broken images with no thumbnail? This is irreversible.')">
           <button type="submit" style="padding:10px 18px;border-radius:8px;border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-size:14px;cursor:pointer;font-family:inherit;min-height:44px">
             <i class="ti ti-trash" style="margin-right:6px"></i>Delete broken images
           </button>
