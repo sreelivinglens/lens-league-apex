@@ -791,27 +791,48 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div id="b-paid-body" class="sec-body" style="display:none">
       {% if paid_users %}
       <table class="ps-table">
-        <thead><tr><th style="width:28%">Member</th><th style="width:14%">Best eval</th><th style="width:12%">Images</th><th style="width:14%">Contest cache</th><th style="width:12%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
+        <thead><tr><th style="width:26%">Member</th><th style="width:12%">Plan</th><th style="width:12%">Best eval</th><th style="width:8%">Images</th><th style="width:12%">Cache</th><th style="width:10%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
         <tbody>
           {% for pu in paid_users %}
-          <tr>
+          {% set is_uat = pu.subscription_plan in ('uat', 'beta') %}
+          <tr style="{% if is_uat %}background:#FFFBEB;{% endif %}">
             <td>
               <div class="ps-name">{{ pu.full_name }}</div>
               <div class="ps-meta">{{ pu.email }}</div>
+            </td>
+            <td>
+              {% if is_uat %}
+              <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;background:#FDE68A;color:#92400E;letter-spacing:.04em">UAT</span>
+              {% else %}
+              <span style="font-size:12px;color:#1A1A18;font-weight:500">{{ pu.subscription_track }}</span>
+              <span style="font-size:11px;color:#8A8A86;display:block">{{ pu.subscription_plan }}</span>
+              {% endif %}
             </td>
             <td>
               <div class="ps-score">{% if pu.best_score %}{{ '%.2f'|format(pu.best_score) }}{% else %}—{% endif %}</div>
               {% if pu.tier %}<span class="ps-tier">{{ pu.tier }}</span>{% endif %}
             </td>
             <td style="font-size:14px">{{ pu.image_count }}</td>
-            <td><span class="ps-cache-age {% if pu.contest_cache_age != 'empty' and pu.contest_cache_age.startswith('6') or pu.contest_cache_age.startswith('7') %}stale{% endif %}">{{ pu.contest_cache_age }}</span></td>
+            <td><span class="ps-cache-age">{{ pu.contest_cache_age }}</span></td>
             <td style="font-size:13px;color:#8A8A86">{{ pu.last_upload_date or '—' }}</td>
             <td>
               <div class="ps-actions">
                 {% if pu.latest_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.latest_image_id) }}">Latest</a>{% endif %}
                 {% if pu.best_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.best_image_id) }}">Best</a>{% endif %}
-                <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=pu.id) }}" style="display:inline"><button class="psa" type="submit" title="Clear contest cache">Bust cache</button></form>
-                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Toggle subscription for {{ pu.full_name }}?')"><button class="psa" type="submit" style="color:#B91C1C">Deactivate</button></form>
+                {% if not is_uat %}
+                <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=pu.id) }}" style="display:inline"><button class="psa" type="submit">Bust cache</button></form>
+                {% endif %}
+                {% if is_uat %}
+                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Revoke UAT for {{ pu.full_name }}?')">
+                  <input type="hidden" name="plan" value="uat">
+                  <input type="hidden" name="track" value="{{ pu.subscription_track }}">
+                  <button class="psa" type="submit" style="background:#FDE68A;border-color:#C8A84B;font-weight:600">Revoke UAT</button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Deactivate subscription for {{ pu.full_name }}?')">
+                  <button class="psa" type="submit" style="color:#B91C1C">Deactivate</button>
+                </form>
+                {% endif %}
               </div>
             </td>
           </tr>
