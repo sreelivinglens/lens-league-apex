@@ -892,7 +892,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
          created_at, onboarding_complete, is_active, haiku_used, last_image_at #}
       {% if haiku_users %}
       <table class="haiku-table">
-        <thead><tr><th style="width:30%">Member</th><th style="width:26%">Evals used</th><th style="width:18%">Last active</th><th style="width:14%">Status</th><th style="width:12%;text-align:right"></th></tr></thead>
+        <thead><tr><th style="width:28%">Member</th><th style="width:22%">Evals used</th><th style="width:12%">Joined</th><th style="width:14%">Last active</th><th style="width:12%">Status</th><th style="width:12%;text-align:right"></th></tr></thead>
         <tbody>
           {% for u in haiku_users %}
           <tr>
@@ -908,6 +908,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 <span class="dot-count">{{ u.haiku_used or 0 }}/10</span>
               </div>
             </td>
+            <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ u.created_at.strftime('%-d %b %Y') if u.created_at else '—' }}</td>
             <td style="color:#8A8A86;font-size:12px">
               {% if u.last_image_at %}
                 {% set delta = (now() - u.last_image_at).days %}
