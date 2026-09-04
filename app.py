@@ -12684,10 +12684,12 @@ def public_card_download(token):
 def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
 
-    # 181.15: Haiku free-try images must never render on the paid scorecard.
-    # The paid template shows the wrong download button which hits download_card_pdf,
-    # which gates haiku_try source and redirects to pricing — confusing the user.
-    # Redirect to /try/result/<id> immediately, before any other processing.
+    # 181.15 / Session 211: Haiku free-try images must never render on the paid scorecard.
+    # Gate on is_haiku_try column FIRST (reliable DB flag), then audit_json source as fallback.
+    # Previously only checked audit_json source — failed when audit_json was corrupted by
+    # a Sonnet force_rescore, causing Haiku images to render on the wrong template.
+    if getattr(img, 'is_haiku_try', False):
+        return redirect(url_for('try_result', image_id=image_id))
     try:
         import json as _idj
         _id_audit = _idj.loads(img._audit_json or '{}')
@@ -34504,7 +34506,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
             img.aq_score         = aq
             import json as _j2
             # 181.15: store all 10 fields per Session 186 handoff spec
-            img.audit_json = _j2.dumps({
+            img._audit_json = _j2.dumps({
                 'source':        'haiku_try',
                 'model':         _HAIKU_MODEL,
                 'dod':           dod,
