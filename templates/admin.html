@@ -1044,7 +1044,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ u.created_at.strftime('%-d %b %Y') if u.created_at else '—' }}</td>
             <td style="color:#8A8A86;font-size:12px">
               {% if u.last_image_at %}
-                {% set delta = (now() - u.last_image_at).days %}
+                {% set delta = (now - u.last_image_at).days %}
                 {% if delta == 0 %}Today{% elif delta == 1 %}Yesterday{% else %}{{ delta }} days ago{% endif %}
               {% else %}—{% endif %}
             </td>
@@ -1053,7 +1053,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <span class="spill s-warn">Onboarding</span>
               {% elif (u.haiku_used or 0) == 0 %}
               <span class="spill s-none">No uploads</span>
-              {% elif u.created_at and (now() - u.created_at).days <= 7 %}
+              {% elif u.created_at and (now - u.created_at).days <= 7 %}
               <span class="spill s-new">New</span>
               {% else %}
               <span class="spill s-active">Active</span>
