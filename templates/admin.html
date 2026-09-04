@@ -925,7 +925,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Non-paying · Sonnet access · newest first</span><span class="chev closed" id="cUAT">▼</span></div>
     </div>
     <div id="b-uat-body" class="sec-body" style="display:none">
-      <div class="guide" style="margin-bottom:12px;font-size:13px"><strong>UAT / beta / learning</strong> — these members have Sonnet access but are not billed. Use Revoke UAT to move them to Haiku world, or toggle subscription to activate a paid plan.</div>
+      <div class="guide" style="margin-bottom:12px;font-size:13px"><strong>UAT / beta / learning / Sonnet free trial</strong> — these members have or had Sonnet access but are not billed. Includes MIM workshop participants and pre-launch free trial users. Use Revoke UAT to move explicit UAT accounts to Haiku world, or toggle subscription to activate a paid plan.</div>
       {% if uat_users %}
       <table class="ps-table">
         <thead><tr><th style="width:24%">Member</th><th style="width:10%">Plan</th><th style="width:11%">Joined</th><th style="width:10%">Best eval</th><th style="width:7%">Images</th><th style="width:9%">Cache</th><th style="width:9%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
@@ -937,7 +937,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <div class="ps-meta">{{ uu.email }}</div>
             </td>
             <td>
+              {% if uu.subscription_plan in ('uat','beta','learning') %}
               <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;background:#FDE68A;color:#92400E;letter-spacing:.04em">{{ uu.subscription_plan|upper }}</span>
+              {% else %}
+              <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;background:#E8EEF8;color:#1A2744;letter-spacing:.04em">SONNET FREE</span>
+              {% endif %}
             </td>
             <td style="font-size:12px;color:#8A8A86;white-space:nowrap">{{ uu.joined_date or '—' }}</td>
             <td>
