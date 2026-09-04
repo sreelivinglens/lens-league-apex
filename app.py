@@ -1,4 +1,4 @@
-# SL-VERSION: 181.85 (Session 210, 2026-09-04 — bulk bot/user delete route for Haiku members panel: POST /admin/haiku/bulk-delete. Two delete types: bot (hard delete + email ban in blocked_ips + audit log bot_delete) and user (hard delete + audit log delete_user). Checkbox selection in admin.html haiku members table.)
+# SL-VERSION: 181.86 (Session 210, 2026-09-04 — soft delete + reinstate system. admin_delete_user now soft-deletes (is_active=False, data preserved, farewell email). New route: POST /admin/user/<id>/reinstate. bulk-delete: bot=hard delete, user=soft delete. OAuth gate blocks soft-deleted accounts. Deleted accounts panel in admin.html. Joined date column in paid subscribers table. Pagination (10/page) on both tables.)
 
 import os
 import re
@@ -3661,6 +3661,15 @@ def register():
             _existing_email = User.query.filter_by(email=email).first()
             if _existing_email:
                 if not _existing_email.is_active:
+                    # Check if this is a soft-deleted (admin-deactivated) account
+                    _is_soft_deleted = db.session.execute(db.text(
+                        "SELECT 1 FROM admin_action_log WHERE target_type='user' "
+                        "AND target_id=:uid AND action IN ('soft_delete','bot_delete') "
+                        "ORDER BY created_at DESC LIMIT 1"
+                    ), {'uid': _existing_email.id}).fetchone()
+                    if _is_soft_deleted:
+                        flash('This account has been deactivated. Contact support if you believe this is an error.', 'error')
+                        return render_template('login.html')
                     # Unverified account — resend verification instead of blocking
                     import secrets as _sec2
                     _existing_email.email_verify_token = _sec2.token_urlsafe(32)
@@ -16463,6 +16472,7 @@ def admin_dashboard():
                 'contest_cache_age': _cache_age,
                 'subscription_plan':  _pu.subscription_plan or '—',
                 'subscription_track': _pu.subscription_track or '—',
+                'joined_date': _pu.created_at.strftime('%-d %b %Y') if _pu.created_at else '—',
             })
     except Exception as _pue:
         app.logger.warning(f'[admin_dashboard] paid_users build failed: {_pue}')
@@ -16552,7 +16562,16 @@ def admin_dashboard():
                                "SELECT COUNT(*) FROM users WHERE is_active=FALSE "                               "AND created_at >= NOW() - INTERVAL '7 days' "                               "AND username ~ '^[a-z]{8,16}$' "                               "AND NOT EXISTS (SELECT 1 FROM images WHERE user_id=users.id)"
                            )).scalar() or 0,
                            recent_admin_actions=recent_admin_actions,
-                           haiku_users=haiku_users)
+                           haiku_users=haiku_users,
+                           deleted_users=db.session.execute(db.text(
+                               "SELECT u.id, u.full_name, u.username, u.email, u.created_at, "
+                               "u.subscription_plan, aal.created_at AS deleted_at "
+                               "FROM users u "
+                               "JOIN admin_action_log aal ON aal.target_id = u.id "
+                               "AND aal.target_type = 'user' AND aal.action = 'soft_delete' "
+                               "WHERE u.is_active = FALSE AND u.role != 'admin' "
+                               "ORDER BY aal.created_at DESC LIMIT 50"
+                           )).fetchall())
 
 
 # ── OPTION 2: Audit Log full search page — Session 208 ─────────────────────────────
@@ -17925,110 +17944,166 @@ def admin_set_plan(user_id):
 @login_required
 @admin_required
 def admin_delete_user(user_id):
+    """
+    Soft delete — sets is_active=False, locks out the user, sends farewell email.
+    Data and images are preserved for reinstatement. Logged as soft_delete.
+    Session 210: replaced hard delete with soft delete to allow reinstatement.
+    """
     user = User.query.get_or_404(user_id)
     if user.role == 'admin':
         flash('Cannot delete an admin account.', 'error')
         return redirect(url_for('admin_users'))
 
-    username = user.full_name or user.username
+    _uname = user.full_name or user.username or f'user {user_id}'
+    _uemail = user.email or ''
 
     try:
-        # 1. CalibrationNotes by this user (as admin) and on their images
-        try:
-            from models import CalibrationNote
-            CalibrationNote.query.filter_by(admin_id=user_id).delete()
-            image_ids = [img.id for img in user.images]
-            if image_ids:
-                CalibrationNote.query.filter(CalibrationNote.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] calibration notes: {e}')
-
-        # 2. ImageReports filed by this user + reports on their images
-        try:
-            ImageReport.query.filter_by(reporter_id=user_id).delete()
-            if image_ids:
-                ImageReport.query.filter(ImageReport.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] image reports: {e}')
-
-        # 3. Peer ratings given by this user + received on their images
-        try:
-            PeerRating.query.filter_by(rater_id=user_id).delete()
-            if image_ids:
-                PeerRating.query.filter(PeerRating.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] peer ratings: {e}')
-
-        # 4. Rating assignments
-        try:
-            RatingAssignment.query.filter_by(rater_id=user_id).delete()
-            if image_ids:
-                RatingAssignment.query.filter(RatingAssignment.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] rating assignments: {e}')
-
-        # 5. Peer pool entries
-        try:
-            PeerPoolEntry.query.filter_by(user_id=user_id).delete()
-            if image_ids:
-                PeerPoolEntry.query.filter(PeerPoolEntry.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] peer pool: {e}')
-
-        # 6. Contest entries
-        try:
-            ContestEntry.query.filter_by(user_id=user_id).delete()
-        except Exception as e:
-            app.logger.warning(f'[delete_user] contest entries: {e}')
-
-        # 7. Open contest entries
-        try:
-            OpenContestEntry.query.filter_by(user_id=user_id).delete()
-        except Exception as e:
-            app.logger.warning(f'[delete_user] open contest entries: {e}')
-
-        # 8. BOW submissions
-        try:
-            from models import BowSubmission
-            BowSubmission.query.filter_by(user_id=user_id).delete()
-        except Exception as e:
-            app.logger.warning(f'[delete_user] bow submissions: {e}')
-
-        # 9. Delete images + R2 cleanup
-        for img in list(user.images):
-            # raw_submissions.image_id is NOT NULL — must delete before image row
-            try:
-                db.session.execute(
-                    db.text('DELETE FROM raw_submissions WHERE image_id = :iid'),
-                    {'iid': img.id}
-                )
-            except Exception:
-                pass
-            if img.thumb_url:
-                try:
-                    key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
-                    r2.delete_file(key)
-                except Exception:
-                    pass
-            if img.card_url:
-                try:
-                    key = img.card_url.split(r2.R2_PUBLIC_URL + '/')[-1]
-                    r2.delete_file(key)
-                except Exception:
-                    pass
-            db.session.delete(img)
-
-        # 10. Delete the user
-        db.session.delete(user)
+        user.is_active = False
+        if getattr(user, 'is_subscribed', False):
+            user.is_subscribed = False
         db.session.commit()
-        flash(f'User "{username}" and all associated data permanently deleted.', 'success')
+
+        _log_admin_action('soft_delete', 'user', user_id, {
+            'username': _uname,
+            'email':    _uemail,
+            'note':     'Admin soft delete — account locked, data preserved, reinstatable',
+        })
+        app.logger.info(f'[soft_delete] uid={user_id} email={_uemail} by admin={current_user.id}')
+
+        # Farewell email
+        try:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            send_email(
+                to_addresses=[_uemail],
+                subject='Your Shutter League account has been deactivated',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="padding:28px 28px 24px;">'
+                    '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Account deactivated</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">Hi ' + _uname + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">'
+                    'Your Shutter League account has been deactivated by our team. '
+                    'Your data is retained and your account can be reinstated if this was made in error.</p>'
+                    '<p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 24px;">'
+                    'If you believe this was a mistake or wish to dispute this action, '
+                    'please contact us immediately at '
+                    '<a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a>.</p>'
+                    '<p style="font-size:15px;color:#8a8070;margin:0;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:15px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; '
+                    '<a href="' + _site + '" style="color:#C8A84B;">shutterleague.com</a></p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    'Hi ' + _uname + ',\n\n'
+                    'Your Shutter League account has been deactivated by our team. '
+                    'Your data is retained and can be reinstated if this was made in error.\n\n'
+                    'If you believe this was a mistake, contact us at ' + CONTACT_EMAIL + '\n\n'
+                    '-- Shutter League'
+                )
+            )
+        except Exception as _email_err:
+            app.logger.warning(f'[soft_delete] farewell email failed: {_email_err}')
+
+        flash(f'Account "{_uname}" deactivated. Data preserved — use Reinstate to restore.', 'success')
 
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f'[admin_delete_user] failed for user {user_id}: {e}')
+        app.logger.error(f'[soft_delete] failed for user {user_id}: {e}')
         flash(f'Delete failed: {str(e)[:120]}', 'error')
 
     return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/user/<int:user_id>/reinstate', methods=['POST'])
+@login_required
+@admin_required
+def admin_reinstate_user(user_id):
+    """
+    Reinstate a soft-deleted user. Sets is_active=True.
+    Subscription is NOT automatically restored — admin must do that separately.
+    Logs reinstate action. Sends welcome-back email. Session 210.
+    """
+    user = User.query.get_or_404(user_id)
+    if user.role == 'admin':
+        return jsonify({'ok': False, 'message': 'Cannot reinstate admin.'}), 400
+
+    _uname = user.full_name or user.username or f'user {user_id}'
+    _uemail = user.email or ''
+
+    try:
+        user.is_active = True
+        db.session.commit()
+
+        _log_admin_action('reinstate', 'user', user_id, {
+            'username': _uname,
+            'email':    _uemail,
+            'note':     'Admin reinstate — account restored, subscription not auto-restored',
+        })
+        app.logger.info(f'[reinstate] uid={user_id} email={_uemail} by admin={current_user.id}')
+
+        # Welcome-back email
+        try:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            send_email(
+                to_addresses=[_uemail],
+                subject='Your Shutter League account has been reinstated',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="padding:28px 28px 24px;">'
+                    '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Account reinstated</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">Hi ' + _uname + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">'
+                    'Good news — your Shutter League account has been reinstated. '
+                    'You can log in again at the link below.</p>'
+                    '<a href="' + _site + '/login" style="display:inline-block;background:#C8A84B;color:#1A1A18;'
+                    'font-weight:700;padding:14px 28px;border-radius:6px;text-decoration:none;margin:8px 0 20px;">'
+                    'Log in to Shutter League &#8594;</a>'
+                    '<p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 24px;">'
+                    'If you had a paid subscription, please contact us at '
+                    '<a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a> '
+                    'to have it restored.</p>'
+                    '<p style="font-size:15px;color:#8a8070;margin:0;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:15px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; '
+                    '<a href="' + _site + '" style="color:#C8A84B;">shutterleague.com</a></p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    'Hi ' + _uname + ',\n\n'
+                    'Your Shutter League account has been reinstated. Log in at: '
+                    + _site + '/login\n\n'
+                    'If you had a paid subscription, contact us at ' + CONTACT_EMAIL + ' to restore it.\n\n'
+                    '-- Shutter League'
+                )
+            )
+        except Exception as _email_err:
+            app.logger.warning(f'[reinstate] welcome-back email failed: {_email_err}')
+
+        return jsonify({'ok': True, 'message': f'Account reinstated. Welcome-back email sent to {_uemail}.'})
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[reinstate] failed for user {user_id}: {e}')
+        return jsonify({'ok': False, 'message': str(e)[:120]}), 500
 
 
 @app.route('/admin/haiku/bulk-delete', methods=['POST'])
@@ -18212,14 +18287,41 @@ def admin_haiku_bulk_delete():
                         pass
                 db.session.delete(_img)
 
-            # 12. Delete user row
-            db.session.delete(_user)
-            db.session.commit()
+            # 12. Delete or soft-delete depending on type
+            if _del_type == 'bot':
+                # Hard delete — bots get no reinstatement
+                db.session.delete(_user)
+                db.session.commit()
+                _action = 'bot_delete'
+            else:
+                # Soft delete — real users: lock out, preserve data, send farewell email
+                _user.is_active = False
+                if getattr(_user, 'is_subscribed', False):
+                    _user.is_subscribed = False
+                db.session.commit()
+                _action = 'soft_delete'
+                # Farewell email for soft-deleted real users
+                try:
+                    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    send_email(
+                        to_addresses=[_uemail],
+                        subject='Your Shutter League account has been deactivated',
+                        html_body=(
+                            '<p>Hi ' + _uname + ',</p>'
+                            '<p>Your Shutter League account has been deactivated. '
+                            'Your data is preserved and can be reinstated if this was made in error.</p>'
+                            '<p>Contact us at <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> to dispute.</p>'
+                            '<p>&#8212; Shutter League</p>'
+                        ),
+                        text_body=(
+                            'Hi ' + _uname + ',\n\nYour Shutter League account has been deactivated. '
+                            'Contact us at ' + CONTACT_EMAIL + ' to dispute.\n\n-- Shutter League'
+                        )
+                    )
+                except Exception as _be:
+                    app.logger.warning(f'[bulk_delete] farewell email failed uid={_uid}: {_be}')
 
             # 13. Audit log
-            # blocked_ips.ip_address is INTEGER — cannot store email strings.
-            # Bot email ban is recorded in audit log detail JSON only.
-            _action = 'bot_delete' if _del_type == 'bot' else 'delete_user'
             _log_admin_action(_action, 'user', _uid, {
                 'username':    _uname,
                 'email':       _uemail,
