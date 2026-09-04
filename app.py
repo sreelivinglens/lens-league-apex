@@ -16647,7 +16647,9 @@ def admin_dashboard():
             "SELECT u.id, u.full_name, u.username, u.email, u.city, "
             "u.created_at, u.onboarding_complete, u.is_active, "
             "COUNT(i.id) AS haiku_used, "
-            "MAX(i.created_at) AS last_image_at "
+            "MAX(i.created_at) AS last_image_at, "
+            "(SELECT id FROM images WHERE user_id=u.id AND is_haiku_try IS TRUE "
+            " ORDER BY id DESC LIMIT 1) AS latest_image_id "
             "FROM users u "
             "LEFT JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
             "WHERE u.role != 'admin' "
@@ -16767,7 +16769,8 @@ def admin_dashboard():
                            master_refs=_mr_refs_list,
                            master_refs_stale=_mr_stale,
                            master_refs_total=_mr_total,
-                           master_refs_days=_mr_days)
+                           master_refs_days=_mr_days,
+                           now=datetime.utcnow())
 
 
 # ── OPTION 2: Audit Log full search page — Session 208 ─────────────────────────────
