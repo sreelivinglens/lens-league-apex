@@ -1284,6 +1284,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Fashion','Fashion')">Fashion</button>
           <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Wedding','Wedding')">Wedding</button>
           <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('People','People')">People</button>
+          <select id="mr-genre-filter" onchange="mrGenreFilter()" style="padding:6px 10px;border:1px solid #C8D4E8;border-radius:7px;font-size:13px;font-family:inherit;background:#fff;min-height:36px">
             <option value="">Filter table by genre</option>
             {% for g in ['Wildlife','Street','Documentary','Landscape','Nature','Macro','Sports','Astrophotography','Creative','Architecture','Drone','Fashion','Wedding','People'] %}
             <option value="{{ g }}">{{ g }}</option>
