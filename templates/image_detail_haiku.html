@@ -221,6 +221,23 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 .sl-ref-link:hover { text-decoration:underline; }
 
+/* Session 211v3: imagine — the 9+ vision */
+.sl-imagine {
+  margin:48px 0 32px;
+  padding:28px 32px;
+  border-left:3px solid #C8A84B;
+  background:linear-gradient(135deg,#FAFAF6 0%,#F5F0E8 100%);
+}
+.sl-imagine-eyebrow {
+  font-size:12px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:#C8A84B;margin-bottom:12px;
+}
+.sl-imagine-body {
+  font-family:'Playfair Display',serif;
+  font-size:20px;font-style:italic;line-height:1.85;
+  color:#1A2744;
+}
+
 /* Session 211: conclusion / invitation section */
 .sl-conclusion {
   margin:0 0 0;
@@ -301,6 +318,8 @@ main { padding:0 !important; background:#E8E5DF; }
   .sl-upgrade-wrap { padding:36px 20px 40px !important; }
   .sl-conclusion { padding:24px 20px 28px; }
   .sl-conclusion p { font-size:16px; }
+  .sl-imagine { padding:20px 20px; }
+  .sl-imagine-body { font-size:17px; }
 }
 </style>
 {% endblock %}
@@ -631,6 +650,18 @@ main { padding:0 !important; background:#E8E5DF; }
     {% endif %}
 
   </div>{# end .sl-content #}
+
+  {# Session 211v3: IMAGINE — the 9+ vision #}
+  {% if imagine %}
+  <div class="sl-content" style="padding-top:0;padding-bottom:0">
+    <div style="max-width:860px;margin:0 auto;padding:0 48px">
+      <div class="sl-imagine">
+        <div class="sl-imagine-eyebrow">Imagine</div>
+        <div class="sl-imagine-body">{{ imagine }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   {# Session 211: CONCLUSION -- invitation before upgrade block #}
   {% if conclusion %}
