@@ -18789,7 +18789,7 @@ def admin_master_references_suggest():
                 )
                 _payload = _bj.dumps({
                     'model': 'claude-sonnet-4-6',
-                    'max_tokens': 8000,
+                    'max_tokens': 2000,
                     'messages': [{'role': 'user', 'content': _prompt}]
                 }).encode()
                 _req = _bur.Request(
@@ -18802,7 +18802,7 @@ def admin_master_references_suggest():
                     },
                     method='POST'
                 )
-                with _bur.urlopen(_req, timeout=90) as _resp:
+                with _bur.urlopen(_req, timeout=45) as _resp:
                     _result = _bj.loads(_resp.read().decode())
                 _text = (_result.get('content') or [{}])[0].get('text', '[]')
                 _text = _text.strip().lstrip('`').replace('json\n', '').rstrip('`').strip()
