@@ -487,13 +487,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   <div class="sb-group">
     <div class="sb-group-label">Members</div>
-    <a class="sb-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid subscribers</a>
+    <a class="sb-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid subscribers{% if paid_users %}<span class="sb-badge ok">{{ paid_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('uat-members','b-uat-body','cUAT')"><i class="ti ti-flask" style="color:#B45309"></i> UAT &amp; Learning{% if uat_users %}<span class="sb-badge warn">{{ uat_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('haiku-members','b-haiku-body','cHM')">
       <i class="ti ti-users"></i> Haiku members
       {% if stats.free_users > 0 %}<span class="sb-badge haiku">{{ stats.free_users }}</span>{% endif %}
     </a>
-    <a class="sb-item" onclick="navTo('new-signups','b-ns-body','cNS')"><i class="ti ti-user-plus"></i> New signups</a>
+    <a class="sb-item" onclick="navTo('new-signups','b-ns-body','cNS')"><i class="ti ti-user-plus"></i> New signups{% if new_signups_30days %}<span class="sb-badge">{{ new_signups_30days }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('deleted-accounts','b-deleted-body','cDA')"><i class="ti ti-user-off" style="color:#B91C1C"></i> Deleted accounts{% if deleted_users %}<span class="sb-badge" style="background:#FEF2F2;color:#B91C1C">{{ deleted_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('engagement','b-en-body','cEN')"><i class="ti ti-chart-line"></i> Engagement</a>
   </div>
@@ -929,9 +929,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       {% if uat_users %}
       <table class="ps-table">
         <thead><tr><th style="width:24%">Member</th><th style="width:10%">Plan</th><th style="width:11%">Joined</th><th style="width:10%">Best eval</th><th style="width:7%">Images</th><th style="width:9%">Cache</th><th style="width:9%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
-        <tbody>
+        <tbody id="uat-tbody">
           {% for uu in uat_users %}
-          <tr style="background:#FFFBEB">
+          <tr class="uat-row" style="background:#FFFBEB">
             <td>
               <div class="ps-name">{{ uu.full_name }}{% if not uu.is_active %} <span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;background:#FEF2F2;color:#B91C1C;vertical-align:middle">inactive</span>{% endif %}</div>
               <div class="ps-meta">{{ uu.email }}</div>
@@ -967,6 +967,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           {% endfor %}
         </tbody>
       </table>
+      <div id="uat-pagination" class="tbl-pagination" style="display:none">
+        <button class="pg-btn" id="uat-prev" onclick="event.stopPropagation();uatPage(-1)">← Prev</button>
+        <span class="pg-info" id="uat-info"></span>
+        <button class="pg-btn" id="uat-next" onclick="event.stopPropagation();uatPage(1)">Next →</button>
+      </div>
       <div class="haiku-footer">
         <span class="hf-note">{{ uat_users|length }} UAT/Learning members</span>
       </div>
@@ -1490,6 +1495,32 @@ function sendNudge(){
 document.getElementById('nudge-modal').addEventListener('click', function(e){
   if(e.target === this) closeNudge();
 });
+
+// ── UAT PAGINATION ────────────────────────────────────────────────────────────
+var _uatPage = 1;
+var _uatPerPage = 10;
+(function initUatPagination(){
+  var rows = document.querySelectorAll('#uat-tbody .uat-row');
+  if(rows.length <= _uatPerPage) return;
+  document.getElementById('uat-pagination').style.display = 'flex';
+  renderUatPage();
+})();
+function renderUatPage(){
+  var rows = document.querySelectorAll('#uat-tbody .uat-row');
+  var total = rows.length;
+  var totalPages = Math.ceil(total / _uatPerPage);
+  var start = (_uatPage - 1) * _uatPerPage;
+  rows.forEach(function(r, i){ r.style.display = (i >= start && i < start + _uatPerPage) ? '' : 'none'; });
+  document.getElementById('uat-info').textContent = 'Page ' + _uatPage + ' of ' + totalPages + ' (' + total + ' members)';
+  document.getElementById('uat-prev').disabled = _uatPage <= 1;
+  document.getElementById('uat-next').disabled = _uatPage >= totalPages;
+}
+function uatPage(dir){
+  var rows = document.querySelectorAll('#uat-tbody .uat-row');
+  var totalPages = Math.ceil(rows.length / _uatPerPage);
+  _uatPage = Math.max(1, Math.min(totalPages, _uatPage + dir));
+  renderUatPage();
+}
 
 // ── PAID SUBSCRIBERS PAGINATION ──────────────────────────────────────────────
 var _psPage = 1;
