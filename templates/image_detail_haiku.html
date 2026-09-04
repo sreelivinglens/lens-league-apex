@@ -645,7 +645,19 @@ main { padding:0 !important; background:#E8E5DF; }
     {% if edit_tips %}
     <div style="margin-bottom:64px;padding-top:48px;border-top:0.5px solid rgba(26,39,68,0.08)">
       <div class="sl-eyebrow">Edit Suggestions</div>
-      <div style="font-size:17px;color:#1A2744;line-height:1.85;white-space:pre-line">{{ edit_tips }}</div>
+      {# Session 211v3: WHAT/WHY/HOW rendered as separate cards #}
+      {% for _tip in edit_tips.split('WHAT:') if _tip.strip() %}
+      <div style="margin-bottom:16px;padding:18px 20px;background:#FAFAF6;border-radius:3px;border-left:3px solid rgba(26,39,68,0.15)">
+        {% for _part in ('WHAT: ' + _tip).split('|') %}{% if _part.strip() %}
+        <div style="font-size:15px;color:#1A2744;line-height:1.7;margin-bottom:6px">
+          {% if 'WHAT:' in _part %}<span style="font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:1px;color:#8a6a30">What</span><br>{{ _part.replace('WHAT:','').strip() }}
+          {% elif 'WHY:' in _part %}<span style="font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:1px;color:rgba(26,39,68,0.45)">Why</span><br>{{ _part.replace('WHY:','').strip() }}
+          {% elif 'HOW:' in _part %}<span style="font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:1px;color:rgba(26,39,68,0.45)">How</span><br>{{ _part.replace('HOW:','').strip() }}
+          {% else %}{{ _part.strip() }}{% endif %}
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+      {% endfor %}
     </div>
     {% endif %}
 
@@ -667,6 +679,20 @@ main { padding:0 !important; background:#E8E5DF; }
   {% if conclusion %}
   <div class="sl-conclusion">
     <p>{{ conclusion }}</p>
+  </div>
+  {% endif %}
+
+  {# Session 211v3: LEAGUE BANNER — shown for 7.5+ scores #}
+  {% if score and score|float >= 7.5 %}
+  <div style="background:#1A2744;padding:28px 48px;border-top:1px solid rgba(255,255,255,0.08)">
+    <div style="max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8A84B;margin-bottom:8px">League of Photographers</div>
+        <div style="font-size:18px;color:rgba(255,255,255,0.88);line-height:1.6;font-family:'Playfair Display',serif;font-style:italic">An image at this level earns a world standing.</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.55);margin-top:6px;line-height:1.6">Calibrated against every photographer on the platform — not a popularity vote.</div>
+      </div>
+      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:14px;font-weight:700;padding:14px 24px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap;flex-shrink:0">See your standing →</a>
+    </div>
   </div>
   {% endif %}
 
