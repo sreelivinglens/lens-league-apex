@@ -36174,6 +36174,16 @@ def try_result(image_id):
             takeaway = audit.get('takeaway', '')
     except Exception:
         pass
+    # Session 211: fallback to image columns if audit_json dims missing/corrupted
+    if not any(v for v in dims.values() if v):
+        _fb_dod = getattr(img, 'dod_score', None)
+        _fb_vd  = getattr(img, 'disruption_score', None)
+        _fb_dm  = getattr(img, 'dm_score', None)
+        _fb_wf  = getattr(img, 'wonder_score', None)
+        _fb_aq  = getattr(img, 'aq_score', None)
+        if any([_fb_dod, _fb_vd, _fb_dm, _fb_wf, _fb_aq]):
+            dims = {'dod': _fb_dod, 'vd': _fb_vd, 'dm': _fb_dm, 'wf': _fb_wf, 'aq': _fb_aq}
+            app.logger.info(f'[try_result] dim fallback to image columns image={image_id}')
 
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     # 181.18: TWO separate counts.
