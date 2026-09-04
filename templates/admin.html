@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.0-main (Session 209, 2026-09-03 — Standalone rebuild. No base.html. Matches mock v6: sidebar nav, stat bar, guide notes, member funnel, eval summary, subscription mix, cities, activity, alerts, quick actions, search, needs attention, image grid (Sonnet/Haiku tabs), paid subscribers, haiku members, recent audit actions, new signups, engagement, stats & calibration, danger zone. Admin-only.) #}
+{# SL-VERSION: admin-2.1-main (Session 210, 2026-09-04 — Haiku members bulk delete: checkboxes, sticky action bar, BOT DELETE + DELETE buttons with confirmation modal. Audit badges: bot_delete, delete_user added.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -273,6 +273,36 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .hf-note{font-size:12px;color:#8A8A86}
 .hf-btn{font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid #1A2744;background:#fff;color:#1A2744;cursor:pointer;font-family:inherit;min-height:40px;text-decoration:none;display:inline-flex;align-items:center}
 
+/* ── BULK DELETE ── */
+.hk-cb{width:16px;height:16px;cursor:pointer;accent-color:#B91C1C;flex-shrink:0}
+.bulk-bar{position:sticky;bottom:16px;z-index:80;background:#1A2744;color:#fff;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.22);margin-top:12px;flex-wrap:wrap}
+.bulk-bar.hidden{display:none}
+.bulk-count{font-size:14px;font-weight:500;flex:1;white-space:nowrap}
+.bulk-deselect{font-size:13px;color:#C8A84B;cursor:pointer;white-space:nowrap;background:none;border:none;font-family:inherit;padding:0;min-height:36px}
+.bulk-deselect:hover{text-decoration:underline}
+.btn-bot-del{font-size:13px;font-weight:600;padding:8px 16px;border-radius:7px;border:2px solid #F87171;background:transparent;color:#F87171;cursor:pointer;font-family:inherit;min-height:38px;white-space:nowrap;transition:background .12s,color .12s}
+.btn-bot-del:hover{background:#F87171;color:#fff}
+.btn-hard-del{font-size:13px;font-weight:600;padding:8px 16px;border-radius:7px;border:none;background:#B91C1C;color:#fff;cursor:pointer;font-family:inherit;min-height:38px;white-space:nowrap;transition:background .12s}
+.btn-hard-del:hover{background:#991B1B}
+/* Confirm modal */
+.del-modal-bg{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
+.del-modal-bg.open{display:flex}
+.del-modal{background:#fff;border-radius:14px;padding:28px;width:min(420px,92vw);box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.del-modal-title{font-size:17px;font-weight:600;color:#1A1A18;margin-bottom:8px}
+.del-modal-body{font-size:14px;color:#6B6B68;line-height:1.6;margin-bottom:20px}
+.del-modal-body strong{color:#B91C1C}
+.del-modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.del-cancel-btn{font-size:14px;padding:9px 18px;border-radius:7px;border:1px solid #E0DDD6;background:#fff;color:#1A1A18;cursor:pointer;font-family:inherit;min-height:40px}
+.del-cancel-btn:hover{border-color:#1A2744}
+.del-confirm-bot{font-size:14px;font-weight:600;padding:9px 18px;border-radius:7px;border:2px solid #F87171;background:transparent;color:#B91C1C;cursor:pointer;font-family:inherit;min-height:40px}
+.del-confirm-bot:hover{background:#FEF2F2}
+.del-confirm-hard{font-size:14px;font-weight:600;padding:9px 18px;border-radius:7px;border:none;background:#B91C1C;color:#fff;cursor:pointer;font-family:inherit;min-height:40px}
+.del-confirm-hard:hover{background:#991B1B}
+/* Status flash inside haiku section */
+.bulk-result{font-size:14px;padding:10px 14px;border-radius:8px;margin-top:10px;display:none}
+.bulk-result.ok{background:#F0FDF4;border:1px solid #BBF7D0;color:#166534}
+.bulk-result.err{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C}
+
 /* ── AUDIT LOG ── */
 .audit-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #F5F3EF;font-size:14px}
 .audit-row:last-child{border-bottom:none}
@@ -284,6 +314,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .ab-sub{background:#E8F5E9;color:#2E7D32}
 .ab-recalib{background:#FFF8E1;color:#B45309}
 .ab-email{background:#F0FDF4;color:#166534}
+.ab-bot-del{background:#1A2744;color:#F87171}
 .audit-detail{flex:1;min-width:0;color:#1A1A18}
 .audit-detail-sub{font-size:12px;color:#8A8A86;margin-top:2px}
 .audit-ts{font-size:12px;color:#AEAEA8;white-space:nowrap;flex-shrink:0;margin-top:2px}
@@ -356,6 +387,19 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </style>
 </head>
 <body>
+
+{# ── BULK DELETE CONFIRM MODAL ── #}
+<div id="del-modal-bg" class="del-modal-bg" onclick="if(event.target===this)closeBulkModal()">
+  <div class="del-modal">
+    <div class="del-modal-title" id="del-modal-title">Confirm deletion</div>
+    <div class="del-modal-body" id="del-modal-body"></div>
+    <div class="del-modal-actions">
+      <button class="del-cancel-btn" onclick="closeBulkModal()">Cancel</button>
+      <button class="del-confirm-bot" id="del-confirm-bot-btn" style="display:none" onclick="executeBulkDelete('bot')">Yes — BOT DELETE</button>
+      <button class="del-confirm-hard" id="del-confirm-hard-btn" style="display:none" onclick="executeBulkDelete('user')">Yes — DELETE</button>
+    </div>
+  </div>
+</div>
 
 {# ── HAIKU NUDGE MODAL ── #}
 <div id="nudge-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
@@ -891,11 +935,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       {# haiku_users = raw SQL rows: id, full_name, username, email, city,
          created_at, onboarding_complete, is_active, haiku_used, last_image_at #}
       {% if haiku_users %}
-      <table class="haiku-table">
-        <thead><tr><th style="width:28%">Member</th><th style="width:22%">Evals used</th><th style="width:12%">Joined</th><th style="width:14%">Last active</th><th style="width:12%">Status</th><th style="width:12%;text-align:right"></th></tr></thead>
+      <table class="haiku-table" id="haiku-table">
+        <thead><tr><th style="width:32px"><input type="checkbox" class="hk-cb" id="hk-select-all" title="Select all" onchange="hkSelectAll(this)"></th><th style="width:26%">Member</th><th style="width:20%">Evals used</th><th style="width:12%">Joined</th><th style="width:12%">Last active</th><th style="width:10%">Status</th><th style="width:12%;text-align:right"></th></tr></thead>
         <tbody>
           {% for u in haiku_users %}
           <tr>
+            <td style="width:32px;padding-right:4px"><input type="checkbox" class="hk-cb hk-row-cb" data-uid="{{ u.id }}" data-name="{{ u.full_name or u.username }}" onchange="hkCbChange()"></td>
             <td>
               <div style="font-weight:500;font-size:14px">{{ u.full_name or u.username }}</div>
               <div style="font-size:11px;color:#8A8A86">user {{ u.id }}{% if u.city %} · {{ u.city }}{% endif %}</div>
@@ -943,6 +988,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           {% endfor %}
         </tbody>
       </table>
+      <div id="bulk-result" class="bulk-result"></div>
+      <div id="bulk-bar" class="bulk-bar hidden">
+        <span class="bulk-count" id="bulk-count-label">0 selected</span>
+        <button class="bulk-deselect" onclick="hkDeselectAll()">Deselect all</button>
+        <button class="btn-bot-del" onclick="openBulkModal('bot')"><i class="ti ti-robot-off" style="font-size:14px;margin-right:4px"></i>BOT DELETE</button>
+        <button class="btn-hard-del" onclick="openBulkModal('user')"><i class="ti ti-trash" style="font-size:14px;margin-right:4px"></i>DELETE</button>
+      </div>
       <div class="haiku-footer">
         <span class="hf-note">{{ haiku_users|length }} Haiku members shown</span>
         <a class="hf-btn" href="{{ url_for('admin_dashboard', engine='haiku') }}">View Haiku image grid →</a>
@@ -972,7 +1024,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       {% if recent_admin_actions %}
       {% for a in recent_admin_actions %}
       <div class="audit-row">
-        {% set badge_map = {'force_rescore':'ab-rescore','delete_image':'ab-delete','flag_image':'ab-flag','toggle_visibility':'ab-vis','toggle_subscription':'ab-sub','recalibrate':'ab-recalib','newsletter_send':'ab-email'} %}
+        {% set badge_map = {'force_rescore':'ab-rescore','delete_image':'ab-delete','flag_image':'ab-flag','toggle_visibility':'ab-vis','toggle_subscription':'ab-sub','recalibrate':'ab-recalib','newsletter_send':'ab-email','haiku_nudge':'ab-email','bot_delete':'ab-bot-del','delete_user':'ab-delete'} %}
         <span class="audit-badge {{ badge_map.get(a.action, 'ab-rescore') }}">{{ a.action }}</span>
         <div class="audit-detail">
           {{ a.target_type|capitalize }} #{{ a.target_id }}
@@ -1336,6 +1388,117 @@ function sendNudge(){
 document.getElementById('nudge-modal').addEventListener('click', function(e){
   if(e.target === this) closeNudge();
 });
+
+// ── BULK DELETE ──────────────────────────────────────────────────────────────
+var _pendingDelType = null;
+
+function hkGetChecked(){
+  return Array.from(document.querySelectorAll('.hk-row-cb:checked'));
+}
+function hkCbChange(){
+  var checked = hkGetChecked();
+  var bar = document.getElementById('bulk-bar');
+  var label = document.getElementById('bulk-count-label');
+  var selectAll = document.getElementById('hk-select-all');
+  var total = document.querySelectorAll('.hk-row-cb').length;
+  label.textContent = checked.length + ' selected';
+  bar.classList.toggle('hidden', checked.length === 0);
+  selectAll.indeterminate = checked.length > 0 && checked.length < total;
+  selectAll.checked = checked.length === total && total > 0;
+}
+function hkSelectAll(master){
+  document.querySelectorAll('.hk-row-cb').forEach(function(cb){ cb.checked = master.checked; });
+  hkCbChange();
+}
+function hkDeselectAll(){
+  document.querySelectorAll('.hk-row-cb').forEach(function(cb){ cb.checked = false; });
+  document.getElementById('hk-select-all').checked = false;
+  hkCbChange();
+}
+function openBulkModal(delType){
+  var checked = hkGetChecked();
+  if(!checked.length) return;
+  _pendingDelType = delType;
+  var names = checked.map(function(cb){ return cb.dataset.name || ('user ' + cb.dataset.uid); });
+  var modal = document.getElementById('del-modal-bg');
+  var title = document.getElementById('del-modal-title');
+  var body  = document.getElementById('del-modal-body');
+  var botBtn  = document.getElementById('del-confirm-bot-btn');
+  var hardBtn = document.getElementById('del-confirm-hard-btn');
+
+  if(delType === 'bot'){
+    title.textContent = 'BOT DELETE — ' + checked.length + ' account' + (checked.length > 1 ? 's' : '');
+    body.innerHTML = 'This will <strong>permanently delete</strong> the selected account(s), '
+      + 'ban their email addresses to block re-registration, and log each action as <strong>bot_delete</strong> in the audit log.<br><br>'
+      + '<strong>Accounts to delete:</strong><br>'
+      + names.map(function(n){ return '• ' + n; }).join('<br>');
+    botBtn.style.display = '';
+    hardBtn.style.display = 'none';
+  } else {
+    title.textContent = 'DELETE — ' + checked.length + ' account' + (checked.length > 1 ? 's' : '');
+    body.innerHTML = 'This will <strong>permanently delete</strong> the selected account(s) and all their data. '
+      + 'This action is irreversible and will be logged in the audit log.<br><br>'
+      + '<strong>Accounts to delete:</strong><br>'
+      + names.map(function(n){ return '• ' + n; }).join('<br>');
+    botBtn.style.display = 'none';
+    hardBtn.style.display = '';
+  }
+  modal.classList.add('open');
+}
+function closeBulkModal(){
+  document.getElementById('del-modal-bg').classList.remove('open');
+  _pendingDelType = null;
+}
+function executeBulkDelete(delType){
+  var checked = hkGetChecked();
+  if(!checked.length) return;
+  var uids = checked.map(function(cb){ return cb.dataset.uid; }).join(',');
+  var botBtn  = document.getElementById('del-confirm-bot-btn');
+  var hardBtn = document.getElementById('del-confirm-hard-btn');
+  var activeBtn = delType === 'bot' ? botBtn : hardBtn;
+  activeBtn.disabled = true;
+  activeBtn.textContent = 'Deleting…';
+
+  var fd = new FormData();
+  fd.append('user_ids', uids);
+  fd.append('delete_type', delType);
+
+  fetch('/admin/haiku/bulk-delete', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      closeBulkModal();
+      var result = document.getElementById('bulk-result');
+      result.style.display = 'block';
+      if(d.ok){
+        result.className = 'bulk-result ok';
+        result.textContent = '✓ ' + d.message;
+        // Remove deleted rows from DOM
+        checked.forEach(function(cb){
+          var row = cb.closest('tr');
+          if(row) row.remove();
+        });
+        hkDeselectAll();
+        // Update haiku member count badge
+        var remaining = document.querySelectorAll('.hk-row-cb').length;
+        var badge = document.querySelector('.sec-badge.haiku');
+        if(badge) badge.textContent = remaining;
+      } else {
+        result.className = 'bulk-result err';
+        result.textContent = '✗ ' + (d.message || 'Delete failed.');
+      }
+      activeBtn.disabled = false;
+      setTimeout(function(){ result.style.display = 'none'; }, 5000);
+    })
+    .catch(function(){
+      closeBulkModal();
+      var result = document.getElementById('bulk-result');
+      result.style.display = 'block';
+      result.className = 'bulk-result err';
+      result.textContent = '✗ Network error — please try again.';
+      activeBtn.disabled = false;
+      setTimeout(function(){ result.style.display = 'none'; }, 5000);
+    });
+}
 (function(){
   var sections=['stat-bar','search-block','needs-attention','images','paid-subs','haiku-members','audit-log','danger'];
   var items=document.querySelectorAll('.mob-nav-item');
