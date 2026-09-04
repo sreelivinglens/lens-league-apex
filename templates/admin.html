@@ -1804,17 +1804,22 @@ function mrPage(dir){
 }
 // Init on section open
 (function(){
+  // Always init _mrFiltered on page load so rows aren't hidden
+  _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
   var body = document.getElementById('b-master-body');
   if(body){
     var observer = new MutationObserver(function(muts){
       muts.forEach(function(m){
-        if(m.target.style.display !== 'none') mrInitPagination();
+        if(m.target.style.display !== 'none'){
+          if(_mrFiltered.length === 0){
+            _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
+          }
+          mrRenderPage();
+        }
       });
     });
     observer.observe(body, {attributes:true, attributeFilter:['style']});
   }
-  // Also init if already open
-  if(body && body.style.display !== 'none') mrInitPagination();
 })();
 
 var _mrPendingSuggestions = [];
