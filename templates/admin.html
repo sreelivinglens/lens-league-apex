@@ -1265,25 +1265,26 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       </div>
 
       {# Genre filter + Refresh controls #}
-      {# Refresh CTA — prominent at top #}
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:16px 18px;background:#F0F4FF;border:1px solid #C8D4E8;border-radius:10px">
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:14px;font-weight:600;color:#1A2744;margin-bottom:4px">Refresh the reference library</div>
-          <div style="font-size:13px;color:#6B6B68">Ask Sonnet to suggest new award winners and emerging masters. One call covers all genres — takes ~45 seconds. Review before saving.</div>
-        </div>
+      {# Refresh CTA — three genre groups #}
+      <div style="margin-bottom:20px;padding:16px 18px;background:#F0F4FF;border:1px solid #C8D4E8;border-radius:10px">
+        <div style="font-size:14px;font-weight:600;color:#1A2744;margin-bottom:4px">Refresh the reference library</div>
+        <div style="font-size:13px;color:#6B6B68;margin-bottom:14px">Run each group once every 3 weeks. Each call takes ~30 seconds. Review and approve before saving.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <select id="mr-genre-filter" onchange="mrGenreFilter()" style="padding:8px 12px;border:1px solid #C8D4E8;border-radius:7px;font-size:14px;font-family:inherit;background:#fff;min-height:40px">
-            <option value="">All genres</option>
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Wildlife,Nature,Macro,Landscape,Astrophotography','Nature & Wildlife')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Nature & Wildlife
+          </button>
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Street,Documentary,People,Portrait,Fashion','People & Street')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>People & Street
+          </button>
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Sports,Architecture,Drone,Creative,Wedding','Other genres')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Other genres
+          </button>
+          <select id="mr-genre-filter" onchange="mrGenreFilter()" style="padding:8px 12px;border:1px solid #C8D4E8;border-radius:7px;font-size:14px;font-family:inherit;background:#fff;min-height:42px;margin-left:8px">
+            <option value="">Filter table by genre</option>
             {% for g in ['Wildlife','Street','Documentary','Landscape','Nature','Macro','Sports','Astrophotography','Creative','Architecture','Drone','Fashion','Wedding','People'] %}
             <option value="{{ g }}">{{ g }}</option>
             {% endfor %}
           </select>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggest(true)">
-            <i class="ti ti-sparkles" style="margin-right:6px"></i>Refresh all genres
-          </button>
-          <button class="btn-hard-del" style="background:#2E5BA8;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggest(false)">
-            <i class="ti ti-sparkles" style="margin-right:6px"></i>This genre only
-          </button>
         </div>
       </div>
 
@@ -1835,14 +1836,70 @@ function mrToggle(refId, btn) {
     .catch(function(){ showFlash('Network error.', 'error'); });
 }
 
-function mrSuggest(allGenres) {
-  var genre = allGenres ? '' : document.getElementById('mr-genre-filter').value;
-  var label = allGenres ? 'all genres' : (genre || 'all genres');
+function mrSuggestGroup(genres, label) {
   var status = document.getElementById('mr-suggest-status');
   status.style.display = 'block';
   status.className = 'bulk-result ok';
-  status.textContent = 'Starting Sonnet for ' + label + '… takes 45–90 seconds for all genres.';
+  status.textContent = 'Starting Sonnet for ' + label + '… ~30 seconds.';
   document.getElementById('mr-suggestions-area').style.display = 'none';
+
+  // Pass the first genre of the group — route splits on comma server-side
+  // Actually pass as multiple genre params — use first genre as the key
+  // We send genre as comma-joined string; route will handle it
+  var fd = new FormData();
+  // Send as individual genres — route currently takes one genre param
+  // We'll send the first genre and let the route expand — OR send all as one string
+  fd.append('genre', genres);  // route will use this as the genre list
+
+  fetch('/admin/master-references/suggest', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.ok){ status.className='bulk-result err'; status.textContent='Failed: '+(d.message||'unknown'); return; }
+      var jobId = d.job_id;
+      var dots = 0;
+      var pollInterval = setInterval(function(){
+        dots = (dots + 1) % 4;
+        status.textContent = label + ' — Sonnet working' + '.'.repeat(dots+1);
+        fetch('/admin/master-references/suggest/status?job=' + jobId)
+          .then(function(r){ return r.json(); })
+          .then(function(result){
+            if(result.status === 'running') return;
+            clearInterval(pollInterval);
+            if(result.status === 'error'){
+              status.className = 'bulk-result err';
+              status.textContent = '✗ ' + (result.message || 'Failed.');
+              return;
+            }
+            _mrPendingSuggestions = [];
+            var list = document.getElementById('mr-suggestions-list');
+            list.innerHTML = '';
+            (result.suggestions || []).forEach(function(genreGroup){
+              if(!genreGroup.photographers || !genreGroup.photographers.length) return;
+              var hdr = document.createElement('div');
+              hdr.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin:14px 0 8px';
+              hdr.textContent = genreGroup.genre;
+              list.appendChild(hdr);
+              genreGroup.photographers.forEach(function(p, i){
+                var id = 'mr-sug-' + (genreGroup.genre||'').replace(/\s/g,'') + '-' + i;
+                _mrPendingSuggestions.push(Object.assign({}, p, {genre_tags: genreGroup.genre, _id: id}));
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F5F3EF';
+                row.innerHTML = '<input type="checkbox" id="'+id+'" checked style="margin-top:3px;flex-shrink:0">'
+                  + '<div><div style="font-size:14px;font-weight:500">'+(p.name||'')
+                  + ' <span style="font-size:12px;color:#8A8A86;font-weight:400">('+p.region+') '+p.tier+'</span></div>'
+                  + '<div style="font-size:13px;color:#4A4840;margin-top:3px">'+(p.known_for||'')+'</div>'
+                  + '<div style="font-size:12px;color:#8A6A00;margin-top:2px">Use when: '+(p.reference_when||'—')+'</div></div>';
+                list.appendChild(row);
+              });
+            });
+            status.style.display = 'none';
+            document.getElementById('mr-suggestions-area').style.display = 'block';
+          })
+          .catch(function(){});
+      }, 3000);
+    })
+    .catch(function(){ status.className='bulk-result err'; status.textContent='Network error.'; });
+}
 
   var fd = new FormData();
   if(genre) fd.append('genre', genre);
