@@ -352,12 +352,13 @@ canvas.spark{flex:1;height:48px;display:block}
     <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="id-link">Your best so far — see the full evaluation →</a>
   </div>
   {% else %}
-  <div class="identity">
+  <div class="identity" style="padding-bottom:32px">
     <div class="id-greeting" id="sl-greeting">Good morning</div>
-    <div class="id-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
-    <div style="font-size:17px;color:rgba(26,39,68,0.55);line-height:1.80;margin-top:12px">
-      Your standing has not started yet. Your record begins with your next photograph.
+    <div class="id-name">{{ current_user.full_name.split()[0] }}. Your record starts with your next photograph.</div>
+    <div style="font-size:17px;color:rgba(26,39,68,0.65);line-height:1.85;margin-top:16px;max-width:520px">
+      Submit any photograph you have taken — your everyday work, not your best. The engine will tell you exactly what your eye found, what it missed, and what to look for in your next session.
     </div>
+    <a href="{{ url_for('try_page') }}" style="display:inline-block;margin-top:24px;background:#1A2744;color:#C8A84B;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:14px 24px;border-radius:3px;text-decoration:none">Submit your first photograph →</a>
   </div>
   {% endif %}
 
@@ -372,8 +373,23 @@ canvas.spark{flex:1;height:48px;display:block}
   </div>
   {% elif evals_used == 0 %}
   <div class="sherpa-section">
-    <div class="eyebrow">The standard you are building toward</div>
-    <div class="sherpa-opening">Every photographer who has reached the League of Photographers began with their first evaluated photograph. The standard is the same for everyone. The work determines everything.</div>
+    <div class="eyebrow">What you will receive</div>
+    <div class="sherpa-opening">After your first photograph goes through the engine, you will know your tier, your strongest dimension, the one thing holding you back, and a specific instruction for your next session.</div>
+    <div style="margin-top:28px;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#fff;border-left:3px solid #C8A84B;padding:18px 22px;border-radius:0 4px 4px 0">
+        <div style="font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">What we see</div>
+        <div style="font-size:16px;line-height:1.80;color:rgba(26,39,68,0.70);font-style:italic">"This is a photograph built on real timing — the geometry creates a single, unrepeatable instant. There is genuine tension here, and the photographer was clearly positioned and ready."</div>
+      </div>
+      <div style="background:#fff;border-left:3px solid #C8A84B;padding:18px 22px;border-radius:0 4px 4px 0">
+        <div style="font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">Your one take-away</div>
+        <div style="font-size:16px;line-height:1.80;color:rgba(26,39,68,0.70);font-style:italic">"Timing is your strength — now push the compositional risk to make the next frame unforgettable rather than just well-captured."</div>
+      </div>
+      <div style="background:#fff;border-left:3px solid #D4860A;padding:18px 22px;border-radius:0 4px 4px 0">
+        <div style="font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#8A4A00;margin-bottom:8px">The gap that follows you</div>
+        <div style="font-size:16px;line-height:1.80;color:rgba(26,39,68,0.70);font-style:italic">"Composition follows expected convention — ask what frame would make this moment unforgettable rather than dramatic."</div>
+      </div>
+    </div>
+    <div style="margin-top:24px;font-size:15px;color:rgba(26,39,68,0.52);line-height:1.70">These are real outputs from a single evaluation. Submit any photograph — street, wildlife, portrait, landscape. The engine reads what is actually in the frame.</div>
   </div>
   {% endif %}
 
