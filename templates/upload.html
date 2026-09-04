@@ -717,8 +717,14 @@
       </div>
 
       <div class="form-group">
+        {% if is_trial %}
+        <label for="subject">What made this photograph difficult or rare? <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional — 2-3 sentences)</span></label>
+        <textarea id="subject" name="subject" placeholder="e.g. This raptor was actively hunting insects thrown up by the wildfire — behaviour documented fewer than 50 times in wildlife photography. I was positioned 30 metres from the fire line." maxlength="500" rows="3"></textarea>
+        <div style="font-size:14px; color:var(--text-muted); margin-top:6px; line-height:1.5;">The engine will use this to go beyond what the frame shows — not to repeat what you told it. If you leave this blank, the evaluation is based on the image alone.</div>
+        {% else %}
         <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
         <textarea id="subject" name="subject" placeholder="Brief context about this image — subject, conditions, technique…" maxlength="500"></textarea>
+        {% endif %}
       </div>
 
       <div class="exif-note">
