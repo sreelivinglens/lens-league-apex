@@ -34450,7 +34450,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
             img.aq_score         = aq
             import json as _j2
             # 181.15: store all 10 fields per Session 186 handoff spec
-            img._audit_json = _j2.dumps({
+            img.audit_json = _j2.dumps({
                 'source':        'haiku_try',
                 'model':         _HAIKU_MODEL,
                 'dod':           dod,
@@ -36150,6 +36150,23 @@ def try_result(image_id):
         except Exception as _mse:
             app.logger.warning(f'[try_result] milestone_strength failed: {_mse}')
 
+    # Build EXIF summary line for display on scorecard
+    _exif_parts = []
+    if img.exif_make or img.exif_model:
+        _cam = ' '.join(filter(None, [img.exif_make, img.exif_model]))
+        _exif_parts.append(_cam)
+    if img.exif_lens:
+        _exif_parts.append(img.exif_lens)
+    if img.exif_focal_length_35mm:
+        _exif_parts.append(f'{int(img.exif_focal_length_35mm)}mm')
+    if img.exif_aperture_raw:
+        _exif_parts.append(f'f/{img.exif_aperture_raw}')
+    if img.exif_shutter_raw:
+        _exif_parts.append(str(img.exif_shutter_raw))
+    if img.exif_iso_raw:
+        _exif_parts.append(f'ISO {img.exif_iso_raw}')
+    _exif_line = '  ·  '.join(_exif_parts) if _exif_parts else ''
+
     return render_template(
         'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
         image_id           = image_id,
@@ -36177,6 +36194,8 @@ def try_result(image_id):
         evals_remaining    = evals_remaining,
         evals_limit        = FREE_IMAGE_LIMIT,
         milestone_strength = _milestone_strength,
+        photographer_name  = current_user.full_name or current_user.username or '',
+        exif_line          = _exif_line,
     )
 
 
