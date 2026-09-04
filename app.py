@@ -34796,13 +34796,29 @@ _TRY_HAIKU_PROMPT = (
     "   5.0-6.4  Competent capture in ordinary conditions.\n"
     "   Below 5  Anyone standing there could have made this frame.\n\n"
 
-    "2. vd - Visual Disruption: does this image stop the viewer? "
-    "Compositional decisions that break expectation.\n"
-    "   9.0-9.5  A compositional decision almost no photographer would have made.\n"
-    "   8.0-8.9  Strong deliberate construction with clean separation.\n"
-    "   6.5-7.9  Considered composition, but within convention.\n"
-    "   5.0-6.4  Competent framing, no surprise.\n"
-    "   Below 5  Centred, expected, or accidental.\n\n"
+    "2. vd - Visual Disruption: how far does this image depart from the conventional "
+    "treatment of its subject — evaluated against the global photographic database "
+    "of 5 billion images shared daily. The question is not whether the composition "
+    "is original. The question is whether a viewer scrolling Instagram has ever seen "
+    "this before. A red apple is known. A blue apple stops the scroll.\n"
+    "   9.0-9.5  A visual experience almost no photographer would ever be present for "
+    "or capable of constructing. The image cannot exist without extreme access, "
+    "rare behaviour, or a compositional decision that defies the genre entirely.\n"
+    "   8.0-8.9  The photographer was inside the event rather than observing it. "
+    "Being physically present in danger, inside active chaos, at the edge of a "
+    "wildfire — this changes the visual language entirely. Score 8.0-9.0 when the "
+    "vantage itself is unrepeatable. Also: rare behaviour the viewer has never "
+    "witnessed scores here — the blue apple rule.\n"
+    "   6.5-7.9  Considered composition, unconventional framing, or a subject "
+    "treatment that departs from convention — but from a standard vantage.\n"
+    "   5.0-6.4  Competent framing. Follows the expected treatment. Centred subject, "
+    "horizontal fire line, obvious placement — what any photographer would frame.\n"
+    "   Below 5  Expected, accidental, or actively conventional.\n"
+    "CRITICAL FOR WILDLIFE: If the behaviour in the frame is genuinely rare — "
+    "documented fewer than 100 times globally, or behaviour most humans have never "
+    "witnessed — score VD on the rarity of WHAT IS BEING SHOWN, not how it is "
+    "framed. The blue apple principle: the subject itself IS the disruption. "
+    "Do NOT penalise for centred composition when the content is rare.\n\n"
 
     "3. dm - Decisive Moment: was the trigger pulled at the right moment? "
     "Behaviour, expression, peak action, geometric alignment.\n"
@@ -35043,20 +35059,73 @@ _TRY_HAIKU_PROMPT = (
 
     "WHAT NEXT:\n"
     "This is the Sherpa speaking directly to the photographer. "
-    "For Wildlife images: name one specific next shot — not a general direction. "
+    "For Wildlife images: name one specific next shot. Not a general direction. "
     "A specific vantage, a specific moment within the behaviour sequence to wait for, "
-    "a specific proximity. The photographer knows this location and this subject — "
+    "a specific proximity. The photographer knows this location and this subject -- "
     "tell them exactly what to go back and get. "
     "Name what the master reference photographer did differently in this type of situation: "
-    "the physical decision — proximity, angle, height, which moment in the behaviour sequence. "
-    "Then name the one thing to change — not 'get closer' but 'get level with the fire line "
+    "the physical decision -- proximity, angle, height, which moment in the behaviour sequence. "
+    "Then name the one thing to change -- not 'get closer' but 'get level with the fire line "
     "so the bird's eye reads against smoke, not sky.' "
-    "For all genres: if the same gap appears in their history, name the pattern directly — "
-    "not 'work on composition' but 'you arrive at scenes and document them — "
+    "For all genres: if the same gap appears in their history, name the pattern directly -- "
+    "not 'work on composition' but 'you arrive at scenes and document them -- "
     "the next frame needs you to decide where the viewer enters before you press the shutter.' "
     "Plain English. No dimension codes. No jargon. Max 120 words.\n\n"
 
-    "CONCLUSION:\n"
+    "COMPOSITION INFERENCE -- inject into what_next when relevant:\n"
+    "If subject is centred: name the compositional principle that would lift this. "
+    "Do not say 'use rule of thirds.' Say: 'The golden spiral is already in this scene -- "
+    "the flame line is the curve, the raptor is the eye. Right now both compete for centre. "
+    "Shift the bird to the upper-right third and the geometry resolves itself.' "
+    "Name the principle (diagonal tension, negative space, golden spiral, triangular "
+    "composition, leading line, frame within frame) and show how it applies to THIS image.\n"
+    "If the image has strong diagonal potential: name it explicitly. "
+    "If the image would benefit from Japanese minimalism (ma -- negative space as subject): name it. "
+    "If the image has Rembrandt-style light: name it and what it does. "
+    "If complementary colours are at play (orange flame / blue smoke): name them. "
+    "Name one principle maximum. Make it specific to this image.\n\n"
+
+    "9+ GAP ANALYSIS -- always include at end of what_next:\n"
+    "To reach 9+ on this image, two things would need to align: "
+    "[plain English gap 1] and [plain English gap 2]. "
+    "Name what that frame would have looked like: specific, visual, concrete. "
+    "Example: 'At 9+: the eye of the bird reads against the smoke wall and the "
+    "flame forms a diagonal behind the stoop. That frame exists -- go back for it.' "
+    "This is the most important sentence on the scorecard. Make it specific.\n\n"
+"IMAGINE:\n"
+    "This is the most important field on the scorecard. "
+    "Write one paragraph. Second person. Present tense. "
+    "Paint the specific 9+ version of this photograph -- the image this moment "
+    "was reaching toward but did not yet fully become. "
+    "Not what went wrong. Not what to fix. What the extraordinary frame looks like "
+    "-- if conditions align, if nature cooperates, if the moment comes again.\n"
+    "TONE RULES:\n"
+    "This is a POSSIBILITY, not a directive. Nature is dynamic. Streets change. "
+    "Moments are not repeatable on demand. NEVER say go back for it or return to "
+    "this location as if the photographer can command the moment. "
+    "Use language like: imagine if / the frame that could exist / "
+    "if this moment comes again / there is a version of this image where.\n"
+    "CAMERA TRACK: If photographer is on MOBILE track -- never describe a frame "
+    "that requires telephoto reach, wide aperture bokeh, or equipment a phone "
+    "cannot achieve. Imagine within phone constraints: proximity, angle, timing, "
+    "light -- not lens choice.\n"
+    "Do NOT give location advice here. That belongs in what_next.\n"
+    "Use the actual elements in this image -- same subject, same behaviour -- "
+    "but describe the frame where everything aligns. "
+    "Name colour, light, proximity, posture, background. Sensory and specific.\n"
+    "Example camera track wildlife: "
+    "Imagine the bird tighter in the frame -- one eye lit by the fire glow, "
+    "wings spread mid-stoop, talons reaching for prey rising from the smoke. "
+    "Behind it: not sky but a wall of green-grey smoke, the fire line a diagonal "
+    "below. The raptor becomes a phoenix -- ancient, purposeful, hunting inside "
+    "the chaos. There is a version of this image where that is the frame.\n"
+    "Example mobile track street: "
+    "Imagine two steps closer -- the face filling the frame, the market chaos "
+    "compressed into colour behind. The gesture that is happening right now but "
+    "too small to read. If you were there again, that is the photograph.\n"
+    "Max 80 words. No jargon. No dimension names. Pure vision.\n\n"
+
+"CONCLUSION:\n"
     "Written in the voice of the platform, not the engine. "
     "Do NOT repeat any observation already made in impression, what_next, or master_why. "
     "This section says one thing only: what this photograph tells us about the photographer, "
@@ -35150,7 +35219,8 @@ _TRY_HAIKU_PROMPT = (
     "\"tech_read\": \"<max 60 words>\", "
     "\"visual_flow\": \"<one sentence>\", "
     "\"award_context\": \"<one sentence or blank>\", "
-    "\"edit_tips\": \"<max 120 words>\"}" 
+    "\"edit_tips\": \"<max 120 words>\", "
+    "\"imagine\": \"<max 80 words>\"}" 
 )
 
 
@@ -35176,16 +35246,62 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
         with app.app_context():
             _history_ctx = _get_haiku_history_context(user_id, exclude_image_id=image_id)
 
+    # Session 211v3: fetch user context — camera track + city for advisory calibration
+    _camera_track = 'camera'  # default
+    _user_city = ''
+    if user_id:
+        try:
+            with app.app_context():
+                _urow = db.session.execute(db.text(
+                    'SELECT subscription_track, city FROM users WHERE id = :uid'
+                ), {'uid': user_id}).fetchone()
+                if _urow:
+                    _camera_track = (_urow[0] or 'camera')
+                    _user_city = (_urow[1] or '').strip()
+        except Exception as _ue:
+            app.logger.debug(f'[try_haiku] user context fetch non-fatal: {_ue}')
+
     # SL-181.1: genre placeholder plus platform calibration anchors
     # 181.15: also inject history context
     # Session 210: inject photographer context — engine must respond to it, never mirror it
     _ctx_block = ''
+    # Build photographer context block — includes camera track, city, and any notes
+    _ctx_parts = []
     if photographer_context and photographer_context.strip():
-        _ctx_block = (
+        _ctx_parts.append(
             f'The photographer provided this context about the image:\n'
             f'"{photographer_context.strip()}"\n'
             f'Use this ONLY to recalibrate DOD and to tell them what they don\'t already know.'
         )
+    # Camera track — changes advisory language fundamentally
+    if _camera_track == 'mobile':
+        _ctx_parts.append(
+            'CAMERA TRACK: MOBILE PHOTOGRAPHER.\n'
+            'This image was shot on a smartphone, not a dedicated camera.\n'
+            'ADVISORY RULES for mobile track:\n'
+            '- NEVER suggest telephoto or tele lens — phone cameras have fixed or limited zoom\n'
+            '- NEVER suggest shooting wide open aperture (phones have fixed aperture)\n'
+            '- NEVER suggest RAW capture as if it requires a camera body\n'
+            '- DO suggest: proximity (get physically closer instead of zooming)\n'
+            '- DO suggest: computational photography strengths (portrait mode, night mode)\n'
+            '- DO suggest: framing decisions that work within phone constraints\n'
+            '- Tone: a phone photographer is often a first-time or casual photographer — '
+            'advisory must be encouraging and achievable, not professional-gear-focused'
+        )
+    else:
+        _ctx_parts.append('CAMERA TRACK: CAMERA (DSLR/Mirrorless). '
+                          'Full advisory range available — lens choice, aperture, focal length.')
+    # Location context
+    if _user_city:
+        _ctx_parts.append(
+            f'PHOTOGRAPHER LOCATION: {_user_city}.\n'
+            'Use this for location-aware advisory ONLY when relevant — '
+            'nearby locations, seasonal windows, accessible environments for this city. '
+            'NEVER give generic location advice. NEVER say "go to [location] which is X minutes away." '
+            'If you do not know specific locations near this city, do not invent them.'
+        )
+    if _ctx_parts:
+        _ctx_block = '\n\n'.join(_ctx_parts)
 
     # Session 210: build master reference library from DB for this genre
     _master_lib_lines = []
@@ -35247,7 +35363,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 2400,  # Session 211 v2: expanded for new moat fields  # Session 211: increased from 1000 — 5 dim_obs + conclusion + what_next(120w) requires headroom
+        'max_tokens': 2800,  # Session 211 v3  # Session 211 v2: expanded for new moat fields  # Session 211: increased from 1000 — 5 dim_obs + conclusion + what_next(120w) requires headroom
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -35319,7 +35435,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     dim_obs_dm     = (d.get('dim_obs_dm')     or '').strip()[:350]
     dim_obs_wf     = (d.get('dim_obs_wf')     or '').strip()[:350]
     dim_obs_aq     = (d.get('dim_obs_aq')     or '').strip()[:350]
-    conclusion     = (d.get('conclusion')     or '').strip()[:500]
+    conclusion     = (d.get('conclusion')     or '').strip()[:700]
     # Session 211 additions
     species_note   = (d.get('species_note')   or '').strip()[:300]
     # Session 211v2: Wikipedia enrichment — fires when engine identifies a species
@@ -35344,9 +35460,10 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
         except Exception as _we:
             app.logger.debug(f'[haiku_wiki] enrichment failed (non-fatal): {_we}')
     tech_read      = (d.get('tech_read')      or '').strip()[:400]
-    visual_flow    = (d.get('visual_flow')    or '').strip()[:200]
+    visual_flow    = (d.get('visual_flow')    or '').strip()[:350]
     award_context  = (d.get('award_context')  or '').strip()[:300]
-    edit_tips      = (d.get('edit_tips')      or '').strip()[:600]
+    edit_tips      = (d.get('edit_tips')      or '').strip()[:900]
+    imagine        = (d.get('imagine')        or '').strip()[:500]
 
     try:
         final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
@@ -35404,6 +35521,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'visual_flow':   visual_flow,
                 'award_context': award_context,
                 'edit_tips':     edit_tips,
+                'imagine':       imagine,
             })
             db.session.commit()
             app.logger.info(
@@ -35512,7 +35630,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'visual_flow':   visual_flow,
                 'award_context': award_context,
                 'edit_tips':     edit_tips,
-            }
+                'imagine':       imagine,            }
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'[try_haiku] DB write failed: {e}')
@@ -37163,6 +37281,7 @@ def try_result(image_id):
         visual_flow        = audit.get('visual_flow', ''),
         award_context      = audit.get('award_context', ''),
         edit_tips          = audit.get('edit_tips', ''),
+        imagine            = audit.get('imagine', ''),
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
         evals_limit        = FREE_IMAGE_LIMIT,
