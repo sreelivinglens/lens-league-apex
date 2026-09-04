@@ -18771,8 +18771,8 @@ def admin_master_references_suggest():
             genres_str = ', '.join(genres_to_refresh)
             try:
                 _prompt = (
-                    'For the ' + genres_str + ' genre in photography, list the top 15 world-level'
-                    ' and top 15 Indian photographers. Return ONLY a valid JSON array, no markdown: '
+                    'For the ' + genres_str + ' genre in photography, list the top 8 world-level'
+                    ' and top 8 Indian photographers. Return ONLY a valid JSON array, no markdown: '
                     '[{"genre": "GENRE", "photographers": [{"name": "Full Name",'
                     ' "region": "Country", "tier": "Tier 1 or Tier 2",'
                     ' "known_for": "one sentence about what they are known for",'
@@ -18783,7 +18783,7 @@ def admin_master_references_suggest():
                 )
                 _payload = _bj.dumps({
                     'model': 'claude-sonnet-4-6',
-                    'max_tokens': 2000,
+                    'max_tokens': 4000,
                     'messages': [{'role': 'user', 'content': _prompt}]
                 }).encode()
                 _req = _bur.Request(
