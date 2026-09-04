@@ -16430,18 +16430,13 @@ def admin_dashboard():
     try:
         import json as _puj
         from datetime import datetime as _pudt
-        # Include all genuinely subscribed users (excluding play) PLUS
-        # UAT/beta/learning users who may have is_subscribed=False from
-        # the pre-subscription-system era (e.g. early UAT members like Divya).
-        from sqlalchemy import or_
+        # Strictly paying plans only — monthly/halfyearly/annual.
+        # UAT/beta/learning shown in separate panel below.
+        # Newest members first.
         _sub_users = User.query.filter(
-            User.subscription_plan != None,
-            User.subscription_plan != 'play',
-            or_(
-                User.is_subscribed == True,
-                User.subscription_plan.in_(['uat', 'beta', 'learning'])
-            )
-        ).order_by(User.full_name).all()
+            User.is_subscribed == True,
+            User.subscription_plan.in_(['monthly', 'halfyearly', 'annual'])
+        ).order_by(User.created_at.desc()).all()
         for _pu in _sub_users:
             # Latest scored image
             _latest = db.session.query(Image).filter(
@@ -16487,6 +16482,59 @@ def admin_dashboard():
             })
     except Exception as _pue:
         app.logger.warning(f'[admin_dashboard] paid_users build failed: {_pue}')
+
+    # ── UAT / Learning members panel ──────────────────────────────────────────
+    # Separate from paid — these are not billed. Includes uat, beta, learning plans
+    # regardless of is_subscribed flag (legacy UAT members may have is_subscribed=False).
+    # Newest first.
+    _uat_users = []
+    try:
+        from sqlalchemy import or_ as _uat_or
+        _uat_rows = User.query.filter(
+            User.subscription_plan.in_(['uat', 'beta', 'learning']),
+            User.role != 'admin',
+            User.is_active == True,
+        ).order_by(User.created_at.desc()).all()
+        for _uu in _uat_rows:
+            _uu_latest = db.session.query(Image).filter(
+                Image.user_id == _uu.id,
+                Image.status == 'scored',
+            ).order_by(Image.scored_at.desc()).first()
+            _uu_best = db.session.query(Image).filter(
+                Image.user_id == _uu.id,
+                Image.status == 'scored',
+                Image.score != None,
+            ).order_by(Image.score.desc()).first()
+            _uu_cache_age = 'empty'
+            if _uu_latest:
+                try:
+                    import json as _uuj
+                    _uu_la = _uuj.loads(_uu_latest._audit_json or '{}')
+                    _uu_cs = _uu_la.get('contest_suggestions')
+                    if _uu_cs and isinstance(_uu_cs, dict):
+                        _uu_cat = _uu_cs.get('cached_at')
+                        if _uu_cat:
+                            from datetime import datetime as _uudt
+                            _uu_days = (_uudt.utcnow() - _uudt.fromisoformat(_uu_cat)).days
+                            _uu_cache_age = f'{_uu_days}d ago'
+                except Exception:
+                    pass
+            _uat_users.append({
+                'id':              _uu.id,
+                'full_name':       _uu.full_name or _uu.username,
+                'email':           _uu.email,
+                'subscription_plan':  _uu.subscription_plan or '—',
+                'subscription_track': _uu.subscription_track or '—',
+                'joined_date':     _uu.created_at.strftime('%-d %b %Y') if _uu.created_at else '—',
+                'image_count':     Image.query.filter_by(user_id=_uu.id, status='scored').count(),
+                'latest_image_id': _uu_latest.id if _uu_latest else None,
+                'best_image_id':   _uu_best.id if _uu_best else None,
+                'best_score':      _uu_best.score if _uu_best else None,
+                'last_upload_date': _uu_latest.scored_at.strftime('%-d %b') if _uu_latest and _uu_latest.scored_at else None,
+                'contest_cache_age': _uu_cache_age,
+            })
+    except Exception as _uue:
+        app.logger.warning(f'[admin_dashboard] uat_users query failed: {_uue}')
 
     # ── Session 209: Haiku members list for admin dashboard panel ───────────
     # stats.free_users is a count only — this query gives per-user rows with
@@ -16574,6 +16622,7 @@ def admin_dashboard():
                            )).scalar() or 0,
                            recent_admin_actions=recent_admin_actions,
                            haiku_users=haiku_users,
+                           uat_users=_uat_users,
                            deleted_users=db.session.execute(db.text(
                                "SELECT u.id, u.full_name, u.username, u.email, u.created_at, "
                                "u.subscription_plan, aal.created_at AS deleted_at "
