@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.59 (Session 205 — 2026-08-31 — Bottom nav: cream→navy #1A2744, icon colour light, label 11px to prevent cutoff. RETAINS 181.58: — 2026-08-31 — Mobile fixes: bottom nav active state dynamic; tier strip stacks vertically at 480px; dim-header sparkline hidden at 480px; mob-nav tap highlight + transition. RETAINS 181.57: — 2026-08-31 — Hero photo now shows latest upload (latest_image); identity bar still shows best score (user_hero). RETAINS 181.56: "Where to focus next" smart fallback. Session 200b: full dashboard redesign. Standalone — does not extend base.html.) #}
+{# SL-VERSION: 181.87 (Session 210, 2026-09-04 — play_exhausted UI: two CTAs "Upgrade to Sonnet" + "Get another 100". play_plan progress bar label. since-bar reflects exhausted state. RETAINS 181.59.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -263,6 +263,17 @@ canvas.spark{flex:1;height:48px;display:block}
 .gp-tag-gap{background:#FEF0E0;color:#8A4A00}
 .gp-tag-neutral{background:rgba(26,39,68,0.06);color:rgba(26,39,68,0.45)}
 
+/* ── PLAY EXHAUSTED ── */
+.exhausted-block{padding:36px 48px;border-top:0.5px solid rgba(200,168,75,0.18);background:#F5F3EF}
+.exhausted-heading{font-family:'Playfair Display',serif;font-size:22px;color:#1A2744;margin-bottom:8px;line-height:1.55}
+.exhausted-sub{font-size:15px;color:rgba(26,39,68,0.60);line-height:1.75;margin-bottom:28px}
+.exhausted-btns{display:flex;flex-direction:column;gap:12px}
+.cta-upgrade{display:block;width:100%;background:#1A2744;color:#C8A84B;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:16px;border:none;border-radius:3px;cursor:pointer;text-align:center;text-decoration:none;min-height:52px;transition:background .15s}
+.cta-upgrade:hover{background:#243660}
+.cta-get-more{display:block;width:100%;background:transparent;color:#1A2744;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:15px;border:1.5px solid #1A2744;border-radius:3px;cursor:pointer;text-align:center;text-decoration:none;min-height:52px;transition:background .15s,color .15s}
+.cta-get-more:hover{background:#1A2744;color:#C8A84B}
+.exhausted-note{font-size:13px;color:rgba(26,39,68,0.42);text-align:center;margin-top:16px;line-height:1.6}
+
 </style>
 </head>
 <body>
@@ -307,7 +318,12 @@ canvas.spark{flex:1;height:48px;display:block}
       Your record begins with your first photograph.
     {% endif %}
   </span>
-  <span class="since-evals">{{ evals_used }} of {{ limit }} free evaluations used</span>
+  <span class="since-evals">
+    {% if play_exhausted %}All 100 evaluations used · upgrade to continue
+    {% elif play_plan %}{{ evals_used }} of {{ limit }} play evaluations used
+    {% else %}{{ evals_used }} of {{ limit }} free evaluations used
+    {% endif %}
+  </span>
 </div>
 
 <div class="page">
@@ -619,18 +635,43 @@ canvas.spark{flex:1;height:48px;display:block}
   {% endif %}
 
   <!-- ══ PROGRESS + CTA ══ -->
+  {% if play_exhausted %}
+  <div class="exhausted-block">
+    <div class="exhausted-heading">You have used all 100 evaluations.</div>
+    <div class="exhausted-sub">Your record stands. Every image you submitted is evaluated and preserved. To continue building your record, upgrade to Sonnet for unlimited evaluations — or purchase another 100 to stay in Haiku world.</div>
+    <div class="exhausted-btns">
+      <a href="{{ url_for('pricing') }}" class="cta-upgrade">Upgrade to Sonnet — unlimited evaluations →</a>
+      <a href="{{ url_for('pricing') }}#play" class="cta-get-more">Get another 100 evaluations — ₹100 →</a>
+    </div>
+    <div class="exhausted-note">Your {{ evals_used }} evaluated photographs are safe and always accessible in My Evaluations.</div>
+  </div>
+  {% else %}
   <div class="cta-section">
     <div class="progress-label">
+      {% if play_plan %}
+      <span class="progress-text">Play evaluations</span>
+      {% else %}
       <span class="progress-text">Free evaluations</span>
+      {% endif %}
       <span class="progress-num">{{ evals_used }} of {{ limit }} used</span>
     </div>
     <div class="progress-bar-bg">
       <div class="progress-bar-fill" style="width:{{ [(evals_used / limit * 100)|round(0)|int, 100]|min }}%"></div>
     </div>
+    {% if evals_remaining > 0 %}
     <a href="{{ url_for('try_page') }}" class="cta-primary">
       {% if evals_used > 0 %}Continue my record →{% else %}Start my record →{% endif %}
     </a>
+    {% if play_plan %}
+    <a href="{{ url_for('pricing') }}" class="cta-secondary">Upgrade to Sonnet for unlimited evaluations</a>
+    {% else %}
+    <a href="{{ url_for('pricing') }}" class="cta-secondary">Upgrade to Sonnet for unlimited evaluations</a>
+    {% endif %}
+    {% else %}
+    <a href="{{ url_for('pricing') }}" class="cta-primary">Upgrade to Sonnet — unlimited evaluations →</a>
+    {% endif %}
   </div>
+  {% endif %}
 
 </div><!-- /page -->
 
