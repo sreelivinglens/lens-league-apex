@@ -12685,11 +12685,17 @@ def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
 
     # 181.15 / Session 211: Haiku free-try images must never render on the paid scorecard.
-    # Gate on is_haiku_try column FIRST (reliable DB flag), then audit_json source as fallback.
-    # Previously only checked audit_json source — failed when audit_json was corrupted by
-    # a Sonnet force_rescore, causing Haiku images to render on the wrong template.
-    if getattr(img, 'is_haiku_try', False):
-        return redirect(url_for('try_result', image_id=image_id))
+    # Rule 8: is_haiku_try is raw SQL only — never ORM. Check via raw SQL first,
+    # then audit_json source as fallback.
+    try:
+        _is_ht = db.session.execute(
+            db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+            {'iid': image_id}
+        ).scalar()
+        if _is_ht:
+            return redirect(url_for('try_result', image_id=image_id))
+    except Exception:
+        pass
     try:
         import json as _idj
         _id_audit = _idj.loads(img._audit_json or '{}')
@@ -18573,8 +18579,16 @@ def admin_haiku_rescore(image_id):
     img = Image.query.get_or_404(image_id)
     # Session 210: removed is_haiku_try guard — admin can force Haiku rescore on any image
     # Ensure the image is marked as haiku_try so try_result renders correctly
-    if not img.is_haiku_try:
-        img.is_haiku_try = True
+    # Rule 8: is_haiku_try is raw SQL only — never ORM
+    _is_ht = db.session.execute(
+        db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+        {'iid': image_id}
+    ).scalar()
+    if not _is_ht:
+        db.session.execute(
+            db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+            {'iid': image_id}
+        )
         db.session.commit()
 
     try:
