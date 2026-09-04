@@ -1251,7 +1251,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   {# ── MASTER REFERENCES ── #}
   <div id="master-refs" class="section">
-    <div class="sec-hdr" onclick="tog('master-body','cMR');mrInitPagination()">
+    <div class="sec-hdr" onclick="tog('master-body','cMR');setTimeout(function(){mrInitPagination();},50)">
       <div class="sec-title"><i class="ti ti-camera" style="color:#1A2744"></i> Master references <span class="sec-badge">{{ master_refs_total or 0 }}</span></div>
       <div style="display:flex;align-items:center;gap:10px">
         <span class="sec-meta">{% if master_refs_days %}Last refreshed {{ master_refs_days }} days ago{% else %}Never refreshed via admin{% endif %}</span>
@@ -1779,10 +1779,12 @@ function mrFilter(){
   mrRenderPage();
 }
 function mrRenderPage(){
+  var countEl = document.getElementById('mr-count');
+  var pgEl = document.getElementById('mr-pagination');
   // If _mrFiltered is empty (not yet initialised), show all rows without pagination
   if(_mrFiltered.length === 0){
     document.querySelectorAll('#mr-tbody .mr-row').forEach(function(r){ r.style.display = ''; });
-    document.getElementById('mr-pagination').style.display = 'none';
+    if(pgEl) pgEl.style.display = 'none';
     return;
   }
   var all = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
@@ -1791,15 +1793,19 @@ function mrRenderPage(){
   var start = (_mrPage - 1) * _mrPerPage;
   all.forEach(function(r){ r.style.display = 'none'; });
   _mrFiltered.slice(start, start + _mrPerPage).forEach(function(r){ r.style.display = ''; });
-  document.getElementById('mr-count').textContent = total + ' photographers';
-  var pg = document.getElementById('mr-pagination');
-  if(total > _mrPerPage){
-    pg.style.display = 'flex';
-    document.getElementById('mr-info').textContent = 'Page ' + _mrPage + ' of ' + totalPages + ' (' + total + ' total)';
-    document.getElementById('mr-prev').disabled = _mrPage <= 1;
-    document.getElementById('mr-next').disabled = _mrPage >= totalPages;
-  } else {
-    pg.style.display = 'none';
+  if(countEl) countEl.textContent = total + ' photographers';
+  if(pgEl){
+    if(total > _mrPerPage){
+      pgEl.style.display = 'flex';
+      var infoEl = document.getElementById('mr-info');
+      if(infoEl) infoEl.textContent = 'Page ' + _mrPage + ' of ' + totalPages + ' (' + total + ' total)';
+      var prevEl = document.getElementById('mr-prev');
+      var nextEl = document.getElementById('mr-next');
+      if(prevEl) prevEl.disabled = _mrPage <= 1;
+      if(nextEl) nextEl.disabled = _mrPage >= totalPages;
+    } else {
+      pgEl.style.display = 'none';
+    }
   }
 }
 function mrPage(dir){
