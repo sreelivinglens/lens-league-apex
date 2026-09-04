@@ -18212,31 +18212,19 @@ def admin_haiku_bulk_delete():
                         pass
                 db.session.delete(_img)
 
-            # 12. Bot delete: ban email in blocked_ips
-            if _del_type == 'bot' and _uemail:
-                try:
-                    db.session.execute(db.text(
-                        "INSERT INTO blocked_ips (ip_address, reason, blocked_by) "
-                        "VALUES (:ip, :reason, :by) "
-                        "ON CONFLICT (ip_address) DO NOTHING"
-                    ), {
-                        'ip':     _uemail,
-                        'reason': f'Bot account — auto-banned on bulk bot delete (was user {_uid})',
-                        'by':     current_user.email or 'admin',
-                    })
-                except Exception as _e:
-                    app.logger.warning(f'[bulk_delete] uid={_uid} email ban failed: {_e}')
-
-            # 13. Delete user row
+            # 12. Delete user row
             db.session.delete(_user)
             db.session.commit()
 
-            # 14. Audit log
+            # 13. Audit log
+            # blocked_ips.ip_address is INTEGER — cannot store email strings.
+            # Bot email ban is recorded in audit log detail JSON only.
             _action = 'bot_delete' if _del_type == 'bot' else 'delete_user'
             _log_admin_action(_action, 'user', _uid, {
                 'username':    _uname,
                 'email':       _uemail,
                 'delete_type': _del_type,
+                'email_banned': (_del_type == 'bot'),
                 'note':        'Bulk delete — Haiku members panel',
             })
 
