@@ -1301,10 +1301,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       </div>
 
       {# Reference table #}
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-        <input type="text" id="mr-search" placeholder="Search photographer or genre…" oninput="mrFilter()" style="padding:8px 12px;border:1px solid #E0DDD6;border-radius:7px;font-size:14px;font-family:inherit;background:#FAFAF6;min-height:38px;flex:1;min-width:200px">
-        <span id="mr-count" style="font-size:13px;color:#8A8A86;white-space:nowrap"></span>
-      </div>
+
       <table class="ps-table" id="mr-table">
         <thead><tr><th style="width:22%">Photographer</th><th style="width:10%">Region</th><th style="width:10%">Tier</th><th style="width:20%">Genre tags</th><th style="width:25%">Known for</th><th style="width:13%;text-align:right">Actions</th></tr></thead>
         <tbody id="mr-tbody">
@@ -1330,11 +1327,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           {% endif %}
         </tbody>
       </table>
-      <div id="mr-pagination" class="tbl-pagination" style="display:none">
-        <button class="pg-btn" id="mr-prev" onclick="event.stopPropagation();mrPage(-1)">← Prev</button>
-        <span class="pg-info" id="mr-info"></span>
-        <button class="pg-btn" id="mr-next" onclick="event.stopPropagation();mrPage(1)">Next →</button>
-      </div>
+
       <div id="mr-result" class="bulk-result" style="margin-top:10px"></div>
     </div>
   </div>
@@ -1753,68 +1746,13 @@ function toggleSub(userId, userName, action, rowClass, btn){
 
 // ── MASTER REFERENCES ────────────────────────────────────────────────────────
 // ── MASTER REFERENCES ────────────────────────────────────────────────────────
-var _mrPage = 1;
-var _mrPerPage = 15;
-var _mrFiltered = [];
-
+// Master refs — simple genre filter on dropdown change
 function mrGenreFilter(){
   var genre = (document.getElementById('mr-genre-filter').value || '').toLowerCase();
-  // Sync with search box
-  document.getElementById('mr-search').value = genre;
-  mrFilter();
-}
-
-function mrInitPagination(){
-  _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
-  _mrPage = 1;
-  mrRenderPage();
-}
-function mrFilter(){
-  var q = (document.getElementById('mr-search').value || '').toLowerCase().trim();
-  _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row')).filter(function(r){
-    if(!q) return true;
-    return (r.dataset.name||'').includes(q) || (r.dataset.genre||'').includes(q);
+  document.querySelectorAll('#mr-tbody .mr-row').forEach(function(r){
+    r.style.display = (!genre || (r.dataset.genre||'').toLowerCase().includes(genre)) ? '' : 'none';
   });
-  _mrPage = 1;
-  mrRenderPage();
 }
-function mrRenderPage(){
-  var countEl = document.getElementById('mr-count');
-  var pgEl = document.getElementById('mr-pagination');
-  // If _mrFiltered is empty (not yet initialised), show all rows without pagination
-  if(_mrFiltered.length === 0){
-    document.querySelectorAll('#mr-tbody .mr-row').forEach(function(r){ r.style.display = ''; });
-    if(pgEl) pgEl.style.display = 'none';
-    return;
-  }
-  var all = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
-  var total = _mrFiltered.length;
-  var totalPages = Math.max(1, Math.ceil(total / _mrPerPage));
-  var start = (_mrPage - 1) * _mrPerPage;
-  all.forEach(function(r){ r.style.display = 'none'; });
-  _mrFiltered.slice(start, start + _mrPerPage).forEach(function(r){ r.style.display = ''; });
-  if(countEl) countEl.textContent = total + ' photographers';
-  if(pgEl){
-    if(total > _mrPerPage){
-      pgEl.style.display = 'flex';
-      var infoEl = document.getElementById('mr-info');
-      if(infoEl) infoEl.textContent = 'Page ' + _mrPage + ' of ' + totalPages + ' (' + total + ' total)';
-      var prevEl = document.getElementById('mr-prev');
-      var nextEl = document.getElementById('mr-next');
-      if(prevEl) prevEl.disabled = _mrPage <= 1;
-      if(nextEl) nextEl.disabled = _mrPage >= totalPages;
-    } else {
-      pgEl.style.display = 'none';
-    }
-  }
-}
-function mrPage(dir){
-  var total = _mrFiltered.length;
-  var totalPages = Math.max(1, Math.ceil(total / _mrPerPage));
-  _mrPage = Math.max(1, Math.min(totalPages, _mrPage + dir));
-  mrRenderPage();
-}
-// mrInitPagination called directly from sec-hdr onclick
 
 var _mrPendingSuggestions = [];
 
