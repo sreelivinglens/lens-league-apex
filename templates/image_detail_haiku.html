@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 1.2 (Session 205 — 2026-08-31 — CSI Card A + B added; title KYC fix. RETAINS 1.1-main: (Session 204, 2026-08-31 — Added upgrade teaser card above conversion section: 6-feature grid on warm pastel background showing what League evaluation adds beyond Haiku. Mobile collapses to 1 column. RETAINS Session 201 audit fixes.)
+{# image_detail_haiku.html — SL-VERSION: 1.3 (Session 210, 2026-09-04 — Takeaway shown prominently as Playfair italic card after percentile. Inline strength_obs and next_leap_obs under dimension rows. strength_name and next_leap_name shown as dimension labels in editorial blocks. RETAINS 1.2.)
    Route: /try/result/<image_id>  →  try_result() in app-staging.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -170,6 +170,23 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 .sl-block-body { font-size:18px; line-height:1.85; color:#1A2744; }
 
+/* TAKEAWAY — headline insight */
+.sl-takeaway {
+  font-family:'Playfair Display',serif;
+  font-size:22px; font-style:italic; line-height:1.80;
+  color:#1A2744; margin-bottom:52px;
+  padding:28px 32px;
+  border-left:3px solid #C8A84B;
+  background:#FAFAF6;
+}
+
+/* Dim inline note — shows under strongest/gap row */
+.sl-dim-inline {
+  font-size:16px; color:rgba(26,39,68,0.58);
+  line-height:1.70; padding:10px 0 6px;
+  font-style:italic;
+}
+
 /* EYE BEHIND THIS */
 .sl-reference {
   margin-bottom:0;
@@ -320,6 +337,11 @@ main { padding:0 !important; background:#E8E5DF; }
       {% endif %}
 
       <div class="sl-gold-rule"></div>
+
+      {# ── TAKEAWAY — single most important insight ── #}
+      {% if takeaway %}
+      <div class="sl-takeaway">{{ takeaway }}</div>
+      {% endif %}
     </div>
 
     {# ── 3. FIVE DIMENSIONS ── #}
@@ -342,6 +364,11 @@ main { padding:0 !important; background:#E8E5DF; }
           <div class="sl-dim-left">
             <span class="sl-dim-official">{{ official }}</span>
             <span class="sl-dim-plain">{{ plain }}</span>
+            {% if val and val == _max_val and strength_obs %}
+            <div class="sl-dim-inline">{{ strength_obs }}</div>
+            {% elif val and val == _min_val and next_leap_obs %}
+            <div class="sl-dim-inline">{{ next_leap_obs }}</div>
+            {% endif %}
           </div>
           <div class="sl-dim-right">
             <span class="sl-dim-val">{{ "%.1f"|format(val) if val else '—' }}</span>
@@ -375,17 +402,15 @@ main { padding:0 !important; background:#E8E5DF; }
 
       {% if strength_obs %}
       <div>
-        <div class="sl-block-label">Strongest moment</div>
+        <div class="sl-block-label">Strongest moment{% if strength_name %} — {{ strength_name }}{% endif %}</div>
         <div class="sl-block-body">{{ strength_obs }}</div>
-
       </div>
       {% endif %}
 
       {% if next_leap_obs %}
       <div>
-        <div class="sl-block-label">Next leap</div>
+        <div class="sl-block-label">Next leap{% if next_leap_name %} — {{ next_leap_name }}{% endif %}</div>
         <div class="sl-block-body">{{ next_leap_obs }}</div>
-
       </div>
       {% endif %}
 
