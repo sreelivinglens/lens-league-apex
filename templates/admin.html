@@ -1251,7 +1251,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   {# ── MASTER REFERENCES ── #}
   <div id="master-refs" class="section">
-    <div class="sec-hdr" onclick="tog('master-body','cMR')">
+    <div class="sec-hdr" onclick="tog('master-body','cMR');mrInitPagination()">
       <div class="sec-title"><i class="ti ti-camera" style="color:#1A2744"></i> Master references <span class="sec-badge">{{ master_refs_total or 0 }}</span></div>
       <div style="display:flex;align-items:center;gap:10px">
         <span class="sec-meta">{% if master_refs_days %}Last refreshed {{ master_refs_days }} days ago{% else %}Never refreshed via admin{% endif %}</span>
@@ -1766,6 +1766,7 @@ function mrGenreFilter(){
 
 function mrInitPagination(){
   _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
+  _mrPage = 1;
   mrRenderPage();
 }
 function mrFilter(){
@@ -1778,11 +1779,16 @@ function mrFilter(){
   mrRenderPage();
 }
 function mrRenderPage(){
+  // If _mrFiltered is empty (not yet initialised), show all rows without pagination
+  if(_mrFiltered.length === 0){
+    document.querySelectorAll('#mr-tbody .mr-row').forEach(function(r){ r.style.display = ''; });
+    document.getElementById('mr-pagination').style.display = 'none';
+    return;
+  }
   var all = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
   var total = _mrFiltered.length;
   var totalPages = Math.max(1, Math.ceil(total / _mrPerPage));
   var start = (_mrPage - 1) * _mrPerPage;
-  // Hide all, show filtered page
   all.forEach(function(r){ r.style.display = 'none'; });
   _mrFiltered.slice(start, start + _mrPerPage).forEach(function(r){ r.style.display = ''; });
   document.getElementById('mr-count').textContent = total + ' photographers';
@@ -1802,25 +1808,7 @@ function mrPage(dir){
   _mrPage = Math.max(1, Math.min(totalPages, _mrPage + dir));
   mrRenderPage();
 }
-// Init on section open
-(function(){
-  // Always init _mrFiltered on page load so rows aren't hidden
-  _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
-  var body = document.getElementById('b-master-body');
-  if(body){
-    var observer = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        if(m.target.style.display !== 'none'){
-          if(_mrFiltered.length === 0){
-            _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
-          }
-          mrRenderPage();
-        }
-      });
-    });
-    observer.observe(body, {attributes:true, attributeFilter:['style']});
-  }
-})();
+// mrInitPagination called directly from sec-hdr onclick
 
 var _mrPendingSuggestions = [];
 
