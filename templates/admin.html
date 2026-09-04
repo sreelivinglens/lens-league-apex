@@ -289,7 +289,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
 /* ── BULK DELETE ── */
 .hk-cb{width:16px;height:16px;cursor:pointer;accent-color:#B91C1C;flex-shrink:0}
-.bulk-bar{position:sticky;top:70px;z-index:80;background:#1A2744;color:#fff;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.22);margin-bottom:12px;flex-wrap:wrap}
+.bulk-bar{position:sticky;top:70px;z-index:40;background:#1A2744;color:#fff;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.22);margin-bottom:12px;flex-wrap:wrap}
 .bulk-bar.hidden{display:none}
 .bulk-count{font-size:14px;font-weight:500;flex:1;white-space:nowrap}
 .bulk-deselect{font-size:13px;color:#C8A84B;cursor:pointer;white-space:nowrap;background:none;border:none;font-family:inherit;padding:0;min-height:36px}
@@ -1251,7 +1251,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   {# ── MASTER REFERENCES ── #}
   <div id="master-refs" class="section">
-    <div class="sec-hdr" onclick="tog('master-body','cMR');setTimeout(function(){mrInitPagination();},50)">
+    <div class="sec-hdr" onclick="tog('master-body','cMR')">
       <div class="sec-title"><i class="ti ti-camera" style="color:#1A2744"></i> Master references <span class="sec-badge">{{ master_refs_total or 0 }}</span></div>
       <div style="display:flex;align-items:center;gap:10px">
         <span class="sec-meta">{% if master_refs_days %}Last refreshed {{ master_refs_days }} days ago{% else %}Never refreshed via admin{% endif %}</span>
