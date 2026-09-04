@@ -1295,12 +1295,16 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       </div>
 
       {# Reference table #}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <input type="text" id="mr-search" placeholder="Search photographer or genre…" oninput="mrFilter()" style="padding:8px 12px;border:1px solid #E0DDD6;border-radius:7px;font-size:14px;font-family:inherit;background:#FAFAF6;min-height:38px;flex:1;min-width:200px">
+        <span id="mr-count" style="font-size:13px;color:#8A8A86;white-space:nowrap"></span>
+      </div>
       <table class="ps-table" id="mr-table">
         <thead><tr><th style="width:22%">Photographer</th><th style="width:10%">Region</th><th style="width:10%">Tier</th><th style="width:20%">Genre tags</th><th style="width:25%">Known for</th><th style="width:13%;text-align:right">Actions</th></tr></thead>
         <tbody id="mr-tbody">
           {% if master_refs %}
           {% for ref in master_refs %}
-          <tr id="mr-row-{{ ref.id }}" style="{% if not ref.is_active %}opacity:.4;{% endif %}">
+          <tr id="mr-row-{{ ref.id }}" class="mr-row" data-name="{{ (ref.name or '')|lower }}" data-genre="{{ (ref.genre_tags or '')|lower }}" style="{% if not ref.is_active %}opacity:.4;{% endif %}">
             <td><div style="font-weight:500;font-size:14px">{{ ref.name }}</div><div style="font-size:11px;color:#8A8A86">{{ ref.added_by or 'seed' }}</div></td>
             <td style="font-size:13px;color:#8A8A86">{{ ref.region or '—' }}</td>
             <td><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;background:{% if ref.tier == 'Tier 1' %}#E8F5E9;color:#2E7D32{% elif ref.tier == 'Contest Winner' %}#FFF8E8;color:#B45309{% else %}#E8EEF8;color:#1A2744{% endif %}">{{ ref.tier }}</span></td>
@@ -1320,6 +1324,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           {% endif %}
         </tbody>
       </table>
+      <div id="mr-pagination" class="tbl-pagination" style="display:none">
+        <button class="pg-btn" id="mr-prev" onclick="event.stopPropagation();mrPage(-1)">← Prev</button>
+        <span class="pg-info" id="mr-info"></span>
+        <button class="pg-btn" id="mr-next" onclick="event.stopPropagation();mrPage(1)">Next →</button>
+      </div>
       <div id="mr-result" class="bulk-result" style="margin-top:10px"></div>
     </div>
   </div>
@@ -1737,6 +1746,64 @@ function toggleSub(userId, userName, action, rowClass, btn){
 }
 
 // ── MASTER REFERENCES ────────────────────────────────────────────────────────
+// ── MASTER REFERENCES ────────────────────────────────────────────────────────
+var _mrPage = 1;
+var _mrPerPage = 15;
+var _mrFiltered = [];
+
+function mrInitPagination(){
+  _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
+  mrRenderPage();
+}
+function mrFilter(){
+  var q = (document.getElementById('mr-search').value || '').toLowerCase().trim();
+  _mrFiltered = Array.from(document.querySelectorAll('#mr-tbody .mr-row')).filter(function(r){
+    if(!q) return true;
+    return (r.dataset.name||'').includes(q) || (r.dataset.genre||'').includes(q);
+  });
+  _mrPage = 1;
+  mrRenderPage();
+}
+function mrRenderPage(){
+  var all = Array.from(document.querySelectorAll('#mr-tbody .mr-row'));
+  var total = _mrFiltered.length;
+  var totalPages = Math.max(1, Math.ceil(total / _mrPerPage));
+  var start = (_mrPage - 1) * _mrPerPage;
+  // Hide all, show filtered page
+  all.forEach(function(r){ r.style.display = 'none'; });
+  _mrFiltered.slice(start, start + _mrPerPage).forEach(function(r){ r.style.display = ''; });
+  document.getElementById('mr-count').textContent = total + ' photographers';
+  var pg = document.getElementById('mr-pagination');
+  if(total > _mrPerPage){
+    pg.style.display = 'flex';
+    document.getElementById('mr-info').textContent = 'Page ' + _mrPage + ' of ' + totalPages + ' (' + total + ' total)';
+    document.getElementById('mr-prev').disabled = _mrPage <= 1;
+    document.getElementById('mr-next').disabled = _mrPage >= totalPages;
+  } else {
+    pg.style.display = 'none';
+  }
+}
+function mrPage(dir){
+  var total = _mrFiltered.length;
+  var totalPages = Math.max(1, Math.ceil(total / _mrPerPage));
+  _mrPage = Math.max(1, Math.min(totalPages, _mrPage + dir));
+  mrRenderPage();
+}
+// Init on section open
+(function(){
+  var body = document.getElementById('b-master-body');
+  if(body){
+    var observer = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.target.style.display !== 'none') mrInitPagination();
+      });
+    });
+    observer.observe(body, {attributes:true, attributeFilter:['style']});
+  }
+  // Also init if already open
+  if(body && body.style.display !== 'none') mrInitPagination();
+})();
+
 var _mrPendingSuggestions = [];
 
 function mrToggle(refId, btn) {
