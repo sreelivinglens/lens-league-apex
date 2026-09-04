@@ -525,6 +525,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sb-group-label">Audit &amp; Legal</div>
     <a class="sb-item" onclick="navTo('audit-log','b-audit-body','cAL')"><i class="ti ti-shield"></i> Recent actions</a>
     <a class="sb-item" href="{{ url_for('admin_audit_log') }}" style="text-decoration:none"><i class="ti ti-file-search"></i> Full audit log →</a>
+    <a class="sb-item" onclick="navTo('master-refs','b-master-body','cMR')"><i class="ti ti-camera"></i> Master references{% if master_refs_stale %}<span class="sb-badge warn">Refresh due</span>{% endif %}</a>
   </div>
 
   <div class="sb-group">
@@ -1295,6 +1296,77 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     </div>
   </div>
 
+  {# ── MASTER REFERENCES ── #}
+  <div id="master-refs" class="section">
+    <div class="sec-hdr" onclick="tog('master-body','cMR')">
+      <div class="sec-title"><i class="ti ti-camera" style="color:#1A2744"></i> Master references <span class="sec-badge">{{ master_refs_total or 0 }}</span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="sec-meta">{% if master_refs_days %}Last refreshed {{ master_refs_days }} days ago{% else %}Never refreshed via admin{% endif %}</span>
+        {% if master_refs_stale %}<span class="sec-badge warn">Refresh due</span>{% endif %}
+        <span class="chev closed" id="cMR">▼</span>
+      </div>
+    </div>
+    <div id="b-master-body" class="sec-body" style="display:none">
+      <div class="guide info" style="margin-bottom:16px">
+        <strong>Master reference library</strong> — these photographers are cited by the Haiku and Sonnet engines when giving feedback. The engine picks the most relevant name per genre and subject. Refresh every 3 weeks to add new award winners and emerging masters. Review all suggestions before approving.
+      </div>
+
+      {# Genre filter + Refresh controls #}
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+        <select id="mr-genre-filter" style="padding:8px 12px;border:1px solid #E0DDD6;border-radius:7px;font-size:14px;font-family:inherit;background:#FAFAF6;min-height:40px">
+          <option value="">All genres</option>
+          {% for g in ['Wildlife','Street','Documentary','Landscape','Nature','Macro','Sports','Astrophotography','Creative','Architecture','Drone','Fashion','Wedding','People'] %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+        <button class="qa-btn" style="min-height:40px;padding:8px 16px" onclick="mrSuggest()">
+          <i class="ti ti-sparkles"></i> Suggest new entries (AI)
+        </button>
+        <span style="font-size:13px;color:#8A8A86">Suggestions are reviewed before saving.</span>
+      </div>
+
+      <div id="mr-suggest-status" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:14px"></div>
+
+      {# Suggestions review modal trigger area #}
+      <div id="mr-suggestions-area" style="display:none;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:500;color:#1A1A18;margin-bottom:10px">Review AI suggestions — approve or skip each entry:</div>
+        <div id="mr-suggestions-list"></div>
+        <div style="margin-top:12px;display:flex;gap:10px">
+          <button class="btn-hard-del" style="background:#2E7D32;border:none" onclick="mrApproveAll()">Approve all selected →</button>
+          <button class="del-cancel-btn" onclick="mrClearSuggestions()">Cancel</button>
+        </div>
+      </div>
+
+      {# Reference table #}
+      <table class="ps-table" id="mr-table">
+        <thead><tr><th style="width:22%">Photographer</th><th style="width:10%">Region</th><th style="width:10%">Tier</th><th style="width:20%">Genre tags</th><th style="width:25%">Known for</th><th style="width:13%;text-align:right">Actions</th></tr></thead>
+        <tbody id="mr-tbody">
+          {% if master_refs %}
+          {% for ref in master_refs %}
+          <tr id="mr-row-{{ ref.id }}" style="{% if not ref.is_active %}opacity:.4;{% endif %}">
+            <td><div style="font-weight:500;font-size:14px">{{ ref.name }}</div><div style="font-size:11px;color:#8A8A86">{{ ref.added_by or 'seed' }}</div></td>
+            <td style="font-size:13px;color:#8A8A86">{{ ref.region or '—' }}</td>
+            <td><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;background:{% if ref.tier == 'Tier 1' %}#E8F5E9;color:#2E7D32{% elif ref.tier == 'Contest Winner' %}#FFF8E8;color:#B45309{% else %}#E8EEF8;color:#1A2744{% endif %}">{{ ref.tier }}</span></td>
+            <td style="font-size:12px;color:#8A8A86">{{ ref.genre_tags }}</td>
+            <td style="font-size:13px;color:#1A1A18;line-height:1.5">{{ ref.known_for or '—' }}</td>
+            <td>
+              <div class="ps-actions">
+                <button class="psa" onclick="mrToggle({{ ref.id }}, this)" style="{% if ref.is_active %}color:#B91C1C{% else %}color:#2E7D32{% endif %}">
+                  {% if ref.is_active %}Disable{% else %}Enable{% endif %}
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr><td colspan="6" style="font-size:14px;color:#8A8A86;padding:20px 0">No entries — deploy will seed from startup migration.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <div id="mr-result" class="bulk-result" style="margin-top:10px"></div>
+    </div>
+  </div>
+
   {# ── DANGER ZONE ── #}
   <div class="guide urgent">
     <strong>Danger zone — read before touching anything here.</strong>
@@ -1702,6 +1774,94 @@ function toggleSub(userId, userName, action, rowClass, btn){
   });
 }
 
+// ── MASTER REFERENCES ────────────────────────────────────────────────────────
+var _mrPendingSuggestions = [];
+
+function mrToggle(refId, btn) {
+  fetch('/admin/master-references/' + refId + '/toggle', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        var row = document.getElementById('mr-row-' + refId);
+        if(row) row.style.opacity = d.is_active ? '1' : '0.4';
+        btn.textContent = d.is_active ? 'Disable' : 'Enable';
+        btn.style.color = d.is_active ? '#B91C1C' : '#2E7D32';
+        showFlash((d.is_active ? 'Enabled' : 'Disabled') + ' successfully.', 'success');
+      } else {
+        showFlash('Toggle failed: ' + (d.message || 'unknown error'), 'error');
+      }
+    })
+    .catch(function(){ showFlash('Network error.', 'error'); });
+}
+
+function mrSuggest() {
+  var genre = document.getElementById('mr-genre-filter').value;
+  var status = document.getElementById('mr-suggest-status');
+  status.style.display = 'block';
+  status.className = 'bulk-result ok';
+  status.textContent = 'Asking Claude for suggestions' + (genre ? ' for ' + genre : '') + '… this takes 20-30 seconds.';
+  document.getElementById('mr-suggestions-area').style.display = 'none';
+
+  var fd = new FormData();
+  if(genre) fd.append('genre', genre);
+  fetch('/admin/master-references/suggest', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.ok){ status.className='bulk-result err'; status.textContent='Failed: '+(d.message||'unknown'); return; }
+      _mrPendingSuggestions = [];
+      var list = document.getElementById('mr-suggestions-list');
+      list.innerHTML = '';
+      d.suggestions.forEach(function(genreGroup){
+        if(!genreGroup.photographers || !genreGroup.photographers.length) return;
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin:14px 0 8px';
+        hdr.textContent = genreGroup.genre;
+        list.appendChild(hdr);
+        genreGroup.photographers.forEach(function(p, i){
+          var id = 'mr-sug-' + genreGroup.genre + '-' + i;
+          _mrPendingSuggestions.push({...p, genre_tags: genreGroup.genre, _id: id});
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F5F3EF';
+          row.innerHTML = '<input type="checkbox" id="'+id+'" checked style="margin-top:3px;flex-shrink:0">'
+            + '<div><div style="font-size:14px;font-weight:500">'+p.name+' <span style="font-size:12px;color:#8A8A86;font-weight:400">('+p.region+') '+p.tier+'</span></div>'
+            + '<div style="font-size:13px;color:#4A4840;margin-top:3px">'+p.known_for+'</div>'
+            + '<div style="font-size:12px;color:#8A6A00;margin-top:2px">Use when: '+(p.reference_when||'—')+'</div></div>';
+          list.appendChild(row);
+        });
+      });
+      status.style.display = 'none';
+      document.getElementById('mr-suggestions-area').style.display = 'block';
+    })
+    .catch(function(){ status.className='bulk-result err'; status.textContent='Network error.'; });
+}
+
+function mrApproveAll() {
+  var approved = _mrPendingSuggestions.filter(function(p){
+    var cb = document.getElementById(p._id);
+    return cb && cb.checked;
+  });
+  if(!approved.length){ showFlash('No entries selected.', 'error'); return; }
+  var fd = new FormData();
+  fd.append('entries', JSON.stringify(approved));
+  fetch('/admin/master-references/approve', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      mrClearSuggestions();
+      var result = document.getElementById('mr-result');
+      result.style.display = 'block';
+      result.className = 'bulk-result ' + (d.ok ? 'ok' : 'err');
+      result.textContent = (d.ok ? '✓ ' : '✗ ') + d.message;
+      setTimeout(function(){ result.style.display='none'; }, 6000);
+    })
+    .catch(function(){ showFlash('Network error.', 'error'); });
+}
+
+function mrClearSuggestions() {
+  document.getElementById('mr-suggestions-area').style.display = 'none';
+  document.getElementById('mr-suggestions-list').innerHTML = '';
+  _mrPendingSuggestions = [];
+}
+
 // ── REINSTATE USER ───────────────────────────────────────────────────────────
 function reinstateUser(userId, userName){
   if(!confirm('Reinstate ' + userName + '? They will be able to log in immediately. Subscription must be re-activated separately.')) return;
@@ -1843,7 +2003,7 @@ function executeBulkDelete(delType){
     });
 }
 (function(){
-  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','uat-members','haiku-members','deleted-accounts','audit-log','danger'];
+  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','uat-members','haiku-members','deleted-accounts','audit-log','master-refs','danger'];
   var items=document.querySelectorAll('.mob-nav-item');
   function onScroll(){
     var cur='';
