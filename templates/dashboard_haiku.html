@@ -91,6 +91,10 @@ html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:an
 .gap-truth{font-size:16px;line-height:1.80;color:rgba(26,39,68,0.65)}
 .gap-count{font-size:13px;color:rgba(26,39,68,0.52);margin-top:12px;letter-spacing:0.04em}
 
+.master-name{font-family:'Playfair Display',serif;font-size:24px;color:#1A2744;margin-bottom:10px}
+.master-link{font-size:13px;color:#C8A84B;letter-spacing:0.09em;text-transform:uppercase;text-decoration:none;display:inline-block;margin-top:14px}
+.master-link:hover{text-decoration:underline}
+
 /* ── NEXT SESSION ── */
 .next-card{background:#EEF2FA;border:0.5px solid rgba(80,120,200,0.15);border-left:3px solid #4A6FA8;border-radius:0 4px 4px 0;padding:28px 32px}
 .next-label{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#2A4A7A;margin-bottom:12px}
@@ -578,11 +582,21 @@ canvas.spark{flex:1;height:48px;display:block}
   {% endif %}
 
   <!-- ══ MASTER REFERENCE ══ -->
-  {% if master_insight %}
+  {% if master_insight or master_name_dash %}
   <div class="section">
     <div class="master-card">
       <div class="master-label">The eye behind this</div>
+      {% if master_name_dash %}
+      <div class="master-name">{{ master_name_dash }}</div>
+      {% if master_why_dash %}<div class="master-why" style="margin-top:8px">{{ master_why_dash }}</div>{% endif %}
+      {% if master_name_dash in all_masters %}
+      <a href="https://www.google.com/search?q={{ all_masters[master_name_dash] }}&tbm=isch" target="_blank" rel="noopener" class="master-link">See their work →</a>
+      {% else %}
+      <a href="https://www.google.com/search?q={{ master_name_dash|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener" class="master-link">See their work →</a>
+      {% endif %}
+      {% elif master_insight %}
       <div class="master-why">{{ master_insight }}</div>
+      {% endif %}
     </div>
   </div>
   {% endif %}
