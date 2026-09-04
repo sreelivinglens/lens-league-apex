@@ -1,4 +1,4 @@
-# SL-VERSION: 181.86 (Session 210, 2026-09-04 — soft delete + reinstate system. admin_delete_user now soft-deletes (is_active=False, data preserved, farewell email). New route: POST /admin/user/<id>/reinstate. bulk-delete: bot=hard delete, user=soft delete. OAuth gate blocks soft-deleted accounts. Deleted accounts panel in admin.html. Joined date column in paid subscribers table. Pagination (10/page) on both tables.)
+# SL-VERSION: 181.87 (Session 210, 2026-09-04 — master reference library: DB-driven prompt injection, 24 new photographers seeded, async suggest route with polling, single-genre refresh buttons, JSON payload fix. Haiku rescore route. Bulk Haiku rescore. Post-eval-1 email. Photographer context field. dashboard_haiku.html zero-state overhaul + play_exhausted UI. image_detail_haiku.html: takeaway card, inline dimension notes. Admin: UAT panel, soft delete, reinstate, bulk delete, pagination, flash messages, fetch-based actions.)
 
 import os
 import re
