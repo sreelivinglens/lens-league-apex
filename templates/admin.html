@@ -919,10 +919,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <div class="ps-actions">
                 {% if pu.latest_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.latest_image_id) }}">Latest</a>{% endif %}
                 {% if pu.best_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.best_image_id) }}">Best</a>{% endif %}
-                <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=pu.id) }}" style="display:inline"><button class="psa" type="submit">Bust cache</button></form>
-                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Deactivate subscription for {{ pu.full_name }}?')">
-                  <button class="psa" type="submit" style="color:#B91C1C">Deactivate</button>
-                </form>
+                <button class="psa" onclick="bustCache({{ pu.id }}, this)">Bust cache</button>
+                <button class="psa" onclick="toggleSub({{ pu.id }}, '{{ pu.full_name|replace("'","\\'")|e }}', 'deactivate', 'ps-row', this)" style="color:#B91C1C">Deactivate</button>
                 <button class="psa" onclick="confirmDeletePaid({{ pu.id }}, '{{ pu.full_name|replace("'","\\'")|e }}')" style="color:#B91C1C;border-color:#FECACA">Delete</button>
               </div>
             </td>
@@ -977,12 +975,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <div class="ps-actions">
                 <a class="psa" href="{{ url_for('admin_user_detail', user_id=uu.id) }}">Profile</a>
                 {% if uu.latest_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=uu.latest_image_id) }}">Latest</a>{% endif %}
-                <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=uu.id) }}" style="display:inline"><button class="psa" type="submit">Bust cache</button></form>
-                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=uu.id) }}" style="display:inline" onsubmit="return confirm('Revoke UAT access for {{ uu.full_name }}?')">
-                  <input type="hidden" name="plan" value="{{ uu.subscription_plan }}">
-                  <input type="hidden" name="track" value="{{ uu.subscription_track }}">
-                  <button class="psa" type="submit" style="background:#FDE68A;border-color:#C8A84B;font-weight:600">Revoke UAT</button>
-                </form>
+                <button class="psa" onclick="bustCache({{ uu.id }}, this)">Bust cache</button>
+                <button class="psa" onclick="toggleSub({{ uu.id }}, '{{ uu.full_name|replace("'","\\'")|e }}', 'revoke', 'uat-row', this)" style="background:#FDE68A;border-color:#C8A84B;font-weight:600">Revoke UAT</button>
                 <button class="psa" onclick="confirmDeletePaid({{ uu.id }}, '{{ uu.full_name|replace("'","\\'")|e }}')" style="color:#B91C1C;border-color:#FECACA">Delete</button>
               </div>
             </td>
@@ -1573,23 +1567,23 @@ function psPage(dir){
 
 // ── PAID SUBSCRIBER DELETE ────────────────────────────────────────────────────
 function confirmDeletePaid(userId, userName){
-  if(!confirm('Permanently delete ' + userName + ' and all their data? This cannot be undone.')) return;
+  if(!confirm('Soft-delete ' + userName + '? They will be locked out but data is preserved. You can reinstate them from the Deleted accounts panel.')) return;
   var fd = new FormData();
   fetch('/admin/user/' + userId + '/delete', {method:'POST', body:fd})
     .then(function(r){
       if(r.ok || r.redirected){
-        // Remove row from DOM
-        var rows = document.querySelectorAll('#ps-tbody .ps-row');
+        showFlash('Account "' + userName + '" deactivated. Data preserved — use Reinstate to restore.', 'success');
+        var rows = document.querySelectorAll('#ps-tbody .ps-row, #uat-tbody .uat-row');
         rows.forEach(function(row){
-          var btn = row.querySelector('button[onclick*="' + userId + '"]');
-          if(btn) row.remove();
+          if(row.innerHTML.indexOf('confirmDeletePaid(' + userId + ',') > -1) row.remove();
         });
-        renderPsPage();
+        if(typeof renderPsPage === 'function') renderPsPage();
+        if(typeof renderUatPage === 'function') renderUatPage();
       } else {
-        alert('Delete failed — please try again or use the user profile page.');
+        showFlash('Delete failed — please try again.', 'error');
       }
     })
-    .catch(function(){ alert('Network error — please try again.'); });
+    .catch(function(){ showFlash('Network error — please try again.', 'error'); });
 }
 
 // ── HAIKU MEMBERS PAGINATION ──────────────────────────────────────────────────
@@ -1616,6 +1610,96 @@ function hkPage(dir){
   var totalPages = Math.ceil(rows.length / _hkPerPage);
   _hkPage = Math.max(1, Math.min(totalPages, _hkPage + dir));
   renderHkPage();
+}
+
+// ── INLINE FLASH (no page reload) ────────────────────────────────────────────
+function showFlash(msg, type){
+  type = type || 'success';
+  var bar = document.getElementById('flash-bar');
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id = 'flash-bar';
+    bar.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;min-width:320px;max-width:560px;width:90vw';
+    document.body.appendChild(bar);
+  }
+  var div = document.createElement('div');
+  div.className = 'flash-msg flash-' + type;
+  div.style.cursor = 'pointer';
+  div.innerHTML = (type==='success'?'✓':type==='error'?'✗':'ℹ') + ' ' + msg + '<span style="float:right;opacity:.5;margin-left:12px">✕</span>';
+  div.onclick = function(){ this.remove(); };
+  bar.appendChild(div);
+  setTimeout(function(){ if(div.parentNode) div.remove(); }, 5000);
+}
+
+// ── BUST CACHE ────────────────────────────────────────────────────────────────
+function bustCache(userId, btn){
+  btn.disabled = true;
+  btn.textContent = '…';
+  var fd = new FormData();
+  fetch('/admin/bust-contest-cache/' + userId, {
+    method: 'POST',
+    headers: {'Accept': 'application/json'},
+    body: fd
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    btn.textContent = 'Bust cache';
+    btn.disabled = false;
+    showFlash(d.message, d.ok ? 'success' : 'error');
+    // Update cache age cell in same row
+    var row = btn.closest('tr');
+    if(row){
+      var cacheCell = row.querySelector('.ps-cache-age');
+      if(cacheCell) cacheCell.textContent = 'just now';
+    }
+  })
+  .catch(function(){
+    btn.textContent = 'Bust cache';
+    btn.disabled = false;
+    showFlash('Network error — please try again.', 'error');
+  });
+}
+
+// ── TOGGLE SUBSCRIPTION (deactivate / revoke UAT) ────────────────────────────
+function toggleSub(userId, userName, action, rowClass, btn){
+  var label = action === 'revoke' ? 'Revoke UAT for ' : 'Deactivate subscription for ';
+  if(!confirm(label + userName + '?')) return;
+  btn.disabled = true;
+  btn.textContent = '…';
+  var fd = new FormData();
+  fetch('/admin/user/' + userId + '/toggle-subscription', {
+    method: 'POST',
+    headers: {'Accept': 'application/json'},
+    body: fd
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok){
+      showFlash(d.message, 'success');
+      // Remove row from table, update badge
+      var row = btn.closest('tr');
+      if(row) row.remove();
+      // Update sidebar badge count
+      var badge = document.querySelector('.sb-item[onclick*="paid-subs"] .sb-badge');
+      var psRows = document.querySelectorAll('#ps-tbody .ps-row');
+      if(badge) badge.textContent = psRows.length;
+      var uatBadge = document.querySelector('.sb-item[onclick*="uat-members"] .sb-badge');
+      var uatRows = document.querySelectorAll('#uat-tbody .uat-row');
+      if(uatBadge) uatBadge.textContent = uatRows.length;
+      // Re-render pagination if active
+      if(typeof renderPsPage === 'function') renderPsPage();
+      if(typeof renderUatPage === 'function') renderUatPage();
+    } else {
+      btn.disabled = false;
+      btn.textContent = action === 'revoke' ? 'Revoke UAT' : 'Deactivate';
+      showFlash(d.message || 'Action failed.', 'error');
+    }
+  })
+  .catch(function(){
+    btn.disabled = false;
+    btn.textContent = action === 'revoke' ? 'Revoke UAT' : 'Deactivate';
+    showFlash('Network error — please try again.', 'error');
+  });
 }
 
 // ── REINSTATE USER ───────────────────────────────────────────────────────────
