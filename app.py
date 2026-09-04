@@ -18764,24 +18764,17 @@ def admin_master_references_suggest():
                 _prompt = (
                     'You are updating the master photographer reference library for a photography '
                     'evaluation platform. For EACH of the following genres, provide the top world-level '
-                    'and top Indian photographers whose work should be referenced when giving feedback.
-
-'
-                    f'GENRES: {genres_str}
-
-'
-                    'Return ONLY a valid JSON array — no markdown, no explanation:
-'
+                    'and top Indian photographers whose work should be referenced when giving feedback.\n\n'
+                    f'GENRES: {genres_str}\n\n'
+                    'Return ONLY a valid JSON array. No markdown, no explanation:\n'
                     '[{"genre": "Wildlife", "photographers": [{'
                     '"name": "Full Name", "region": "Country", "tier": "Tier 1 or Tier 2", '
-                    '"known_for": "One specific sentence about what they are known for in this genre", '
-                    '"reference_when": "The specific situation, subject, or dimension gap where this photographer is the right reference", '
-                    '"do_not_reference": "comma-separated genres where this is the wrong reference"'
-                    '}]}]
-
-'
-                    'Rules: Up to 15 world-level + 15 Indian photographers per genre. '
-                    'Tier 1 = NatGeo/Magnum/WPP level. Tier 2 = regionally celebrated. '
+                    '"known_for": "One specific sentence", '
+                    '"reference_when": "The specific situation where this is the right reference", '
+                    '"do_not_reference": "comma-separated wrong genres"'
+                    '}]}]\n\n'
+                    'Rules: Up to 15 world + 15 Indian photographers per genre. '
+                    'Tier 1 = NatGeo/Magnum/WPP. Tier 2 = regionally acclaimed. '
                     'reference_when must name the specific subject or situation. '
                     'Include recent award winners (last 3 years). No generic entries.'
                 )
@@ -18803,8 +18796,7 @@ def admin_master_references_suggest():
                 with _bur.urlopen(_req, timeout=90) as _resp:
                     _result = _bj.loads(_resp.read().decode())
                 _text = (_result.get('content') or [{}])[0].get('text', '[]')
-                _text = _text.strip().lstrip('`').replace('json
-', '').rstrip('`').strip()
+                _text = _text.strip().lstrip('`').replace('json\n', '').rstrip('`').strip()
                 _suggestions = _bj.loads(_text)
                 if not isinstance(_suggestions, list):
                     _suggestions = [_suggestions]
