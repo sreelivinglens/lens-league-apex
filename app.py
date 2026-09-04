@@ -35127,16 +35127,21 @@ _TRY_HAIKU_PROMPT = (
 
 "CONCLUSION:\n"
     "Written in the voice of the platform, not the engine. "
+    "ALWAYS address the photographer directly as YOU -- never as 'this photographer' or "
+    "'the photographer'. First person address only. Sherpa tone -- warm, personal, direct. "
     "Do NOT repeat any observation already made in impression, what_next, or master_why. "
-    "This section says one thing only: what this photograph tells us about the photographer, "
+    "This section says one thing only: what this photograph tells us about YOU, "
     "and that we want to see more. "
     "If PHOTOGRAPHER HISTORY is empty (eval 1): "
-    "2-3 sentences. What does this one image reveal about how this person sees? "
+    "2-3 sentences. What does this one image reveal about how YOU see? "
     "Then invite the next photograph. "
+    "LEAGUE MENTION RULE: if the score is 7.5 or above, add exactly one sentence: "
+    "'An image at this level belongs in the League of Photographers -- "
+    "where it earns a world standing calibrated against every photographer on the platform.' "
     "Close with this exact sentence: 'The standard we are measuring against was built from "
-    "312 blind calibrations — not preference, not taste — what makes an image hold attention, "
+    "312 blind calibrations -- not preference, not taste -- what makes an image hold attention, "
     "create feeling, and outlast the five seconds it gets on a feed.' "
-    "Do not mention upgrading. Do not mention pricing. Max 70 words.\n"
+    "Do not mention upgrading. Do not mention pricing. Max 90 words.\n"
     "If PHOTOGRAPHER HISTORY has prior images (eval 2+): "
     "Name the pattern across their work — one strength, one gap — in 2 sentences. "
     "Do not say what they should do next. That is in what_next. Max 50 words.\n\n"
@@ -35423,10 +35428,10 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     takeaway       = (d.get('takeaway')       or '').strip()[:300]
     impression     = (d.get('impression')     or '').strip()[:400]
     strength_name  = (d.get('strength_name')  or '').strip()[:80]
-    strength_obs   = (d.get('strength_obs')   or '').strip()[:250]
+    strength_obs   = (d.get('strength_obs')   or '').strip()[:350]
     next_leap_name = (d.get('next_leap_name') or '').strip()[:80]
-    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:250]
-    what_next      = (d.get('what_next')      or '').strip()[:700]   # Session 211: 120 words ~700 chars
+    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:350]
+    what_next      = (d.get('what_next')      or '').strip()[:900]   # Session 211: 120 words ~700 chars
     master_name    = (d.get('master_name')    or '').strip()[:100]
     master_why     = (d.get('master_why')     or '').strip()[:400]
     # Session 211: per-dimension observations + conclusion
@@ -35461,7 +35466,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
             app.logger.debug(f'[haiku_wiki] enrichment failed (non-fatal): {_we}')
     tech_read      = (d.get('tech_read')      or '').strip()[:400]
     visual_flow    = (d.get('visual_flow')    or '').strip()[:350]
-    award_context  = (d.get('award_context')  or '').strip()[:300]
+    award_context  = (d.get('award_context')  or '').strip()[:450]
     edit_tips      = (d.get('edit_tips')      or '').strip()[:900]
     imagine        = (d.get('imagine')        or '').strip()[:500]
 
@@ -37286,7 +37291,11 @@ def try_result(image_id):
         evals_remaining    = evals_remaining,
         evals_limit        = FREE_IMAGE_LIMIT,
         milestone_strength = _milestone_strength,
-        photographer_name  = current_user.full_name or current_user.username or '',
+        photographer_name  = (
+            db.session.execute(db.text('SELECT full_name FROM users WHERE id=:uid'),
+            {'uid': img.user_id}).scalar() or ''
+        ),
+        # Session 211: use image owner name, not viewer (admin may be viewing)
         exif_line          = _exif_line,
     )
 
