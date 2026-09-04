@@ -33940,6 +33940,71 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                     _sht.Thread(target=_run_sherpa, daemon=True).start()
                 except Exception as _she:
                     app.logger.warning(f'[haiku_sherpa] trigger failed (non-fatal): {_she}')
+
+            # Session 210 — Post-eval-1 email: fires when this is the photographer's
+            # first ever Haiku evaluation. Sherpa tone, includes takeaway, pulls to eval 2.
+            # Non-blocking background thread. Never crashes scoring.
+            try:
+                _eval_count = db.session.execute(
+                    db.text(
+                        "SELECT (SELECT COUNT(*) FROM images WHERE user_id=:uid AND is_haiku_try=TRUE) "
+                        "+ (SELECT COUNT(*) FROM upload_history_log WHERE user_id=:uid AND is_haiku_try=TRUE)"
+                    ), {'uid': img.user_id}
+                ).scalar() or 0
+                if int(_eval_count) == 1:
+                    _e1_user = User.query.get(img.user_id)
+                    if _e1_user and _e1_user.email:
+                        _e1_name  = (_e1_user.full_name or _e1_user.username or 'Photographer').split()[0]
+                        _e1_email = _e1_user.email
+                        _e1_score = round(final_score, 2)
+                        _e1_tier  = tier
+                        _e1_take  = takeaway or ''
+                        _e1_site  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        _e1_result_url = f'{_e1_site}/try/result/{image_id}'
+                        import threading as _e1t
+                        def _send_post_eval1():
+                            with app.app_context():
+                                try:
+                                    send_email(
+                                        to_addresses=[_e1_email],
+                                        subject=f'{_e1_name} — your first evaluation just landed',
+                                        html_body=(
+                                            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                                            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                                            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                                            '<tr><td align="center">'
+                                            '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                                            '<tr><td style="background:#1A2744;padding:20px 28px 16px;">'
+                                            '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                                            '</td></tr>'
+                                            '<tr><td style="padding:28px 28px 8px;">'
+                                            f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Hi {_e1_name},</p>'
+                                            f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">Your first photograph just came back from the engine. You landed at <strong style="color:#1A2744;">{_e1_score} — {_e1_tier}</strong>.</p>'
+                                            + (f'<div style="border-left:3px solid #C8A84B;padding:14px 18px;background:#FAFAF6;margin:0 0 20px;font-size:16px;line-height:1.75;color:#1A2744;font-style:italic;">{_e1_take}</div>' if _e1_take else '')
+                                            + '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 24px;">Your second photograph will show us whether this was your eye or your position. The engine is watching.</p>'
+                                            f'<a href="{_e1_result_url}" style="display:inline-block;background:#1A2744;color:#C8A84B;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 24px;border-radius:3px;text-decoration:none;margin-bottom:28px;">See your full evaluation →</a>'
+                                            '</td></tr>'
+                                            '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                                            f'<p style="margin:0;font-size:14px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; <a href="{_e1_site}" style="color:#C8A84B;">shutterleague.com</a></p>'
+                                            '</td></tr>'
+                                            '</table></td></tr></table></body></html>'
+                                        ),
+                                        text_body=(
+                                            f'Hi {_e1_name},\n\n'
+                                            f'Your first photograph just came back. You landed at {_e1_score} — {_e1_tier}.\n\n'
+                                            + (f'{_e1_take}\n\n' if _e1_take else '')
+                                            + f'Your second photograph will show us whether this was your eye or your position.\n\n'
+                                            f'See your full evaluation: {_e1_result_url}\n\n'
+                                            f'-- Shutter League'
+                                        )
+                                    )
+                                    app.logger.info(f'[post_eval1_email] sent to {_e1_email} user={img.user_id}')
+                                except Exception as _e1_err:
+                                    app.logger.warning(f'[post_eval1_email] failed: {_e1_err}')
+                        _e1t.Thread(target=_send_post_eval1, daemon=True).start()
+            except Exception as _e1_outer:
+                app.logger.warning(f'[post_eval1_email] outer error (non-fatal): {_e1_outer}')
+
             return {
                 'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
                 'score': round(final_score, 2),
