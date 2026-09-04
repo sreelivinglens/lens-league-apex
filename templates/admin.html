@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.1-main (Session 210, 2026-09-04 — Haiku members bulk delete: checkboxes, sticky action bar, BOT DELETE + DELETE buttons with confirmation modal. Audit badges: bot_delete, delete_user added.) #}
+{# SL-VERSION: admin-2.2-main (Session 210, 2026-09-04 — Soft delete + reinstate system. DELETE button now soft-deletes (is_active=False, data preserved, farewell email). Deleted accounts panel with Reinstate button. Paid subscribers: Joined column, pagination, Delete button. Haiku members: pagination. Audit badges updated.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -273,6 +273,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .hf-note{font-size:12px;color:#8A8A86}
 .hf-btn{font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid #1A2744;background:#fff;color:#1A2744;cursor:pointer;font-family:inherit;min-height:40px;text-decoration:none;display:inline-flex;align-items:center}
 
+/* ── TABLE PAGINATION ── */
+.tbl-pagination{display:flex;align-items:center;gap:10px;padding:12px 0 4px;border-top:1px solid #EEE;margin-top:8px}
+.pg-btn{font-size:13px;padding:6px 14px;border-radius:7px;border:1px solid #E0DDD6;background:#FAFAF6;color:#1A1A18;cursor:pointer;font-family:inherit;min-height:36px;transition:background .12s}
+.pg-btn:hover:not(:disabled){background:#EFF6FF;border-color:#C8D4E8}
+.pg-btn:disabled{opacity:.4;cursor:default}
+.pg-info{font-size:13px;color:#8A8A86;flex:1;text-align:center}
+
 /* ── BULK DELETE ── */
 .hk-cb{width:16px;height:16px;cursor:pointer;accent-color:#B91C1C;flex-shrink:0}
 .bulk-bar{position:sticky;bottom:16px;z-index:80;background:#1A2744;color:#fff;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.22);margin-top:12px;flex-wrap:wrap}
@@ -486,6 +493,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       {% if stats.free_users > 0 %}<span class="sb-badge haiku">{{ stats.free_users }}</span>{% endif %}
     </a>
     <a class="sb-item" onclick="navTo('new-signups','b-ns-body','cNS')"><i class="ti ti-user-plus"></i> New signups</a>
+    <a class="sb-item" onclick="navTo('deleted-accounts','b-deleted-body','cDA')"><i class="ti ti-user-off" style="color:#B91C1C"></i> Deleted accounts{% if deleted_users %}<span class="sb-badge" style="background:#FEF2F2;color:#B91C1C">{{ deleted_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('engagement','b-en-body','cEN')"><i class="ti ti-chart-line"></i> Engagement</a>
   </div>
 
@@ -863,11 +871,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div id="b-paid-body" class="sec-body" style="display:none">
       {% if paid_users %}
       <table class="ps-table">
-        <thead><tr><th style="width:26%">Member</th><th style="width:12%">Plan</th><th style="width:12%">Best eval</th><th style="width:8%">Images</th><th style="width:12%">Cache</th><th style="width:10%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
-        <tbody>
+        <thead><tr><th style="width:22%">Member</th><th style="width:10%">Plan</th><th style="width:10%">Joined</th><th style="width:10%">Best eval</th><th style="width:7%">Images</th><th style="width:10%">Cache</th><th style="width:9%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody id="ps-tbody">
           {% for pu in paid_users %}
           {% set is_uat = pu.subscription_plan in ('uat', 'beta') %}
-          <tr style="{% if is_uat %}background:#FFFBEB;{% endif %}">
+          <tr class="ps-row" style="{% if is_uat %}background:#FFFBEB;{% endif %}">
             <td>
               <div class="ps-name">{{ pu.full_name }}</div>
               <div class="ps-meta">{{ pu.email }}</div>
@@ -880,6 +888,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <span style="font-size:11px;color:#8A8A86;display:block">{{ pu.subscription_plan }}</span>
               {% endif %}
             </td>
+            <td style="font-size:12px;color:#8A8A86;white-space:nowrap">{{ pu.joined_date or '—' }}</td>
             <td>
               <div class="ps-score">{% if pu.best_score %}{{ '%.2f'|format(pu.best_score) }}{% else %}—{% endif %}</div>
               {% if pu.tier %}<span class="ps-tier">{{ pu.tier }}</span>{% endif %}
@@ -905,12 +914,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                   <button class="psa" type="submit" style="color:#B91C1C">Deactivate</button>
                 </form>
                 {% endif %}
+                <button class="psa" onclick="confirmDeletePaid({{ pu.id }}, '{{ pu.full_name|replace("'","\\'")|e }}')" style="color:#B91C1C;border-color:#FECACA">Delete</button>
               </div>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
+      <div id="ps-pagination" class="tbl-pagination" style="display:none">
+        <button class="pg-btn" id="ps-prev" onclick="psPage(-1)">← Prev</button>
+        <span class="pg-info" id="ps-info"></span>
+        <button class="pg-btn" id="ps-next" onclick="psPage(1)">Next →</button>
+      </div>
       {% else %}
       <div style="font-size:14px;color:#8A8A86;padding:10px 0">No paid subscribers yet.</div>
       {% endif %}
@@ -939,7 +954,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <thead><tr><th style="width:32px"><input type="checkbox" class="hk-cb" id="hk-select-all" title="Select all" onchange="hkSelectAll(this)"></th><th style="width:26%">Member</th><th style="width:20%">Evals used</th><th style="width:12%">Joined</th><th style="width:12%">Last active</th><th style="width:10%">Status</th><th style="width:12%;text-align:right"></th></tr></thead>
         <tbody>
           {% for u in haiku_users %}
-          <tr>
+          <tr class="hk-table-row">
             <td style="width:32px;padding-right:4px"><input type="checkbox" class="hk-cb hk-row-cb" data-uid="{{ u.id }}" data-name="{{ u.full_name or u.username }}" onchange="hkCbChange()"></td>
             <td>
               <div style="font-weight:500;font-size:14px">{{ u.full_name or u.username }}</div>
@@ -988,6 +1003,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           {% endfor %}
         </tbody>
       </table>
+      <div id="hk-pagination" class="tbl-pagination" style="display:none">
+        <button class="pg-btn" id="hk-prev" onclick="hkPage(-1)">← Prev</button>
+        <span class="pg-info" id="hk-info"></span>
+        <button class="pg-btn" id="hk-next" onclick="hkPage(1)">Next →</button>
+      </div>
       <div id="bulk-result" class="bulk-result"></div>
       <div id="bulk-bar" class="bulk-bar hidden">
         <span class="bulk-count" id="bulk-count-label">0 selected</span>
@@ -1048,7 +1068,45 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     </div>
   </div>
 
-  {# ── NEW SIGNUPS ── #}
+  {# ── DELETED ACCOUNTS ── #}
+  <div id="deleted-accounts" class="section">
+    <div class="sec-hdr" onclick="tog('deleted-body','cDA')">
+      <div class="sec-title"><i class="ti ti-user-off" style="color:#B91C1C"></i> Deleted accounts <span class="sec-badge danger">{{ deleted_users|length if deleted_users else 0 }}</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Soft-deleted · data preserved · reinstatable</span><span class="chev closed" id="cDA">▼</span></div>
+    </div>
+    <div id="b-deleted-body" class="sec-body" style="display:none">
+      <div class="guide urgent" style="margin-bottom:12px">
+        <strong>These accounts are locked out but data is intact.</strong> Reinstate restores login access immediately. Subscription must be re-activated separately. BOT-deleted accounts do not appear here — they are permanently gone.
+      </div>
+      {% if deleted_users %}
+      <table class="ps-table">
+        <thead><tr><th style="width:28%">Member</th><th style="width:14%">Plan</th><th style="width:14%">Joined</th><th style="width:18%">Deactivated</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody>
+          {% for du in deleted_users %}
+          <tr id="del-row-{{ du.id }}">
+            <td>
+              <div class="ps-name">{{ du.full_name or du.username }}</div>
+              <div class="ps-meta">{{ du.email }}</div>
+            </td>
+            <td style="font-size:12px;color:#8A8A86">{{ du.subscription_plan or 'free' }}</td>
+            <td style="font-size:12px;color:#8A8A86;white-space:nowrap">{{ du.created_at.strftime('%-d %b %Y') if du.created_at else '—' }}</td>
+            <td style="font-size:12px;color:#B91C1C;white-space:nowrap">{{ du.deleted_at.strftime('%-d %b %Y %H:%M') if du.deleted_at else '—' }}</td>
+            <td>
+              <div class="ps-actions">
+                <a class="psa" href="{{ url_for('admin_user_detail', user_id=du.id) }}">Profile</a>
+                <button class="psa" onclick="reinstateUser({{ du.id }}, '{{ (du.full_name or du.username)|replace("'", "\\'")|e }}')" style="background:#E8F5E9;border-color:#BBF7D0;color:#166534;font-weight:600">Reinstate</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="font-size:14px;color:#8A8A86;padding:10px 0">No deleted accounts.</div>
+      {% endif %}
+      <div id="reinstate-result" class="bulk-result" style="margin-top:10px"></div>
+    </div>
+  </div>
   <div id="new-signups" class="section">
     <div class="sec-hdr" onclick="tog('ns-body','cNS')">
       <div class="sec-title"><i class="ti ti-user-plus"></i> New signups <span class="sec-badge">{{ new_signups_30days }}</span></div>
@@ -1389,6 +1447,108 @@ document.getElementById('nudge-modal').addEventListener('click', function(e){
   if(e.target === this) closeNudge();
 });
 
+// ── PAID SUBSCRIBERS PAGINATION ──────────────────────────────────────────────
+var _psPage = 1;
+var _psPerPage = 10;
+(function initPsPagination(){
+  var rows = document.querySelectorAll('#ps-tbody .ps-row');
+  if(rows.length <= _psPerPage) return;
+  document.getElementById('ps-pagination').style.display = 'flex';
+  renderPsPage();
+})();
+function renderPsPage(){
+  var rows = document.querySelectorAll('#ps-tbody .ps-row');
+  var total = rows.length;
+  var totalPages = Math.ceil(total / _psPerPage);
+  var start = (_psPage - 1) * _psPerPage;
+  rows.forEach(function(r, i){ r.style.display = (i >= start && i < start + _psPerPage) ? '' : 'none'; });
+  document.getElementById('ps-info').textContent = 'Page ' + _psPage + ' of ' + totalPages + ' (' + total + ' members)';
+  document.getElementById('ps-prev').disabled = _psPage <= 1;
+  document.getElementById('ps-next').disabled = _psPage >= totalPages;
+}
+function psPage(dir){
+  var rows = document.querySelectorAll('#ps-tbody .ps-row');
+  var totalPages = Math.ceil(rows.length / _psPerPage);
+  _psPage = Math.max(1, Math.min(totalPages, _psPage + dir));
+  renderPsPage();
+}
+
+// ── PAID SUBSCRIBER DELETE ────────────────────────────────────────────────────
+function confirmDeletePaid(userId, userName){
+  if(!confirm('Permanently delete ' + userName + ' and all their data? This cannot be undone.')) return;
+  var fd = new FormData();
+  fetch('/admin/user/' + userId + '/delete', {method:'POST', body:fd})
+    .then(function(r){
+      if(r.ok || r.redirected){
+        // Remove row from DOM
+        var rows = document.querySelectorAll('#ps-tbody .ps-row');
+        rows.forEach(function(row){
+          var btn = row.querySelector('button[onclick*="' + userId + '"]');
+          if(btn) row.remove();
+        });
+        renderPsPage();
+      } else {
+        alert('Delete failed — please try again or use the user profile page.');
+      }
+    })
+    .catch(function(){ alert('Network error — please try again.'); });
+}
+
+// ── HAIKU MEMBERS PAGINATION ──────────────────────────────────────────────────
+var _hkPage = 1;
+var _hkPerPage = 10;
+(function initHkPagination(){
+  var rows = document.querySelectorAll('#haiku-table tbody .hk-table-row');
+  if(rows.length <= _hkPerPage) return;
+  document.getElementById('hk-pagination').style.display = 'flex';
+  renderHkPage();
+})();
+function renderHkPage(){
+  var rows = document.querySelectorAll('#haiku-table tbody .hk-table-row');
+  var total = rows.length;
+  var totalPages = Math.ceil(total / _hkPerPage);
+  var start = (_hkPage - 1) * _hkPerPage;
+  rows.forEach(function(r, i){ r.style.display = (i >= start && i < start + _hkPerPage) ? '' : 'none'; });
+  document.getElementById('hk-info').textContent = 'Page ' + _hkPage + ' of ' + totalPages + ' (' + total + ' members)';
+  document.getElementById('hk-prev').disabled = _hkPage <= 1;
+  document.getElementById('hk-next').disabled = _hkPage >= totalPages;
+}
+function hkPage(dir){
+  var rows = document.querySelectorAll('#haiku-table tbody .hk-table-row');
+  var totalPages = Math.ceil(rows.length / _hkPerPage);
+  _hkPage = Math.max(1, Math.min(totalPages, _hkPage + dir));
+  renderHkPage();
+}
+
+// ── REINSTATE USER ───────────────────────────────────────────────────────────
+function reinstateUser(userId, userName){
+  if(!confirm('Reinstate ' + userName + '? They will be able to log in immediately. Subscription must be re-activated separately.')) return;
+  var fd = new FormData();
+  fetch('/admin/user/' + userId + '/reinstate', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var result = document.getElementById('reinstate-result');
+      result.style.display = 'block';
+      if(d.ok){
+        result.className = 'bulk-result ok';
+        result.textContent = '\u2713 ' + d.message;
+        var row = document.getElementById('del-row-' + userId);
+        if(row) row.remove();
+      } else {
+        result.className = 'bulk-result err';
+        result.textContent = '\u2717 ' + (d.message || 'Reinstate failed.');
+      }
+      setTimeout(function(){ result.style.display = 'none'; }, 5000);
+    })
+    .catch(function(){
+      var result = document.getElementById('reinstate-result');
+      result.style.display = 'block';
+      result.className = 'bulk-result err';
+      result.textContent = '\u2717 Network error \u2014 please try again.';
+      setTimeout(function(){ result.style.display = 'none'; }, 5000);
+    });
+}
+
 // ── BULK DELETE ──────────────────────────────────────────────────────────────
 var _pendingDelType = null;
 
@@ -1478,6 +1638,7 @@ function executeBulkDelete(delType){
           if(row) row.remove();
         });
         hkDeselectAll();
+        renderHkPage();
         // Update haiku member count badge
         var remaining = document.querySelectorAll('.hk-row-cb').length;
         var badge = document.querySelector('.sec-badge.haiku');
@@ -1500,7 +1661,7 @@ function executeBulkDelete(delType){
     });
 }
 (function(){
-  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','haiku-members','audit-log','danger'];
+  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','haiku-members','deleted-accounts','audit-log','danger'];
   var items=document.querySelectorAll('.mob-nav-item');
   function onScroll(){
     var cur='';
