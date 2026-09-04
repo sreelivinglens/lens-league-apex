@@ -322,6 +322,9 @@ main { padding:0 !important; background:#E8E5DF; }
       <div class="sl-tier-genre">
         {{ tier or '—' }}&nbsp;·&nbsp;{{ genre or '—' }}
       </div>
+      {% if photographer_name %}
+      <div style="font-size:15px;color:rgba(26,39,68,0.55);margin-top:6px;letter-spacing:0.02em">{{ photographer_name }}</div>
+      {% endif %}
 
       {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
       <div class="sl-tier-strip">
@@ -443,6 +446,13 @@ main { padding:0 !important; background:#E8E5DF; }
   </div>{# end .sl-content #}
 
   {# ── UPGRADE TEASER — what a full League evaluation includes ── #}
+  {% if exif_line %}
+  <div style="padding:16px 48px;background:#F5F3EF;border-top:1px solid rgba(26,39,68,0.08)">
+    <div style="font-size:12px;color:rgba(26,39,68,0.40);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Camera data</div>
+    <div style="font-size:13px;color:rgba(26,39,68,0.60);line-height:1.6">{{ exif_line }}</div>
+  </div>
+  {% endif %}
+
   <div class="sl-upgrade-wrap" style="background:#EDE8DF;padding:48px 48px 52px;border-top:1px solid rgba(26,39,68,0.10)">
     <div style="max-width:760px;margin:0 auto">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8a6a30;margin-bottom:12px">In a full League evaluation, you also get</div>
