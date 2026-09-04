@@ -410,7 +410,7 @@ main { padding:0 !important; background:#E8E5DF; }
           {% elif _val and _val == _min_val %}
             <span class="sl-dim-tag gap">Gap</span>
           {% else %}
-            <span class="sl-dim-tag developing">Developing</span>
+            <span class="sl-dim-tag developing">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>
           {% endif %}
         </div>
       </div>
@@ -436,7 +436,7 @@ main { padding:0 !important; background:#E8E5DF; }
           {% elif _val and _val == _min_val %}
             <span class="sl-dim-tag gap">Gap</span>
           {% else %}
-            <span class="sl-dim-tag developing">Developing</span>
+            <span class="sl-dim-tag developing">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>
           {% endif %}
         </div>
       </div>
@@ -462,7 +462,7 @@ main { padding:0 !important; background:#E8E5DF; }
           {% elif _val and _val == _min_val %}
             <span class="sl-dim-tag gap">Gap</span>
           {% else %}
-            <span class="sl-dim-tag developing">Developing</span>
+            <span class="sl-dim-tag developing">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>
           {% endif %}
         </div>
       </div>
@@ -488,7 +488,7 @@ main { padding:0 !important; background:#E8E5DF; }
           {% elif _val and _val == _min_val %}
             <span class="sl-dim-tag gap">Gap</span>
           {% else %}
-            <span class="sl-dim-tag developing">Developing</span>
+            <span class="sl-dim-tag developing">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>
           {% endif %}
         </div>
       </div>
@@ -514,7 +514,7 @@ main { padding:0 !important; background:#E8E5DF; }
           {% elif _val and _val == _min_val %}
             <span class="sl-dim-tag gap">Gap</span>
           {% else %}
-            <span class="sl-dim-tag developing">Developing</span>
+            <span class="sl-dim-tag developing">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>
           {% endif %}
         </div>
       </div>
@@ -590,9 +590,49 @@ main { padding:0 !important; background:#E8E5DF; }
     </div>
     {% endif %}
 
+    {# ── 9. SPECIES & BEHAVIOUR — ecological context (Wildlife/Nature) ── #}
+    {% if species_note %}
+    <div class="sl-narrative" style="padding-top:48px;margin-bottom:48px">
+      <div class="sl-eyebrow">Species &amp; Behaviour</div>
+      <div style="font-size:18px;color:#1A2744;line-height:1.75;font-style:italic">{{ species_note }}</div>
+    </div>
+    {% endif %}
+
+    {# ── 10. TECHNICAL READ — forensic analysis ── #}
+    {% if tech_read %}
+    <div style="margin-bottom:48px;padding-top:32px;border-top:0.5px solid rgba(26,39,68,0.08)">
+      <div class="sl-eyebrow">Technical Read</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.65);line-height:1.75">{{ tech_read }}</div>
+    </div>
+    {% endif %}
+
+    {# ── 11. VISUAL FLOW ── #}
+    {% if visual_flow %}
+    <div style="margin-bottom:32px">
+      <div class="sl-eyebrow">Visual Flow</div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.65);line-height:1.7">{{ visual_flow }}</div>
+    </div>
+    {% endif %}
+
+    {# ── 12. AWARD STANDARD ── #}
+    {% if award_context %}
+    <div style="margin-bottom:48px;padding:20px 24px;background:#FAFAF6;border-left:3px solid #C8A84B">
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;margin-bottom:8px">Award Standard</div>
+      <div style="font-size:16px;color:#1A2744;line-height:1.7">{{ award_context }}</div>
+    </div>
+    {% endif %}
+
+    {# ── 13. EDIT SUGGESTIONS — What/Why/How ── #}
+    {% if edit_tips %}
+    <div style="margin-bottom:64px;padding-top:48px;border-top:0.5px solid rgba(26,39,68,0.08)">
+      <div class="sl-eyebrow">Edit Suggestions</div>
+      <div style="font-size:17px;color:#1A2744;line-height:1.85;white-space:pre-line">{{ edit_tips }}</div>
+    </div>
+    {% endif %}
+
   </div>{# end .sl-content #}
 
-  {# ── Session 211: CONCLUSION — invitation before upgrade block ── #}
+  {# Session 211: CONCLUSION -- invitation before upgrade block #}
   {% if conclusion %}
   <div class="sl-conclusion">
     <p>{{ conclusion }}</p>
@@ -629,8 +669,8 @@ main { padding:0 !important; background:#E8E5DF; }
           <div style="font-size:15px;color:#3d3530;line-height:1.7">After 10 evaluations, the engine builds a cross-image read of what your eye consistently finds — and what it consistently misses.</div>
         </div>
         <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
-          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Edit suggestions</div>
-          <div style="font-size:15px;color:#3d3530;line-height:1.7">Specific post-processing guidance — what to darken, what to crop, what tonal move would make this particular image stronger.</div>
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Weekly assignment</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">A specific shoot brief each week — subject, location type, and timing — calibrated to your interests and what your last image was reaching for.</div>
         </div>
         <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
           <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Annual Excellence Award</div>
