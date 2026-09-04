@@ -34181,6 +34181,16 @@ _TRY_HAIKU_PROMPT = (
     "   5.0-6.4  Technically resolved, emotionally quiet.\n"
     "   Below 4  Triggers the Humanity Check penalty. Use it when earned.\n\n"
 
+    "SCORE BAND REFERENCE — USE THIS WHEN WRITING DIMENSION OBSERVATIONS:\n"
+    "   5-6  Competent. Present in the work but not yet a conscious strength.\n"
+    "   6-7  Developing. Aware of it, but not yet in control of it.\n"
+    "   7-8  Strong, above average. The gap to the next level is one specific decision.\n"
+    "   8-9  Exceptional. A clear creative decision most photographers wouldn't make.\n"
+    "   9+   Rare. Award-level. The standard almost no one reaches.\n"
+    "When you write a dim_obs for a dimension scoring in the 7-8 band, name WHAT THAT ONE "
+    "SPECIFIC DECISION IS that separates 7-8 from 8+. Do not write 'strong work.' "
+    "Write what 8.0 would require for THIS image.\n\n"
+
     "INTEREST AREA: {genre}\n\n"
 
     "PLATFORM CALIBRATION - THIS IS THE STANDARD YOU ARE SCORING AGAINST:\n"
@@ -34211,6 +34221,18 @@ _TRY_HAIKU_PROMPT = (
     "- Do not inflate to be encouraging. An honest 6.4 is more useful to a "
     "photographer than a generous 8.2.\n\n"
 
+    "DIMENSION REASONING — MANDATORY FOR ALL FIVE:\n"
+    "For each dimension you score, you must write one clause explaining WHY this specific "
+    "image lands where it does in that dimension. Not what the dimension measures — "
+    "what THIS IMAGE does or fails to do within it. Your five scores and five dim_obs "
+    "clauses must agree exactly. Each dim_obs must be one sentence, max 35 words, "
+    "plain English, no jargon.\n"
+    "Example for Wonder Factor 7.8 on a wildlife image:\n"
+    "  dim_obs_wf: 'The raptor hunting behaviour is genuinely rare, but the bird is "
+    "centred — the composition follows where anyone standing there would have pointed; "
+    "at 8.5 the geometry would be yours, not the scene\\'s.'\n"
+    "Write all five before writing the takeaway.\n\n"
+
     "TAKEAWAY:\n"
     "Write exactly one sentence (max 30 words) that names the single most "
     "important insight about this photograph. Name the specific dimension "
@@ -34229,22 +34251,12 @@ _TRY_HAIKU_PROMPT = (
     "strength_name: The plain-English name of the strongest dimension "
     "(e.g. 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', "
     "'Depth of Difficulty', 'Authentic Quality').\n"
-    "strength_obs: One sentence (max 30 words) explaining specifically what "
+    "strength_obs: One sentence (max 35 words) explaining specifically what "
     "is working in this dimension for THIS photograph. Concrete. No jargon.\n"
     "next_leap_name: The plain-English name of the weakest dimension.\n"
-    "next_leap_obs: One sentence (max 30 words) explaining specifically what "
-    "is limiting this dimension for THIS photograph. Honest. No jargon.\n\n"
-
-    "WHAT NEXT:\n"
-    "This is the Sherpa speaking directly. One specific, actionable instruction "
-    "for the photographer's next session with this subject or genre. "
-    "Name what the reference photographer (from the library above) specifically did "
-    "in a similar situation that this photographer has not yet done — concrete, not abstract. "
-    "Then name the one thing to change: vantage, timing, proximity, or the moment to wait for. "
-    "If the same gap appears in their history, name the pattern — not 'work on composition' "
-    "but 'you arrive at scenes and document them — the next frame needs you to architect "
-    "where the viewer enters before you press the shutter.' "
-    "Plain English. No codes. No jargon. Max 80 words.\n\n"
+    "next_leap_obs: One sentence (max 35 words) explaining specifically what "
+    "is limiting this dimension for THIS photograph. Name the one decision that "
+    "would move it into the next band. Honest. No jargon.\n\n"
 
     "MASTER REFERENCE — HOW TO CHOOSE:\n"
     "Select one photographer from the REFERENCE LIBRARY below whose work most closely "
@@ -34259,8 +34271,9 @@ _TRY_HAIKU_PROMPT = (
     "the SUBJECT of this specific image, not the visual style.\n\n"
 
     "master_name: Exactly one name from the library above.\n"
-    "master_why: One sentence (max 30 words) — what this master did in the same situation "
-    "that this photographer has not yet done. Specific and concrete, not generic praise.\n\n"
+    "master_why: One sentence (max 35 words) — what this master did in the same situation "
+    "that this photographer has not yet done. Name the specific vantage, proximity, or "
+    "moment they chose. Concrete, not generic praise.\n\n"
 
     "{history_context}\n\n"
 
@@ -34279,17 +34292,48 @@ _TRY_HAIKU_PROMPT = (
     "NEVER validate their context by echoing it. "
     "Respond to it — go beyond it. The photographer already knows what they told you.\n\n"
 
+    "WHAT NEXT:\n"
+    "This is the Sherpa speaking directly to the photographer. "
+    "Name what the master reference photographer specifically did in a similar situation "
+    "that this photographer has not yet done — concrete vantage, proximity, or moment chosen. "
+    "Then name the single thing to change before the next session: "
+    "vantage, timing, proximity, or the moment to wait for. "
+    "If the same gap appears in their history, name the pattern directly — "
+    "not 'work on composition' but 'you arrive at scenes and document them — "
+    "the next frame needs you to decide where the viewer enters before you press the shutter.' "
+    "Plain English. No dimension codes. No jargon. Max 120 words.\n\n"
+
+    "CONCLUSION:\n"
+    "This is the final section — written in the voice of the platform, not the engine. "
+    "If PHOTOGRAPHER HISTORY is empty (this is their first evaluation): "
+    "Write 2-3 sentences. Tell them what this one photograph reveals about how they see. "
+    "Then say that you want to see more — across subjects, distances, light. "
+    "Close with this exact sentence: "
+    "'The standard we are measuring against was built from 312 blind calibrations — "
+    "not preference, not taste — what makes an image hold attention, create feeling, "
+    "and outlast the five seconds it gets on a feed.' "
+    "Do not mention pricing. Do not mention upgrading. Max 70 words.\n"
+    "If PHOTOGRAPHER HISTORY has prior images (eval 2+): "
+    "Write 2-3 sentences. Name the pattern — which dimension is consistently strong, "
+    "which is consistently the gap. Say it is not a judgement but a map. Max 60 words.\n\n"
+
     "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
+    "\"dim_obs_dod\": \"<one sentence>\", "
+    "\"dim_obs_vd\": \"<one sentence>\", "
+    "\"dim_obs_dm\": \"<one sentence>\", "
+    "\"dim_obs_wf\": \"<one sentence>\", "
+    "\"dim_obs_aq\": \"<one sentence>\", "
     "\"takeaway\": \"<one sentence>\", "
     "\"impression\": \"<2-3 sentences>\", "
     "\"strength_name\": \"<dimension name>\", "
     "\"strength_obs\": \"<one sentence>\", "
     "\"next_leap_name\": \"<dimension name>\", "
     "\"next_leap_obs\": \"<one sentence>\", "
-    "\"what_next\": \"<max 80 words>\", "
     "\"master_name\": \"<photographer name>\", "
-    "\"master_why\": \"<one sentence>\"}"
+    "\"master_why\": \"<one sentence>\", "
+    "\"what_next\": \"<max 120 words>\", "
+    "\"conclusion\": \"<max 70 words>\"}"
 )
 
 
@@ -34360,7 +34404,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 1000,
+        'max_tokens': 1800,  # Session 211: increased from 1000 — 5 dim_obs + conclusion + what_next(120w) requires headroom
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -34420,12 +34464,19 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     takeaway       = (d.get('takeaway')       or '').strip()[:300]
     impression     = (d.get('impression')     or '').strip()[:400]
     strength_name  = (d.get('strength_name')  or '').strip()[:80]
-    strength_obs   = (d.get('strength_obs')   or '').strip()[:200]
+    strength_obs   = (d.get('strength_obs')   or '').strip()[:250]
     next_leap_name = (d.get('next_leap_name') or '').strip()[:80]
-    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:200]
-    what_next      = (d.get('what_next')      or '').strip()[:500]
+    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:250]
+    what_next      = (d.get('what_next')      or '').strip()[:700]   # Session 211: 120 words ~700 chars
     master_name    = (d.get('master_name')    or '').strip()[:100]
-    master_why     = (d.get('master_why')     or '').strip()[:200]
+    master_why     = (d.get('master_why')     or '').strip()[:250]
+    # Session 211: per-dimension observations + conclusion
+    dim_obs_dod    = (d.get('dim_obs_dod')    or '').strip()[:250]
+    dim_obs_vd     = (d.get('dim_obs_vd')     or '').strip()[:250]
+    dim_obs_dm     = (d.get('dim_obs_dm')     or '').strip()[:250]
+    dim_obs_wf     = (d.get('dim_obs_wf')     or '').strip()[:250]
+    dim_obs_aq     = (d.get('dim_obs_aq')     or '').strip()[:250]
+    conclusion     = (d.get('conclusion')     or '').strip()[:500]
 
     try:
         final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
@@ -34470,6 +34521,13 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'what_next':     what_next,
                 'master_name':   master_name,
                 'master_why':    master_why,
+                # Session 211: per-dimension observations + conclusion
+                'dim_obs_dod':   dim_obs_dod,
+                'dim_obs_vd':    dim_obs_vd,
+                'dim_obs_dm':    dim_obs_dm,
+                'dim_obs_wf':    dim_obs_wf,
+                'dim_obs_aq':    dim_obs_aq,
+                'conclusion':    conclusion,
             })
             db.session.commit()
             app.logger.info(
@@ -34566,6 +34624,13 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'what_next':     what_next,
                 'master_name':   master_name,
                 'master_why':    master_why,
+                # Session 211
+                'dim_obs_dod':   dim_obs_dod,
+                'dim_obs_vd':    dim_obs_vd,
+                'dim_obs_dm':    dim_obs_dm,
+                'dim_obs_wf':    dim_obs_wf,
+                'dim_obs_aq':    dim_obs_aq,
+                'conclusion':    conclusion,
             }
         except Exception as e:
             db.session.rollback()
@@ -36095,6 +36160,7 @@ def try_result(image_id):
 
     dims     = {}
     takeaway = ''
+    audit    = {}
     try:
         audit = _j.loads(img._audit_json or '{}')
         if audit.get('source') == 'haiku_try':
@@ -36193,6 +36259,13 @@ def try_result(image_id):
         what_next          = audit.get('what_next', ''),
         master_name        = audit.get('master_name', ''),
         master_why         = audit.get('master_why', ''),
+        # Session 211: per-dimension observations + conclusion
+        dim_obs_dod        = audit.get('dim_obs_dod', ''),
+        dim_obs_vd         = audit.get('dim_obs_vd', ''),
+        dim_obs_dm         = audit.get('dim_obs_dm', ''),
+        dim_obs_wf         = audit.get('dim_obs_wf', ''),
+        dim_obs_aq         = audit.get('dim_obs_aq', ''),
+        conclusion         = audit.get('conclusion', ''),
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
         evals_limit        = FREE_IMAGE_LIMIT,
