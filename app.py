@@ -16490,12 +16490,38 @@ def admin_dashboard():
     _uat_users = []
     try:
         from sqlalchemy import or_ as _uat_or
-        # Include ALL UAT/beta/learning users regardless of is_active —
-        # many legacy UAT members may have is_active=False from early cleanup runs.
-        _uat_rows = User.query.filter(
+        # Include:
+        # 1. Explicit UAT/beta/learning plan users (regardless of is_active)
+        # 2. Pre-launch Sonnet free trial users — registered before HAIKU_LAUNCH_DATE,
+        #    no paid plan, no uat plan, but have Sonnet images (MIM workshop participants etc)
+        _uat_plan_users = User.query.filter(
             User.subscription_plan.in_(['uat', 'beta', 'learning']),
             User.role != 'admin',
-        ).order_by(User.created_at.desc()).all()
+        ).all()
+        _uat_plan_ids = {u.id for u in _uat_plan_users}
+
+        # Pre-launch Sonnet free trial cohort via raw SQL
+        _prelaunched = db.session.execute(db.text(
+            "SELECT DISTINCT u.id FROM users u "
+            "JOIN images i ON i.user_id = u.id "
+            "WHERE u.created_at < :launch "
+            "AND u.role != 'admin' "
+            "AND (u.subscription_plan IS NULL "
+            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','uat','beta','learning','play')) "
+            "AND (i.is_haiku_try IS NULL OR i.is_haiku_try = FALSE)"
+        ), {'launch': HAIKU_LAUNCH_DATE}).fetchall()
+        _prelaunched_ids = {r[0] for r in _prelaunched} - _uat_plan_ids
+
+        _prelaunched_users = User.query.filter(
+            User.id.in_(_prelaunched_ids),
+            User.role != 'admin',
+        ).all() if _prelaunched_ids else []
+
+        _uat_rows = sorted(
+            _uat_plan_users + _prelaunched_users,
+            key=lambda u: u.created_at or __import__('datetime').datetime.min,
+            reverse=True
+        )
         for _uu in _uat_rows:
             _uu_latest = db.session.query(Image).filter(
                 Image.user_id == _uu.id,
